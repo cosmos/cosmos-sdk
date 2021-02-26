@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	ibctransfertypes "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	connectionutils "github.com/cosmos/cosmos-sdk/x/ibc/core/03-connection/client/utils"
@@ -42,11 +43,14 @@ func NewChannelOpenInitCmd() *cobra.Command {
 				portID, version, order, hops,
 				counterpartyPortID, clientCtx.GetFromAddress(),
 			)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.ChannelOpenInit(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 
@@ -93,11 +97,14 @@ func NewChannelOpenTryCmd() *cobra.Command {
 				counterpartyPortID, counterpartyChannelID, version,
 				proofInit, proofHeight, clientCtx.GetFromAddress(),
 			)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.ChannelOpenTry(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 
@@ -139,11 +146,14 @@ func NewChannelOpenAckCmd() *cobra.Command {
 			msg := types.NewMsgChannelOpenAck(
 				portID, channelID, counterpartyChannelID, version, proofTry, proofHeight, clientCtx.GetFromAddress(),
 			)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.ChannelOpenAck(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 	cmd.Flags().String(FlagIBCVersion, ibctransfertypes.Version, "IBC application version")
@@ -179,11 +189,14 @@ func NewChannelOpenConfirmCmd() *cobra.Command {
 			msg := types.NewMsgChannelOpenConfirm(
 				portID, channelID, proofAck, proofHeight, clientCtx.GetFromAddress(),
 			)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.ChannelOpenConfirm(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 
@@ -207,11 +220,14 @@ func NewChannelCloseInitCmd() *cobra.Command {
 			channelID := args[1]
 
 			msg := types.NewMsgChannelCloseInit(portID, channelID, clientCtx.GetFromAddress())
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.ChannelCloseInit(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 
@@ -247,11 +263,14 @@ func NewChannelCloseConfirmCmd() *cobra.Command {
 			msg := types.NewMsgChannelCloseConfirm(
 				portID, channelID, proofInit, proofHeight, clientCtx.GetFromAddress(),
 			)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.ChannelCloseConfirm(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 

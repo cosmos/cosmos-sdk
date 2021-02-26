@@ -32,8 +32,8 @@ func GetMultiSignCommand() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Sign transactions created with the --generate-only flag that require multisig signatures.
 
-Read signature(s) from [signature] file(s), generate a multisig signature compliant to the
-multisig key [name], and attach it to the transaction read from [file].
+Read one or more signatures from one or more [signature] file, generate a multisig signature compliant to the
+multisig key [name], and attach the key name to the transaction read from [file].
 
 Example:
 $ %s tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json

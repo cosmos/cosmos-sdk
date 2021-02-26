@@ -38,6 +38,7 @@ func Test_runMigrateCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	cmd.SetArgs([]string{
+		kbHome,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flags.FlagDryRun),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),

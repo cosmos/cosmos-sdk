@@ -171,15 +171,23 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 // by address. If the account has no spendable coins, an empty Coins slice is
 // returned.
 func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	balances := k.GetAllBalances(ctx, addr)
+	spendable, _ := k.spendableCoins(ctx, addr)
+	return spendable
+}
+
+// spendableCoins returns the coins the given address can spend alongside the total amount of coins it holds.
+// It exists for gas efficiency, in order to avoid to have to get balance multiple times.
+func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (spendable, total sdk.Coins) {
+	total = k.GetAllBalances(ctx, addr)
 	locked := k.LockedCoins(ctx, addr)
 
-	spendable, hasNeg := balances.SafeSub(locked)
+	spendable, hasNeg := total.SafeSub(locked)
 	if hasNeg {
-		return sdk.NewCoins()
+		spendable = sdk.NewCoins()
+		return
 	}
 
-	return spendable
+	return
 }
 
 // ValidateBalance validates all balances for a given account address returning

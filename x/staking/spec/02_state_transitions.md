@@ -55,6 +55,9 @@ this process may be also be reversed. the following operations occur:
 - if jailed delete record from `ValidatorByPowerIndex`
 - if unjailed add record to `ValidatorByPowerIndex`
 
+Jailed validators are not present in any of the following stores:
+- the power store (from consensus power to address)
+
 ## Delegations
 
 ### Delegate

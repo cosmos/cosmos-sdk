@@ -41,7 +41,7 @@ When a validator is kicked out of the bonded validator set (either through
 being jailed, or not having sufficient bonded tokens) it begins the unbonding
 process along with all its delegations begin unbonding (while still being
 delegated to this validator). At this point the validator is said to be an
-unbonding validator, whereby it will mature to become an "unbonded validator"
+"unbonding validator", whereby it will mature to become an "unbonded validator"
 after the unbonding period has passed.
 
 Each block the validator queue is to be checked for mature unbonding validators

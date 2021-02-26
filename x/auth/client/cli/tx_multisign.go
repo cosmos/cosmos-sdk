@@ -38,8 +38,8 @@ multisig key [name], and attach the key name to the transaction read from [file]
 Example:
 $ %s tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 
-If the flag --signature-only flag is on, it outputs a JSON representation
-of the generated signature only.
+If --signature-only flag is on, output a JSON representation
+of only the generated signature.
 
 The --offline flag makes sure that the client will not reach out to an external node.
 Thus account number or sequence number lookups will not be performed and it is

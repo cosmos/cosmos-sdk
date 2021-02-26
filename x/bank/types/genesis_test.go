@@ -71,7 +71,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid balance",
+			"0  balance",
 			types.GenesisState{
 				Balances: []types.Balance{
 					{
@@ -79,7 +79,7 @@ func TestGenesisStateValidate(t *testing.T) {
 					},
 				},
 			},
-			true,
+			false,
 		},
 		{
 			"dup Metadata",

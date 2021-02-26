@@ -34,11 +34,6 @@ func (b Balance) Validate() error {
 	if err != nil {
 		return err
 	}
-
-	if len(b.Coins) == 0 {
-		return fmt.Errorf("empty or nil coins for address %s", b.Address)
-	}
-
 	seenDenoms := make(map[string]bool)
 
 	// NOTE: we perform a custom validation since the coins.Validate function

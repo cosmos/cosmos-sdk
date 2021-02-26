@@ -25,6 +25,7 @@ group BlockValidatorUpdates
                 note left : unbonded and unbonding treated as separate cases in the code,\nbut both just call bondValidator
                 group bondValidator
                     keeper -> keeper
+                    note right  #DD0000 : TODO
                     'TODO describe bondValidator state updates x/staking/keeper/val_state_change.go:284
                 end
             end
@@ -44,7 +45,7 @@ group BlockValidatorUpdates
             keeper -> keeper : bondedToUnbonding(validator)
             group bondedToUnbonding
                 keeper -> keeper
-                'TODO describe bondValidator state updates x/staking/keeper/val_state_change.go:284
+                note right  #DD0000 : TODO
             end
             keeper -> store : delete validator from power index
             keeper -> keeper : append validator and its new power (0) to `updates`

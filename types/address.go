@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/hashicorp/golang-lru/simplelru"
 )
 
 const (
@@ -239,37 +240,33 @@ func (aa AccAddress) Bytes() []byte {
 
 // AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
 // yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
-// With the string interning below, we are able to achieve zero cost allocations for string->[]byte
-// because the Go compiler recognizes the special case of map[string([]byte)] when used exactly
-// in that pattern. See https://github.com/cosmos/cosmos-sdk/issues/8693.
 var addMu sync.Mutex
-var addrStrMemoize = make(map[string]string)
+var addrStrMemoize, _ = simplelru.NewLRU(1000, nil)
 
 // String implements the Stringer interface.
-func (aa AccAddress) String() (str string) {
-	addMu.Lock()
-	defer addMu.Unlock()
-
-	if str, ok := addrStrMemoize[string(aa)]; ok {
-		return str
+func (aa AccAddress) String() string {
+	var key = string(aa)
+	if str, ok := addrStrMemoize.Get(key); ok {
+		return str.(string)
 	}
-
 	// Otherwise cache it for later memoization.
-	defer func() {
-		addrStrMemoize[string(aa)] = str
-	}()
 
 	if aa.Empty() {
+		addMu.Lock()
+		addrStrMemoize.Add(key, "")
+		addMu.Unlock()
 		return ""
 	}
 
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
-
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa.Bytes())
+	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa)
 	if err != nil {
 		panic(err)
 	}
 
+	addMu.Lock()
+	addrStrMemoize.Add(key, bech32Addr)
+	addMu.Unlock()
 	return bech32Addr
 }
 

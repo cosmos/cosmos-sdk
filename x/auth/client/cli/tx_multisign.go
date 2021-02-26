@@ -56,8 +56,8 @@ The SIGN_MORE_DIRECT sign mode is not supported.'
 	}
 
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit")
-	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
-	cmd.Flags().Bool(flagAmino, false, "Generate Amino encoded JSON suitable for submiting to the txs REST endpoint")
+	cmd.Flags().String(flags.FlagOutputDocument, "", "The document is written to the given file instead of STDOUT")
+	cmd.Flags().Bool(flagAmino, false, "Generate Amino-encoded JSON suitable for submitting to the txs REST endpoint")
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(flags.FlagChainID, "", "network chain ID")
 

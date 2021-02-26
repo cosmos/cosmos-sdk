@@ -31,9 +31,6 @@ alt delegating from an account (subtractTokens == true)
     keeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
     group DelegateCoinsFromAccountToModule function
         keeper.bankKeeper -> keeper.bankKeeper : DelegateCoinsFromAccountToModule
-        alt recipient does not exist or does not have permission to stake
-            keeper.bankKeeper -> keeper.bankKeeper : panic
-        end
         keeper.bankKeeper -> keeper.bankKeeper : DelegateCoins
         group DelegateCoins function
             keeper.bankKeeper --> keeper.bankKeeper : Check the delegator has enough balances of all tokens delegated

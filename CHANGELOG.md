@@ -34,6 +34,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+**IMPORTANT:** Due to a bug in the `v0.41.x` series with how evidence handles validator consensus addresses [\#8461](https://github.com/cosmos/cosmos-sdk/issues/8461), SDK based chains that are not using the de$
+
 ## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
 
 ### Bug Fixes
@@ -44,33 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-<<<<<<< HEAD
 * Bump tendermint dependency to v0.34.7.
-=======
-### Bug Fixes
-
-* (x/evidence) [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix bech32 prefix in evidence validator address conversion
-* (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
-* (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
-* (server) [\#8641](https://github.com/cosmos/cosmos-sdk/pull/8641) Fix Tendermint and application configuration reading from file
-<<<<<<< HEAD
->>>>>>> 2f069c90b... server: fix interceptConfigs (#8641)
-=======
-
-## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
-
-**IMPORTANT:** Due to a bug in the `v0.41.x` series with how evidence handles validator consensus addresses [\#8461](https://github.com/cosmos/cosmos-sdk/issues/8461), SDK based chains that are not using the default bech32 prefix (`cosmos`, aka all chains except for the Cosmos Hub) **should not** use this release or any release in the `v0.41.x` series. Please see [\#8668](https://github.com/cosmos/cosmos-sdk/issues/8668) for tracking & timeline for the v0.42.0 release, which will include a fix for this issue.
-
-### Bug Fixes
-
-* [\#8617](https://github.com/cosmos/cosmos-sdk/pull/8617) Fix build failures caused by a small API breakage introduced in tendermint v0.34.7.
-
-## [v0.41.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.2) - 2021-02-18
-
-### Improvements
-
-* Bump tendermint dependency to v0.34.7.
->>>>>>> b19ac2c4f... Add warning notice in changelog for v0.41.x bug (ref: #8461) (#8707)
 
 ## [v0.41.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.1) - 2021-02-17
 

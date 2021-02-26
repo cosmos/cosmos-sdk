@@ -215,7 +215,7 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 	cmd.Flags().Bool(flagNoAutoIncrement, false, "disable sequence auto increment")
 	cmd.Flags().String(
 		flagMultisig, "",
-		"Address of the multisig account on behalf of which the transaction shall be signed",
+		"Address of the multisig account that the transaction signs on behalf of",
 	)
 	flags.AddTxFlagsToCmd(cmd)
 

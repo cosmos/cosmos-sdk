@@ -86,8 +86,6 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 }
 
-//____________________________________________________________________________
-
 // AppModule implements an application module for the bank module.
 type AppModule struct {
 	AppModuleBasic
@@ -100,9 +98,9 @@ type AppModule struct {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 0, func(ctx sdk.Context) error {
-		return am.keeper.(keeper.MigrationKeeper).Migrate1(ctx)
-	})
+
+	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper))
+	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
 }
 
 // NewAppModule creates a new AppModule object
@@ -165,8 +163,6 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
-
-//____________________________________________________________________________
 
 // AppModuleSimulation functions
 

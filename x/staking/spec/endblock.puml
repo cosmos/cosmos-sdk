@@ -1,11 +1,30 @@
 @startuml
 'https://plantuml.com/sequence-diagram
 
-autonumber
+participant keeper
+database store
 
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
+keeper -> keeper : ApplyAndReturnValidatorSetUpdates
+note left : returns a list of `abci.ValidatorUpdate`s
+group ApplyAndReturnValidatorSetUpdates
+    keeper -> keeper : last := map from active validators at the beginning of current block to their power. (getLastValidatorsByAddr)
+    loop for the `maxValidators` number of validators with power > 0\n(current power, which may have changed during the block)
+    'TODO: how are totalPower, amtFromBondedToNotBonded, amtFromNotBondedToBonded used?
+        alt validator is unbonded or unbonding
+            keeper -> keeper : bondValidator
+            note left : unbonded and unbonding treated as separate cases in the code,\nbut both just call bondValidator
+            group bondValidator
+                keeper -> keeper
+                'TODO describe bondValidator state updates x/staking/keeper/val_state_change.go:284
+            end
+        end
+        keeper -> store : update validator's power in power index (add it if not already present)
+    end
+    'After loop: totalPower = amount of power of the new validator set
+    '            amtFromNotBondedToBonded = number of previously undonded tokens now bonded
+    '            amtFromBondedToNotBonded = 0
+    keeper -> keeper : noLongerBonded := map validator -> power of all validators that were bonded this block, but won't be next block.
 
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
+end
+
 @enduml

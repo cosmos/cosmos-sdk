@@ -9,11 +9,8 @@ abstract class Slashing
 abstract class Evidence
 abstract class Bank
 abstract class "Auth/Account" as Auth
-abstract class Capability
-abstract class Crisis
 abstract class Gov
 abstract class Mint
-abstract class Upgrade
 
 Staking <|-- Mint
 Bank <|-- Mint

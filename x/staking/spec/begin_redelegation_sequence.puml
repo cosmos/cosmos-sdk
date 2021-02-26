@@ -2,7 +2,6 @@
 'https://plantuml.com/sequence-diagram
 
 title: Delegating (currently undelegated funds delegator)
-autonumber
 
 msgServer -> keeper : BeginRedelegation(delAddr, valSrcAddr, valDstAddr, sharesAmount)
 participant  "keeper (staking)" as keeper

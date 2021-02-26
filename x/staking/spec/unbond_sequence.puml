@@ -3,6 +3,8 @@
 
 autonumber
 
+title: Unbond message
+
 msgServer -> keeper : Undelegate(delAddr, valAddr, tokenAmount)
 
 keeper -> keeper : calculate number of shares the tokenAmount represents
@@ -28,9 +30,7 @@ group Unbond(delAddr, valAddr, shares)
 
     alt complete unbonding, all shares removed
         keeper -> store : remove delegation object
-    end
-
-    alt there are still shares delegated (not a complete undbonding)
+    else there are still shares delegated (not a complete undbonding)
         keeper -> store : update delegation object
         keeper -> keeper : AfterDelegationModified hook
     end

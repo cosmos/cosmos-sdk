@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	query "github.com/cosmos/cosmos-sdk/types/query"
@@ -106,7 +107,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 6) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -143,7 +144,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(result.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 6) // 1 coin recv, 1 coin spent,1 transfer, 3 messages.
 				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -412,7 +413,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 				var result tx.BroadcastTxResponse
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
-				s.Require().Equal(uint32(0), result.TxResponse.Code)
+				s.Require().Equal(uint32(0), result.TxResponse.Code, "rawlog", result.TxResponse.RawLog)
 			}
 		})
 	}

@@ -7,6 +7,7 @@ order: 1
 ## LastTotalPower
 
 LastTotalPower tracks the total amounts of bonded tokens recorded during the previous end block.
+Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 - LastTotalPower: `0x12 -> ProtocolBuffer(sdk.Int)`
 

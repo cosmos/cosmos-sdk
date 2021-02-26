@@ -71,15 +71,21 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
+<<<<<<< HEAD
 			"invalid balance",
 			types.GenesisState{
 				Balances: []types.Balance{
+=======
+			"0  balance",
+			GenesisState{
+				Balances: []Balance{
+>>>>>>> a786830bb... auth: allow 0 coin accounts in genesis (#8714)
 					{
 						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 					},
 				},
 			},
-			true,
+			false,
 		},
 		{
 			"dup Metadata",

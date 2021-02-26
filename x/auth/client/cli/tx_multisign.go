@@ -46,7 +46,7 @@ Account number or sequence number lookups are not performed so you must
 set these parameters manually.
 
 The current multisig implementation defaults to amino-json sign mode.
-The SIGN_MORE_DIRECT sign mode is not supported.'
+The SIGN_MODE_DIRECT sign mode is not supported.'
 `,
 				version.AppName,
 			),

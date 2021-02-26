@@ -1,10 +1,6 @@
 @startuml
 'https://plantuml.com/sequence-diagram
 
-autonumber
-
-title: Unbond message
-
 msgServer -> keeper : Undelegate(delAddr, valAddr, tokenAmount)
 
 keeper -> keeper : calculate number of shares the tokenAmount represents

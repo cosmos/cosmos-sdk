@@ -33,7 +33,7 @@ func TestPlanString(t *testing.T) {
 				Info: "https://foo.bar",
 				Time: mustParseTime("2019-07-08T11:33:55Z"),
 			},
-			expect: "Upgrade Plan\n  Name: due_time\n  Time: 2019-07-08T11:33:55Z\n  Info: https://foo.bar",
+			expect: "Upgrade Plan\n  Name: due_time\n  Time: 2019-07-08T11:33:55Z\n  Info: https://foo.bar.",
 		},
 		"with height": {
 			p: types.Plan{
@@ -41,13 +41,13 @@ func TestPlanString(t *testing.T) {
 				Info:   "https://foo.bar/baz",
 				Height: 7890,
 			},
-			expect: "Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz",
+			expect: "Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.",
 		},
 		"neither": {
 			p: types.Plan{
 				Name: "almost-empty",
 			},
-			expect: "Upgrade Plan\n  Name: almost-empty\n  Height: 0\n  Info: ",
+			expect: "Upgrade Plan\n  Name: almost-empty\n  Height: 0\n  Info: .",
 		},
 	}
 

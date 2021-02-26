@@ -58,11 +58,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = stakingtestutil.MsgRedelegateExec(val.ClientCtx, val.Address, val.ValAddress, val2.ValAddress, unbond)
+	_, err = stakingtestutil.MsgRedelegateExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		val2.ValAddress,
+		unbond,
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 202954), //  202954 is the required
+	)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
 	// unbonding
 	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)

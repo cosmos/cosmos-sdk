@@ -89,13 +89,13 @@ func NewUpgradeProposal(title, description string, plan upgradetypes.Plan, upgra
 	}, nil
 }
 
-// GetTitle returns the title of a client update proposal.
+// GetTitle returns the title of a upgrade proposal.
 func (up *UpgradeProposal) GetTitle() string { return up.Title }
 
-// GetDescription returns the description of a client update proposal.
+// GetDescription returns the description of a upgrade proposal.
 func (up *UpgradeProposal) GetDescription() string { return up.Description }
 
-// ProposalRoute returns the routing key of a client update proposal.
+// ProposalRoute returns the routing key of a upgrade proposal.
 func (up *UpgradeProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the upgrade proposal type.
@@ -113,6 +113,10 @@ func (up *UpgradeProposal) ValidateBasic() error {
 
 	if up.Plan.Time.Unix() > 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeProposal, "IBC chain upgrades must only set height")
+	}
+
+	if up.UpgradedClientState == nil {
+		return sdkerrors.Wrap(ErrInvalidUpgradeProposal, "upgraded client state cannot be nil")
 	}
 
 	_, err := UnpackClientState(up.UpgradedClientState)
@@ -133,12 +137,11 @@ func (up UpgradeProposal) String() string {
 		upgradedClientStr = upgradedClient.String()
 	}
 
-	return fmt.Sprintf(`IBC Upgrade Proposal:
-  Title:               %s
-  Description:         %s
-  Plan:				   %s
-  UpgradedClientState: %s
-`, up.Title, up.Description, up.Plan, upgradedClientStr)
+	return fmt.Sprintf(`IBC Upgrade Proposal
+  Title: %s
+  Description: %s
+  %s
+  Upgraded IBC Client: %s`, up.Title, up.Description, up.Plan, upgradedClientStr)
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

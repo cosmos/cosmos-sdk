@@ -211,6 +211,10 @@ func (suite *KeeperTestSuite) TestHandleUpgradeProposal() {
 				store := suite.chainA.GetContext().KVStore(suite.chainA.App.GetKey(upgradetypes.StoreKey))
 				bz := suite.chainA.App.AppCodec().MustMarshalBinaryBare(&oldPlan)
 				store.Set(upgradetypes.PlanKey(), bz)
+
+				bz, err := types.MarshalClientState(suite.chainA.App.AppCodec(), upgradedClientState)
+				suite.Require().NoError(err)
+				suite.chainA.App.UpgradeKeeper.SetUpgradedClient(suite.chainA.GetContext(), oldPlan.Height, bz)
 			}
 
 			upgradeProp, ok := content.(*types.UpgradeProposal)
@@ -224,6 +228,10 @@ func (suite *KeeperTestSuite) TestHandleUpgradeProposal() {
 				storedPlan, found := suite.chainA.App.UpgradeKeeper.GetUpgradePlan(suite.chainA.GetContext())
 				suite.Require().True(found)
 				suite.Require().Equal(plan, storedPlan)
+
+				// check that old upgraded client state is cleared
+				_, found = suite.chainA.App.UpgradeKeeper.GetUpgradedClient(suite.chainA.GetContext(), oldPlan.Height)
+				suite.Require().False(found)
 
 				// check that client state was set
 				storedClientState, found := suite.chainA.App.UpgradeKeeper.GetUpgradedClient(suite.chainA.GetContext(), plan.Height)

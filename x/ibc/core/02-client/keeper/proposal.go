@@ -79,7 +79,7 @@ func (k Keeper) HandleUpgradeProposal(ctx sdk.Context, p *types.UpgradeProposal)
 	// clear any old IBC state stored by previous plan
 	oldPlan, found := k.GetUpgradePlan(ctx)
 	if found {
-		k.upgradeKeeper.ClearIBCState(ctx, oldPlan.Height-1)
+		k.upgradeKeeper.ClearIBCState(ctx, oldPlan.Height)
 	}
 
 	clientState, err := types.UnpackClientState(p.UpgradedClientState)

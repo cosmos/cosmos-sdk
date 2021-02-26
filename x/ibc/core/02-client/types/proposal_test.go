@@ -81,7 +81,8 @@ func (suite *TypesTestSuite) TestMarshalClientUpdateProposalProposal() {
 	cdc := codec.NewProtoCodec(ir)
 
 	// marshal message
-	bz, err := cdc.MarshalJSON(proposal)
+	content := proposal.(*types.ClientUpdateProposal)
+	bz, err := cdc.MarshalJSON(content)
 	suite.Require().NoError(err)
 
 	// unmarshal proposal
@@ -131,9 +132,19 @@ func (suite *TypesTestSuite) TestUpgradeProposalValidateBasic() {
 		{
 			"plan time is not set to 0", func() {
 				invalidPlan := upgradetypes.Plan{Name: "ibc upgrade", Time: time.Now()}
-				types.NewUpgradeProposal(ibctesting.Title, ibctesting.Description, invalidPlan, cs)
+				proposal, err = types.NewUpgradeProposal(ibctesting.Title, ibctesting.Description, invalidPlan, cs)
 				suite.Require().NoError(err)
 
+			}, false,
+		},
+		{
+			"client state is nil", func() {
+				proposal = &types.UpgradeProposal{
+					Title:               ibctesting.Title,
+					Description:         ibctesting.Description,
+					Plan:                plan,
+					UpgradedClientState: nil,
+				}
 			}, false,
 		},
 		{
@@ -152,6 +163,8 @@ func (suite *TypesTestSuite) TestUpgradeProposalValidateBasic() {
 	}
 
 	for _, tc := range testCases {
+
+		tc.malleate()
 
 		err := proposal.ValidateBasic()
 
@@ -209,7 +222,7 @@ func (suite *TypesTestSuite) TestUpgradeString() {
 	proposal, err := types.NewUpgradeProposal(ibctesting.Title, ibctesting.Description, plan, &ibctmtypes.ClientState{})
 	suite.Require().NoError(err)
 
-	expect := fmt.Sprintf("Upgrade Plan\n  Name: ibc upgrade\n  Height: 1000\n  Info: https://foo.bar/baz.\n  Upgraded IBC Client: %s", &ibctmtypes.ClientState{})
+	expect := fmt.Sprintf("IBC Upgrade Proposal\n  Title: title\n  Description: description\n  Upgrade Plan\n  Name: ibc upgrade\n  Height: 1000\n  Info: https://foo.bar/baz\n  Upgraded IBC Client: %s", &ibctmtypes.ClientState{})
 
 	suite.Require().Equal(expect, proposal.String())
 }

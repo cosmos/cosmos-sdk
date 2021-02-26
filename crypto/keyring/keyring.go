@@ -107,7 +107,7 @@ type Signer interface {
 	SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error)
 }
 
-// Importer is implemented by key stores that support import of public and private keys.
+// Importer is implemented by key stores that support import of info, public and private keys.
 type Importer interface {
 	// ImportPrivKey imports ASCII armored passphrase-encrypted private keys.
 	ImportPrivKey(uid, armor, passphrase string) error
@@ -121,7 +121,7 @@ type Importer interface {
 	ImportInfo(oldInfo Info) error
 }
 
-// Exporter is implemented by key stores that support export of private keys.
+// Exporter is implemented by key stores that support export of public and private keys.
 type Exporter interface {
 	// Export public key
 	ExportPubKeyArmor(uid string) (string, error)
@@ -213,29 +213,6 @@ func newKeystore(kr keyring.Keyring, opts ...Option) keystore {
 	return keystore{kr, options}
 }
 
-func (ks keystore) ImportPubKey(uid string, armor string) error {
-	if _, err := ks.Key(uid); err == nil {
-		return fmt.Errorf("cannot overwrite key: %s", uid)
-	}
-
-	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
-	if err != nil {
-		return err
-	}
-
-	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
-	if err != nil {
-		return err
-	}
-
-	_, err = ks.writeOfflineKey(uid, pubKey, hd.PubKeyType(algo))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 	bz, err := ks.Key(uid)
 	if err != nil {
@@ -320,6 +297,29 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	}
 
 	_, err = ks.writeLocalKey(uid, privKey, hd.PubKeyType(algo))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ks keystore) ImportPubKey(uid string, armor string) error {
+	if _, err := ks.Key(uid); err == nil {
+		return fmt.Errorf("cannot overwrite key: %s", uid)
+	}
+
+	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armor)
+	if err != nil {
+		return err
+	}
+
+	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
+	if err != nil {
+		return err
+	}
+
+	_, err = ks.writeOfflineKey(uid, pubKey, hd.PubKeyType(algo))
 	if err != nil {
 		return err
 	}

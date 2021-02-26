@@ -112,7 +112,7 @@ type Importer interface {
 	// ImportPrivKey imports ASCII armored passphrase-encrypted private keys.
 	ImportPrivKey(uid, armor, passphrase string) error
 
-	// ImportInfo MigrateInfo takes a keyring.Info (in practise, from an old keyring), and
+	// ImportInfo takes a keyring.Info (in practise, from an old keyring), and
 	// writes it to the current keyring. We use it to migrate Type{Multi,Ledger,Offline}
 	// keyring.Infos.
 	ImportInfo(oldInfo Info) error
@@ -274,7 +274,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-// MigrateInfo implements Importer.MigrateInfo.
+// ImportInfo implements Importer.MigrateInfo.
 func (ks keystore) ImportInfo(oldInfo Info) error {
 	if _, err := ks.Key(oldInfo.GetName()); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", oldInfo.GetName())

@@ -72,8 +72,8 @@ func TestGenesisStateValidate(t *testing.T) {
 		},
 		{
 			"0  balance",
-			GenesisState{
-				Balances: []Balance{
+			types.GenesisState{
+				Balances: []types.Balance{
 					{
 						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 					},

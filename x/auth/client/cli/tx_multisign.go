@@ -41,9 +41,9 @@ $ %s tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
 If --signature-only flag is on, output a JSON representation
 of only the generated signature.
 
-The --offline flag makes sure that the client will not reach out to an external node.
-Thus account number or sequence number lookups will not be performed and it is
-recommended to set such parameters manually.
+If the --offline flag is on, the client will not reach out to an external node.
+Account number or sequence number lookups are not performed so you must
+set these parameters manually.
 
 The current multisig implementation doesn't support SIGN_MORE_DIRECT and defaults 
 to amino-json sign mode.'

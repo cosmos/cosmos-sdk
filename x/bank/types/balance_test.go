@@ -29,7 +29,7 @@ func TestBalanceValidate(t *testing.T) {
 			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 			},
-			true,
+			false,
 		},
 		{
 			"dup coins",

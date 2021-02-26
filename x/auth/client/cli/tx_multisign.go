@@ -202,8 +202,8 @@ multisig key [name], and attach the key name to the transaction read from [file]
 Example:
 $ %s tx multisign-batch transactions.json multisigk1k2k3 k1sigs.json k2sigs.json k3sig.json
 
-The current multisig implementation doesn't support sign_mode_direct and defaults 
-to amino-json sign mode.'
+The current multisig implementation defaults to amino-json sign mode.
+The SIGN_MODE_DIRECT sign mode is not supported.'
 `, version.AppName,
 			),
 		),

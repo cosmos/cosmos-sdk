@@ -127,7 +127,6 @@ type Exporter interface {
 	ExportPubKeyArmor(uid string) (string, error)
 	ExportPubKeyArmorByAddress(address sdk.Address) (string, error)
 
-	// ExportPrivKey returns a private key in ASCII armored format.
 	// ExportPrivKeyArmor returns a private key in ASCII armored format.
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)

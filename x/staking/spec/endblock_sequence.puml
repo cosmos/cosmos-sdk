@@ -42,6 +42,10 @@ group BlockValidatorUpdates
         note left : `last` now contains exactly the validators of the current block\nthat will not be validators in the next block.
         loop for validator in noLongerBonded
             keeper -> keeper : bondedToUnbonding(validator)
+            group bondedToUnbonding
+                keeper -> keeper
+                'TODO describe bondValidator state updates x/staking/keeper/val_state_change.go:284
+            end
             keeper -> store : delete validator from power index
             keeper -> keeper : append validator and its new power (0) to `updates`
         end

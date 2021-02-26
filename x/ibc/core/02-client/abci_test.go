@@ -68,6 +68,7 @@ func (suite *ClientTestSuite) TestBeginBlockerConsensusState() {
 		Name:   "test",
 		Height: suite.chainA.GetContext().BlockHeight() + 1,
 	}
+	// set upgrade plan in the upgrade store
 	store := suite.chainA.GetContext().KVStore(suite.chainA.App.GetKey(upgradetypes.StoreKey))
 	bz := suite.chainA.App.AppCodec().MustMarshalBinaryBare(plan)
 	store.Set(upgradetypes.PlanKey(), bz)

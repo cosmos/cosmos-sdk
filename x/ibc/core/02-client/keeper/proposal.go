@@ -77,8 +77,8 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 // store.
 func (k Keeper) HandleUpgradeProposal(ctx sdk.Context, p *types.UpgradeProposal) error {
 	// clear any old IBC state stored by previous plan
-	oldPlan, exists := k.GetUpgradePlan(ctx)
-	if exists {
+	oldPlan, found := k.GetUpgradePlan(ctx)
+	if found {
 		k.upgradeKeeper.ClearIBCState(ctx, oldPlan.Height-1)
 	}
 

@@ -83,7 +83,7 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 	}
 	adL := make([]*addrToBalance, 0, len(balances))
 	for _, balance := range balances {
-                balance := balance
+		balance := balance
 		addr, _ := sdk.AccAddressFromBech32(balance.Address)
 		adL = append(adL, &addrToBalance{
 			balance: &balance,

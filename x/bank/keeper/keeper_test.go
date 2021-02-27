@@ -258,8 +258,8 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 		NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
 	supplyAfterInflation := keeper.GetTotalSupply(ctx)
 
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                               // nolint:errcheck
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")                // nolint:errcheck
+	suite.Require().Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                    // nolint:errcheck
+	suite.Require().Panics(func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")     // nolint:errcheck
 	suite.Require().Panics(func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission") // nolint:errcheck
 	err := keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation)
 	suite.Require().Error(err, "insufficient coins")
@@ -267,7 +267,7 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	err = keeper.BurnCoins(ctx, authtypes.Burner, initCoins)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner).String())
-	suite.Require().Equal(supplyAfterInflation.Sub(initCoins), keeper.GetSupply(ctx).GetTotal())
+	suite.Require().Equal(supplyAfterInflation.Sub(initCoins), keeper.GetTotalSupply(ctx))
 
 	// test same functionality on module account with multiple permissions
 	suite.
@@ -1080,9 +1080,9 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 	}
 
 	// check balance and supply tracking
-	savedSupply := suite.app.BankKeeper.GetSupply(suite.ctx)
-	utxoSupply := savedSupply.GetTotal().AmountOf("utxo")
-	suite.Require().Equal(utxoSupply, supply.AmountOf("utxo"))
+	savedSupply := suite.app.BankKeeper.GetSupply(suite.ctx, "utxo")
+	utxoSupply := savedSupply
+	suite.Require().Equal(utxoSupply.Amount, supply.AmountOf("utxo"))
 	// iterate accounts and check balances
 	suite.app.BankKeeper.IterateAllBalances(suite.ctx, func(address sdk.AccAddress, coin sdk.Coin) (stop bool) {
 		// if it's not utxo coin then skip

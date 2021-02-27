@@ -169,7 +169,10 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 
 	bz := supplyStore.Get([]byte(denom))
 	if bz == nil {
-		panic("stored supply should not have been nil")
+		return sdk.Coin{
+			Denom:  denom,
+			Amount: sdk.NewInt(0),
+		}
 	}
 
 	var coin sdk.Coin

@@ -45,7 +45,7 @@ func (suite *IntegrationTestSuite) getTestBalancesAndSupply() ([]types.Balance, 
 	addr2Balance := sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}
 
 	totalSupply := addr1Balance
-	totalSupply.Add(addr2Balance...)
+	totalSupply = totalSupply.Add(addr2Balance...)
 	return []types.Balance{
 		{Address: addr2.String(), Coins: addr2Balance},
 		{Address: addr1.String(), Coins: addr1Balance},

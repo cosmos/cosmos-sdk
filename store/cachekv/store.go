@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"sort"
 	"sync"
-	"time"
 	"unsafe"
 
 	tmkv "github.com/tendermint/tendermint/libs/kv"
@@ -205,7 +204,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	for key := range store.unsortedCache {
 		if dbm.IsKeyInDomain(strToByte(key), start, end) {
 			cacheValue := store.cache[key]
-			unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+			unsorted = append(unsorted, &tmkv.Pair{Key: []byte(key), Value: cacheValue.value})
 		}
 	}
 

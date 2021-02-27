@@ -111,8 +111,12 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		// TypeLocal needs an additional step to ask password.
 		// The other keyring types are handled by ImportInfo.
 		if keyType != keyring.TypeLocal {
-			err = migrator.ImportInfo(oldInfo)
-			if err != nil {
+			infoImporter, ok := migrator.(keyring.InfoImporter)
+			if !ok {
+				return fmt.Errorf("the Keyring implementation does not support import operations of Info types.")
+			}
+
+			if err = infoImporter.ImportInfo(oldInfo); err != nil {
 				return err
 			}
 

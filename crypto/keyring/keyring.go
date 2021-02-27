@@ -107,17 +107,19 @@ type Signer interface {
 	SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error)
 }
 
-// Importer is implemented by key stores that support import of info, public and private keys.
+// Importer is implemented by key stores that support import of public and private keys.
 type Importer interface {
 	// ImportPrivKey imports ASCII armored passphrase-encrypted private keys.
 	ImportPrivKey(uid, armor, passphrase string) error
 
 	// ImportPubKey imports ASCII armored public keys.
 	ImportPubKey(uid string, armor string) error
+}
 
-	// ImportInfo takes a keyring.Info (in practise, from an old keyring), and
-	// writes it to the current keyring. We use it to migrate Type{Multi,Ledger,Offline}
-	// keyring.Infos.
+// InfoImporter is implemented by key stores that support import of Info types.
+type InfoImporter interface {
+	// ImportInfo import a keyring.Info into the current keyring.
+	// It is used to migrate multisig, ledger, and public key Info structure.
 	ImportInfo(oldInfo Info) error
 }
 

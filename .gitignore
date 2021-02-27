@@ -17,6 +17,8 @@ examples/build/*
 docs/_build
 docs/tutorial
 docs/node_modules
+dev/testnet
+dev/cache
 dist
 tools-stamp
 

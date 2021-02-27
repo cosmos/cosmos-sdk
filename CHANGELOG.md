@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ###Improvements
 
-* (store/cachekv), (x/bank/types) #8719 algorithmically fix pathologically slow code
+* [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) (store/cachekv), (x/bank/types) algorithmically fix pathologically slow code
 
 
 ## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18

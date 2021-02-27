@@ -35,6 +35,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* (store/cachekv), (x/bank/types) #8719 algorithmically fix pathologically slow code
+
+
+
 ## [v0.39.3]
 
 ### Improvements

@@ -113,7 +113,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		if keyType != keyring.TypeLocal {
 			infoImporter, ok := migrator.(keyring.InfoImporter)
 			if !ok {
-				return fmt.Errorf("the Keyring implementation does not support import operations of Info types.")
+				return fmt.Errorf("the Keyring implementation does not support import operations of Info types")
 			}
 
 			if err = infoImporter.ImportInfo(oldInfo); err != nil {

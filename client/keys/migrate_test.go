@@ -36,7 +36,7 @@ func Test_runMigrateCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
-	mockIn.Reset("test1234\ntest1234\n")
+	mockIn.Reset("\n12345678\n\n\n\n\n")
 	t.Log(mockOut.String())
 	assert.NoError(t, cmd.ExecuteContext(ctx))
 }

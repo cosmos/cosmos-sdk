@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -236,8 +237,28 @@ func (aa AccAddress) Bytes() []byte {
 	return aa
 }
 
+// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
+// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
+// With the string interning below, we are able to achieve zero cost allocations for string->[]byte
+// because the Go compiler recognizes the special case of map[string([]byte)] when used exactly
+// in that pattern. See https://github.com/cosmos/cosmos-sdk/issues/8693.
+var addMu sync.Mutex
+var addrStrMemoize = make(map[string]string)
+
 // String implements the Stringer interface.
-func (aa AccAddress) String() string {
+func (aa AccAddress) String() (str string) {
+	addMu.Lock()
+	defer addMu.Unlock()
+
+	if str, ok := addrStrMemoize[string(aa)]; ok {
+		return str
+	}
+
+	// Otherwise cache it for later memoization.
+	defer func() {
+		addrStrMemoize[string(aa)] = str
+	}()
+
 	if aa.Empty() {
 		return ""
 	}

@@ -189,9 +189,9 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, supply sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	for _, coin := range supply {
-		bz := k.cdc.MustMarshalBinaryBare(&coin)
-		supplyStore.Set([]byte(coin.Denom), bz)
+	for i := range supply {
+		bz := k.cdc.MustMarshalBinaryBare(&supply[i])
+		supplyStore.Set([]byte(supply[i].Denom), bz)
 	}
 }
 

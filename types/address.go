@@ -73,6 +73,22 @@ const (
 	Bech32PrefixConsPub = Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
 )
 
+// cache variables
+var (
+	// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
+	// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
+	addrMu    sync.Mutex
+	addrCache *simplelru.LRU
+)
+
+func init() {
+	var err error
+	addrCache, err = simplelru.NewLRU(1000, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // Address is a common interface for different types of addresses used by the SDK
 type Address interface {
 	Equals(Address) bool
@@ -233,23 +249,18 @@ func (aa AccAddress) Bytes() []byte {
 	return aa
 }
 
-// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
-// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
-var addMu sync.Mutex
-var addrStrMemoize, _ = simplelru.NewLRU(1000, nil)
-
 // String implements the Stringer interface.
 func (aa AccAddress) String() string {
 	var key = string(aa)
-	if str, ok := addrStrMemoize.Get(key); ok {
+	if str, ok := addrCache.Get(key); ok {
 		return str.(string)
 	}
 	// Otherwise cache it for later memoization.
 
 	if aa.Empty() {
-		addMu.Lock()
-		addrStrMemoize.Add(key, "")
-		addMu.Unlock()
+		addrMu.Lock()
+		addrCache.Add(key, "")
+		addrMu.Unlock()
 		return ""
 	}
 
@@ -259,9 +270,9 @@ func (aa AccAddress) String() string {
 		panic(err)
 	}
 
-	addMu.Lock()
-	addrStrMemoize.Add(key, bech32Addr)
-	addMu.Unlock()
+	addrMu.Lock()
+	addrCache.Add(key, bech32Addr)
+	addrMu.Unlock()
 	return bech32Addr
 }
 

@@ -34,15 +34,27 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.41.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-03-02
 
 **IMPORTANT**: Due to a bug in the v0.41.x series with how evidence handles validator consensus addresses #8461, SDK based chains that are not using the default bech32 prefix (cosmos, aka all chains except for the Cosmos Hub) should not use this release or any release in the v0.41.x series. Please see #8668 for tracking & timeline for the v0.42.0 release, which will include a fix for this issue.
 
+### Features
 
-###Improvements
+* [\#7787](https://github.com/cosmos/cosmos-sdk/pull/7787) Add multisign-batch command.
 
-* [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) (store/cachekv), (x/bank/types) algorithmically fix pathologically slow code
+### Bug fixes
 
+* [\#8730](https://github.com/cosmos/cosmos-sdk/pull/8730) Allow REST endpoint to query txs with multisig addresses.
+* [\#8680](https://github.com/cosmos/cosmos-sdk/issues/8680) Fix missing timestamp in GetTxsEvent response [\#8732](https://github.com/cosmos/cosmos-sdk/pull/8732).
+* [\#8681](https://github.com/cosmos/cosmos-sdk/issues/8681) Fix missing error message when calling GetTxsEvent [\#8732](https://github.com/cosmos/cosmos-sdk/pull/8732)
+* (server) [\#8641](https://github.com/cosmos/cosmos-sdk/pull/8641) Fix Tendermint and application configuration reading from file
+* (client/keys) [\#8639] (https://github.com/cosmos/cosmos-sdk/pull/8639) Fix keys migrate for mulitisig, offline, and ledger keys. The migrate command now takes a positional old_home_dir argument.
+
+### Improvements
+
+* (store/cachekv), (x/bank/types) [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) algorithmically fix pathologically slow code
+* [\#8701](https://github.com/cosmos/cosmos-sdk/pull/8701) Upgrade tendermint v0.34.8.
+* [\#8714](https://github.com/cosmos/cosmos-sdk/pull/8714) Allow accounts to have a balance of 0 at genesis.
 
 ## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
 

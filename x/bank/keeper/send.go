@@ -83,7 +83,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 			return err
 		}
 
-		err = k.subtractCoins(ctx, inAddress, in.Coins)
+		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
 		if err != nil {
 			return err
 		}
@@ -144,7 +144,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		),
 	})
 
-	err := k.subtractCoins(ctx, fromAddr, amt)
+	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -167,9 +167,10 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	return nil
 }
 
-// subtractCoins removes amt coins the account by the given address. An error is
+// subUnlockedCoins removes the unlocked amt coins of the given account. An error is
 // returned if the resulting balance is negative or the initial amount is invalid.
-func (k BaseSendKeeper) subtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+// A coin_spent event is emitted after.
+func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -194,12 +195,15 @@ func (k BaseSendKeeper) subtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 		}
 	}
 
+	// emit coin spent event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinSpentEvent(addr, amt),
+	)
 	return nil
 }
 
-// addCoins adds amt to the account balance given by the provided address. An
-// error is returned if the initial amount is invalid or if any resulting new
-// balance is negative.
+// addCoins increase the addr balance by the given amt. Fails if the provided amt is invalid.
+// It emits a coin received event.
 func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
@@ -215,11 +219,16 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 		}
 	}
 
+	// emit coin received event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinReceivedEvent(addr, amt),
+	)
+
 	return nil
 }
 
-// ClearBalances removes all balances for a given account by address.
-func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
+// clearBalances removes all balances for a given account by address.
+func (k BaseSendKeeper) clearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 	keys := [][]byte{}
 	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
 		keys = append(keys, []byte(balance.Denom))
@@ -237,7 +246,7 @@ func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 // clear out all balances prior to setting the new coins as to set existing balances
 // to zero if they don't exist in amt. An error is returned upon failure.
 func (k BaseSendKeeper) setBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	k.ClearBalances(ctx, addr)
+	k.clearBalances(ctx, addr)
 
 	for _, balance := range balances {
 		err := k.setBalance(ctx, addr, balance)

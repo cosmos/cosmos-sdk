@@ -1501,6 +1501,8 @@ a basic token.
 | `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
 | `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
 | `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
+| `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom) |
+| `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display. |
 
 
 

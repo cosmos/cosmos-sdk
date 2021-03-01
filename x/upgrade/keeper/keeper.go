@@ -140,8 +140,14 @@ func (k Keeper) ClearIBCState(ctx sdk.Context, lastHeight int64) {
 	store.Delete(types.UpgradedConsStateKey(lastHeight))
 }
 
-// ClearUpgradePlan clears any schedule upgrade
+// ClearUpgradePlan clears any schedule upgrade and associated IBC states.
 func (k Keeper) ClearUpgradePlan(ctx sdk.Context) {
+	// clear IBC states everytime upgrade plan is removed
+	oldPlan, found := k.GetUpgradePlan(ctx)
+	if found {
+		k.ClearIBCState(ctx, oldPlan.Height)
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.PlanKey())
 }

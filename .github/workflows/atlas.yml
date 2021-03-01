@@ -20,7 +20,8 @@ jobs:
         with:
           PATTERNS: |
             x/auth/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/auth/atlas/atlas.toml
@@ -35,7 +36,8 @@ jobs:
         with:
           PATTERNS: |
             x/bank/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/bank/atlas/atlas.toml
@@ -50,7 +52,8 @@ jobs:
         with:
           PATTERNS: |
             x/capability/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/capability/atlas/atlas.toml
@@ -65,7 +68,8 @@ jobs:
         with:
           PATTERNS: |
             x/crisis/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/crisis/atlas/atlas.toml
@@ -80,7 +84,8 @@ jobs:
         with:
           PATTERNS: |
             x/distribution/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/distribution/atlas/atlas.toml
@@ -95,7 +100,8 @@ jobs:
         with:
           PATTERNS: |
             x/evidence/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/evidence/atlas/atlas.toml
@@ -110,7 +116,8 @@ jobs:
         with:
           PATTERNS: |
             x/feegrant/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/feegrant/atlas/atlas.toml
@@ -125,7 +132,8 @@ jobs:
         with:
           PATTERNS: |
             x/gov/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/gov/atlas/atlas.toml
@@ -140,7 +148,8 @@ jobs:
         with:
           PATTERNS: |
             x/mint/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/mint/atlas/atlas.toml
@@ -155,7 +164,8 @@ jobs:
         with:
           PATTERNS: |
             x/params/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/params/atlas/atlas.toml
@@ -170,7 +180,8 @@ jobs:
         with:
           PATTERNS: |
             x/slashing/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/slashing/atlas/atlas.toml
@@ -185,7 +196,8 @@ jobs:
         with:
           PATTERNS: |
             x/staking/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/staking/atlas/atlas.toml
@@ -200,7 +212,8 @@ jobs:
         with:
           PATTERNS: |
             x/upgrade/atlas/**
-      - uses: marbar3778/atlas_action@main
+      - name: Cosmos Atlas
+        uses: cosmos/atlas@v0.0.3
         with:
           token: ${{ secrets.ATLAS_TOKEN }}
           path: ./x/upgrade/atlas/atlas.toml

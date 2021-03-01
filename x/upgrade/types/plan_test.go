@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -10,8 +9,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,9 +23,6 @@ func mustParseTime(s string) time.Time {
 }
 
 func TestPlanString(t *testing.T) {
-	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
-	require.NoError(t, err)
-
 	cases := map[string]struct {
 		p      types.Plan
 		expect string
@@ -39,7 +33,7 @@ func TestPlanString(t *testing.T) {
 				Info: "https://foo.bar",
 				Time: mustParseTime("2019-07-08T11:33:55Z"),
 			},
-			expect: "Upgrade Plan\n  Name: due_time\n  Time: 2019-07-08T11:33:55Z\n  Info: https://foo.bar.\n  Upgraded IBC Client: no upgraded client provided",
+			expect: "Upgrade Plan\n  Name: due_time\n  Time: 2019-07-08T11:33:55Z\n  Info: https://foo.bar.",
 		},
 		"with height": {
 			p: types.Plan{
@@ -47,23 +41,13 @@ func TestPlanString(t *testing.T) {
 				Info:   "https://foo.bar/baz",
 				Height: 7890,
 			},
-			expect: "Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.\n  Upgraded IBC Client: no upgraded client provided",
+			expect: "Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.",
 		},
-		"with IBC client": {
-			p: types.Plan{
-				Name:                "by height",
-				Info:                "https://foo.bar/baz",
-				Height:              7890,
-				UpgradedClientState: cs,
-			},
-			expect: fmt.Sprintf("Upgrade Plan\n  Name: by height\n  Height: 7890\n  Info: https://foo.bar/baz.\n  Upgraded IBC Client: %s", &ibctmtypes.ClientState{}),
-		},
-
 		"neither": {
 			p: types.Plan{
 				Name: "almost-empty",
 			},
-			expect: "Upgrade Plan\n  Name: almost-empty\n  Height: 0\n  Info: .\n  Upgraded IBC Client: no upgraded client provided",
+			expect: "Upgrade Plan\n  Name: almost-empty\n  Height: 0\n  Info: .",
 		},
 	}
 
@@ -77,9 +61,6 @@ func TestPlanString(t *testing.T) {
 }
 
 func TestPlanValid(t *testing.T) {
-	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
-	require.NoError(t, err)
-
 	cases := map[string]struct {
 		p     types.Plan
 		valid bool
@@ -89,15 +70,6 @@ func TestPlanValid(t *testing.T) {
 				Name: "all-good",
 				Info: "some text here",
 				Time: mustParseTime("2019-07-08T11:33:55Z"),
-			},
-			valid: true,
-		},
-		"proper ibc upgrade": {
-			p: types.Plan{
-				Name:                "ibc-all-good",
-				Info:                "some text here",
-				Height:              123450000,
-				UpgradedClientState: cs,
 			},
 			valid: true,
 		},
@@ -124,15 +96,6 @@ func TestPlanValid(t *testing.T) {
 				Name:   "minus",
 				Height: -12345,
 			},
-		},
-		"time due date defined for IBC plan": {
-			p: types.Plan{
-				Name:                "ibc-all-good",
-				Info:                "some text here",
-				Time:                mustParseTime("2019-07-08T11:33:55Z"),
-				UpgradedClientState: cs,
-			},
-			valid: false,
 		},
 	}
 

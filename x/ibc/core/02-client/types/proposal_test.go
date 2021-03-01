@@ -130,11 +130,17 @@ func (suite *TypesTestSuite) TestUpgradeProposalValidateBasic() {
 			}, false,
 		},
 		{
+			"plan height is zero", func() {
+				invalidPlan := upgradetypes.Plan{Name: "ibc upgrade", Height: 0}
+				proposal, err = types.NewUpgradeProposal(ibctesting.Title, ibctesting.Description, invalidPlan, cs)
+				suite.Require().NoError(err)
+			}, false,
+		},
+		{
 			"plan time is not set to 0", func() {
 				invalidPlan := upgradetypes.Plan{Name: "ibc upgrade", Time: time.Now()}
 				proposal, err = types.NewUpgradeProposal(ibctesting.Title, ibctesting.Description, invalidPlan, cs)
 				suite.Require().NoError(err)
-
 			}, false,
 		},
 		{

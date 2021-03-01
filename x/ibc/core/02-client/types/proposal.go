@@ -111,12 +111,12 @@ func (up *UpgradeProposal) ValidateBasic() error {
 		return err
 	}
 
-	if up.Plan.Height <= 0 {
-		return sdkerrors.Wrap(ErrInvalidUpgradeProposal, "IBC chain upgrades must set a positive height")
-	}
-
 	if up.Plan.Time.Unix() > 0 {
 		return sdkerrors.Wrap(ErrInvalidUpgradeProposal, "IBC chain upgrades must only set height")
+	}
+
+	if up.Plan.Height <= 0 {
+		return sdkerrors.Wrap(ErrInvalidUpgradeProposal, "IBC chain upgrades must set a positive height")
 	}
 
 	if up.UpgradedClientState == nil {

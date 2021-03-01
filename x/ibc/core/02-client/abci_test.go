@@ -72,6 +72,7 @@ func (suite *ClientTestSuite) TestBeginBlockerConsensusState() {
 	store := suite.chainA.GetContext().KVStore(suite.chainA.App.GetKey(upgradetypes.StoreKey))
 	bz := suite.chainA.App.AppCodec().MustMarshalBinaryBare(plan)
 	store.Set(upgradetypes.PlanKey(), bz)
+	suite.chainA.App.IBCKeeper.ClientKeeper.SetUpgradePlanHeight(suite.chainA.GetContext(), uint64(plan.Height))
 
 	nextValsHash := []byte("nextValsHash")
 	newCtx := suite.chainA.GetContext().WithBlockHeader(tmproto.Header{

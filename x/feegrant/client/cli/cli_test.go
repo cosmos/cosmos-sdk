@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -619,7 +620,9 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	val := s.network.Validators[0]
 
 	granter := val.Address
-	grantee := s.network.Validators[2].Address
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	grantee := sdk.AccAddress(info.GetPubKey().Address())
 
 	clientCtx := val.ClientCtx
 
@@ -628,7 +631,9 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
-	spendLimit := "100stake"
+	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
+
+	allowMsgs := "/cosmos.gov.v1beta1.Msg/SubmitProposal"
 
 	testCases := []struct {
 		name         string
@@ -643,8 +648,8 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				[]string{
 					"wrong granter",
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, "vote"),
-					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit),
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -657,8 +662,8 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				[]string{
 					granter.String(),
 					"wrong grantee",
-					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, "vote"),
-					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit),
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -671,8 +676,8 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				[]string{
 					granter.String(),
 					grantee.String(),
-					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, "vote"),
-					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit),
+					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, allowMsgs),
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
@@ -706,6 +711,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
 
+	// get filtered fee allowance and check info
 	cmd := cli.GetCmdQueryFeeGrant()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -717,8 +723,69 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	s.Require().Equal(resp.Granter, resp.Granter)
 	s.Require().Equal(
 		resp.GetFeeGrant().(*types.FilteredFeeAllowance).GetAllowance().(*types.BasicFeeAllowance).SpendLimit.String(),
-		spendLimit,
+		spendLimit.String(),
 	)
+
+	// exec filtered fee allowance
+	cases := []struct {
+		name         string
+		malleate     func() (testutil.BufferWriter, error)
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"valid tx",
+			func() (testutil.BufferWriter, error) {
+				out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+					"Text Proposal", "No desc", govtypes.ProposalTypeText,
+					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
+				)
+
+				return out, err
+			},
+			false,
+			&sdk.TxResponse{},
+			0,
+		},
+		{
+			"should fail with unauthorized msgs",
+			func() (testutil.BufferWriter, error) {
+				args := append(
+					[]string{
+						grantee.String(),
+						"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
+						fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+						fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter),
+					},
+					commonFlags...,
+				)
+				cmd := cli.NewCmdFeeGrant()
+				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+
+				return out, err
+			},
+			false, &sdk.TxResponse{}, 7,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			out, err := tc.malleate()
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

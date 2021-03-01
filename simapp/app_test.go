@@ -25,8 +25,6 @@ import (
 	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -174,7 +172,6 @@ func TestRunMigrations(t *testing.T) {
 					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 					"vesting":      vesting.AppModule{}.ConsensusVersion(),
 					"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
-					"transfer":     transfer.AppModule{}.ConsensusVersion(),
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"crisis":       crisis.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),

@@ -242,7 +242,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			err = k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[3], expired)
 			suite.Require().NoError(err)
 
-			err = k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee, []string{})
+			err = k.UseGrantedFees(ctx, tc.granter, tc.grantee, tc.fee, []sdk.Msg{})
 			if tc.allowed {
 				suite.NoError(err)
 			} else {

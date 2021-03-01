@@ -55,7 +55,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 	if ssType == Unknown {
 		return nil, fmt.Errorf("unrecognized streaming service name %s", name)
 	}
-	if constructor, ok := ServiceConstructorLookupTable[ssType]; ok {
+	if constructor, ok := ServiceConstructorLookupTable[ssType]; ok && constructor != nil {
 		return constructor, nil
 	}
 	return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())

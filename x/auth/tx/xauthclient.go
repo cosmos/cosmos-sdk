@@ -1,9 +1,7 @@
 // Package tx 's xauthclient.go file is copy-pasted from
 // https://github.com/cosmos/cosmos-sdk/blob/v0.41.3/x/auth/client/query.go
 // It is duplicated as to not introduce any breaking change in 0.41.4, see PR:
-// TODO
-// It is refactored and removed in the following PR:
-// TODO
+// https://github.com/cosmos/cosmos-sdk/pull/8732#discussion_r584746947
 package tx
 
 import (

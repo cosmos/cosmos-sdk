@@ -9,7 +9,11 @@ description = "Staking is responsible for handling any logic related to Proof of
 homepage = "https://github.com/cosmos/cosmos-sdk"
 
 #List of key words describing your module (Optional)
-keywords = []
+keywords = [
+  "staking",
+  "PoS",
+  "Proof of Stake"
+]
 
 
 [bug_tracker]

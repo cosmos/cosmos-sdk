@@ -1,6 +1,6 @@
 # x/feegrant
 
-The `x/feegrant` module distributes fees and staking rewards to users.
+The `x/feegrant` module allows accounts to grant fee allowances and to use fees from their accounts.
 
 ## Usage
 
@@ -72,7 +72,7 @@ The `x/feegrant` module distributes fees and staking rewards to users.
    }
    ```
 
-9. Set the `x/distribution` module begin blocker order.
+9. Set the `x/feegrant` module begin blocker order.
 
     ```go
     func NewApp(...) *App {
@@ -85,7 +85,7 @@ The `x/feegrant` module distributes fees and staking rewards to users.
     }
     ```
 
-10.  Set the `x/distribution` module genesis order.
+10.  Set the `x/feegrant` module genesis order.
 
    ```go
    func NewApp(...) *App {
@@ -94,7 +94,7 @@ The `x/feegrant` module distributes fees and staking rewards to users.
    }
    ```
 
-11. Add the `x/distribution` module to the simulation manager (if you have one set).
+11. Add the `x/feegrant` module to the simulation manager (if you have one set).
 
    ```go
    func NewApp(...) *App {
@@ -108,46 +108,37 @@ The `x/feegrant` module distributes fees and staking rewards to users.
 
 ## Genesis
 
-The `x/distribution` module defines its genesis state as follows:
+The `x/feegrant` module defines its genesis state as follows:
 
 ```proto
-// DelegatorWithdrawInfo is the address for where distributions rewards are
-// withdrawn to by default this struct is only used at genesis to feed in
-// default withdraw addresses.
-type DelegatorWithdrawInfo struct {
-	// delegator_address is the address of the delegator.
-	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	// withdraw_address is the address to withdraw the delegation rewards to.
-	WithdrawAddress string `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
+// GenesisState contains a set of fee allowances, persisted from the store
+type GenesisState struct {
+	FeeAllowances []FeeAllowanceGrant `protobuf:"bytes,1,rep,name=fee_allowances,json=feeAllowances,proto3" json:"fee_allowances"`
 }
 ```
 
 ## Messages
 
-The distribution module provides interaction via command line, REST and gRPC.
+The feegrant module provides interaction via command line, REST and gRPC.
 
 ### CLI
 
 #### Queries
 
 ```sh
-app q distribution
-Querying commands for the distribution module
+app q feegrant          
+Querying commands for the feegrant module
 
 Usage:
-  app query distribution [flags]
-  app query distribution [command]
+  app query feegrant [flags]
+  app query feegrant [command]
 
 Available Commands:
-  commission                    Query distribution validator commission
-  community-pool                Query the amount of coins in the community pool
-  params                        Query distribution params
-  rewards                       Query all distribution delegator rewards or rewards from a particular validator
-  slashes                       Query distribution validator slashes
-  validator-outstanding-rewards Query distribution outstanding (un-withdrawn) rewards for a validator and all their delegations
+  grant       Query details of a single grant
+  grants      Query all grants of a grantee
 
 Flags:
-  -h, --help   help for distribution
+  -h, --help   help for feegrant
 
 Global Flags:
       --chain-id string     The network chain ID
@@ -156,27 +147,25 @@ Global Flags:
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors
 
-Use "app query distribution [command] --help" for more information about a command.
+Use "app query feegrant [command] --help" for more information about a command.
 ```
 
 #### Transactions
 
 ```sh
-app tx distribution
-Distribution transactions subcommands
+app tx feegrant
+Grant and revoke fee allowance for a grantee by a granter
 
 Usage:
-  app tx distribution [flags]
-  app tx distribution [command]
+  app tx feegrant [flags]
+  app tx feegrant [command]
 
 Available Commands:
-  fund-community-pool  Funds the community pool with the specified amount
-  set-withdraw-addr    change the default withdraw address for rewards associated with an address
-  withdraw-all-rewards withdraw all delegations rewards for a delegator
-  withdraw-rewards     Withdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator
+  grant       Grant Fee allowance to an address
+  revoke      revoke fee-grant
 
 Flags:
-  -h, --help   help for distribution
+  -h, --help   help for feegrant
 
 Global Flags:
       --chain-id string     The network chain ID
@@ -185,24 +174,22 @@ Global Flags:
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors
 
-Use "app tx distribution [command] --help" for more information about a command.
+Use "app tx feegrant [command] --help" for more information about a command.
 ```
 
 
 ### REST
 
-Evidence REST API supports only queries of evidence. To submit evidence please use gRPC or the cli.
+Feegrant REST API supports queries and transactions. 
 
 ### gRPC
 
-Evidence supports both querying and submitting transactions via gRPC
+Feegrant supports both querying and submitting transactions via gRPC
 
 #### Query
 
-[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos/distribution/v1beta1/query.proto)
+[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos/feegrant/v1beta1/query.proto)
 
 #### Tx
 
-[gRPC Tx](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-distribution-v1beta1-tx-proto)
-
-View supported messages at [docs.cosmos.network/v0.40/modules/distribution](https://docs.cosmos.network/master/modules/distribution/04_messages.html)
+[gRPC Tx](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-feegrant-v1beta1-tx-proto)

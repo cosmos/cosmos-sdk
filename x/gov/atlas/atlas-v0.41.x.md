@@ -1,7 +1,7 @@
 
 # x/gov
 
-Gov governs the protocol. There are multiple 
+Gov governs the protocol. There are multiple proposals one can make. 
 
 ## Usage
 
@@ -47,7 +47,7 @@ Gov governs the protocol. There are multiple
       // ...
     }
   ```
-5. Add the <module_name> store key to the group of store keys.
+5. Add the gov store key to the group of store keys.
  
   ```go
    func NewApp(...) *App {
@@ -147,32 +147,92 @@ type GenesisState struct {
 
 ## Messages
 
-<!-- Todo: add a short description about client interactions -->
+Gov supports cli, REST and gRPC for all queries and messages
 
 ### CLI
-<!-- Todo: add a short description about client interactions -->
+
+CLI support for the gov module is for both transactions and queries. Below you will see a print out of the commands. 
 
 #### Queries
-<!-- Todo: add a short description about cli query interactions -->
+
+```sh
+app q gov      
+Querying commands for the governance module
+
+Usage:
+  app query gov [flags]
+  app query gov [command]
+
+Available Commands:
+  deposit     Query details of a deposit
+  deposits    Query deposits on a proposal
+  param       Query the parameters (voting|tallying|deposit) of the governance process
+  params      Query the parameters of the governance process
+  proposal    Query details of a single proposal
+  proposals   Query proposals with optional filters
+  proposer    Query the proposer of a governance proposal
+  tally       Get the tally of a proposal vote
+  vote        Query details of a single vote
+  votes       Query votes on a proposal
+
+Flags:
+  -h, --help   help for gov
+
+Global Flags:
+      --chain-id string     The network chain ID
+      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
+      --log_format string   The logging format (json|plain) (default "plain")
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --trace               print out full stack trace on errors
+
+Use "app query gov [command] --help" for more information about a command.
+```
 
 #### Transactions
-<!-- Todo: add a short description about cli transaction interactions -->
+
+```sh
+app tx gov
+Governance transactions subcommands
+
+Usage:
+  app tx gov [flags]
+  app tx gov [command]
+
+Available Commands:
+  deposit         Deposit tokens for an active proposal
+  submit-proposal Submit a proposal along with an initial deposit
+  vote            Vote for an active proposal, options: yes/no/no_with_veto/abstain
+  weighted-vote   Vote for an active proposal, options: yes/no/no_with_veto/abstain
+
+Flags:
+  -h, --help   help for gov
+
+Global Flags:
+      --chain-id string     The network chain ID
+      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
+      --log_format string   The logging format (json|plain) (default "plain")
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --trace               print out full stack trace on errors
+
+Use "app tx gov [command] --help" for more information about a command.
+```
 
 
 ### REST
-<!-- Todo: add a short description about REST interactions -->
 
-#### Query
-<!-- Todo: add a short description about REST query interactions -->
-
-#### Tx
-<!-- Todo: add a short description about REST transaction interactions -->
+The rest api endpoints can be found here https://cosmos.network/rpc/master under the governance section.
 
 ### gRPC
-<!-- Todo: add a short description about gRPC interactions -->
+
+Gov supports both queries and transactions for gRPC. 
 
 #### Query
-<!-- Todo: add a short description about gRPC query interactions -->
+
+[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-gov-v1beta1-query-proto)
 
 #### Tx
-<!-- Todo: add a short description about gRPC transactions interactions -->
+
+[gRPC Tx](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-gov-v1beta1-tx-proto)
+
+
+View supported messages at [docs.cosmos.network/v0.41/modules/gov](https://docs.cosmos.network/v0.41/modules/gov/03_messages.html)

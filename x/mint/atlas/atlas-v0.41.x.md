@@ -129,32 +129,49 @@ type GenesisState struct {
 
 ## Messages
 
-<!-- Todo: add a short description about client interactions -->
+The mint module supports a command line interface, REST and gRPC APIs. There are no transaction APIs only query APIs.
 
 ### CLI
-<!-- Todo: add a short description about client interactions -->
+
+Mint up
 
 #### Queries
-<!-- Todo: add a short description about cli query interactions -->
 
-#### Transactions
-<!-- Todo: add a short description about cli transaction interactions -->
+```sh
+app q mint
+Querying commands for the minting module
+
+Usage:
+  app query mint [flags]
+  app query mint [command]
+
+Available Commands:
+  annual-provisions Query the current minting annual provisions value
+  inflation         Query the current minting inflation value
+  params            Query the current minting parameters
+
+Flags:
+  -h, --help   help for mint
+
+Global Flags:
+      --chain-id string     The network chain ID
+      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
+      --log_format string   The logging format (json|plain) (default "plain")
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --trace               print out full stack trace on errors
+
+Use "app query mint [command] --help" for more information about a command.
+```
 
 
 ### REST
-<!-- Todo: add a short description about REST interactions -->
 
-#### Query
-<!-- Todo: add a short description about REST query interactions -->
-
-#### Tx
-<!-- Todo: add a short description about REST transaction interactions -->
+The rest api endpoints can be found here https://cosmos.network/rpc/master under the mint section.
 
 ### gRPC
-<!-- Todo: add a short description about gRPC interactions -->
+
+mint supports both queries and transactions for gRPC. 
 
 #### Query
-<!-- Todo: add a short description about gRPC query interactions -->
 
-#### Tx
-<!-- Todo: add a short description about gRPC transactions interactions -->
+[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-mint-v1beta1-query-proto)

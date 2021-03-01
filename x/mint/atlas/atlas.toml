@@ -9,7 +9,12 @@ description = "Mint handles the minting of new tokens. This can be associated wi
 homepage = "https://github.com/cosmos/cosmos-sdk"
 
 #List of key words describing your module (Optional)
-keywords = []
+keywords = [
+  "mint",
+  "brrr",
+  "inflation",
+  "issuance",
+]
 
 
 [bug_tracker]

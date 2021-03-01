@@ -109,7 +109,6 @@ type GenesisState struct {
 	// module.
 	ConstantFee types.Coin `protobuf:"bytes,3,opt,name=constant_fee,json=constantFee,proto3" json:"constant_fee" yaml:"constant_fee"`
 }
-}
 ```
 
 ## Messages

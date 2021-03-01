@@ -3,7 +3,7 @@
 name = "x/distribution"
 
 # Description of the module. (Optional)
-description = ""
+description = "Distribution is responsible for distributing fees and staking rewards to users."
 
 # Link to where the module is located, it can also be a link to your project. (Optional)
 homepage = "https://github.com/cosmos/cosmos-sdk"

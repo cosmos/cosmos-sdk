@@ -1,7 +1,7 @@
 
 # x/slashing
 
-Mint handles the minting of new tokens. This can be associated with a inflation rate.
+Slashing is responsible for punishing malicious actors.
 
 ## Usage
 
@@ -123,32 +123,80 @@ type GenesisState struct {
 
 ## Messages
 
-<!-- Todo: add a short description about client interactions -->
+Slashing has both queries and transactions. They can be used in the command line interface, REST and gRPC APIs.
 
 ### CLI
-<!-- Todo: add a short description about client interactions -->
 
 #### Queries
-<!-- Todo: add a short description about cli query interactions -->
+
+```sh
+app q slashing
+Querying commands for the slashing module
+
+Usage:
+  app query slashing [flags]
+  app query slashing [command]
+
+Available Commands:
+  params        Query the current slashing parameters
+  signing-info  Query a validator's signing information
+  signing-infos Query signing information of all validators
+
+Flags:
+  -h, --help   help for slashing
+
+Global Flags:
+      --chain-id string     The network chain ID
+      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
+      --log_format string   The logging format (json|plain) (default "plain")
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --trace               print out full stack trace on errors
+
+Use "app query slashing [command] --help" for more information about a command.
+```
 
 #### Transactions
-<!-- Todo: add a short description about cli transaction interactions -->
+
+```sh
+app tx slashing                                                                                   
+Slashing transaction subcommands
+
+Usage:
+  app tx slashing [flags]
+  app tx slashing [command]
+
+Available Commands:
+  unjail      unjail validator previously jailed for downtime
+
+Flags:
+  -h, --help   help for slashing
+
+Global Flags:
+      --chain-id string     The network chain ID
+      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
+      --log_format string   The logging format (json|plain) (default "plain")
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --trace               print out full stack trace on errors
+
+Use "app tx slashing [command] --help" for more information about a command.
+```
 
 
 ### REST
-<!-- Todo: add a short description about REST interactions -->
 
-#### Query
-<!-- Todo: add a short description about REST query interactions -->
+The REST api for slashing can be found here https://cosmos.network/rpc/master under the slashing section. 
 
-#### Tx
-<!-- Todo: add a short description about REST transaction interactions -->
 
 ### gRPC
-<!-- Todo: add a short description about gRPC interactions -->
+
+gRPC supports both queries and transactions for the slashing module. 
 
 #### Query
-<!-- Todo: add a short description about gRPC query interactions -->
+
+[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos/slashing/v1beta1/query.proto)
 
 #### Tx
-<!-- Todo: add a short description about gRPC transactions interactions -->
+
+[gRPC Tx](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-slashing-v1beta1-tx-proto)
+
+View supported messages at [docs.cosmos.network/v0.41/modules/slashing](https://docs.cosmos.network/v0.41/modules/slashing/03_messages.html)

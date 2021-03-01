@@ -3,7 +3,7 @@
 name = "x/crisis"
 
 # Description of the module. (Optional)
-description = ""
+description = "Crisis handles invairant checks and stops the world if anything arises."
 
 # Link to where the module is located, it can also be a link to your project. (Optional)
 homepage = "https://github.com/cosmos/cosmos-sdk"

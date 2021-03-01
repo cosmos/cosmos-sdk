@@ -9,7 +9,9 @@ description = "The upgrade module handles live chain upgrades of the application
 homepage = "https://github.com/cosmos/cosmos-sdk"
 
 #List of key words describing your module (Optional)
-keywords = []
+keywords = [
+  "upgrade",
+]
 
 
 [bug_tracker]

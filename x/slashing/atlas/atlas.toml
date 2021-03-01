@@ -9,7 +9,10 @@ description = "Slashing is responsible for reduce the voting power of a validato
 homepage = "https://github.com/cosmos/cosmos-sdk"
 
 #List of key words describing your module (Optional)
-keywords = []
+keywords = [
+  "misbehaviour",
+  "slashing",
+]
 
 
 [bug_tracker]

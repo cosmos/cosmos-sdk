@@ -130,20 +130,34 @@ The `x/distribution` module distributes fees and staking rewards to users.
 The `x/distribution` module defines its genesis state as follows:
 
 ```proto
-// DelegatorWithdrawInfo is the address for where distributions rewards are
-// withdrawn to by default this struct is only used at genesis to feed in
-// default withdraw addresses.
-type DelegatorWithdrawInfo struct {
-	// delegator_address is the address of the delegator.
-	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty" yaml:"delegator_address"`
-	// withdraw_address is the address to withdraw the delegation rewards to.
-	WithdrawAddress string `protobuf:"bytes,2,opt,name=withdraw_address,json=withdrawAddress,proto3" json:"withdraw_address,omitempty" yaml:"withdraw_address"`
+// GenesisState defines the distribution module's genesis state.
+type GenesisState struct {
+	// params defines all the paramaters of the module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params" yaml:"params"`
+	// fee_pool defines the fee pool at genesis.
+	FeePool FeePool `protobuf:"bytes,2,opt,name=fee_pool,json=feePool,proto3" json:"fee_pool" yaml:"fee_pool"`
+	// fee_pool defines the delegator withdraw infos at genesis.
+	DelegatorWithdrawInfos []DelegatorWithdrawInfo `protobuf:"bytes,3,rep,name=delegator_withdraw_infos,json=delegatorWithdrawInfos,proto3" json:"delegator_withdraw_infos" yaml:"delegator_withdraw_infos"`
+	// fee_pool defines the previous proposer at genesis.
+	PreviousProposer string `protobuf:"bytes,4,opt,name=previous_proposer,json=previousProposer,proto3" json:"previous_proposer,omitempty" yaml:"previous_proposer"`
+	// fee_pool defines the outstanding rewards of all validators at genesis.
+	OutstandingRewards []ValidatorOutstandingRewardsRecord `protobuf:"bytes,5,rep,name=outstanding_rewards,json=outstandingRewards,proto3" json:"outstanding_rewards" yaml:"outstanding_rewards"`
+	// fee_pool defines the accumulated commisions of all validators at genesis.
+	ValidatorAccumulatedCommissions []ValidatorAccumulatedCommissionRecord `protobuf:"bytes,6,rep,name=validator_accumulated_commissions,json=validatorAccumulatedCommissions,proto3" json:"validator_accumulated_commissions" yaml:"validator_accumulated_commissions"`
+	// fee_pool defines the historical rewards of all validators at genesis.
+	ValidatorHistoricalRewards []ValidatorHistoricalRewardsRecord `protobuf:"bytes,7,rep,name=validator_historical_rewards,json=validatorHistoricalRewards,proto3" json:"validator_historical_rewards" yaml:"validator_historical_rewards"`
+	// fee_pool defines the current rewards of all validators at genesis.
+	ValidatorCurrentRewards []ValidatorCurrentRewardsRecord `protobuf:"bytes,8,rep,name=validator_current_rewards,json=validatorCurrentRewards,proto3" json:"validator_current_rewards" yaml:"validator_current_rewards"`
+	// fee_pool defines the delegator starting infos at genesis.
+	DelegatorStartingInfos []DelegatorStartingInfoRecord `protobuf:"bytes,9,rep,name=delegator_starting_infos,json=delegatorStartingInfos,proto3" json:"delegator_starting_infos" yaml:"delegator_starting_infos"`
+	// fee_pool defines the validator slash events at genesis.
+	ValidatorSlashEvents []ValidatorSlashEventRecord `protobuf:"bytes,10,rep,name=validator_slash_events,json=validatorSlashEvents,proto3" json:"validator_slash_events" yaml:"validator_slash_events"`
 }
 ```
 
 ## Messages
 
-View supported messages at [docs.cosmos.network/v0.40/modules/Distribution](https://docs.cosmos.network/v0.40/modules/Distribution/03_messages.html)
+View supported messages at [docs.cosmos.network/v0.40/modules/Distribution](https://docs.cosmos.network/v0.41/modules/distribution/04_messages.html)
 
 ## Client
 

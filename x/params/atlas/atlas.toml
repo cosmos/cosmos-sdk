@@ -9,7 +9,10 @@ description = "The param module is responsible for handling the parameters of th
 homepage = "https://github.com/cosmos/cosmos-sdk"
 
 #List of key words describing your module (Optional)
-keywords = []
+keywords = [
+  "configuration",
+  "parameters",
+]
 
 
 [bug_tracker]

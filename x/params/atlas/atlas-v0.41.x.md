@@ -93,32 +93,49 @@ Params handles the modification of module parameters. If used in conjunction wit
 
 ## Messages
 
-<!-- Todo: add a short description about client interactions -->
+Params supports changing parameters of the system through either a governance proposal, if used in conjunction with the gov module. 
 
 ### CLI
-<!-- Todo: add a short description about client interactions -->
+
 
 #### Queries
-<!-- Todo: add a short description about cli query interactions -->
+
+```sh
+ app q params
+Querying commands for the params module
+
+Usage:
+  app query params [flags]
+  app query params [command]
+
+Available Commands:
+  subspace    Query for raw parameters by subspace and key
+
+Flags:
+  -h, --help   help for params
+
+Global Flags:
+      --chain-id string     The network chain ID
+      --home string         directory for config and data (default "/Users/markobaricevic/.simapp")
+      --log_format string   The logging format (json|plain) (default "plain")
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --trace               print out full stack trace on errors
+
+Use "app query params [command] --help" for more information about a command.
+```
 
 #### Transactions
-<!-- Todo: add a short description about cli transaction interactions -->
 
+Transactions are submitted through another module. In the case of the cosmos hub this is gov. 
 
 ### REST
-<!-- Todo: add a short description about REST interactions -->
 
-#### Query
-<!-- Todo: add a short description about REST query interactions -->
-
-#### Tx
-<!-- Todo: add a short description about REST transaction interactions -->
+Queries are supported via rest. They can be found here https://cosmos.network/rpc/master. Transactions are submitting through governance. 
 
 ### gRPC
-<!-- Todo: add a short description about gRPC interactions -->
+
+Params support both queries and transactions for gRPC. The transactions need to be administered via a different module. If used in conjunction with gov they would be modified via governance proposals. 
 
 #### Query
-<!-- Todo: add a short description about gRPC query interactions -->
 
-#### Tx
-<!-- Todo: add a short description about gRPC transactions interactions -->
+[gRPC query](https://docs.cosmos.network/master/core/proto-docs.html#cosmos-params-v1beta1-query-proto)

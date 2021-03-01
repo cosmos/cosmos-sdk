@@ -3,6 +3,7 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --always) | sed 's/^v//')
+TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -44,8 +45,6 @@ endif
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
-build_tags += $(BUILD_TAGS)
-build_tags := $(strip $(build_tags))
 
 whitespace :=
 whitespace += $(whitespace)
@@ -58,7 +57,8 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=simd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
+		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
+			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -66,6 +66,7 @@ ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
 endif
 ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
+  BUILD_TAGS += badgerdb
 endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
@@ -84,6 +85,9 @@ ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
+
+build_tags += $(BUILD_TAGS)
+build_tags := $(strip $(build_tags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 # check for nostrip option

@@ -141,7 +141,6 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		}
 
 	}
-
 	cmd.PrintErrln("Migration complete.")
 
 	return err

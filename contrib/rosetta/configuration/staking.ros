@@ -94,7 +94,7 @@ staking(1){
         "account": {
             "address": "staking_account",
             "sub_account": {
-                "address" : "cosmosvaloper158nkd0l9tyemv2crp579rmj8dg37qty86kaut5"
+                "address" : "cosmosvaloper19g9cm8ymzchq2qkcdv3zgqtwayj9asv3jxcps8"
             }
         },
         "amount":{
@@ -134,7 +134,7 @@ staking(1){
             "account": {
                 "address": "staking_account",
                 "sub_account": {
-                    "address" : "cosmosvaloper158nkd0l9tyemv2crp579rmj8dg37qty86kaut5"
+                    "address" : "cosmosvaloper19g9cm8ymzchq2qkcdv3zgqtwayj9asv3jxcps8"
                 }
             },
             "amount":{

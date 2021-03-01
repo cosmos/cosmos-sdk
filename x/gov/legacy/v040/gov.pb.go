@@ -12,7 +12,7 @@ import (
 )
 
 type Vote struct {
-	ProposalId uint64           `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
+	ProposalId uint64           `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"` //nolint:golint
 	Voter      string           `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	Option     types.VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
 }
@@ -27,7 +27,7 @@ func (m *Vote) Size() (n int) {
 	var l int
 	_ = l
 	if m.ProposalId != 0 {
-		n += 1 + sovGov(uint64(m.ProposalId))
+		n += 1 + sovGov(m.ProposalId)
 	}
 	l = len(m.Voter)
 	if l > 0 {
@@ -72,7 +72,7 @@ func (m *Vote) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 	}
 	if m.ProposalId != 0 {
-		i = encodeVarintGov(dAtA, i, uint64(m.ProposalId))
+		i = encodeVarintGov(dAtA, i, m.ProposalId)
 		i--
 		dAtA[i] = 0x8
 	}

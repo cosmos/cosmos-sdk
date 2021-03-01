@@ -84,10 +84,9 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		Txs:         txsList,
 		TxResponses: result.Txs,
 		Pagination: &pagination.PageResponse{
-			Total: uint64(result.TotalCount),
+			Total: result.TotalCount,
 		},
 	}, nil
-
 }
 
 // Simulate implements the ServiceServer.Simulate RPC method.

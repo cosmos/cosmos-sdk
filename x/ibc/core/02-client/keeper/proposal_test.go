@@ -211,7 +211,6 @@ func (suite *KeeperTestSuite) TestHandleUpgradeProposal() {
 				store := suite.chainA.GetContext().KVStore(suite.chainA.App.GetKey(upgradetypes.StoreKey))
 				bz := suite.chainA.App.AppCodec().MustMarshalBinaryBare(&oldPlan)
 				store.Set(upgradetypes.PlanKey(), bz)
-				suite.chainA.App.IBCKeeper.ClientKeeper.SetUpgradePlanHeight(suite.chainA.GetContext(), uint64(oldPlan.Height))
 
 				bz, err := types.MarshalClientState(suite.chainA.App.AppCodec(), upgradedClientState)
 				suite.Require().NoError(err)

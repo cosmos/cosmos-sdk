@@ -117,24 +117,6 @@ func (k Keeper) SetNextClientSequence(ctx sdk.Context, sequence uint64) {
 	store.Set([]byte(types.KeyNextClientSequence), bz)
 }
 
-// GetUpgradePlanHeight gets the IBC upgrade plan height.
-func (k Keeper) GetUpgradePlanHeight(ctx sdk.Context) (uint64, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get([]byte(types.KeyUpgradePlanHeight))
-	if bz == nil {
-		return 0, false
-	}
-
-	return sdk.BigEndianToUint64(bz), true
-}
-
-// SetUpgradePlanHeight sets the IBC upgrade plan height to the store.
-func (k Keeper) SetUpgradePlanHeight(ctx sdk.Context, height uint64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := sdk.Uint64ToBigEndian(height)
-	store.Set([]byte(types.KeyUpgradePlanHeight), bz)
-}
-
 // IterateConsensusStates provides an iterator over all stored consensus states.
 // objects. For each State object, cb will be called. If the cb returns true,
 // the iterator will close and stop.

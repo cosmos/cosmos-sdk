@@ -23,10 +23,6 @@ const (
 	// KeyNextClientSequence is the key used to store the next client sequence in
 	// the keeper.
 	KeyNextClientSequence = "nextClientSequence"
-
-	// KeyUpgradePlanHeight is the key used to store the IBC upgrade plan
-	// height in the keeper.
-	KeyUpgradePlanHeight = "upgradePlanHeight"
 )
 
 // FormatClientIdentifier returns the client identifier with the sequence appended.

@@ -76,12 +76,6 @@ func (k Keeper) ClientUpdateProposal(ctx sdk.Context, p *types.ClientUpdatePropo
 // will schedule an upgrade and finally set the upgraded client state in upgrade
 // store.
 func (k Keeper) HandleUpgradeProposal(ctx sdk.Context, p *types.UpgradeProposal) error {
-	// clear any old IBC state stored by previous plan
-	planHeight, found := k.GetUpgradePlanHeight(ctx)
-	if found {
-		k.upgradeKeeper.ClearIBCState(ctx, int64(planHeight))
-	}
-
 	clientState, err := types.UnpackClientState(p.UpgradedClientState)
 	if err != nil {
 		return sdkerrors.Wrap(err, "could not unpack UpgradedClientState")
@@ -97,9 +91,6 @@ func (k Keeper) HandleUpgradeProposal(ctx sdk.Context, p *types.UpgradeProposal)
 	if err := k.upgradeKeeper.ScheduleUpgrade(ctx, p.Plan); err != nil {
 		return err
 	}
-
-	// set the new IBC upgrade plan height
-	k.SetUpgradePlanHeight(ctx, uint64(p.Plan.Height))
 
 	// sets the new upgraded client in last height committed on this chain is at plan.Height,
 	// since the chain will panic at plan.Height and new chain will resume at plan.Height

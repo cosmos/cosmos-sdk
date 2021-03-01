@@ -717,7 +717,7 @@ func addressBytesFromHexString(address string) ([]byte, error) {
 	return hex.DecodeString(address)
 }
 
-func cacheBech32Addr(prefix string, addr []byte, m *sync.Mutex, cache *simplelru.LRU, cacheKey string) string {
+func cacheBech32Addr(prefix string, addr []byte, m sync.Locker, cache *simplelru.LRU, cacheKey string) string {
 	bech32Addr, err := bech32.ConvertAndEncode(prefix, addr)
 	if err != nil {
 		panic(err)

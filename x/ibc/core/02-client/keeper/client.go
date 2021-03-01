@@ -98,7 +98,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 	// emit the full header in events
 	var headerStr string
 	if header != nil {
-		headerStr = string(sdk.MustSortJSON(types.SubModuleCdc.MustMarshalJSON(header)))
+		headerStr = string(types.MustMarshalHeader(k.cdc, header))
 	}
 
 	// emitting events in the keeper emits for both begin block and handler client updates

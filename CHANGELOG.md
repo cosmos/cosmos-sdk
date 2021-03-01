@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* (store/cachekv) [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) Algorithmically fix pathologically slow code
+
 ## [v0.39.3]
 
 ### Improvements

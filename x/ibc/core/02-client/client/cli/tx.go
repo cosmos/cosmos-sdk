@@ -18,6 +18,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // NewCreateClientCmd defines the command to create a new IBC light client.
@@ -295,6 +296,95 @@ func NewCmdSubmitUpdateClientProposal() *cobra.Command {
 			}
 
 			content := types.NewClientUpdateProposal(title, description, subjectClientID, substituteClientID, initialHeight)
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+
+	return cmd
+}
+
+// NewCmdSubmitUpgradeProposal implements a command handler for submitting an upgrade IBC client proposal transaction.
+func NewCmdSubmitUpgradeProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ibc-upgrade [name] [height] [path/to/upgraded_client_state.json] [flags]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Submit an IBC upgrade proposal",
+		Long: "Submit an IBC client breaking upgrade proposal along with an initial deposit.\n" +
+			"The client state specified is the upgraded client state representing the upgraded chain",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+			title, err := cmd.Flags().GetString(govcli.FlagTitle)
+			if err != nil {
+				return err
+			}
+
+			description, err := cmd.Flags().GetString(govcli.FlagDescription)
+			if err != nil {
+				return err
+			}
+
+			name := args[0]
+
+			height, err := cmd.Flags().GetInt64(args[1])
+			if err != nil {
+				return err
+			}
+
+			plan := upgradetypes.Plan{
+				Name:   name,
+				Height: height,
+			}
+
+			// attempt to unmarshal client state argument
+			var clientState exported.ClientState
+			clientContentOrFileName := args[2]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(clientContentOrFileName), &clientState); err != nil {
+
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(clientContentOrFileName)
+				if err != nil {
+					return errors.Wrap(err, "neither JSON input nor path to .json file for client state were provided")
+				}
+
+				if err := cdc.UnmarshalInterfaceJSON(contents, &clientState); err != nil {
+					return errors.Wrap(err, "error unmarshalling client state file")
+				}
+			}
+
+			content, err := types.NewUpgradeProposal(title, description, plan, clientState)
+			if err != nil {
+				return err
+			}
 
 			from := clientCtx.GetFromAddress()
 

@@ -78,14 +78,23 @@ const (
 var (
 	// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
 	// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
-	addrMu    sync.Mutex
-	addrCache *simplelru.LRU
+	accAddrMu     sync.Mutex
+	accAddrCache  *simplelru.LRU
+	consAddrMu    sync.Mutex
+	consAddrCache *simplelru.LRU
+	valAddrMu     sync.Mutex
+	valAddrCache  *simplelru.LRU
 )
 
 func init() {
 	var err error
-	addrCache, err = simplelru.NewLRU(30000, nil)
-	if err != nil {
+	if accAddrCache, err = simplelru.NewLRU(25000, nil); err != nil {
+		panic(err)
+	}
+	if consAddrCache, err = simplelru.NewLRU(500, nil); err != nil {
+		panic(err)
+	}
+	if valAddrCache, err = simplelru.NewLRU(500, nil); err != nil {
 		panic(err)
 	}
 }
@@ -252,29 +261,16 @@ func (aa AccAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (aa AccAddress) String() string {
-	var key = conv.UnsafeBytesToStr(aa)
-	if addr, ok := addrCache.Get(key); ok {
-		return addr.(string)
-	}
-	// Otherwise cache it for later memoization.
-
 	if aa.Empty() {
-		addrMu.Lock()
-		addrCache.Add(key, "")
-		addrMu.Unlock()
 		return ""
 	}
 
-	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa)
-	if err != nil {
-		panic(err)
+	var key = conv.UnsafeBytesToStr(aa)
+	if addr, ok := accAddrCache.Get(key); ok {
+		return addr.(string)
 	}
-
-	addrMu.Lock()
-	addrCache.Add(key, bech32Addr)
-	addrMu.Unlock()
-	return bech32Addr
+	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(),
+		aa, &accAddrMu, accAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -417,14 +413,12 @@ func (va ValAddress) String() string {
 		return ""
 	}
 
-	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
-
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
-	if err != nil {
-		panic(err)
+	var key = conv.UnsafeBytesToStr(va)
+	if addr, ok := valAddrCache.Get(key); ok {
+		return addr.(string)
 	}
-
-	return bech32Addr
+	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(),
+		va, &valAddrMu, valAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -572,14 +566,12 @@ func (ca ConsAddress) String() string {
 		return ""
 	}
 
-	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
-
-	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixConsAddr, ca.Bytes())
-	if err != nil {
-		panic(err)
+	var key = conv.UnsafeBytesToStr(ca)
+	if addr, ok := consAddrCache.Get(key); ok {
+		return addr.(string)
 	}
-
-	return bech32Addr
+	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(),
+		ca, &consAddrMu, consAddrCache, key)
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
@@ -723,4 +715,15 @@ func addressBytesFromHexString(address string) ([]byte, error) {
 	}
 
 	return hex.DecodeString(address)
+}
+
+func cacheBech32Addr(prefix string, addr []byte, m *sync.Mutex, cache *simplelru.LRU, cacheKey string) string {
+	bech32Addr, err := bech32.ConvertAndEncode(prefix, addr)
+	if err != nil {
+		panic(err)
+	}
+	m.Lock()
+	cache.Add(cacheKey, bech32Addr)
+	m.Unlock()
+	return bech32Addr
 }

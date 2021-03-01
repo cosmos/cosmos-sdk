@@ -19,7 +19,7 @@ func (a *FilteredFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) erro
 }
 
 // NewFilteredFeeAllowance creates new filtered fee allowance.
-func NewFilteredFeeAllowance(allowance FeeAllowanceI, msgNames []string) (*FilteredFeeAllowance, error) {
+func NewFilteredFeeAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*FilteredFeeAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
@@ -31,7 +31,7 @@ func NewFilteredFeeAllowance(allowance FeeAllowanceI, msgNames []string) (*Filte
 
 	return &FilteredFeeAllowance{
 		Allowance:       any,
-		AllowedMessages: msgNames,
+		AllowedMessages: allowedMsgs,
 	}, nil
 }
 
@@ -46,20 +46,20 @@ func (a *FilteredFeeAllowance) GetAllowance() FeeAllowanceI {
 }
 
 // Accept method checks for the filtered messages has valid expiry
-func (a *FilteredFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64, msgTypes []string) (bool, error) {
-	if !a.isMsgTypesAllowed(msgTypes) {
-		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message not exists in allowed messages")
+func (a *FilteredFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64, msgs []sdk.Msg) (bool, error) {
+	if !a.isMsgTypesAllowed(msgs) {
+		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
-	return a.GetAllowance().Accept(fee, blockTime, blockHeight, msgTypes)
+	return a.GetAllowance().Accept(fee, blockTime, blockHeight, msgs)
 }
 
-func (a *FilteredFeeAllowance) isMsgTypesAllowed(msgTypes []string) bool {
+func (a *FilteredFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
 	found := false
 
-	for _, msgType := range msgTypes {
-		for _, msg := range a.AllowedMessages {
-			if msg == msgType {
+	for _, msg := range msgs {
+		for _, allowedMsg := range a.AllowedMessages {
+			if allowedMsg == msg.Type() {
 				found = true
 				break
 			}

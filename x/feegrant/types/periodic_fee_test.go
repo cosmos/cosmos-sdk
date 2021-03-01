@@ -188,7 +188,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			require.NoError(t, err)
 
 			// now try to deduct
-			remove, err := tc.allow.Accept(tc.fee, tc.blockTime, tc.blockHeight, []string{})
+			remove, err := tc.allow.Accept(tc.fee, tc.blockTime, tc.blockHeight, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return

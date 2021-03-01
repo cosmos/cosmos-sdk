@@ -158,13 +158,13 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 }
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
-func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgTypes []string) error {
+func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
 	grant, found := k.GetFeeGrant(ctx, granter, grantee)
 	if !found || grant.GetFeeGrant() == nil {
 		return sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
-	remove, err := grant.GetFeeGrant().Accept(fee, ctx.BlockTime(), ctx.BlockHeight(), msgTypes)
+	remove, err := grant.GetFeeGrant().Accept(fee, ctx.BlockTime(), ctx.BlockHeight(), msgs)
 	if err == nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

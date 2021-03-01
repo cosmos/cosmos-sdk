@@ -14,24 +14,15 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"ibc.core.channel.v1.ChannelI",
 		(*exported.ChannelI)(nil),
+		&Channel{},
 	)
 	registry.RegisterInterface(
 		"ibc.core.channel.v1.CounterpartyChannelI",
 		(*exported.CounterpartyChannelI)(nil),
+		&Counterparty{},
 	)
 	registry.RegisterInterface(
 		"ibc.core.channel.v1.PacketI",
-		(*exported.PacketI)(nil),
-	)
-	registry.RegisterImplementations(
-		(*exported.ChannelI)(nil),
-		&Channel{},
-	)
-	registry.RegisterImplementations(
-		(*exported.CounterpartyChannelI)(nil),
-		&Counterparty{},
-	)
-	registry.RegisterImplementations(
 		(*exported.PacketI)(nil),
 		&Packet{},
 	)

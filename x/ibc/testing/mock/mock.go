@@ -124,8 +124,6 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
-
 // OnChanOpenInit implements the IBCModule interface.
 func (am AppModule) OnChanOpenInit(
 	ctx sdk.Context, _ channeltypes.Order, _ []string, portID string,

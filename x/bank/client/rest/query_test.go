@@ -33,6 +33,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	bankGenesis.DenomMetadata = []types.Metadata{
 		{
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
 			Description: "The native staking token of the Cosmos Hub.",
 			DenomUnits: []*types.DenomUnit{
 				{

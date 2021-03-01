@@ -583,15 +583,12 @@ func (s *IntegrationTestSuite) TestLegacyMultisig() {
 	// Generate 2 accounts and a multisig.
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
 	s.Require().NoError(err)
-	fmt.Println("account1.GetPubKey()=", account1.GetPubKey())
 
 	account2, err := val1.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
-	fmt.Println("account2.GetPubKey()=", account2.GetPubKey())
 
 	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
-	fmt.Println("multisigInfo.GetPubKey()=", multisigInfo.GetPubKey())
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)

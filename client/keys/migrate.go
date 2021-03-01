@@ -107,9 +107,15 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		if keyType != keyring.TypeLocal {
+<<<<<<< HEAD
 			pubkeyArmor, err := legacyKb.ExportPubKey(keyName)
 			if err != nil {
 				return err
+=======
+			infoImporter, ok := migrator.(keyring.LegacyInfoImporter)
+			if !ok {
+				return fmt.Errorf("the Keyring implementation does not support import operations of Info types")
+>>>>>>> 010eeef45... Rename InfoImporter -> LegacyInfoImporter (#8739)
 			}
 
 			if err := migrator.ImportPubKey(keyName, pubkeyArmor); err != nil {

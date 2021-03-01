@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -83,7 +84,7 @@ var (
 
 func init() {
 	var err error
-	addrCache, err = simplelru.NewLRU(1000, nil)
+	addrCache, err = simplelru.NewLRU(30000, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -251,9 +252,9 @@ func (aa AccAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (aa AccAddress) String() string {
-	var key = string(aa)
-	if str, ok := addrCache.Get(key); ok {
-		return str.(string)
+	var key = conv.UnsafeBytesToStr(aa)
+	if addr, ok := addrCache.Get(key); ok {
+		return addr.(string)
 	}
 	// Otherwise cache it for later memoization.
 

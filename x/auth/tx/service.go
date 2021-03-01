@@ -63,7 +63,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		}
 	}
 
-	result, err := queryTxsByEvents(s.clientCtx, req.Events, page, limit, "")
+	result, err := queryTxsByEvents(ctx, s.clientCtx, req.Events, page, limit, "")
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 
 	// TODO We should also check the proof flag in gRPC header.
 	// https://github.com/cosmos/cosmos-sdk/issues/7036.
-	result, err := queryTx(s.clientCtx, req.Hash)
+	result, err := queryTx(ctx, s.clientCtx, req.Hash)
 	if err != nil {
 		return nil, err
 	}

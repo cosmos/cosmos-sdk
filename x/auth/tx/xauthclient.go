@@ -25,7 +25,7 @@ import (
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.
 // If an empty string is provided it will order txs by asc
-func queryTxsByEvents(clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
+func queryTxsByEvents(goCtx context.Context, clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
 	if len(events) == 0 {
 		return nil, errors.New("must declare at least one event to search")
 	}
@@ -48,12 +48,12 @@ func queryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 
 	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
-	resTxs, err := node.TxSearch(context.Background(), query, true, &page, &limit, orderBy)
+	resTxs, err := node.TxSearch(goCtx, query, true, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
 	}
 
-	resBlocks, err := getBlocksForTxResults(clientCtx, resTxs.Txs)
+	resBlocks, err := getBlocksForTxResults(goCtx, clientCtx, resTxs.Txs)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func queryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 
 // QueryTx queries for a single transaction by a hash string in hex format. An
 // error is returned if the transaction does not exist or cannot be queried.
-func queryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, error) {
+func queryTx(goCtx context.Context, clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
@@ -83,12 +83,12 @@ func queryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 
 	//TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
-	resTx, err := node.Tx(context.Background(), hash, true)
+	resTx, err := node.Tx(goCtx, hash, true)
 	if err != nil {
 		return nil, err
 	}
 
-	resBlocks, err := getBlocksForTxResults(clientCtx, []*ctypes.ResultTx{resTx})
+	resBlocks, err := getBlocksForTxResults(goCtx, clientCtx, []*ctypes.ResultTx{resTx})
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func formatTxResults(txConfig client.TxConfig, resTxs []*ctypes.ResultTx, resBlo
 	return out, nil
 }
 
-func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) (map[int64]*ctypes.ResultBlock, error) {
+func getBlocksForTxResults(goCtx context.Context, clientCtx client.Context, resTxs []*ctypes.ResultTx) (map[int64]*ctypes.ResultBlock, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*ctypes.ResultTx) 
 
 	for _, resTx := range resTxs {
 		if _, ok := resBlocks[resTx.Height]; !ok {
-			resBlock, err := node.Block(context.Background(), &resTx.Height)
+			resBlock, err := node.Block(goCtx, &resTx.Height)
 			if err != nil {
 				return nil, err
 			}

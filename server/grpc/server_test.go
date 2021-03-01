@@ -121,7 +121,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 	_, err := txServiceClient.GetTxsEvent(
 		context.Background(),
 		&tx.GetTxsEventRequest{
-			Events: []string{"message.action=send"},
+			Events: []string{"message.action='send'"},
 		},
 	)
 	s.Require().NoError(err)

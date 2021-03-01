@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	query "github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -175,14 +175,14 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=send"},
+				Events: []string{"message.action='send'"},
 			},
 			false, "",
 		},
 		{
 			"with pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=send"},
+				Events: []string{"message.action='send'"},
 				Pagination: &query.PageRequest{
 					CountTotal: false,
 					Offset:     0,
@@ -194,7 +194,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=send", "message.module=bank"},
+				Events: []string{"message.action='send'", "message.module='bank'"},
 			},
 			false, "",
 		},
@@ -210,6 +210,12 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+
+				// Make sure fields are populated.
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
+				s.Require().NotEmpty(grpcRes.TxResponses[0].Timestamp)
+				s.Require().NotEmpty(grpcRes.TxResponses[0].RawLog)
 			}
 		})
 	}
@@ -231,25 +237,25 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=send"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action='send'"),
 			false,
 			"",
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=send", 0, 10),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action='send'", 0, 10),
 			false,
 			"",
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=send", "message.module=bank"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action='send'", "message.module='bank'"),
 			false,
 			"",
 		},
 		{
 			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3Dsend"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'send'"),
 			false,
 			"",
 		},
@@ -335,6 +341,12 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 				s.Require().NoError(err)
 				s.Require().Equal("foobar", result.Tx.Body.Memo)
 				s.Require().NotZero(result.TxResponse.Height)
+
+				// Make sure fields are populated.
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
+				s.Require().NotEmpty(result.TxResponse.Timestamp)
+				s.Require().NotEmpty(result.TxResponse.RawLog)
 			}
 		})
 	}

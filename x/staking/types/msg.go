@@ -273,9 +273,9 @@ func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettat
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = rosetta.StatusSuccess
+			status = rosetta.StatusTxSuccess
 			if hasError {
-				status = rosetta.StatusReverted
+				status = rosetta.StatusTxReverted
 			}
 		}
 		return &rosettatypes.Operation{
@@ -413,9 +413,9 @@ func (msg *MsgBeginRedelegate) ToOperations(withStatus bool, hasError bool) []*r
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = rosetta.StatusSuccess
+			status = rosetta.StatusTxSuccess
 			if hasError {
-				status = rosetta.StatusReverted
+				status = rosetta.StatusTxReverted
 			}
 		}
 		return &rosettatypes.Operation{
@@ -557,9 +557,9 @@ func (msg *MsgUndelegate) ToOperations(withStatus bool, hasError bool) []*rosett
 	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
 		var status string
 		if withStatus {
-			status = rosetta.StatusSuccess
+			status = rosetta.StatusTxSuccess
 			if hasError {
-				status = rosetta.StatusReverted
+				status = rosetta.StatusTxReverted
 			}
 		}
 		return &rosettatypes.Operation{

@@ -3,6 +3,7 @@ package rosetta
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -12,15 +13,10 @@ import (
 
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/tendermint/btcd/btcec"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/tendermint/tendermint/rpc/client/http"
-	tmtypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/grpc"
 
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
@@ -31,7 +27,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -54,27 +49,8 @@ type Client struct {
 
 	clientCtx client.Context
 
-	version string
-}
-
-func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types.AccountIdentifier, error) {
-	if pubKey.CurveType != "secp256k1" {
-		return nil, crgerrs.WrapError(crgerrs.ErrUnsupportedCurve, "only secp256k1 supported")
-	}
-
-	cmp, err := btcec.ParsePubKey(pubKey.Bytes, btcec.S256())
-	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
-	}
-
-	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
-	copy(compressedPublicKey, cmp.SerializeCompressed())
-
-	pk := secp256k1.PubKey{Key: compressedPublicKey}
-
-	return &types.AccountIdentifier{
-		Address: sdk.AccAddress(pk.Address()).String(),
-	}, nil
+	txDecoder sdk.TxDecoder
+	version   string
 }
 
 // NewClient instantiates a new online servicer
@@ -87,9 +63,10 @@ func NewClient(cfg *Config) (*Client, error) {
 	}
 
 	return &Client{
-		config:  cfg,
-		ir:      cfg.InterfaceRegistry,
-		version: fmt.Sprintf("%s/%s", info.AppName, v),
+		config:    cfg,
+		ir:        cfg.InterfaceRegistry,
+		version:   fmt.Sprintf("%s/%s", info.AppName, v),
+		txDecoder: authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes).TxDecoder(),
 	}, nil
 }
 
@@ -147,7 +124,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 		return crgtypes.BlockResponse{}, err
 	}
 
-	return buildBlockResponse(block), nil
+	return tmResultBlockToRosettaBlockResponse(block), nil
 }
 
 func (c *Client) BlockByHeight(ctx context.Context, height *int64) (crgtypes.BlockResponse, error) {
@@ -156,50 +133,26 @@ func (c *Client) BlockByHeight(ctx context.Context, height *int64) (crgtypes.Blo
 		return crgtypes.BlockResponse{}, err
 	}
 
-	return buildBlockResponse(block), nil
-}
-
-func buildBlockResponse(block *tmtypes.ResultBlock) crgtypes.BlockResponse {
-	return crgtypes.BlockResponse{
-		Block:                TMBlockToRosettaBlockIdentifier(block),
-		ParentBlock:          TMBlockToRosettaParentBlockIdentifier(block),
-		MillisecondTimestamp: timeToMilliseconds(block.Block.Time),
-		TxCount:              int64(len(block.Block.Txs)),
-	}
+	return tmResultBlockToRosettaBlockResponse(block), nil
 }
 
 func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (crgtypes.BlockTransactionsResponse, error) {
+	// TODO(fdymylja): use a faster path, by searching the block by hash, instead of doing a double query operation
 	blockResp, err := c.BlockByHash(ctx, hash)
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
 
-	txs, err := c.listTransactionsInBlock(ctx, blockResp.Block.Index)
-	if err != nil {
-		return crgtypes.BlockTransactionsResponse{}, err
-	}
-
-	return crgtypes.BlockTransactionsResponse{
-		BlockResponse: blockResp,
-		Transactions:  sdkTxsWithHashToRosettaTxs(txs),
-	}, nil
+	return c.blockTxs(ctx, &blockResp.Block.Index)
 }
 
 func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (crgtypes.BlockTransactionsResponse, error) {
-	blockResp, err := c.BlockByHeight(ctx, height)
+	blockTxResp, err := c.blockTxs(ctx, height)
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
 
-	txs, err := c.listTransactionsInBlock(ctx, blockResp.Block.Index)
-	if err != nil {
-		return crgtypes.BlockTransactionsResponse{}, err
-	}
-
-	return crgtypes.BlockTransactionsResponse{
-		BlockResponse: blockResp,
-		Transactions:  sdkTxsWithHashToRosettaTxs(txs),
-	}, nil
+	return blockTxResp, nil
 }
 
 // Coins fetches the existing coins in the application
@@ -211,24 +164,9 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 	return supply.Supply, nil
 }
 
-// listTransactionsInBlock returns the list of the transactions in a block given its height
-func (c *Client) listTransactionsInBlock(ctx context.Context, height int64) ([]*sdkTxWithHash, error) {
-	txQuery := fmt.Sprintf(`tx.height=%d`, height)
-	txList, err := c.clientCtx.Client.TxSearch(ctx, txQuery, true, nil, nil, "")
-	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
-	}
-
-	sdkTxs, err := tmResultTxsToSdkTxsWithHash(c.clientCtx.TxConfig.TxDecoder(), txList.Txs)
-	if err != nil {
-		return nil, err
-	}
-	return sdkTxs, nil
-}
-
 func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes []byte) (ops []*types.Operation, signers []*types.AccountIdentifier, err error) {
 	txConfig := c.getTxConfig()
-	rawTx, err := txConfig.TxDecoder()(txBytes)
+	rawTx, err := c.txDecoder(txBytes)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -253,22 +191,30 @@ func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes [
 }
 
 // GetTx returns a transaction given its hash
-func (c *Client) GetTx(_ context.Context, hash string) (*types.Transaction, error) {
-	txResp, err := authclient.QueryTx(c.clientCtx, hash)
+func (c *Client) GetTx(ctx context.Context, hash string) (*types.Transaction, error) {
+	hashBytes, err := hex.DecodeString(hash)
 	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
+		return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("bad tx hash: %s", err))
 	}
-	var sdkTx sdk.Tx
-	err = c.ir.UnpackAny(txResp.Tx, &sdkTx)
-	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+
+	// here we check for the hash length to understand if it is a begin or endblock tx or a standard tendermint tx
+	switch len(hashBytes) {
+	case beginEndBlockTxSize:
+		// verify if it's end or begin block operations we're trying to query
+		switch hashBytes[0] {
+		case beginBlockHashStart:
+			return c.beginBlockTx(ctx, hashBytes[1:])
+		case endBlockHashStart:
+			return c.endBlockTx(ctx, hashBytes[1:])
+		default:
+			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, fmt.Sprintf("bad begin endblock starting byte: %x", hashBytes[0]))
+		}
+	// standard tx...
+	case sha256.Size:
+		return c.getTx(ctx, hashBytes)
+	default:
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, fmt.Sprintf("invalid tx size: %d", len(hashBytes)))
 	}
-	return sdkTxWithHashToOperations(&sdkTxWithHash{
-		HexHash: txResp.TxHash,
-		Code:    txResp.Code,
-		Log:     txResp.RawLog,
-		Tx:      sdkTx,
-	}), nil
 }
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash
@@ -283,22 +229,25 @@ func (c *Client) GetUnconfirmedTx(ctx context.Context, hash string) (*types.Tran
 		return nil, crgerrs.WrapError(crgerrs.ErrInterpreting, "invalid hash")
 	}
 
-	for _, tx := range res.Txs {
-		if bytes.Equal(tx.Hash(), hashAsBytes) {
-			sdkTx, err := tmTxToSdkTx(c.clientCtx.TxConfig.TxDecoder(), tx)
-			if err != nil {
-				return nil, err
-			}
-
-			return &types.Transaction{
-				TransactionIdentifier: TmTxToRosettaTxsIdentifier(tx),
-				Operations:            sdkTxToOperations(sdkTx, false, false),
-				Metadata:              nil,
-			}, nil
-		}
+	// assert that correct tx length is provided
+	switch len(hashAsBytes) {
+	default:
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, fmt.Sprintf("unrecognized tx size: %d", len(hashAsBytes)))
+	case beginEndBlockTxSize:
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, fmt.Sprintf("endblock and begin block txs cannot be unconfirmed"))
+	case deliverTxSize:
+		break
 	}
 
-	return nil, crgerrs.WrapError(crgerrs.ErrNotFound, "transaction not found in mempool")
+	// iterate over unconfirmed txs to find the one with matching hash
+	for _, unconfirmedTx := range res.Txs {
+		if !bytes.Equal(unconfirmedTx.Hash(), hashAsBytes) {
+			continue
+		}
+
+		return sdkTxToRosettaTx(c.txDecoder, unconfirmedTx, nil)
+	}
+	return nil, crgerrs.WrapError(crgerrs.ErrNotFound, "transaction not found in mempool: "+hash)
 }
 
 // Mempool returns the unconfirmed transactions in the mempool
@@ -308,7 +257,7 @@ func (c *Client) Mempool(ctx context.Context) ([]*types.TransactionIdentifier, e
 		return nil, err
 	}
 
-	return TMTxsToRosettaTxsIdentifiers(txs.Txs), nil
+	return tmTxsToRosettaTxsIdentifiers(txs.Txs), nil
 }
 
 // Peers gets the number of peers
@@ -317,7 +266,7 @@ func (c *Client) Peers(ctx context.Context) ([]*types.Peer, error) {
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 	}
-	return TmPeersToRosettaPeers(netInfo.Peers), nil
+	return tmPeersToRosettaPeers(netInfo.Peers), nil
 }
 
 func (c *Client) Status(ctx context.Context) (*types.SyncStatus, error) {
@@ -325,7 +274,7 @@ func (c *Client) Status(ctx context.Context) (*types.SyncStatus, error) {
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 	}
-	return TMStatusToRosettaSyncStatus(status), err
+	return tmStatusToRosettaSyncStatus(status), err
 }
 
 func (c *Client) getTxConfig() client.TxConfig {

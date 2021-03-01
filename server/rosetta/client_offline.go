@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"strings"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
@@ -20,11 +22,15 @@ import (
 func (c *Client) OperationStatuses() []*types.OperationStatus {
 	return []*types.OperationStatus{
 		{
-			Status:     StatusSuccess,
+			Status:     StatusTxSuccess,
 			Successful: true,
 		},
 		{
-			Status:     StatusReverted,
+			Status:     StatusTxReverted,
+			Successful: false,
+		},
+		{
+			Status:     StatusTxUnconfirmed,
 			Successful: false,
 		},
 	}
@@ -37,17 +43,20 @@ func (c *Client) Version() string {
 func (c *Client) SupportedOperations() []string {
 	var supportedOperations []string
 	for _, ii := range c.ir.ListImplementations("cosmos.base.v1beta1.Msg") {
-		resolve, err := c.ir.Resolve(ii)
+		resolvedMsg, err := c.ir.Resolve(ii)
 		if err != nil {
 			continue
 		}
 
-		if _, ok := resolve.(Msg); ok {
+		if _, ok := resolvedMsg.(Msg); ok {
 			supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
 		}
 	}
 
-	supportedOperations = append(supportedOperations, OperationFee)
+	supportedOperations = append(
+		supportedOperations,
+		OperationFee, banktypes.EventTypeCoinSpent, banktypes.EventTypeCoinReceived,
+	)
 
 	return supportedOperations
 }
@@ -217,5 +226,25 @@ func (c *Client) PreprocessOperationsToOptions(_ context.Context, req *types.Con
 		OptionAddress: msgs[0].GetSigners()[0],
 		OptionMemo:    memo,
 		OptionGas:     gas,
+	}, nil
+}
+
+func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types.AccountIdentifier, error) {
+	if pubKey.CurveType != "secp256k1" {
+		return nil, crgerrs.WrapError(crgerrs.ErrUnsupportedCurve, "only secp256k1 supported")
+	}
+
+	cmp, err := btcec.ParsePubKey(pubKey.Bytes, btcec.S256())
+	if err != nil {
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+
+	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
+
+	pk := secp256k1.PubKey{Key: compressedPublicKey}
+
+	return &types.AccountIdentifier{
+		Address: sdk.AccAddress(pk.Address()).String(),
 	}, nil
 }

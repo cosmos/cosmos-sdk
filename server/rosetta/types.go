@@ -8,10 +8,11 @@ import (
 
 // statuses
 const (
-	StatusSuccess  = "Success"
-	StatusReverted = "Reverted"
-	StageSynced    = "synced"
-	StageSyncing   = "syncing"
+	StatusTxSuccess     = "Success"
+	StatusTxReverted    = "Reverted"
+	StatusTxUnconfirmed = "Unconfirmed"
+	StatusPeerSynced    = "synced"
+	StatusPeerSyncing   = "syncing"
 )
 
 // misc

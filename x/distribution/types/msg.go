@@ -100,9 +100,9 @@ func (msg *MsgWithdrawDelegatorReward) ToOperations(withStatus, hasError bool) [
 
 	var status string
 	if withStatus {
-		status = rosetta.StatusSuccess
+		status = rosetta.StatusTxSuccess
 		if hasError {
-			status = rosetta.StatusReverted
+			status = rosetta.StatusTxReverted
 		}
 	}
 

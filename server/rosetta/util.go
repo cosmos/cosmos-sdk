@@ -2,48 +2,14 @@ package rosetta
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-
-	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// tmResultTxsToSdkTxsWithHash converts tendermint result txs to cosmos sdk.Tx
-func tmResultTxsToSdkTxsWithHash(decode sdk.TxDecoder, txs []*tmcoretypes.ResultTx) ([]*sdkTxWithHash, error) {
-	converted := make([]*sdkTxWithHash, len(txs))
-	for i, tx := range txs {
-		sdkTx, err := decode(tx.Tx)
-		if err != nil {
-			return nil, err
-		}
-		converted[i] = &sdkTxWithHash{
-			HexHash: fmt.Sprintf("%X", tx.Tx.Hash()),
-			Code:    tx.TxResult.Code,
-			Log:     tx.TxResult.Log,
-			Tx:      sdkTx,
-		}
-	}
-
-	return converted, nil
-}
-
-func tmTxToSdkTx(decode sdk.TxDecoder, tx tmtypes.Tx) (sdk.Tx, error) {
-	sdkTx, err := decode(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	return sdkTx, err
-}
-
-type sdkTxWithHash struct {
-	HexHash string
-	Code    uint32
-	Log     string
-	Tx      sdk.Tx
+// timeToMilliseconds converts time to milliseconds timestamp
+func timeToMilliseconds(t time.Time) int64 {
+	return t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
 
 type PayloadReqMetadata struct {

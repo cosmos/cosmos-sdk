@@ -43,19 +43,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) (store/cachekv), (x/bank/types) algorithmically fix pathologically slow code
 
-<<<<<<< HEAD
-=======
-### Bug Fixes
-
-* (keyring) [#\8635](https://github.com/cosmos/cosmos-sdk/issues/8635) Remove hardcoded default passphrase value on `NewMnemonic`
-* (x/evidence) [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix bech32 prefix in evidence validator address conversion
-* (x/bank) [\#8434](https://github.com/cosmos/cosmos-sdk/pull/8434) Fix legacy REST API `GET /bank/total` and `GET /bank/total/{denom}` in swagger
-* (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
-* (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
-* (server) [\#8641](https://github.com/cosmos/cosmos-sdk/pull/8641) Fix Tendermint and application configuration reading from file
-* (rest) [\#8730](https://github.com/cosmos/cosmos-sdk/pull/8730) Fix querying txs with multisigs on legacy REST endpoints.
-* (client/keys) [\#8639] (https://github.com/cosmos/cosmos-sdk/pull/8639) Fix keys migrate for mulitisig, offline, and ledger keys. The migrate command now takes a positional old_home_dir argument.
->>>>>>> 383286026... Allow REST endpoint to query txs with multisig (#8730)
 
 ## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
 

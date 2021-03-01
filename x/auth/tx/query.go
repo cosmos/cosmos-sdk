@@ -1,9 +1,3 @@
-// Package tx 's xauthclient.go file is copy-pasted from
-// https://github.com/cosmos/cosmos-sdk/blob/v0.41.3/x/auth/client/query.go
-// It is duplicated as to not introduce any breaking change in 0.41.4, see PR:
-// https://github.com/cosmos/cosmos-sdk/pull/8732#discussion_r584746947
-// It is refactored and removed in the following PR:
-// https://github.com/cosmos/cosmos-sdk/pull/8734
 package tx
 
 import (
@@ -27,7 +21,7 @@ import (
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.
 // If an empty string is provided it will order txs by asc
-func queryTxsByEvents(clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
+func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchTxsResult, error) {
 	if len(events) == 0 {
 		return nil, errors.New("must declare at least one event to search")
 	}
@@ -72,7 +66,7 @@ func queryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 
 // QueryTx queries for a single transaction by a hash string in hex format. An
 // error is returned if the transaction does not exist or cannot be queried.
-func queryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, error) {
+func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err

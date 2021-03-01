@@ -36,7 +36,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-**IMPORTANT:** Due to a bug in the `v0.41.x` series with how evidence handles validator consensus addresses [\#8461](https://github.com/cosmos/cosmos-sdk/issues/8461), SDK based chains that are not using the de$
+**IMPORTANT**: Due to a bug in the v0.41.x series with how evidence handles validator consensus addresses #8461, SDK based chains that are not using the default bech32 prefix (cosmos, aka all chains except for the Cosmos Hub) should not use this release or any release in the v0.41.x series. Please see #8668 for tracking & timeline for the v0.42.0 release, which will include a fix for this issue.
+
+
+###Improvements
+
+* [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) (store/cachekv), (x/bank/types) algorithmically fix pathologically slow code
+
 
 ## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
 

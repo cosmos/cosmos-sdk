@@ -38,6 +38,11 @@ service Query {
   rpc ClientParams(QueryClientParamsRequest) returns (QueryClientParamsResponse) {
     option (google.api.http).get = "/ibc/client/v1beta1/params";
   }
+
+  // UpgradedClientState queries an Upgraded IBC light client.
+  rpc UpgradedClientState(QueryUpgradedClientStateRequest) returns (QueryUpgradedClientStateResponse) {
+    option (google.api.http).get = "/ibc/core/client/v1/upgraded_client_states/{client_id}";
+  }
 }
 
 // QueryClientStateRequest is the request type for the Query/ClientState RPC
@@ -127,4 +132,21 @@ message QueryClientParamsRequest {}
 message QueryClientParamsResponse {
   // params defines the parameters of the module.
   Params params = 1;
+}
+
+// QueryUpgradedClientStateRequest is the request type for the Query/UpgradedClientState RPC
+// method
+message QueryUpgradedClientStateRequest {
+  // client state unique identifier
+  string client_id = 1;
+  // plan height of the current chain must be sent in request
+  // as this is the height under which upgraded client state is stored
+  int64 plan_height = 2;
+}
+
+// QueryUpgradedClientStateResponse is the response type for the Query/UpgradedClientState RPC
+// method.
+message QueryUpgradedClientStateResponse {
+  // client state associated with the request identifier
+  google.protobuf.Any upgraded_client_state = 1;
 }

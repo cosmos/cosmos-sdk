@@ -40,8 +40,8 @@ func (cs ClientState) VerifyUpgradeAndUpdateState(
 			upgradedClient.GetLatestHeight(), lastHeight)
 	}
 
-	// counterparty chain must commit the upgraded client with all client-customizable fields zeroed out
-	// at the upgrade path specified by current client
+	// upgraded client state and consensus state must be IBC tendermint client state and consensus state
+	// this may be modified in the future to upgrade to a new IBC tendermint type
 	// counterparty must also commit to the upgraded consensus state at a sub-path under the upgrade path specified
 	tmUpgradeClient, ok := upgradedClient.(*ClientState)
 	if !ok {

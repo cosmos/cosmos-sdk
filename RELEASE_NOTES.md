@@ -4,7 +4,7 @@ This release includes the addition of the multisign-batch command, minor bug fix
 
 See the [Cosmos SDK v0.41.4 milestone](https://github.com/cosmos/cosmos-sdk/milestone/40?closed=1) on our issue tracker for details.
 
-## Multisign-batch command
+## multisign-batch command
 
 Multisign-batch command was added and it allows generating multiple musltisig transactions by merging batches of signatures.
 

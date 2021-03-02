@@ -1,0 +1,27 @@
+syntax = "proto3";
+package cosmos.crypto.secp256r1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1";
+
+// PubKey defines a secp256r1 ECDSA public key.
+message PubKey {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.marshaler) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // Point on secp256r1 curve in a compressed representation as specified in section
+  // 4.3.6 of ANSI X9.62.
+  bytes point = 1 [(gogoproto.customtype) = "ecdsaPK"];
+}
+
+// PrivKey defines a secp256r1 ECDSA private key.
+message PrivKey {
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.marshaler) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // secret number serialized using big-endian encoding
+  bytes secret = 1;
+}

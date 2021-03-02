@@ -16,9 +16,12 @@ Now the rest endpoint allows to query transactions with multisig addresses.
 
 Major performance improvements in store and balance which will speed up genesis verification and initialization.
 
-Tendermint was upgraded to v0.34.8. This release of Tendermint introduces various changes that should make the logs much, much quieter.
+Genesis now allows 0 coin account balances. This means that genesis initialization will not fail if an address with no balance will be included.
 
-Genesis now allows 0 coin account balances. This means that genesis initialization will not fail if an address with no balance will be included. 
+# Tendermint new release
+
+Tendermint was upgraded to v0.34.8. This release of Tendermint introduces various changes that should make the logs much, much quieter. See [Tendermint's changelog](https://github.com/tendermint/tendermint/blob/v0.34.8/CHANGELOG.md#v0.34.8) for more information.
+
 
 ## Bugfixes
 

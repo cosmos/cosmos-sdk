@@ -374,6 +374,10 @@ func NewSimApp(
 		authz.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		transferModule,
 	)
+	// give upgrade keeper the module manager
+	app.UpgradeKeeper.SetModuleManager(app.mm)
+	// pass the updated keeper to the module manager
+	app.mm.Modules[upgradetypes.ModuleName] = upgrade.NewAppModule(app.UpgradeKeeper)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -391,7 +395,7 @@ func NewSimApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
+		upgradetypes.ModuleName, capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		ibchost.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authztypes.ModuleName, ibctransfertypes.ModuleName,
 		feegranttypes.ModuleName,

@@ -395,3 +395,15 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 		Events:           ctx.EventManager().ABCIEvents(),
 	}
 }
+
+// GetConsensusVersions gets consensus version from all modules
+func (m *Manager) GetConsensusVersions() MigrationMap {
+	migmap := make(map[string]uint64)
+	for _, v := range m.Modules {
+		version := v.ConsensusVersion()
+		name := v.Name()
+		migmap[name] = version
+	}
+
+	return migmap
+}

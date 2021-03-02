@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -110,7 +111,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
 				suite.ctx = suite.ctx.WithBlockHeight(expHeight)
-				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan) {})
+				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(_ sdk.Context, _ types.Plan, _ module.MigrationMap) error { return nil })
 				suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx, plan)
 
 				req = &types.QueryAppliedPlanRequest{Name: planName}

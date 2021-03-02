@@ -22,6 +22,9 @@ const (
 	// DoneByte is a prefix for to look up completed upgrade plan by name
 	DoneByte = 0x1
 
+	// MigrationMapByte is a prefix to look up module names (key) and versions (value)
+	MigrationMapByte = 0x2
+
 	// KeyUpgradedIBCState is the key under which upgraded ibc state is stored in the upgrade store
 	KeyUpgradedIBCState = "upgradedIBCState"
 
@@ -50,4 +53,14 @@ func UpgradedClientKey(height int64) []byte {
 // upgrading their clients.
 func UpgradedConsStateKey(height int64) []byte {
 	return []byte(fmt.Sprintf("%s/%d/%s", KeyUpgradedIBCState, height, KeyUpgradedConsState))
+}
+
+func MigrationMapKey() []byte {
+	return []byte{MigrationMapByte}
+}
+
+func MigrationMapKeyModule(moduleName string) []byte {
+	nameBytes := []byte(moduleName)
+	key := append(MigrationMapKey(), nameBytes...)
+	return key
 }

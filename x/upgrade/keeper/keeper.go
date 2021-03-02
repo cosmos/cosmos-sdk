@@ -16,6 +16,7 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -28,6 +29,7 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
+	ModuleManager      *module.Manager
 }
 
 // NewKeeper constructs an upgrade Keeper
@@ -46,6 +48,50 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc cod
 // must be set even if it is a no-op function.
 func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandler) {
 	k.upgradeHandlers[name] = upgradeHandler
+}
+
+func (k *Keeper) SetModuleManager(mm *module.Manager) *Keeper {
+	k.ModuleManager = mm
+	return k
+}
+
+// SetConsensusVersions saves the consensus versions retrieved from module.Manager
+func (k Keeper) SetConsensusVersions(ctx sdk.Context) {
+	modules := k.ModuleManager.GetConsensusVersions()
+	for modName, ver := range modules {
+		k.setConsensusVersion(ctx, ver, modName)
+	}
+}
+
+// SetConsensusVersion sets the given module's consensus version to the given version
+func (k Keeper) setConsensusVersion(ctx sdk.Context, version uint64, moduleName string) {
+	store := k.getConsensusVersionPrefixStore(ctx, moduleName)
+	versionBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(versionBytes, version)
+	store.Set(types.MigrationMapKeyModule(moduleName), versionBytes)
+}
+
+// getConsensusVersionStore gets the store of the given module name
+func (k Keeper) getConsensusVersionPrefixStore(ctx sdk.Context, moduleName string) prefix.Store {
+	store := ctx.KVStore(k.storeKey)
+	return prefix.NewStore(store, types.MigrationMapKeyModule(moduleName))
+}
+
+// GetConsensusVersions gets a MigrationMap from state
+func (k Keeper) GetConsensusVersions(ctx sdk.Context) module.MigrationMap {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, []byte{types.MigrationMapByte})
+
+	migmap := make(map[string]uint64)
+
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		moduleName := string(it.Key())
+		moduleVersion := binary.LittleEndian.Uint64(it.Value())
+		migmap[moduleName] = moduleVersion
+	}
+
+	return migmap
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
@@ -191,7 +237,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
-	handler(ctx, plan)
+	handler(ctx, plan, k.GetConsensusVersions(ctx))
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

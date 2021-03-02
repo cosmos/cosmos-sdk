@@ -73,3 +73,7 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 func BuildUpgradeNeededMsg(plan types.Plan) string {
 	return fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
 }
+
+func InitChainer(k keeper.Keeper, ctx sdk.Context) {
+	k.SetConsensusVersions(ctx)
+}

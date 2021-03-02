@@ -6,7 +6,7 @@ See the [Cosmos SDK v0.41.4 milestone](https://github.com/cosmos/cosmos-sdk/mile
 
 ## multisign-batch command
 
-Multisign-batch command was added and it allows generating multiple musltisig transactions by merging batches of signatures.
+Multisign-batch command was added and it allows generating multiple multisig transactions by merging batches of signatures.
 
 ## Query tx with multisig addresses
 
@@ -23,4 +23,3 @@ Genesis now allows 0 coin account balances.
 ## Bugfixes
 
 Minor bugfixes were included regarding missing errors and fields on some responses.
-

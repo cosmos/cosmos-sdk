@@ -3134,12 +3134,12 @@ This prefix is followed with the x-coordinate.
 <a name="cosmos.crypto.secp256r1.PrivKey"></a>
 
 ### PrivKey
-PrivKey defines a secp256r1 private key.
+PrivKey defines a secp256r1 ECDSA private key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
+| `secret` | [bytes](#bytes) |  | secret number serialized using big-endian encoding |
 
 
 
@@ -3149,12 +3149,12 @@ PrivKey defines a secp256r1 private key.
 <a name="cosmos.crypto.secp256r1.PubKey"></a>
 
 ### PubKey
-PubKey defines a secp256r1 public key
+PubKey defines a secp256r1 ECDSA public key.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
+| `point` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62. |
 
 
 

@@ -15,12 +15,19 @@ func BenchmarkAccAddressString(b *testing.B) {
 	b.ReportAllocs()
 	pkBz := make([]byte, ed25519.PubKeySize)
 	pk := &ed25519.PubKey{Key: pkBz}
-	aa := pk.Address()
-	var str string
+	a := pk.Address()
+	pk2 := make([]byte, ed25519.PubKeySize)
+	for i = 1; i <= ed25519.PubKeySize; i++ {
+		pk2[i] = i
+	}
+	a2 := pk.Address()
+	var str, str2 string
 	for i := 0; i < b.N; i++ {
-		str = aa.String()
+		str = a.String()
+		str2 = a2.String()
 	}
 	require.NotEmpty(b, str)
+	require.NotEmpty(b, str2)
 }
 
 func BenchmarkBech32ifyPubKey(b *testing.B) {

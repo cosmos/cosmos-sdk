@@ -22,7 +22,6 @@ Genesis now allows 0 coin account balances. This means that genesis initializati
 
 ## Bugfixes
 
-Keys migrations command is now functional for offline, multisign and ledger keys.
+The keys migration command (i.e. `keys migrate`) is now functional for offline, multisign, and ledger keys.
 
 Minor bugfixes were included regarding missing errors and fields on some responses.
-

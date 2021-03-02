@@ -1,5 +1,24 @@
-# Cosmos SDK v0.41.3 "Stargate" Release Notes
+# Cosmos SDK v0.41.4 "Stargate" Release Notes
 
-This release fixes a build failure caused by a small API breakage introduced in Tendermint v0.34.7. It is **highly recommended** that all applications using v0.41.2 upgrade to v0.41.3 as soon as possible.
+This release includes the addition of the multisign-batch command, minor bug fixes, and performance improvements.
 
-See the [Cosmos SDK v0.41.3 milestone](https://github.com/cosmos/cosmos-sdk/milestone/39?closed=1) on our issue tracker for details.
+See the [Cosmos SDK v0.41.4 milestone](https://github.com/cosmos/cosmos-sdk/milestone/40?closed=1) on our issue tracker for details.
+
+## Multisign-batch command
+
+Multisign-batch command was added and it allows generating multiple musltisig transactions by merging batches of signatures.
+
+## Query tx with multisig addresses
+
+Now the rest endpoint allows to query transactions with multisig addresses.
+
+## Improvements
+
+Major performance improvements in store and balance which will speed up genesis verification and initialization.
+
+Tendermint was upgraded to v0.34.8.
+
+## Bugfixes
+
+Minor bugfixes were included regarding missing errors and fields on some responses.
+

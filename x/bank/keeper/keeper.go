@@ -189,7 +189,23 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, supply sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	for i := range supply {
+	var newSupply []sdk.Coin
+	storeSupply := k.GetTotalSupply(ctx)
+
+	// update supply for coins which have non zero amount
+	for _, coin := range storeSupply {
+		if supply.AmountOf(coin.Denom).IsZero() {
+			zeroCoin := &sdk.Coin{
+				Denom:  coin.Denom,
+				Amount: sdk.NewInt(0),
+			}
+			bz := k.cdc.MustMarshalBinaryBare(zeroCoin)
+			supplyStore.Set([]byte(coin.Denom), bz)
+		}
+	}
+	newSupply = append(newSupply, supply...)
+
+	for i := range newSupply {
 		bz := k.cdc.MustMarshalBinaryBare(&supply[i])
 		supplyStore.Set([]byte(supply[i].Denom), bz)
 	}

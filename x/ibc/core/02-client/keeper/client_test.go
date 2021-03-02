@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -624,7 +625,11 @@ func (suite *KeeperTestSuite) TestUpdateClientEventEmission() {
 	for _, attr := range updateEvent.Attributes {
 		if string(attr.Key) == clienttypes.AttributeKeyHeader {
 			contains = true
-			emittedHeader, err := types.UnmarshalHeader(suite.chainA.App.AppCodec(), attr.Value)
+
+			bz, err := hex.DecodeString(string(attr.Value))
+			suite.Require().NoError(err)
+
+			emittedHeader, err := types.UnmarshalHeader(suite.chainA.App.AppCodec(), bz)
 			suite.Require().NoError(err)
 			suite.Require().Equal(header, emittedHeader)
 		}

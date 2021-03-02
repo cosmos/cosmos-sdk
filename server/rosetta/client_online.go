@@ -31,7 +31,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -254,7 +253,7 @@ func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes [
 
 // GetTx returns a transaction given its hash
 func (c *Client) GetTx(_ context.Context, hash string) (*types.Transaction, error) {
-	txResp, err := authclient.QueryTx(c.clientCtx, hash)
+	txResp, err := authtx.QueryTx(c.clientCtx, hash)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 	}

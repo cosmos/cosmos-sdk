@@ -88,7 +88,9 @@ var (
 
 func init() {
 	var err error
-	if accAddrCache, err = simplelru.NewLRU(25000, nil); err != nil {
+	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
+	// That will make around 92 * 61k * 2 (LRU) bytes ~ 11 MB
+	if accAddrCache, err = simplelru.NewLRU(60000, nil); err != nil {
 		panic(err)
 	}
 	if consAddrCache, err = simplelru.NewLRU(500, nil); err != nil {

@@ -18,8 +18,11 @@ Major performance improvements in store and balance which will speed up genesis 
 
 Tendermint was upgraded to v0.34.8. This release of Tendermint introduces various changes that should make the logs much, much quieter.
 
-Genesis now allows 0 coin account balances.
+Genesis now allows 0 coin account balances. This means that genesis initialization will not fail if an address with no balance will be included. 
 
 ## Bugfixes
 
+Keys migrations command is now functional for offline, multisign and ledger keys.
+
 Minor bugfixes were included regarding missing errors and fields on some responses.
+

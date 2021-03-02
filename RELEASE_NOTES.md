@@ -18,6 +18,8 @@ Major performance improvements in store and balance which will speed up genesis 
 
 Tendermint was upgraded to v0.34.8.
 
+Genesis now allows 0 coin account balances.
+
 ## Bugfixes
 
 Minor bugfixes were included regarding missing errors and fields on some responses.

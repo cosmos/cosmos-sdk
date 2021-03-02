@@ -89,10 +89,6 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 	// require that all vested coins (50%) are spendable
 	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
-
-	// require that all vested coins (50%) are spendable plus any received
-	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
 func TestTrackDelegationContVestingAcc(t *testing.T) {
@@ -238,12 +234,6 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all coins are still vesting after some time
-	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
-	require.True(t, lockedCoins.IsEqual(origCoins))
-
-	// receive some coins
-	// require that only received coins are spendable since the account is still
-	// vesting
 	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
@@ -453,11 +443,6 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 	// require that all still vesting coins (50%) are locked
 	lockedCoins = pva.LockedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
-
-	// receive some coins
-	// require that all still vesting coins (50% of original) are locked plus any received
-	lockedCoins = pva.LockedCoins(now.Add(12 * time.Hour))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
 func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
@@ -629,12 +614,6 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// require that all coins are still locked at end time
-	lockedCoins = plva.LockedCoins(endTime)
-	require.True(t, lockedCoins.IsEqual(origCoins))
-
-	// receive some coins
-	// require that only received coins are spendable since the original coins
-	// are all locked
 	lockedCoins = plva.LockedCoins(endTime)
 	require.True(t, lockedCoins.IsEqual(origCoins))
 

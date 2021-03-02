@@ -73,5 +73,5 @@ message Metadata {
   string name = 5;
   // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
   // be the same as the display.
-  string symbol = 6; 
+  string symbol = 6;
 }

@@ -112,9 +112,6 @@
   
     - [Msg](#cosmos.bank.v1beta1.Msg)
   
-- [cosmos/base/bytes.proto](#cosmos/base/bytes.proto)
-    - [PBBytes](#cosmos.crypto.secp256r1.PBBytes)
-  
 - [cosmos/base/kv/v1beta1/kv.proto](#cosmos/base/kv/v1beta1/kv.proto)
     - [Pair](#cosmos.base.kv.v1beta1.Pair)
     - [Pairs](#cosmos.base.kv.v1beta1.Pairs)
@@ -192,6 +189,10 @@
 - [cosmos/crypto/secp256k1/keys.proto](#cosmos/crypto/secp256k1/keys.proto)
     - [PrivKey](#cosmos.crypto.secp256k1.PrivKey)
     - [PubKey](#cosmos.crypto.secp256k1.PubKey)
+  
+- [cosmos/crypto/secp256r1/keys.proto](#cosmos/crypto/secp256r1/keys.proto)
+    - [PrivKey](#cosmos.crypto.secp256r1.PrivKey)
+    - [PubKey](#cosmos.crypto.secp256r1.PubKey)
   
 - [cosmos/distribution/v1beta1/distribution.proto](#cosmos/distribution/v1beta1/distribution.proto)
     - [CommunityPoolSpendProposal](#cosmos.distribution.v1beta1.CommunityPoolSpendProposal)
@@ -2166,37 +2167,6 @@ Msg defines the bank Msg service.
 
 
 
-<a name="cosmos/base/bytes.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/bytes.proto
-
-
-
-<a name="cosmos.crypto.secp256r1.PBBytes"></a>
-
-### PBBytes
-PBBytes defines a structure wrapping protocol buffers raw bytes serialization
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `bytes` | [bytes](#bytes) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
 <a name="cosmos/base/kv/v1beta1/kv.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -3134,6 +3104,52 @@ Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
 if the y-coordinate is the lexicographically largest of the two associated with
 the x-coordinate. Otherwise the first byte is a 0x03.
 This prefix is followed with the x-coordinate.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/secp256r1/keys.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/secp256r1/keys.proto
+
+
+
+<a name="cosmos.crypto.secp256r1.PrivKey"></a>
+
+### PrivKey
+PrivKey defines a secp256r1 private key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.secp256r1.PubKey"></a>
+
+### PubKey
+PubKey defines a secp256r1 public key
 
 
 | Field | Type | Label | Description |

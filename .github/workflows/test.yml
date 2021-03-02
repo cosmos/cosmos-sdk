@@ -201,7 +201,7 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock'  > ${{ matrix.part }}-race-output.txt
+          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock' | tee ${{ matrix.part }}-race-output.txt
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:

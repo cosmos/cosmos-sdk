@@ -113,13 +113,20 @@ type Importer interface {
 	ImportPubKey(uid string, armor string) error
 }
 
+// LegacyInfoImporter is implemented by key stores that support import of Info types.
+type LegacyInfoImporter interface {
+	// ImportInfo import a keyring.Info into the current keyring.
+	// It is used to migrate multisig, ledger, and public key Info structure.
+	ImportInfo(oldInfo Info) error
+}
+
 // Exporter is implemented by key stores that support export of public and private keys.
 type Exporter interface {
 	// Export public key
 	ExportPubKeyArmor(uid string) (string, error)
 	ExportPubKeyArmorByAddress(address sdk.Address) (string, error)
 
-	// ExportPrivKey returns a private key in ASCII armored format.
+	// ExportPrivKeyArmor returns a private key in ASCII armored format.
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
@@ -316,6 +323,15 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	}
 
 	return nil
+}
+
+// ImportInfo implements Importer.MigrateInfo.
+func (ks keystore) ImportInfo(oldInfo Info) error {
+	if _, err := ks.Key(oldInfo.GetName()); err == nil {
+		return fmt.Errorf("cannot overwrite key: %s", oldInfo.GetName())
+	}
+
+	return ks.writeInfo(oldInfo)
 }
 
 func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {

@@ -26,7 +26,7 @@ type PubKey struct {
 	address tmcrypto.Address
 }
 
-// String implements PubKey interface.
+// Address creates an ADR-28 address for ECDSA keys. protoName is a concrete proto structure id.
 func (pk *PubKey) Address(protoName string) tmcrypto.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(protoName, pk.Bytes())
@@ -43,7 +43,7 @@ func (pk *PubKey) Bytes() []byte {
 	return elliptic.MarshalCompressed(pk.Curve, pk.X, pk.Y)
 }
 
-// VerifySignature implements skd.PubKey interface.
+// VerifySignature checks if sig is a valid ECDSA signature for msg.
 func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	s := new(signature)
 	if _, err := asn1.Unmarshal(sig, s); err != nil || s == nil {
@@ -54,21 +54,21 @@ func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	return ecdsa.Verify(&pk.PublicKey, h[:], s.R, s.S)
 }
 
-// String implements proto.Message interface
+// String returns a string representation of the public key based on the curveName.
 func (pk *PubKey) String(curveName string) string {
 	return fmt.Sprintf("%s{%X}", curveName, pk.Bytes())
 }
 
 // **** Proto Marshaler ****
 
-// MarshalTo implements ProtoMarshaler interface.
+// MarshalTo implements proto.Marshaler interface.
 func (pk *PubKey) MarshalTo(dAtA []byte) (int, error) {
 	bz := pk.Bytes()
 	copy(dAtA, bz)
 	return len(bz), nil
 }
 
-// Unmarshal implements ProtoMarshaler interface.
+// Unmarshal implements proto.Marshaler interface.
 func (pk *PubKey) Unmarshal(bz []byte, curve elliptic.Curve, expectedSize int) error {
 	if len(bz) != expectedSize {
 		return errors.Wrapf(errors.ErrInvalidPubKey, "wrong ECDSA PK bytes, expecting %d bytes, got %d", expectedSize, len(bz))

@@ -31,12 +31,12 @@ func (m *PubKey) Address() tmcrypto.Address {
 	return m.Key.Address(m.XXX_MessageName())
 }
 
-// Type returns key type name. Implements sdk.PubKey interface.
+// Type returns key type name. Implements SDK PubKey interface.
 func (m *PubKey) Type() string {
 	return name
 }
 
-// VerifySignature implements skd.PubKey interface.
+// VerifySignature implements SDK PubKey interface.
 func (m *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	return m.Key.VerifySignature(msg, sig)
 }

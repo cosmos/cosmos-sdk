@@ -11,17 +11,17 @@ func GenPrivKey() (*PrivKey, error) {
 	return &PrivKey{&ecdsaSK{key}}, err
 }
 
-// PubKey implements Cosmos-SDK PrivKey interface.
+// PubKey implements SDK PrivKey interface.
 func (m *PrivKey) PubKey() cryptotypes.PubKey {
 	return &PubKey{&ecdsaPK{m.Secret.PubKey()}}
 }
 
-// String implements Cosmos-SDK proto.Message interface.
+// String implements SDK proto.Message interface.
 func (m *PrivKey) String() string {
 	return m.Secret.String(name)
 }
 
-// Type returns key type name. Implements sdk.PrivKey interface.
+// Type returns key type name. Implements SDK PrivKey interface.
 func (m *PrivKey) Type() string {
 	return name
 }

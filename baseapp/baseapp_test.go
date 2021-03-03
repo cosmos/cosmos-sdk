@@ -111,7 +111,9 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	app := newBaseApp(t.Name(), options...)
 	require.Equal(t, t.Name(), app.Name())
 
-	app.MountStores(capKey1, capKey2) // test  for panic use key typedifferent from  sdk.StoreKey
+	// TODO should I test MountStores for panic using keytype different from sdk.StoreKey?
+	app.MountStores(capKey1, capKey2)
+
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 
 	// stores are mounted
@@ -492,20 +494,7 @@ func TestTxDecoder(t *testing.T) {
 func TestInfo(t *testing.T) {
 	app := newBaseApp(t.Name())
 
-	// ----- test an empty response -------
 	reqInfo := abci.RequestInfo{}
-
-	//res := app.Info(reqInfo)
-
-	// should be empty
-
-	//assert.Equal(t, "", res.Version)
-	//assert.Equal(t, t.Name(), res.GetData())
-	//assert.Equal(t, int64(0), res.LastBlockHeight)
-	//require.Equal(t, []uint8(nil), res.LastBlockAppHash)
-
-	// ----- test a proper response -------
-	// TODO
 
 	cases := map[string]struct {
 		name             string

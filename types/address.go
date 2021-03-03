@@ -268,11 +268,12 @@ func (aa AccAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(aa)
+	accAddrMu.Lock()
+	defer accAddrMu.Unlock()
 	if addr, ok := accAddrCache.Get(key); ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(),
-		aa, &accAddrMu, accAddrCache, key)
+	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -416,11 +417,12 @@ func (va ValAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(va)
+	valAddrMu.Lock()
+	defer valAddrMu.Unlock()
 	if addr, ok := valAddrCache.Get(key); ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(),
-		va, &valAddrMu, valAddrCache, key)
+	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -569,11 +571,12 @@ func (ca ConsAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(ca)
+	consAddrMu.Lock()
+	defer consAddrMu.Unlock()
 	if addr, ok := consAddrCache.Get(key); ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(),
-		ca, &consAddrMu, consAddrCache, key)
+	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
@@ -719,13 +722,11 @@ func addressBytesFromHexString(address string) ([]byte, error) {
 	return hex.DecodeString(address)
 }
 
-func cacheBech32Addr(prefix string, addr []byte, m sync.Locker, cache *simplelru.LRU, cacheKey string) string {
+func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey string) string {
 	bech32Addr, err := bech32.ConvertAndEncode(prefix, addr)
 	if err != nil {
 		panic(err)
 	}
-	m.Lock()
 	cache.Add(cacheKey, bech32Addr)
-	m.Unlock()
 	return bech32Addr
 }

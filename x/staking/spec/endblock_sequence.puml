@@ -10,7 +10,7 @@ database store
 
 keeper -> keeper : BlockValidatorUpdates
 group BlockValidatorUpdates
-    note left : returns `updates`, a list of `abci.ValidatorUpdate`s
+    note left : returns `updates`, a list of `abci.ValidatorUpdate`s.
     keeper -> keeper : ApplyAndReturnValidatorSetUpdates
     group ApplyAndReturnValidatorSetUpdates
         keeper -> store : get the validators the set of validators for the beginning of the current block and their power.
@@ -22,11 +22,15 @@ group BlockValidatorUpdates
         '`maxValidators` is just an upper bound.
             alt validator is unbonded or unbonding
                 keeper -> keeper : bondValidator(validator)
-                note left : unbonded and unbonding treated as separate cases in the code,\nbut both just call bondValidator
+                note right : unbonded and unbonding treated as separate cases in the code,\nbut both just call bondValidator.
                 group bondValidator
-                    keeper -> keeper
-                    note right  #DD0000 : TODO
-                    'TODO describe bondValidator state updates x/staking/keeper/val_state_change.go:284
+                    keeper -> keeper : set validator's status to `Bonded`
+                    keeper -> store : update the validator's state
+                    keeper -> store : update the power index
+                    note left : TODO Is this unncessary? [[https://github.com/cosmos/cosmos-sdk/issues/8764]]).
+                    keeper -> store : delete validator from unbonding queue.
+                    note left : Delete the whole time slice if this is the last waiting validator in the slice.
+                    keeper -> keeper : AfterValidatorBonded(consAddress, operator) hook
                 end
             end
             alt if validator power has changed
@@ -41,11 +45,20 @@ group BlockValidatorUpdates
         '            last = all validators at the beginning of the block
         keeper -> keeper : noLongerBonded := `last` sorted by address
         note left : `last` now contains exactly the validators of the current block\nthat will not be validators in the next block.
-        loop for validator in noLongerBonded
+        loop for validator in noLongerBonded (bonded in this block, but not next)
             keeper -> keeper : bondedToUnbonding(validator)
             group bondedToUnbonding
-                keeper -> keeper
-                note right  #DD0000 : TODO
+                keeper -> keeper : beginUnbondingValidator
+                group beginUnbondingValidator
+                    keeper -> store : delete validator from power index
+                    keeper -> keeper : change validator state to `Unbonding`
+                    keeper -> keeper : set validator's unbonding time and unbonding height
+                    keeper -> store : update the validator's state
+                    keeper -> store : update the power index
+                    keeper -> store : add validator to unbonding queue
+                    note left : creates a new time slice if necessary
+                    keeper -> keeper : AfterValidatorBeginUnbonding(consAddress, operator) hook
+                end
             end
             keeper -> store : delete validator from power index
             keeper -> keeper : append validator and its new power (0) to `updates`
@@ -81,28 +94,67 @@ group BlockValidatorUpdates
                 keeper -> keeper : AfterValidatorRemoved hook
             end
         end
-        loop for mature `delegation` in UnbondingQueue
-            keeper -> store : delete `delegation` from unbonding queue
-            keeper -> keeper : append `delegation` to `matureBonds`
+    end
+    loop for mature `delegation` in UnbondingQueue
+        keeper -> store : delete `delegation` from unbonding queue
+        keeper -> keeper : append `delegation` to `matureBonds`
+    end
+    loop for `delegation` in `matureBonds`
+        keeper -> keeper : CompleteUnbonding(delegation)
+        group CompleteUnbonding
+            keeper -> store : GetUnbondingDelegation(delegatorAddress, validatorAddress)
+            keeper <-- store : `ubd`
+            alt unbonding delegation not found
+                keeper --> keeper : continue with next loop iteration
+            end
+            loop all delegations in `ubd`
+                'Is this inefficient? Looping over all delegations again?
+                alt unbonding delegation is mature
+                    keeper -> keeper : remove entry from `ubd`
+                    alt unbonding delegation has a non-zero balance
+                        keeper -> keeper.bankKeeper : UndelegateCoinsFromModuleToAccount(NotBondedPoolName, delegatorAddress, amount )
+                    end
+                end
+            end
+            alt the delegator has no remaining unbonding delegations to the validator
+                keeper -> store : remove unbonding delegation entry
+            else
+                keeper -> store : set unbonding delegation to updated `ubd`
+            end
+            keeper --> keeper : `amount` := return total unbonded balance
         end
-        loop for `delegation` in `matureBonds`
-            keeper -> keeper : CompleteUnbonding(delegation)
-            'TODO what happens in CompleteUnbonding?
-            keeper -> ctx.EventManager : EventTypeCompleteUnbonding(amount, validator, delegator)
-        end
+        keeper -> ctx.EventManager : EventTypeCompleteUnbonding(amount, validator, delegator)
+    end
 
-        loop for mature `redelegation` in RedelegationQueue
-            keeper -> store : delete `redelegation` from redelegation queue
-            keeper -> keeper : append `redelegation` to `matureRedelegations`
+    loop for mature `redelegation` in RedelegationQueue
+        keeper -> store : delete `redelegation` from redelegation queue
+        keeper -> keeper : append `redelegation` to `matureRedelegations`
+    end
+    loop for `redelegation` in `matureRedelegations`
+        keeper -> keeper : CompleteRedelegation(redelegation)
+        group CompleteRedelegation
+            keeper -> store : GetRedelegation(delegatorAddress, validatorSrcAddress, validatorDstAddress)
+            keeper <-- store : `red`
+            alt redelegation not found
+                keeper --> keeper : continue with next loop iteration
+            end
+            loop all delegations in `red`
+                'Is this inefficient? Looping over all delegations again?
+                alt redelegation is mature
+                    keeper -> keeper : remove entry from `red`
+                end
+            end
+            alt the delegator- has no remaining redelegation to this pair of validators
+                keeper -> store : remove redelegation entry
+            else
+                keeper -> store : set redelegation to updated `red`
+            end
+            keeper --> keeper : `amount` := return total unbonded balance
         end
-        loop for `redelegation` in `matureRedelegations`
-            keeper -> keeper : CompleteRedelegation(redelegation)
-            'TODO what happens in CompleteRedelegation?
-            keeper -> ctx.EventManager : EventTypeCompleteRedelegation(amount, delegator, src_validator, dst_validator)
-        end
-
+        keeper -> ctx.EventManager : EventTypeCompleteRedelegation(amount, delegator, src_validator, dst_validator)
     end
 
 end
+
 
 @enduml

@@ -491,8 +491,6 @@
     - [Query](#cosmos.upgrade.v1beta1.Query)
   
 - [cosmos/vesting/v1beta1/tx.proto](#cosmos/vesting/v1beta1/tx.proto)
-    - [MsgCreatePermanentLockedAccount](#cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount)
-    - [MsgCreatePermanentLockedAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse)
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
     - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
   
@@ -7162,35 +7160,6 @@ Query defines the gRPC upgrade querier service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/vesting/v1beta1/tx.proto
-
-
-
-<a name="cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccount"></a>
-
-### MsgCreatePermanentLockedAccount
-MsgCreatePermanentLockedAccount defines a message that creates a permanent locked
-account. The original coin balance of this account can be used for voting and delegation, but can
-never be traded or sent to another account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `to_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse"></a>
-
-### MsgCreatePermanentLockedAccountResponse
-MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
-
-
-
 
 
 

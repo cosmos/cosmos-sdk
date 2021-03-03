@@ -81,4 +81,3 @@ message PermanentLockedVestingAccount {
 
   BaseVestingAccount base_vesting_account = 1 [(gogoproto.embed) = true];
 }
-

@@ -27,21 +27,5 @@ message MsgCreateVestingAccount {
   bool  delayed  = 5;
 }
 
-
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
-
-// MsgCreatePermanentLockedAccount defines a message that creates a permanent locked
-// account. The original coin balance of this account can be used for voting and delegation, but can
-// never be traded or sent to another account.
-message MsgCreatePermanentLockedAccount {
-  option (gogoproto.equal) = true;
-
-  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
-  repeated cosmos.base.v1beta1.Coin amount = 3
-  [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-}
-
-// MsgCreatePermanentLockedAccountResponse defines the Msg/CreatePermanentLockedAccount response type.
-message MsgCreatePermanentLockedAccountResponse {}

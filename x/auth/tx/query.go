@@ -1,4 +1,4 @@
-package client
+package tx
 
 import (
 	"context"

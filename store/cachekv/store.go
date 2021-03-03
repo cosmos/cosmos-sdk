@@ -10,6 +10,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -181,13 +182,21 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 func (store *Store) dirtyItems(start, end []byte) {
 	unsorted := make([]*kv.Pair, 0)
 
+	n := len(store.unsortedCache)
 	for key := range store.unsortedCache {
-		cacheValue := store.cache[key]
-
-		if dbm.IsKeyInDomain([]byte(key), start, end) {
+		if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
+			cacheValue := store.cache[key]
 			unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+		}
+	}
 
+	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
+		for key := range store.unsortedCache {
 			delete(store.unsortedCache, key)
+		}
+	} else { // Otherwise, normally delete the unsorted keys from the map.
+		for _, kv := range unsorted {
+			delete(store.unsortedCache, conv.UnsafeBytesToStr(kv.Key))
 		}
 	}
 

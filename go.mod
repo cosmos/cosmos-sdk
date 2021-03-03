@@ -25,6 +25,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87
 	github.com/improbable-eng/grpc-web v0.14.0
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-isatty v0.0.12
@@ -32,7 +33,7 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.9.0
-	github.com/prometheus/common v0.17.0
+	github.com/prometheus/common v0.18.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.20.0

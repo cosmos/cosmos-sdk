@@ -508,7 +508,7 @@ func TestInfo(t *testing.T) {
 	// TODO
 
 	cases := map[string]struct {
-		data             string
+		name             string
 		lastBlockHeight  int64
 		lastBlockAppHash []byte
 	}{
@@ -521,6 +521,7 @@ func TestInfo(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+
 			if name != "Zero commit" {
 				height := app.LastBlockHeight()
 				app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height + 1}})
@@ -530,12 +531,9 @@ func TestInfo(t *testing.T) {
 
 			wantResInfo := app.Info(reqInfo)
 
-			//check  appname
-			assert.Equal(t, tc.data, wantResInfo.Data)
-			//check block  height
-			assert.Equal(t, tc.lastBlockHeight, wantResInfo.LastBlockHeight)
-			//checklastblockhhash
-			require.True(t, bytes.Equal(tc.lastBlockAppHash, wantResInfo.LastBlockAppHash))
+			assert.Equal(t, tc.name, wantResInfo.Data, "name must be correct")
+			assert.Equal(t, tc.lastBlockHeight, wantResInfo.LastBlockHeight, "LastBlockHeight must be correct")
+			require.True(t, bytes.Equal(tc.lastBlockAppHash, wantResInfo.LastBlockAppHash), "lastBlockAppHash must be correct")
 
 		})
 
@@ -1069,17 +1067,18 @@ func TestMultiMsgCheckTx(t *testing.T) {
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 
-	cases := map[string]struct {
-		tx *txTest
+	tt := []struct {
+		name string
+		tx   *txTest
 	}{
-		"zeromessages":   {newTxCounter(0, 0)},
-		"multmessages1":  {newTxCounter(1, 1)},
-		"multimessages2": {newTxCounter(2, 3, 4, 5)},
+		{"zeromessages", newTxCounter(0, 0)},
+		{"multmessages1", newTxCounter(1, 1)},
+		{"multimessages2", newTxCounter(2, 3, 4, 5)},
 	}
 
-	for name, tc := range cases {
+	for _, tc := range tt {
 		tc := tc
-		t.Run(name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			txBytes, err := codec.MarshalBinaryBare(tc.tx)
 			require.NoError(t, err)
 			r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
@@ -1094,7 +1093,7 @@ func TestMultiMsgCheckTx(t *testing.T) {
 	storedCounter := getIntFromStore(checkStateStore, counterKey)
 
 	// Ensure AnteHandler ran
-	require.Equal(t, len(cases), int(storedCounter))
+	require.Equal(t, len(tt), int(storedCounter))
 
 	// If a block is committed, CheckTx state should be reset.
 	header := tmproto.Header{Height: 1}

@@ -1,8 +1,6 @@
 package secp256r1
 
 import (
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
 	ecdsa "github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -27,7 +25,7 @@ func (m *PubKey) Equals(other cryptotypes.PubKey) bool {
 }
 
 // Address implements SDK PubKey interface.
-func (m *PubKey) Address() tmcrypto.Address {
+func (m *PubKey) Address() cryptotypes.Address {
 	return m.Key.Address(m.XXX_MessageName())
 }
 

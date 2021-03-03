@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"math/big"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -23,11 +22,11 @@ type PubKey struct {
 	ecdsa.PublicKey
 
 	// cache
-	address tmcrypto.Address
+	address cryptotypes.Address
 }
 
 // Address creates an ADR-28 address for ECDSA keys. protoName is a concrete proto structure id.
-func (pk *PubKey) Address(protoName string) tmcrypto.Address {
+func (pk *PubKey) Address(protoName string) cryptotypes.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(protoName, pk.Bytes())
 	}

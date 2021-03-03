@@ -38,7 +38,7 @@ func (sk *PrivKey) Bytes() []byte {
 	return bz
 }
 
-// Sign hashes and signs the message usign ECDSA. Implements sdk.PrivKey interface.
+// Sign hashes and signs the message usign ECDSA. Implements SDK PrivKey interface.
 func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 	digest := sha256.Sum256(msg)
 	return sk.PrivateKey.Sign(rand.Reader, digest[:], nil)

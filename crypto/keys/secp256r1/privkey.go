@@ -11,7 +11,7 @@ func GenPrivKey() (*PrivKey, error) {
 	return &PrivKey{&ecdsaSK{key}}, err
 }
 
-// PubKey implements sdk.PrivKey interface.
+// PubKey implements SDK PrivKey interface.
 func (m *PrivKey) PubKey() cryptotypes.PubKey {
 	return &PubKey{&ecdsaPK{m.Secret.PubKey()}}
 }
@@ -21,7 +21,7 @@ func (m *PrivKey) String() string {
 	return m.Secret.String(name)
 }
 
-// Type returns key type name. Implements sdk.PrivKey interface.
+// Type returns key type name. Implements SDK PrivKey interface.
 func (m *PrivKey) Type() string {
 	return name
 }
@@ -36,7 +36,7 @@ func (m *PrivKey) Bytes() []byte {
 	return m.Secret.Bytes()
 }
 
-// Equals implements sdk.PrivKey interface.
+// Equals implements SDK PrivKey interface.
 func (m *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 	sk2, ok := other.(*PrivKey)
 	if !ok {

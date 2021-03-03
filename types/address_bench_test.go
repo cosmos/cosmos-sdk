@@ -17,8 +17,8 @@ func BenchmarkAccAddressString(b *testing.B) {
 	pk := &ed25519.PubKey{Key: pkBz}
 	a := pk.Address()
 	pk2 := make([]byte, ed25519.PubKeySize)
-	for i = 1; i <= ed25519.PubKeySize; i++ {
-		pk2[i] = i
+	for i := 1; i <= ed25519.PubKeySize; i++ {
+		pk2[i] = byte(i)
 	}
 	a2 := pk.Address()
 	var str, str2 string

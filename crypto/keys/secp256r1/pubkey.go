@@ -12,12 +12,12 @@ func (m *PubKey) String() string {
 	return m.Key.String(name)
 }
 
-// Bytes implements SDK PubKey interface.
+// Bytes implements sdk.PubKey interface.
 func (m *PubKey) Bytes() []byte {
 	return m.Key.Bytes()
 }
 
-// Equals implements SDK PubKey interface.
+// Equals implements sdk.PubKey interface.
 func (m *PubKey) Equals(other cryptotypes.PubKey) bool {
 	pk2, ok := other.(*PubKey)
 	if !ok {
@@ -26,17 +26,17 @@ func (m *PubKey) Equals(other cryptotypes.PubKey) bool {
 	return m.Key.Equal(&pk2.Key.PublicKey)
 }
 
-// Address implements SDK PubKey interface.
+// Address implements sdk.PubKey interface.
 func (m *PubKey) Address() tmcrypto.Address {
 	return m.Key.Address(m.XXX_MessageName())
 }
 
-// Type returns key type name. Implements SDK PubKey interface.
+// Type returns key type name. Implements sdk.PubKey interface.
 func (m *PubKey) Type() string {
 	return name
 }
 
-// VerifySignature implements SDK PubKey interface.
+// VerifySignature implements sdk.PubKey interface.
 func (m *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	return m.Key.VerifySignature(msg, sig)
 }

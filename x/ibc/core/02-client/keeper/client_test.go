@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -588,4 +589,40 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateClientEventEmission() {
+	clientID, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	header, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientID)
+	suite.Require().NoError(err)
+
+	msg, err := clienttypes.NewMsgUpdateClient(
+		clientID, header,
+		suite.chainA.SenderAccount.GetAddress(),
+	)
+
+	result, err := suite.chainA.SendMsgs(msg)
+	suite.Require().NoError(err)
+	// first event type is "message"
+	updateEvent := result.Events[1]
+
+	suite.Require().Equal(clienttypes.EventTypeUpdateClient, updateEvent.Type)
+
+	// use a boolean to ensure the update event contains the header
+	contains := false
+	for _, attr := range updateEvent.Attributes {
+		if string(attr.Key) == clienttypes.AttributeKeyHeader {
+			contains = true
+
+			bz, err := hex.DecodeString(string(attr.Value))
+			suite.Require().NoError(err)
+
+			emittedHeader, err := types.UnmarshalHeader(suite.chainA.App.AppCodec(), bz)
+			suite.Require().NoError(err)
+			suite.Require().Equal(header, emittedHeader)
+		}
+
+	}
+	suite.Require().True(contains)
+
 }

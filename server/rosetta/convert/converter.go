@@ -196,7 +196,7 @@ func (c converter) MsgToOps(status string, msg sdk.Msg) ([]*rosettatypes.Operati
 		if !ok {
 			return nil, crgerrs.WrapError(
 				crgerrs.ErrCodec,
-				fmt.Sprintf("unable to cast %T to sdk.Msg, method: %s", unwrappedMsg, unwrappedMsg.MethodName),
+				fmt.Sprintf("unable to cast %T to sdk.Msg, method: %s", unwrappedMsg.Request, unwrappedMsg.MethodName),
 			)
 		}
 

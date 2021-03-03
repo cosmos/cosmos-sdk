@@ -82,4 +82,9 @@ message Metadata {
   // display indicates the suggested denom that should be
   // displayed in clients.
   string display = 4;
+  // name defines the name of the token (eg: Cosmos Atom)
+  string name = 5;
+  // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
+  // be the same as the display.
+  string symbol = 6;
 }

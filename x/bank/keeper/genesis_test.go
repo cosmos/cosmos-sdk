@@ -31,21 +31,21 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0)
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
-	suite.Require().Equal(totalSupply.Total, exportGenesis.Supply)
+	suite.Require().Equal(totalSupply, exportGenesis.Supply)
 	// add mint module balance as nil
 	expectedBalances = append(expectedBalances, types.Balance{Address: "cosmos1m3h30wlvsf8llruxtpukdvsy0km2kum8g38c8q", Coins: nil})
 	suite.Require().Equal(expectedBalances, exportGenesis.Balances)
 	suite.Require().Equal(expectedMetadata, exportGenesis.DenomMetadata)
 }
 
-func (suite *IntegrationTestSuite) getTestBalancesAndSupply() ([]types.Balance, *types.Supply) {
+func (suite *IntegrationTestSuite) getTestBalancesAndSupply() ([]types.Balance, sdk.Coins) {
 	addr2, _ := sdk.AccAddressFromBech32("cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0")
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
 	addr1Balance := sdk.Coins{sdk.NewInt64Coin("testcoin3", 10)}
 	addr2Balance := sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}
 
-	totalSupply := types.NewSupply(addr1Balance)
-	totalSupply.Inflate(addr2Balance)
+	totalSupply := addr1Balance
+	totalSupply = totalSupply.Add(addr2Balance...)
 	return []types.Balance{
 		{Address: addr2.String(), Coins: addr2Balance},
 		{Address: addr1.String(), Coins: addr1Balance},

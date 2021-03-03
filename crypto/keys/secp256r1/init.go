@@ -1,4 +1,4 @@
-// secp256r1 package implements Cosmos-SDK compatible ECDSA public and private key. The keys
+// Package secp256r1 implements Cosmos-SDK compatible ECDSA public and private key. The keys
 // can be protobuf serialized and packed in Any.
 package secp256r1
 
@@ -25,7 +25,7 @@ func init() {
 	// pubKeySize is ceil of field bit size + 1 for the sign
 	expected := (secp256r1.Params().BitSize + 7) / 8
 	if expected != fieldSize {
-		panic(fmt.Sprintf("Wrong fieldSize=%d, expecting=%d", fieldSize, expected))
+		panic(fmt.Sprintf("Wrong secp256r1 curve fieldSize=%d, expecting=%d", fieldSize, expected))
 	}
 }
 

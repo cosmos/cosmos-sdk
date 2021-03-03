@@ -11,6 +11,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
+func BenchmarkAccAddressString(b *testing.B) {
+	b.ReportAllocs()
+	pkBz := make([]byte, ed25519.PubKeySize)
+	pk := &ed25519.PubKey{Key: pkBz}
+	a := pk.Address()
+	pk2 := make([]byte, ed25519.PubKeySize)
+	for i := 1; i <= ed25519.PubKeySize; i++ {
+		pk2[i] = byte(i)
+	}
+	a2 := pk.Address()
+	var str, str2 string
+	for i := 0; i < b.N; i++ {
+		str = a.String()
+		str2 = a2.String()
+	}
+	require.NotEmpty(b, str)
+	require.NotEmpty(b, str2)
+}
+
 func BenchmarkBech32ifyPubKey(b *testing.B) {
 	b.ReportAllocs()
 	pkBz := make([]byte, ed25519.PubKeySize)

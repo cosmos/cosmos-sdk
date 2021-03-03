@@ -1,8 +1,6 @@
 @startuml
 'https://plantuml.com/sequence-diagram
 
-autonumber
-
 actor User
 User -> baseApp : Transaction Type<Tx>
 baseApp -> router : Route(ctx, msgRoute)

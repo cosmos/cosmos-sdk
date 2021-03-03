@@ -1,7 +1,6 @@
 package secp256r1
 
 import (
-	"encoding/hex"
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
@@ -34,18 +33,11 @@ func (suite *CommonSuite) SetupSuite() {
 type PKSuite struct{ CommonSuite }
 
 func (suite *PKSuite) TestString() {
-	assert := suite.Assert()
 	require := suite.Require()
 
 	pkStr := suite.pk.String()
 	prefix := "secp256r1{"
-	require.Len(pkStr, len(prefix)+suite.pk.Key.Size()*2+1) // prefix + hex_len + "}"
-	assert.Equal(prefix, pkStr[:len(prefix)])
-	assert.EqualValues('}', pkStr[len(pkStr)-1])
-
-	bz, err := hex.DecodeString(pkStr[len(prefix) : len(pkStr)-1])
-	require.NoError(err)
-	assert.EqualValues(suite.pk.Bytes(), bz)
+	require.Equal(prefix, pkStr[:len(prefix)])
 }
 
 func (suite *PKSuite) TestEquals() {

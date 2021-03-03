@@ -1,20 +1,12 @@
 package ecdsa
 
 import (
-	"crypto/ecdsa"
-	"math/big"
 	"testing"
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 )
-
-var _ cryptotypes.PrivKey = &ecdsaSK{}
 
 func TestSKSuite(t *testing.T) {
 	suite.Run(t, new(SKSuite))
@@ -23,74 +15,33 @@ func TestSKSuite(t *testing.T) {
 type SKSuite struct{ CommonSuite }
 
 func (suite *SKSuite) TestString() {
-	suite.Require().Equal("secp256r1{-}", suite.sk.String())
-}
-
-func (suite *SKSuite) TestEquals() {
-	require := suite.Require()
-
-	skOther, err := GenSecp256r1()
-	require.NoError(err)
-	require.False(suite.sk.Equals(skOther))
-
-	skOther2 := &ecdsaSK{skOther.(*ecdsaSK).PrivateKey}
-	require.True(skOther.Equals(skOther2))
-	require.True(skOther2.Equals(skOther), "Equals must be reflexive")
+	const prefix = "abc"
+	suite.Require().Equal(prefix+"{-}", suite.sk.String(prefix))
 }
 
 func (suite *SKSuite) TestPubKey() {
 	pk := suite.sk.PubKey()
-	suite.True(suite.sk.(*ecdsaSK).PublicKey.Equal(&pk.(*ecdsaPK).PublicKey))
+	suite.True(suite.sk.PublicKey.Equal(&pk.PublicKey))
 }
 
 func (suite *SKSuite) Bytes() {
 	bz := suite.sk.Bytes()
-	suite.Len(bz, PrivKeySize)
-	var sk *ecdsaSK
+	suite.Len(bz, 32)
+	var sk *PrivKey
 	suite.Nil(sk.Bytes())
 }
 
-func (suite *SKSuite) TestReset() {
-	var sk = &ecdsaSK{PrivateKey: ecdsa.PrivateKey{D: big.NewInt(1)}}
-	sk.Reset()
-	suite.Equal(0, sk.D.Cmp(big.NewInt(0)))
-	suite.Equal(ecdsa.PublicKey{}, sk.PublicKey)
-}
-
-func (suite *SKSuite) TestMarshalProto() {
+func (suite *SKSuite) TestMarshal() {
 	require := suite.Require()
+	const size = 32
 
-	/**** test structure marshalling ****/
+	var buffer = make([]byte, size)
+	suite.sk.MarshalTo(buffer)
 
-	var sk ecdsaSK
-	bz, err := proto.Marshal(suite.sk)
+	var sk = new(PrivKey)
+	err := sk.Unmarshal(buffer, secp256r1, size)
 	require.NoError(err)
-	require.NoError(proto.Unmarshal(bz, &sk))
-	require.True(sk.Equals(suite.sk))
-
-	/**** test structure marshalling with codec ****/
-
-	sk = ecdsaSK{}
-	registry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
-	bz, err = cdc.MarshalBinaryBare(suite.sk.(*ecdsaSK))
-	require.NoError(err)
-	require.NoError(cdc.UnmarshalBinaryBare(bz, &sk))
-	require.True(sk.Equals(suite.sk))
-
-	const bufSize = 100
-	bz2 := make([]byte, bufSize)
-	skCpy := suite.sk.(*ecdsaSK)
-	_, err = skCpy.MarshalTo(bz2)
-	require.NoError(err)
-	require.Len(bz2, bufSize)
-	require.Equal(bz, bz2[:sovPrivKeySize])
-
-	bz2 = make([]byte, bufSize)
-	_, err = skCpy.MarshalToSizedBuffer(bz2)
-	require.NoError(err)
-	require.Len(bz2, bufSize)
-	require.Equal(bz, bz2[(bufSize-sovPrivKeySize):])
+	require.True(sk.Equal(&suite.sk.PrivateKey))
 }
 
 func (suite *SKSuite) TestSign() {

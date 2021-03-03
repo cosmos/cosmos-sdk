@@ -3154,7 +3154,7 @@ PubKey defines a secp256r1 ECDSA public key.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `point` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62. |
+| `key` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62. |
 
 
 

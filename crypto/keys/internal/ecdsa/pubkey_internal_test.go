@@ -1,19 +1,18 @@
 package ecdsa
 
 import (
-	"crypto/ecdsa"
+	"crypto/elliptic"
 	"encoding/hex"
-	"math/big"
 	"testing"
 
-	proto "github.com/gogo/protobuf/proto"
-	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
+
+var secp256r1 = elliptic.P256()
+
+func GenSecp256r1() (PrivKey, error) {
+	return GenPrivKey(secp256r1)
+}
 
 func TestPKSuite(t *testing.T) {
 	suite.Run(t, new(PKSuite))
@@ -21,8 +20,8 @@ func TestPKSuite(t *testing.T) {
 
 type CommonSuite struct {
 	suite.Suite
-	pk cryptotypes.PubKey
-	sk cryptotypes.PrivKey
+	pk PubKey
+	sk PrivKey
 }
 
 func (suite *CommonSuite) SetupSuite() {
@@ -38,101 +37,33 @@ func (suite *PKSuite) TestString() {
 	assert := suite.Assert()
 	require := suite.Require()
 
-	pkStr := suite.pk.String()
-	prefix := "secp256r1{"
-	require.Len(pkStr, len(prefix)+PubKeySize*2+1) // prefix + hex_len + "}"
-	assert.Equal(prefix, pkStr[:len(prefix)])
+	prefix := "abc"
+	pkStr := suite.pk.String(prefix)
+	assert.Equal(prefix+"{", pkStr[:len(prefix)+1])
 	assert.EqualValues('}', pkStr[len(pkStr)-1])
 
-	bz, err := hex.DecodeString(pkStr[len(prefix) : len(pkStr)-1])
+	bz, err := hex.DecodeString(pkStr[len(prefix)+1 : len(pkStr)-1])
 	require.NoError(err)
 	assert.EqualValues(suite.pk.Bytes(), bz)
 }
 
 func (suite *PKSuite) TestBytes() {
 	require := suite.Require()
-	var pk *ecdsaPK
+	var pk *PubKey
 	require.Nil(pk.Bytes())
-	require.Len(suite.pk.Bytes(), PubKeySize)
 }
 
-func (suite *PKSuite) TestReset() {
-	pk := &ecdsaPK{ecdsa.PublicKey{X: big.NewInt(1)}, []byte{1}}
-	pk.Reset()
-	suite.Nil(pk.address)
-	suite.Equal(pk.PublicKey, ecdsa.PublicKey{})
-}
-
-func (suite *PKSuite) TestEquals() {
+func (suite *PKSuite) TestMarshal() {
 	require := suite.Require()
+	const size = 33 // secp256r1 size
 
-	skOther, err := GenSecp256r1()
+	var buffer = make([]byte, size)
+	n, err := suite.pk.MarshalTo(buffer)
 	require.NoError(err)
-	pkOther := skOther.PubKey()
-	pkOther2 := &ecdsaPK{skOther.(*ecdsaSK).PublicKey, nil}
+	require.Equal(size, n)
 
-	require.False(suite.pk.Equals(pkOther))
-	require.True(pkOther.Equals(pkOther2))
-	require.True(pkOther2.Equals(pkOther))
-	require.True(pkOther.Equals(pkOther), "Equals must be reflexive")
-}
-
-func (suite *PKSuite) TestSize() {
-	require := suite.Require()
-	bv := gogotypes.BytesValue{Value: suite.pk.Bytes()}
-	require.Equal(bv.Size(), suite.pk.(*ecdsaPK).Size())
-
-	var nilPk *ecdsaPK
-	require.Equal(0, nilPk.Size(), "nil value must have zero size")
-}
-
-func (suite *PKSuite) TestMarshalProto() {
-	require := suite.Require()
-
-	/**** test structure marshalling ****/
-
-	var pk ecdsaPK
-	bz, err := proto.Marshal(suite.pk)
+	var pk = new(PubKey)
+	err = pk.Unmarshal(buffer, secp256r1, size)
 	require.NoError(err)
-	require.NoError(proto.Unmarshal(bz, &pk))
-	require.True(pk.Equals(suite.pk))
-
-	/**** test structure marshalling with codec ****/
-
-	pk = ecdsaPK{}
-	registry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
-	bz, err = cdc.MarshalBinaryBare(suite.pk.(*ecdsaPK))
-	require.NoError(err)
-	require.NoError(cdc.UnmarshalBinaryBare(bz, &pk))
-	require.True(pk.Equals(suite.pk))
-
-	const bufSize = 100
-	bz2 := make([]byte, bufSize)
-	pkCpy := suite.pk.(*ecdsaPK)
-	_, err = pkCpy.MarshalTo(bz2)
-	require.NoError(err)
-	require.Len(bz2, bufSize)
-	require.Equal(bz, bz2[:sovPubKeySize])
-
-	bz2 = make([]byte, bufSize)
-	_, err = pkCpy.MarshalToSizedBuffer(bz2)
-	require.NoError(err)
-	require.Len(bz2, bufSize)
-	require.Equal(bz, bz2[(bufSize-sovPubKeySize):])
-
-	/**** test interface marshalling ****/
-
-	bz, err = cdc.MarshalInterface(suite.pk)
-	require.NoError(err)
-	var pkI cryptotypes.PubKey
-	err = cdc.UnmarshalInterface(bz, &pkI)
-	require.EqualError(err, "no registered implementations of type types.PubKey")
-
-	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), new(ecdsaPK))
-	require.NoError(cdc.UnmarshalInterface(bz, &pkI))
-	require.True(pkI.Equals(suite.pk))
-
-	cdc.UnmarshalInterface(bz, nil)
-	require.Error(err, "nil should fail")
+	require.True(pk.PublicKey.Equal(&suite.pk.PublicKey))
 }

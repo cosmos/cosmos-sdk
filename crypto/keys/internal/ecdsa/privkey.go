@@ -2,132 +2,65 @@ package ecdsa
 
 import (
 	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"math/big"
-
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	gogotypes "github.com/gogo/protobuf/types"
 )
 
-type ecdsaSK struct {
+// GenPrivKey generates a new secp256r1 private key. It uses operating system randomness.
+func GenPrivKey(curve elliptic.Curve) (PrivKey, error) {
+	key, err := ecdsa.GenerateKey(curve, rand.Reader)
+	return PrivKey{*key}, err
+}
+
+type PrivKey struct {
 	ecdsa.PrivateKey
 }
 
-// GenSecp256r1 generates a new secp256r1 private key. It uses operating system randomness.
-func GenSecp256r1() (cryptotypes.PrivKey, error) {
-	key, err := ecdsa.GenerateKey(secp256r1, rand.Reader)
-	return &ecdsaSK{*key}, err
-}
-
 // PubKey implements Cosmos-SDK PrivKey interface.
-func (sk *ecdsaSK) PubKey() cryptotypes.PubKey {
-	return &ecdsaPK{sk.PublicKey, nil}
+func (sk *PrivKey) PubKey() PubKey {
+	return PubKey{sk.PublicKey, nil}
 }
 
 // Bytes serialize the private key with first byte being the curve type.
-func (sk *ecdsaSK) Bytes() []byte {
+func (sk *PrivKey) Bytes() []byte {
 	if sk == nil {
 		return nil
 	}
-	bz := make([]byte, PrivKeySize)
-	bz[0] = curveTypes[sk.Curve]
-	sk.D.FillBytes(bz[1:])
+	fieldSize := (sk.Curve.Params().BitSize + 7) / 8
+	bz := make([]byte, fieldSize)
+	sk.D.FillBytes(bz)
 	return bz
 }
 
-// Equals - you probably don't need to use this.
-// Runs in constant time based on length of the keys.
-func (sk *ecdsaSK) Equals(other cryptotypes.LedgerPrivKey) bool {
-	sk2, ok := other.(*ecdsaSK)
-	if !ok {
-		return false
-	}
-	return sk.PrivateKey.Equal(&sk2.PrivateKey)
-}
-
-// Type returns key type name. Implements sdk.PrivKey interface.
-func (sk *ecdsaSK) Type() string {
-	return curveNames[sk.Curve]
-}
-
 // Sign hashes and signs the message usign ECDSA. Implements sdk.PrivKey interface.
-func (sk *ecdsaSK) Sign(msg []byte) ([]byte, error) {
+func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 	digest := sha256.Sum256(msg)
 	return sk.PrivateKey.Sign(rand.Reader, digest[:], nil)
 }
 
-// **** proto.Message ****
-
-// Reset implements proto.Message interface.
-func (sk *ecdsaSK) Reset() {
-	sk.D = new(big.Int)
-	sk.PublicKey = ecdsa.PublicKey{}
-}
-
-// ProtoMessage implements proto.Message interface.
-func (*ecdsaSK) ProtoMessage() {}
-
 // String implements proto.Message interface.
-func (sk *ecdsaSK) String() string {
-	return curveNames[sk.Curve] + "{-}"
-}
-
-// XXX_MessageName provides a proto name for proto.MessageName.
-func (sk *ecdsaSK) XXX_MessageName() string { //nolint:golint
-	return fmt.Sprintf("cosmos.crypto.%s.PrivKey", curveNames[sk.Curve])
-}
-
-// **** Proto Marshaler ****
-
-// Marshal implements ProtoMarshaler interface.
-func (sk *ecdsaSK) Marshal() ([]byte, error) {
-	bv := gogotypes.BytesValue{Value: sk.Bytes()}
-	return bv.Marshal()
+func (sk *PrivKey) String(name string) string {
+	return name + "{-}"
 }
 
 // MarshalTo implements ProtoMarshaler interface.
-func (sk *ecdsaSK) MarshalTo(data []byte) (int, error) {
-	bv := gogotypes.BytesValue{Value: sk.Bytes()}
-	return bv.MarshalTo(data)
-}
-
-// MarshalToSizedBuffer implements ProtoMarshaler interface.
-func (sk *ecdsaSK) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	bv := gogotypes.BytesValue{Value: sk.Bytes()}
-	return bv.MarshalToSizedBuffer(dAtA)
+func (sk *PrivKey) MarshalTo(dAtA []byte) (int, error) {
+	bz := sk.Bytes()
+	copy(dAtA, bz)
+	return len(bz), nil
 }
 
 // Unmarshal implements ProtoMarshaler interface.
-func (sk *ecdsaSK) Unmarshal(b []byte) error {
-	bv := gogotypes.BytesValue{}
-	err := bv.Unmarshal(b)
-	if err != nil {
-		return err
-	}
-	bz := bv.Value
-	if len(bz) != PrivKeySize {
-		return fmt.Errorf("wrong ECDSA SK bytes, expecting %d bytes", PrivKeySize)
-	}
-	curve, ok := curveTypesRev[bz[0]]
-	if !ok {
-		return fmt.Errorf("wrong ECDSA PK bytes, unknown curve type: %d", bz[0])
+func (sk *PrivKey) Unmarshal(bz []byte, curve elliptic.Curve, expectedSize int) error {
+	if len(bz) != expectedSize {
+		return fmt.Errorf("wrong ECDSA SK bytes, expecting %d bytes", expectedSize)
 	}
 
-	if sk == nil {
-		sk = new(ecdsaSK)
-	}
 	sk.Curve = curve
-	sk.D = new(big.Int).SetBytes(bz[1:])
-	sk.X, sk.Y = curve.ScalarBaseMult(bz[1:])
+	sk.D = new(big.Int).SetBytes(bz)
+	sk.X, sk.Y = curve.ScalarBaseMult(bz)
 	return nil
-}
-
-// Size implements ProtoMarshaler interface.
-func (sk *ecdsaSK) Size() int {
-	if sk == nil {
-		return 0
-	}
-	return sovPrivKeySize
 }

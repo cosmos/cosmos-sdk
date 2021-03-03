@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/keys) [\#8500](https://github.com/cosmos/cosmos-sdk/pull/8500) `InfoImporter` interface is removed from legacy keybase.
 * [\#8629](https://github.com/cosmos/cosmos-sdk/pull/8629) Deprecated `SetFullFundraiserPath` from `Config` in favor of `SetPurpose` and `SetCoinType`.
 * (x/upgrade) [\#8673](https://github.com/cosmos/cosmos-sdk/pull/8673) Remove IBC logic from x/upgrade. Deprecates IBC fields in an Upgrade Plan. IBC upgrade logic moved to 02-client and an IBC UpgradeProposal is added. 
+* (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) `SupplyI` interface and `Supply` are removed and uses `sdk.Coins` for supply tracking
 
 ### State Machine Breaking
 
@@ -61,7 +62,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/evidence) [\#8502](https://github.com/cosmos/cosmos-sdk/pull/8502) `HandleEquivocationEvidence` persists the evidence to state.
 * (x/gov) [\#7733](https://github.com/cosmos/cosmos-sdk/pull/7733) ADR 037 Implementation: Governance Split Votes
 * (x/bank) [\#8656](https://github.com/cosmos/cosmos-sdk/pull/8656) balance and supply are now correctly tracked via `coin_spent`, `coin_received`, `coinbase` and `burn` events.
-
+* (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) Supply is now stored and tracked as `sdk.Coins`
 ### Improvements
 
 * (x/bank) [\#8614](https://github.com/cosmos/cosmos-sdk/issues/8614) Add `Name` and `Symbol` fields to denom metadata

@@ -80,7 +80,6 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
-    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -1774,22 +1773,6 @@ sendable).
 
 
 
-
-<a name="cosmos.bank.v1beta1.Supply"></a>
-
-### Supply
-Supply represents a struct that passively keeps track of the total supply
-amounts in the network.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -3159,7 +3142,7 @@ PubKey defines a secp256r1 ECDSA public key.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62. |
+| `key` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62: https://webstore.ansi.org/standards/ascx9/ansix9621998 |
 
 
 
@@ -8228,7 +8211,7 @@ upgrade.
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
 | `plan` | [cosmos.upgrade.v1beta1.Plan](#cosmos.upgrade.v1beta1.Plan) |  |  |
-| `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | An UpgradedClientState must be provided to perform an IBC breaking upgrade. This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs, so that connected chains can verify that the new upgraded client is valid by verifying a proof of the intended new client state on the previous version of the chain. This will allow IBC connections to persist smoothly across planned chain upgrades. |
+| `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | An UpgradedClientState must be provided to perform an IBC breaking upgrade. This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs, so that connecting chains can verify that the new upgraded client is valid by verifying a proof on the previous version of the chain. This will allow IBC connections to persist smoothly across planned chain upgrades |
 
 
 
@@ -10945,3 +10928,4 @@ that implements Misbehaviour interface expected by ICS-02
 | <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
+

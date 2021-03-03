@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,10 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+// Secp256k1ToR1GasFactor is a factor of the secp256r1 gas fee compared to secp256k1. It's
+// Set by benchmarking current implementation.
+const Secp256k1ToR1GasFactor = 2
 
 var (
 	// simulation signature values used to estimate gas consumption
@@ -366,6 +371,10 @@ func DefaultSigVerificationGasConsumer(
 
 	case *secp256k1.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
+		return nil
+
+	case *secp256r1.PubKey:
+		meter.ConsumeGas(params.SigVerifyCostSecp256k1*Secp256k1ToR1GasFactor, "ante verify: secp256r1")
 		return nil
 
 	case multisig.PubKey:

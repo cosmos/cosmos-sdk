@@ -50,19 +50,19 @@ func NonnegativeBalanceInvariant(k ViewKeeper) sdk.Invariant {
 func TotalSupply(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		expectedTotal := sdk.Coins{}
-		supply := k.GetSupply(ctx)
+		supply := k.GetTotalSupply(ctx)
 
 		k.IterateAllBalances(ctx, func(_ sdk.AccAddress, balance sdk.Coin) bool {
 			expectedTotal = expectedTotal.Add(balance)
 			return false
 		})
 
-		broken := !expectedTotal.IsEqual(supply.GetTotal())
+		broken := !expectedTotal.IsEqual(supply)
 
 		return sdk.FormatInvariant(types.ModuleName, "total supply",
 			fmt.Sprintf(
 				"\tsum of accounts coins: %v\n"+
 					"\tsupply.Total:          %v\n",
-				expectedTotal, supply.GetTotal())), broken
+				expectedTotal, supply)), broken
 	}
 }

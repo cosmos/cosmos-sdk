@@ -1,7 +1,7 @@
 @startuml
 'https://plantuml.com/sequence-diagram
 
-title: Delegating (currently undelegated funds delegator)
+title: Redelegation
 
 msgServer -> keeper : BeginRedelegation(delAddr, valSrcAddr, valDstAddr, sharesAmount)
 participant  "keeper (staking)" as keeper
@@ -23,14 +23,14 @@ end
 
 keeper -> keeper : Unbond(del, valSrc) returns returnAmount
 ...
-note left : TODO: Describe unbond
+note left : See unbonding diagram
 
 alt returnAmount is zero
 keeper -> msgServer : error
 end
 
 keeper -> keeper : Delegate(del, returnAmount, status := valSrc.status, valDst, subtractAccount := false)
-note left : TODO: explore different statuses in Delegate
+note left : See delegation diagram
 ...
 
 alt validator is unbonded

@@ -29,7 +29,7 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
-	ModuleManager      *module.Manager
+	versionManager     module.VersionManager
 }
 
 // NewKeeper constructs an upgrade Keeper
@@ -50,31 +50,21 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-func (k *Keeper) SetModuleManager(mm *module.Manager) *Keeper {
-	k.ModuleManager = mm
-	return k
+func (k *Keeper) SetVersionManager(vm module.VersionManager) {
+	k.versionManager = vm
 }
 
 // SetConsensusVersions saves the consensus versions retrieved from module.Manager
 func (k Keeper) SetConsensusVersions(ctx sdk.Context) {
-	modules := k.ModuleManager.GetConsensusVersions()
-	for modName, ver := range modules {
-		k.setConsensusVersion(ctx, ver, modName)
-	}
-}
-
-// SetConsensusVersion sets the given module's consensus version to the given version
-func (k Keeper) setConsensusVersion(ctx sdk.Context, version uint64, moduleName string) {
-	store := k.getConsensusVersionPrefixStore(ctx, moduleName)
-	versionBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(versionBytes, version)
-	store.Set(types.MigrationMapKeyModule(moduleName), versionBytes)
-}
-
-// getConsensusVersionStore gets the store of the given module name
-func (k Keeper) getConsensusVersionPrefixStore(ctx sdk.Context, moduleName string) prefix.Store {
+	modules := k.versionManager.GetConsensusVersions()
 	store := ctx.KVStore(k.storeKey)
-	return prefix.NewStore(store, types.MigrationMapKeyModule(moduleName))
+	migrationStore := prefix.NewStore(store, []byte{types.MigrationMapByte})
+	for modName, ver := range modules {
+		nameBytes := []byte(modName)
+		verBytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(verBytes, ver)
+		migrationStore.Set(nameBytes, verBytes)
+	}
 }
 
 // GetConsensusVersions gets a MigrationMap from state
@@ -82,13 +72,13 @@ func (k Keeper) GetConsensusVersions(ctx sdk.Context) module.MigrationMap {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.MigrationMapByte})
 
-	migmap := make(map[string]uint64)
-
+	migmap := make(module.MigrationMap)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
-		moduleName := string(it.Key())
+		moduleBytes := it.Key()
+		name := string(moduleBytes[1:])
 		moduleVersion := binary.LittleEndian.Uint64(it.Value())
-		migmap[moduleName] = moduleVersion
+		migmap[name] = moduleVersion
 	}
 
 	return migmap
@@ -237,7 +227,12 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
-	handler(ctx, plan, k.GetConsensusVersions(ctx))
+	err := handler(ctx, plan, k.GetConsensusVersions(ctx))
+	if err != nil {
+		panic(err)
+	}
+
+	k.SetConsensusVersions(ctx)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

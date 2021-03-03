@@ -102,7 +102,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis is ignored, no sense in serializing future upgrades
 func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
-	InitChainer(am.keeper, ctx)
 	return []abci.ValidatorUpdate{}
 }
 

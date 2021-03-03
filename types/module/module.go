@@ -337,6 +337,10 @@ type MigrationHandler func(sdk.Context) error
 // version from which we should perform the migration for each module.
 type MigrationMap map[string]uint64
 
+type VersionManager interface {
+	GetConsensusVersions() MigrationMap
+}
+
 // RunMigrations performs in-place store migrations for all modules.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrateFromVersions MigrationMap) error {
 	c, ok := cfg.(configurator)
@@ -398,7 +402,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 
 // GetConsensusVersions gets consensus version from all modules
 func (m *Manager) GetConsensusVersions() MigrationMap {
-	migmap := make(map[string]uint64)
+	migmap := make(MigrationMap)
 	for _, v := range m.Modules {
 		version := v.ConsensusVersion()
 		name := v.Name()

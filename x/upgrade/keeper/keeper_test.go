@@ -12,6 +12,7 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -153,7 +154,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 		s.Run(tc.name, func() {
 			// reset suite
 			s.SetupTest()
-
+			s.app.UpgradeKeeper.SetVersionManager(s.app)
 			// setup test case
 			tc.setup()
 
@@ -210,6 +211,34 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		}
 	}
 
+}
+
+// Mock version manager for TestMigrations
+type MockVersionManager struct{}
+
+func (m MockVersionManager) GetConsensusVersions() module.MigrationMap {
+	migmap := make(module.MigrationMap)
+	migmap["bank"] = 1
+	return migmap
+}
+
+// Tests that the underlying state of x/upgrade is set correctly after
+// an upgrade.
+func (s *KeeperTestSuite) TestMigrations() {
+	mockVM := MockVersionManager{}
+	s.app.UpgradeKeeper.SetVersionManager(mockVM)
+	s.app.UpgradeKeeper.SetConsensusVersions(s.ctx)
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, _ module.MigrationMap) error { return nil })
+	dummyPlan := types.Plan{
+		Name: "dummy",
+		Info: "some text here",
+		Time: s.ctx.BlockTime().Add(time.Hour),
+	}
+
+	s.app.UpgradeKeeper.SetVersionManager(s.app)
+	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	migmap := s.app.UpgradeKeeper.GetConsensusVersions(s.ctx)
+	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), migmap["bank"])
 }
 
 func TestKeeperTestSuite(t *testing.T) {

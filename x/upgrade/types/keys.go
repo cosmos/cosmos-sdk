@@ -54,13 +54,3 @@ func UpgradedClientKey(height int64) []byte {
 func UpgradedConsStateKey(height int64) []byte {
 	return []byte(fmt.Sprintf("%s/%d/%s", KeyUpgradedIBCState, height, KeyUpgradedConsState))
 }
-
-func MigrationMapKey() []byte {
-	return []byte{MigrationMapByte}
-}
-
-func MigrationMapKeyModule(moduleName string) []byte {
-	nameBytes := []byte(moduleName)
-	key := append(MigrationMapKey(), nameBytes...)
-	return key
-}

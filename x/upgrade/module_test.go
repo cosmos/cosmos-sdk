@@ -5,14 +5,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-func TestItSavesConsensusVersionToState(t *testing.T) {
+func TestItGetsModuleVersions(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.InitChain(
 		abcitypes.RequestInitChain{
@@ -21,6 +19,6 @@ func TestItSavesConsensusVersionToState(t *testing.T) {
 		},
 	)
 
-	migmap := app.UpgradeKeeper.GetConsensusVersions(ctx)
+	migmap := app.GetConsensusVersions()
 	require.NotEmpty(t, migmap)
 }

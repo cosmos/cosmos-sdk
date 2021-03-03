@@ -375,7 +375,7 @@ func NewSimApp(
 		transferModule,
 	)
 	// give upgrade keeper the module manager
-	app.UpgradeKeeper.SetModuleManager(app.mm)
+	app.UpgradeKeeper.SetVersionManager(app.mm)
 	// pass the updated keeper to the module manager
 	app.mm.Modules[upgradetypes.ModuleName] = upgrade.NewAppModule(app.UpgradeKeeper)
 
@@ -629,6 +629,11 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //   })
 func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
+}
+
+// Returns a map (MigrationMap) of key module name and value module consensus version
+func (app *SimApp) GetConsensusVersions() module.MigrationMap {
+	return app.mm.GetConsensusVersions()
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

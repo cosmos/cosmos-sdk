@@ -50,10 +50,10 @@ func (pk *ecdsaPK) Size() int {
 	if pk == nil {
 		return 0
 	}
-	return fieldSize + 1
+	return pubKeySize
 }
 
 // Unmarshal implements proto.Marshaler interface
 func (pk *ecdsaPK) Unmarshal(bz []byte) error {
-	return pk.PubKey.Unmarshal(bz, secp256r1, fieldSize+1)
+	return pk.PubKey.Unmarshal(bz, secp256r1, pubKeySize)
 }

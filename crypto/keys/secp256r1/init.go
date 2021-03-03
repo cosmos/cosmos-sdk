@@ -12,7 +12,8 @@ import (
 
 const (
 	// fieldSize is the curve domain size.
-	fieldSize = 32
+	fieldSize  = 32
+	pubKeySize = fieldSize + 1
 
 	name = "secp256r1"
 )

@@ -1,6 +1,6 @@
 [store]
     streamers = [ # if len(streamers) > 0 we are streaming
-        "file",
+        "file", # name of the streaming service, used by constructor
     ]
 
 [streamers]

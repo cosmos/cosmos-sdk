@@ -241,7 +241,7 @@ func NewSimApp(
 		wg := new(sync.WaitGroup)
 		quitChan := make(chan struct{})
 		// kick off the background streaming service loop
-		streamingService.Stream(wg, quitChan) // maybe this should be done from inside BaseApp instead?
+		streamingService.Stream(wg, quitChan)
 	}
 
 	app := &SimApp{

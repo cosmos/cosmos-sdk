@@ -18,6 +18,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"non-empty coins",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{"microatom"}},
@@ -29,17 +31,50 @@ func TestMetadataValidate(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"base coin is display coin",
+			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"atom", uint32(0), []string{"ATOM"}},
+				},
+				Base:    "atom",
+				Display: "atom",
+			},
+			false,
+		},
 		{"empty metadata", types.Metadata{}, true},
+		{
+			"blank name",
+			types.Metadata{
+				Name: "",
+			},
+			true,
+		},
+		{
+			"blank symbol",
+			types.Metadata{
+				Name:   "Cosmos Hub Atom",
+				Symbol: "",
+			},
+			true,
+		},
 		{
 			"invalid base denom",
 			types.Metadata{
-				Base: "",
+				Name:   "Cosmos Hub Atom",
+				Symbol: "ATOM",
+				Base:   "",
 			},
 			true,
 		},
 		{
 			"invalid display denom",
 			types.Metadata{
+				Name:    "Cosmos Hub Atom",
+				Symbol:  "ATOM",
 				Base:    "uatom",
 				Display: "",
 			},
@@ -48,6 +83,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"duplicate denom unit",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{"microatom"}},
@@ -61,6 +98,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"invalid denom unit",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"", uint32(0), []string{"microatom"}},
@@ -73,6 +112,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"invalid denom unit alias",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{""}},
@@ -85,6 +126,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"duplicate denom unit alias",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{"microatom", "microatom"}},
@@ -97,6 +140,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"no base denom unit",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"matom", uint32(3), []string{"milliatom"}},
@@ -110,6 +155,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"base denom exponent not zero",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(1), []string{"microatom"}},
@@ -122,8 +169,25 @@ func TestMetadataValidate(t *testing.T) {
 			true,
 		},
 		{
+			"invalid denom unit",
+			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*types.DenomUnit{
+					{"uatom", uint32(0), []string{"microatom"}},
+					{"", uint32(3), []string{"milliatom"}},
+				},
+				Base:    "uatom",
+				Display: "uatom",
+			},
+			true,
+		},
+		{
 			"no display denom unit",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{"microatom"}},
@@ -136,6 +200,8 @@ func TestMetadataValidate(t *testing.T) {
 		{
 			"denom units not sorted",
 			types.Metadata{
+				Name:        "Cosmos Hub Atom",
+				Symbol:      "ATOM",
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*types.DenomUnit{
 					{"uatom", uint32(0), []string{"microatom"}},

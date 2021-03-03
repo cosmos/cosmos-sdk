@@ -37,7 +37,7 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 
 	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(suite.app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(suite.app, ctx, addr1, balances))
 
 	testCases := []struct {
 		name      string

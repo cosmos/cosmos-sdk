@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"reflect"
 	"sort"
-	"unsafe"
 
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -21,7 +20,7 @@ type Addressable interface {
 // Hash creates a new address from address type and key
 func Hash(typ string, key []byte) []byte {
 	hasher := sha256.New()
-	hasher.Write(unsafeStrToByteArray(typ))
+	hasher.Write(conv.UnsafeStrToBytes(typ))
 	th := hasher.Sum(nil)
 
 	hasher.Reset()
@@ -62,13 +61,4 @@ func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
 func Module(moduleName string, key []byte) []byte {
 	mKey := append([]byte(moduleName), 0)
 	return Hash("module", append(mKey, key...))
-}
-
-// unsafeStrToByteArray uses unsafe to convert string into byte array. Returned array
-// cannot be altered after this functions is called
-func unsafeStrToByteArray(s string) []byte {
-	sh := *(*reflect.SliceHeader)(unsafe.Pointer(&s))
-	sh.Cap = sh.Len
-	bs := *(*[]byte)(unsafe.Pointer(&sh))
-	return bs
 }

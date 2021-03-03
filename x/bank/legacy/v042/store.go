@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v040"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // MigrateStore performs in-place store migrations from v0.40 to v0.42. The
@@ -27,7 +28,7 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v040bank.AddressFromBalancesStore(oldStoreIter.Key())
 		denom := oldStoreIter.Key()[v040auth.AddrLen:]
-		newStoreKey := append(CreateAccountBalancesPrefix(addr), denom...)
+		newStoreKey := append(types.CreateAccountBalancesPrefix(addr), denom...)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())

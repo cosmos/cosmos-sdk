@@ -12,24 +12,35 @@
 - [cosmos/auth/v1beta1/genesis.proto](#cosmos/auth/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.auth.v1beta1.GenesisState)
   
+- [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
+    - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
+    - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
+  
 - [cosmos/auth/v1beta1/query.proto](#cosmos/auth/v1beta1/query.proto)
     - [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest)
     - [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse)
+    - [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest)
+    - [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse)
     - [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse)
   
     - [Query](#cosmos.auth.v1beta1.Query)
   
-- [cosmos/base/v1beta1/coin.proto](#cosmos/base/v1beta1/coin.proto)
-    - [Coin](#cosmos.base.v1beta1.Coin)
-    - [DecCoin](#cosmos.base.v1beta1.DecCoin)
-    - [DecProto](#cosmos.base.v1beta1.DecProto)
-    - [IntProto](#cosmos.base.v1beta1.IntProto)
-  
 - [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
     - [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant)
     - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
-    - [SendAuthorization](#cosmos.authz.v1beta1.SendAuthorization)
+  
+- [cosmos/authz/v1beta1/genesis.proto](#cosmos/authz/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.authz.v1beta1.GenesisState)
+    - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
+  
+- [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
+    - [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest)
+    - [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse)
+    - [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest)
+    - [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse)
+  
+    - [Query](#cosmos.authz.v1beta1.Query)
   
 - [cosmos/base/abci/v1beta1/abci.proto](#cosmos/base/abci/v1beta1/abci.proto)
     - [ABCIMessageLog](#cosmos.base.abci.v1beta1.ABCIMessageLog)
@@ -53,21 +64,14 @@
   
     - [Msg](#cosmos.authz.v1beta1.Msg)
   
-- [cosmos/authz/v1beta1/genesis.proto](#cosmos/authz/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.authz.v1beta1.GenesisState)
-    - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
+- [cosmos/base/v1beta1/coin.proto](#cosmos/base/v1beta1/coin.proto)
+    - [Coin](#cosmos.base.v1beta1.Coin)
+    - [DecCoin](#cosmos.base.v1beta1.DecCoin)
+    - [DecProto](#cosmos.base.v1beta1.DecProto)
+    - [IntProto](#cosmos.base.v1beta1.IntProto)
   
-- [cosmos/base/query/v1beta1/pagination.proto](#cosmos/base/query/v1beta1/pagination.proto)
-    - [PageRequest](#cosmos.base.query.v1beta1.PageRequest)
-    - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
-  
-- [cosmos/authz/v1beta1/query.proto](#cosmos/authz/v1beta1/query.proto)
-    - [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest)
-    - [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse)
-    - [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest)
-    - [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse)
-  
-    - [Query](#cosmos.authz.v1beta1.Query)
+- [cosmos/bank/v1beta1/authz.proto](#cosmos/bank/v1beta1/authz.proto)
+    - [SendAuthorization](#cosmos.bank.v1beta1.SendAuthorization)
   
 - [cosmos/bank/v1beta1/bank.proto](#cosmos/bank/v1beta1/bank.proto)
     - [DenomUnit](#cosmos.bank.v1beta1.DenomUnit)
@@ -264,6 +268,32 @@
   
     - [Msg](#cosmos.evidence.v1beta1.Msg)
   
+- [cosmos/feegrant/v1beta1/feegrant.proto](#cosmos/feegrant/v1beta1/feegrant.proto)
+    - [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance)
+    - [Duration](#cosmos.feegrant.v1beta1.Duration)
+    - [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt)
+    - [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant)
+    - [PeriodicFeeAllowance](#cosmos.feegrant.v1beta1.PeriodicFeeAllowance)
+  
+- [cosmos/feegrant/v1beta1/genesis.proto](#cosmos/feegrant/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.feegrant.v1beta1.GenesisState)
+  
+- [cosmos/feegrant/v1beta1/query.proto](#cosmos/feegrant/v1beta1/query.proto)
+    - [QueryFeeAllowanceRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest)
+    - [QueryFeeAllowanceResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse)
+    - [QueryFeeAllowancesRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest)
+    - [QueryFeeAllowancesResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse)
+  
+    - [Query](#cosmos.feegrant.v1beta1.Query)
+  
+- [cosmos/feegrant/v1beta1/tx.proto](#cosmos/feegrant/v1beta1/tx.proto)
+    - [MsgGrantFeeAllowance](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowance)
+    - [MsgGrantFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse)
+    - [MsgRevokeFeeAllowance](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance)
+    - [MsgRevokeFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse)
+  
+    - [Msg](#cosmos.feegrant.v1beta1.Msg)
+  
 - [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
   
@@ -276,6 +306,7 @@
     - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
     - [Vote](#cosmos.gov.v1beta1.Vote)
     - [VotingParams](#cosmos.gov.v1beta1.VotingParams)
+    - [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption)
   
     - [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus)
     - [VoteOption](#cosmos.gov.v1beta1.VoteOption)
@@ -310,6 +341,8 @@
     - [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse)
     - [MsgVote](#cosmos.gov.v1beta1.MsgVote)
     - [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse)
+    - [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted)
+    - [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse)
   
     - [Msg](#cosmos.gov.v1beta1.Msg)
   
@@ -365,6 +398,12 @@
     - [MsgUnjailResponse](#cosmos.slashing.v1beta1.MsgUnjailResponse)
   
     - [Msg](#cosmos.slashing.v1beta1.Msg)
+  
+- [cosmos/staking/v1beta1/authz.proto](#cosmos/staking/v1beta1/authz.proto)
+    - [StakeAuthorization](#cosmos.staking.v1beta1.StakeAuthorization)
+    - [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators)
+  
+    - [AuthorizationType](#cosmos.staking.v1beta1.AuthorizationType)
   
 - [cosmos/staking/v1beta1/staking.proto](#cosmos/staking/v1beta1/staking.proto)
     - [Commission](#cosmos.staking.v1beta1.Commission)
@@ -529,6 +568,7 @@
     - [Height](#ibc.core.client.v1.Height)
     - [IdentifiedClientState](#ibc.core.client.v1.IdentifiedClientState)
     - [Params](#ibc.core.client.v1.Params)
+    - [UpgradeProposal](#ibc.core.client.v1.UpgradeProposal)
   
 - [ibc/applications/transfer/v1/tx.proto](#ibc/applications/transfer/v1/tx.proto)
     - [MsgTransfer](#ibc.applications.transfer.v1.MsgTransfer)
@@ -621,6 +661,8 @@
     - [QueryConsensusStateResponse](#ibc.core.client.v1.QueryConsensusStateResponse)
     - [QueryConsensusStatesRequest](#ibc.core.client.v1.QueryConsensusStatesRequest)
     - [QueryConsensusStatesResponse](#ibc.core.client.v1.QueryConsensusStatesResponse)
+    - [QueryUpgradedClientStateRequest](#ibc.core.client.v1.QueryUpgradedClientStateRequest)
+    - [QueryUpgradedClientStateResponse](#ibc.core.client.v1.QueryUpgradedClientStateResponse)
   
     - [Query](#ibc.core.client.v1.Query)
   
@@ -822,6 +864,68 @@ GenesisState defines the auth module's genesis state.
 
 
 
+<a name="cosmos/base/query/v1beta1/pagination.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/query/v1beta1/pagination.proto
+
+
+
+<a name="cosmos.base.query.v1beta1.PageRequest"></a>
+
+### PageRequest
+PageRequest is to be embedded in gRPC request messages for efficient
+pagination. Ex:
+
+ message SomeRequest {
+         Foo some_parameter = 1;
+         PageRequest pagination = 2;
+ }
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  | key is a value returned in PageResponse.next_key to begin querying the next page most efficiently. Only one of offset or key should be set. |
+| `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
+| `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
+| `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
+
+
+
+
+
+
+<a name="cosmos.base.query.v1beta1.PageResponse"></a>
+
+### PageResponse
+PageResponse is to be embedded in gRPC response messages where the
+corresponding request message has used PageRequest.
+
+ message SomeResponse {
+         repeated Bar results = 1;
+         PageResponse page = 2;
+ }
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `next_key` | [bytes](#bytes) |  | next_key is the key to be passed to PageRequest.key to query the next page most efficiently |
+| `total` | [uint64](#uint64) |  | total is total number of results available if PageRequest.count_total was set, its value is undefined otherwise |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/auth/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -853,6 +957,37 @@ QueryAccountResponse is the response type for the Query/Account RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `account` | [google.protobuf.Any](#google.protobuf.Any) |  | account defines the account of the corresponding address. |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.QueryAccountsRequest"></a>
+
+### QueryAccountsRequest
+QueryAccountsRequest is the request type for the Query/Accounts RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.QueryAccountsResponse"></a>
+
+### QueryAccountsResponse
+QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [google.protobuf.Any](#google.protobuf.Any) | repeated | accounts are the existing accounts |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -897,92 +1032,9 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/v1beta1/coin.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/v1beta1/coin.proto
-
-
-
-<a name="cosmos.base.v1beta1.Coin"></a>
-
-### Coin
-Coin defines a token with a denomination and an amount.
-
-NOTE: The amount field is an Int which implements the custom method
-signatures required by gogoproto.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.v1beta1.DecCoin"></a>
-
-### DecCoin
-DecCoin defines a token with a denomination and a decimal amount.
-
-NOTE: The amount field is an Dec which implements the custom method
-signatures required by gogoproto.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `denom` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.v1beta1.DecProto"></a>
-
-### DecProto
-DecProto defines a Protobuf wrapper around a Dec object.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `dec` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.base.v1beta1.IntProto"></a>
-
-### IntProto
-IntProto defines a Protobuf wrapper around an Int object.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `int` | [string](#string) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
 
  <!-- end services -->
 
@@ -1027,17 +1079,50 @@ the provided method on behalf of the granter's account.
 
 
 
+ <!-- end messages -->
 
-<a name="cosmos.authz.v1beta1.SendAuthorization"></a>
+ <!-- end enums -->
 
-### SendAuthorization
-SendAuthorization allows the grantee to spend up to spend_limit coins from
-the granter's account.
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authz/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.authz.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the authz module's genesis state.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `authorization` | [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.GrantAuthorization"></a>
+
+### GrantAuthorization
+GrantAuthorization defines the GenesisState/GrantAuthorization type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 
@@ -1048,6 +1133,98 @@ the granter's account.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authz/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/query.proto
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationRequest"></a>
+
+### QueryAuthorizationRequest
+QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `method_name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationResponse"></a>
+
+### QueryAuthorizationResponse
+QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorization` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) |  | authorization is a authorization granted for grantee by granter. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationsRequest"></a>
+
+### QueryAuthorizationsRequest
+QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.QueryAuthorizationsResponse"></a>
+
+### QueryAuthorizationsResponse
+QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorizations` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) | repeated | authorizations is a list of grants granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.authz.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Authorization` | [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest) | [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse) | Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant|
+| `Authorizations` | [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest) | [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants|
 
  <!-- end services -->
 
@@ -1368,40 +1545,75 @@ Msg defines the authz Msg service.
 
 
 
-<a name="cosmos/authz/v1beta1/genesis.proto"></a>
+<a name="cosmos/base/v1beta1/coin.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/authz/v1beta1/genesis.proto
+## cosmos/base/v1beta1/coin.proto
 
 
 
-<a name="cosmos.authz.v1beta1.GenesisState"></a>
+<a name="cosmos.base.v1beta1.Coin"></a>
 
-### GenesisState
-GenesisState defines the authz module's genesis state.
+### Coin
+Coin defines a token with a denomination and an amount.
 
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authorization` | [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.GrantAuthorization"></a>
-
-### GrantAuthorization
-GrantAuthorization defines the GenesisState/GrantAuthorization type.
+NOTE: The amount field is an Int which implements the custom method
+signatures required by gogoproto.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `denom` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.v1beta1.DecCoin"></a>
+
+### DecCoin
+DecCoin defines a token with a denomination and a decimal amount.
+
+NOTE: The amount field is an Dec which implements the custom method
+signatures required by gogoproto.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.v1beta1.DecProto"></a>
+
+### DecProto
+DecProto defines a Protobuf wrapper around a Dec object.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `dec` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.v1beta1.IntProto"></a>
+
+### IntProto
+IntProto defines a Protobuf wrapper around an Int object.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `int` | [string](#string) |  |  |
 
 
 
@@ -1417,53 +1629,23 @@ GrantAuthorization defines the GenesisState/GrantAuthorization type.
 
 
 
-<a name="cosmos/base/query/v1beta1/pagination.proto"></a>
+<a name="cosmos/bank/v1beta1/authz.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/base/query/v1beta1/pagination.proto
+## cosmos/bank/v1beta1/authz.proto
 
 
 
-<a name="cosmos.base.query.v1beta1.PageRequest"></a>
+<a name="cosmos.bank.v1beta1.SendAuthorization"></a>
 
-### PageRequest
-PageRequest is to be embedded in gRPC request messages for efficient
-pagination. Ex:
-
- message SomeRequest {
-         Foo some_parameter = 1;
-         PageRequest pagination = 2;
- }
+### SendAuthorization
+SendAuthorization allows the grantee to spend up to spend_limit coins from
+the granter's account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  | key is a value returned in PageResponse.next_key to begin querying the next page most efficiently. Only one of offset or key should be set. |
-| `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
-| `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
-| `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
-
-
-
-
-
-
-<a name="cosmos.base.query.v1beta1.PageResponse"></a>
-
-### PageResponse
-PageResponse is to be embedded in gRPC response messages where the
-corresponding request message has used PageRequest.
-
- message SomeResponse {
-         repeated Bar results = 1;
-         PageResponse page = 2;
- }
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `next_key` | [bytes](#bytes) |  | next_key is the key to be passed to PageRequest.key to query the next page most efficiently |
-| `total` | [uint64](#uint64) |  | total is total number of results available if PageRequest.count_total was set, its value is undefined otherwise |
+| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -1474,98 +1656,6 @@ corresponding request message has used PageRequest.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/authz/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/authz/v1beta1/query.proto
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationRequest"></a>
-
-### QueryAuthorizationRequest
-QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `method_name` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationResponse"></a>
-
-### QueryAuthorizationResponse
-QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authorization` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) |  | authorization is a authorization granted for grantee by granter. |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationsRequest"></a>
-
-### QueryAuthorizationsRequest
-QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.authz.v1beta1.QueryAuthorizationsResponse"></a>
-
-### QueryAuthorizationsResponse
-QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authorizations` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) | repeated | authorizations is a list of grants granted for grantee by granter. |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.authz.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Authorization` | [QueryAuthorizationRequest](#cosmos.authz.v1beta1.QueryAuthorizationRequest) | [QueryAuthorizationResponse](#cosmos.authz.v1beta1.QueryAuthorizationResponse) | Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the provided msg type. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant|
-| `Authorizations` | [QueryAuthorizationsRequest](#cosmos.authz.v1beta1.QueryAuthorizationsRequest) | [QueryAuthorizationsResponse](#cosmos.authz.v1beta1.QueryAuthorizationsResponse) | Returns list of `Authorization`, granted to the grantee by the granter. | GET|/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants|
 
  <!-- end services -->
 
@@ -1625,6 +1715,8 @@ a basic token.
 | `denom_units` | [DenomUnit](#cosmos.bank.v1beta1.DenomUnit) | repeated | denom_units represents the list of DenomUnit's for a given coin |
 | `base` | [string](#string) |  | base represents the base denom (should be the DenomUnit with exponent = 0). |
 | `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
+| `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom) |
+| `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display. |
 
 
 
@@ -2857,7 +2949,8 @@ Msg defines the bank Msg service.
 <a name="cosmos.crypto.ed25519.PrivKey"></a>
 
 ### PrivKey
-PrivKey defines a ed25519 private key.
+Deprecated: PrivKey defines a ed25519 private key.
+NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 
 
 | Field | Type | Label | Description |
@@ -2872,11 +2965,11 @@ PrivKey defines a ed25519 private key.
 <a name="cosmos.crypto.ed25519.PubKey"></a>
 
 ### PubKey
-PubKey defines a ed25519 public key
-Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
-if the y-coordinate is the lexicographically largest of the two associated with
-the x-coordinate. Otherwise the first byte is a 0x03.
-This prefix is followed with the x-coordinate.
+PubKey is an ed25519 public key for handling Tendermint keys in SDK.
+It's needed for Any serialization and SDK compatibility.
+It must not be used in a non Tendermint key context because it doesn't implement
+ADR-28. Nevertheless, you will like to use ed25519 in app user level
+then you must create a new proto message and follow ADR-28 for Address construction.
 
 
 | Field | Type | Label | Description |
@@ -4098,6 +4191,312 @@ Msg defines the evidence Msg service.
 
 
 
+<a name="cosmos/feegrant/v1beta1/feegrant.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/feegrant.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.BasicFeeAllowance"></a>
+
+### BasicFeeAllowance
+BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | spend_limit specifies the maximum amount of tokens that can be spent by this allowance and will be updated as tokens are spent. If it is empty, there is no spend limit and any amount of coins can be spent. |
+| `expiration` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | expiration specifies an optional time when this allowance expires |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.Duration"></a>
+
+### Duration
+Duration is a span of a clock time or number of blocks.
+This is designed to be added to an ExpiresAt struct.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `blocks` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.ExpiresAt"></a>
+
+### ExpiresAt
+ExpiresAt is a point in time where something expires.
+It may be *either* block time or block height
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `height` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.FeeAllowanceGrant"></a>
+
+### FeeAllowanceGrant
+FeeAllowanceGrant is stored in the KVStore to record a grant with full context
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.PeriodicFeeAllowance"></a>
+
+### PeriodicFeeAllowance
+PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+as well as a limit per time period.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `basic` | [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance) |  | basic specifies a struct of `BasicFeeAllowance` |
+| `period` | [Duration](#cosmos.feegrant.v1beta1.Duration) |  | period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset |
+| `period_spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_spend_limit specifies the maximum number of coins that can be spent in the period |
+| `period_can_spend` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_can_spend is the number of coins left to be spent before the period_reset time |
+| `period_reset` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | period_reset is the time at which this period resets and a new one begins, it is calculated from the start time of the first transaction after the last period ended |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/feegrant/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState contains a set of fee allowances, persisted from the store
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowances` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/feegrant/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/query.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest"></a>
+
+### QueryFeeAllowanceRequest
+QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse"></a>
+
+### QueryFeeAllowanceResponse
+QueryFeeAllowanceResponse is the response type for the Query/FeeAllowance RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowance` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) |  | fee_allowance is a fee_allowance granted for grantee by granter. |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest"></a>
+
+### QueryFeeAllowancesRequest
+QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `grantee` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse"></a>
+
+### QueryFeeAllowancesResponse
+QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fee_allowances` | [FeeAllowanceGrant](#cosmos.feegrant.v1beta1.FeeAllowanceGrant) | repeated | fee_allowances are fee_allowance's granted for grantee by granter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.feegrant.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `FeeAllowance` | [QueryFeeAllowanceRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest) | [QueryFeeAllowanceResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse) | FeeAllowance returns fee granted to the grantee by the granter. | GET|/cosmos/feegrant/v1beta1/fee_allowance/{granter}/{grantee}|
+| `FeeAllowances` | [QueryFeeAllowancesRequest](#cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest) | [QueryFeeAllowancesResponse](#cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse) | FeeAllowances returns all the grants for address. | GET|/cosmos/feegrant/v1beta1/fee_allowances/{grantee}|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/feegrant/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/feegrant/v1beta1/tx.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgGrantFeeAllowance"></a>
+
+### MsgGrantFeeAllowance
+MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
+of fees from the account of Granter.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse"></a>
+
+### MsgGrantFeeAllowanceResponse
+MsgGrantFeeAllowanceResponse defines the Msg/GrantFeeAllowanceResponse response type.
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance"></a>
+
+### MsgRevokeFeeAllowance
+MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `granter` | [string](#string) |  |  |
+| `grantee` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse"></a>
+
+### MsgRevokeFeeAllowanceResponse
+MsgRevokeFeeAllowanceResponse defines the Msg/RevokeFeeAllowanceResponse response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.feegrant.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the feegrant msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GrantFeeAllowance` | [MsgGrantFeeAllowance](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowance) | [MsgGrantFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgGrantFeeAllowanceResponse) | GrantFeeAllowance grants fee allowance to the grantee on the granter's account with the provided expiration time. | |
+| `RevokeFeeAllowance` | [MsgRevokeFeeAllowance](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowance) | [MsgRevokeFeeAllowanceResponse](#cosmos.feegrant.v1beta1.MsgRevokeFeeAllowanceResponse) | RevokeFeeAllowance revokes any fee allowance of granter's account that has been granted to the grantee. | |
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/genutil/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -4256,7 +4655,7 @@ A Vote consists of a proposal ID, the voter, and the vote option.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
 
 
 
@@ -4272,6 +4671,22 @@ VotingParams defines the params for voting on governance proposals.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `voting_period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Length of the voting period. |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.WeightedVoteOption"></a>
+
+### WeightedVoteOption
+WeightedVoteOption defines a unit of vote for vote split.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
+| `weight` | [string](#string) |  |  |
 
 
 
@@ -4734,6 +5149,33 @@ MsgVoteResponse defines the Msg/Vote response type.
 
 
 
+
+<a name="cosmos.gov.v1beta1.MsgVoteWeighted"></a>
+
+### MsgVoteWeighted
+MsgVote defines a message to cast a vote.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  |  |
+| `voter` | [string](#string) |  |  |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.MsgVoteWeightedResponse"></a>
+
+### MsgVoteWeightedResponse
+MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4750,6 +5192,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
 | `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
+| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | WeightedVote defines a method to add a weighted vote on a specific proposal. | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->
@@ -5361,6 +5804,69 @@ Msg defines the slashing Msg service.
 
 
 
+<a name="cosmos/staking/v1beta1/authz.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/staking/v1beta1/authz.proto
+
+
+
+<a name="cosmos.staking.v1beta1.StakeAuthorization"></a>
+
+### StakeAuthorization
+StakeAuthorization defines authorization for delegate/undelegate/redelegate.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `max_tokens` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is empty, there is no spend limit and any amount of coins can be delegated. |
+| `allow_list` | [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators) |  | allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's account. |
+| `deny_list` | [StakeAuthorization.Validators](#cosmos.staking.v1beta1.StakeAuthorization.Validators) |  | deny_list specifies list of validator addresses to whom grantee can not delegate tokens. |
+| `authorization_type` | [AuthorizationType](#cosmos.staking.v1beta1.AuthorizationType) |  | authorization_type defines one of AuthorizationType. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.StakeAuthorization.Validators"></a>
+
+### StakeAuthorization.Validators
+Validators defines list of validator addresses.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="cosmos.staking.v1beta1.AuthorizationType"></a>
+
+### AuthorizationType
+AuthorizationType defines the type of staking module authorization type
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| AUTHORIZATION_TYPE_UNSPECIFIED | 0 | AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type |
+| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines an authorization type for Msg/Delegate |
+| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for Msg/Undelegate |
+| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/staking/v1beta1/staking.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5376,8 +5882,8 @@ Commission defines commission parameters for a given validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `commission_rates` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
-| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `commission_rates` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  | commission_rates defines the initial commission rates to be used for creating a validator. |
+| `update_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | update_time is the last time the commission rate was changed. |
 
 
 
@@ -5393,9 +5899,9 @@ a validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `rate` | [string](#string) |  |  |
-| `max_rate` | [string](#string) |  |  |
-| `max_change_rate` | [string](#string) |  |  |
+| `rate` | [string](#string) |  | rate is the commission rate charged to delegators, as a fraction. |
+| `max_rate` | [string](#string) |  | max_rate defines the maximum commission rate which validator can ever charge, as a fraction. |
+| `max_change_rate` | [string](#string) |  | max_change_rate defines the maximum daily increase of the validator commission, as a fraction. |
 
 
 
@@ -5480,9 +5986,9 @@ validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `shares` | [string](#string) |  |  |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
+| `shares` | [string](#string) |  | shares define the delegation shares received. |
 
 
 
@@ -5514,11 +6020,11 @@ Description defines a validator description.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `moniker` | [string](#string) |  |  |
-| `identity` | [string](#string) |  |  |
-| `website` | [string](#string) |  |  |
-| `security_contact` | [string](#string) |  |  |
-| `details` | [string](#string) |  |  |
+| `moniker` | [string](#string) |  | moniker defines a human-readable name for the validator. |
+| `identity` | [string](#string) |  | identity defines an optional identity signature (ex. UPort or Keybase). |
+| `website` | [string](#string) |  | website defines an optional website link. |
+| `security_contact` | [string](#string) |  | security_contact defines an optional email for security contact. |
+| `details` | [string](#string) |  | details define other optional details. |
 
 
 
@@ -5552,11 +6058,11 @@ Params defines the parameters for the staking module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `unbonding_time` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `max_validators` | [uint32](#uint32) |  |  |
-| `max_entries` | [uint32](#uint32) |  |  |
-| `historical_entries` | [uint32](#uint32) |  |  |
-| `bond_denom` | [string](#string) |  |  |
+| `unbonding_time` | [google.protobuf.Duration](#google.protobuf.Duration) |  | unbonding_time is the time duration of unbonding. |
+| `max_validators` | [uint32](#uint32) |  | max_validators is the maximum number of validators. |
+| `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
+| `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
+| `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
 
 
 
@@ -5589,10 +6095,12 @@ from a particular source validator to a particular destination validator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_src_address` | [string](#string) |  |  |
-| `validator_dst_address` | [string](#string) |  |  |
-| `entries` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) | repeated | redelegation entries |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_src_address` | [string](#string) |  | validator_src_address is the validator redelegation source operator address. |
+| `validator_dst_address` | [string](#string) |  | validator_dst_address is the validator redelegation destination operator address. |
+| `entries` | [RedelegationEntry](#cosmos.staking.v1beta1.RedelegationEntry) | repeated | entries are the redelegation entries.
+
+redelegation entries |
 
 
 
@@ -5607,10 +6115,10 @@ RedelegationEntry defines a redelegation object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `shares_dst` | [string](#string) |  |  |
+| `creation_height` | [int64](#int64) |  | creation_height defines the height which the redelegation took place. |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time defines the unix time for redelegation completion. |
+| `initial_balance` | [string](#string) |  | initial_balance defines the initial balance when redelegation started. |
+| `shares_dst` | [string](#string) |  | shares_dst is the amount of destination-validator shares created by redelegation. |
 
 
 
@@ -5662,9 +6170,11 @@ for a single validator in an time-ordered list.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | unbonding delegation entries |
+| `delegator_address` | [string](#string) |  | delegator_address is the bech32-encoded address of the delegator. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
+| `entries` | [UnbondingDelegationEntry](#cosmos.staking.v1beta1.UnbondingDelegationEntry) | repeated | entries are the unbonding delegation entries.
+
+unbonding delegation entries |
 
 
 
@@ -5679,10 +6189,10 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `creation_height` | [int64](#int64) |  |  |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `initial_balance` | [string](#string) |  |  |
-| `balance` | [string](#string) |  |  |
+| `creation_height` | [int64](#int64) |  | creation_height is the height which the unbonding took place. |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
+| `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
+| `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
 
 
 
@@ -5719,17 +6229,17 @@ multiplied by exchange rate.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `operator_address` | [string](#string) |  |  |
-| `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `jailed` | [bool](#bool) |  |  |
-| `status` | [BondStatus](#cosmos.staking.v1beta1.BondStatus) |  |  |
-| `tokens` | [string](#string) |  |  |
-| `delegator_shares` | [string](#string) |  |  |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `unbonding_height` | [int64](#int64) |  |  |
-| `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  |  |
-| `min_self_delegation` | [string](#string) |  |  |
+| `operator_address` | [string](#string) |  | operator_address defines the address of the validator's operator; bech encoded in JSON. |
+| `consensus_pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  | consensus_pubkey is the consensus public key of the validator, as a Protobuf Any. |
+| `jailed` | [bool](#bool) |  | jailed defined whether the validator has been jailed from bonded status or not. |
+| `status` | [BondStatus](#cosmos.staking.v1beta1.BondStatus) |  | status is the validator status (bonded/unbonding/unbonded). |
+| `tokens` | [string](#string) |  | tokens define the delegated tokens (incl. self-delegation). |
+| `delegator_shares` | [string](#string) |  | delegator_shares defines total shares issued to a validator's delegators. |
+| `description` | [Description](#cosmos.staking.v1beta1.Description) |  | description defines the description terms for the validator. |
+| `unbonding_height` | [int64](#int64) |  | unbonding_height defines, if unbonding, the height at which this validator has begun unbonding. |
+| `unbonding_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | unbonding_time defines, if unbonding, the min time for the validator to complete unbonding. |
+| `commission` | [Commission](#cosmos.staking.v1beta1.Commission) |  | commission defines the commission parameters. |
+| `min_self_delegation` | [string](#string) |  | min_self_delegation is the validator's self declared minimum self delegation. |
 
 
 
@@ -7003,7 +7513,6 @@ Plan specifies information about a planned upgrade and when it should occur.
 | `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time after which the upgrade must be performed. Leave set to its zero value to use a pre-defined Height instead. |
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
-| `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | IBC-enabled chains can opt-in to including the upgraded client state in its upgrade plan This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs, so that connecting chains can verify that the new upgraded client is valid by verifying a proof on the previous version of the chain. This will allow IBC connections to persist smoothly across planned chain upgrades |
 
 
 
@@ -7128,7 +7637,7 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `upgraded_consensus_state` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `upgraded_consensus_state` | [bytes](#bytes) |  |  |
 
 
 
@@ -7583,17 +8092,20 @@ client.
 <a name="ibc.core.client.v1.ClientUpdateProposal"></a>
 
 ### ClientUpdateProposal
-ClientUpdateProposal is a governance proposal. If it passes, the client is
-updated with the provided header. The update may fail if the header is not
-valid given certain conditions specified by the client implementation.
+ClientUpdateProposal is a governance proposal. If it passes, the substitute client's
+consensus states starting from the 'initial height' are copied over to the subjects
+client state. The proposal handler may fail if the subject and the substitute do not
+match in client and chain parameters (with exception to latest height, frozen height, and chain-id).
+The updated client must also be valid (cannot be expired).
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  | the title of the update proposal |
 | `description` | [string](#string) |  | the description of the proposal |
-| `client_id` | [string](#string) |  | the client identifier for the client to be updated if the proposal passes |
-| `header` | [google.protobuf.Any](#google.protobuf.Any) |  | the header used to update the client if the proposal passes |
+| `subject_client_id` | [string](#string) |  | the client identifier for the client to be updated if the proposal passes |
+| `substitute_client_id` | [string](#string) |  | the substitute client identifier for the client standing in for the subject client |
+| `initial_height` | [Height](#ibc.core.client.v1.Height) |  | the intital height to copy consensus states from the substitute to the subject |
 
 
 
@@ -7666,6 +8178,25 @@ Params defines the set of IBC light client parameters.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `allowed_clients` | [string](#string) | repeated | allowed_clients defines the list of allowed client state types. |
+
+
+
+
+
+
+<a name="ibc.core.client.v1.UpgradeProposal"></a>
+
+### UpgradeProposal
+UpgradeProposal is a gov Content type for initiating an IBC breaking
+upgrade.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `plan` | [cosmos.upgrade.v1beta1.Plan](#cosmos.upgrade.v1beta1.Plan) |  |  |
+| `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | An UpgradedClientState must be provided to perform an IBC breaking upgrade. This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs, so that connected chains can verify that the new upgraded client is valid by verifying a proof of the intended new client state on the previous version of the chain. This will allow IBC connections to persist smoothly across planned chain upgrades. |
 
 
 
@@ -9037,6 +9568,39 @@ Query/ConsensusStates RPC method
 
 
 
+
+<a name="ibc.core.client.v1.QueryUpgradedClientStateRequest"></a>
+
+### QueryUpgradedClientStateRequest
+QueryUpgradedClientStateRequest is the request type for the Query/UpgradedClientState RPC
+method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `client_id` | [string](#string) |  | client state unique identifier |
+| `plan_height` | [int64](#int64) |  | plan height of the current chain must be sent in request as this is the height under which upgraded client state is stored |
+
+
+
+
+
+
+<a name="ibc.core.client.v1.QueryUpgradedClientStateResponse"></a>
+
+### QueryUpgradedClientStateResponse
+QueryUpgradedClientStateResponse is the response type for the Query/UpgradedClientState RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | client state associated with the request identifier |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -9056,6 +9620,7 @@ Query provides defines the gRPC querier service
 | `ConsensusState` | [QueryConsensusStateRequest](#ibc.core.client.v1.QueryConsensusStateRequest) | [QueryConsensusStateResponse](#ibc.core.client.v1.QueryConsensusStateResponse) | ConsensusState queries a consensus state associated with a client state at a given height. | GET|/ibc/core/client/v1beta1/consensus_states/{client_id}/revision/{revision_number}/height/{revision_height}|
 | `ConsensusStates` | [QueryConsensusStatesRequest](#ibc.core.client.v1.QueryConsensusStatesRequest) | [QueryConsensusStatesResponse](#ibc.core.client.v1.QueryConsensusStatesResponse) | ConsensusStates queries all the consensus state associated with a given client. | GET|/ibc/core/client/v1beta1/consensus_states/{client_id}|
 | `ClientParams` | [QueryClientParamsRequest](#ibc.core.client.v1.QueryClientParamsRequest) | [QueryClientParamsResponse](#ibc.core.client.v1.QueryClientParamsResponse) | ClientParams queries all parameters of the ibc client. | GET|/ibc/client/v1beta1/params|
+| `UpgradedClientState` | [QueryUpgradedClientStateRequest](#ibc.core.client.v1.QueryUpgradedClientStateRequest) | [QueryUpgradedClientStateResponse](#ibc.core.client.v1.QueryUpgradedClientStateResponse) | UpgradedClientState queries an Upgraded IBC light client. | GET|/ibc/core/client/v1/upgraded_client_states/{client_id}|
 
  <!-- end services -->
 
@@ -10348,4 +10913,3 @@ that implements Misbehaviour interface expected by ICS-02
 | <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
-

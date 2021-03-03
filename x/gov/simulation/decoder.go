@@ -22,7 +22,7 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 				panic(err)
 			}
 			var proposalB types.Proposal
-			err = cdc.UnmarshalBinaryBare(kvA.Value, &proposalB)
+			err = cdc.UnmarshalBinaryBare(kvB.Value, &proposalB)
 			if err != nil {
 				panic(err)
 			}

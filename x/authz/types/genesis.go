@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 // NewGenesisState creates new GenesisState object
@@ -36,6 +37,6 @@ func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg GrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var authorization Authorization
+	var authorization exported.Authorization
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }

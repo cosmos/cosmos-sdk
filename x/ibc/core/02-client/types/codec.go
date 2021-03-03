@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
 )
 
@@ -32,6 +33,11 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"ibc.core.client.v1.Misbehaviour",
 		(*exported.Misbehaviour)(nil),
+	)
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&ClientUpdateProposal{},
+		&UpgradeProposal{},
 	)
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),

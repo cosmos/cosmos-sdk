@@ -11,9 +11,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // NewCreateClientCmd defines the command to create a new IBC light client.
@@ -70,11 +75,14 @@ func NewCreateClientCmd() *cobra.Command {
 				return err
 			}
 
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.CreateClient(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 
@@ -120,11 +128,14 @@ func NewUpdateClientCmd() *cobra.Command {
 				return err
 			}
 
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.UpdateClient(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 }
@@ -165,11 +176,14 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 				return err
 			}
 
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.SubmitMisbehaviour(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 }
@@ -232,7 +246,74 @@ func NewUpgradeClientCmd() *cobra.Command {
 				return err
 			}
 
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.UpgradeClient(cmd.Context(), msg)
+			if err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdSubmitUpdateClientProposal implements a command handler for submitting an update IBC client proposal transaction.
+func NewCmdSubmitUpdateClientProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-client [subject-client-id] [substitute-client-id] [initial-height] [flags]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Submit an update IBC client proposal",
+		Long: "Submit an update IBC client proposal along with an initial deposit.\n" +
+			"Please specify a subject client identifier you want to update..\n" +
+			"Please specify the substitute client the subject client will use and the initial height to reference the substitute client's state.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			title, err := cmd.Flags().GetString(govcli.FlagTitle)
+			if err != nil {
+				return err
+			}
+
+			description, err := cmd.Flags().GetString(govcli.FlagDescription)
+			if err != nil {
+				return err
+			}
+
+			subjectClientID := args[0]
+			substituteClientID := args[1]
+
+			initialHeight, err := types.ParseHeight(args[2])
+			if err != nil {
+				return err
+			}
+
+			content := types.NewClientUpdateProposal(title, description, subjectClientID, substituteClientID, initialHeight)
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
 
@@ -240,7 +321,98 @@ func NewUpgradeClientCmd() *cobra.Command {
 		},
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+
+	return cmd
+}
+
+// NewCmdSubmitUpgradeProposal implements a command handler for submitting an upgrade IBC client proposal transaction.
+func NewCmdSubmitUpgradeProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ibc-upgrade [name] [height] [path/to/upgraded_client_state.json] [flags]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Submit an IBC upgrade proposal",
+		Long: "Submit an IBC client breaking upgrade proposal along with an initial deposit.\n" +
+			"The client state specified is the upgraded client state representing the upgraded chain",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
+
+			title, err := cmd.Flags().GetString(govcli.FlagTitle)
+			if err != nil {
+				return err
+			}
+
+			description, err := cmd.Flags().GetString(govcli.FlagDescription)
+			if err != nil {
+				return err
+			}
+
+			name := args[0]
+
+			height, err := cmd.Flags().GetInt64(args[1])
+			if err != nil {
+				return err
+			}
+
+			plan := upgradetypes.Plan{
+				Name:   name,
+				Height: height,
+			}
+
+			// attempt to unmarshal client state argument
+			var clientState exported.ClientState
+			clientContentOrFileName := args[2]
+			if err := cdc.UnmarshalInterfaceJSON([]byte(clientContentOrFileName), &clientState); err != nil {
+
+				// check for file path if JSON input is not provided
+				contents, err := ioutil.ReadFile(clientContentOrFileName)
+				if err != nil {
+					return errors.Wrap(err, "neither JSON input nor path to .json file for client state were provided")
+				}
+
+				if err := cdc.UnmarshalInterfaceJSON(contents, &clientState); err != nil {
+					return errors.Wrap(err, "error unmarshalling client state file")
+				}
+			}
+
+			content, err := types.NewUpgradeProposal(title, description, plan, clientState)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 
 	return cmd
 }

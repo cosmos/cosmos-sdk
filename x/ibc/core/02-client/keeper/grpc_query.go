@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sort"
@@ -159,7 +160,7 @@ func (q Keeper) ConsensusStates(c context.Context, req *types.QueryConsensusStat
 
 	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key, value []byte, accumulate bool) (bool, error) {
 		// filter any metadata stored under consensus state key
-		if strings.Contains(string(key), "/") {
+		if bytes.Contains(key, []byte("/")) {
 			return false, nil
 		}
 
@@ -194,5 +195,48 @@ func (q Keeper) ClientParams(c context.Context, _ *types.QueryClientParamsReques
 
 	return &types.QueryClientParamsResponse{
 		Params: &params,
+	}, nil
+}
+
+// UpgradedClientState implements the Query/UpgradedClientState gRPC method
+func (q Keeper) UpgradedClientState(c context.Context, req *types.QueryUpgradedClientStateRequest) (*types.QueryUpgradedClientStateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if err := host.ClientIdentifierValidator(req.ClientId); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	plan, found := q.GetUpgradePlan(ctx)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound, "upgrade plan not found",
+		)
+	}
+
+	bz, found := q.GetUpgradedClient(ctx, plan.Height)
+	if !found {
+		return nil, status.Error(
+			codes.NotFound,
+			sdkerrors.Wrap(types.ErrClientNotFound, req.ClientId).Error(),
+		)
+	}
+
+	clientState, err := types.UnmarshalClientState(q.cdc, bz)
+	if err != nil {
+		return nil, status.Error(
+			codes.Internal, err.Error(),
+		)
+	}
+
+	any, err := types.PackClientState(clientState)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryUpgradedClientStateResponse{
+		UpgradedClientState: any,
 	}, nil
 }

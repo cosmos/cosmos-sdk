@@ -40,6 +40,10 @@ func (suite *PKSuite) TestString() {
 	require.Equal(prefix, pkStr[:len(prefix)])
 }
 
+func (suite *PKSuite) TestType() {
+	suite.Require().Equal(name, suite.pk.Type())
+}
+
 func (suite *PKSuite) TestEquals() {
 	require := suite.Require()
 

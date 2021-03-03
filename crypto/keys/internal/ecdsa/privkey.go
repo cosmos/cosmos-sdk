@@ -12,7 +12,10 @@ import (
 // GenPrivKey generates a new secp256r1 private key. It uses operating system randomness.
 func GenPrivKey(curve elliptic.Curve) (PrivKey, error) {
 	key, err := ecdsa.GenerateKey(curve, rand.Reader)
-	return PrivKey{*key}, err
+	if err != nil {
+		return PrivKey{}, err
+	}
+	return PrivKey{*key}, nil
 }
 
 type PrivKey struct {

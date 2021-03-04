@@ -3,9 +3,14 @@ package rosetta
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+
+	"github.com/btcsuite/btcd/btcec"
 	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
-	"reflect"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/gogo/protobuf/proto"
@@ -16,15 +21,26 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// converter is a utility that can be used to convert
+// Converter is a utility that can be used to convert
 // back and forth from rosetta to sdk and tendermint types
+// IMPORTANT NOTES:
+// - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
+//   IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
+//   WITH TENDERMINT RPC AND COSMOS GRPC
+//
+// - IT SHOULD RETURN cosmos rosetta gateway error types!
 type Converter interface {
-	FromRosetta() FromRosettaConverter
+	// ToSDK exposes the methods that convert
+	// rosetta types to cosmos sdk and tendermint types
+	ToSDK() ToSDKConverter
+	// ToRosetta exposes the methods that convert
+	// sdk and tendermint types to rosetta types
 	ToRosetta() ToRosettaConverter
 }
 
@@ -38,38 +54,51 @@ type ToRosettaConverter interface {
 	BeginBlockTxHash(blockHash []byte) string
 	// EndBlockTxHash converts the given endblock hash to rosetta transaction hash
 	EndBlockTxHash(blockHash []byte) string
-	// CoinsToAmounts converts sdk.Coins to amounts
-	CoinsToAmounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*rosettatypes.Amount
-	// MsgToOps converts an sdk.Msg to a rosetta operation
-	MsgToOps(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error)
-	// MsgToMeta converts an sdk.Msg to rosetta metadata
-	MsgToMeta(msg sdk.Msg) (meta map[string]interface{}, err error)
+	// Amounts converts sdk.Coins to rosetta.Amounts
+	Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*rosettatypes.Amount
+	// Ops converts an sdk.Msg to rosetta operations
+	Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error)
+	// OpsAndSigners takes raw transaction bytes and returns rosetta operations and the expected signers
+	OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error)
+	// Meta converts an sdk.Msg to rosetta metadata
+	Meta(msg sdk.Msg) (meta map[string]interface{}, err error)
 	// Tx converts a tendermint transaction and tx result if provided to a rosetta tx
 	Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error)
 	// TxIdentifiers converts a tendermint tx to transaction identifiers
 	TxIdentifiers(txs []tmtypes.Tx) []*rosettatypes.TransactionIdentifier
-	// EventsToBalanceOps converts events to balance operations
-	EventsToBalanceOps(status string, events []abci.Event) []*rosettatypes.Operation
-	// StatusToSyncStatus converts a tendermint status to sync status
-	StatusToSyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.SyncStatus
+	// BalanceOps converts events to balance operations
+	BalanceOps(status string, events []abci.Event) []*rosettatypes.Operation
+	// SyncStatus converts a tendermint status to sync status
+	SyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.SyncStatus
 	// Peers converts tendermint peers to rosetta
 	Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer
 }
 
-// FromRosettaConverter is an interface that exposes
+// ToSDKConverter is an interface that exposes
 // all the functions used to convert rosetta types
 // to tendermint and sdk types
-type FromRosettaConverter interface {
-	OpsToUnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx, err error)
-	MetaToMsg(meta map[string]interface{}, msg sdk.Msg) (err error)
+type ToSDKConverter interface {
+	// UnsignedTx converts rosetta operations to an unsigned cosmos sdk transactions
+	UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx, err error)
+	// SignedTx adds the provided signatures after decoding the unsigned transaction raw bytes
+	// and returns the signed tx bytes
+	SignedTx(txBytes []byte, signatures []*rosettatypes.Signature) (signedTxBytes []byte, err error)
+	// Msg converts metadata to an sdk message
+	Msg(meta map[string]interface{}, msg sdk.Msg) (err error)
+	// HashToTxType returns the transaction type (end block, begin block or deliver tx)
+	// and the real hash to query in order to get information
 	HashToTxType(hashBytes []byte) (txType TransactionType, realHash []byte)
+	// PubKey attempts to convert a rosetta public key to cosmos sdk one
+	PubKey(pk *rosettatypes.PublicKey) (cryptotypes.PubKey, error)
 }
 
 type converter struct {
-	newTxBuilder func() sdkclient.TxBuilder
-	txDecode     sdk.TxDecoder
-	ir           codectypes.InterfaceRegistry
-	cdc          *codec.ProtoCodec
+	newTxBuilder    func() sdkclient.TxBuilder
+	txBuilderFromTx func(tx sdk.Tx) (sdkclient.TxBuilder, error)
+	txDecode        sdk.TxDecoder
+	txEncode        sdk.TxEncoder
+	ir              codectypes.InterfaceRegistry
+	cdc             *codec.ProtoCodec
 }
 
 func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sdkclient.TxConfig) Converter {
@@ -77,13 +106,17 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		newTxBuilder: func() sdkclient.TxBuilder {
 			return cfg.NewTxBuilder()
 		},
+		txBuilderFromTx: func(tx sdk.Tx) (sdkclient.TxBuilder, error) {
+			return cfg.WrapTxBuilder(tx)
+		},
+		txDecode: cfg.TxDecoder(),
+		txEncode: cfg.TxEncoder(),
 		ir:       ir,
 		cdc:      cdc,
-		txDecode: cfg.TxDecoder(),
 	}
 }
 
-func (c converter) FromRosetta() FromRosettaConverter {
+func (c converter) ToSDK() ToSDKConverter {
 	return c
 }
 
@@ -92,7 +125,7 @@ func (c converter) ToRosetta() ToRosettaConverter {
 }
 
 // OpsToUnsignedTx returns all the sdk.Msgs given the operations
-func (c converter) OpsToUnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx, err error) {
+func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx, err error) {
 	builder := c.newTxBuilder()
 
 	var msgs []sdk.Msg
@@ -110,7 +143,7 @@ func (c converter) OpsToUnsignedTx(ops []*rosettatypes.Operation) (tx authsignin
 			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "operation is not a valid supported sdk.Msg: "+op.Type)
 		}
 
-		err = c.MetaToMsg(op.Metadata, msg)
+		err = c.Msg(op.Metadata, msg)
 		if err != nil {
 			return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 		}
@@ -168,7 +201,7 @@ func (c converter) OpsToUnsignedTx(ops []*rosettatypes.Operation) (tx authsignin
 }
 
 // MetaToMsg unmarshals the rosetta metadata to the given sdk.Msg
-func (c converter) MetaToMsg(meta map[string]interface{}, msg sdk.Msg) error {
+func (c converter) Msg(meta map[string]interface{}, msg sdk.Msg) error {
 	metaBytes, err := json.Marshal(meta)
 	if err != nil {
 		return err
@@ -176,7 +209,7 @@ func (c converter) MetaToMsg(meta map[string]interface{}, msg sdk.Msg) error {
 	return c.cdc.UnmarshalJSON(metaBytes, msg)
 }
 
-func (c converter) MsgToMeta(msg sdk.Msg) (meta map[string]interface{}, err error) {
+func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
 	b, err := c.cdc.MarshalJSON(msg)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
@@ -193,7 +226,7 @@ func (c converter) MsgToMeta(msg sdk.Msg) (meta map[string]interface{}, err erro
 // MsgToOps will create an operation for each msg signer
 // with the message proto name as type, and the raw fields
 // as metadata
-func (c converter) MsgToOps(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
+func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
 	opName := proto.MessageName(msg)
 	// in case proto does not recognize the message name
 	// then we should try to cast it to service msg, to
@@ -220,7 +253,7 @@ func (c converter) MsgToOps(status string, msg sdk.Msg) ([]*rosettatypes.Operati
 		}
 	}
 
-	meta, err := c.MsgToMeta(msg)
+	meta, err := c.Meta(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +300,7 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	msgs := tx.GetMsgs()
 	var rawTxOps []*rosettatypes.Operation
 	for _, msg := range msgs {
-		ops, err := c.MsgToOps(status, msg)
+		ops, err := c.Ops(status, msg)
 		if err != nil {
 			return nil, err
 		}
@@ -278,7 +311,7 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	var balanceOps []*rosettatypes.Operation
 	// tx result might be nil, in case we're querying an unconfirmed tx from the mempool
 	if txResult != nil {
-		balanceOps = c.EventsToBalanceOps(status, txResult.Events)
+		balanceOps = c.BalanceOps(status, txResult.Events)
 	}
 
 	// now normalize indexes
@@ -290,7 +323,7 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	}, nil
 }
 
-func (c converter) EventsToBalanceOps(status string, events []abci.Event) []*rosettatypes.Operation {
+func (c converter) BalanceOps(status string, events []abci.Event) []*rosettatypes.Operation {
 	var ops []*rosettatypes.Operation
 
 	for _, e := range events {
@@ -389,7 +422,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 }
 
 // sdkCoinsToRosettaAmounts converts []sdk.Coin to rosetta amounts
-func (c converter) CoinsToAmounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*rosettatypes.Amount {
+func (c converter) Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*rosettatypes.Amount {
 	amounts := make([]*rosettatypes.Amount, len(availableCoins))
 	ownedCoinsMap := make(map[string]sdk.Int, len(availableCoins))
 
@@ -487,7 +520,7 @@ func (c converter) HashToTxType(hashBytes []byte) (txType TransactionType, realH
 }
 
 // StatusToSyncStatus converts a tendermint status to rosetta sync status
-func (c converter) StatusToSyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.SyncStatus {
+func (c converter) SyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.SyncStatus {
 	// determine sync status
 	var stage = StatusPeerSynced
 	if status.SyncInfo.CatchingUp {
@@ -552,4 +585,93 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 	}
 
 	return converted
+}
+
+// OpsAndSigners takes transactions bytes and returns the operation, is signed is true it will return
+// the account identifiers which have signed the transaction
+func (c converter) OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error) {
+
+	rosTx, err := c.ToRosetta().Tx(txBytes, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	ops = rosTx.Operations
+
+	// get the signers
+	sdkTx, err := c.txDecode(txBytes)
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+	}
+
+	txBuilder, err := c.txBuilderFromTx(sdkTx)
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+	}
+
+	for _, signer := range txBuilder.GetTx().GetSigners() {
+		signers = append(signers, &rosettatypes.AccountIdentifier{
+			Address: signer.String(),
+		})
+	}
+
+	return
+}
+
+func (c converter) SignedTx(txBytes []byte, signatures []*rosettatypes.Signature) (signedTxBytes []byte, err error) {
+	rawTx, err := c.txDecode(txBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	txBuilder, err := c.txBuilderFromTx(rawTx)
+	if err != nil {
+		return nil, err
+	}
+
+	notSignedSigs, err := txBuilder.GetTx().GetSignaturesV2() //
+	if err != nil {
+		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+	}
+
+	signedSigs := make([]signing.SignatureV2, len(notSignedSigs))
+	for i, signature := range signatures {
+		// TODO(fdymylja): here we should check that the public key matches...
+		signedSigs[i] = signing.SignatureV2{
+			PubKey: notSignedSigs[i].PubKey,
+			Data: &signing.SingleSignatureData{
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				Signature: signature.Bytes,
+			},
+			Sequence: notSignedSigs[i].Sequence,
+		}
+	}
+
+	if err = txBuilder.SetSignatures(signedSigs...); err != nil {
+		return nil, err
+	}
+
+	txBytes, err = c.txEncode(txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	return txBytes, nil
+}
+
+func (c converter) PubKey(pubKey *rosettatypes.PublicKey) (cryptotypes.PubKey, error) {
+	if pubKey.CurveType != "secp256k1" {
+		return nil, crgerrs.WrapError(crgerrs.ErrUnsupportedCurve, "only secp256k1 supported")
+	}
+
+	cmp, err := btcec.ParsePubKey(pubKey.Bytes, btcec.S256())
+	if err != nil {
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+
+	compressedPublicKey := make([]byte, secp256k1.PubKeySize)
+	copy(compressedPublicKey, cmp.SerializeCompressed())
+
+	pk := &secp256k1.PubKey{Key: compressedPublicKey}
+
+	return pk, nil
 }

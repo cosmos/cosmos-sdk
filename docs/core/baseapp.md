@@ -104,7 +104,7 @@ Finally, a few more important parameterd:
 
 ```go
 func NewBaseApp(
-  name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+  name string, logger log.Logger, db dbm.DB, txDecode sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 
   // ...

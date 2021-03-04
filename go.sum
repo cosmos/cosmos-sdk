@@ -660,8 +660,8 @@ github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c h1:g+WoO5jjkqGAzH
 github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c/go.mod h1:ahpPrc7HpcfEWDQRZEmnXMzHY03mLDYMCxeDzy46i+8=
 github.com/tendermint/btcd v0.1.1 h1:0VcxPfflS2zZ3RiOAHkBiFUcPvbtRj5O7zHmcJWHV7s=
 github.com/tendermint/btcd v0.1.1/go.mod h1:DC6/m53jtQzr/NFmMNEu0rxf18/ktVoVtMrnDD5pN+U=
-github.com/tendermint/cosmos-rosetta-gateway v0.3.0-rc2 h1:crekJuQ57yIBDuKd3/dMJ00ZvOHURuv9RGJSi2hWTW4=
-github.com/tendermint/cosmos-rosetta-gateway v0.3.0-rc2/go.mod h1:gBPw8WV2Erm4UGHlBRiM3zaEBst4bsuihmMCNQdgP/s=
+github.com/tendermint/cosmos-rosetta-gateway v0.3.0-rc2.0.20210304154332-87d6ca4410df h1:hoMLrOS4WyyMM+Y+iWdGu94o0zzp6Q43y7v89Q1/OIw=
+github.com/tendermint/cosmos-rosetta-gateway v0.3.0-rc2.0.20210304154332-87d6ca4410df/go.mod h1:gBPw8WV2Erm4UGHlBRiM3zaEBst4bsuihmMCNQdgP/s=
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 h1:hqAk8riJvK4RMWx1aInLzndwxKalgi5rTqgfXxOxbEI=
 github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15/go.mod h1:z4YtwM70uOnk8h0pjJYlj3zdYwi9l03By6iAIF5j/Pk=
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=

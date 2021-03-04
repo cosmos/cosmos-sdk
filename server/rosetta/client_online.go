@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
@@ -31,6 +29,8 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	tmrpc "github.com/tendermint/tendermint/rpc/client"
 )
 
 // interface assertion
@@ -48,10 +48,11 @@ type Client struct {
 
 	ir codectypes.InterfaceRegistry
 
-	clientCtx client.Context
+	tmRPC tmrpc.Client
 
-	txDecoder sdk.TxDecoder
-	version   string
+	txEncode sdk.TxEncoder
+	txConfig client.TxConfig
+	version  string
 
 	converter Converter
 }
@@ -65,12 +66,18 @@ func NewClient(cfg *Config) (*Client, error) {
 		v = "unknown"
 	}
 
+	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes)
+
 	return &Client{
 		config:    cfg,
+		auth:      nil,
+		bank:      nil,
 		ir:        cfg.InterfaceRegistry,
+		tmRPC:     nil,
+		txEncode:  txConfig.TxEncoder(),
+		txConfig:  txConfig,
 		version:   fmt.Sprintf("%s/%s", info.AppName, v),
-		txDecoder: authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes).TxDecoder(),
-		converter: NewConverter(cfg.Codec, cfg.InterfaceRegistry, authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes)),
+		converter: NewConverter(cfg.Codec, cfg.InterfaceRegistry, txConfig),
 	}, nil
 }
 
@@ -114,7 +121,7 @@ func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]*r
 		return nil, err
 	}
 
-	return c.converter.ToRosetta().CoinsToAmounts(balance.Balances, availableCoins), nil
+	return c.converter.ToRosetta().Amounts(balance.Balances, availableCoins), nil
 }
 
 func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockResponse, error) {
@@ -123,7 +130,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 		return crgtypes.BlockResponse{}, fmt.Errorf("invalid block hash: %s", err)
 	}
 
-	block, err := c.clientCtx.Client.BlockByHash(ctx, bHash)
+	block, err := c.tmRPC.BlockByHash(ctx, bHash)
 	if err != nil {
 		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
 	}
@@ -132,7 +139,7 @@ func (c *Client) BlockByHash(ctx context.Context, hash string) (crgtypes.BlockRe
 }
 
 func (c *Client) BlockByHeight(ctx context.Context, height *int64) (crgtypes.BlockResponse, error) {
-	block, err := c.clientCtx.Client.Block(ctx, height)
+	block, err := c.tmRPC.Block(ctx, height)
 	if err != nil {
 		return crgtypes.BlockResponse{}, crgerrs.WrapError(crgerrs.ErrBadGateway, err.Error())
 	}
@@ -155,8 +162,6 @@ func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
-	bb, _ := json.Marshal(blockTxResp)
-	log.Printf("block %d: %s", height, bb)
 	return blockTxResp, nil
 }
 
@@ -170,34 +175,17 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 }
 
 func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error) {
-	txConfig := c.getTxConfig()
-	rawTx, err := c.txDecoder(txBytes)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	txBldr, err := txConfig.WrapTxBuilder(rawTx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var accountIdentifierSigners []*rosettatypes.AccountIdentifier
-	if signed {
-		addrs := txBldr.GetTx().GetSigners()
-		for _, addr := range addrs {
-			signer := &rosettatypes.AccountIdentifier{
-				Address: addr.String(),
-			}
-			accountIdentifierSigners = append(accountIdentifierSigners, signer)
+	switch signed {
+	case false:
+		rosTx, err := c.converter.ToRosetta().Tx(txBytes, nil)
+		if err != nil {
+			return nil, nil, err
 		}
+		return rosTx.Operations, nil, err
+	default:
+		ops, signers, err = c.converter.ToRosetta().OpsAndSigners(txBytes)
+		return
 	}
-
-	rosTx, err := c.converter.ToRosetta().Tx(txBytes, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return rosTx.Operations, accountIdentifierSigners, nil
 }
 
 // GetTx returns a transaction given its hash, in rosetta begin block and end block are mocked
@@ -209,14 +197,14 @@ func (c *Client) GetTx(ctx context.Context, hash string) (*rosettatypes.Transact
 	}
 
 	// get tx type and hash
-	txType, hashBytes := c.converter.FromRosetta().HashToTxType(hashBytes)
+	txType, hashBytes := c.converter.ToSDK().HashToTxType(hashBytes)
 
 	// construct rosetta tx
 	switch txType {
 	// handle begin block hash
 	case BeginBlockTx:
 		// get block height by hash
-		block, err := c.clientCtx.Client.BlockByHash(ctx, hashBytes)
+		block, err := c.tmRPC.BlockByHash(ctx, hashBytes)
 		if err != nil {
 			return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 		}
@@ -230,16 +218,15 @@ func (c *Client) GetTx(ctx context.Context, hash string) (*rosettatypes.Transact
 		return fullBlock.Transactions[0], nil
 	// handle deliver tx hash
 	case DeliverTxTx:
-		rawTx, err := c.clientCtx.Client.Tx(ctx, hashBytes, true)
+		rawTx, err := c.tmRPC.Tx(ctx, hashBytes, true)
 		if err != nil {
-			log.Printf("tx err: %s : %s", hash, err)
 			return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 		}
 		return c.converter.ToRosetta().Tx(rawTx.Tx, &rawTx.TxResult)
 	// handle end block hash
 	case EndBlockTx:
 		// get block height by hash
-		block, err := c.clientCtx.Client.BlockByHash(ctx, hashBytes)
+		block, err := c.tmRPC.BlockByHash(ctx, hashBytes)
 		if err != nil {
 			return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 		}
@@ -260,7 +247,7 @@ func (c *Client) GetTx(ctx context.Context, hash string) (*rosettatypes.Transact
 
 // GetUnconfirmedTx gets an unconfirmed transaction given its hash
 func (c *Client) GetUnconfirmedTx(ctx context.Context, hash string) (*rosettatypes.Transaction, error) {
-	res, err := c.clientCtx.Client.UnconfirmedTxs(ctx, nil)
+	res, err := c.tmRPC.UnconfirmedTxs(ctx, nil)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrNotFound, "unconfirmed tx not found")
 	}
@@ -293,7 +280,7 @@ func (c *Client) GetUnconfirmedTx(ctx context.Context, hash string) (*rosettatyp
 
 // Mempool returns the unconfirmed transactions in the mempool
 func (c *Client) Mempool(ctx context.Context) ([]*rosettatypes.TransactionIdentifier, error) {
-	txs, err := c.clientCtx.Client.UnconfirmedTxs(ctx, nil)
+	txs, err := c.tmRPC.UnconfirmedTxs(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +290,7 @@ func (c *Client) Mempool(ctx context.Context) ([]*rosettatypes.TransactionIdenti
 
 // Peers gets the number of peers
 func (c *Client) Peers(ctx context.Context) ([]*rosettatypes.Peer, error) {
-	netInfo, err := c.clientCtx.Client.NetInfo(ctx)
+	netInfo, err := c.tmRPC.NetInfo(ctx)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 	}
@@ -311,40 +298,39 @@ func (c *Client) Peers(ctx context.Context) ([]*rosettatypes.Peer, error) {
 }
 
 func (c *Client) Status(ctx context.Context) (*rosettatypes.SyncStatus, error) {
-	status, err := c.clientCtx.Client.Status(ctx)
+	status, err := c.tmRPC.Status(ctx)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 	}
-	return c.converter.ToRosetta().StatusToSyncStatus(status), err
-}
-
-func (c *Client) getTxConfig() client.TxConfig {
-	return c.clientCtx.TxConfig
+	return c.converter.ToRosetta().SyncStatus(status), err
 }
 
 func (c *Client) PostTx(txBytes []byte) (*rosettatypes.TransactionIdentifier, map[string]interface{}, error) {
 	// sync ensures it will go through checkTx
-	res, err := c.clientCtx.BroadcastTxSync(txBytes)
+	res, err := c.tmRPC.BroadcastTxSync(context.Background(), txBytes)
 	if err != nil {
 		return nil, nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 	}
 	// check if tx was broadcast successfully
 	if res.Code != abcitypes.CodeTypeOK {
-		return nil, nil, crgerrs.WrapError(crgerrs.ErrUnknown, fmt.Sprintf("transaction broadcast failure: (%d) %s ", res.Code, res.RawLog))
+		return nil, nil, crgerrs.WrapError(
+			crgerrs.ErrUnknown,
+			fmt.Sprintf("transaction broadcast failure: (%d) %s ", res.Code, res.Log),
+		)
 	}
 
 	return &rosettatypes.TransactionIdentifier{
-			Hash: res.TxHash,
+			Hash: fmt.Sprintf("%X", res.Hash),
 		},
 		map[string]interface{}{
-			Log: res.RawLog,
+			Log: res.Log,
 		}, nil
 }
 
 func (c *Client) Ready() error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultNodeTimeout)
 	defer cancel()
-	_, err := c.clientCtx.Client.Health(ctx)
+	_, err := c.tmRPC.Health(ctx)
 	if err != nil {
 		return err
 	}
@@ -386,7 +372,7 @@ func (c *Client) Bootstrap() error {
 
 	c.auth = authClient
 	c.bank = bankClient
-	c.clientCtx = clientCtx
+	c.tmRPC = clientCtx.Client
 	c.ir = c.config.InterfaceRegistry
 
 	return nil
@@ -421,7 +407,7 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 		}
 	}
 
-	status, err := c.clientCtx.Client.Status(ctx)
+	status, err := c.tmRPC.Status(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -439,12 +425,12 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 
 func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTransactionsResponse, error) {
 	// get block info
-	blockInfo, err := c.clientCtx.Client.Block(ctx, height)
+	blockInfo, err := c.tmRPC.Block(ctx, height)
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
 	// get block events
-	blockResults, err := c.clientCtx.Client.BlockResults(ctx, height)
+	blockResults, err := c.tmRPC.BlockResults(ctx, height)
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
@@ -458,7 +444,7 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 		TransactionIdentifier: &rosettatypes.TransactionIdentifier{Hash: c.converter.ToRosetta().BeginBlockTxHash(blockInfo.BlockID.Hash)},
 		Operations: AddOperationIndexes(
 			nil,
-			c.converter.ToRosetta().EventsToBalanceOps(StatusTxSuccess, blockResults.BeginBlockEvents),
+			c.converter.ToRosetta().BalanceOps(StatusTxSuccess, blockResults.BeginBlockEvents),
 		),
 	}
 
@@ -466,7 +452,7 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 		TransactionIdentifier: &rosettatypes.TransactionIdentifier{Hash: c.converter.ToRosetta().EndBlockTxHash(blockInfo.BlockID.Hash)},
 		Operations: AddOperationIndexes(
 			nil,
-			c.converter.ToRosetta().EventsToBalanceOps(StatusTxSuccess, blockResults.EndBlockEvents),
+			c.converter.ToRosetta().BalanceOps(StatusTxSuccess, blockResults.EndBlockEvents),
 		),
 	}
 

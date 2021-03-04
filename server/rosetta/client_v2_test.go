@@ -2,8 +2,6 @@ package rosetta
 
 import (
 	"context"
-	"encoding/hex"
-	"encoding/json"
 	"testing"
 )
 
@@ -47,36 +45,4 @@ func TestClientV2(t *testing.T) {
 			t.Logf("\t\t meta: %#v", op.Metadata)
 		}
 	}
-}
-
-func TestT(t *testing.T) {
-
-	const addr = "FD41B1F4CA2222B503F448C481873FA91BAE8492495251602A4E60A73C38F944"
-	cdc, ir := MakeCodec()
-	c, err := NewClient(&Config{
-		Blockchain:        "",
-		Network:           "",
-		TendermintRPC:     "tcp://localhost:26657",
-		GRPCEndpoint:      "localhost:9090",
-		Addr:              "",
-		Retries:           0,
-		Offline:           false,
-		Codec:             cdc,
-		InterfaceRegistry: ir,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	c.Bootstrap()
-	hashBy, err := hex.DecodeString(addr)
-	tx, err := c.clientCtx.Client.Tx(context.Background(), hashBy, true)
-	t.Logf("%#v", tx.TxResult)
-
-	// ros resp
-	rosTx, err := c.GetTx(context.TODO(), addr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	x, err := json.Marshal(rosTx)
-	t.Logf("%s", x)
 }

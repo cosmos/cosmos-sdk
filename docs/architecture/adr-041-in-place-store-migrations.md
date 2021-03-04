@@ -36,7 +36,7 @@ type AppModule interface {
 }
 ```
 
-This methods returns an `uint64` which serves as state-breaking versioning of the module. It MUST be incremented on each consensus-breaking change introduced by the module. To avoid potential errors with default values, the initial version of a module MUST be set to 1. In the SDK, version 1 corresponds to the modules in the v0.41 series.
+This methods returns an `uint64` which serves as state-breaking version of the module. It MUST be incremented on each consensus-breaking change introduced by the module. To avoid potential errors with default values, the initial version of a module MUST be set to 1. In the SDK, version 1 corresponds to the modules in the v0.41 series.
 
 ### Module-Specific Migration Scripts
 

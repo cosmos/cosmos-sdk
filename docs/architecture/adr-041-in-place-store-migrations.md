@@ -106,7 +106,7 @@ When `InitChain` is run, the initial `ModuleManager.GetConsensusVersions()` valu
 + type UpgradeHandler func(ctx sdk.Context, plan Plan, migrationMap MigrationMap) error
 ```
 
-Applying an upgrade will fetch the `MigrationMap` from the `x/upgrade` store and pass it into the handler.
+To apply an upgrade, we query the `MigrationMap` from the `x/upgrade` store and pass it into the handler:
 
 ```diff
 func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {

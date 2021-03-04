@@ -73,12 +73,10 @@ func DefaultParams() Params {
 // Set by benchmarking current implementation:
 //     BenchmarkSig/secp256k1     4334   277167 ns/op   4128 B/op   79 allocs/op
 //     BenchmarkSig/secp256r1    10000   108769 ns/op   1672 B/op   33 allocs/op
-// Based on the results above the factor would be 2x. However we propose to discount it and
-// use 1.2x because we are comparing a highly optimized cgo implementation of secp256k1 to
-// a go stdlib secp256r1. In other benchmark we found that ported secp256k1 to stdlib based
-// implementation wold be 20x slower.
+// Based on the results above secp256k1 is 2.7x is slwer. However we propose to discount it
+// because we are we don't compare the cgo implementation of secp256k1, which is faster.
 func (p Params) SigVerifyCostSecp256r1() uint64 {
-	return p.SigVerifyCostSecp256k1 * 12 / 10 // 120%
+	return p.SigVerifyCostSecp256k1 / 2
 }
 
 // String implements the stringer interface.

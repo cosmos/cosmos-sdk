@@ -22,7 +22,6 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	t.Skip()
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 

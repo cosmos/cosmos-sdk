@@ -54,6 +54,22 @@ func (k *Keeper) SetVersionManager(vm module.VersionManager) {
 	k.versionManager = vm
 }
 
+func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
+	pVersionStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.ProtocolVersionByte})
+	versionBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(versionBytes, v)
+	pVersionStore.Set([]byte("protocol"), versionBytes)
+}
+
+// GetAppVersion gets the protocol version
+func (k Keeper) GetProtocolVersion(ctx sdk.Context) uint64 {
+	pVersionStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.ProtocolVersionByte})
+	pvBytes := pVersionStore.Get([]byte("protocol"))
+	protocolVersion := binary.LittleEndian.Uint64(pvBytes)
+
+	return protocolVersion
+}
+
 // SetConsensusVersions saves the consensus versions retrieved from module.Manager
 func (k Keeper) SetConsensusVersions(ctx sdk.Context) {
 	modules := k.versionManager.GetConsensusVersions()
@@ -233,6 +249,10 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	}
 
 	k.SetConsensusVersions(ctx)
+
+	// increment the protocol version in state
+	currentProtocolVersion := k.GetProtocolVersion(ctx)
+	k.setProtocolVersion(ctx, currentProtocolVersion+1)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

@@ -25,6 +25,9 @@ const (
 	// MigrationMapByte is a prefix to look up module names (key) and versions (value)
 	MigrationMapByte = 0x2
 
+	// ProtocolVersionByte is  aprefix to look up Protocol Version
+	ProtocolVersionByte = 0x3
+
 	// KeyUpgradedIBCState is the key under which upgraded ibc state is stored in the upgrade store
 	KeyUpgradedIBCState = "upgradedIBCState"
 

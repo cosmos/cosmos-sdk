@@ -3,9 +3,6 @@ package rosetta
 import (
 	"context"
 	"encoding/hex"
-	"strings"
-
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
@@ -31,24 +28,7 @@ func (c *Client) Version() string {
 }
 
 func (c *Client) SupportedOperations() []string {
-	var supportedOperations []string
-	for _, ii := range c.ir.ListImplementations("cosmos.base.v1beta1.Msg") {
-		resolvedMsg, err := c.ir.Resolve(ii)
-		if err != nil {
-			continue
-		}
-
-		if _, ok := resolvedMsg.(sdk.Msg); ok {
-			supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
-		}
-	}
-
-	supportedOperations = append(
-		supportedOperations,
-		banktypes.EventTypeCoinSpent, banktypes.EventTypeCoinReceived,
-	)
-
-	return supportedOperations
+	return c.supportedOperations
 }
 
 func (c *Client) SignedTx(_ context.Context, txBytes []byte, signatures []*types.Signature) (signedTxBytes []byte, err error) {

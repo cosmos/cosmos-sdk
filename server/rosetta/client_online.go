@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -21,9 +22,6 @@ import (
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -41,17 +39,15 @@ const defaultNodeTimeout = 15 * time.Second
 
 // Client implements a single network client to interact with cosmos based chains
 type Client struct {
+	supportedOperations []string
+
 	config *Config
 
-	auth auth.QueryClient
-	bank bank.QueryClient
-
-	ir codectypes.InterfaceRegistry
-
+	auth  auth.QueryClient
+	bank  bank.QueryClient
 	tmRPC tmrpc.Client
 
-	txConfig client.TxConfig
-	version  string
+	version string
 
 	converter Converter
 }
@@ -67,19 +63,35 @@ func NewClient(cfg *Config) (*Client, error) {
 
 	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes)
 
+	var supportedOperations []string
+	for _, ii := range cfg.InterfaceRegistry.ListImplementations("cosmos.base.v1beta1.Msg") {
+		resolvedMsg, err := cfg.InterfaceRegistry.Resolve(ii)
+		if err != nil {
+			continue
+		}
+
+		if _, ok := resolvedMsg.(sdk.Msg); ok {
+			supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
+		}
+	}
+
+	supportedOperations = append(
+		supportedOperations,
+		bank.EventTypeCoinSpent, bank.EventTypeCoinReceived,
+	)
+
 	return &Client{
-		config:    cfg,
-		auth:      nil,
-		bank:      nil,
-		ir:        cfg.InterfaceRegistry,
-		tmRPC:     nil,
-		txConfig:  txConfig,
-		version:   fmt.Sprintf("%s/%s", info.AppName, v),
-		converter: NewConverter(cfg.Codec, cfg.InterfaceRegistry, txConfig),
+		supportedOperations: supportedOperations,
+		config:              cfg,
+		auth:                nil,
+		bank:                nil,
+		tmRPC:               nil,
+		version:             fmt.Sprintf("%s/%s", info.AppName, v),
+		converter:           NewConverter(cfg.Codec, cfg.InterfaceRegistry, txConfig),
 	}, nil
 }
 
-func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (auth.AccountI, error) {
+func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (*SignerData, error) {
 	if height != nil {
 		strHeight := strconv.FormatInt(*height, 10)
 		ctx = metadata.AppendToOutgoingContext(ctx, grpctypes.GRPCBlockHeightHeader, strHeight)
@@ -92,13 +104,9 @@ func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (a
 		return nil, crgerrs.FromGRPCToRosettaError(err)
 	}
 
-	var account auth.AccountI
-	err = c.ir.UnpackAny(accountInfo.Account, &account)
-	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
-	}
+	signerData, err := c.converter.ToRosetta().SignerData(accountInfo.Account)
 
-	return account, nil
+	return signerData, nil
 }
 
 func (c *Client) Balances(ctx context.Context, addr string, height *int64) ([]*rosettatypes.Amount, error) {
@@ -353,25 +361,9 @@ func (c *Client) Bootstrap() error {
 	authClient := auth.NewQueryClient(grpcConn)
 	bankClient := bank.NewQueryClient(grpcConn)
 
-	// NodeURI and Client are set from here otherwise
-	// WitNodeURI will require to create a new client
-	// it's done here because WithNodeURI panics if
-	// connection to tendermint node fails
-	clientCtx := client.Context{
-		Client:  tmRPC,
-		NodeURI: c.config.TendermintRPC,
-	}
-	clientCtx = clientCtx.
-		WithJSONMarshaler(c.config.Codec).
-		WithInterfaceRegistry(c.config.InterfaceRegistry).
-		WithTxConfig(authtx.NewTxConfig(c.config.Codec, authtx.DefaultSignModes)).
-		WithAccountRetriever(auth.AccountRetriever{}).
-		WithBroadcastMode(flags.BroadcastBlock)
-
 	c.auth = authClient
 	c.bank = bankClient
-	c.tmRPC = clientCtx.Client
-	c.ir = c.config.InterfaceRegistry
+	c.tmRPC = tmRPC
 
 	return nil
 }
@@ -399,10 +391,7 @@ func (c *Client) ConstructionMetadataFromOptions(ctx context.Context, options ma
 			return nil, err
 		}
 
-		signersData[i] = &SignerData{
-			AccountNumber: accountInfo.GetAccountNumber(),
-			Sequence:      accountInfo.GetSequence(),
-		}
+		signersData[i] = accountInfo
 	}
 
 	status, err := c.tmRPC.Status(ctx)

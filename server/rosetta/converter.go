@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -65,6 +67,8 @@ type ToRosettaConverter interface {
 	OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error)
 	// Meta converts an sdk.Msg to rosetta metadata
 	Meta(msg sdk.Msg) (meta map[string]interface{}, err error)
+	// SignerData returns account signing data from a queried any account
+	SignerData(anyAccount *codectypes.Any) (*SignerData, error)
 	// SigningComponents returns rosetta's components required to build a signable transaction
 	SigningComponents(tx authsigning.Tx, metadata *ConstructionMetadata, rosPubKeys []*rosettatypes.PublicKey) (txBytes []byte, payloadsToSign []*rosettatypes.SigningPayload, err error)
 	// Tx converts a tendermint transaction and tx result if provided to a rosetta tx
@@ -779,4 +783,18 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 	}
 
 	return
+}
+
+// SignerData converts the given any account to signer data
+func (c converter) SignerData(anyAccount *codectypes.Any) (*SignerData, error) {
+	var acc auth.AccountI
+	err := c.ir.UnpackAny(anyAccount, &acc)
+	if err != nil {
+		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+	}
+
+	return &SignerData{
+		AccountNumber: acc.GetAccountNumber(),
+		Sequence:      acc.GetSequence(),
+	}, nil
 }

@@ -38,9 +38,9 @@ type AppModule interface {
 
 This methods returns an `uint64` which serves as state-breaking version of the module. It MUST be incremented on each consensus-breaking change introduced by the module. To avoid potential errors with default values, the initial version of a module MUST be set to 1. In the SDK, version 1 corresponds to the modules in the v0.41 series.
 
-### Module-Specific Migration Scripts
+### Module-Specific Migration Functions
 
-For each consensus-breaking change introduced by the module, a migration script from ConsensusVersion `N` to version `N+1` MUST be registered in the `Configurator` using its newly-added `RegisterMigration` method. All modules receive a reference to the configurator in their `RegisterServices` method on `AppModule`, and this is where the migration scripts should be registered.
+For each consensus-breaking change introduced by the module, a migration script from ConsensusVersion `N` to version `N+1` MUST be registered in the `Configurator` using its newly-added `RegisterMigration` method. All modules receive a reference to the configurator in their `RegisterServices` method on `AppModule`, and this is where the migration functions should be registered. The migration functions should be registered in increasing order.
 
 ```go
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -55,9 +55,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 ```
 
-For example, if the new ConsensusVersion of a module is `N` , then `N-1` migration scripts MUST be registered in the configurator.
+For example, if the new ConsensusVersion of a module is `N` , then `N-1` migration functions MUST be registered in the configurator.
 
-In the SDK, the migration scripts are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. To not overload the keeper, a `Migrator` wrapper is used by each module to handle the migration scripts:
+In the SDK, the migration functions are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. To not overload the keeper, a `Migrator` wrapper is used by each module to handle the migration functions:
 
 ```go
 // Migrator is a struct for handling in-place store migrations.
@@ -66,7 +66,7 @@ type Migrator struct {
 }
 ```
 
-Since migration scripts manipulate legacy code, they should live inside the `legacy/` folder of each module, and be called by the Migrator's methods. We propose the format `Migrate{M}to{N}` for method names.
+Since migration functions manipulate legacy code, they should live inside the `legacy/` folder of each module, and be called by the Migrator's methods. We propose the format `Migrate{M}to{N}` for method names.
 
 ```go
 // Migrate1to2 migrates from version 1 to 2.
@@ -75,7 +75,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 ```
 
-Each module's migration scripts are specific to the module's store evolutions, and are not described in this ADR. An example of x/bank store key migrations following the introduction of ADR-028 length-prefixed addresses can be seen [here](https://github.com/cosmos/cosmos-sdk/blob/ef8dabcf0f2ecaf26db1c6c6d5922e9399458bb3/x/bank/legacy/v042/store.go#L15).
+Each module's migration functions are specific to the module's store evolutions, and are not described in this ADR. An example of x/bank store key migrations following the introduction of ADR-028 length-prefixed addresses can be seen [here](https://github.com/cosmos/cosmos-sdk/blob/ef8dabcf0f2ecaf26db1c6c6d5922e9399458bb3/x/bank/legacy/v042/store.go#L15).
 
 ### Tracking Module Versions in `x/upgrade`
 
@@ -114,6 +114,8 @@ func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 }
 ```
 
+An gRPC query endpoint to query the `VersionMap` stored in `x/upgrade`'s state will also be added, so that app developers can query get double-check the `VersionMap` before the upgrade handler runs.
+
 ### Running Migrations
 
 Once all the migration handlers are registered inside the configurator (which happens at startup), running migrations can happen by calling the `RunMigrations` method on `module.Manager`. This function will loop through all modules, and for each module:
@@ -146,7 +148,7 @@ Assuming a chain upgrades at block `n`, the procedure should run as follows:
 
 This ADR introduces a new method `ConsensusVersion()` on `AppModule`, which all modules need to implement. It also alters the UpgradeHandler function signature. As such, it is not backwards-compatible.
 
-While modules MUST register their migration scripts when bumping ConsensusVersions, running those scripts using an upgrade handler is optional. An application may perfectly well decide to not call the `RunMigrations` inside its upgrade handler, and continue using the legacy JSON migration path.
+While modules MUST register their migration functions when bumping ConsensusVersions, running those scripts using an upgrade handler is optional. An application may perfectly well decide to not call the `RunMigrations` inside its upgrade handler, and continue using the legacy JSON migration path.
 
 ### Positive
 

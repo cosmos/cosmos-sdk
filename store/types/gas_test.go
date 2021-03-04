@@ -95,7 +95,7 @@ func TestTransientGasConfig(t *testing.T) {
 	require.Equal(t, config, GasConfig{
 		HasCost:          100,
 		DeleteCost:       100,
-		ReadCostFlat:     1000,
+		ReadCostFlat:     100,
 		ReadCostPerByte:  0,
 		WriteCostFlat:    200,
 		WriteCostPerByte: 3,

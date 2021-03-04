@@ -15,9 +15,12 @@ func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 
 	_, ok := old.PubKey.(*multisigtypes.LegacyAminoPubKey)
 
-	// If the old genesis had a pubkey, we pack it inside an Any. Or else, we
-	// just leave it nil.
-	if old.PubKey != nil && !ok {
+	// If pubkey is multisig type, then leave it as nil for now
+	// Else if the old genesis had a pubkey, we pack it inside an Any.
+	// Or else, we just leave it nil.
+	if ok {
+		// TODO migrate multisig public_keys
+	} else if old.PubKey != nil {
 		var err error
 		any, err = codectypes.NewAnyWithValue(old.PubKey)
 		if err != nil {

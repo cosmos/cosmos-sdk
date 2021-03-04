@@ -55,7 +55,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 ```
 
-For example, if the current ConsensusVersion of a module is `N` , then `N-1` migration scripts MUST be registered in the configurator.
+For example, if the new ConsensusVersion of a module is `N` , then `N-1` migration scripts MUST be registered in the configurator.
 
 In the SDK, the migration scripts are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. A `MigrationKeeper` interface is implemented by each keeper:
 

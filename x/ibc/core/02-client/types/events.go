@@ -11,7 +11,6 @@ const (
 	AttributeKeyClientID        = "client_id"
 	AttributeKeyClientType      = "client_type"
 	AttributeKeyConsensusHeight = "consensus_height"
-	AttributeKeyHeader          = "header"
 )
 
 // IBC client events vars

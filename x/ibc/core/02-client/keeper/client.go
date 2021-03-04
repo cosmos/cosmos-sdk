@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"encoding/hex"
-
 	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -97,16 +95,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		)
 	}()
 
-	// emit the full header in events
-	var headerStr string
-	if header != nil {
-		// Marshal the Header as an Any and encode the resulting bytes to hex.
-		// This prevents the event value from containing invalid UTF-8 characters
-		// which may cause data to be lost when JSON encoding/decoding.
-		headerStr = hex.EncodeToString(types.MustMarshalHeader(k.cdc, header))
-
-	}
-
 	// emitting events in the keeper emits for both begin block and handler client updates
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -114,7 +102,6 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 			sdk.NewAttribute(types.AttributeKeyClientID, clientID),
 			sdk.NewAttribute(types.AttributeKeyClientType, clientState.ClientType()),
 			sdk.NewAttribute(types.AttributeKeyConsensusHeight, consensusHeight.String()),
-			sdk.NewAttribute(types.AttributeKeyHeader, headerStr),
 		),
 	)
 

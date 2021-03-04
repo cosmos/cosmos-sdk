@@ -120,7 +120,7 @@ func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 Once all the migration handlers are registered inside the configurator (which happens at startup), running migrations can happen by calling the `RunMigrations` method on `module.Manager`. This function will loop through all modules, and for each module:
 
-- Fetch the old ConsensusVersion of the module from its `migrationMap` argument (let's call it `M`).
+- Get the old ConsensusVersion of the module from its `migrationMap` argument (let's call it `M`).
 - Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
 - If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
 

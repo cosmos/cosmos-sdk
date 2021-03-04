@@ -43,6 +43,7 @@ func TestSupplyMigration(t *testing.T) {
 }
 
 func TestBalanceKeysMigration(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
 	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
@@ -54,7 +55,7 @@ func TestBalanceKeysMigration(t *testing.T) {
 	oldKey := append(append(v040bank.BalancesPrefix, addr...), denom...)
 	store.Set(oldKey, value)
 
-	err := v042bank.MigrateStore(ctx, bankKey, nil)
+	err := v042bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	newKey := append(types.CreateAccountBalancesPrefix(addr), denom...)

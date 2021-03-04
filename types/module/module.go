@@ -333,16 +333,16 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[st
 // MigrationHandler is the migration function that each module registers.
 type MigrationHandler func(sdk.Context) error
 
-// MigrationMap is a map of moduleName -> version, where version denotes the
+// VersionMap is a map of moduleName -> version, where version denotes the
 // version from which we should perform the migration for each module.
-type MigrationMap map[string]uint64
+type VersionMap map[string]uint64
 
 type VersionManager interface {
-	GetConsensusVersions() MigrationMap
+	GetConsensusVersions() VersionMap
 }
 
 // RunMigrations performs in-place store migrations for all modules.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrateFromVersions MigrationMap) error {
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrateFromVersions VersionMap) error {
 	c, ok := cfg.(configurator)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
@@ -401,13 +401,13 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 }
 
 // GetConsensusVersions gets consensus version from all modules
-func (m *Manager) GetConsensusVersions() MigrationMap {
-	migmap := make(MigrationMap)
+func (m *Manager) GetConsensusVersions() VersionMap {
+	vermap := make(VersionMap)
 	for _, v := range m.Modules {
 		version := v.ConsensusVersion()
 		name := v.Name()
-		migmap[name] = version
+		vermap[name] = version
 	}
 
-	return migmap
+	return vermap
 }

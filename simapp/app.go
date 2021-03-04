@@ -619,7 +619,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 // Example:
 //   cfg := module.NewConfigurator(...)
 //   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
-//       err := app.RunMigrations(ctx, module.MigrationMap{
+//       err := app.RunMigrations(ctx, module.VersionMap{
 //           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
 //           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
 //      })
@@ -627,12 +627,12 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //           panic(err)
 //      }
 //   })
-func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) error {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 
-// Returns a map (MigrationMap) of key module name and value module consensus version
-func (app *SimApp) GetConsensusVersions() module.MigrationMap {
+// Returns a map (VersionMap) of key module name and value module consensus version
+func (app *SimApp) GetConsensusVersions() module.VersionMap {
 	return app.mm.GetConsensusVersions()
 }
 

@@ -22,8 +22,8 @@ const (
 	// DoneByte is a prefix for to look up completed upgrade plan by name
 	DoneByte = 0x1
 
-	// MigrationMapByte is a prefix to look up module names (key) and versions (value)
-	MigrationMapByte = 0x2
+	// VersionMapByte is a prefix to look up module names (key) and versions (value)
+	VersionMapByte = 0x2
 
 	// KeyUpgradedIBCState is the key under which upgraded ibc state is stored in the upgrade store
 	KeyUpgradedIBCState = "upgradedIBCState"

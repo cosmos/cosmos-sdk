@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.app.UpgradeKeeper.SetUpgradeHandler("all-good", func(_ sdk.Context, _ types.Plan, _ module.MigrationMap) error { return nil })
+				s.app.UpgradeKeeper.SetUpgradeHandler("all-good", func(_ sdk.Context, _ types.Plan, _ module.VersionMap) error { return nil })
 				s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
@@ -214,21 +214,21 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 }
 
 // Mock version manager for TestMigrations
-type MockVersionManager struct{}
+type mockVersionManager struct{}
 
-func (m MockVersionManager) GetConsensusVersions() module.MigrationMap {
-	migmap := make(module.MigrationMap)
-	migmap["bank"] = 1
-	return migmap
+func (m mockVersionManager) GetConsensusVersions() module.VersionMap {
+	vermap := make(module.VersionMap)
+	vermap["bank"] = 1
+	return vermap
 }
 
 // Tests that the underlying state of x/upgrade is set correctly after
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
-	mockVM := MockVersionManager{}
+	mockVM := mockVersionManager{}
 	s.app.UpgradeKeeper.SetVersionManager(mockVM)
 	s.app.UpgradeKeeper.SetConsensusVersions(s.ctx)
-	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, _ module.MigrationMap) error { return nil })
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, _ module.VersionMap) error { return nil })
 	dummyPlan := types.Plan{
 		Name: "dummy",
 		Info: "some text here",
@@ -237,8 +237,8 @@ func (s *KeeperTestSuite) TestMigrations() {
 
 	s.app.UpgradeKeeper.SetVersionManager(s.app)
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	migmap := s.app.UpgradeKeeper.GetConsensusVersions(s.ctx)
-	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), migmap["bank"])
+	vermap := s.app.UpgradeKeeper.GetConsensusVersions(s.ctx)
+	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), vermap["bank"])
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -161,7 +161,7 @@ func TestRunMigrations(t *testing.T) {
 			// their latest ConsensusVersion.
 			err = app.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
-				module.MigrationMap{
+				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
 					"authz":        authz.AppModule{}.ConsensusVersion(),

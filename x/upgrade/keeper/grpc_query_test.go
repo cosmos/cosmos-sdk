@@ -111,7 +111,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
 				suite.ctx = suite.ctx.WithBlockHeight(expHeight)
-				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(_ sdk.Context, _ types.Plan, _ module.MigrationMap) error { return nil })
+				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(_ sdk.Context, _ types.Plan, _ module.VersionMap) error { return nil })
 				suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx, plan)
 
 				req = &types.QueryAppliedPlanRequest{Name: planName}

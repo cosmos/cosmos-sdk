@@ -10,7 +10,7 @@ Proposed
 
 ## Abstract
 
-This ADR introduces a mechanism to perform in-place store migrations during chain upgrades.
+This ADR introduces a mechanism to perform in-place state store migrations during chain software upgrades.
 
 ## Context
 
@@ -23,7 +23,7 @@ This procedure is cumbersome for multiple reasons:
 
 ## Decision
 
-We propose a migration procedure based on modifying the KV store in-place. This procedure does not manipulate intermediary JSON files.
+We propose a migration procedure based on modifying the KV store in-place without involving the JSON export-process-import flow described above.
 
 ### Module `ConsensusVersion`
 
@@ -36,7 +36,7 @@ type AppModule interface {
 }
 ```
 
-This methods returns an `uint64` which serves as state-breaking versioning of the module. It MUST be incremented on each consensus-breaking change introduced by the module. To avoid potential errors with default values, the initial version of a module MUST be set to 1. In the SDK, version 1 corresponds to the modules in the v0.41 series.
+This methods returns an `uint64` which serves as state-breaking version of the module. It MUST be incremented on each consensus-breaking change introduced by the module. To avoid potential errors with default values, the initial version of a module MUST be set to 1. In the SDK, version 1 corresponds to the modules in the v0.41 series.
 
 ### Module-Specific Migration Scripts
 
@@ -55,7 +55,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 ```
 
-For example, if the current ConsensusVersion of a module is `N` , then `N-1` migration scripts MUST be registered in the configurator.
+For example, if the new ConsensusVersion of a module is `N` , then `N-1` migration scripts MUST be registered in the configurator.
 
 In the SDK, the migration scripts are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. To not overload the keeper, a `Migrator` wrapper is used by each module to handle the migration scripts:
 
@@ -93,8 +93,8 @@ type VersionManager interface {
     GetConsensusVersions() MigrationMap
 }
 
-// Map of module name => ConsensusVersion.
-type MigrationMap map[string]uint64
+// Map of module name => new module Consensus Version.
+type VersionMap map[string]uint64
 ```
 
 When `InitChain` is run, the initial `ModuleManager.GetConsensusVersions()` value will be recorded to state. The UpgradeHandler signature needs to be updated to take a `MigrationMap`, as well as return an error:
@@ -104,7 +104,7 @@ When `InitChain` is run, the initial `ModuleManager.GetConsensusVersions()` valu
 + type UpgradeHandler func(ctx sdk.Context, plan Plan, migrationMap MigrationMap) error
 ```
 
-Applying an upgrade will fetch the `MigrationMap` from the `x/upgrade` store and pass it into the handler.
+To apply an upgrade, we query the `MigrationMap` from the `x/upgrade` store and pass it into the handler:
 
 ```diff
 func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
@@ -118,7 +118,7 @@ func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 Once all the migration handlers are registered inside the configurator (which happens at startup), running migrations can happen by calling the `RunMigrations` method on `module.Manager`. This function will loop through all modules, and for each module:
 
-- Fetch the old ConsensusVersion of the module from its `migrationMap` argument (let's call it `M`).
+- Get the old ConsensusVersion of the module from its `migrationMap` argument (let's call it `M`).
 - Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
 - If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
 
@@ -137,7 +137,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 
 Assuming a chain upgrades at block `n`, the procedure should run as follows:
 
-- the old binary will halt in `BeginBlock` at block `N`. In its store, the ConsensusVersions of the old binary's modules are stored.
+- the old binary will halt in `BeginBlock` when starting block `N`. In its store, the ConsensusVersions of the old binary's modules are stored.
 - the new binary will start at block `N`. The UpgradeHandler is set in the new binary, so will run at `BeginBlock` of the new binary. Inside `x/upgrade`'s `ApplyUpgrade`, the `MigrationMap` will be retrieved from the (old binary's) store, and passed into the `RunMigrations` functon, migrating all module stores in-place before the modules' own `BeginBlock`s.
 
 ## Consequences

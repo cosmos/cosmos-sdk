@@ -190,6 +190,10 @@
     - [PrivKey](#cosmos.crypto.secp256k1.PrivKey)
     - [PubKey](#cosmos.crypto.secp256k1.PubKey)
   
+- [cosmos/crypto/secp256r1/keys.proto](#cosmos/crypto/secp256r1/keys.proto)
+    - [PrivKey](#cosmos.crypto.secp256r1.PrivKey)
+    - [PubKey](#cosmos.crypto.secp256r1.PubKey)
+  
 - [cosmos/distribution/v1beta1/distribution.proto](#cosmos/distribution/v1beta1/distribution.proto)
     - [CommunityPoolSpendProposal](#cosmos.distribution.v1beta1.CommunityPoolSpendProposal)
     - [CommunityPoolSpendProposalWithDeposit](#cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit)
@@ -3110,6 +3114,52 @@ This prefix is followed with the x-coordinate.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [bytes](#bytes) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/secp256r1/keys.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/secp256r1/keys.proto
+
+
+
+<a name="cosmos.crypto.secp256r1.PrivKey"></a>
+
+### PrivKey
+PrivKey defines a secp256r1 ECDSA private key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `secret` | [bytes](#bytes) |  | secret number serialized using big-endian encoding |
+
+
+
+
+
+
+<a name="cosmos.crypto.secp256r1.PubKey"></a>
+
+### PubKey
+PubKey defines a secp256r1 ECDSA public key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62. |
 
 
 

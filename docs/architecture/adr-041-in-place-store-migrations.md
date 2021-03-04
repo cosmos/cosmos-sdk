@@ -10,7 +10,7 @@ Proposed
 
 ## Abstract
 
-This ADR introduces a mechanism to perform in-place store migrations during chain upgrades.
+This ADR introduces a mechanism to perform in-place state store migrations during chain software upgrades.
 
 ## Context
 

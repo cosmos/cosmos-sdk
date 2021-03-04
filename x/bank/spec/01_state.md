@@ -8,5 +8,5 @@ The `x/bank` module keeps state of three primary objects, account balances, deno
 total supply of all balances.
 
 - Supply: `0x0 | byte(denom) -> ProtocolBuffer(coin)`
-- Denom Metadata: `0x0 | byte(denom) -> ProtocolBuffer(Metadata)`
+- Denom Metadata: `0x1 | byte(denom) -> ProtocolBuffer(Metadata)`
 - Balances: `0x2 | byte(address length) | []byte(address) | []byte(balance.Denom) -> ProtocolBuffer(balance)`

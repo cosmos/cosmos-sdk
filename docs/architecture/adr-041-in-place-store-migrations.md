@@ -6,7 +6,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Abstract
 
@@ -97,6 +97,8 @@ type VersionManager interface {
 type VersionMap map[string]uint64
 ```
 
+This `versionManager` field can be modified via the `SetVersionManager` field, and will allow the upgrade keeper to know the current versions of loaded modules. `SetVersionManager` MUST be called as early as possible in the app initialization; in the SDK's `simapp`, it is called in the `NewSimApp` constructor function.
+
 The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return an error:
 
 ```diff
@@ -104,17 +106,24 @@ The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well
 + type UpgradeHandler func(ctx sdk.Context, plan Plan, versionMap VersionMap) error
 ```
 
-To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pass it into the handler. Right after the
+To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pass it into the handler. The handler runs the actual migration functions (see next section), and if successful, the current ConsensusVersions of all loaded modules will be stored into state.
 
 ```diff
 func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
     // --snip--
 -   handler(ctx, plan)
 +   err := handler(ctx, plan, k.GetConsensusVersions()) // k.GetConsensusVersions() fetches the VersionMap stored in state.
++   if err != nil {
++       return err
++   }
++
++   // Get the current ConsensusVersions of the loaded modules (retrieved from
++   // `k.versionManager`), and save them to state.
++   k.SetCurrentConsensusVersions()
 }
 ```
 
-An gRPC query endpoint to query the `VersionMap` stored in `x/upgrade`'s state will also be added, so that app developers can query get double-check the `VersionMap` before the upgrade handler runs.
+An gRPC query endpoint to query the `VersionMap` stored in `x/upgrade`'s state will also be added, so that app developers can double-check the `VersionMap` before the upgrade handler runs.
 
 ### Running Migrations
 
@@ -123,6 +132,7 @@ Once all the migration handlers are registered inside the configurator (which ha
 - Get the old ConsensusVersion of the module from its `VersionMap` argument (let's call it `M`).
 - Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
 - If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
+  - There is a special case where there is no ConsensusVersion for the module, as this means that the module has been newly added during the upgrade. In this case, no migration function is run, and the module's current ConsensusVersion is saved to `x/upgrade`'s store.
 
 If a required migration is missing (e.g. if it has not been registered in the `Configurator`), then the `RunMigrations` function will error.
 

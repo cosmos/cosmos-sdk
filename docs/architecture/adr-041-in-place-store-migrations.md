@@ -141,8 +141,6 @@ In practice, the `RunMigrations` method should be called from inside an `Upgrade
 ```go
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap VersionMap) error {
     return app.mm.RunMigrations(ctx, versionMap)
-        return err
-    }
 })
 ```
 

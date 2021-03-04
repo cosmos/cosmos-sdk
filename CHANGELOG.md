@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store/cachekv), (x/bank/types) [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) algorithmically fix pathologically slow code
 * [\#8701](https://github.com/cosmos/cosmos-sdk/pull/8701) Upgrade tendermint v0.34.8.
 * [\#8714](https://github.com/cosmos/cosmos-sdk/pull/8714) Allow accounts to have a balance of 0 at genesis.
+* (x/ibc) [\#8624](https://github.com/cosmos/cosmos-sdk/pull/8624) Emit full header in IBC UpdateClient message.
 
 ## [v0.41.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-02-18
 

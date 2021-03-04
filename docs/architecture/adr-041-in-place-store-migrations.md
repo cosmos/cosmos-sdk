@@ -23,7 +23,7 @@ While [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/v0.41.1/cosmovisor)
 
 ## Decision
 
-We propose a migration procedure based on modifying the KV store in-place. This procedure does not manipulate intermediary JSON files.
+We propose a migration procedure based on modifying the KV store in-place without involving the JSON export-process-import flow described above.
 
 ### Module `ConsensusVersion`
 

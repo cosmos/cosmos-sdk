@@ -50,7 +50,6 @@ type Client struct {
 
 	tmRPC tmrpc.Client
 
-	txEncode sdk.TxEncoder
 	txConfig client.TxConfig
 	version  string
 
@@ -74,7 +73,6 @@ func NewClient(cfg *Config) (*Client, error) {
 		bank:      nil,
 		ir:        cfg.InterfaceRegistry,
 		tmRPC:     nil,
-		txEncode:  txConfig.TxEncoder(),
 		txConfig:  txConfig,
 		version:   fmt.Sprintf("%s/%s", info.AppName, v),
 		converter: NewConverter(cfg.Codec, cfg.InterfaceRegistry, txConfig),

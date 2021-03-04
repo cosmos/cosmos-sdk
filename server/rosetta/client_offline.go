@@ -3,13 +3,7 @@ package rosetta
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
-	"log"
 	"strings"
-
-	"github.com/tendermint/tendermint/crypto"
-
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -17,7 +11,6 @@ import (
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func (c *Client) OperationStatuses() []*types.OperationStatus {
@@ -63,8 +56,6 @@ func (c *Client) SignedTx(_ context.Context, txBytes []byte, signatures []*types
 }
 
 func (c *Client) ConstructionPayload(_ context.Context, request *types.ConstructionPayloadsRequest) (resp *types.ConstructionPayloadsResponse, err error) {
-	b, _ := json.Marshal(request)
-	log.Printf("raw req: %s", b)
 	// check if there is at least one operation
 	if len(request.Operations) < 1 {
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "expected at least one operation")
@@ -77,72 +68,16 @@ func (c *Client) ConstructionPayload(_ context.Context, request *types.Construct
 
 	metadata := new(ConstructionMetadata)
 	if err = metadata.FromMetadata(request.Metadata); err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+		return nil, err
 	}
-	feeAmt, err := sdk.ParseCoinsNormalized(metadata.GasPrice)
+
+	txBytes, payloads, err := c.converter.ToRosetta().SigningComponents(tx, metadata, request.PublicKeys)
 	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+		return nil, err
 	}
 
-	//
-	builder := c.txConfig.NewTxBuilder()
-	_ = builder.SetMsgs(tx.GetMsgs()...)
-	builder.SetFeeAmount(feeAmt)
-	builder.SetGasLimit(metadata.GasLimit)
-	builder.SetMemo(metadata.Memo)
-
-	tx = builder.GetTx()
-
-	accIdentifiers := tx.GetSigners()
-
-	payloads := make([]*types.SigningPayload, len(accIdentifiers))
-	signersData := make([]signing.SignatureV2, len(accIdentifiers))
-	for i, accID := range accIdentifiers {
-		// we expect pubkeys to be ordered... TODO(fdymylja): maybe make ordering not matter?
-		signerData := authsigning.SignerData{
-			ChainID:       metadata.ChainID,
-			AccountNumber: metadata.SignersData[i].AccountNumber,
-			Sequence:      metadata.SignersData[i].Sequence,
-		}
-		// Sign_mode_legacy_amino is being used as default here, as sign_mode_direct
-		// needs the signer infos to be set before hand but rosetta doesn't have a way
-		// to do this yet. To be revisited in future versions of sdk and rosetta
-		signBytes, err := c.txConfig.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
-		if err != nil {
-			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "signing error: "+err.Error())
-		}
-
-		payloads[i] = &types.SigningPayload{
-			AccountIdentifier: &types.AccountIdentifier{Address: accID.String()},
-			Bytes:             crypto.Sha256(signBytes),
-			SignatureType:     types.Ecdsa,
-		}
-
-		pk, err := c.converter.ToSDK().PubKey(request.PublicKeys[i])
-		if err != nil {
-			return nil, err
-		}
-
-		signersData[i] = signing.SignatureV2{
-			PubKey:   pk,
-			Data:     &signing.SingleSignatureData{},
-			Sequence: metadata.SignersData[i].Sequence,
-		}
-	}
-
-	// we set the signature data so we carry information regarding public key
-	// then afterwards we just need to set the signed bytes
-	err = builder.SetSignatures(signersData...)
-	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
-	}
-	// encode tx
-	encodedTx, err := c.txEncode(builder.GetTx())
-	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
-	}
 	return &types.ConstructionPayloadsResponse{
-		UnsignedTransaction: hex.EncodeToString(encodedTx),
+		UnsignedTransaction: hex.EncodeToString(txBytes),
 		Payloads:            payloads,
 	}, nil
 }

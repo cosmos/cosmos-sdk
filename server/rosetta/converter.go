@@ -1,9 +1,12 @@
 package rosetta
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
 	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
@@ -62,6 +65,8 @@ type ToRosettaConverter interface {
 	OpsAndSigners(txBytes []byte) (ops []*rosettatypes.Operation, signers []*rosettatypes.AccountIdentifier, err error)
 	// Meta converts an sdk.Msg to rosetta metadata
 	Meta(msg sdk.Msg) (meta map[string]interface{}, err error)
+	// SigningComponents returns rosetta's components required to build a signable transaction
+	SigningComponents(tx authsigning.Tx, metadata *ConstructionMetadata, rosPubKeys []*rosettatypes.PublicKey) (txBytes []byte, payloadsToSign []*rosettatypes.SigningPayload, err error)
 	// Tx converts a tendermint transaction and tx result if provided to a rosetta tx
 	Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error)
 	// TxIdentifiers converts a tendermint tx to transaction identifiers
@@ -97,6 +102,7 @@ type converter struct {
 	txBuilderFromTx func(tx sdk.Tx) (sdkclient.TxBuilder, error)
 	txDecode        sdk.TxDecoder
 	txEncode        sdk.TxEncoder
+	bytesToSign     func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error)
 	ir              codectypes.InterfaceRegistry
 	cdc             *codec.ProtoCodec
 }
@@ -111,8 +117,16 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		},
 		txDecode: cfg.TxDecoder(),
 		txEncode: cfg.TxEncoder(),
-		ir:       ir,
-		cdc:      cdc,
+		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
+			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
+			if err != nil {
+				return nil, err
+			}
+
+			return crypto.Sha256(bytesToSign), nil
+		},
+		ir:  ir,
+		cdc: cdc,
 	}
 }
 
@@ -674,4 +688,95 @@ func (c converter) PubKey(pubKey *rosettatypes.PublicKey) (cryptotypes.PubKey, e
 	pk := &secp256k1.PubKey{Key: compressedPublicKey}
 
 	return pk, nil
+}
+
+// SigningComponents takes a sdk tx and construction metadata and returns signable components
+func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMetadata, rosPubKeys []*rosettatypes.PublicKey) (txBytes []byte, payloadsToSign []*rosettatypes.SigningPayload, err error) {
+
+	// verify metadata correctness
+	feeAmount, err := sdk.ParseCoinsNormalized(metadata.GasPrice)
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+
+	signers := tx.GetSigners()
+	// assert the signers data provided in options are the same as the expected signing accounts
+	// and that the number of rosetta provided public keys equals the one of the signers
+	if len(metadata.SignersData) != len(signers) || len(signers) != len(rosPubKeys) {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "signers data and account identifiers mismatch")
+	}
+
+	// add transaction metadata
+	builder, err := c.txBuilderFromTx(tx)
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+	}
+	builder.SetFeeAmount(feeAmount)
+	builder.SetGasLimit(metadata.GasLimit)
+	builder.SetMemo(metadata.Memo)
+
+	// build signatures
+	partialSignatures := make([]signing.SignatureV2, len(signers))
+	payloadsToSign = make([]*rosettatypes.SigningPayload, len(signers))
+
+	// pub key ordering matters, in a future release this check might be relaxed
+	for i, signer := range signers {
+		// assert that the provided public keys are correctly ordered
+		// by checking if the signer at index i matches the pubkey at index
+		pubKey, err := c.ToSDK().PubKey(rosPubKeys[0])
+		if err != nil {
+			return nil, nil, err
+		}
+		if !bytes.Equal(pubKey.Address().Bytes(), signer.Bytes()) {
+			return nil, nil, crgerrs.WrapError(
+				crgerrs.ErrBadArgument,
+				fmt.Sprintf("public key at index %d does not match the expected transaction signer: %X <-> %X", i, rosPubKeys[i].Bytes, signer.Bytes()),
+			)
+		}
+
+		// set the signer data
+		signerData := authsigning.SignerData{
+			ChainID:       metadata.ChainID,
+			AccountNumber: metadata.SignersData[i].AccountNumber,
+			Sequence:      metadata.SignersData[i].Sequence,
+		}
+
+		// get signature bytes
+		signBytes, err := c.bytesToSign(tx, signerData)
+		if err != nil {
+			return nil, nil, crgerrs.WrapError(crgerrs.ErrUnknown, fmt.Sprintf("unable to sign tx: %s", err.Error()))
+		}
+
+		// set payload
+		payloadsToSign[i] = &rosettatypes.SigningPayload{
+			AccountIdentifier: &rosettatypes.AccountIdentifier{Address: signer.String()},
+			Bytes:             signBytes,
+			SignatureType:     rosettatypes.Ecdsa,
+		}
+
+		// set partial signature
+		partialSignatures[i] = signing.SignatureV2{
+			PubKey:   pubKey,
+			Data:     &signing.SingleSignatureData{}, // needs to be set to empty otherwise the codec will cry
+			Sequence: metadata.SignersData[i].Sequence,
+		}
+
+	}
+
+	// now we set the partial signatures in the tx
+	// because we will need to decode the sequence
+	// information of each account in a stateless way
+	err = builder.SetSignatures(partialSignatures...)
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+	}
+
+	// finally encode the tx
+	// encode tx
+	txBytes, err = c.txEncode(builder.GetTx())
+	if err != nil {
+		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
+	}
+
+	return
 }

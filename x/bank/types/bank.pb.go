@@ -211,6 +211,7 @@ var xxx_messageInfo_Output proto.InternalMessageInfo
 
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
+// This message is deprecated now that supply is indexed by denom.
 //
 // Deprecated: Do not use.
 type Supply struct {

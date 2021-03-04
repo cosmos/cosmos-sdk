@@ -1567,6 +1567,7 @@ sendable).
 ### Supply
 Supply represents a struct that passively keeps track of the total supply
 amounts in the network.
+This message is deprecated now that supply is indexed by denom.
 
 
 | Field | Type | Label | Description |
@@ -2946,7 +2947,7 @@ PubKey defines a secp256r1 ECDSA public key.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62. |
+| `key` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62: https://webstore.ansi.org/standards/ascx9/ansix9621998 |
 
 
 

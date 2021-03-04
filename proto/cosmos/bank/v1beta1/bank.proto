@@ -43,6 +43,20 @@ message Output {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
 
+// Supply represents a struct that passively keeps track of the total supply
+// amounts in the network.
+message Supply {
+  option deprecated = true;
+
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_getters)  = false;
+
+  option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/exported.SupplyI";
+
+  repeated cosmos.base.v1beta1.Coin total = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
 // DenomUnit represents a struct that describes a given
 // denomination unit of the basic token.
 message DenomUnit {

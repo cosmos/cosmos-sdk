@@ -86,31 +86,31 @@ We introduce a new prefix store in `x/upgrade`'s store. This store will track ea
 ```
 
 s
-We add a new field `VersionManager` `x/upgrade`'s keeper, where `VersionManager` is:
+We add a new private field `versionManager` of type `VersionManager` to `x/upgrade`'s keeper, where `VersionManager` is:
 
 ```go
 type VersionManager interface {
-    GetConsensusVersions() MigrationMap
+    GetConsensusVersions() VersionMap
 }
 
 // Map of module name => new module Consensus Version.
 type VersionMap map[string]uint64
 ```
 
-When `InitChain` is run, the initial `ModuleManager.GetConsensusVersions()` value will be recorded to state. The UpgradeHandler signature needs to be updated to take a `MigrationMap`, as well as return an error:
+The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return an error:
 
 ```diff
 - type UpgradeHandler func(ctx sdk.Context, plan Plan)
-+ type UpgradeHandler func(ctx sdk.Context, plan Plan, migrationMap MigrationMap) error
++ type UpgradeHandler func(ctx sdk.Context, plan Plan, versionMap VersionMap) error
 ```
 
-To apply an upgrade, we query the `MigrationMap` from the `x/upgrade` store and pass it into the handler:
+To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pass it into the handler. Right after the
 
 ```diff
 func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
     // --snip--
 -   handler(ctx, plan)
-+   handler(ctx, plan, k.GetConsensusVersions()) // k.GetConsensusVersions() fetches the MigrationMap stored in state.
++   err := handler(ctx, plan, k.GetConsensusVersions()) // k.GetConsensusVersions() fetches the VersionMap stored in state.
 }
 ```
 
@@ -118,7 +118,7 @@ func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 Once all the migration handlers are registered inside the configurator (which happens at startup), running migrations can happen by calling the `RunMigrations` method on `module.Manager`. This function will loop through all modules, and for each module:
 
-- Get the old ConsensusVersion of the module from its `migrationMap` argument (let's call it `M`).
+- Get the old ConsensusVersion of the module from its `VersionMap` argument (let's call it `M`).
 - Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
 - If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
 
@@ -127,10 +127,10 @@ If a required migration is missing (e.g. if it has not been registered in the `C
 In practice, the `RunMigrations` method should be called from inside an `UpgradeHandler`.
 
 ```go
-app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, migrationMap MigrationMap) {
-    err := app.mm.RunMigrations(ctx, migrationMap)
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap VersionMap) error {
+    err := app.mm.RunMigrations(ctx, versionMap)
     if err != nil {
-        panic(err)
+        return err
     }
 })
 ```
@@ -138,7 +138,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 Assuming a chain upgrades at block `n`, the procedure should run as follows:
 
 - the old binary will halt in `BeginBlock` when starting block `N`. In its store, the ConsensusVersions of the old binary's modules are stored.
-- the new binary will start at block `N`. The UpgradeHandler is set in the new binary, so will run at `BeginBlock` of the new binary. Inside `x/upgrade`'s `ApplyUpgrade`, the `MigrationMap` will be retrieved from the (old binary's) store, and passed into the `RunMigrations` functon, migrating all module stores in-place before the modules' own `BeginBlock`s.
+- the new binary will start at block `N`. The UpgradeHandler is set in the new binary, so will run at `BeginBlock` of the new binary. Inside `x/upgrade`'s `ApplyUpgrade`, the `VersionMap` will be retrieved from the (old binary's) store, and passed into the `RunMigrations` functon, migrating all module stores in-place before the modules' own `BeginBlock`s.
 
 ## Consequences
 
@@ -159,7 +159,6 @@ While modules MUST register their migration scripts when bumping ConsensusVersio
 
 ### Neutral
 
-- Currently, Cosmovisor only handles JSON migrations. Its code should be updated to support in-place store migrations too.
 - The SDK will continue to support JSON migrations via the existing `simd export` and `simd migrate` commands.
 - The current ADR does not allow creating, renaming or deleting stores, only modifying existing store keys and values. The SDK already has the `StoreLoader` for those operations.
 

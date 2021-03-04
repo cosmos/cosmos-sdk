@@ -69,6 +69,8 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	msg := []byte{1, 2, 3, 4}
 	cdc := simapp.MakeTestEncodingConfig().Amino
 
+	p := types.DefaultParams()
+	skR1, _ := secp256r1.GenPrivKey()
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
 	multisigKey1 := kmultisig.NewLegacyAminoPubKey(2, pkSet1)
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
@@ -80,8 +82,6 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
 		suite.Require().NoError(err)
 	}
-
-	skR1, _ := secp256r1.GenPrivKey()
 
 	type args struct {
 		meter  sdk.GasMeter
@@ -95,9 +95,9 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 		gasConsumed uint64
 		shouldErr   bool
 	}{
-		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostSecp256k1, false},
-		{"PubKeySecp256r1", args{sdk.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, types.DefaultSigVerifyCostSecp256k1 * ante.Secp256k1ToR1GasFactor, false},
+		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
+		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
+		{"PubKeySecp256r1", args{sdk.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
 		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}

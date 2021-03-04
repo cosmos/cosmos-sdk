@@ -19,10 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// Secp256k1ToR1GasFactor is a factor of the secp256r1 gas fee compared to secp256k1. It's
-// Set by benchmarking current implementation.
-const Secp256k1ToR1GasFactor = 2
-
 var (
 	// simulation signature values used to estimate gas consumption
 	key                = make([]byte, secp256k1.PubKeySize)
@@ -374,7 +370,7 @@ func DefaultSigVerificationGasConsumer(
 		return nil
 
 	case *secp256r1.PubKey:
-		meter.ConsumeGas(params.SigVerifyCostSecp256k1*Secp256k1ToR1GasFactor, "ante verify: secp256r1")
+		meter.ConsumeGas(params.SigVerifyCostSecp256r1(), "ante verify: secp256r1")
 		return nil
 
 	case multisig.PubKey:

@@ -3,20 +3,22 @@ package rosetta
 import (
 	"context"
 	"encoding/hex"
+	"log"
 	"strings"
+
+	"github.com/tendermint/tendermint/crypto"
+
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/coinbase/rosetta-sdk-go/types"
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
-	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func (c *Client) OperationStatuses() []*types.OperationStatus {
@@ -27,10 +29,6 @@ func (c *Client) OperationStatuses() []*types.OperationStatus {
 		},
 		{
 			Status:     StatusTxReverted,
-			Successful: false,
-		},
-		{
-			Status:     StatusTxUnconfirmed,
 			Successful: false,
 		},
 	}
@@ -48,14 +46,14 @@ func (c *Client) SupportedOperations() []string {
 			continue
 		}
 
-		if _, ok := resolvedMsg.(Msg); ok {
+		if _, ok := resolvedMsg.(sdk.Msg); ok {
 			supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
 		}
 	}
 
 	supportedOperations = append(
 		supportedOperations,
-		OperationFee, banktypes.EventTypeCoinSpent, banktypes.EventTypeCoinReceived,
+		banktypes.EventTypeCoinSpent, banktypes.EventTypeCoinReceived,
 	)
 
 	return supportedOperations
@@ -122,57 +120,56 @@ func (c *Client) ConstructionPayload(_ context.Context, request *types.Construct
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "expected at least one operation")
 	}
 
-	// convert rosetta operations to sdk msgs and fees (if present)
-	msgs, fee, err := opsToMsgsAndFees(c.ir, request.Operations)
+	tx, err := c.converter.FromRosetta().OpsToUnsignedTx(request.Operations)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, err.Error())
 	}
 
-	metadata, err := getMetadataFromPayloadReq(request)
+	metadata := new(ConstructionMetadata)
+	if err = metadata.FromMetadata(request.Metadata); err != nil {
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
+	}
+	feeAmt, err := sdk.ParseCoinsNormalized(metadata.GasPrice)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, err.Error())
 	}
 
-	txFactory := tx.Factory{}.WithAccountNumber(metadata.AccountNumber).WithChainID(metadata.ChainID).
-		WithGas(metadata.Gas).WithSequence(metadata.Sequence).WithMemo(metadata.Memo).WithFees(fee.String())
+	//
+	builder := c.getTxConfig().NewTxBuilder()
+	_ = builder.SetMsgs(tx.GetMsgs()...)
+	builder.SetFeeAmount(feeAmt)
+	builder.SetGasLimit(metadata.GasLimit)
+	builder.SetMemo(metadata.Memo)
 
-	TxConfig := c.getTxConfig()
-	txFactory = txFactory.WithTxConfig(TxConfig)
-
-	txBldr, err := tx.BuildUnsignedTx(txFactory, msgs...)
+	tx = builder.GetTx()
+	txBytes, err := c.clientCtx.TxConfig.TxEncoder()(builder.GetTx())
 	if err != nil {
 		return nil, err
 	}
 
-	// Sign_mode_legacy_amino is being used as default here, as sign_mode_direct
-	// needs the signer infos to be set before hand but rosetta doesn't have a way
-	// to do this yet. To be revisited in future versions of sdk and rosetta
-	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	}
-
-	signerData := authsigning.SignerData{
-		ChainID:       txFactory.ChainID(),
-		AccountNumber: txFactory.AccountNumber(),
-		Sequence:      txFactory.Sequence(),
-	}
-
-	signBytes, err := TxConfig.SignModeHandler().GetSignBytes(txFactory.SignMode(), signerData, txBldr.GetTx())
-	if err != nil {
-		return nil, err
-	}
-
-	txBytes, err := TxConfig.TxEncoder()(txBldr.GetTx())
-	if err != nil {
-		return nil, err
-	}
-
-	accIdentifiers := getAccountIdentifiersByMsgs(msgs)
+	accIdentifiers := tx.GetSigners()
+	rawJSONTx, err := c.clientCtx.TxConfig.TxJSONEncoder()(builder.GetTx())
+	log.Printf("raw tx: %s", rawJSONTx)
 
 	payloads := make([]*types.SigningPayload, len(accIdentifiers))
 	for i, accID := range accIdentifiers {
+		// we expect pubkeys to be ordered... TODO(fdymylja): maybe make ordering not matter?
+		signerData := authsigning.SignerData{
+			ChainID:       metadata.ChainID,
+			AccountNumber: metadata.SignersData[i].AccountNumber,
+			Sequence:      metadata.SignersData[i].Sequence,
+		}
+
+		// Sign_mode_legacy_amino is being used as default here, as sign_mode_direct
+		// needs the signer infos to be set before hand but rosetta doesn't have a way
+		// to do this yet. To be revisited in future versions of sdk and rosetta
+		signBytes, err := c.clientCtx.TxConfig.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
+		if err != nil {
+			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "signing error: "+err.Error())
+		}
+
 		payloads[i] = &types.SigningPayload{
-			AccountIdentifier: accID,
+			AccountIdentifier: &types.AccountIdentifier{Address: accID.String()},
 			Bytes:             crypto.Sha256(signBytes),
 			SignatureType:     types.Ecdsa,
 		}
@@ -184,49 +181,48 @@ func (c *Client) ConstructionPayload(_ context.Context, request *types.Construct
 	}, nil
 }
 
-func getAccountIdentifiersByMsgs(msgs []sdk.Msg) []*types.AccountIdentifier {
-	var accIdentifiers []*types.AccountIdentifier
-	for _, msg := range msgs {
-		for _, signer := range msg.GetSigners() {
-			accIdentifiers = append(accIdentifiers, &types.AccountIdentifier{Address: signer.String()})
-		}
+func (c *Client) PreprocessOperationsToOptions(_ context.Context, req *types.ConstructionPreprocessRequest) (optionsMeta map[string]interface{}, err error) {
+	if len(req.Operations) == 0 {
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "no operations")
 	}
 
-	return accIdentifiers
-}
-
-func (c *Client) PreprocessOperationsToOptions(_ context.Context, req *types.ConstructionPreprocessRequest) (options map[string]interface{}, err error) {
-	operations := req.Operations
-	if len(operations) < 1 {
-		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "invalid number of operations")
-	}
-
-	msgs, err := opsToMsgs(c.ir, operations)
+	// now we need to parse the operations to cosmos sdk messages
+	tx, err := c.converter.FromRosetta().OpsToUnsignedTx(req.Operations)
 	if err != nil {
-		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, err.Error())
+		return nil, err
 	}
 
-	if len(msgs) < 1 || len(msgs[0].GetSigners()) < 1 {
-		return nil, crgerrs.WrapError(crgerrs.ErrInvalidOperation, "operation produced no msg or signers")
+	// get the signers
+	signers := tx.GetSigners()
+	signersStr := make([]string, len(signers))
+
+	for i, sig := range signers {
+		signersStr[i] = sig.String()
+	}
+	// get the metadata request information
+	meta := new(ConstructionPreprocessMetadata)
+	err = meta.FromMetadata(req.Metadata)
+	if err != nil {
+		return nil, err
 	}
 
-	memo, ok := req.Metadata["memo"]
-	if !ok {
-		memo = ""
+	if meta.GasPrice == "" {
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "no gas prices")
 	}
 
-	defaultGas := float64(200000)
-
-	gas := req.SuggestedFeeMultiplier
-	if gas == nil {
-		gas = &defaultGas
+	if meta.GasLimit == 0 {
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "no gas limit")
 	}
 
-	return map[string]interface{}{
-		OptionAddress: msgs[0].GetSigners()[0],
-		OptionMemo:    memo,
-		OptionGas:     gas,
-	}, nil
+	// prepare the options to return
+	options := &PreprocessOperationsOptionsResponse{
+		ExpectedSigners: signersStr,
+		Memo:            meta.Memo,
+		GasLimit:        meta.GasLimit,
+		GasPrice:        meta.GasPrice,
+	}
+
+	return options.ToMetadata()
 }
 
 func (c *Client) AccountIdentifierFromPublicKey(pubKey *types.PublicKey) (*types.AccountIdentifier, error) {

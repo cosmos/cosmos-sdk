@@ -1,4 +1,4 @@
-package convert
+package rosetta
 
 import (
 	"testing"
@@ -7,12 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -23,12 +19,7 @@ type ConverterTestSuite struct {
 }
 
 func (s *ConverterTestSuite) SetupTest() {
-	ir := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(ir)
-
-	auth.RegisterInterfaces(ir)
-	bank.RegisterInterfaces(ir)
-	cryptocodec.RegisterInterfaces(ir)
+	cdc, ir := MakeCodec()
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	s.c = NewConverter(cdc, ir, txConfig)
 }

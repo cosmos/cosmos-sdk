@@ -45,6 +45,7 @@ message Output {
 
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
+// This message is deprecated now that supply is indexed by denom.
 message Supply {
   option deprecated = true;
 

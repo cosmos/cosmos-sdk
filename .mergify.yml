@@ -24,3 +24,11 @@ pull_request_rules:
       backport:
         branches:
           - launchpad/backports
+  - name: backport patches to v0.42.x branch
+    conditions:
+      - base=master
+      - label=backport/0.42.x (Stargate)
+    actions:
+      backport:
+        branches:
+          - release/v0.42.x

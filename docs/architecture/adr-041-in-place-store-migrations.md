@@ -16,7 +16,7 @@ This ADR introduces a mechanism to perform in-place store migrations during chai
 
 When a chain upgrade introduces state-breaking changes inside modules, the current procedure consists of exporting the whole state into a JSON file (via the `simd export` command), running migration scripts on the JSON file (`simd migrate` command), clearing the stores (`simd unsafe-reset-all` command), and starting a new chain with the migrated JSON file as new genesis (optionally with a custom initial block height). An example of such a procedure can be seen [in the Cosmos Hub 3->4 migration guide](https://github.com/cosmos/gaia/blob/v4.0.3/docs/migration/cosmoshub-3.md#upgrade-procedure).
 
-While [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree/v0.41.1/cosmovisor) aims to alleviate the difficulty of handling upgrades, this procedure is still cumbersome for multiple reasons:
+This procedure is cumbersome for multiple reasons:
 
 - The procedure takes time. It can take hours to run the `export` command, plus some additional hours to run `InitChain` on the fresh chain using the migrated JSON.
 - The exported JSON file can be heavy (~100MB-1GB), making it difficult to view, edit and transfer, which in turn introduces additional work to solve these problems (such as [streaming genesis](https://github.com/cosmos/cosmos-sdk/issues/6936)).
@@ -85,9 +85,10 @@ Each module's migration scripts are specific to the module's store evolutions, a
 We introduce a new prefix store in `x/upgrade`'s store. This store will track each module's current version, it can be modelized as a `map[string]uint64` of module name to module ConsensusVersion, and will be used when running the migrations (see next section for details). The key prefix used is `0x1`, and the key/value format is:
 
 ```
-0x1 | {module_name_bytes} => LittleEndian(module_consensus_version)
+0x2 | {bytes(module_name)} => LittleEndian(module_consensus_version)
 ```
 
+s
 We add a new parameter `ModuleManager` `x/upgrade`'s `NewKeeper` constructor, where ModuleManager is:
 
 ```go

@@ -57,24 +57,21 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 For example, if the current ConsensusVersion of a module is `N` , then `N-1` migration scripts MUST be registered in the configurator.
 
-In the SDK, the migration scripts are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. A `MigrationKeeper` interface is implemented by each keeper:
+In the SDK, the migration scripts are handled by each module's keeper, because the keeper holds the `sdk.StoreKey` used to perform in-place store migrations. To not overload the keeper, a `Migrator` wrapper is used by each module to handle the migration scripts:
 
 ```go
-// MigrationKeeper is an interface that the keeper implements for handling
-// in-place store migrations.
-type MigrationKeeper interface {
-    // Migrate1 migrates the store from version 1 to 2.
-    Migrate1(ctx sdk.Context) error
-
-    // ...Add more MigrateN scripts here.
+// Migrator is a struct for handling in-place store migrations.
+type Migrator struct {
+	keeper BaseKeeper
 }
 ```
 
-Since migration scripts manipulate legacy code, they should live inside the `legacy/` folder of each module, and be called by the keeper's implementation of `MigrationKeeper`.
+Since migration scripts manipulate legacy code, they should live inside the `legacy/` folder of each module, and be called by the Migrator's methods. We propose the format `Migrate{M}to{N}` for method names.
 
 ```go
-func (keeper BankKeeper) Migrate1(ctx sdk.Context) error {
-    return v042bank.MigrateStore(ctx, keeper.storeKey) // v042bank is package `x/bank/legacy/v042`.
+// Migrate1to2 migrates from version 1 to 2.
+func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+	return v042bank.MigrateStore(ctx, m.keeper.storeKey) // v042bank is package `x/bank/legacy/v042`.
 }
 ```
 
@@ -89,10 +86,10 @@ We introduce a new prefix store in `x/upgrade`'s store. This store will track ea
 ```
 
 s
-We add a new parameter `ModuleManager` `x/upgrade`'s `NewKeeper` constructor, where ModuleManager is:
+We add a new field `VersionManager` `x/upgrade`'s keeper, where `VersionManager` is:
 
 ```go
-type ModuleManager interface {
+type VersionManager interface {
     GetConsensusVersions() MigrationMap
 }
 

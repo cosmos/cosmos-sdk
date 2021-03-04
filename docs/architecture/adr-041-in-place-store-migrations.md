@@ -95,8 +95,8 @@ type ModuleManager interface {
     GetConsensusVersions() MigrationMap
 }
 
-// Map of module name => ConsensusVersion.
-type MigrationMap map[string]uint64
+// Map of module name => new module Consensus Version.
+type VersionMap map[string]uint64
 ```
 
 When `InitChain` is run, the initial `ModuleManager.GetConsensusVersions()` value will be recorded to state. The UpgradeHandler signature needs to be updated to take a `MigrationMap`, as well as return an error:

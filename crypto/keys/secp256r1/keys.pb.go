@@ -26,7 +26,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // PubKey defines a secp256r1 ECDSA public key.
 type PubKey struct {
 	// Point on secp256r1 curve in a compressed representation as specified in section
-	// 4.3.6 of ANSI X9.62.
+	// 4.3.6 of ANSI X9.62: https://webstore.ansi.org/standards/ascx9/ansix9621998
 	Key *ecdsaPK `protobuf:"bytes,1,opt,name=key,proto3,customtype=ecdsaPK" json:"key,omitempty"`
 }
 

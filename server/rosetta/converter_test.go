@@ -209,6 +209,14 @@ func (s *ConverterTestSuite) TestBeginEndBlockAndHashToTxType() {
 	s.Require().Equal(BeginBlockTx, txType)
 	s.Require().Equal(deliverTxBytes, hash, "begin block tx hash should be equal to a block hash")
 
+	txType, hash = s.c.ToSDK().HashToTxType([]byte("invalid"))
+
+	s.Require().Equal(UnrecognizedTx, txType)
+	s.Require().Nil(hash)
+
+	txType, hash = s.c.ToSDK().HashToTxType(append([]byte{0x3}, deliverTxBytes...))
+	s.Require().Equal(UnrecognizedTx, txType)
+	s.Require().Nil(hash)
 }
 
 func TestConverterTestSuite(t *testing.T) {

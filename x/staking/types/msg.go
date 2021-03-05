@@ -20,7 +20,7 @@ const (
 	TypeSvcMsgUndelegate      = "/cosmos.staking.v1beta1.Msg/Undelegate"
 	TypeSvcMsgEditValidator   = "/cosmos.staking.v1beta1.Msg/EditValidator"
 	TypeSvcMsgCreateValidator = "/cosmos.staking.v1beta1.Msg/CreateValidator"
-	TypeSvcMsgDelegate        = "/cosmos.staking.v1beta1.Msg/Deledate"
+	TypeSvcMsgDelegate        = "/cosmos.staking.v1beta1.Msg/Delegate"
 	TypeSvcMsgBeginRedelegate = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
 

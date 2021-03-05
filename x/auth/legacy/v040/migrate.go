@@ -16,6 +16,7 @@ func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 	_, ok := old.PubKey.(*multisigtypes.LegacyAminoPubKey)
 
 	// If pubkey is multisig type, then leave it as nil for now
+	// Ref: https://github.com/cosmos/cosmos-sdk/issues/8776#issuecomment-790552126
 	// Else if the old genesis had a pubkey, we pack it inside an Any.
 	// Or else, we just leave it nil.
 	if ok {

@@ -32,6 +32,7 @@ callbacks to IBC applications.
 | update_client | client_id        | {clientId}        |
 | update_client | client_type      | {clientType}      |
 | update_client | consensus_height | {consensusHeight} |
+| update_client | header           | {header}          |
 | message       | action           | update_client     |
 | message       | module           | ibc_client        |
 
@@ -237,5 +238,4 @@ callbacks to IBC applications.
 | timeout_packet | packet_channel_ordering  | {channel.Ordering}   |
 | message        | action                   | timeout_packet       |
 | message        | module                   | ibc-channel          |
-
 

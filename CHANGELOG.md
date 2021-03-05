@@ -34,9 +34,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [v0.42.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.0) - 2021-03-03
+## [v0.42.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.0) - 2021-03-05
 
 **IMPORTANT**: This release contains an important security fix for all non Cosmos Hub chains running Stargate version of the Cosmos SDK (>0.40). Non-hub chains should not be using any version of the SDK in the v0.40.x or v0.41.x release series. See [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) for more details.
+
+### Improvements
+
+* (x/ibc) [\#8624](https://github.com/cosmos/cosmos-sdk/pull/8624) Emit full header in IBC UpdateClient message.
 
 ### Bug fixes
 

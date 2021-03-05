@@ -25,6 +25,7 @@ binary).
 command line arguments and flags (but new binary) after a successful upgrade. By default, `cosmovisor` dies
 afterwards and allows the supervisor to restart it if needed. Note that this will not auto-restart the child
 if there was an error.
+* `DAEMON_LOG_BUFFER_SIZE` (*optional*) is the buffer size for cosmovisor to scan log. If not set, it will use the default [64](https://github.com/golang/go/blob/2217e89ba326875470a856cd0da79f3ec9a896b8/src/bufio/scan.go#L80). (e.g. set to `256` or `512`) It is to avoid scanning stuck in case of long line of the log.
 
 ## Data Folder Layout
 

@@ -1,11 +1,13 @@
 package cosmovisor
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 const (
@@ -21,6 +23,7 @@ type Config struct {
 	Name                  string
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
+	LogBufferSize         int
 }
 
 // Root returns the root directory where all info lives
@@ -97,6 +100,17 @@ func GetConfigFromEnv() (*Config, error) {
 
 	if os.Getenv("DAEMON_RESTART_AFTER_UPGRADE") == "true" {
 		cfg.RestartAfterUpgrade = true
+	}
+
+	logBufferSizeStr := os.Getenv("DAEMON_LOG_BUFFER_SIZE")
+	if logBufferSizeStr != "" {
+		logBufferSize, err := strconv.Atoi(logBufferSizeStr)
+		if err != nil {
+			return nil, err
+		}
+		cfg.LogBufferSize = logBufferSize * 1024
+	} else {
+		cfg.LogBufferSize = bufio.MaxScanTokenSize
 	}
 
 	if err := cfg.validate(); err != nil {

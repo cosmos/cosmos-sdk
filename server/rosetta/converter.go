@@ -313,9 +313,7 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	// get operations from msgs
 	msgs := tx.GetMsgs()
 
-	// nolint: nolintlint
-	// nolint: prealloc
-	var rawTxOps []*rosettatypes.Operation
+	var rawTxOps []*rosettatypes.Operation // nolint: prealloc
 	for _, msg := range msgs {
 		ops, err := c.Ops(status, msg)
 		if err != nil {
@@ -341,9 +339,7 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 }
 
 func (c converter) BalanceOps(status string, events []abci.Event) []*rosettatypes.Operation {
-	// nolint: nolintlint
-	// nolint: prealloc
-	var ops []*rosettatypes.Operation
+	var ops []*rosettatypes.Operation // nolint: prealloc
 
 	for _, e := range events {
 		balanceOps, ok := sdkEventToBalanceOperations(status, e)

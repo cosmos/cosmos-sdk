@@ -38,8 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Features
 
-* [\#8559](https://github.com/cosmos/cosmos-sdk/pull/8559) Added Protobuf compatible secp256r1 ECDSA signatures.
-* [\#8786](https://github.com/cosmos/cosmos-sdk/pull/8786) Enabled secp256r1 in x/auth.
+* [\#8559](https://github.com/cosmos/cosmos-sdk/pull/8559) Adding Protobuf compatible secp256r1 ECDSA signatures.
 
 ### Client Breaking Changes
 
@@ -68,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [\#7733](https://github.com/cosmos/cosmos-sdk/pull/7733) ADR 037 Implementation: Governance Split Votes
 * (x/bank) [\#8656](https://github.com/cosmos/cosmos-sdk/pull/8656) balance and supply are now correctly tracked via `coin_spent`, `coin_received`, `coinbase` and `burn` events.
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) Supply is now stored and tracked as `sdk.Coins`
+* (store) [\#8790](https://github.com/cosmos/cosmos-sdk/pull/8790) Reduce gas costs by 10x for transient store operations.
 
 ### Improvements
 

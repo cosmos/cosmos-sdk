@@ -41,6 +41,7 @@ const (
 	FlagPruningInterval   = "pruning-interval"
 	FlagLocalRpcPort      = "local-rpc-port"
 	FlagPortMonitor       = "netstat"
+	FlagEvmDataInitPath   = "evm-init-data-path"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -115,6 +116,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
 	cmd.Flags().String(FlagLocalRpcPort, "", "Local rpc port for mempool and block monitor on cosmos layer(ignored if mempool/block monitoring is not required)")
 	cmd.Flags().String(FlagPortMonitor, "", "Local target ports for connecting number monitoring(ignored if connecting number monitoring is not required)")
+	cmd.Flags().String(FlagEvmDataInitPath, "", "Evm contract & storage db used for InitGenesis")
 	viper.BindPFlag(FlagTrace, cmd.Flags().Lookup(FlagTrace))
 	viper.BindPFlag(FlagPruning, cmd.Flags().Lookup(FlagPruning))
 	viper.BindPFlag(FlagPruningKeepRecent, cmd.Flags().Lookup(FlagPruningKeepRecent))
@@ -122,6 +124,7 @@ which accepts a path for the resulting pprof file.
 	viper.BindPFlag(FlagPruningInterval, cmd.Flags().Lookup(FlagPruningInterval))
 	viper.BindPFlag(FlagLocalRpcPort, cmd.Flags().Lookup(FlagLocalRpcPort))
 	viper.BindPFlag(FlagPortMonitor, cmd.Flags().Lookup(FlagPortMonitor))
+	viper.BindPFlag(FlagEvmDataInitPath, cmd.Flags().Lookup(FlagEvmDataInitPath))
 
 	registerRestServerFlags(cmd)
 

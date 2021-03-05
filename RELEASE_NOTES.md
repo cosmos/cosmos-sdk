@@ -6,12 +6,9 @@ See the [Cosmos SDK v0.42.0 milestone](https://github.com/cosmos/cosmos-sdk/mile
 
 # Security fix: validator address conversion in evidence handling
 
-Due to incorrect handling of validators' consensus addresses, Cosmos SDK applications that were not
-using the default `cosmos1` bech32 default one could not be able to jail validators that commit
-misbehaviours such as double signing.
+The security fix resolves the issue regarding incorrect handling of validators' consensus addresses. Because of this incorrect handling, Cosmos SDK apps that were not using the default `cosmos1` Bech32 address prefix were not able to jail validators that committed misbehaviors such as double signing.
 
-Although the issue **does not affect the Cosmos Hub**, it still potentially renders the `v0.41` and `v0.40`
-release series unsafe for most chains.
+Although the issue does **not** affect the Cosmos Hub, this issue potentially renders the `v0.41` and `v0.40` release series unsafe for most chains. 
 
 # Full header is emitted on IBC UpdateClient message event
 

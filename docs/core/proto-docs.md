@@ -80,6 +80,7 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
+    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -1560,7 +1561,6 @@ sendable).
 
 
 
-<<<<<<< HEAD
 
 <a name="cosmos.bank.v1beta1.Supply"></a>
 
@@ -1578,8 +1578,6 @@ This message is deprecated now that supply is indexed by denom.
 
 
 
-=======
->>>>>>> e17953ab112244fece1534b386517bf9cd44ce05
  <!-- end messages -->
 
  <!-- end enums -->

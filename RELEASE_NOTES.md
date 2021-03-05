@@ -13,4 +13,4 @@ Although the issue does **not** affect the Cosmos Hub, this issue potentially re
 # Full header is emitted on IBC UpdateClient message event
 
 The event emitted by the IBC UpdateClient message now contains the full header.
-This is meant to make misbehaviour handling, which requires tracking these headers, easier.
+This change makes header tracking easier and improves the handling of misbehaviors.

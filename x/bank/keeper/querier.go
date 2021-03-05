@@ -84,7 +84,8 @@ func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQu
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	//TODO: pagenate
+	// TODO: paginate
+	// https://github.com/cosmos/cosmos-sdk/issues/8761
 	totalSupply := k.GetTotalSupply(ctx)
 
 	start, end := client.Paginate(len(totalSupply), params.Page, params.Limit, 100)

@@ -214,7 +214,7 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 
 }
 
-// MetaToMsg unmarshals the rosetta metadata to the given sdk.Msg
+// Msg unmarshals the rosetta metadata to the given sdk.Msg
 func (c converter) Msg(meta map[string]interface{}, msg sdk.Msg) error {
 	metaBytes, err := json.Marshal(meta)
 	if err != nil {
@@ -237,7 +237,7 @@ func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
 	return
 }
 
-// MsgToOps will create an operation for each msg signer
+// Ops will create an operation for each msg signer
 // with the message proto name as type, and the raw fields
 // as metadata
 func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
@@ -436,7 +436,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 	return operations, true
 }
 
-// sdkCoinsToRosettaAmounts converts []sdk.Coin to rosetta amounts
+// Amounts converts []sdk.Coin to rosetta amounts
 func (c converter) Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*rosettatypes.Amount {
 	amounts := make([]*rosettatypes.Amount, len(availableCoins))
 	ownedCoinsMap := make(map[string]sdk.Int, len(availableCoins))
@@ -498,7 +498,7 @@ func AddOperationIndexes(msgOps []*rosettatypes.Operation, balanceOps []*rosetta
 	return finalOps
 }
 
-// endBlockTxHash produces a mock endblock hash that rosetta can query
+// EndBlockTxHash produces a mock endblock hash that rosetta can query
 // for endblock operations, it also serves the purpose of representing
 // part of the state changes happening at endblock level (balance ones)
 func (c converter) EndBlockTxHash(hash []byte) string {
@@ -506,7 +506,7 @@ func (c converter) EndBlockTxHash(hash []byte) string {
 	return fmt.Sprintf("%X", final)
 }
 
-// beginBlockTxHash produces a mock beginblock hash that rosetta can query
+// BeginBlockTxHash produces a mock beginblock hash that rosetta can query
 // for beginblock operations, it also serves the purpose of representing
 // part of the state changes happening at beginblock level (balance ones)
 func (c converter) BeginBlockTxHash(hash []byte) string {

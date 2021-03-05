@@ -1,11 +1,8 @@
 package ante
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
@@ -39,16 +36,9 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a GrantedFeeTx")
 	}
 
-	// sanity check from DeductFeeDecorator
-	if addr := d.ak.GetModuleAddress(authtypes.FeeCollectorName); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", authtypes.FeeCollectorName))
-	}
-
 	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
 	feeGranter := feeTx.FeeGranter()
-
-	deductFeesFrom := feePayer
 
 	// ensure the grant is allowed, if we request a different fee payer
 	if feeGranter != nil && !feeGranter.Equals(feePayer) {
@@ -57,24 +47,6 @@ func (d DeductGrantedFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simula
 			return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
 		}
 
-		deductFeesFrom = feeGranter
-	}
-
-	// now, either way, we know that we are authorized to deduct the fees from the deductFeesFrom account
-	deductFeesFromAcc := d.ak.GetAccount(ctx, deductFeesFrom)
-	if deductFeesFromAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
-	}
-
-	// move on if there is no fee to deduct
-	if fee.IsZero() {
-		return next(ctx, tx, simulate)
-	}
-
-	// deduct fee if non-zero
-	err = DeductFees(d.bk, ctx, deductFeesFromAcc, fee)
-	if err != nil {
-		return ctx, err
 	}
 
 	return next(ctx, tx, simulate)

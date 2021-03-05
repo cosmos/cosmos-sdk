@@ -63,7 +63,13 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, &suite.app.FeeGrantKeeper, ante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
+	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper,
+		ante.AnteHandlerOptions{
+			FeegrantKeeper:  &suite.app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+		},
+	)
 }
 
 // CreateTestAccounts creates `numAccs` accounts, and return all relevant

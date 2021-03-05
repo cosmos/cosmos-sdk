@@ -81,6 +81,14 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 	}
 
 	feePayer := feeTx.FeePayer()
+	feeGranter := feeTx.FeeGranter()
+
+	// if feegranter set deduct fee from feegranter account.
+	// this works with only when feegrant enabled.
+	if feeGranter != nil {
+		feePayer = feeGranter
+	}
+
 	feePayerAcc := dfd.ak.GetAccount(ctx, feePayer)
 
 	if feePayerAcc == nil {

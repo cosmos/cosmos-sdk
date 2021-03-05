@@ -1,7 +1,6 @@
 package rosetta
 
 import (
-	"encoding/hex"
 	"testing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
@@ -107,18 +106,4 @@ func (s *ConverterTestSuite) TestMsgToMetaMetaToMsg() {
 
 func TestConverterTestSuite(t *testing.T) {
 	suite.Run(t, new(ConverterTestSuite))
-}
-
-func (s *ConverterTestSuite) TestX() {
-	const txRaw = "0a8e010a8b010a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e64126b0a2d636f736d6f7331656e377a6574686b6c6c79307761386a7778777878727638396565386a383668656374747337122d636f736d6f73317377383670393076393076753875706d363478327173373068756663796330746d34766e37361a0b0a057374616b651202313812600a4c0a460a1f2f636f736d6f732e63727970746f2e736563703235366b312e5075624b657912230a21030c65f93f08cc27ee461ce1cd0a11647f0cfe852d044874d4d0905240a9787ec412020a0012100a0a0a057374616b651201311090a10f1a00"
-
-	raw, _ := hex.DecodeString(txRaw)
-	cdc, _ := MakeCodec()
-	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-
-	tx, err := txConfig.TxDecoder()(raw)
-	s.Require().NoError(err)
-	txB, err := txConfig.TxJSONEncoder()(tx)
-	s.Require().NoError(err)
-	s.T().Logf("%s", txB)
 }

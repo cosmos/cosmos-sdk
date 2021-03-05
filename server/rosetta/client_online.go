@@ -91,6 +91,43 @@ func NewClient(cfg *Config) (*Client, error) {
 	}, nil
 }
 
+// Bootstrap is gonna connect the client to the endpoints
+func (c *Client) Bootstrap() error {
+	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+
+	tmRPC, err := http.New(c.config.TendermintRPC, tmWebsocketPath)
+	if err != nil {
+		return err
+	}
+
+	authClient := auth.NewQueryClient(grpcConn)
+	bankClient := bank.NewQueryClient(grpcConn)
+
+	c.auth = authClient
+	c.bank = bankClient
+	c.tmRPC = tmRPC
+
+	return nil
+}
+
+// Ready asserts if the client is ready or not
+func (c *Client) Ready() error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultNodeTimeout)
+	defer cancel()
+	_, err := c.tmRPC.Health(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (*SignerData, error) {
 	if height != nil {
 		strHeight := strconv.FormatInt(*height, 10)
@@ -331,41 +368,6 @@ func (c *Client) PostTx(txBytes []byte) (*rosettatypes.TransactionIdentifier, ma
 		map[string]interface{}{
 			Log: res.Log,
 		}, nil
-}
-
-func (c *Client) Ready() error {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultNodeTimeout)
-	defer cancel()
-	_, err := c.tmRPC.Health(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = c.bank.TotalSupply(ctx, &bank.QueryTotalSupplyRequest{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) Bootstrap() error {
-	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
-	if err != nil {
-		return err
-	}
-
-	tmRPC, err := http.New(c.config.TendermintRPC, tmWebsocketPath)
-	if err != nil {
-		return err
-	}
-
-	authClient := auth.NewQueryClient(grpcConn)
-	bankClient := bank.NewQueryClient(grpcConn)
-
-	c.auth = authClient
-	c.bank = bankClient
-	c.tmRPC = tmRPC
-
-	return nil
 }
 
 // construction endpoints

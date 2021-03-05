@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/suite"
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
@@ -17,13 +21,32 @@ import (
 type ConverterTestSuite struct {
 	suite.Suite
 
-	c Converter
+	c               Converter
+	unsignedTxBytes []byte
+
+	util struct {
+		ir     codectypes.InterfaceRegistry
+		cdc    *codec.ProtoCodec
+		txConf client.TxConfig
+	}
 }
 
 func (s *ConverterTestSuite) SetupTest() {
+	// create an unsigned tx
+	const unsignedTxHex = "0a8e010a8b010a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e64126b0a2d636f736d6f733134376b6c68377468356a6b6a793361616a736a3272717668747668396d666465333777713567122d636f736d6f73316d6e7670386c786b616679346c787777617175356561653764787630647a36687767797436331a0b0a057374616b651202313612600a4c0a460a1f2f636f736d6f732e63727970746f2e736563703235366b312e5075624b657912230a21034c92046950c876f4a5cb6c7797d6eeb9ef80d67ced4d45fb62b1e859240ba9ad12020a0012100a0a0a057374616b651201311090a10f1a00"
+	unsignedTxBytes, err := hex.DecodeString(unsignedTxHex)
+	s.Require().NoError(err)
+	s.unsignedTxBytes = unsignedTxBytes
+	// instantiate converter
 	cdc, ir := MakeCodec()
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	s.c = NewConverter(cdc, ir, txConfig)
+	// add utils
+	s.util = struct {
+		ir     codectypes.InterfaceRegistry
+		cdc    *codec.ProtoCodec
+		txConf client.TxConfig
+	}{ir: ir, cdc: cdc, txConf: txConfig}
 }
 
 func (s *ConverterTestSuite) TestFromRosettaOpsToTxSuccess() {
@@ -107,9 +130,6 @@ func (s *ConverterTestSuite) TestMsgToMetaMetaToMsg() {
 }
 
 func (s *ConverterTestSuite) TestSignedTx() {
-	const unsignedTxHex = "0a8e010a8b010a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e64126b0a2d636f736d6f733134376b6c68377468356a6b6a793361616a736a3272717668747668396d666465333777713567122d636f736d6f73316d6e7670386c786b616679346c787777617175356561653764787630647a36687767797436331a0b0a057374616b651202313612600a4c0a460a1f2f636f736d6f732e63727970746f2e736563703235366b312e5075624b657912230a21034c92046950c876f4a5cb6c7797d6eeb9ef80d67ced4d45fb62b1e859240ba9ad12020a0012100a0a0a057374616b651201311090a10f1a00"
-	unsignedTxBytes, err := hex.DecodeString(unsignedTxHex)
-	s.Require().NoError(err)
 
 	s.Run("success", func() {
 		const payloadsJSON = `[{"hex_bytes":"82ccce81a3e4a7272249f0e25c3037a316ee2acce76eb0c25db00ef6634a4d57303b2420edfdb4c9a635ad8851fe5c7a9379b7bc2baadc7d74f7e76ac97459b5","signing_payload":{"address":"cosmos147klh7th5jkjy3aajsj2rqvhtvh9mfde37wq5g","hex_bytes":"ed574d84b095250280de38bf8c254e4a1f8755e5bd300b1f6ca2671688136ecc","account_identifier":{"address":"cosmos147klh7th5jkjy3aajsj2rqvhtvh9mfde37wq5g"},"signature_type":"ecdsa"},"public_key":{"hex_bytes":"034c92046950c876f4a5cb6c7797d6eeb9ef80d67ced4d45fb62b1e859240ba9ad","curve_type":"secp256k1"},"signature_type":"ecdsa"}]`
@@ -118,7 +138,7 @@ func (s *ConverterTestSuite) TestSignedTx() {
 		var payloads []*rosettatypes.Signature
 		s.Require().NoError(json.Unmarshal([]byte(payloadsJSON), &payloads))
 
-		signedTx, err := s.c.ToSDK().SignedTx(unsignedTxBytes, payloads)
+		signedTx, err := s.c.ToSDK().SignedTx(s.unsignedTxBytes, payloads)
 		s.Require().NoError(err)
 
 		signedTxHex := hex.EncodeToString(signedTx)
@@ -127,8 +147,35 @@ func (s *ConverterTestSuite) TestSignedTx() {
 	})
 
 	s.Run("signers data and signing payloads mismatch", func() {
-		_, err := s.c.ToSDK().SignedTx(unsignedTxBytes, nil)
+		_, err := s.c.ToSDK().SignedTx(s.unsignedTxBytes, nil)
 		s.Require().ErrorIs(err, crgerrs.ErrInvalidTransaction)
+	})
+}
+
+func (s *ConverterTestSuite) TestOpsAndSigners() {
+	s.Run("success", func() {
+		addr1 := sdk.AccAddress("address1").String()
+		addr2 := sdk.AccAddress("address2").String()
+
+		msg := &bank.MsgSend{
+			FromAddress: addr1,
+			ToAddress:   addr2,
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
+		}
+
+		builder := s.util.txConf.NewTxBuilder()
+		s.Require().NoError(builder.SetMsgs(msg))
+
+		sdkTx := builder.GetTx()
+		txBytes, err := s.util.txConf.TxEncoder()(sdkTx)
+		s.Require().NoError(err)
+
+		ops, signers, err := s.c.ToRosetta().OpsAndSigners(txBytes)
+		s.Require().NoError(err)
+
+		s.Require().Equal(len(ops), len(sdkTx.GetMsgs())*len(sdkTx.GetSigners()), "operation number mismatch")
+
+		s.Require().Equal(len(signers), len(sdkTx.GetSigners()), "signers number mismatch")
 	})
 }
 

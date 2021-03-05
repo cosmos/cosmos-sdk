@@ -1,9 +1,11 @@
-package rosetta
+package rosetta_test
 
 import (
 	"encoding/hex"
 	"encoding/json"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -25,7 +27,7 @@ import (
 type ConverterTestSuite struct {
 	suite.Suite
 
-	c               Converter
+	c               rosetta.Converter
 	unsignedTxBytes []byte
 	unsignedTx      authsigning.Tx
 
@@ -43,9 +45,9 @@ func (s *ConverterTestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.unsignedTxBytes = unsignedTxBytes
 	// instantiate converter
-	cdc, ir := MakeCodec()
+	cdc, ir := rosetta.MakeCodec()
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
-	s.c = NewConverter(cdc, ir, txConfig)
+	s.c = rosetta.NewConverter(cdc, ir, txConfig)
 	// add utils
 	s.util = struct {
 		ir     codectypes.InterfaceRegistry
@@ -202,7 +204,7 @@ func (s *ConverterTestSuite) TestBeginEndBlockAndHashToTxType() {
 
 	txType, hash := s.c.ToSDK().HashToTxType(deliverTxBytes)
 
-	s.Require().Equal(DeliverTxTx, txType)
+	s.Require().Equal(rosetta.DeliverTxTx, txType)
 	s.Require().Equal(deliverTxBytes, hash, "deliver tx hash should not change")
 
 	endBlockTxBytes, err := hex.DecodeString(endBlockTxHex)
@@ -210,7 +212,7 @@ func (s *ConverterTestSuite) TestBeginEndBlockAndHashToTxType() {
 
 	txType, hash = s.c.ToSDK().HashToTxType(endBlockTxBytes)
 
-	s.Require().Equal(EndBlockTx, txType)
+	s.Require().Equal(rosetta.EndBlockTx, txType)
 	s.Require().Equal(deliverTxBytes, hash, "end block tx hash should be equal to a block hash")
 
 	beginBlockTxBytes, err := hex.DecodeString(beginBlockTxHex)
@@ -218,34 +220,34 @@ func (s *ConverterTestSuite) TestBeginEndBlockAndHashToTxType() {
 
 	txType, hash = s.c.ToSDK().HashToTxType(beginBlockTxBytes)
 
-	s.Require().Equal(BeginBlockTx, txType)
+	s.Require().Equal(rosetta.BeginBlockTx, txType)
 	s.Require().Equal(deliverTxBytes, hash, "begin block tx hash should be equal to a block hash")
 
 	txType, hash = s.c.ToSDK().HashToTxType([]byte("invalid"))
 
-	s.Require().Equal(UnrecognizedTx, txType)
+	s.Require().Equal(rosetta.UnrecognizedTx, txType)
 	s.Require().Nil(hash)
 
 	txType, hash = s.c.ToSDK().HashToTxType(append([]byte{0x3}, deliverTxBytes...))
-	s.Require().Equal(UnrecognizedTx, txType)
+	s.Require().Equal(rosetta.UnrecognizedTx, txType)
 	s.Require().Nil(hash)
 }
 
 func (s *ConverterTestSuite) TestSigningComponents() {
 	s.Run("invalid metadata coins", func() {
-		_, _, err := s.c.ToRosetta().SigningComponents(nil, &ConstructionMetadata{GasPrice: "invalid"}, nil)
+		_, _, err := s.c.ToRosetta().SigningComponents(nil, &rosetta.ConstructionMetadata{GasPrice: "invalid"}, nil)
 		s.Require().ErrorIs(err, crgerrs.ErrBadArgument)
 	})
 
 	s.Run("length signers data does not match signers", func() {
-		_, _, err := s.c.ToRosetta().SigningComponents(s.unsignedTx, &ConstructionMetadata{GasPrice: "10stake"}, nil)
+		_, _, err := s.c.ToRosetta().SigningComponents(s.unsignedTx, &rosetta.ConstructionMetadata{GasPrice: "10stake"}, nil)
 		s.Require().ErrorIs(err, crgerrs.ErrBadArgument)
 	})
 
 	s.Run("length pub keys does not match signers", func() {
 		_, _, err := s.c.ToRosetta().SigningComponents(
 			s.unsignedTx,
-			&ConstructionMetadata{GasPrice: "10stake", SignersData: []*SignerData{
+			&rosetta.ConstructionMetadata{GasPrice: "10stake", SignersData: []*rosetta.SignerData{
 				{
 					AccountNumber: 0,
 					Sequence:      0,
@@ -261,7 +263,7 @@ func (s *ConverterTestSuite) TestSigningComponents() {
 
 		_, _, err = s.c.ToRosetta().SigningComponents(
 			s.unsignedTx,
-			&ConstructionMetadata{GasPrice: "10stake", SignersData: []*SignerData{
+			&rosetta.ConstructionMetadata{GasPrice: "10stake", SignersData: []*rosetta.SignerData{
 				{
 					AccountNumber: 0,
 					Sequence:      0,
@@ -282,7 +284,7 @@ func (s *ConverterTestSuite) TestSigningComponents() {
 
 		_, _, err = s.c.ToRosetta().SigningComponents(
 			s.unsignedTx,
-			&ConstructionMetadata{GasPrice: "10stake", SignersData: []*SignerData{
+			&rosetta.ConstructionMetadata{GasPrice: "10stake", SignersData: []*rosetta.SignerData{
 				{
 					AccountNumber: 0,
 					Sequence:      0,

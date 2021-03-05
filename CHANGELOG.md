@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (x/ibc) [\#8624](https://github.com/cosmos/cosmos-sdk/pull/8624) Emit full header in IBC UpdateClient message.
-* (x/crisis) [\#8621](https://github.com/cosmos/cosmos-sdk/issues/8621) crisis invariants' names are now printed to loggers.
+* (x/crisis) [\#8621](https://github.com/cosmos/cosmos-sdk/issues/8621) crisis invariants names now print to loggers.
 
 ### Bug fixes
 

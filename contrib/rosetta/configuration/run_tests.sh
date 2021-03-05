@@ -25,5 +25,3 @@ rosetta-cli check:data --configuration-file ./config/rosetta.json
 echo "checking construction API"
 rosetta-cli check:construction --configuration-file ./config/rosetta.json
 
-echo "checking staking API"
-rosetta-cli check:construction --configuration-file ./config/staking.json

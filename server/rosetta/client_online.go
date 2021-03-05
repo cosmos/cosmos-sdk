@@ -142,7 +142,9 @@ func (c *Client) accountInfo(ctx context.Context, addr string, height *int64) (*
 	}
 
 	signerData, err := c.converter.ToRosetta().SignerData(accountInfo.Account)
-
+	if err != nil {
+		return nil, err
+	}
 	return signerData, nil
 }
 
@@ -305,7 +307,7 @@ func (c *Client) GetUnconfirmedTx(ctx context.Context, hash string) (*rosettatyp
 	default:
 		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, fmt.Sprintf("unrecognized tx size: %d", len(hashAsBytes)))
 	case BeginEndBlockTxSize:
-		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, fmt.Sprintf("endblock and begin block txs cannot be unconfirmed"))
+		return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "endblock and begin block txs cannot be unconfirmed")
 	case DeliverTxSize:
 		break
 	}

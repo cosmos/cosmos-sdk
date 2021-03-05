@@ -2,8 +2,9 @@ package rosetta
 
 import (
 	"encoding/json"
-	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 	"time"
+
+	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 )
 
 // timeToMilliseconds converts time to milliseconds timestamp

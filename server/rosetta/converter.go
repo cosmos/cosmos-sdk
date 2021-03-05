@@ -113,14 +113,10 @@ type converter struct {
 
 func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sdkclient.TxConfig) Converter {
 	return converter{
-		newTxBuilder: func() sdkclient.TxBuilder {
-			return cfg.NewTxBuilder()
-		},
-		txBuilderFromTx: func(tx sdk.Tx) (sdkclient.TxBuilder, error) {
-			return cfg.WrapTxBuilder(tx)
-		},
-		txDecode: cfg.TxDecoder(),
-		txEncode: cfg.TxEncoder(),
+		newTxBuilder:    cfg.NewTxBuilder,
+		txBuilderFromTx: cfg.WrapTxBuilder,
+		txDecode:        cfg.TxDecoder(),
+		txEncode:        cfg.TxEncoder(),
 		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
 			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
 			if err != nil {
@@ -316,6 +312,8 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	}
 	// get operations from msgs
 	msgs := tx.GetMsgs()
+
+	// nolint: prealloc
 	var rawTxOps []*rosettatypes.Operation
 	for _, msg := range msgs {
 		ops, err := c.Ops(status, msg)
@@ -342,6 +340,7 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 }
 
 func (c converter) BalanceOps(status string, events []abci.Event) []*rosettatypes.Operation {
+	// nolint: prealloc
 	var ops []*rosettatypes.Operation
 
 	for _, e := range events {
@@ -789,7 +788,7 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 	}
 
-	return
+	return txBytes, payloadsToSign, nil
 }
 
 // SignerData converts the given any account to signer data

@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -23,6 +27,7 @@ type ConverterTestSuite struct {
 
 	c               Converter
 	unsignedTxBytes []byte
+	unsignedTx      authsigning.Tx
 
 	util struct {
 		ir     codectypes.InterfaceRegistry
@@ -47,6 +52,13 @@ func (s *ConverterTestSuite) SetupTest() {
 		cdc    *codec.ProtoCodec
 		txConf client.TxConfig
 	}{ir: ir, cdc: cdc, txConf: txConfig}
+	// add authsigning tx
+	sdkTx, err := txConfig.TxDecoder()(unsignedTxBytes)
+	s.Require().NoError(err)
+	builder, err := txConfig.WrapTxBuilder(sdkTx)
+	s.Require().NoError(err)
+
+	s.unsignedTx = builder.GetTx()
 }
 
 func (s *ConverterTestSuite) TestFromRosettaOpsToTxSuccess() {
@@ -217,6 +229,123 @@ func (s *ConverterTestSuite) TestBeginEndBlockAndHashToTxType() {
 	txType, hash = s.c.ToSDK().HashToTxType(append([]byte{0x3}, deliverTxBytes...))
 	s.Require().Equal(UnrecognizedTx, txType)
 	s.Require().Nil(hash)
+}
+
+func (s *ConverterTestSuite) TestSigningComponents() {
+	s.Run("invalid metadata coins", func() {
+		_, _, err := s.c.ToRosetta().SigningComponents(nil, &ConstructionMetadata{GasPrice: "invalid"}, nil)
+		s.Require().ErrorIs(err, crgerrs.ErrBadArgument)
+	})
+
+	s.Run("length signers data does not match signers", func() {
+		_, _, err := s.c.ToRosetta().SigningComponents(s.unsignedTx, &ConstructionMetadata{GasPrice: "10stake"}, nil)
+		s.Require().ErrorIs(err, crgerrs.ErrBadArgument)
+	})
+
+	s.Run("length pub keys does not match signers", func() {
+		_, _, err := s.c.ToRosetta().SigningComponents(
+			s.unsignedTx,
+			&ConstructionMetadata{GasPrice: "10stake", SignersData: []*SignerData{
+				{
+					AccountNumber: 0,
+					Sequence:      0,
+				},
+			}},
+			nil)
+		s.Require().ErrorIs(err, crgerrs.ErrBadArgument)
+	})
+
+	s.Run("ros pub key is valid but not the one we expect", func() {
+		validButUnexpected, err := hex.DecodeString("030da9096a40eb1d6c25f1e26e9cbf8941fc84b8f4dc509c8df5e62a29ab8f2415")
+		s.Require().NoError(err)
+
+		_, _, err = s.c.ToRosetta().SigningComponents(
+			s.unsignedTx,
+			&ConstructionMetadata{GasPrice: "10stake", SignersData: []*SignerData{
+				{
+					AccountNumber: 0,
+					Sequence:      0,
+				},
+			}},
+			[]*rosettatypes.PublicKey{
+				{
+					Bytes:     validButUnexpected,
+					CurveType: rosettatypes.Secp256k1,
+				},
+			})
+		s.Require().ErrorIs(err, crgerrs.ErrBadArgument)
+	})
+
+	s.Run("success", func() {
+		expectedPubKey, err := hex.DecodeString("034c92046950c876f4a5cb6c7797d6eeb9ef80d67ced4d45fb62b1e859240ba9ad")
+		s.Require().NoError(err)
+
+		_, _, err = s.c.ToRosetta().SigningComponents(
+			s.unsignedTx,
+			&ConstructionMetadata{GasPrice: "10stake", SignersData: []*SignerData{
+				{
+					AccountNumber: 0,
+					Sequence:      0,
+				},
+			}},
+			[]*rosettatypes.PublicKey{
+				{
+					Bytes:     expectedPubKey,
+					CurveType: rosettatypes.Secp256k1,
+				},
+			})
+		s.Require().NoError(err)
+	})
+
+}
+
+func (s *ConverterTestSuite) TestBalanceOps() {
+	s.Run("not a balance op", func() {
+		notBalanceOp := abci.Event{
+			Type: "not-a-balance-op",
+		}
+
+		ops := s.c.ToRosetta().BalanceOps("", []abci.Event{notBalanceOp})
+		s.Len(ops, 0, "expected no balance ops")
+	})
+
+	s.Run("multiple balance ops from 2 multicoins event", func() {
+		subBalanceOp := bank.NewCoinSpentEvent(
+			sdk.AccAddress("test"),
+			sdk.NewCoins(sdk.NewInt64Coin("test", 10), sdk.NewInt64Coin("utxo", 10)),
+		)
+
+		addBalanceOp := bank.NewCoinReceivedEvent(
+			sdk.AccAddress("test"),
+			sdk.NewCoins(sdk.NewInt64Coin("test", 10), sdk.NewInt64Coin("utxo", 10)),
+		)
+
+		ops := s.c.ToRosetta().BalanceOps("", []abci.Event{(abci.Event)(subBalanceOp), (abci.Event)(addBalanceOp)})
+		s.Len(ops, 4)
+	})
+
+	s.Run("spec broken", func() {
+		s.Require().Panics(func() {
+			specBrokenSub := abci.Event{
+				Type: bank.EventTypeCoinSpent,
+			}
+			_ = s.c.ToRosetta().BalanceOps("", []abci.Event{specBrokenSub})
+		})
+
+		s.Require().Panics(func() {
+			specBrokenSub := abci.Event{
+				Type: bank.EventTypeCoinBurn,
+			}
+			_ = s.c.ToRosetta().BalanceOps("", []abci.Event{specBrokenSub})
+		})
+
+		s.Require().Panics(func() {
+			specBrokenSub := abci.Event{
+				Type: bank.EventTypeCoinReceived,
+			}
+			_ = s.c.ToRosetta().BalanceOps("", []abci.Event{specBrokenSub})
+		})
+	})
 }
 
 func TestConverterTestSuite(t *testing.T) {

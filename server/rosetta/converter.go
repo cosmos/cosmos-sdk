@@ -651,6 +651,12 @@ func (c converter) SignedTx(txBytes []byte, signatures []*rosettatypes.Signature
 		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())
 	}
 
+	if len(notSignedSigs) != len(signatures) {
+		return nil, crgerrs.WrapError(
+			crgerrs.ErrInvalidTransaction,
+			fmt.Sprintf("expected transaction to have signers data matching the provided signatures: %d <-> %d", len(notSignedSigs), len(signatures)))
+	}
+
 	signedSigs := make([]signing.SignatureV2, len(notSignedSigs))
 	for i, signature := range signatures {
 		// TODO(fdymylja): here we should check that the public key matches...
@@ -776,7 +782,6 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 	}
 
 	// finally encode the tx
-	// encode tx
 	txBytes, err = c.txEncode(builder.GetTx())
 	if err != nil {
 		return nil, nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())

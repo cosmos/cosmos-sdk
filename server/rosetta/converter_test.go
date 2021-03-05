@@ -1,6 +1,8 @@
 package rosetta
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"testing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
@@ -102,6 +104,32 @@ func (s *ConverterTestSuite) TestMsgToMetaMetaToMsg() {
 	s.Require().NoError(err)
 
 	s.Require().Equal(msg, copyMsg)
+}
+
+func (s *ConverterTestSuite) TestSignedTx() {
+	const unsignedTxHex = "0a8e010a8b010a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e64126b0a2d636f736d6f733134376b6c68377468356a6b6a793361616a736a3272717668747668396d666465333777713567122d636f736d6f73316d6e7670386c786b616679346c787777617175356561653764787630647a36687767797436331a0b0a057374616b651202313612600a4c0a460a1f2f636f736d6f732e63727970746f2e736563703235366b312e5075624b657912230a21034c92046950c876f4a5cb6c7797d6eeb9ef80d67ced4d45fb62b1e859240ba9ad12020a0012100a0a0a057374616b651201311090a10f1a00"
+	unsignedTxBytes, err := hex.DecodeString(unsignedTxHex)
+	s.Require().NoError(err)
+
+	s.Run("success", func() {
+		const payloadsJSON = `[{"hex_bytes":"82ccce81a3e4a7272249f0e25c3037a316ee2acce76eb0c25db00ef6634a4d57303b2420edfdb4c9a635ad8851fe5c7a9379b7bc2baadc7d74f7e76ac97459b5","signing_payload":{"address":"cosmos147klh7th5jkjy3aajsj2rqvhtvh9mfde37wq5g","hex_bytes":"ed574d84b095250280de38bf8c254e4a1f8755e5bd300b1f6ca2671688136ecc","account_identifier":{"address":"cosmos147klh7th5jkjy3aajsj2rqvhtvh9mfde37wq5g"},"signature_type":"ecdsa"},"public_key":{"hex_bytes":"034c92046950c876f4a5cb6c7797d6eeb9ef80d67ced4d45fb62b1e859240ba9ad","curve_type":"secp256k1"},"signature_type":"ecdsa"}]`
+		const expectedSignedTxHex = "0a8e010a8b010a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e64126b0a2d636f736d6f733134376b6c68377468356a6b6a793361616a736a3272717668747668396d666465333777713567122d636f736d6f73316d6e7670386c786b616679346c787777617175356561653764787630647a36687767797436331a0b0a057374616b651202313612620a4e0a460a1f2f636f736d6f732e63727970746f2e736563703235366b312e5075624b657912230a21034c92046950c876f4a5cb6c7797d6eeb9ef80d67ced4d45fb62b1e859240ba9ad12040a02087f12100a0a0a057374616b651201311090a10f1a4082ccce81a3e4a7272249f0e25c3037a316ee2acce76eb0c25db00ef6634a4d57303b2420edfdb4c9a635ad8851fe5c7a9379b7bc2baadc7d74f7e76ac97459b5"
+
+		var payloads []*rosettatypes.Signature
+		s.Require().NoError(json.Unmarshal([]byte(payloadsJSON), &payloads))
+
+		signedTx, err := s.c.ToSDK().SignedTx(unsignedTxBytes, payloads)
+		s.Require().NoError(err)
+
+		signedTxHex := hex.EncodeToString(signedTx)
+
+		s.Require().Equal(signedTxHex, expectedSignedTxHex)
+	})
+
+	s.Run("signers data and signing payloads mismatch", func() {
+		_, err := s.c.ToSDK().SignedTx(unsignedTxBytes, nil)
+		s.Require().ErrorIs(err, crgerrs.ErrInvalidTransaction)
+	})
 }
 
 func TestConverterTestSuite(t *testing.T) {

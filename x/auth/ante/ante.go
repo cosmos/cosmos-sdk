@@ -10,8 +10,8 @@ import (
 
 type DefaultSigVerificationGasConsumerHandler func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 
-// AnteHandlerOptions are the options for ante handler build
-type AnteHandlerOptions struct {
+// HandlerOptions are the options for ante handler build
+type HandlerOptions struct {
 	FeegrantKeeper  *feegrantkeeper.Keeper
 	SigGasConsumer  DefaultSigVerificationGasConsumerHandler
 	SignModeHandler authsigning.SignModeHandler
@@ -22,7 +22,7 @@ type AnteHandlerOptions struct {
 // signer.
 func NewAnteHandler(
 	ak AccountKeeper, bk types.BankKeeper,
-	anteHandlerOptions AnteHandlerOptions,
+	anteHandlerOptions HandlerOptions,
 ) sdk.AnteHandler {
 
 	var feeGrantAnteHandler sdk.AnteDecorator

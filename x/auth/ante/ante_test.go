@@ -1012,7 +1012,7 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 
 	// setup an ante handler that only accepts PubKeyEd25519
 	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper,
-		ante.AnteHandlerOptions{
+		ante.HandlerOptions{
 			FeegrantKeeper: &suite.app.FeeGrantKeeper,
 			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
 				switch pubkey := sig.PubKey.(type) {

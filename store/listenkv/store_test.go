@@ -89,7 +89,7 @@ func TestListenKVStoreSet(t *testing.T) {
 				Key:      kvPairs[0].Key,
 				Value:    kvPairs[0].Value,
 				StoreKey: testStoreKey.Name(),
-				Set:      true,
+				Delete:   false,
 			},
 		},
 		{
@@ -99,7 +99,7 @@ func TestListenKVStoreSet(t *testing.T) {
 				Key:      kvPairs[1].Key,
 				Value:    kvPairs[1].Value,
 				StoreKey: testStoreKey.Name(),
-				Set:      true,
+				Delete:   false,
 			},
 		},
 		{
@@ -109,7 +109,7 @@ func TestListenKVStoreSet(t *testing.T) {
 				Key:      kvPairs[2].Key,
 				Value:    kvPairs[2].Value,
 				StoreKey: testStoreKey.Name(),
-				Set:      true,
+				Delete:   false,
 			},
 		},
 	}
@@ -144,7 +144,7 @@ func TestListenKVStoreDelete(t *testing.T) {
 				Key:      kvPairs[0].Key,
 				Value:    nil,
 				StoreKey: testStoreKey.Name(),
-				Set:      false,
+				Delete:   true,
 			},
 		},
 	}

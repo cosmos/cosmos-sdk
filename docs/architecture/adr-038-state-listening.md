@@ -33,7 +33,7 @@ type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
 	// set bool indicates if it was a set; true: set, false: delete
-	OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte) error
+    OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 ```
 
@@ -72,10 +72,10 @@ func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryMarshaler) *StoreKVP
 }
 
 // OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
-func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, set bool, key []byte, value []byte) error {
+func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error error {
 	kvPair := new(types.StoreKVPair)
 	kvPair.StoreKey = storeKey.Name()
-	kvPair.Set = set
+	kvPair.Delete = Delete
 	kvPair.Key = key
 	kvPair.Value = value
 	by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair)
@@ -115,20 +115,20 @@ func NewStore(parent types.KVStore, psk types.StoreKey, listeners []types.WriteL
 func (s *Store) Set(key []byte, value []byte) {
 	types.AssertValidKey(key)
 	s.parent.Set(key, value)
-	s.onWrite(true, key, value)
+	s.onWrite(false, key, value)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
 func (s *Store) Delete(key []byte) {
 	s.parent.Delete(key)
-	s.onWrite(false, key, nil)
+	s.onWrite(true, key, nil)
 }
 
 // onWrite writes a KVStore operation to all of the WriteListeners
-func (s *Store) onWrite(set bool, key, value []byte) {
+func (s *Store) onWrite(delete bool, key, value []byte) {
 	for _, l := range s.listeners {
-		if err := l.OnWrite(s.parentStoreKey, set, key, value); err != nil {
+		if err := l.OnWrite(s.parentStoreKey, key, value, delete); err != nil {
                     // log error
                 }
 	}

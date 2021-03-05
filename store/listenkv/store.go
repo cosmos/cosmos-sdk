@@ -35,14 +35,14 @@ func (s *Store) Get(key []byte) []byte {
 func (s *Store) Set(key []byte, value []byte) {
 	types.AssertValidKey(key)
 	s.parent.Set(key, value)
-	s.onWrite(true, key, value)
+	s.onWrite(false, key, value)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
 func (s *Store) Delete(key []byte) {
 	s.parent.Delete(key)
-	s.onWrite(false, key, nil)
+	s.onWrite(true, key, nil)
 }
 
 // Has implements the KVStore interface. It delegates the Has call to the
@@ -148,8 +148,8 @@ func (s *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener
 }
 
 // onWrite writes a KVStore operation to all of the WriteListeners
-func (s *Store) onWrite(set bool, key, value []byte) {
+func (s *Store) onWrite(delete bool, key, value []byte) {
 	for _, l := range s.listeners {
-		l.OnWrite(s.parentStoreKey, set, key, value)
+		l.OnWrite(s.parentStoreKey, key, value, delete)
 	}
 }

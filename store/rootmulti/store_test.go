@@ -732,7 +732,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 		Key:      testKey1,
 		Value:    testValue1,
 		StoreKey: testStoreKey1.Name(),
-		Set:      true,
+		Delete:   false,
 	})
 	require.Nil(t, err)
 	kvPairSet1Bytes := buf.Bytes()
@@ -744,7 +744,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 		Key:      testKey1,
 		Value:    nil,
 		StoreKey: testStoreKey1.Name(),
-		Set:      false,
+		Delete:   true,
 	})
 	require.Nil(t, err)
 	kvPairDelete1Bytes := buf.Bytes()
@@ -759,7 +759,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 		Key:      testKey2,
 		Value:    testValue2,
 		StoreKey: testStoreKey2.Name(),
-		Set:      true,
+		Delete:   false,
 	})
 	kvPairSet2Bytes := buf.Bytes()
 	buf.Reset()
@@ -770,7 +770,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 		Key:      testKey2,
 		Value:    nil,
 		StoreKey: testStoreKey2.Name(),
-		Set:      false,
+		Delete:   true,
 	})
 	kvPairDelete2Bytes := buf.Bytes()
 	buf.Reset()

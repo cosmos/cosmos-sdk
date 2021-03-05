@@ -10,8 +10,8 @@ import (
 type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
-	// set bool indicates if it was a set; true: set, false: delete
-	OnWrite(storeKey StoreKey, set bool, key []byte, value []byte) error
+	// delete bool indicates if it was a delete; true: delete, false: set
+	OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 
 // StoreKVPairWriteListener is used to configure listening to a KVStore by writing out length-prefixed
@@ -30,10 +30,10 @@ func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryMarshaler) *StoreKVP
 }
 
 // OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
-func (wl *StoreKVPairWriteListener) OnWrite(storeKey StoreKey, set bool, key []byte, value []byte) error {
+func (wl *StoreKVPairWriteListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
 	kvPair := new(StoreKVPair)
 	kvPair.StoreKey = storeKey.Name()
-	kvPair.Set = set
+	kvPair.Delete = delete
 	kvPair.Key = key
 	kvPair.Value = value
 	by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair)

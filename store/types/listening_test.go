@@ -31,7 +31,9 @@ func TestOnWrite(t *testing.T) {
 	testStoreKey := NewKVStoreKey("test_key")
 	testKey := []byte("testing123")
 	testValue := []byte("testing321")
-	err := wl.OnWrite(testStoreKey, true, testKey, testValue)
+
+	// test set
+	err := wl.OnWrite(testStoreKey, testKey, testValue, false)
 	require.Nil(t, err)
 
 	outputBytes := testWriter.Bytes()
@@ -40,7 +42,23 @@ func TestOnWrite(t *testing.T) {
 		Key:      testKey,
 		Value:    testValue,
 		StoreKey: testStoreKey.Name(),
-		Set:      true,
+		Delete:   false,
+	}
+	testMarshaller.UnmarshalBinaryLengthPrefixed(outputBytes, outputKVPair)
+	require.EqualValues(t, expectedOutputKVPair, outputKVPair)
+	testWriter.Reset()
+
+	// test delete
+	err = wl.OnWrite(testStoreKey, testKey, testValue, true)
+	require.Nil(t, err)
+
+	outputBytes = testWriter.Bytes()
+	outputKVPair = new(StoreKVPair)
+	expectedOutputKVPair = &StoreKVPair{
+		Key:      testKey,
+		Value:    testValue,
+		StoreKey: testStoreKey.Name(),
+		Delete:   true,
 	}
 	testMarshaller.UnmarshalBinaryLengthPrefixed(outputBytes, outputKVPair)
 	require.EqualValues(t, expectedOutputKVPair, outputKVPair)

@@ -32,8 +32,8 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	// this just tests our handler
-	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.BankKeeper, &app.FeeGrantKeeper)
-	ourAnteHandler := sdk.ChainAnteDecorators(dfd)
+	dfd := ante.NewDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper)
+	feeAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
 	anteHandlerStack := suite.anteHandler
@@ -66,79 +66,69 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.Require().NoError(err)
 
 	cases := map[string]struct {
-		signerKey                cryptotypes.PrivKey
-		signer                   sdk.AccAddress
-		feeAccount               sdk.AccAddress
-		fee                      int64
-		shouldPassFeegrantAnte   bool
-		shouldPassWholeAnteStack bool
+		signerKey  cryptotypes.PrivKey
+		signer     sdk.AccAddress
+		feeAccount sdk.AccAddress
+		fee        int64
+		valid      bool
 	}{
 		"paying with low funds": {
-			signerKey:                priv1,
-			signer:                   addr1,
-			fee:                      50,
-			shouldPassFeegrantAnte:   true,
-			shouldPassWholeAnteStack: false,
+			signerKey: priv1,
+			signer:    addr1,
+			fee:       50,
+			valid:     false,
 		},
 		"paying with good funds": {
-			signerKey:                priv2,
-			signer:                   addr2,
-			fee:                      50,
-			shouldPassFeegrantAnte:   true,
-			shouldPassWholeAnteStack: true,
+			signerKey: priv2,
+			signer:    addr2,
+			fee:       50,
+			valid:     true,
 		},
 		"paying with no account": {
-			signerKey:                priv3,
-			signer:                   addr3,
-			fee:                      1,
-			shouldPassFeegrantAnte:   true,
-			shouldPassWholeAnteStack: false,
+			signerKey: priv3,
+			signer:    addr3,
+			fee:       1,
+			valid:     false,
 		},
 		"no fee with real account": {
-			signerKey:                priv1,
-			signer:                   addr1,
-			fee:                      0,
-			shouldPassFeegrantAnte:   true,
-			shouldPassWholeAnteStack: true,
+			signerKey: priv1,
+			signer:    addr1,
+			fee:       0,
+			valid:     true,
 		},
 		"no fee with no account": {
-			signerKey:                priv5,
-			signer:                   addr5,
-			fee:                      0,
-			shouldPassFeegrantAnte:   true,
-			shouldPassWholeAnteStack: false,
+			signerKey: priv5,
+			signer:    addr5,
+			fee:       0,
+			valid:     false,
 		},
 		"valid fee grant without account": {
-			signerKey:                priv3,
-			signer:                   addr3,
-			feeAccount:               addr2,
-			fee:                      50,
-			shouldPassFeegrantAnte:   true,
-			shouldPassWholeAnteStack: true,
+			signerKey:  priv3,
+			signer:     addr3,
+			feeAccount: addr2,
+			fee:        50,
+			valid:      true,
 		},
 		"no fee grant": {
-			signerKey:                priv3,
-			signer:                   addr3,
-			feeAccount:               addr1,
-			fee:                      2,
-			shouldPassFeegrantAnte:   false,
-			shouldPassWholeAnteStack: false,
+			signerKey:  priv3,
+			signer:     addr3,
+			feeAccount: addr1,
+			fee:        2,
+			valid:      false,
 		},
 		"allowance smaller than requested fee": {
-			signerKey:                priv4,
-			signer:                   addr4,
-			feeAccount:               addr2,
-			fee:                      50,
-			shouldPassFeegrantAnte:   false,
-			shouldPassWholeAnteStack: false,
+			signerKey:  priv4,
+			signer:     addr4,
+			feeAccount: addr2,
+			fee:        50,
+			valid:      false,
 		},
 		"granter cannot cover allowed fee grant": {
-			signerKey:                priv4,
-			signer:                   addr4,
-			feeAccount:               addr1,
-			fee:                      50,
-			shouldPassFeegrantAnte:   false,
-			shouldPassWholeAnteStack: false,
+			signerKey:  priv4,
+			signer:     addr4,
+			feeAccount: addr1,
+			fee:        50,
+			valid:      false,
 		},
 	}
 
@@ -156,15 +146,15 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
-			_, err = ourAnteHandler(ctx, tx, false) // tests only feegrant ante
-			if tc.shouldPassFeegrantAnte {
+			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
+			if tc.valid {
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 			}
 
 			_, err = anteHandlerStack(ctx, tx, false) // tests while stack
-			if tc.shouldPassWholeAnteStack {
+			if tc.valid {
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)

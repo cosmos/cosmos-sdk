@@ -205,7 +205,7 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 
 	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper,
 		ante.HandlerOptions{
-			FeegrantKeeper:  &suite.app.FeeGrantKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			SignModeHandler: txConfig.SignModeHandler(),
 		})

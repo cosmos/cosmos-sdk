@@ -65,7 +65,7 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 
 	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper,
 		ante.HandlerOptions{
-			FeegrantKeeper:  &suite.app.FeeGrantKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 		},

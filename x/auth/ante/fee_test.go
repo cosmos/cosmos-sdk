@@ -8,6 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
+type setFeeGranter interface {
+	SetFeeGranter(feeGranter sdk.AccAddress)
+}
+
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
@@ -86,7 +90,7 @@ func (suite *AnteTestSuite) TestDeductFees() {
 	err = simapp.FundAccount(suite.app, suite.ctx, addr1, coins)
 	suite.Require().NoError(err)
 
-	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper)
+	dfd := ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, nil)
 	antehandler := sdk.ChainAnteDecorators(dfd)
 
 	_, err = antehandler(suite.ctx, tx, false)

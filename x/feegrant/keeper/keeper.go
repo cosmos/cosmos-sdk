@@ -11,6 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
+// FeegrantKeeperI is the interface for x/feegrant's implements.
+type FeegrantKeeperI interface {
+	// UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
+	UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins) error
+}
+
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
@@ -18,6 +24,8 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	authKeeper types.AccountKeeper
 }
+
+var _ FeegrantKeeperI = &Keeper{}
 
 // NewKeeper creates a fee grant Keeper
 func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) Keeper {

@@ -179,6 +179,38 @@ func (s *ConverterTestSuite) TestOpsAndSigners() {
 	})
 }
 
+func (s *ConverterTestSuite) TestBeginEndBlockAndHashToTxType() {
+	const deliverTxHex = "5229A67AA008B5C5F1A0AEA77D4DEBE146297A30AAEF01777AF10FAD62DD36AB"
+
+	deliverTxBytes, err := hex.DecodeString(deliverTxHex)
+	s.Require().NoError(err)
+
+	endBlockTxHex := s.c.ToRosetta().EndBlockTxHash(deliverTxBytes)
+	beginBlockTxHex := s.c.ToRosetta().BeginBlockTxHash(deliverTxBytes)
+
+	txType, hash := s.c.ToSDK().HashToTxType(deliverTxBytes)
+
+	s.Require().Equal(DeliverTxTx, txType)
+	s.Require().Equal(deliverTxBytes, hash, "deliver tx hash should not change")
+
+	endBlockTxBytes, err := hex.DecodeString(endBlockTxHex)
+	s.Require().NoError(err)
+
+	txType, hash = s.c.ToSDK().HashToTxType(endBlockTxBytes)
+
+	s.Require().Equal(EndBlockTx, txType)
+	s.Require().Equal(deliverTxBytes, hash, "end block tx hash should be equal to a block hash")
+
+	beginBlockTxBytes, err := hex.DecodeString(beginBlockTxHex)
+	s.Require().NoError(err)
+
+	txType, hash = s.c.ToSDK().HashToTxType(beginBlockTxBytes)
+
+	s.Require().Equal(BeginBlockTx, txType)
+	s.Require().Equal(deliverTxBytes, hash, "begin block tx hash should be equal to a block hash")
+
+}
+
 func TestConverterTestSuite(t *testing.T) {
 	suite.Run(t, new(ConverterTestSuite))
 }

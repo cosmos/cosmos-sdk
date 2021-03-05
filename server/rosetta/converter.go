@@ -505,14 +505,16 @@ func AddOperationIndexes(msgOps []*rosettatypes.Operation, balanceOps []*rosetta
 // for endblock operations, it also serves the purpose of representing
 // part of the state changes happening at endblock level (balance ones)
 func (c converter) EndBlockTxHash(hash []byte) string {
-	return fmt.Sprintf("%X%X", EndBlockHashStart, hash)
+	final := append([]byte{EndBlockHashStart}, hash...)
+	return fmt.Sprintf("%X", final)
 }
 
 // beginBlockTxHash produces a mock beginblock hash that rosetta can query
 // for beginblock operations, it also serves the purpose of representing
 // part of the state changes happening at beginblock level (balance ones)
 func (c converter) BeginBlockTxHash(hash []byte) string {
-	return fmt.Sprintf("%X%X", BeginBlockHashStart, hash)
+	final := append([]byte{BeginBlockHashStart}, hash...)
+	return fmt.Sprintf("%X", final)
 }
 
 // HashToTxType takes the provided hash bytes from rosetta and discerns if they are

@@ -3,7 +3,6 @@ package keeper
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -77,24 +76,20 @@ func queryAllBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 }
 
 func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	var params types.QueryTotalSupplyParams
+	var params types.QueryTotalSupplyRequest
 
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	//TODO: pagenate
-	totalSupply := k.GetTotalSupply(ctx)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(ctx, params.Pagination)
 
-	start, end := client.Paginate(len(totalSupply), params.Page, params.Limit, 100)
-	if start < 0 || end < 0 {
-		totalSupply = sdk.Coins{}
-	} else {
-		totalSupply = totalSupply[start:end]
+	supplyRes := &types.QueryTotalSupplyResponse{
+		Supply:     totalSupply,
+		Pagination: pageRes,
 	}
-
-	res, err := legacyQuerierCdc.MarshalJSON(totalSupply)
+	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, supplyRes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

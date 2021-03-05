@@ -19,7 +19,7 @@ type memIterator struct {
 }
 
 func newMemIterator(start, end []byte, items *list.List, ascending bool) *memIterator {
-	itemsInDomain := make([]*kv.Pair, 0)
+	itemsInDomain := make([]*kv.Pair, 0, items.Len())
 
 	var entered bool
 

@@ -482,7 +482,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer as enough funds, should pass",
 			func() {
-				accNums = []uint64{7}
+				accNums = []uint64{acc1.GetAccountNumber()}
+
 				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
 				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
@@ -511,6 +512,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 

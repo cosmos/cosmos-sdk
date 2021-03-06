@@ -5,6 +5,11 @@ import (
 	"sync"
 )
 
+// Disable followings after milestoneMercuryHeight
+// 1. TransferToContractBlock
+// 2. ChangeEvmDenomByProposal
+// 3. BankTransferBlock
+
 var (
 	MILESTONE_MERCURY_HEIGHT     string
 	milestoneMercuryHeight       int64
@@ -33,7 +38,7 @@ func init() {
 }
 
 //disable transfer tokens to contract address by cli
-func higherThanMercury(height int64) bool {
+func HigherThanMercury(height int64) bool {
 	if milestoneMercuryHeight == 0 {
 		// milestoneMercuryHeight not enabled
 		return false
@@ -41,18 +46,17 @@ func higherThanMercury(height int64) bool {
 	return height > milestoneMercuryHeight
 }
 
-
-//disable transfer tokens to contract address by cli
-func IsDisableTransferToContractBlock(height int64) bool {
-	return higherThanMercury(height)
-}
-
-//disable change the param EvmDenom by proposal
-func IsDisableChangeEvmDenomByProposal(height int64) bool {
-	return higherThanMercury(height)
-}
-
-//disable transfer tokens by module of cosmos-sdk/bank
-func IsDisableBankTransferBlock(height int64) bool {
-	return higherThanMercury(height)
-}
+////disable transfer tokens to contract address by cli
+//func IsDisableTransferToContractBlock(height int64) bool {
+//	return higherThanMercury(height)
+//}
+//
+////disable change the param EvmDenom by proposal
+//func IsDisableChangeEvmDenomByProposal(height int64) bool {
+//	return higherThanMercury(height)
+//}
+//
+////disable transfer tokens by module of cosmos-sdk/bank
+//func IsDisableBankTransferBlock(height int64) bool {
+//	return higherThanMercury(height)
+//}

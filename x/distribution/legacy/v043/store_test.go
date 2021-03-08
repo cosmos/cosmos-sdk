@@ -32,47 +32,47 @@ func TestStoreMigration(t *testing.T) {
 	}{
 		{
 			"FeePoolKey",
-			v040distribution.FeePoolKe0,
+			v040distribution.FeePoolKey,
 			types.FeePoolKey,
 		},
 		{
 			"ProposerKey",
-			v040distribution.ProposerKe0,
+			v040distribution.ProposerKey,
 			types.ProposerKey,
 		},
 		{
 			"ValidatorOutstandingRewards",
-			v040distribution.GetValidatorOutstandingRewardsKey(valAddr0,
+			v040distribution.GetValidatorOutstandingRewardsKey(valAddr),
 			types.GetValidatorOutstandingRewardsKey(valAddr),
 		},
 		{
 			"DelegatorWithdrawAddr",
-			v040distribution.GetDelegatorWithdrawAddrKey(addr20,
+			v040distribution.GetDelegatorWithdrawAddrKey(addr2),
 			types.GetDelegatorWithdrawAddrKey(addr2),
 		},
 		{
 			"DelegatorStartingInfo",
-			v040distribution.GetDelegatorStartingInfoKey(valAddr, addr20,
+			v040distribution.GetDelegatorStartingInfoKey(valAddr, addr2),
 			types.GetDelegatorStartingInfoKey(valAddr, addr2),
 		},
 		{
 			"ValidatorHistoricalRewards",
-			v040distribution.GetValidatorHistoricalRewardsKey(valAddr, 60,
+			v040distribution.GetValidatorHistoricalRewardsKey(valAddr, 6),
 			types.GetValidatorHistoricalRewardsKey(valAddr, 6),
 		},
 		{
 			"ValidatorCurrentRewards",
-			v040distribution.GetValidatorCurrentRewardsKey(valAddr0,
+			v040distribution.GetValidatorCurrentRewardsKey(valAddr),
 			types.GetValidatorCurrentRewardsKey(valAddr),
 		},
 		{
 			"ValidatorAccumulatedCommission",
-			v040distribution.GetValidatorAccumulatedCommissionKey(valAddr0,
+			v040distribution.GetValidatorAccumulatedCommissionKey(valAddr),
 			types.GetValidatorAccumulatedCommissionKey(valAddr),
 		},
 		{
 			"ValidatorSlashEvent",
-			v040distribution.GetValidatorSlashEventKey(valAddr, 6, 80,
+			v040distribution.GetValidatorSlashEventKey(valAddr, 6, 8),
 			types.GetValidatorSlashEventKey(valAddr, 6, 8),
 		},
 	}
@@ -83,7 +83,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v043distribution.MigrateStore(ctx, distributionKe0)
+	err := v043distribution.MigrateStore(ctx, distributionKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

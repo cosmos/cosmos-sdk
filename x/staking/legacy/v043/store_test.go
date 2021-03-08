@@ -1,4 +1,4 @@
-package v042_test
+package v043_test
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
-	v042staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v042"
+	v043staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v043"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -121,7 +121,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v042staking.MigrateStore(ctx, stakingKey)
+	err := v043staking.MigrateStore(ctx, stakingKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

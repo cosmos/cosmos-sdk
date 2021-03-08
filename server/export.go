@@ -21,6 +21,8 @@ const (
 	flagHeight        = "height"
 	flagForZeroHeight = "for-zero-height"
 	flagJailWhitelist = "jail-whitelist"
+	FlagEvmExportMode = "evm-export-mode"
+	FlagEvmExportPath = "evm-export-path"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -88,6 +90,8 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
 	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
+	cmd.Flags().String(FlagEvmExportMode, "default", "Select export mode for evm state (default|files|db)")
+	cmd.Flags().String(FlagEvmExportPath, "", "Evm contract & storage db or files used for export")
 	return cmd
 }
 

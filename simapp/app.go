@@ -322,8 +322,6 @@ func NewSimApp(
 	)
 	// give upgrade keeper the module manager
 	app.UpgradeKeeper.SetVersionManager(app.mm)
-	// pass the updated keeper to the module manager
-	app.mm.Modules[upgradetypes.ModuleName] = upgrade.NewAppModule(app.UpgradeKeeper)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -341,7 +339,7 @@ func NewSimApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		upgradetypes.ModuleName, capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
+		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authztypes.ModuleName,
 		feegranttypes.ModuleName,
@@ -555,14 +553,8 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //
 // Example:
 //   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
-//       err := app.RunMigrations(ctx, module.VersionMap{
-//           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
-//           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
-//      })
-//      if err != nil {
-//           panic(err)
-//      }
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) {
+//       return app.RunMigrations(ctx, versionMap)
 //   })
 func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) error {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)

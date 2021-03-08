@@ -227,7 +227,9 @@ func (m mockVersionManager) GetConsensusVersions() module.VersionMap {
 func (s *KeeperTestSuite) TestMigrations() {
 	mockVM := mockVersionManager{}
 	s.app.UpgradeKeeper.SetVersionManager(mockVM)
-	s.app.UpgradeKeeper.SetCurrentConsensusVersions(s.ctx)
+	if err := s.app.UpgradeKeeper.SetCurrentConsensusVersions(s.ctx); err != nil {
+		s.T().Fatalf("error setting consensus versions: %v", err)
+	}
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, _ module.VersionMap) error { return nil })
 	dummyPlan := types.Plan{
 		Name: "dummy",

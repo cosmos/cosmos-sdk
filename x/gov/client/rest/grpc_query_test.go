@@ -151,11 +151,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 				s.Require().Empty(proposals.Proposals)
 			} else {
 				s.Require().NoError(err)
-<<<<<<< HEAD
-				s.Require().Len(proposals.Proposals, 2)
-=======
 				s.Require().Len(proposals.Proposals, tc.wantNumProposals)
->>>>>>> be23295bd... x/gov: fix NormalizeProposalType() return values (#8808)
 			}
 		})
 	}

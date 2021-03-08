@@ -85,6 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8434](https://github.com/cosmos/cosmos-sdk/pull/8434) Fix legacy REST API `GET /bank/total` and `GET /bank/total/{denom}` in swagger
 * (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
 * (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
+* (x/gov) [\#8813](https://github.com/cosmos/cosmos-sdk/pull/8813) fix `GET /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits` to include initial deposit
 
 ## [v0.41.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.41.3) - 2021-03-02
 

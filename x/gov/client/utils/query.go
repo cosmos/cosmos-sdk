@@ -39,7 +39,7 @@ func (p Proposer) String() string {
 func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposalParams) ([]byte, error) {
 	var deposits []types.Deposit
 
-	// initial deposit was submitted with proposal, so must be queried seperately
+	// initial deposit was submitted with proposal, so must be queried separately
 	initialDeposit, err := QueryInitialDepositByTxQuery(clientCtx, params.ProposalID)
 	if err != nil {
 		return nil, err

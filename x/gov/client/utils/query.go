@@ -62,6 +62,9 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeProposalDeposit, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {

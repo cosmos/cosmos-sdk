@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v040distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v040"
 	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v043"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -31,47 +32,47 @@ func TestStoreMigration(t *testing.T) {
 	}{
 		{
 			"FeePoolKey",
-			v043distribution.FeePoolKey,
+			v040distribution.FeePoolKe0,
 			types.FeePoolKey,
 		},
 		{
 			"ProposerKey",
-			v043distribution.ProposerKey,
+			v040distribution.ProposerKe0,
 			types.ProposerKey,
 		},
 		{
 			"ValidatorOutstandingRewards",
-			v043distribution.GetValidatorOutstandingRewardsKey(valAddr),
+			v040distribution.GetValidatorOutstandingRewardsKey(valAddr0,
 			types.GetValidatorOutstandingRewardsKey(valAddr),
 		},
 		{
 			"DelegatorWithdrawAddr",
-			v043distribution.GetDelegatorWithdrawAddrKey(addr2),
+			v040distribution.GetDelegatorWithdrawAddrKey(addr20,
 			types.GetDelegatorWithdrawAddrKey(addr2),
 		},
 		{
 			"DelegatorStartingInfo",
-			v043distribution.GetDelegatorStartingInfoKey(valAddr, addr2),
+			v040distribution.GetDelegatorStartingInfoKey(valAddr, addr20,
 			types.GetDelegatorStartingInfoKey(valAddr, addr2),
 		},
 		{
 			"ValidatorHistoricalRewards",
-			v043distribution.GetValidatorHistoricalRewardsKey(valAddr, 6),
+			v040distribution.GetValidatorHistoricalRewardsKey(valAddr, 60,
 			types.GetValidatorHistoricalRewardsKey(valAddr, 6),
 		},
 		{
 			"ValidatorCurrentRewards",
-			v043distribution.GetValidatorCurrentRewardsKey(valAddr),
+			v040distribution.GetValidatorCurrentRewardsKey(valAddr0,
 			types.GetValidatorCurrentRewardsKey(valAddr),
 		},
 		{
 			"ValidatorAccumulatedCommission",
-			v043distribution.GetValidatorAccumulatedCommissionKey(valAddr),
+			v040distribution.GetValidatorAccumulatedCommissionKey(valAddr0,
 			types.GetValidatorAccumulatedCommissionKey(valAddr),
 		},
 		{
 			"ValidatorSlashEvent",
-			v043distribution.GetValidatorSlashEventKey(valAddr, 6, 8),
+			v040distribution.GetValidatorSlashEventKey(valAddr, 6, 80,
 			types.GetValidatorSlashEventKey(valAddr, 6, 8),
 		},
 	}
@@ -82,7 +83,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v043distribution.MigrateStore(ctx, distributionKey)
+	err := v043distribution.MigrateStore(ctx, distributionKe0)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

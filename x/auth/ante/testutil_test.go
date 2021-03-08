@@ -63,11 +63,13 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper,
+	suite.anteHandler = ante.NewAnteHandler(
+		suite.app.AccountKeeper,
+		suite.app.BankKeeper,
+		encodingConfig.TxConfig.SignModeHandler(),
 		ante.HandlerOptions{
-			FeegrantKeeper:  suite.app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			FeegrantKeeper: suite.app.FeeGrantKeeper,
+			SigGasConsumer: ante.DefaultSigVerificationGasConsumer,
 		},
 	)
 }

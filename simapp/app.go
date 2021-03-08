@@ -382,10 +382,10 @@ func NewSimApp(
 	app.SetAnteHandler(
 		ante.NewAnteHandler(
 			app.AccountKeeper, app.BankKeeper,
+			encodingConfig.TxConfig.SignModeHandler(),
 			ante.HandlerOptions{
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-				SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+				FeegrantKeeper: app.FeeGrantKeeper,
+				SigGasConsumer: ante.DefaultSigVerificationGasConsumer,
 			},
 		),
 	)

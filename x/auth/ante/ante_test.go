@@ -1011,7 +1011,10 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	suite.SetupTest(false) // setup
 
 	// setup an ante handler that only accepts PubKeyEd25519
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper,
+	suite.anteHandler = ante.NewAnteHandler(
+		suite.app.AccountKeeper,
+		suite.app.BankKeeper,
+		suite.clientCtx.TxConfig.SignModeHandler(),
 		ante.HandlerOptions{
 			FeegrantKeeper: suite.app.FeeGrantKeeper,
 			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
@@ -1023,7 +1026,6 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 				}
 			},
-			SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
 		},
 	)
 

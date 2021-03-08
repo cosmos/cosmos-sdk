@@ -9,9 +9,8 @@ import (
 
 // HandlerOptions are the options for ante handler build
 type HandlerOptions struct {
-	FeegrantKeeper  FeegrantKeeper
-	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
-	SignModeHandler authsigning.SignModeHandler
+	FeegrantKeeper FeegrantKeeper
+	SigGasConsumer func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -19,6 +18,7 @@ type HandlerOptions struct {
 // signer.
 func NewAnteHandler(
 	ak AccountKeeper, bk types.BankKeeper,
+	signModeHandler authsigning.SignModeHandler,
 	anteHandlerOptions HandlerOptions,
 ) sdk.AnteHandler {
 	var sigGasConsumer = anteHandlerOptions.SigGasConsumer
@@ -38,7 +38,7 @@ func NewAnteHandler(
 		NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		NewValidateSigCountDecorator(ak),
 		NewSigGasConsumeDecorator(ak, sigGasConsumer),
-		NewSigVerificationDecorator(ak, anteHandlerOptions.SignModeHandler),
+		NewSigVerificationDecorator(ak, signModeHandler),
 		NewIncrementSequenceDecorator(ak),
 	}
 

@@ -71,7 +71,7 @@ Since migration functions manipulate legacy code, they should live inside the `l
 ```go
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v042bank.MigrateStore(ctx, m.keeper.storeKey) // v042bank is package `x/bank/legacy/v042`.
+	return v043bank.MigrateStore(ctx, m.keeper.storeKey) // v043bank is package `x/bank/legacy/v043`.
 }
 ```
 

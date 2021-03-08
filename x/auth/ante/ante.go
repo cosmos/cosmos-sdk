@@ -12,7 +12,7 @@ type DefaultSigVerificationGasConsumerHandler func(meter sdk.GasMeter, sig signi
 // HandlerOptions are the options for ante handler build
 type HandlerOptions struct {
 	FeegrantKeeper  FeegrantKeeper
-	SigGasConsumer  DefaultSigVerificationGasConsumerHandler
+	SigGasConsumer  func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 	SignModeHandler authsigning.SignModeHandler
 }
 

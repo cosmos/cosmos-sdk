@@ -54,8 +54,8 @@ func (k *Keeper) SetVersionManager(vm module.VersionManager) {
 	k.versionManager = vm
 }
 
-// SetConsensusVersions saves the consensus versions retrieved from module.Manager
-func (k Keeper) SetConsensusVersions(ctx sdk.Context) {
+// SetCurrentConsensusVersions saves the consensus versions retrieved from module.Manager
+func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) {
 	if k.versionManager == nil {
 		panic("Upgrade Keeper VersionManager was nil")
 	}
@@ -79,6 +79,7 @@ func (k Keeper) GetConsensusVersions(ctx sdk.Context) module.VersionMap {
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		moduleBytes := it.Key()
+		// first byte is prefix key, so we remove it here
 		name := string(moduleBytes[1:])
 		moduleVersion := binary.LittleEndian.Uint64(it.Value())
 		vermap[name] = moduleVersion
@@ -235,7 +236,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic(err)
 	}
 
-	k.SetConsensusVersions(ctx)
+	k.SetCurrentConsensusVersions(ctx)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

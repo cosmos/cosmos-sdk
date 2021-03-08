@@ -8,10 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
-type setFeeGranter interface {
-	SetFeeGranter(feeGranter sdk.AccAddress)
-}
-
 func (suite *AnteTestSuite) TestEnsureMempoolFees() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

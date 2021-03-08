@@ -40,21 +40,13 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		}
 
 		if !k.HasHandler(plan.Name) {
-			upgradeMsg := BuildUpgradeNeededMsg(plan)
-			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
-			ctx.Logger().Error(upgradeMsg)
-
 			// Write the upgrade info to disk. The UpgradeStoreLoader uses this info to perform or skip
 			// store migrations.
 			err := k.DumpUpgradeInfoToDisk(ctx.BlockHeight(), plan.Name)
 			if err != nil {
 				panic(fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error()))
 			}
-
-			panic(upgradeMsg)
 		}
-		// We have an upgrade handler for this upgrade name, so apply the upgrade
-		ctx.Logger().Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
 		ctx = ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 		k.ApplyUpgrade(ctx, plan)
 		return
@@ -67,9 +59,4 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		ctx.Logger().Error(downgradeMsg)
 		panic(downgradeMsg)
 	}
-}
-
-// BuildUpgradeNeededMsg prints the message that notifies that an upgrade is needed.
-func BuildUpgradeNeededMsg(plan types.Plan) string {
-	return fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
 }

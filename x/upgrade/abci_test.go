@@ -68,34 +68,11 @@ func TestRequireName(t *testing.T) {
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
-func TestRequireFutureTime(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Time: s.ctx.BlockHeader().Time}})
-	require.NotNil(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
-}
-
 func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
-}
-
-func TestCantSetBothTimeAndHeight(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Time: time.Now(), Height: s.ctx.BlockHeight() + 1}})
-	require.NotNil(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
-}
-
-func TestDoTimeUpgrade(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
-	t.Log("Verify can schedule an upgrade")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Time: time.Now()}})
-	require.Nil(t, err)
-
-	VerifyDoUpgrade(t)
 }
 
 func TestDoHeightUpgrade(t *testing.T) {
@@ -195,7 +172,7 @@ func VerifyCleared(t *testing.T, newCtx sdk.Context) {
 func TestCanClear(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 	t.Log("Verify upgrade is scheduled")
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Time: time.Now()}})
+	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 100}})
 	require.Nil(t, err)
 
 	err = s.handler(s.ctx, &types.CancelSoftwareUpgradeProposal{Title: "cancel"})
@@ -206,11 +183,12 @@ func TestCanClear(t *testing.T) {
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
-	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Time: time.Now()}})
+	height := s.ctx.BlockHeader().Height + 1
+	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: height}})
 	require.Nil(t, err)
 	VerifyDoUpgrade(t)
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
-	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Time: time.Now()}})
+	err = s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: height}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
@@ -225,20 +203,15 @@ func TestNoSpuriousUpgrades(t *testing.T) {
 }
 
 func TestPlanStringer(t *testing.T) {
-	ti, err := time.Parse(time.RFC3339, "2020-01-01T00:00:00Z")
-	require.Nil(t, err)
-	require.Equal(t, `Upgrade Plan
-  Name: test
-  Time: 2020-01-01T00:00:00Z
-  Info: .`, types.Plan{Name: "test", Time: ti}.String())
 	require.Equal(t, `Upgrade Plan
   Name: test
   Height: 100
-  Info: .`, types.Plan{Name: "test", Height: 100}.String())
+  Info: .`, types.Plan{Name: "test", Height: 100, Info: ""}.String())
+
 	require.Equal(t, fmt.Sprintf(`Upgrade Plan
   Name: test
   Height: 100
-  Info: .`), types.Plan{Name: "test", Height: 100}.String())
+  Info: .`), types.Plan{Name: "test", Height: 100, Info: ""}.String())
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {

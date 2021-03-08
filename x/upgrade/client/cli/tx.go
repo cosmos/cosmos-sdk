@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -168,29 +167,12 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 		return nil, err
 	}
 
-	timeStr, err := cmd.Flags().GetString(FlagUpgradeTime)
-	if err != nil {
-		return nil, err
-	}
-
-	if height != 0 && len(timeStr) != 0 {
-		return nil, fmt.Errorf("only one of --upgrade-time or --upgrade-height should be specified")
-	}
-
-	var upgradeTime time.Time
-	if len(timeStr) != 0 {
-		upgradeTime, err = time.Parse(TimeFormat, timeStr)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	plan := types.Plan{Name: name, Time: upgradeTime, Height: height, Info: info}
+	plan := types.Plan{Name: name, Height: height, Info: info}
 	content := types.NewSoftwareUpgradeProposal(title, description, plan)
 	return content, nil
 }

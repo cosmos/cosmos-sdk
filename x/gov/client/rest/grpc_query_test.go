@@ -126,7 +126,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 			"valid request",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals", val.APIAddress),
 			map[string]string{},
-			3,
+			2,
 			false,
 		},
 		{

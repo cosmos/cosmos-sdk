@@ -380,23 +380,18 @@ func QueryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
+			var subMsg *types.MsgSubmitProposal
 			if msg.Type() == types.TypeSvcMsgSubmitProposal {
-				subMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
-
-				return types.Deposit{
-					ProposalId: proposalID,
-					Depositor:  subMsg.Proposer,
-					Amount:     subMsg.InitialDeposit,
-				}, nil
+				subMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
 			} else if protoSubMsg, ok := msg.(*types.MsgSubmitProposal); ok {
-				subMsg := protoSubMsg
-
-				return types.Deposit{
-					ProposalId: proposalID,
-					Depositor:  subMsg.Proposer,
-					Amount:     subMsg.InitialDeposit,
-				}, nil
+				subMsg = protoSubMsg
 			}
+
+			return types.Deposit{
+				ProposalId: proposalID,
+				Depositor:  subMsg.Proposer,
+				Amount:     subMsg.InitialDeposit,
+			}, nil
 		}
 	}
 

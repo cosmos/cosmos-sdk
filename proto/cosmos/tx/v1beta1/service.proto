@@ -42,6 +42,8 @@ message GetTxsEventRequest {
   repeated string events = 1;
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  // order_by defines events sorting order
+  string order_by = 3;
 }
 
 // GetTxsEventResponse is the response type for the Service.TxsByEvents

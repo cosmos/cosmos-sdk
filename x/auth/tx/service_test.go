@@ -174,6 +174,14 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}",
 		},
 		{
+			"request with order-by",
+			&tx.GetTxsEventRequest{
+				Events:  []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
+				OrderBy: "asc",
+			},
+			false, "",
+		},
+		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
 				Events: []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
@@ -245,6 +253,12 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		{
 			"with pagination",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", 0, 10),
+			false,
+			"",
+		},
+		{
+			"expect pass with with order-by filter",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=asc", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
 			false,
 			"",
 		},

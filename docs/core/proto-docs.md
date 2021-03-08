@@ -7221,6 +7221,7 @@ RPC method.
 | ----- | ---- | ----- | ----------- |
 | `events` | [string](#string) | repeated | events is the list of transaction event type. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+| `order_by` | [string](#string) |  | order_by defines events sorting order |
 
 
 

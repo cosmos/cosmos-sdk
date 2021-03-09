@@ -111,6 +111,11 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithKeyringDir(keyringDir)
 	}
 
+	if !clientCtx.DryRun || flagSet.Changed(flags.FlagDryRun) {
+		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
+		clientCtx = clientCtx.WithDryRun(dryRun)
+	}
+
 	if clientCtx.ChainID == "" || flagSet.Changed(flags.FlagChainID) {
 		chainID, _ := flagSet.GetString(flags.FlagChainID)
 		clientCtx = clientCtx.WithChainID(chainID)

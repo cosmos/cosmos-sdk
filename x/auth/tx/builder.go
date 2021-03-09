@@ -1,12 +1,15 @@
 package tx
 
 import (
+	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -100,7 +103,7 @@ func (w *wrapper) GetSigners() []sdk.AccAddress {
 	return w.tx.GetSigners()
 }
 
-func (w *wrapper) GetPubKeys() []cryptotypes.PubKey {
+func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	pks := make([]cryptotypes.PubKey, len(signerInfos))
 
@@ -111,13 +114,16 @@ func (w *wrapper) GetPubKeys() []cryptotypes.PubKey {
 			continue
 		}
 
-		pk, ok := si.PublicKey.GetCachedValue().(cryptotypes.PubKey)
+		pkAny := si.PublicKey.GetCachedValue()
+		pk, ok := pkAny.(cryptotypes.PubKey)
 		if ok {
 			pks[i] = pk
+		} else {
+			return nil, sdkerrors.ErrLogic.Wrap(fmt.Sprintf("Expecting PubKey, got: %T", pkAny))
 		}
 	}
 
-	return pks
+	return pks, nil
 }
 
 func (w *wrapper) GetGas() uint64 {
@@ -165,7 +171,10 @@ func (w *wrapper) GetTimeoutHeight() uint64 {
 func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	signerInfos := w.tx.AuthInfo.SignerInfos
 	sigs := w.tx.Signatures
-	pubKeys := w.GetPubKeys()
+	pubKeys, err := w.GetPubKeys()
+	if err != nil {
+		return nil, err
+	}
 	n := len(signerInfos)
 	res := make([]signing.SignatureV2, n)
 

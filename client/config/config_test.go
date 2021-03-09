@@ -50,6 +50,8 @@ func Test_runConfigCmdTwiceWithShorterNodeValue(t *testing.T) {
 	err = cmd.RunE(cmd, []string{"invalidKey", "invalidValue"})
 	require.Equal(t, err, errUnknownConfigKey("invalidKey"))
 
+	// TODO add testing of pririty environmental variable, flag and file
+
 }
 
 func tmpDir(t *testing.T) (string, func()) {

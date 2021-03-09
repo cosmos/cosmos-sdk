@@ -1161,4 +1161,16 @@ func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetType(), mnemonic.GetType())
 }
 
+func TestCustomKeyringAlgorithms(t *testing.T) {
+	SupportedAlgorithms = append(SupportedAlgorithms, notSupportedAlgo{})
+	SupportedLedgerAlgorithms = append(SupportedLedgerAlgorithms, notSupportedAlgo{})
+
+	k := NewInMemory()
+
+	algos, ledgerAlgos := k.SupportedAlgorithms()
+
+	require.Equal(t, SupportedAlgorithms, algos)
+	require.Equal(t, SupportedLedgerAlgorithms, ledgerAlgos)
+}
+
 func accAddr(info Info) sdk.AccAddress { return info.GetAddress() }

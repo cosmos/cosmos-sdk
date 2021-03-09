@@ -44,7 +44,7 @@ Once the module genesis parameter are generated randomly (or with the key and
 values defined in a `params` file), they are marshaled to JSON format and added
 to the app genesis JSON to use it on the simulations.
 
-You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/simulation/genesis.go).
+You can check an example on how to create the randomized genesis [here](https://github.com/cosmos/cosmos-sdk/blob/v0.42.0/x/staking/simulation/genesis.go).
 
 ### Randomized parameter changes
 

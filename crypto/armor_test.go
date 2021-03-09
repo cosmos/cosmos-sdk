@@ -73,7 +73,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	cstore := keyring.NewInMemory()
 
 	// Add keys and see they return in alphabetical order
-	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 	armored := crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "")
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
@@ -158,6 +158,8 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 }
 
 func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
+	b.ReportAllocs()
+
 	passphrase := []byte("passphrase")
 	for securityParam := 9; securityParam < 16; securityParam++ {
 		param := securityParam

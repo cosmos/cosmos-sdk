@@ -98,6 +98,113 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
+	val := s.network.Validators[0]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name     string
+		url      string
+		headers  map[string]string
+		expErr   bool
+		respType proto.Message
+		expected proto.Message
+	}{
+		{
+			"test GRPC client metadata",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/denoms_metadata", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&types.QueryDenomsMetadataResponse{},
+			&types.QueryDenomsMetadataResponse{
+				Metadatas: []types.Metadata{
+					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
+						Description: "The native staking token of the Cosmos Hub.",
+						DenomUnits: []*types.DenomUnit{
+							{
+								Denom:    "uatom",
+								Exponent: 0,
+								Aliases:  []string{"microatom"},
+							},
+							{
+								Denom:    "atom",
+								Exponent: 6,
+								Aliases:  []string{"ATOM"},
+							},
+						},
+						Base:    "uatom",
+						Display: "atom",
+					},
+				},
+				Pagination: &query.PageResponse{Total: 1},
+			},
+		},
+		{
+			"GRPC client metadata of a specific denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/denoms_metadata/uatom", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&types.QueryDenomMetadataResponse{},
+			&types.QueryDenomMetadataResponse{
+				Metadata: types.Metadata{
+					Name:        "Cosmos Hub Atom",
+					Symbol:      "ATOM",
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*types.DenomUnit{
+						{
+							Denom:    "uatom",
+							Exponent: 0,
+							Aliases:  []string{"microatom"},
+						},
+						{
+							Denom:    "atom",
+							Exponent: 6,
+							Aliases:  []string{"ATOM"},
+						},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				},
+			},
+		},
+		{
+			"GRPC client metadata of a bogus denom",
+			fmt.Sprintf("%s/cosmos/bank/v1beta1/denoms_metadata/foobar", baseURL),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			true,
+			&types.QueryDenomMetadataResponse{},
+			&types.QueryDenomMetadataResponse{
+				Metadata: types.Metadata{
+					DenomUnits: []*types.DenomUnit{},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
+			s.Require().NoError(err)
+
+			if tc.expErr {
+				s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+			} else {
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+				s.Require().Equal(tc.expected.String(), tc.respType.String())
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress

@@ -182,17 +182,24 @@ func (s *errorsTestSuite) TestWrapEmpty() {
 }
 
 func (s *errorsTestSuite) TestWrappedIs() {
+	require := s.Require()
 	err := Wrap(ErrTxTooLarge, "context")
-	s.Require().True(stdlib.Is(err, ErrTxTooLarge))
+	require.True(stdlib.Is(err, ErrTxTooLarge))
 
 	err = Wrap(err, "more context")
-	s.Require().True(stdlib.Is(err, ErrTxTooLarge))
+	require.True(stdlib.Is(err, ErrTxTooLarge))
 
 	err = Wrap(err, "even more context")
-	s.Require().True(stdlib.Is(err, ErrTxTooLarge))
+	require.True(stdlib.Is(err, ErrTxTooLarge))
 
 	err = Wrap(ErrInsufficientFee, "...")
-	s.Require().False(stdlib.Is(err, ErrTxTooLarge))
+	require.False(stdlib.Is(err, ErrTxTooLarge))
+
+	errs := stdlib.New("other")
+	require.True(stdlib.Is(errs, errs))
+
+	errw := &wrappedError{"msg", errs}
+	require.True(errw.Is(errw), "should match itself")
 }
 
 func (s *errorsTestSuite) TestWrappedIsMultiple() {

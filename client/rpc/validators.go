@@ -21,7 +21,7 @@ import (
 
 // TODO these next two functions feel kinda hacky based on their placement
 
-//ValidatorCommand returns the validator set for a given height
+// ValidatorCommand returns the validator set for a given height
 func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tendermint-validator-set [height]",
@@ -49,7 +49,7 @@ func ValidatorCommand() *cobra.Command {
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			result, err := GetValidators(clientCtx, height, &page, &limit)
+			result, err := GetValidators(cmd.Context(), clientCtx, height, &page, &limit)
 			if err != nil {
 				return err
 			}
@@ -78,12 +78,14 @@ type ValidatorOutput struct {
 type ResultValidatorsOutput struct {
 	BlockHeight int64             `json:"block_height"`
 	Validators  []ValidatorOutput `json:"validators"`
+	Total       uint64            `json:"total"`
 }
 
 func (rvo ResultValidatorsOutput) String() string {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("block height: %d\n", rvo.BlockHeight))
+	b.WriteString(fmt.Sprintf("total count: %d\n", rvo.Total))
 
 	for _, val := range rvo.Validators {
 		b.WriteString(
@@ -116,21 +118,26 @@ func validatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
 }
 
 // GetValidators from client
-func GetValidators(clientCtx client.Context, height *int64, page, limit *int) (ResultValidatorsOutput, error) {
+func GetValidators(ctx context.Context, clientCtx client.Context, height *int64, page, limit *int) (ResultValidatorsOutput, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
 
-	validatorsRes, err := node.Validators(context.Background(), height, page, limit)
+	validatorsRes, err := node.Validators(ctx, height, page, limit)
 	if err != nil {
 		return ResultValidatorsOutput{}, err
 	}
 
+	total := validatorsRes.Total
+	if validatorsRes.Total < 0 {
+		total = 0
+	}
 	out := ResultValidatorsOutput{
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
+		Total:       uint64(total),
 	}
 	for i := 0; i < len(validatorsRes.Validators); i++ {
 		out.Validators[i], err = validatorOutput(validatorsRes.Validators[i])
@@ -170,7 +177,7 @@ func ValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := GetValidators(clientCtx, &height, &page, &limit)
+		output, err := GetValidators(r.Context(), clientCtx, &height, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -187,7 +194,7 @@ func LatestValidatorSetRequestHandlerFn(clientCtx client.Context) http.HandlerFu
 			return
 		}
 
-		output, err := GetValidators(clientCtx, nil, &page, &limit)
+		output, err := GetValidators(r.Context(), clientCtx, nil, &page, &limit)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}

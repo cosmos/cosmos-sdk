@@ -28,7 +28,7 @@ Blockchain Node |  |           Consensus           |  |
 
 1. [`app.go`] 创建了一个状态机实例。
 
-2. 用最新的已知状态初始化状态机，该状态机是从存储在 `~/.appd/data` 文件夹中的 db 中提取的。 此时，状态机的高度为：`appBlockHeight`。
+2. 用最新的已知状态初始化状态机，该状态机是从存储在 `~/.app/data` 文件夹中的 db 中提取的。 此时，状态机的高度为：`appBlockHeight`。
 
 3. 创建并启动一个新的 Tendermint 实例。 该节点将与对等节点进行连接交换信息。 它将从他们那里获取最新的 `blockHeight`，如果它大于本地的 `appBlockHeight`，则重播块以同步到该高度。 如果 `appBlockHeight` 为 `0`，则该节点从创世开始，并且 Tendermint 通过 ABCI 接口向 `app` 发送 `InitChain` 初始化链命令，从而触发 [`InitChainer`](https://docs.cosmos.network/master/basics/app-anatomy.html#initchainer)。
 
@@ -73,7 +73,7 @@ Blockchain Node |  |           Consensus           |  |
 - 挂载存储.
 - 返回应用实例.
 
-请注意，此函数仅创建该应用的一个实例，而如果重新启动节点，则状态将从 `〜/.appd/data` 文件夹中保留下来状态加载，如果节点是第一次启动，则从创世文件生成。See an example of application constructor from [`gaia`](https://github.com/cosmos/gaia):
+请注意，此函数仅创建该应用的一个实例，而如果重新启动节点，则状态将从 `〜/.app/data` 文件夹中保留下来状态加载，如果节点是第一次启动，则从创世文件生成。See an example of application constructor from [`gaia`](https://github.com/cosmos/gaia):
 
 +++ https://github.com/cosmos/gaia/blob/f41a660cdd5bea173139965ade55bd25d1ee3429/app/app.go#L110-L222
 

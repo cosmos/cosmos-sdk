@@ -2,7 +2,9 @@ package simulation
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"reflect"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -75,7 +77,16 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 }
 
 // NewOperationMsg - create a new operation message from sdk.Msg
-func NewOperationMsg(msg sdk.Msg, ok bool, comment string) OperationMsg {
+func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
+	if reflect.TypeOf(msg) == reflect.TypeOf(sdk.ServiceMsg{}) {
+		srvMsg, ok := msg.(sdk.ServiceMsg)
+		if !ok {
+			panic(fmt.Sprintf("Expecting %T to implement sdk.ServiceMsg", msg))
+		}
+		bz := cdc.MustMarshalJSON(srvMsg.Request)
+
+		return NewOperationMsgBasic(srvMsg.MethodName, srvMsg.MethodName, comment, ok, bz)
+	}
 	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
 }
 
@@ -113,8 +124,6 @@ func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
 
 	eventLogger(om.Route, om.Name, pass)
 }
-
-//________________________________________________________________________
 
 // FutureOperation is an operation which will be ran at the beginning of the
 // provided BlockHeight. If both a BlockHeight and BlockTime are specified, it

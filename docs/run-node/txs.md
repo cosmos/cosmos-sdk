@@ -11,14 +11,14 @@ This document describes how to generate an (unsigned) transaction, signing it (w
 The easiest way to send transactions is using the CLI, as we have seen in the previous page when [interacting with a node](./interact-node.md#using-the-cli). For example, running the following command
 
 ```bash
-simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain
+simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain --keyring-backend test
 ```
 
 will run the following steps:
 
 - generate a transaction with one `Msg` (`x/bank`'s `MsgSend`), and print the generated transaction to the console.
 - ask the user for confirmation to send the transaction from the `$MY_VALIDATOR_ADDRESS` account.
-- fetch `$MY_VALIDATOR_ADDRESS` in the keyring. This is possible because we have [set up the CLI's keyring](./keyring.md) in a previous step.
+- fetch `$MY_VALIDATOR_ADDRESS` from the keyring. This is possible because we have [set up the CLI's keyring](./keyring.md) in a previous step.
 - sign the generated transaction with the keyring's account.
 - broadcast the signed transaction to the network. This is possible because the CLI connects to the node's Tendermint RPC endpoint.
 
@@ -52,7 +52,7 @@ Some useful flags to consider in the `tx sign` command:
 #### Signing with Multiple Signers
 
 ::: warning
-Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not possible as of yet. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info.
+Please note that signing a transaction with multiple signers or with a multisig account, where at least one signer uses `SIGN_MODE_DIRECT`, is not yet possible. You may follow [this Github issue](https://github.com/cosmos/cosmos-sdk/issues/8141) for more info.
 :::
 
 Signing with multiple signers is done with the `tx multisign` command. This command assumes that all signers use `SIGN_MODE_LEGACY_AMINO_JSON`. The flow is similar to the `tx sign` command flow, but instead of signing an unsigned transaction file, each signer signs the file signed by previous signer(s). The `tx multisign` command will append signatures to the existing transactions. It is important that signers sign the transaction **in the same order** as given by the transaction, which is retrievable using the `GetSigners()` method.
@@ -60,14 +60,13 @@ Signing with multiple signers is done with the `tx multisign` command. This comm
 For example, starting with the `unsigned_tx.json`, and assuming the transaction has 4 signers, we would run:
 
 ```bash
-# Let signer 1 sign the unsigned tx.
+# Let signer1 sign the unsigned tx.
 simd tx multisignsign unsigned_tx.json signer_key_1 --chain-id my-test-chain --keyring-backend test > partial_tx_1.json
-# Signer 2 appends their signature.
+# Now signer1 will send the partial_tx_1.json to the signer2.
+# Signer2 appends their signature:
 simd tx multisignsign partial_tx_1.json signer_key_2 --chain-id my-test-chain --keyring-backend test > partial_tx_2.json
-# Signer 3 appends their signature.
+# Signer2 sends the partial_tx_2.json file to signer3, and signer3 can append his signature:
 simd tx multisignsign partial_tx_2.json signer_key_3 --chain-id my-test-chain --keyring-backend test > partial_tx_3.json
-# Signer 4 appends their signature. The final output is the fully signed tx.
-simd tx multisignsign partial_tx_3.json signer_key_4 --chain-id my-test-chain --keyring-backend test > signed_tx.json
 ```
 
 ### Broadcasting a Transaction
@@ -154,7 +153,7 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 
 ### Signing a Transaction
 
-We chose our encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
+We set encoding config to use Protobuf, which will use `SIGN_MODE_DIRECT` by default. As per [ADR-020](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/docs/architecture/adr-020-protobuf-transaction-encoding.md), each signer needs to sign the `SignerInfo`s of all other signers. This means that we need to perform two steps sequentially:
 
 - for each signer, populate the signer's `SignerInfo` inside `TxBuilder`,
 - once all `SignerInfo`s are populated, for each signer, sign the `SignDoc` (the payload to be signed).
@@ -254,7 +253,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-func sendTx() error {
+func sendTx(ctx context.Context) error {
     // --snip--
 
     // Create a connection to the gRPC server.
@@ -269,7 +268,7 @@ func sendTx() error {
     txClient := tx.NewServiceClient(grpcConn)
     // We then call the BroadcastTx method on this client.
     grpcRes, err := txClient.BroadcastTx(
-        context.Background(),
+        ctx,
         &tx.BroadcastTxRequest{
             Mode:    tx.BroadcastMode_BROADCAST_MODE_SYNC,
             TxBytes: txBytes, // Proto-binary of the signed transaction, see previous step.

@@ -60,7 +60,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			),
 		)
 
-		logger.Info(
+		logger.Debug(
 			"absent validator",
 			"height", height,
 			"validator", consAddr.String(),

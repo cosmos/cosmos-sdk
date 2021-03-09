@@ -28,8 +28,8 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	bech32PrefixConsAddr := "terravalcons"
 	bech32PrefixConsPub := "terravalconspub"
 
+	config.SetPurpose(44)
 	config.SetCoinType(330)
-	config.SetFullFundraiserPath("44'/330'/0'/0/0")
 	config.SetBech32PrefixForAccount(bech32PrefixAccAddr, bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(bech32PrefixValAddr, bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(bech32PrefixConsAddr, bech32PrefixConsPub)
@@ -76,8 +76,8 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 		"PubKeySecp256k1{03028F0D5A9FD41600191CDEFDEA05E77A68DFBCE286241C0190805B9346667D07}",
 		key1.GetPubKey().String())
 
+	config.SetPurpose(44)
 	config.SetCoinType(118)
-	config.SetFullFundraiserPath("44'/118'/0'/0/0")
 	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)

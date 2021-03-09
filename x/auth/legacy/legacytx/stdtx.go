@@ -12,9 +12,12 @@ import (
 
 // Interface implementation checks
 var (
-	_ sdk.Tx         = (*StdTx)(nil)
-	_ sdk.TxWithMemo = (*StdTx)(nil)
-	_ sdk.FeeTx      = (*StdTx)(nil)
+	_ sdk.Tx                             = (*StdTx)(nil)
+	_ sdk.TxWithMemo                     = (*StdTx)(nil)
+	_ sdk.FeeTx                          = (*StdTx)(nil)
+	_ codectypes.UnpackInterfacesMessage = (*StdTx)(nil)
+
+	_ codectypes.UnpackInterfacesMessage = (*StdSignature)(nil)
 )
 
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -228,5 +231,14 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 			return err
 		}
 	}
+
+	// Signatures contain PubKeys, which need to be unpacked.
+	for _, s := range tx.Signatures {
+		err := codectypes.UnpackInterfaces(s, unpacker)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

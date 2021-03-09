@@ -20,7 +20,6 @@ var (
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
 )
 
-//-----------------------------------------------------------------------------
 // Base Vesting Account
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
@@ -202,7 +201,6 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Continuous Vesting Account
 
 var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
@@ -316,7 +314,6 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Periodic Vesting Account
 
 var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
@@ -460,7 +457,6 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Delayed Vesting Account
 
 var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)

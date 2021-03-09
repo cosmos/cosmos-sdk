@@ -15,9 +15,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Interface implementation checks
-var _ codectypes.UnpackInterfacesMessage = StdTx{}
-
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
 // as well as the ChainID (prevent cross chain replay)
@@ -37,6 +34,9 @@ type StdSignDoc struct {
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
+		// If msg is a legacy Msg, then GetSignBytes is implemented.
+		// If msg is a ServiceMsg, then GetSignBytes has graceful support of
+		// calling GetSignBytes from its underlying Msg.
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
 
@@ -84,18 +84,23 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 	if ss.PubKey != nil {
 		pk = ss.PubKey.String()
 	}
+
 	bz, err := yaml.Marshal(struct {
 		PubKey    string
 		Signature string
 	}{
-		PubKey:    pk,
-		Signature: fmt.Sprintf("%X", ss.Signature),
+		pk,
+		fmt.Sprintf("%X", ss.Signature),
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return string(bz), err
+}
+
+func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return codectypes.UnpackInterfaces(ss.PubKey, unpacker)
 }
 
 // StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2

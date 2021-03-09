@@ -2,7 +2,6 @@ package cachekv
 
 import (
 	"bytes"
-	"container/list"
 	"io"
 	"sort"
 	"sync"
@@ -30,7 +29,7 @@ type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]*cValue
 	unsortedCache map[string]struct{}
-	sortedCache   *list.List // always ascending sorted
+	sortedCache   *kv.List // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -41,7 +40,7 @@ func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   list.New(),
+		sortedCache:   kv.NewList(),
 		parent:        parent,
 	}
 }
@@ -134,7 +133,7 @@ func (store *Store) Write() {
 	// Clear the cache
 	store.cache = make(map[string]*cValue)
 	store.unsortedCache = make(map[string]struct{})
-	store.sortedCache = list.New()
+	store.sortedCache = kv.NewList()
 }
 
 // CacheWrap implements CacheWrapper.
@@ -206,7 +205,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 	for e := store.sortedCache.Front(); e != nil && len(unsorted) != 0; {
 		uitem := unsorted[0]
-		sitem := e.Value.(*kv.Pair)
+		sitem := e.Value
 		comp := bytes.Compare(uitem.Key, sitem.Key)
 
 		switch comp {

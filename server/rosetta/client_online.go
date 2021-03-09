@@ -173,7 +173,7 @@ func (c *Client) BlockTransactionsByHash(ctx context.Context, hash string) (crgt
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
 
-	txs, err := c.listTransactionsInBlock(ctx, blockResp.Block.Index)
+	txs, err := c.listTransactionsInBlock(ctx, blockResp.Block.Index, "asc")
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
@@ -190,7 +190,7 @@ func (c *Client) BlockTransactionsByHeight(ctx context.Context, height *int64) (
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
 
-	txs, err := c.listTransactionsInBlock(ctx, blockResp.Block.Index)
+	txs, err := c.listTransactionsInBlock(ctx, blockResp.Block.Index, "asc")
 	if err != nil {
 		return crgtypes.BlockTransactionsResponse{}, err
 	}
@@ -211,9 +211,9 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 }
 
 // listTransactionsInBlock returns the list of the transactions in a block given its height
-func (c *Client) listTransactionsInBlock(ctx context.Context, height int64) ([]*sdkTxWithHash, error) {
+func (c *Client) listTransactionsInBlock(ctx context.Context, height int64, orderBy string) ([]*sdkTxWithHash, error) {
 	txQuery := fmt.Sprintf(`tx.height=%d`, height)
-	txList, err := c.clientCtx.Client.TxSearch(ctx, txQuery, true, nil, nil, "")
+	txList, err := c.clientCtx.Client.TxSearch(ctx, txQuery, true, nil, nil, orderBy)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrUnknown, err.Error())
 	}

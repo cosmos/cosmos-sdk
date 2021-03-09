@@ -15,17 +15,20 @@ message ValidatorSigningInfo {
   option (gogoproto.goproto_stringer) = false;
 
   string address = 1;
-  // height at which validator was first a candidate OR was unjailed
+  // Height at which validator was first a candidate OR was unjailed
   int64 start_height = 2 [(gogoproto.moretags) = "yaml:\"start_height\""];
-  // index offset into signed block bit array
+  // Index which is incremented each time the validator was a bonded
+  // in a block and may have signed a precommit or not. This in conjunction with the
+  // `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
   int64 index_offset = 3 [(gogoproto.moretags) = "yaml:\"index_offset\""];
-  // timestamp validator cannot be unjailed until
+  // Timestamp until which the validator is jailed due to liveness downtime.
   google.protobuf.Timestamp jailed_until = 4
       [(gogoproto.moretags) = "yaml:\"jailed_until\"", (gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  // whether or not a validator has been tombstoned (killed out of validator
-  // set)
+  // Whether or not a validator has been tombstoned (killed out of validator set). It is set
+  // once the validator commits an equivocation or for any other configured misbehiavor.
   bool tombstoned = 5;
-  // missed blocks counter (to avoid scanning the array every time)
+  // A counter kept to avoid unnecessary array reads.
+  // Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
   int64 missed_blocks_counter = 6 [(gogoproto.moretags) = "yaml:\"missed_blocks_counter\""];
 }
 

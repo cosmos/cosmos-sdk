@@ -13,8 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const aminoCacheSize = 500
-
 // Implements ValidatorSet interface
 var _ types.ValidatorSet = Keeper{}
 
@@ -30,7 +28,6 @@ type Keeper struct {
 	epochKeeper        epochkeeper.Keeper
 	hooks              types.StakingHooks
 	paramstore         paramtypes.Subspace
-	validatorCache     map[string]cachedValidator
 	validatorCacheList *list.List
 }
 
@@ -65,7 +62,6 @@ func NewKeeper(
 		epochKeeper:        epochkeeper.NewKeeper(cdc, key),
 		paramstore:         ps,
 		hooks:              nil,
-		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),
 	}
 }

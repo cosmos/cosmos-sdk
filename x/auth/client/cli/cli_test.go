@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -53,13 +52,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), cfg)
 
 	kb := s.network.Validators[0].ClientCtx.Keyring
-	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{account1.GetPubKey(), account2.GetPubKey()})
@@ -145,11 +144,21 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	valInfo, err := val1.ClientCtx.Keyring.Key(val1.Moniker)
 	require.NoError(err)
 
+	// query account info
+	queryResJSON, err := authtest.QueryAccountExec(val1.ClientCtx, val1.Address)
+	require.NoError(err)
+	var account authtypes.AccountI
+	require.NoError(val1.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
+
 	/****  test signature-only  ****/
 	res, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
 		sigOnlyFlag)
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
+	sigs, err := txCfg.UnmarshalSignatureJSON(res.Bytes())
+	require.NoError(err)
+	require.Equal(1, len(sigs))
+	require.Equal(account.GetSequence(), sigs[0].Sequence)
 
 	/****  test full output  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag)
@@ -221,23 +230,19 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 
 	// Send coins, try both with legacy Msg and with Msg service.
-	// Legacy Msg.
-	legacyMsgOut, err := bankcli.MsgSendExec(
-		val.ClientCtx,
+	// Legacy proto Msg.
+	legacyTxRes, err := bankcli.LegacyGRPCProtoMsgSend(
+		val.ClientCtx, val.Moniker,
 		val.Address,
 		account2.GetAddress(),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))),
 		sdk.NewCoins(sendTokens),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
 	s.Require().NoError(err)
-	var legacyMsgTxRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(legacyMsgOut.Bytes(), &legacyMsgTxRes))
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Service Msg.
-	out, err := bankcli.ServiceMsgSendExec(
+	out, err := bankcli.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		account2.GetAddress(),
@@ -250,7 +255,6 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
-
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
@@ -273,7 +277,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 		},
 		{
 			"happy case (legacy Msg)",
-			[]string{legacyMsgTxRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{legacyTxRes.TxResponse.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 		},
@@ -426,7 +430,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
-	// Validate Signature
+	// validate Signature
 	res, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
@@ -728,7 +732,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	// Does not work in offline mode.
 	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
-	s.Require().EqualError(err, "couldn't verify signature: unable to verify single signer signature")
+	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", account1.GetAddress()))
 
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
@@ -808,25 +812,100 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	s.Require().NoError(err)
 }
 
+func (s *IntegrationTestSuite) TestMultisignBatch() {
+	val := s.network.Validators[0]
+
+	// Fetch 2 accounts and a multisig.
+	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+
+	// Send coins from validator to multisig.
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
+	_, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		multisigInfo.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	generatedStd, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		multisigInfo.GetAddress(),
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Write the output to disk
+	filename := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
+	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
+
+	queryResJSON, err := authtest.QueryAccountExec(val.ClientCtx, multisigInfo.GetAddress())
+	s.Require().NoError(err)
+	var account authtypes.AccountI
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
+
+	// sign-batch file
+	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+	// write sigs to file
+	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
+
+	// sign-batch file with account2
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+
+	// multisign the file
+	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
+	res, err = authtest.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
+	s.Require().NoError(err)
+	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
+
+	// Broadcast transactions.
+	for _, signedTx := range signedTxs {
+		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
+		val.ClientCtx.BroadcastMode = flags.BroadcastBlock
+		res, err = authtest.TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
+		s.T().Log(res)
+		s.Require().NoError(err)
+		s.Require().NoError(s.network.WaitForNextBlock())
+	}
+}
+
 func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	val := s.network.Validators[0]
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		name      string
-		args      []string
+		address   sdk.AccAddress
 		expectErr bool
 	}{
 		{
 			"invalid address",
-			[]string{addr1.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			addr1,
 			true,
 		},
 		{
 			"valid address",
-			[]string{val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			val.Address,
 			false,
 		},
 	}
@@ -834,22 +913,33 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			cmd := authcli.GetAccountCmd()
 			clientCtx := val.ClientCtx
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := authtest.QueryAccountExec(clientCtx, tc.address)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
-				var any types.Any
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &any))
 				var acc authtypes.AccountI
-				s.Require().NoError(val.ClientCtx.InterfaceRegistry.UnpackAny(&any, &acc))
+				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(out.Bytes(), &acc))
 				s.Require().Equal(val.Address, acc.GetAddress())
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestGetAccountsCmd() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.GetAccountsCmd(), []string{
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	})
+	s.Require().NoError(err)
+
+	var res authtypes.QueryAccountsResponse
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NotEmpty(res.Accounts)
 }
 
 func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
@@ -1012,7 +1102,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit()) // min required is 101892
 	require.Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
@@ -1036,7 +1126,12 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
 	// Now let's try to send this tx.
-	res, err := authtest.TxBroadcastExec(val0.ClientCtx, signedTxFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
+	res, err := authtest.TxBroadcastExec(
+		val0.ClientCtx,
+		signedTxFile.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+	)
+
 	require.NoError(err)
 	var txRes sdk.TxResponse
 	require.NoError(val0.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txRes))

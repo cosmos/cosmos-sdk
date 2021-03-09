@@ -53,6 +53,7 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 023: Protocol Buffer Naming and Versioning](./adr-023-protobuf-naming.md)
 - [ADR 026: IBC Client Recovery Mechanisms](./adr-026-ibc-client-recovery-mechanisms.md)
 - [ADR 029: Fee Grant Module](./adr-029-fee-grant-module.md)
+- [ADR 030: Message Authorization Module](architecture/adr-030-authz-module.md)
 - [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 
 ### Proposed
@@ -71,5 +72,8 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 027: Deterministic Protobuf Serialization](./adr-027-deterministic-protobuf-serialization.md)
 - [ADR 028: Public Key Addresses](./adr-028-public-key-addresses.md)
 - [ADR 032: Typed Events](./adr-032-typed-events.md)
+- [ADR 033: Inter-module RPC](./adr-033-protobuf-inter-module-comm.md)
 - [ADR 035: Rosetta API Support](./adr-035-rosetta-api-support.md)
 - [ADR 037: Governance Split Votes](./adr-037-gov-split-vote.md)
+- [ADR 038: State Listening](./adr-038-state-listening.md)
+- [ADR 039: Epoched Staking](./adr-039-epoched-staking.md)

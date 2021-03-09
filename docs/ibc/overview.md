@@ -141,12 +141,40 @@ Thus, packet data is completely opaque to IBC handlers. It is incumbent on a sen
 their application-specific packet information into the `Data` field of packets, and the receiver
 module to decode that `Data` back to the original application data.
 
+### [Receipts and Timeouts](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
+
+Since IBC works over a distributed network and relies on potentially faulty relayers to relay messages between ledgers, 
+IBC must handle the case where a packet does not get sent to its destination in a timely manner or at all. Thus, packets must 
+specify a timeout height or timeout timestamp after which a packet can no longer be successfully received on the destination chain.
+
+If the timeout does get reached, then a proof of packet timeout can be submitted to the original chain which can then perform 
+application-specific logic to timeout the packet, perhaps by rolling back the packet send changes (refunding senders any locked funds, etc).
+
+In ORDERED channels, a timeout of a single packet in the channel will cause the channel to close. If packet sequence `n` times out, 
+then no packet at sequence `k > n` can be successfully received without violating the contract of ORDERED channels that packets are processed in the order that they are sent. Since ORDERED channels enforce this invariant, a proof that sequence `n` hasn't been received on the destination chain by packet `n`'s specified timeout is sufficient to timeout packet `n` and close the channel.
+
+In the UNORDERED case, packets may be received in any order. Thus, IBC will write a packet receipt for each sequence it has received in the UNORDERED channel. This receipt contains no information, it is simply a marker intended to signify that the UNORDERED channel has received a packet at the specified sequence. To timeout a packet on an UNORDERED channel, one must provide a proof that a packet receipt does not exist for the packet's sequence by the specified timeout. Of course, timing out a packet on an UNORDERED channel will simply trigger the application specific timeout logic for that packet, and will not close the channel.
+
+For this reason, most modules should use UNORDERED channels as they require less liveness guarantees to function effectively for users of that channel.
+
+### [Acknowledgements](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
+
+Modules may also choose to write application-specific acknowledgements upon processing a packet. This may either be done synchronously on `OnRecvPacket`, if the module processes packets as soon as they are received from IBC module. Or they may be done asynchronously if module processes packets at some later point after receiving the packet.
+
+Regardless, this acknowledgement data is opaque to IBC much like the packet `Data` and will be treated by IBC as a simple byte string `[]byte`. It is incumbent on receiver modules to encode their acknowledgemnet in such a way that the sender module can decode it correctly. This should be decided through version negotiation during the channel handshake.
+
+The acknowledgement may encode whether the packet processing succeeded or failed, along with additional information that will allow the sender module to take appropriate action.
+
+Once the acknowledgement has been written by the receiving chain, a relayer will relay the acknowledgement back to the original sender module which will then execute application-specific acknowledgment logic using the contents of the acknowledgement. This may involve rolling back packet-send changes in the case of a failed acknowledgement (refunding senders).
+
+Once an acknowledgement is received successfully on the original sender the chain, the IBC module deletes the corresponding packet commitment as it is no longer needed.
+
 ## Further Readings and Specs
 
 If you want to learn more about IBC, check the following specifications:
 
 * [IBC specification overview](https://github.com/cosmos/ics/blob/master/ibc/README.md)
-* [IBC SDK specification](../../modules/ibc)
+* [IBC SDK specification](../../x/ibc/spec/README.md)
 
 ## Next {hide}
 

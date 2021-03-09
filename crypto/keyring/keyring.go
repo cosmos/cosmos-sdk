@@ -448,7 +448,7 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (Info, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, checkKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
 	}
 
 	if len(ik.Data) == 0 {
@@ -458,7 +458,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (Info, error) {
 	return ks.Key(string(ik.Data))
 }
 
-func checkKeyNotFound(err error, msg string) error {
+func wrapKeyNotFound(err error, msg string) error {
 	if err == keyring.ErrKeyNotFound {
 		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, msg)
 	}
@@ -563,7 +563,7 @@ func (ks keystore) Key(uid string) (Info, error) {
 
 	bs, err := ks.db.Get(string(key))
 	if err != nil {
-		return nil, checkKeyNotFound(err, uid)
+		return nil, wrapKeyNotFound(err, uid)
 	}
 	if len(bs.Data) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
@@ -741,7 +741,6 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
-
 	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshalBinaryBare(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
@@ -759,7 +758,6 @@ func (ks keystore) writeInfo(info Info) error {
 	if exists {
 		return errors.New("public key already exist in keybase")
 	}
-
 	if err != nil {
 		return err
 	}
@@ -786,13 +784,13 @@ func (ks keystore) writeInfo(info Info) error {
 func (ks keystore) existsInDb(info Info) (bool, error) {
 	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
 		return true, nil // address lookup succeeds - info exists
-	} else if !sdkerrors.ErrKeyNotFound.Is(err) {
+	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns error
 	}
 
 	if _, err := ks.db.Get(string(infoKey(info.GetName()))); err == nil {
 		return true, nil // uid lookup succeeds - info exists
-	} else if !sdkerrors.ErrKeyNotFound.Is(err) {
+	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
 	}
 

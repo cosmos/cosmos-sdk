@@ -19,6 +19,7 @@ import (
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.
 func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v036Codec := codec.NewLegacyAmino()
+	v036auth.RegisterLegacyAminoCodec(v036Codec)
 	v036gov.RegisterLegacyAminoCodec(v036Codec)
 	v036distr.RegisterLegacyAminoCodec(v036Codec)
 	v036params.RegisterLegacyAminoCodec(v036Codec)

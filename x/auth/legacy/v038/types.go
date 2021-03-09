@@ -13,7 +13,6 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
@@ -518,7 +517,7 @@ func ValidateGenAccounts(genAccounts GenesisAccounts) error {
 }
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cryptocodec.RegisterCrypto(cdc)
+	v034auth.RegisterCrypto(cdc)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)

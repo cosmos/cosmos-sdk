@@ -117,10 +117,20 @@
     - [Pairs](#cosmos.base.kv.v1beta1.Pairs)
   
 - [cosmos/base/reflection/v1beta1/reflection.proto](#cosmos/base/reflection/v1beta1/reflection.proto)
+    - [DeliverableDescriptor](#cosmos.base.reflection.v1beta1.DeliverableDescriptor)
     - [ListAllInterfacesRequest](#cosmos.base.reflection.v1beta1.ListAllInterfacesRequest)
     - [ListAllInterfacesResponse](#cosmos.base.reflection.v1beta1.ListAllInterfacesResponse)
+    - [ListDeliverablesRequest](#cosmos.base.reflection.v1beta1.ListDeliverablesRequest)
+    - [ListDeliverablesResponse](#cosmos.base.reflection.v1beta1.ListDeliverablesResponse)
     - [ListImplementationsRequest](#cosmos.base.reflection.v1beta1.ListImplementationsRequest)
     - [ListImplementationsResponse](#cosmos.base.reflection.v1beta1.ListImplementationsResponse)
+    - [ListQueriesRequest](#cosmos.base.reflection.v1beta1.ListQueriesRequest)
+    - [ListQueriesResponse](#cosmos.base.reflection.v1beta1.ListQueriesResponse)
+    - [QueryDescriptor](#cosmos.base.reflection.v1beta1.QueryDescriptor)
+    - [ResolveProtoTypeRequest](#cosmos.base.reflection.v1beta1.ResolveProtoTypeRequest)
+    - [ResolveProtoTypeResponse](#cosmos.base.reflection.v1beta1.ResolveProtoTypeResponse)
+    - [ResolveServiceRequest](#cosmos.base.reflection.v1beta1.ResolveServiceRequest)
+    - [ResolveServiceResponse](#cosmos.base.reflection.v1beta1.ResolveServiceResponse)
   
     - [ReflectionService](#cosmos.base.reflection.v1beta1.ReflectionService)
   
@@ -2014,6 +2024,22 @@ Pairs defines a repeated slice of Pair objects.
 
 
 
+<a name="cosmos.base.reflection.v1beta1.DeliverableDescriptor"></a>
+
+### DeliverableDescriptor
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `method` | [string](#string) |  |  |
+| `proto_name` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="cosmos.base.reflection.v1beta1.ListAllInterfacesRequest"></a>
 
 ### ListAllInterfacesRequest
@@ -2033,6 +2059,31 @@ ListAllInterfacesResponse is the response type of the ListAllInterfaces RPC.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `interface_names` | [string](#string) | repeated | interface_names is an array of all the registered interfaces. |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.ListDeliverablesRequest"></a>
+
+### ListDeliverablesRequest
+
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.ListDeliverablesResponse"></a>
+
+### ListDeliverablesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `deliverables` | [DeliverableDescriptor](#cosmos.base.reflection.v1beta1.DeliverableDescriptor) | repeated |  |
 
 
 
@@ -2070,6 +2121,108 @@ RPC.
 
 
 
+
+<a name="cosmos.base.reflection.v1beta1.ListQueriesRequest"></a>
+
+### ListQueriesRequest
+
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.ListQueriesResponse"></a>
+
+### ListQueriesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `queries` | [QueryDescriptor](#cosmos.base.reflection.v1beta1.QueryDescriptor) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.QueryDescriptor"></a>
+
+### QueryDescriptor
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `service_name` | [string](#string) |  |  |
+| `proto_file` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.ResolveProtoTypeRequest"></a>
+
+### ResolveProtoTypeRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.ResolveProtoTypeResponse"></a>
+
+### ResolveProtoTypeResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `raw_descriptor` | [bytes](#bytes) |  |  |
+| `indexes` | [int64](#int64) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.ResolveServiceRequest"></a>
+
+### ResolveServiceRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `file_name` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v1beta1.ResolveServiceResponse"></a>
+
+### ResolveServiceResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `raw_descriptor` | [bytes](#bytes) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2086,6 +2239,10 @@ ReflectionService defines a service for interface reflection.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `ListAllInterfaces` | [ListAllInterfacesRequest](#cosmos.base.reflection.v1beta1.ListAllInterfacesRequest) | [ListAllInterfacesResponse](#cosmos.base.reflection.v1beta1.ListAllInterfacesResponse) | ListAllInterfaces lists all the interfaces registered in the interface registry. | GET|/cosmos/base/reflection/v1beta1/interfaces|
 | `ListImplementations` | [ListImplementationsRequest](#cosmos.base.reflection.v1beta1.ListImplementationsRequest) | [ListImplementationsResponse](#cosmos.base.reflection.v1beta1.ListImplementationsResponse) | ListImplementations list all the concrete types that implement a given interface. | GET|/cosmos/base/reflection/v1beta1/interfaces/{interface_name}/implementations|
+| `ListDeliverables` | [ListDeliverablesRequest](#cosmos.base.reflection.v1beta1.ListDeliverablesRequest) | [ListDeliverablesResponse](#cosmos.base.reflection.v1beta1.ListDeliverablesResponse) | ListDeliverables provides a list of all the messages that can be passed to the deliver tx endpoint of the tendermint node for the application | |
+| `ListQueryServices` | [ListQueriesRequest](#cosmos.base.reflection.v1beta1.ListQueriesRequest) | [ListQueriesResponse](#cosmos.base.reflection.v1beta1.ListQueriesResponse) | ListQueries lists the queries that the application supports | |
+| `ResolveProtoType` | [ResolveProtoTypeRequest](#cosmos.base.reflection.v1beta1.ResolveProtoTypeRequest) | [ResolveProtoTypeResponse](#cosmos.base.reflection.v1beta1.ResolveProtoTypeResponse) | ResolveProtoType returns the raw descriptor of the given type | |
+| `ResolveService` | [ResolveServiceRequest](#cosmos.base.reflection.v1beta1.ResolveServiceRequest) | [ResolveServiceResponse](#cosmos.base.reflection.v1beta1.ResolveServiceResponse) |  | |
 
  <!-- end services -->
 

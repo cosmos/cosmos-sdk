@@ -141,7 +141,7 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	// registry reflection gRPC service.
 	reflection.RegisterReflectionServiceServer(
 		qrt,
-		reflection.NewReflectionServiceServer(interfaceRegistry),
+		reflection.NewReflectionServiceServer(interfaceRegistry, qrt),
 	)
 }
 
@@ -156,4 +156,12 @@ func (qrt *GRPCQueryRouter) returnTypeOf(method string) (reflect.Type, error) {
 	}
 
 	return returnType, nil
+}
+
+func (qrt *GRPCQueryRouter) ListServices() []*grpc.ServiceDesc {
+	svcDesc := make([]*grpc.ServiceDesc, len(qrt.serviceData))
+	for i, svc := range qrt.serviceData {
+		svcDesc[i] = svc.serviceDesc
+	}
+	return svcDesc
 }

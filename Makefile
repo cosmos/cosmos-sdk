@@ -315,7 +315,7 @@ test-cover:
 
 test-rosetta:
 	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
-	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+	docker-compose -f contrib/rosetta/docker-compose.yaml up
 .PHONY: test-rosetta
 
 benchmark:
@@ -373,7 +373,7 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.1 sh ./scripts/protocgen.sh
+	docker run --rm -v "$(CURDIR)":/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.1 sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"

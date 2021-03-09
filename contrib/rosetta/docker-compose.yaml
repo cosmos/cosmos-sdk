@@ -7,8 +7,8 @@ services:
     ports:
       - 9090:9090
       - 26657:26657
-    logging:
-      driver: "none"
+    #logging:
+    #  driver: "none"
 
   rosetta:
     image: rosetta-ci:latest

@@ -19,6 +19,56 @@ service ReflectionService {
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces/"
                                    "{interface_name}/implementations";
   };
+
+  // ListDeliverables provides a list of all the messages that can be passed to the
+  // deliver tx endpoint of the tendermint node for the application
+  rpc ListDeliverables(ListDeliverablesRequest) returns (ListDeliverablesResponse) {}
+
+  // ListQueries lists the queries that the application supports
+  rpc ListQueryServices(ListQueriesRequest) returns (ListQueriesResponse) {}
+
+  // ResolveProtoType returns the raw descriptor of the given type
+  rpc ResolveProtoType(ResolveProtoTypeRequest) returns (ResolveProtoTypeResponse) {}
+
+  rpc ResolveService(ResolveServiceRequest) returns (ResolveServiceResponse) {}
+}
+
+message ResolveProtoTypeRequest {
+  string name = 1;
+}
+
+message ResolveProtoTypeResponse {
+  bytes raw_descriptor = 1;
+  repeated int64 indexes = 2;
+}
+
+message ResolveServiceRequest {
+  string file_name = 1;
+}
+
+message ResolveServiceResponse {
+  bytes raw_descriptor = 1;
+}
+
+message ListDeliverablesRequest {}
+message ListDeliverablesResponse {
+  repeated DeliverableDescriptor deliverables = 1;
+}
+
+message DeliverableDescriptor {
+  string method = 1;
+  string proto_name = 2;
+}
+
+message ListQueriesRequest {}
+
+message ListQueriesResponse {
+  repeated QueryDescriptor queries = 1;
+}
+
+message QueryDescriptor {
+  string service_name = 1;
+  string proto_file = 2;
 }
 
 // ListAllInterfacesRequest is the request type of the ListAllInterfaces RPC.

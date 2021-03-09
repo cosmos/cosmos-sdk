@@ -257,12 +257,6 @@ func (e *Error) Is(err error) bool {
 	}
 }
 
-// Wrap extends this error with an additional information.
-// It's a handy function to call Wrap with sdk errors.
-func (e Error) Wrap(desc string) error {
-	return Wrap(e, desc)
-}
-
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with
 	// a nil implementation of an error.

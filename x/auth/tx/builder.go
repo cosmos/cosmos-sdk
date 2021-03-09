@@ -1,8 +1,6 @@
 package tx
 
 import (
-	"fmt"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -119,7 +117,7 @@ func (w *wrapper) GetPubKeys() ([]cryptotypes.PubKey, error) {
 		if ok {
 			pks[i] = pk
 		} else {
-			return nil, sdkerrors.ErrLogic.Wrap(fmt.Sprintf("Expecting PubKey, got: %T", pkAny))
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "Expecting PubKey, got: %T", pkAny)
 		}
 	}
 

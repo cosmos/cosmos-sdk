@@ -10,6 +10,62 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+func (s *IntegrationTestSuite) TestLegacyGetAllProposals() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name         string
+		url          string
+		numProposals int
+		expErr       bool
+		expErrMsg    string
+	}{
+		{
+			"get all existing proposals",
+			fmt.Sprintf("%s/gov/proposals", val.APIAddress),
+			3, false, "",
+		},
+		{
+			"get proposals in deposit period",
+			fmt.Sprintf("%s/gov/proposals?status=deposit_period", val.APIAddress),
+			1, false, "",
+		},
+		{
+			"get proposals in voting period",
+			fmt.Sprintf("%s/gov/proposals?status=voting_period", val.APIAddress),
+			2, false, "",
+		},
+		{
+			"wrong status parameter",
+			fmt.Sprintf("%s/gov/proposals?status=invalidstatus", val.APIAddress),
+			0, true, "'invalidstatus' is not a valid proposal status",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			respJSON, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+
+			if tc.expErr {
+				var errResp rest.ErrorResponse
+				s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(respJSON, &errResp))
+				s.Require().Equal(errResp.Error, tc.expErrMsg)
+			} else {
+				var resp = rest.ResponseWithHeight{}
+				err = val.ClientCtx.LegacyAmino.UnmarshalJSON(respJSON, &resp)
+				s.Require().NoError(err)
+
+				// Check results.
+				var proposals types.Proposals
+				s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp.Result, &proposals))
+				s.Require().Equal(tc.numProposals, len(proposals))
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestLegacyGetVote() {
 	val := s.network.Validators[0]
 	voterAddressBech32 := val.Address.String()

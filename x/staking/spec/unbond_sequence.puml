@@ -1,7 +1,7 @@
 @startuml
 'https://plantuml.com/sequence-diagram
 
-title: Unbond
+title: Undelegate
 
 msgServer -> keeper : Undelegate(delAddr, valAddr, tokenAmount)
 

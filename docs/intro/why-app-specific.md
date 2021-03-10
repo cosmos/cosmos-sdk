@@ -44,7 +44,8 @@ Application-Specific Blockchains are designed to address these shortcomings.
 
 Application-specific blockchains give maximum flexibility to developers:
 
-- In Cosmos blockchains, the state-machine is typically connected to the underlying consensus engine via an interface called the [ABCI](https://docs.tendermint.com/master/spec/abci/). This interface can be wrapped in any programming language, meaning developers can build their state-machine in the programming language of their choice.
+- In Cosmos blockchains, the state-machine is typically connected to the underlying consensus engine via an interface called the [ABCI](https://docs.tendermint.com/v0.34/spec/abci/). This interface can be wrapped in any programming language, meaning developers can build their state-machine in the programming language of their choice.
+
 - Developers can choose among multiple frameworks to build their state-machine. The most widely used today is the Cosmos SDK, but others exist (e.g. [Lotion](https://github.com/nomic-io/lotion), [Weave](https://github.com/iov-one/weave), ...). The choice will most of the time be done based on the programming language they want to use (Cosmos SDK and Weave are in Golang, Lotion is in Javascript, ...).
 - The ABCI also allows developers to swap the consensus engine of their application-specific blockchain. Today, only Tendermint is production-ready, but in the future other consensus engines are expected to emerge.
 - Even when they settle for a framework and consensus engine, developers still have the freedom to tweak them if they don't perfectly match their requirements in their pristine forms. 

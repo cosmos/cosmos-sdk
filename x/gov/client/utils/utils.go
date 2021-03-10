@@ -55,13 +55,13 @@ func NormalizeProposalType(proposalType string) string {
 func NormalizeProposalStatus(status string) string {
 	switch status {
 	case "DepositPeriod", "deposit_period":
-		return "DepositPeriod"
+		return types.StatusDepositPeriod.String()
 	case "VotingPeriod", "voting_period":
-		return "VotingPeriod"
+		return types.StatusVotingPeriod.String()
 	case "Passed", "passed":
-		return "Passed"
+		return types.StatusPassed.String()
 	case "Rejected", "rejected":
-		return "Rejected"
+		return types.StatusRejected.String()
 	default:
 		return status
 	}

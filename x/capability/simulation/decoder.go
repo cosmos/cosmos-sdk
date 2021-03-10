@@ -11,7 +11,7 @@ import (
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
-// Value to the corresponding capaility type.
+// Value to the corresponding capability type.
 func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {

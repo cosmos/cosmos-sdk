@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	clicfg "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -240,6 +241,18 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 
 	if err := rootViper.MergeInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to merge configuration: %w", err)
+	}
+
+	// Adding default ClientConfig and writing it into "client.toml"
+	cliCfgFilePath := filepath.Join(configPath, "client.toml")
+	if _, err := os.Stat(cliCfgFilePath); os.IsNotExist(err) {
+		cliConfig, err := clicfg.ParseConfig(rootViper)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse %s: %w", cliCfgFilePath, err)
+		}
+
+		configTemplate := clicfg.InitConfigTemplate()
+		clicfg.WriteConfigFile(cliCfgFilePath, cliConfig, configTemplate)
 	}
 
 	return conf, nil

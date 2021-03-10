@@ -94,7 +94,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// add rosetta
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 
-	// add cli config
+	// add client config
 	rootCmd.AddCommand(clicfg.Cmd(flags.FlagHome))
 }
 

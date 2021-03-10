@@ -71,6 +71,7 @@ const (
 	FlagTimeoutHeight    = "timeout-height"
 	FlagKeyAlgorithm     = "algo"
 	FlagFeeAccount       = "fee-account"
+	FlagReverse          = "reverse"
 
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"

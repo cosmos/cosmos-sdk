@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
+	db "github.com/tendermint/tm-db"
 )
 
 // DefaultLimit is the default `limit` for queries
@@ -67,7 +68,7 @@ func Paginate(
 	}
 
 	if len(key) != 0 {
-		iterator := prefixStore.Iterator(key, nil)
+		iterator := getIterator(prefixStore, key, nil, pageRequest.Reverse)
 		defer iterator.Close()
 
 		var count uint64
@@ -94,7 +95,7 @@ func Paginate(
 		}, nil
 	}
 
-	iterator := prefixStore.Iterator(nil, nil)
+	iterator := getIterator(prefixStore, nil, nil, pageRequest.Reverse)
 	defer iterator.Close()
 
 	end := offset + limit
@@ -131,4 +132,11 @@ func Paginate(
 	}
 
 	return res, nil
+}
+
+func getIterator(prefixStore types.KVStore, start []byte, end []byte, reverse bool) db.Iterator {
+	if reverse {
+		return prefixStore.ReverseIterator(end, start)
+	}
+	return prefixStore.Iterator(start, end)
 }

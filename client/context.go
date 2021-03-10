@@ -41,7 +41,6 @@ type Context struct {
 	GenerateOnly      bool
 	Offline           bool
 	SkipConfirm       bool
-	DryRun            bool
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
@@ -140,12 +139,6 @@ func (ctx Context) WithKeyringDir(dir string) Context {
 // WithGenerateOnly returns a copy of the context with updated GenerateOnly value
 func (ctx Context) WithGenerateOnly(generateOnly bool) Context {
 	ctx.GenerateOnly = generateOnly
-	return ctx
-}
-
-// WithDryRun returns a copy of the context with updated DryRun value
-func (ctx Context) WithDryRun(dryRun bool) Context {
-	ctx.DryRun = dryRun
 	return ctx
 }
 
@@ -331,7 +324,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 }
 
 func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
-	if ctx.GenerateOnly || ctx.DryRun {
+	if ctx.GenerateOnly || ctx.Simulate {
 		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input)
 	}
 

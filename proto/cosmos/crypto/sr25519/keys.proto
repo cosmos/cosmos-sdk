@@ -13,5 +13,5 @@ message PubKey {
 
 // PrivKey defines a sr25519 private key.
 message PrivKey {
-    bytes key = 1;
+    bytes miniSecretKey = 1;
 }

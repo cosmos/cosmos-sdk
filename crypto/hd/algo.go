@@ -92,6 +92,6 @@ func (s sr25519Algo) Derive() DeriveFn {
 // Generate generates a sr25519 private key from the given bytes.
 func (s sr25519Algo) Generate() GenerateFn {
 	return func(bz []byte) types.PrivKey {
-		return &sr25519.PrivKey{Key: bz}
+		return &sr25519.PrivKey{MiniSecretKey: bz}
 	}
 }

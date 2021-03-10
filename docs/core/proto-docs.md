@@ -2982,7 +2982,7 @@ PrivKey defines a sr25519 private key.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
+| `miniSecretKey` | [bytes](#bytes) |  |  |
 
 
 

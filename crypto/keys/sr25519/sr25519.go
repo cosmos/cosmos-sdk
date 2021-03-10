@@ -26,12 +26,17 @@ const (
 
 // Bytes returns the byte representation of the Private Key.
 func (privKey *PrivKey) Bytes() []byte {
-	return privKey.Key
+	return privKey.MiniSecretKey
+}
+
+// Sign produces a signature on the provided message.
+func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
+	return tmsr25519.PrivKey(privKey.MiniSecretKey).Sign(msg)
 }
 
 // PubKey gets the corresponding public key from the private key.
 func (privKey *PrivKey) PubKey() cryptotypes.PubKey {
-	return &PubKey{Key: tmsr25519.PrivKey(privKey.Key).PubKey().Bytes()}
+	return &PubKey{Key: tmsr25519.PrivKey(privKey.MiniSecretKey).PubKey().Bytes()}
 }
 
 // Equals - you probably don't need to use this.
@@ -46,7 +51,7 @@ func (privKey *PrivKey) Type() string {
 
 // MarshalAmino overrides Amino binary marshalling.
 func (privKey PrivKey) MarshalAmino() ([]byte, error) {
-	return privKey.Key, nil
+	return privKey.MiniSecretKey, nil
 }
 
 // UnmarshalAmino overrides Amino binary marshalling.
@@ -54,7 +59,7 @@ func (privKey *PrivKey) UnmarshalAmino(bz []byte) error {
 	if len(bz) != PrivKeySize {
 		return fmt.Errorf("invalid privkey size")
 	}
-	privKey.Key = bz
+	privKey.MiniSecretKey = bz
 
 	return nil
 }
@@ -75,7 +80,7 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 // It uses OS randomness in conjunction with the current global random seed
 // in tendermint/libs/common to generate the private key.
 func GenPrivKey() *PrivKey {
-	return &PrivKey{Key: tmsr25519.GenPrivKey().Bytes()}
+	return &PrivKey{MiniSecretKey: tmsr25519.GenPrivKey().Bytes()}
 }
 
 // GenPrivKeyFromSecret hashes the secret with SHA2, and uses
@@ -83,7 +88,7 @@ func GenPrivKey() *PrivKey {
 // NOTE: secret should be the output of a KDF like bcrypt,
 // if it's derived from user input.
 func GenPrivKeyFromSecret(secret []byte) *PrivKey {
-	return &PrivKey{Key: tmsr25519.GenPrivKeyFromSecret(secret).Bytes()}
+	return &PrivKey{MiniSecretKey: tmsr25519.GenPrivKeyFromSecret(secret).Bytes()}
 }
 
 //-------------------------------------
@@ -99,6 +104,11 @@ func (pubKey *PubKey) Address() crypto.Address {
 // Bytes returns the pubkey byte format.
 func (pubKey *PubKey) Bytes() []byte {
 	return pubKey.Key
+}
+
+// VerifySignature - verifies a signature
+func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
+	return tmsr25519.PubKey(pubKey.Key).VerifySignature(msg, sigStr)
 }
 
 func (pubKey *PubKey) String() string {

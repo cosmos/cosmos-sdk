@@ -97,7 +97,7 @@ func TestPrivKeyEquals(t *testing.T) {
 			"equals",
 			sr25519PrivKey,
 			&sr25519.PrivKey{
-				Key: sr25519PrivKey.Key,
+				MiniSecretKey: sr25519PrivKey.MiniSecretKey,
 			},
 			true,
 		},
@@ -176,7 +176,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 	tmPrivKey := tmsr25519.GenPrivKey()
 	tmPubKey := tmPrivKey.PubKey()
 	// Create our own keys, with the same private key as Tendermint's.
-	privKey := &sr25519.PrivKey{Key: []byte(tmPrivKey)}
+	privKey := &sr25519.PrivKey{MiniSecretKey: []byte(tmPrivKey)}
 	pubKey := privKey.PubKey().(*sr25519.PubKey)
 
 	testCases := []struct {

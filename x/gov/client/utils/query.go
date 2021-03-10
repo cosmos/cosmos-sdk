@@ -387,11 +387,13 @@ func QueryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 				subMsg = protoSubMsg
 			}
 
-			return types.Deposit{
-				ProposalId: proposalID,
-				Depositor:  subMsg.Proposer,
-				Amount:     subMsg.InitialDeposit,
-			}, nil
+			if subMsg != nil {
+				return types.Deposit{
+					ProposalId: proposalID,
+					Depositor:  subMsg.Proposer,
+					Amount:     subMsg.InitialDeposit,
+				}, nil
+			}
 		}
 	}
 

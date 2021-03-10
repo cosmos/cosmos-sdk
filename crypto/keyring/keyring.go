@@ -613,9 +613,10 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err er
 
 func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Config {
 	return keyring.Config{
-		ServiceName:      appName,
-		FileDir:          dir,
-		FilePasswordFunc: newRealPrompt(dir, buf),
+		ServiceName:              appName,
+		FileDir:                  dir,
+		KeychainTrustApplication: true,
+		FilePasswordFunc:         newRealPrompt(dir, buf),
 	}
 }
 

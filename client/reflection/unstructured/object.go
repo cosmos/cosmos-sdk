@@ -31,9 +31,13 @@ func (o Object) Marshal(desc protoreflect.MessageDescriptor) (*dynamicpb.Message
 				return nil, errTypeMismatch(desc, fieldDesc, interfaceValue)
 			}
 			pv = protoreflect.ValueOfBool(v)
-		// enum TODO
+		// enum
 		case protoreflect.EnumKind:
-
+			v, err := cast.ToInt32E(interfaceValue)
+			if err != nil {
+				return nil, errTypeMismatch(desc, fieldDesc, interfaceValue)
+			}
+			pv = protoreflect.ValueOfEnum((protoreflect.EnumNumber)(v))
 		// int32
 		case protoreflect.Int32Kind:
 			v, err := cast.ToInt32E(interfaceValue)

@@ -88,6 +88,9 @@ func (c *Client) Query(ctx context.Context, method string, request unstructured.
 	}
 
 	b, err := proto.Marshal(reqProto)
+	if err != nil {
+		return nil, err
+	}
 
 	tmResp, err := c.tmClient.ABCIQuery(ctx, method, b)
 	if err != nil {
@@ -96,7 +99,6 @@ func (c *Client) Query(ctx context.Context, method string, request unstructured.
 
 	resp = dynamicpb.NewMessage(desc.Response)
 	return resp, proto.Unmarshal(tmResp.Response.Value, resp)
-
 }
 
 func (c *Client) init() error {

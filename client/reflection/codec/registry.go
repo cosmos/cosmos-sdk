@@ -61,7 +61,9 @@ func (b *Registry) ImportedFiles() []string {
 func (b *Registry) Parse(rawDesc []byte) (fileDesc protoreflect.FileDescriptor, err error) {
 
 	rawDesc, err = tryUnzip(rawDesc)
-
+	if err != nil {
+		return nil, err
+	}
 	// we build a temporary descriptor whose purpose is to check for dependencies
 	// after the proto dependencies are resolved and registered we can build
 	// and register the file descriptor
@@ -78,9 +80,15 @@ func (b *Registry) Parse(rawDesc []byte) (fileDesc protoreflect.FileDescriptor, 
 		// process missing imports
 		imp := fileImports.Get(i)
 		_, err := b.files.FindFileByPath(imp.Path())
-		if err != nil && !errors.Is(err, protoregistry.NotFound) {
+		// if the file exist then skip the import
+		if err == nil {
+			continue
+		}
+		// if the error is not a not found one then fail
+		if !errors.Is(err, protoregistry.NotFound) {
 			return nil, fmt.Errorf("unrecognized error while processing imports: %s", err)
 		}
+
 		// check if we have set up a dependency fetcher
 		if b.dependencyFetcher == nil {
 			return nil, fmt.Errorf("file %s requires missing dependency %s: %w", tmpDesc.Path(), imp.Path(), ErrNoDependencyFetcher)
@@ -97,7 +105,8 @@ func (b *Registry) Parse(rawDesc []byte) (fileDesc protoreflect.FileDescriptor, 
 		}
 	}
 	// after we have registered the dependencies
-	// we rebuild the descriptor with the internal registry
+	// we rebuild the descriptor with the registry
+	// that contains the resolved dependencies
 	fileDesc, err = buildDescriptor(b.files, b.types, rawDesc)
 	if err != nil {
 		return fileDesc, err
@@ -151,5 +160,6 @@ func buildDescriptor(fileRegistry *protoregistry.Files, typesRegistry *protoregi
 	if err != nil {
 		return nil, err
 	}
+	// already registered
 	return existingFd, fmt.Errorf("%s: %w", existingFd.Path(), ErrFileRegistered)
 }

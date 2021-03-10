@@ -98,7 +98,6 @@ func (o Object) Marshal(desc protoreflect.MessageDescriptor) (*dynamicpb.Message
 				return nil, fmt.Errorf("descriptor %s: unable to unmarshal recursive type at field %s: %w", desc, fieldDesc, err)
 			}
 			pv = protoreflect.ValueOfMessage(msg.ProtoReflect())
-		// handle double
 		default:
 			return nil, fmt.Errorf("descriptor %s field %s unsupported type: %s", desc.FullName(), fieldDesc.FullName(), fieldDesc.Kind().String())
 		}

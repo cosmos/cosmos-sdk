@@ -34,6 +34,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v0.42.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.1) - 2021-03-10
+
+This release fixes security vulnerability identified in the simapp.
+
+
 ## [v0.42.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.0) - 2021-03-08
 
 **IMPORTANT**: This release contains an important security fix for all non Cosmos Hub chains running Stargate version of the Cosmos SDK (>0.40). Non-hub chains should not be using any version of the SDK in the v0.40.x or v0.41.x release series. See [#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) for more details.
@@ -102,7 +107,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * (x/ibc) [\#8266](https://github.com/cosmos/cosmos-sdk/issues/8266) Add amino JSON for IBC messages in order to support Ledger text signing.
-* (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks. 
+* (x/ibc) [\#8404](https://github.com/cosmos/cosmos-sdk/pull/8404) Reorder IBC `ChanOpenAck` and `ChanOpenConfirm` handler execution to perform core handler first, followed by application callbacks.
 
 ### Bug Fixes
 

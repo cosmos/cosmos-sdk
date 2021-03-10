@@ -96,13 +96,13 @@ information.
 The `test` backend is a password-less variation of the `file` backend. Keys are stored
 unencrypted on disk.
 
-**This backend is meant for testing purposes only and should never be used  in production environments**.
+**Provided for testing purposes only. The `test` backend is not recommended for use in production environments**.
 
 ### The `memory` backend
 
-The `memory` backend stores keys in memory. The keys are immediately deleted once the program has exited.
+The `memory` backend stores keys in memory. The keys are immediately deleted after the program has exited.
 
-**This backend is meant for testing purposes only and should never be used  in production environments**.
+**Provided for testing purposes only. The `memory` backend is not recommended for use in production environments**.
 
 ## Adding keys to the keyring
 

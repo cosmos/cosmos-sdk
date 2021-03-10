@@ -104,6 +104,14 @@ func (app *BaseApp) SetAppVersion(v string) {
 	app.appVersion = v
 }
 
+type ProtocolManager interface {
+	SetProtocolVersion(uint64)
+}
+
+func (app *BaseApp) SetProtocolVersion(v uint64) {
+	app.protocolVersion = v
+}
+
 func (app *BaseApp) SetDB(db dbm.DB) {
 	if app.sealed {
 		panic("SetDB() on sealed BaseApp")

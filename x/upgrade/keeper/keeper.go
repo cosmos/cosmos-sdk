@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -30,16 +31,18 @@ type Keeper struct {
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
 	versionManager     module.VersionManager
+	protoManager       baseapp.ProtocolManager
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, pm baseapp.ProtocolManager) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
+		protoManager:       pm,
 	}
 }
 
@@ -55,16 +58,20 @@ func (k *Keeper) SetVersionManager(vm module.VersionManager) {
 }
 
 func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
-	pVersionStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.ProtocolVersionByte})
+	store := ctx.KVStore(k.storeKey)
 	versionBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(versionBytes, v)
-	pVersionStore.Set([]byte("protocol"), versionBytes)
+	store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
 }
 
 // GetAppVersion gets the protocol version
 func (k Keeper) GetProtocolVersion(ctx sdk.Context) uint64 {
-	pVersionStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.ProtocolVersionByte})
-	pvBytes := pVersionStore.Get([]byte("protocol"))
+	store := ctx.KVStore(k.storeKey)
+	ok := store.Has([]byte{types.ProtocolVersionByte})
+	if !ok {
+		return 0
+	}
+	pvBytes := store.Get([]byte{types.ProtocolVersionByte})
 	protocolVersion := binary.LittleEndian.Uint64(pvBytes)
 
 	return protocolVersion
@@ -250,9 +257,11 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 	k.SetConsensusVersions(ctx)
 
+	nextProtoVersion := k.GetProtocolVersion(ctx) + 1
 	// increment the protocol version in state
-	currentProtocolVersion := k.GetProtocolVersion(ctx)
-	k.setProtocolVersion(ctx, currentProtocolVersion+1)
+	k.setProtocolVersion(ctx, nextProtoVersion)
+
+	k.protoManager.SetProtocolVersion(nextProtoVersion)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

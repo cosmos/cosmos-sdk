@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
-		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir,
+		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp,
 	)
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -239,6 +239,31 @@ func (s *KeeperTestSuite) TestMigrations() {
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	migmap := s.app.UpgradeKeeper.GetConsensusVersions(s.ctx)
 	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), migmap["bank"])
+}
+
+func (s *KeeperTestSuite) TestProtocolVersion() {
+	mockVM := MockVersionManager{}
+	s.app.UpgradeKeeper.SetVersionManager(mockVM)
+
+	pVersion := s.app.UpgradeKeeper.GetProtocolVersion(s.ctx)
+	s.Require().Equal(uint64(0), pVersion)
+
+	s.app.UpgradeKeeper.SetConsensusVersions(s.ctx)
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, _ module.MigrationMap) error { return nil })
+	dummyPlan := types.Plan{
+		Name: "dummy",
+		Info: "some text here",
+		Time: s.ctx.BlockTime().Add(time.Hour),
+	}
+
+	s.app.UpgradeKeeper.SetVersionManager(s.app)
+	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+
+	nextVersion := s.app.UpgradeKeeper.GetProtocolVersion(s.ctx)
+	s.Require().Equal(pVersion+1, nextVersion)
+
+	baseappVer := s.app.BaseApp.ProtocolVersion()
+	s.Require().Equal(nextVersion, baseappVer)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

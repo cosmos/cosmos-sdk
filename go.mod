@@ -4,6 +4,7 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	github.com/99designs/keyring v1.1.6
+	github.com/ChainSafe/go-schnorrkel v0.0.0-20210222182958-bd440c890782
 	github.com/armon/go-metrics v0.3.6
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.21.0-beta

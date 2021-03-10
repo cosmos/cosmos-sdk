@@ -1,9 +1,11 @@
 package hd
 
 import (
+	goschnorrkel "github.com/ChainSafe/go-schnorrkel"
 	bip39 "github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/sr25519"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
@@ -25,6 +27,8 @@ const (
 var (
 	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
 	Secp256k1 = secp256k1Algo{}
+	// Sr25519 represents the Sr25519Type signature system.
+	Sr25519 = sr25519Algo{}
 )
 
 type DeriveFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
@@ -67,5 +71,27 @@ func (s secp256k1Algo) Generate() GenerateFn {
 		copy(bzArr, bz)
 
 		return &secp256k1.PrivKey{Key: bzArr}
+	}
+}
+
+type sr25519Algo struct {
+}
+
+func (s sr25519Algo) Name() PubKeyType {
+	return Sr25519Type
+}
+
+// Derive derives and returns the sr25519 private key for the given seed and HD path.
+func (s sr25519Algo) Derive() DeriveFn {
+	return func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
+		seed, err := goschnorrkel.SeedFromMnemonic(mnemonic, bip39Passphrase)
+		return seed[:], err
+	}
+}
+
+// Generate generates a sr25519 private key from the given bytes.
+func (s sr25519Algo) Generate() GenerateFn {
+	return func(bz []byte) types.PrivKey {
+		return &sr25519.PrivKey{Key: bz}
 	}
 }

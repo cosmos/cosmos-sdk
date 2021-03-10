@@ -194,6 +194,10 @@
     - [PrivKey](#cosmos.crypto.secp256r1.PrivKey)
     - [PubKey](#cosmos.crypto.secp256r1.PubKey)
   
+- [cosmos/crypto/sr25519/keys.proto](#cosmos/crypto/sr25519/keys.proto)
+    - [PrivKey](#cosmos.crypto.sr25519.PrivKey)
+    - [PubKey](#cosmos.crypto.sr25519.PubKey)
+  
 - [cosmos/distribution/v1beta1/distribution.proto](#cosmos/distribution/v1beta1/distribution.proto)
     - [CommunityPoolSpendProposal](#cosmos.distribution.v1beta1.CommunityPoolSpendProposal)
     - [CommunityPoolSpendProposalWithDeposit](#cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit)
@@ -2948,6 +2952,52 @@ PubKey defines a secp256r1 ECDSA public key.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [bytes](#bytes) |  | Point on secp256r1 curve in a compressed representation as specified in section 4.3.6 of ANSI X9.62: https://webstore.ansi.org/standards/ascx9/ansix9621998 |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/sr25519/keys.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/sr25519/keys.proto
+
+
+
+<a name="cosmos.crypto.sr25519.PrivKey"></a>
+
+### PrivKey
+PrivKey defines a sr25519 private key.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.sr25519.PubKey"></a>
+
+### PubKey
+PubKey defines a sr25519 public key
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [bytes](#bytes) |  |  |
 
 
 

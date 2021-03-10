@@ -145,7 +145,6 @@ slash_fraction_downtime: "0.010000000000000000"`,
 
 func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
 	val := s.network.Validators[0]
-
 	testCases := []struct {
 		name         string
 		args         []string

@@ -437,7 +437,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(string(infoKey(uid)))
+	err = ks.db.Remove(infoKey(uid))
 	if err != nil {
 		return err
 	}
@@ -452,10 +452,9 @@ func (ks keystore) KeyByAddress(address sdk.Address) (Info, error) {
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
 	}
-
-	return ks.Key(string(ik.Data))
+	return ks.key(string(ik.Data))
 }
 
 func wrapKeyNotFound(err error, msg string) error {
@@ -531,7 +530,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 	return info, mnemonic, nil
 }
 
-func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (Info, error) {
+func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (Info, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
@@ -551,24 +550,26 @@ func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase strin
 		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
 	}
 
-	return ks.writeLocalKey(uid, privKey, algo.Name())
+	return ks.writeLocalKey(name, privKey, algo.Name())
 }
 
 func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 	return ks.options.SupportedAlgos.Contains(algo)
 }
 
-func (ks keystore) Key(uid string) (Info, error) {
-	key := infoKey(uid)
-
-	bs, err := ks.db.Get(string(key))
+func (ks keystore) key(infoKey string) (Info, error) {
+	bs, err := ks.db.Get(infoKey)
 	if err != nil {
-		return nil, wrapKeyNotFound(err, uid)
+		return nil, wrapKeyNotFound(err, infoKey)
 	}
 	if len(bs.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 	return unmarshalInfo(bs.Data)
+}
+
+func (ks keystore) Key(uid string) (Info, error) {
+	return ks.key(infoKey(uid))
 }
 
 // SupportedAlgorithms returns the keystore Options' supported signing algorithm.
@@ -750,16 +751,15 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKey
 }
 
 func (ks keystore) writeInfo(info Info) error {
-	// write the info by key
-	key := infoKey(info.GetName())
+	key := infoKeyBz(info.GetName())
 	serializedInfo := marshalInfo(info)
 
 	exists, err := ks.existsInDb(info)
-	if exists {
-		return errors.New("public key already exist in keybase")
-	}
 	if err != nil {
 		return err
+	}
+	if exists {
+		return errors.New("public key already exist in keybase")
 	}
 
 	err = ks.db.Set(keyring.Item{
@@ -781,6 +781,8 @@ func (ks keystore) writeInfo(info Info) error {
 	return nil
 }
 
+// existsInDb returns true if key is in DB. Error is returned only when we have error
+// different thant ErrKeyNotFound
 func (ks keystore) existsInDb(info Info) (bool, error) {
 	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
 		return true, nil // address lookup succeeds - info exists

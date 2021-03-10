@@ -75,8 +75,10 @@ keeper <-- validator : validator, addedShares
 keeper -> store : update validator state
 keeper -> keeper: calculate new validator's power
 note left : Number of tokens divided by PowerReduction (default: 1,000,000,000,000,000,000 = 10^18)
-keeper -> store : update validator's power in power index
-note left : the power index has entries shaped as 35 || power || address.\nThis makes the validators sorted by power, high to low.
+alt validator is not jailed
+    keeper -> store : update validator's power in power index
+    note left : the power index has entries shaped as 35 || power || address.\nThis makes the validators sorted by power, high to low.
+end
 
 keeper -> keeper : AfterDelegationModified hook
 note left: Calls initializeDelegation\nStore the previous period\nCalculate the number of tokens from shares\n(shares the delegator has) * (tokens in delegation object)/(total tokens delegated to the validator)\nStore delegation starting info.

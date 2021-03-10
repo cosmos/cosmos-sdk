@@ -7,7 +7,7 @@ import (
 )
 
 // tmMultisig implements a K of N threshold multisig. It is used for
-// Amino marshaling of LegacyAminoPubKey (see below for details).
+// Amino JSON marshaling of LegacyAminoPubKey (see below for details).
 //
 // This struct is copy-pasted from:
 // https://github.com/tendermint/tendermint/blob/v0.33.9/crypto/multisig/threshold_pubkey.go
@@ -18,8 +18,10 @@ import (
 // amino marshaling to be breaking: amino marshals `uint32` as a JSON number,
 // and `uint` as a JSON string.
 //
-// In this file, we're overriding LegacyAminoPubKey's default Amino marshaling
-// by using this struct.
+// In this file, we're overriding LegacyAminoPubKey's default JSON Amino
+// marshaling by using this struct. Please note that we are NOT overriding the
+// Amino binary marshaling, as that _might_ introduce breaking changes in the
+// keyring, where multisigs are amino-binary-encoded.
 //
 // ref: https://github.com/cosmos/cosmos-sdk/issues/8776
 type tmMultisig struct {
@@ -59,23 +61,6 @@ func tmToProto(tmPk tmMultisig) (*LegacyAminoPubKey, error) {
 		Threshold: uint32(tmPk.K),
 		PubKeys:   pks,
 	}, nil
-}
-
-// MarshalAmino overrides amino binary unmarshaling.
-func (m LegacyAminoPubKey) MarshalAmino() (tmMultisig, error) {
-	return protoToTm(&m)
-}
-
-// UnmarshalAmino overrides amino binary unmarshaling.
-func (m *LegacyAminoPubKey) UnmarshalAmino(tmPk tmMultisig) error {
-	protoPk, err := tmToProto(tmPk)
-	if err != nil {
-		return err
-	}
-
-	*m = *protoPk
-
-	return nil
 }
 
 // MarshalAminoJSON overrides amino JSON unmarshaling.

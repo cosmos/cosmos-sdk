@@ -2797,6 +2797,7 @@ BREAKING CHANGES
 
 DEPRECATED
 * [cli] Deprecated `--name` flag in commands that send txs, in favor of `--from`
+* [upgrade] Deprecated time based upgrades.
 
 FEATURES
 * [x/gov] Implemented MVP

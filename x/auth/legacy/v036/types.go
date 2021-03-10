@@ -2,8 +2,6 @@
 package v036
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
 )
 
@@ -19,8 +17,4 @@ type (
 
 func NewGenesisState(params v034auth.Params) GenesisState {
 	return GenesisState{params}
-}
-
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cryptocodec.RegisterCrypto(cdc)
 }

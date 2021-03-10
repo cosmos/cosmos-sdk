@@ -2,8 +2,6 @@
 package v034
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,7 +23,3 @@ type (
 		Params        Params    `json:"params"`
 	}
 )
-
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cryptocodec.RegisterCrypto(cdc)
-}

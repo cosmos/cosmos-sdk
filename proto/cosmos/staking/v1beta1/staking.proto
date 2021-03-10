@@ -280,8 +280,10 @@ message Params {
   uint32 max_entries = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
   // historical_entries is the number of historical entries to persist.
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
-  string bond_denom         = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
-  int64  epoch_interval     = 6 [(gogoproto.moretags) = "yaml:\"epoch_interval\""];
+  // bond_denom defines the bondable coin denomination.
+  string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  // epoch_interval defines the length of a staking epoch in blocks
+  int64 epoch_interval = 6 [(gogoproto.moretags) = "yaml:\"epoch_interval\""];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

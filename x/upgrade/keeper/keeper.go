@@ -50,6 +50,10 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
+// SetVersionManager sets a VersionManager for the keeper to
+// gain access to modules and their consensus versions.
+// This MUST be set in app.go, or versions will not be committed
+// to state.
 func (k *Keeper) SetVersionManager(vm module.VersionManager) {
 	k.versionManager = vm
 }

@@ -17,6 +17,7 @@ var _ cryptotypes.PrivKey = &PrivKey{}
 var _ codec.AminoMarshaler = &PrivKey{}
 
 const (
+	PubKeySize  = 32
 	PrivKeySize = 32
 	keyType     = "sr25519"
 	PrivKeyName = "tendermint/PrivKeySr25519"
@@ -89,10 +90,6 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 var _ cryptotypes.PubKey = &PubKey{}
 var _ codec.AminoMarshaler = &PubKey{}
-
-// PubKeySize is comprised of 32 bytes for one field element
-// (the x-coordinate), plus one byte for the parity of the y-coordinate.
-const PubKeySize = 33
 
 // Address returns a Bitcoin style addresses: RIPEMD160(SHA256(pubkey))
 func (pubKey *PubKey) Address() crypto.Address {

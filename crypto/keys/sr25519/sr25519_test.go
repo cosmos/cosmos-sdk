@@ -133,14 +133,14 @@ func TestMarshalAmino(t *testing.T) {
 			"sr25519 private key",
 			privKey,
 			&sr25519.PrivKey{},
-			append([]byte{64}, privKey.Bytes()...), // Length-prefixed.
+			append([]byte{sr25519.PrivKeySize}, privKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(privKey.Bytes()) + "\"",
 		},
 		{
 			"sr25519 public key",
 			pubKey,
 			&sr25519.PubKey{},
-			append([]byte{32}, pubKey.Bytes()...), // Length-prefixed.
+			append([]byte{sr25519.PubKeySize}, pubKey.Bytes()...), // Length-prefixed.
 			"\"" + base64.StdEncoding.EncodeToString(pubKey.Bytes()) + "\"",
 		},
 	}

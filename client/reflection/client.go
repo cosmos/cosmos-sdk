@@ -82,7 +82,7 @@ func (c *Client) Query(ctx context.Context, method string, request unstructured.
 		return nil, fmt.Errorf("unknown method: %s", method)
 	}
 
-	reqProto, err := request.MarshalFromDescriptor(desc.Request)
+	reqProto, err := request.Marshal(desc.Request)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal request to proto message: %w", err)
 	}

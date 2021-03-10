@@ -87,7 +87,7 @@ func (c *Client) SignedTx(ctx context.Context, txBytes []byte, signatures []*typ
 		sig := signing.SignatureV2{
 			PubKey: pubKey,
 			Data: &signing.SingleSignatureData{
-				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, //nolint:staticcheck
 				Signature: signature.Bytes,
 			},
 			Sequence: accountInfo.GetSequence(),
@@ -139,7 +139,7 @@ func (c *Client) ConstructionPayload(_ context.Context, request *types.Construct
 	// needs the signer infos to be set before hand but rosetta doesn't have a way
 	// to do this yet. To be revisited in future versions of sdk and rosetta
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON) //nolint:staticcheck
 	}
 
 	signerData := authsigning.SignerData{

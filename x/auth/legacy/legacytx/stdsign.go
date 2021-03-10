@@ -121,7 +121,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 	multiPK, ok := key.(multisig.PubKey)
 	if !ok {
 		return &signing.SingleSignatureData{
-			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, // nolint: staticcheck
+			SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: sig,
 		}, nil
 	}

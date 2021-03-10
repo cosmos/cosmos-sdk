@@ -790,7 +790,7 @@ func (ks keystore) existsInDb(info Info) (bool, error) {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(string(infoKey(info.GetName()))); err == nil {
+	if _, err := ks.db.Get(infoKey(info.GetName())); err == nil {
 		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns

@@ -78,12 +78,3 @@ func printTextInfos(w io.Writer, kos []cryptokeyring.KeyOutput) {
 	}
 	fmt.Fprintln(w, string(out))
 }
-
-func printInfo(w io.Writer, info cryptokeyring.Info, bechKeyOut bechKeyOutFn) {
-	ko, err := bechKeyOut(info)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Fprintln(w, ko.Address)
-}

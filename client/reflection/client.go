@@ -1,11 +1,9 @@
 package reflection
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
-	"io/ioutil"
 
 	tmrpc "github.com/tendermint/tendermint/rpc/client"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -13,8 +11,9 @@ import (
 	grpcreflectionv1alpha "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/runtime/protoimpl"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	"github.com/cosmos/cosmos-sdk/client/reflection/codec"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/client/reflection/unstructured"
@@ -28,6 +27,39 @@ type Client struct {
 
 	msgs     map[string]ServiceMsg
 	queriers methodsMap
+
+	reg *codec.Registry
+}
+
+func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
+	conn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+
+	sdkReflect := reflection.NewReflectionServiceClient(conn)
+	fetcher := dependencyFetcher{client: sdkReflect}
+	grpcReflect := grpcreflectionv1alpha.NewServerReflectionClient(conn)
+
+	tmRpc, err := tmhttp.New(tmEndpoint, "")
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{
+		sdkReflect:  sdkReflect,
+		grpcReflect: grpcReflect,
+		tmClient:    tmRpc,
+		msgs:        nil,
+		queriers:    make(methodsMap),
+		reg:         codec.NewFetcherRegistry(fetcher),
+	}
+	err = c.init()
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func (c *Client) ListQueries() []Queries {
@@ -65,35 +97,6 @@ func (c *Client) Query(ctx context.Context, method string, request unstructured.
 	resp = dynamicpb.NewMessage(desc.Response)
 	return resp, proto.Unmarshal(tmResp.Response.Value, resp)
 
-}
-
-func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
-	conn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-
-	sdkReflect := reflection.NewReflectionServiceClient(conn)
-	grpcReflect := grpcreflectionv1alpha.NewServerReflectionClient(conn)
-
-	tmRpc, err := tmhttp.New(tmEndpoint, "")
-	if err != nil {
-		return nil, err
-	}
-
-	c := &Client{
-		sdkReflect:  sdkReflect,
-		grpcReflect: grpcReflect,
-		tmClient:    tmRpc,
-		msgs:        nil,
-		queriers:    make(methodsMap),
-	}
-	err = c.init()
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
 }
 
 func (c *Client) init() error {
@@ -134,8 +137,8 @@ func (c *Client) init() error {
 
 func (c *Client) buildQueries(rawDescs [][]byte) error {
 	for _, rawDesc := range rawDescs {
-		fileDesc, err := decodeDescriptor(rawDesc)
-		if err != nil {
+		fileDesc, err := c.reg.Parse(rawDesc)
+		if err != nil && !errors.Is(err, codec.ErrFileRegistered) {
 			return err
 		}
 		queries, err := queryFromFileDesc(fileDesc)
@@ -150,36 +153,6 @@ func (c *Client) buildQueries(rawDescs [][]byte) error {
 	}
 
 	return nil
-}
-
-func decodeDescriptor(rawDesc []byte) (protoreflect.FileDescriptor, error) {
-	// build is used multiple times and needs a recover because the protoimpl builder
-	// expects the bytes provided to be valid proto files, which cannot always assume
-	// to be true.
-	build := func(rawDesc []byte) (desc protoreflect.FileDescriptor, err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("unable to build descriptor: %#v", r)
-			}
-		}()
-
-		builder := protoimpl.DescBuilder{
-			RawDescriptor: rawDesc,
-		}
-		return builder.Build().File, nil
-	}
-	buf := bytes.NewBuffer(rawDesc)
-	unzip, err := gzip.NewReader(buf)
-	if err != nil {
-		return build(rawDesc)
-	}
-
-	unzippedDesc, err := ioutil.ReadAll(unzip)
-	if err != nil {
-		return nil, err
-	}
-
-	return build(unzippedDesc)
 }
 
 func queryFromFileDesc(file protoreflect.FileDescriptor) (methodsMap, error) {

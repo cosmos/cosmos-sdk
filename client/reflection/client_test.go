@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"google.golang.org/protobuf/encoding/protojson"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/client/reflection/unstructured"
 )
@@ -60,14 +62,31 @@ func TestClient_Query(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Balance", unstructured.Object{
-		"address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
-		"denom":   "stake",
+	t.Run("bank test", func(t *testing.T) {
+		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Balance", unstructured.Object{
+			"address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
+			"denom":   "stake",
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log(resp)
+
+		b, err := protojson.Marshal(resp)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("%s", b)
 	})
 
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Run("params", func(t *testing.T) {
+		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Params", unstructured.Object{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Log(resp)
+	})
 
-	t.Log(resp)
 }

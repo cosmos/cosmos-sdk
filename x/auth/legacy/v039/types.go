@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v034auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v034"
@@ -415,7 +416,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 }
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	v034auth.RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 	cdc.RegisterInterface((*v038auth.GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*v038auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/Account", nil)

@@ -3,12 +3,8 @@ package v034
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 const (
@@ -30,30 +26,6 @@ type (
 	}
 )
 
-// PubKeyMultisigThreshold implements a K of N threshold multisig.
-// This struct is copy-pasted from:
-// https://github.com/tendermint/tendermint/blob/v0.33.9/crypto/multisig/threshold_pubkey.go
-type PubKeyMultisigThreshold struct {
-	K       uint            `json:"threshold"`
-	PubKeys []crypto.PubKey `json:"pubkeys"`
-}
-
-func RegisterCrypto(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*cryptotypes.PubKey)(nil), nil)
-	cdc.RegisterConcrete(&ed25519.PubKey{},
-		ed25519.PubKeyName, nil)
-	cdc.RegisterConcrete(&secp256k1.PubKey{},
-		secp256k1.PubKeyName, nil)
-	cdc.RegisterConcrete(&PubKeyMultisigThreshold{},
-		kmultisig.PubKeyAminoRoute, nil)
-
-	cdc.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
-	cdc.RegisterConcrete(&ed25519.PrivKey{}, //nolint:staticcheck
-		ed25519.PrivKeyName, nil)
-	cdc.RegisterConcrete(&secp256k1.PrivKey{},
-		secp256k1.PrivKeyName, nil)
-}
-
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	RegisterCrypto(cdc)
+	cryptocodec.RegisterCrypto(cdc)
 }

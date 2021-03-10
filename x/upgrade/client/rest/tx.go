@@ -31,7 +31,6 @@ type PlanRequest struct {
 	Deposit       sdk.Coins    `json:"deposit" yaml:"deposit"`
 	UpgradeName   string       `json:"upgrade_name" yaml:"upgrade_name"`
 	UpgradeHeight int64        `json:"upgrade_height" yaml:"upgrade_height"`
-	UpgradeTime   string       `json:"upgrade_time" yaml:"upgrade_time"`
 	UpgradeInfo   string       `json:"upgrade_info" yaml:"upgrade_info"`
 }
 

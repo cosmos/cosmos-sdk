@@ -26,7 +26,7 @@ func TestContentAccessors(t *testing.T) {
 	}{
 		"upgrade": {
 			p: types.NewSoftwareUpgradeProposal("Title", "desc", types.Plan{
-				Name:   "due_time",
+				Name:   "due_height",
 				Info:   "https://foo.bar",
 				Height: 99999999999,
 			}),

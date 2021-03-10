@@ -1,7 +1,7 @@
 package hd
 
 import (
-	goschnorrkel "github.com/ChainSafe/go-schnorrkel"
+	schnorrkel "github.com/ChainSafe/go-schnorrkel"
 	bip39 "github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -84,7 +84,7 @@ func (s sr25519Algo) Name() PubKeyType {
 // Derive derives and returns the sr25519 private key for the given seed and HD path.
 func (s sr25519Algo) Derive() DeriveFn {
 	return func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
-		seed, err := goschnorrkel.SeedFromMnemonic(mnemonic, bip39Passphrase)
+		seed, err := schnorrkel.SeedFromMnemonic(mnemonic, bip39Passphrase)
 		return seed[:], err
 	}
 }

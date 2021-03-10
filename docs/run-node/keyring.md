@@ -38,7 +38,7 @@ client.
 designed to meet users' most common needs and provide them with a comfortable
 experience without compromising on security.
 
-In headless environments, it is recommended to use either the `file` or `pass` backends.
+The recommended backends for headless environments are `file` and `pass`.
 
 ### The `file` backend
 

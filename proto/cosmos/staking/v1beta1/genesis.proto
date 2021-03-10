@@ -45,7 +45,6 @@ message GenesisState {
 
   // current epoch number at the time of genesis
   int64 epoch_number = 10;
-
 }
 
 // LastValidatorPower required for validator set update logic.

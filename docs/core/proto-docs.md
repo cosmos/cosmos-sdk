@@ -379,6 +379,7 @@
   
 - [cosmos/slashing/v1beta1/slashing.proto](#cosmos/slashing/v1beta1/slashing.proto)
     - [Params](#cosmos.slashing.v1beta1.Params)
+    - [SlashEvent](#cosmos.slashing.v1beta1.SlashEvent)
     - [ValidatorSigningInfo](#cosmos.slashing.v1beta1.ValidatorSigningInfo)
   
 - [cosmos/slashing/v1beta1/genesis.proto](#cosmos/slashing/v1beta1/genesis.proto)
@@ -438,6 +439,8 @@
     - [LastValidatorPower](#cosmos.staking.v1beta1.LastValidatorPower)
   
 - [cosmos/staking/v1beta1/query.proto](#cosmos/staking/v1beta1/query.proto)
+    - [QueryBufferedValidatorsRequest](#cosmos.staking.v1beta1.QueryBufferedValidatorsRequest)
+    - [QueryBufferedValidatorsResponse](#cosmos.staking.v1beta1.QueryBufferedValidatorsResponse)
     - [QueryDelegationRequest](#cosmos.staking.v1beta1.QueryDelegationRequest)
     - [QueryDelegationResponse](#cosmos.staking.v1beta1.QueryDelegationResponse)
     - [QueryDelegatorDelegationsRequest](#cosmos.staking.v1beta1.QueryDelegatorDelegationsRequest)
@@ -5360,6 +5363,26 @@ Params represents the parameters used for by the slashing module.
 
 
 
+<a name="cosmos.slashing.v1beta1.SlashEvent"></a>
+
+### SlashEvent
+SlashEvent represents a singular slash event that is queued in order to be
+executed at a later time (i.e. end of an epoch)
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [bytes](#bytes) |  |  |
+| `validator_voting_percent` | [bytes](#bytes) |  |  |
+| `slash_percent` | [bytes](#bytes) |  |  |
+| `distribution_height` | [int64](#int64) |  |  |
+| `validator_power` | [int64](#int64) |  |  |
+
+
+
+
+
+
 <a name="cosmos.slashing.v1beta1.ValidatorSigningInfo"></a>
 
 ### ValidatorSigningInfo
@@ -5408,6 +5431,7 @@ GenesisState defines the slashing module's genesis state.
 | `params` | [Params](#cosmos.slashing.v1beta1.Params) |  | params defines all the paramaters of related to deposit. |
 | `signing_infos` | [SigningInfo](#cosmos.slashing.v1beta1.SigningInfo) | repeated | signing_infos represents a map between validator addresses and their signing infos. |
 | `missed_blocks` | [ValidatorMissedBlocks](#cosmos.slashing.v1beta1.ValidatorMissedBlocks) | repeated | signing_infos represents a map between validator addresses and their missed blocks. |
+| `buffered_msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated | buffered_msgs represents messages that are queued for execution at the end of a staking epoch |
 
 
 
@@ -5899,7 +5923,8 @@ Params defines the parameters for the staking module.
 | `max_validators` | [uint32](#uint32) |  | max_validators is the maximum number of validators. |
 | `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
 | `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
-| `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
+| `bond_denom` | [string](#string) |  |  |
+| `epoch_interval` | [int64](#int64) |  |  |
 
 
 
@@ -6129,6 +6154,8 @@ GenesisState defines the staking module's genesis state.
 | `unbonding_delegations` | [UnbondingDelegation](#cosmos.staking.v1beta1.UnbondingDelegation) | repeated | unbonding_delegations defines the unbonding delegations active at genesis. |
 | `redelegations` | [Redelegation](#cosmos.staking.v1beta1.Redelegation) | repeated | redelegations defines the redelegations active at genesis. |
 | `exported` | [bool](#bool) |  |  |
+| `buffered_msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated | added newly added queues |
+| `epoch_number` | [int64](#int64) |  | current epoch number at the time of genesis |
 
 
 
@@ -6164,6 +6191,38 @@ LastValidatorPower required for validator set update logic.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/staking/v1beta1/query.proto
+
+
+
+<a name="cosmos.staking.v1beta1.QueryBufferedValidatorsRequest"></a>
+
+### QueryBufferedValidatorsRequest
+QueryBufferedValidatorsRequest is request type for the Query/BufferedValidators RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `status` | [string](#string) |  | status enables to query for validators matching a given status. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryBufferedValidatorsResponse"></a>
+
+### QueryBufferedValidatorsResponse
+QueryBufferedValidatorsResponse is response type for the Query/BufferedValidators RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `validators` | [Validator](#cosmos.staking.v1beta1.Validator) | repeated | validators contains all the queried validators. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
 
 
 
@@ -6641,6 +6700,7 @@ Query defines the gRPC querier service.
 | `HistoricalInfo` | [QueryHistoricalInfoRequest](#cosmos.staking.v1beta1.QueryHistoricalInfoRequest) | [QueryHistoricalInfoResponse](#cosmos.staking.v1beta1.QueryHistoricalInfoResponse) | HistoricalInfo queries the historical info for given height. | GET|/cosmos/staking/v1beta1/historical_info/{height}|
 | `Pool` | [QueryPoolRequest](#cosmos.staking.v1beta1.QueryPoolRequest) | [QueryPoolResponse](#cosmos.staking.v1beta1.QueryPoolResponse) | Pool queries the pool info. | GET|/cosmos/staking/v1beta1/pool|
 | `Params` | [QueryParamsRequest](#cosmos.staking.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.staking.v1beta1.QueryParamsResponse) | Parameters queries the staking parameters. | GET|/cosmos/staking/v1beta1/params|
+| `BufferedValidators` | [QueryBufferedValidatorsRequest](#cosmos.staking.v1beta1.QueryBufferedValidatorsRequest) | [QueryBufferedValidatorsResponse](#cosmos.staking.v1beta1.QueryBufferedValidatorsResponse) | this could return current estimation of next validator set | GET|/cosmos/staking/v1beta1/validators|
 
  <!-- end services -->
 

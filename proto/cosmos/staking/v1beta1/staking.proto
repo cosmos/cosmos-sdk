@@ -280,7 +280,7 @@ message Params {
   uint32 max_entries = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
   // historical_entries is the number of historical entries to persist.
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
-  string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  string bond_denom         = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
   int64  epoch_interval     = 6 [(gogoproto.moretags) = "yaml:\"epoch_interval\""];
 }
 

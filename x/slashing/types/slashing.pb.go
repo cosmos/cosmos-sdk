@@ -180,6 +180,8 @@ func (m *Params) GetDowntimeJailDuration() time.Duration {
 	return 0
 }
 
+// SlashEvent represents a singular slash event that is queued in order to be
+// executed at a later time (i.e. end of an epoch)
 type SlashEvent struct {
 	Address                github_com_cosmos_cosmos_sdk_types.ValAddress `protobuf:"bytes,1,opt,name=address,proto3,casttype=github.com/cosmos/cosmos-sdk/types.ValAddress" json:"address,omitempty" yaml:"address"`
 	ValidatorVotingPercent github_com_cosmos_cosmos_sdk_types.Dec        `protobuf:"bytes,2,opt,name=validator_voting_percent,json=validatorVotingPercent,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"validator_voting_percent" yaml:"validator_voting_percent"`
@@ -1260,10 +1262,7 @@ func (m *SlashEvent) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSlashing
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSlashing
 			}
 			if (iNdEx + skippy) > l {

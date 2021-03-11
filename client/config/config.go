@@ -36,6 +36,36 @@ type ClientConfig struct {
 	Trace          bool   `mapstructure:"trace" json:"trace"`
 }
 
+// TODO Validate values in setters
+func (c *ClientConfig) SetChainID(chainID string) {
+	c.ChainID = chainID
+}
+
+func (c *ClientConfig) SetKeyringBackend(keyringBackend string) {
+	c.KeyringBackend = keyringBackend
+}
+
+func (c *ClientConfig) SetOutput(output string) {
+	c.Output = output
+}
+
+func (c *ClientConfig) SetNode(node string) {
+	c.Node = node
+}
+
+func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
+	c.BroadcastMode = broadcastMode
+}
+
+func (c *ClientConfig) SetTrace(trace string) error {
+	boolVal, err := strconv.ParseBool(trace)
+	if err != nil {
+		return err
+	}
+	c.Trace = boolVal
+	return nil
+}
+
 func DefaultClientConfig() *ClientConfig {
 	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode, trace}
 }
@@ -52,8 +82,6 @@ func Cmd(defaultCLIHome string) *cobra.Command {
 
 	cmd.Flags().String(flags.FlagHome, defaultCLIHome,
 		"set client's home directory for configuration")
-	//	cmd.Flags().Bool(flagGet, false,
-	//		"print configuration value or its default if unset")
 	return cmd
 }
 
@@ -105,29 +133,25 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 	case 2:
 		// it's set
-		// TODO impement method for set
-		// TODO implement setters
 
 		key, value := args[0], args[1]
 
 		switch key {
 		case flags.FlagChainID:
-			cliConfig.ChainID = value
+			cliConfig.SetChainID(value)
 		case flags.FlagKeyringBackend:
-			cliConfig.KeyringBackend = value
+			cliConfig.SetKeyringBackend(value)
 		case tmcli.OutputFlag:
-			cliConfig.Output = value
+			cliConfig.SetOutput(value)
 		case flags.FlagNode:
-			cliConfig.Node = value
+			cliConfig.SetNode(value)
 		case flags.FlagBroadcastMode:
-			cliConfig.BroadcastMode = value
+			cliConfig.SetBroadcastMode(value)
 		case "trace":
-			boolVal, err := strconv.ParseBool(value)
-			if err != nil {
+			if err := cliConfig.SetTrace(value); err != nil {
 				fmt.Fprintf(os.Stderr, "Unable to parse value to bool, err: %v\n", err)
 				return err
 			}
-			cliConfig.Trace = boolVal
 		default:
 			return errUnknownConfigKey(key)
 		}

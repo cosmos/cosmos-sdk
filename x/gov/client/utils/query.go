@@ -40,7 +40,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 	var deposits []types.Deposit
 
 	// initial deposit was submitted with proposal, so must be queried separately
-	initialDeposit, err := QueryInitialDepositByTxQuery(clientCtx, params.ProposalID)
+	initialDeposit, err := queryInitialDepositByTxQuery(clientCtx, params.ProposalID)
 	if err != nil {
 		return nil, err
 	}
@@ -356,9 +356,9 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
 }
 
-// QueryInitialDepositByTxQuery will query for a initial deposit of a governance proposal by
+// queryInitialDepositByTxQuery will query for a initial deposit of a governance proposal by
 // ID.
-func QueryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (types.Deposit, error) {
+func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (types.Deposit, error) {
 	searchResult, err := combineEvents(
 		clientCtx, defaultPage,
 		// Query old Msgs

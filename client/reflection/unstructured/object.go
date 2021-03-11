@@ -78,6 +78,13 @@ func interfaceToProtoValue(interfaceValue interface{}, fieldDesc protoreflect.Fi
 			return protoreflect.Value{}, errTypeMismatch(desc, fieldDesc, interfaceValue)
 		}
 		return protoreflect.ValueOfInt32(v), nil
+	// uint32
+	case protoreflect.Uint32Kind:
+		v, err := cast.ToUint32E(interfaceValue)
+		if err != nil {
+			return protoreflect.Value{}, errTypeMismatch(desc, fieldDesc, interfaceValue)
+		}
+		return protoreflect.ValueOfUint32(v), nil
 	// int64
 	case protoreflect.Int64Kind:
 		v, err := cast.ToInt64E(interfaceValue)

@@ -5,15 +5,14 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client/reflection/tx"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+	"github.com/cosmos/cosmos-sdk/client/reflection/tx"
 	"github.com/cosmos/cosmos-sdk/client/reflection/unstructured"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func TestClient(t *testing.T) {

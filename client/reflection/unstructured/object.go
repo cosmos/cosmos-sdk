@@ -20,44 +20,84 @@ type Object interface {
 // is not supported.
 type Map map[string]interface{}
 
-func (o Map) Marshal(desc protoreflect.MessageDescriptor) (*dynamicpb.Message, error) {
-	dyn := dynamicpb.NewMessage(desc)
+func (o Map) Marshal(md protoreflect.MessageDescriptor) (*dynamicpb.Message, error) {
+	dyn := dynamicpb.NewMessage(md)
 	for fieldName, interfaceValue := range o {
-		fieldDesc := desc.Fields().ByName(protoreflect.Name(fieldName))
-		if fieldDesc == nil {
-			return nil, fmt.Errorf("descriptor %s does not contain field named %s", desc.FullName(), fieldName)
+		fd := md.Fields().ByName(protoreflect.Name(fieldName))
+		if fd == nil {
+			return nil, fmt.Errorf("descriptor %s does not contain field named %s", md.FullName(), fieldName)
 		}
 		switch {
-		case fieldDesc.IsList():
-			value := dyn.NewField(fieldDesc)
-			sliceValue := value.List()
-			err := fillList(interfaceValue, sliceValue, fieldDesc, desc)
+		case fd.IsList():
+			value := dyn.NewField(fd)
+			listValue := value.List()
+			err := fillList(interfaceValue, listValue, fd, md)
 			if err != nil {
 				return nil, err
 			}
-			dyn.Set(fieldDesc, value)
-		case fieldDesc.IsMap():
+			dyn.Set(fd, value)
+		case fd.IsMap():
+			rawField := dyn.NewField(fd)
+			pMap := rawField.Map()
+			err := fillMap(interfaceValue, pMap, fd, md)
+			if err != nil {
+				return nil, err
+			}
+			dyn.Set(fd, rawField)
 		default:
-			pv, err := interfaceToProtoValue(interfaceValue, fieldDesc, desc)
+			pv, err := interfaceToProtoValue(interfaceValue, fd, md)
 			if err != nil {
 				return nil, err
 			}
 			// set the field
-			dyn.Set(fieldDesc, pv)
+			dyn.Set(fd, pv)
 		}
 	}
 
 	return dyn, nil
 }
 
-func fillList(v interface{}, list protoreflect.List, fd protoreflect.FieldDescriptor, desc protoreflect.MessageDescriptor) error {
+// TODO: indirect
+func fillMap(v interface{}, pMap protoreflect.Map, fd protoreflect.FieldDescriptor, md protoreflect.MessageDescriptor) error {
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Map {
+		return errTypeMismatch(md, fd, v)
+	}
+
+	keyDesc := fd.MapKey()
+	valueDesc := fd.MapValue()
+
+	mapIter := rv.MapRange()
+
+	for mapIter.Next() {
+		k := mapIter.Key().Interface()
+		v := mapIter.Value().Interface()
+
+		// cast k and v to kDesc and vDesc
+		kValue, err := interfaceToProtoValue(k, keyDesc, md)
+		if err != nil {
+			return fmt.Errorf("unable to set map key for map field descriptor %s: %w", fd, err)
+		}
+		vValue, err := interfaceToProtoValue(v, valueDesc, md)
+		if err != nil {
+			return fmt.Errorf("unable to set map value for map field descriptor %s: %w", fd, err)
+		}
+		// set in map
+		pMap.Set(kValue.MapKey(), vValue)
+	}
+
+	return nil
+}
+
+// TODO: indirect
+func fillList(v interface{}, list protoreflect.List, fd protoreflect.FieldDescriptor, md protoreflect.MessageDescriptor) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Slice {
-		return fmt.Errorf("slice expected")
+		return errTypeMismatch(md, fd, v)
 	}
 	for i := 0; i < rv.Len(); i++ {
 		iv := rv.Index(i).Interface()
-		v, err := interfaceToProtoValue(iv, fd, desc)
+		v, err := interfaceToProtoValue(iv, fd, md)
 		if err != nil {
 			return err
 		}
@@ -163,5 +203,5 @@ func castToBytes(value interface{}) ([]byte, error) {
 }
 
 func errTypeMismatch(desc protoreflect.MessageDescriptor, field protoreflect.FieldDescriptor, v interface{}) error {
-	return fmt.Errorf("descriptor %s field %s expects a bool, got: %T", desc.FullName(), field.FullName(), v)
+	return fmt.Errorf("descriptor %s field %s expects %s, got: %T", desc.FullName(), field.FullName(), field.Kind(), v)
 }

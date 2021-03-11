@@ -54,7 +54,7 @@ func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
 		queriers:    make(methodsMap),
 		reg:         codec.NewFetcherRegistry(fetcher),
 	}
-	err = c.init()
+	err = c.init(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (c *Client) ListQueries() []Queries {
 	return q
 }
 
-func (c *Client) Query(ctx context.Context, method string, request unstructured.Object) (resp proto.Message, err error) {
+func (c *Client) Query(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
 	desc, exists := c.queriers[method]
 	if !exists {
 		return nil, fmt.Errorf("unknown method: %s", method)
@@ -101,8 +101,25 @@ func (c *Client) Query(ctx context.Context, method string, request unstructured.
 	return resp, proto.Unmarshal(tmResp.Response.Value, resp)
 }
 
-func (c *Client) init() error {
-	queries, err := c.sdkReflect.ListQueryServices(context.TODO(), nil)
+func (c *Client) init(ctx context.Context) error {
+	err := c.buildQueries(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = c.buildMsgs(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) buildMsgs(ctx context.Context) error {
+	return nil
+}
+
+func (c *Client) buildQueries(ctx context.Context) error {
+	queries, err := c.sdkReflect.ListQueryServices(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -121,7 +138,7 @@ func (c *Client) init() error {
 	svcDescriptors := make([][]byte, 0, len(svcPerFile))
 
 	for file := range svcPerFile {
-		rawDesc, err := c.sdkReflect.ResolveService(context.TODO(), &reflection.ResolveServiceRequest{FileName: file})
+		rawDesc, err := c.sdkReflect.ResolveService(ctx, &reflection.ResolveServiceRequest{FileName: file})
 		if err != nil {
 			return err
 		}
@@ -129,16 +146,7 @@ func (c *Client) init() error {
 		svcDescriptors = append(svcDescriptors, rawDesc.RawDescriptor)
 	}
 
-	err = c.buildQueries(svcDescriptors)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Client) buildQueries(rawDescs [][]byte) error {
-	for _, rawDesc := range rawDescs {
+	for _, rawDesc := range svcDescriptors {
 		fileDesc, err := c.reg.Parse(rawDesc)
 		if err != nil && !errors.Is(err, codec.ErrFileRegistered) {
 			return err

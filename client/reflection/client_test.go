@@ -63,7 +63,7 @@ func TestClient_Query(t *testing.T) {
 	}
 
 	t.Run("bank test", func(t *testing.T) {
-		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Balance", unstructured.Object{
+		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Balance", unstructured.Map{
 			"address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
 			"denom":   "stake",
 		})
@@ -82,7 +82,7 @@ func TestClient_Query(t *testing.T) {
 	})
 
 	t.Run("params", func(t *testing.T) {
-		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Params", unstructured.Object{})
+		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Params", unstructured.Map{})
 		if err != nil {
 			t.Fatal(err)
 		}

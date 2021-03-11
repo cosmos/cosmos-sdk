@@ -51,7 +51,7 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 }
 
 // SetVersionManager sets a VersionManager for the keeper to
-// gain access to modules and their consensus versions.
+// gain access to app modules and their consensus versions.
 // This MUST be set in app.go, or versions will not be committed
 // to state.
 func (k *Keeper) SetVersionManager(vm module.VersionManager) {
@@ -59,20 +59,20 @@ func (k *Keeper) SetVersionManager(vm module.VersionManager) {
 }
 
 // SetCurrentConsensusVersions saves the consensus versions retrieved from module.Manager
-func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) error {
-	if k.versionManager == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrLogic, "upgrade keeper VersionManager was nil, please call SetVersionManager on the keeper first")
+// if versionManager is not set from app.go, consensus versions will NOT be saved
+// to state.
+func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) {
+	if k.versionManager != nil {
+		modules := k.versionManager.GetConsensusVersions()
+		store := ctx.KVStore(k.storeKey)
+		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
+		for modName, ver := range modules {
+			nameBytes := []byte(modName)
+			verBytes := make([]byte, 8)
+			binary.LittleEndian.PutUint64(verBytes, ver)
+			versionStore.Set(nameBytes, verBytes)
+		}
 	}
-	modules := k.versionManager.GetConsensusVersions()
-	store := ctx.KVStore(k.storeKey)
-	versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
-	for modName, ver := range modules {
-		nameBytes := []byte(modName)
-		verBytes := make([]byte, 8)
-		binary.LittleEndian.PutUint64(verBytes, ver)
-		versionStore.Set(nameBytes, verBytes)
-	}
-	return nil
 }
 
 // GetConsensusVersions gets a VersionMap from state
@@ -241,10 +241,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic(err)
 	}
 
-	err = k.SetCurrentConsensusVersions(ctx)
-	if err != nil {
-		panic(err)
-	}
+	k.SetCurrentConsensusVersions(ctx)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

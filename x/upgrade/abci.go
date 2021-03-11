@@ -69,6 +69,10 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	}
 }
 
+func InitChainer(k keeper.Keeper, ctx sdk.Context) {
+	k.SetCurrentConsensusVersions(ctx)
+}
+
 // BuildUpgradeNeededMsg prints the message that notifies that an upgrade is needed.
 func BuildUpgradeNeededMsg(plan types.Plan) string {
 	return fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueAt(), plan.Info)

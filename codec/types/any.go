@@ -121,23 +121,23 @@ func (any *Any) GetCachedValue() interface{} {
 
 // GoString returns a string representing valid go code to reproduce the current state of
 // the struct.
-func (this *Any) GoString() string {
-	if this == nil {
+func (any *Any) GoString() string {
+	if any == nil {
 		return "nil"
 	}
 	extra := ""
-	if this.XXX_unrecognized != nil {
-		extra = fmt.Sprintf(",\n  XXX_unrecognized: %#v,\n", this.XXX_unrecognized)
+	if any.XXX_unrecognized != nil {
+		extra = fmt.Sprintf(",\n  XXX_unrecognized: %#v,\n", any.XXX_unrecognized)
 	}
 	return fmt.Sprintf("&Any{TypeUrl: %#v,\n  Value: %#v%s\n}",
-		this.TypeUrl, this.Value, extra)
+		any.TypeUrl, any.Value, extra)
 }
 
 // String implements the stringer interface
-func (this *Any) String() string {
-	if this == nil {
+func (any *Any) String() string {
+	if any == nil {
 		return "nil"
 	}
 	return fmt.Sprintf("&Any{TypeUrl:%v,Value:%v,XXX_unrecognized:%v}",
-		this.TypeUrl, this.Value, this.XXX_unrecognized)
+		any.TypeUrl, any.Value, any.XXX_unrecognized)
 }

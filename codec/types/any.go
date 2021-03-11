@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	"github.com/gogo/protobuf/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -115,4 +117,27 @@ func (any *Any) pack(x proto.Message) error {
 // GetCachedValue returns the cached value from the Any if present
 func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
+}
+
+// GoString returns a string representing valid go code to reproduce the current state of
+// the struct.
+func (this *Any) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	extra := ""
+	if this.XXX_unrecognized != nil {
+		extra = fmt.Sprintf(",\n  XXX_unrecognized: %#v,\n", this.XXX_unrecognized)
+	}
+	return fmt.Sprintf("&Any{TypeUrl: %#v,\n  Value: %#v%s\n}",
+		this.TypeUrl, this.Value, extra)
+}
+
+// String implements the stringer interface
+func (this *Any) String() string {
+	if this == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("&Any{TypeUrl:%v,Value:%v,XXX_unrecognized:%v}",
+		this.TypeUrl, this.Value, this.XXX_unrecognized)
 }

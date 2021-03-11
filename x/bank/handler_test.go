@@ -79,7 +79,7 @@ func TestSendToModuleAccount(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := handler(ctx, tc.msg)
 			if tc.expectedError != nil {
-				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
 				require.NoError(t, err)
 			}

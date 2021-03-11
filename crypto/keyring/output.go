@@ -33,14 +33,14 @@ func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.Pu
 	}, nil
 }
 
-// Bech32KeysOutput returns a slice of KeyOutput objects, each with the "acc"
+// MkKeysOutput returns a slice of KeyOutput objects, each with the "acc"
 // Bech32 prefixes, given a slice of Info objects. It returns an error if any
-// call to Bech32KeyOutput fails.
-func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
+// call to MkKeyOutput fails.
+func MkKeysOutput(infos []Info) ([]KeyOutput, error) {
 	kos := make([]KeyOutput, len(infos))
 	var err error
 	for i, info := range infos {
-		kos[i], err = Bech32KeyOutput(info)
+		kos[i], err = MkKeyOutput(info)
 		if err != nil {
 			return nil, err
 		}
@@ -49,24 +49,24 @@ func Bech32KeysOutput(infos []Info) ([]KeyOutput, error) {
 	return kos, nil
 }
 
-// Bech32ConsKeyOutput create a KeyOutput in with "cons" Bech32 prefixes.
-func Bech32ConsKeyOutput(keyInfo Info) (KeyOutput, error) {
+// MkConsKeyOutput create a KeyOutput in with "cons" Bech32 prefixes.
+func MkConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
 	addr := sdk.ConsAddress(pk.Address().Bytes())
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
-// Bech32ValKeyOutput create a KeyOutput in with "val" Bech32 prefixes.
-func Bech32ValKeyOutput(keyInfo Info) (KeyOutput, error) {
+// MkValKeyOutput create a KeyOutput in with "val" Bech32 prefixes.
+func MkValKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
 	addr := sdk.ValAddress(pk.Address().Bytes())
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
-// Bech32KeyOutput create a KeyOutput in with "acc" Bech32 prefixes. If the
+// MkKeyOutput create a KeyOutput in with "acc" Bech32 prefixes. If the
 // public key is a multisig public key, then the threshold and constituent
 // public keys will be added.
-func Bech32KeyOutput(keyInfo Info) (KeyOutput, error) {
+func MkKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
 	addr := sdk.AccAddress(pk.Address().Bytes())
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)

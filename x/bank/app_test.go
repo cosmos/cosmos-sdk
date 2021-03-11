@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type (
@@ -122,6 +121,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	require.Equal(t, res2.GetSequence(), origSeq+1)
 }
 
+<<<<<<< HEAD
 // A module account cannot be the recipient of bank sends unless it has been marked as such
 func TestSendToModuleAcc(t *testing.T) {
 	tests := []struct {
@@ -202,6 +202,8 @@ func TestSendToModuleAcc(t *testing.T) {
 	}
 }
 
+=======
+>>>>>>> 280ee4f15... Fix SendToModuleAccountTest (#8857)
 func TestMsgMultiSendWithAccounts(t *testing.T) {
 	acc := &authtypes.BaseAccount{
 		Address: addr1.String(),

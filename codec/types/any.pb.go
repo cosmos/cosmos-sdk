@@ -6,13 +6,13 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
-	strings "strings"
+
+	_ "github.com/gogo/protobuf/gogoproto"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -173,15 +173,12 @@ func (this *Any) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 6)
-	s = append(s, "&types.Any{")
-	s = append(s, "TypeUrl: "+fmt.Sprintf("%#v", this.TypeUrl)+",\n")
-	s = append(s, "Value: "+fmt.Sprintf("%#v", this.Value)+",\n")
+	extra := ""
 	if this.XXX_unrecognized != nil {
-		s = append(s, "XXX_unrecognized:"+fmt.Sprintf("%#v", this.XXX_unrecognized)+",\n")
+		extra = fmt.Sprintf(",\n  XXX_unrecognized: %#v,\n", this.XXX_unrecognized)
 	}
-	s = append(s, "}")
-	return strings.Join(s, "")
+	return fmt.Sprintf("&Any{TypeUrl: %#v,\n  Value: %#v%s\n}",
+		this.TypeUrl, this.Value, extra)
 }
 func valueToGoStringAny(v interface{}, typ string) string {
 	rv := reflect.ValueOf(v)
@@ -359,13 +356,15 @@ func (this *Any) String() string {
 	if this == nil {
 		return "nil"
 	}
-	s := strings.Join([]string{`&Any{`,
-		`TypeUrl:` + fmt.Sprintf("%v", this.TypeUrl) + `,`,
-		`Value:` + fmt.Sprintf("%v", this.Value) + `,`,
-		`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
-		`}`,
-	}, "")
-	return s
+	return fmt.Sprintf("&Any{TypeUrl:%v,Value:%v,XXX_unrecognized:%v}",
+		this.TypeUrl, this.Value, this.XXX_unrecognized)
+	// s := strings.Join([]string{`&Any{`,
+	// 	`TypeUrl:` + fmt.Sprintf("%v", this.TypeUrl) + `,`,
+	// 	`Value:` + fmt.Sprintf("%v", this.Value) + `,`,
+	// 	`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
+	// 	`}`,
+	// }, "")
+	// return s
 }
 func valueToStringAny(v interface{}) string {
 	rv := reflect.ValueOf(v)

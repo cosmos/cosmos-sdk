@@ -31,11 +31,9 @@ type ConverterTestSuite struct {
 	unsignedTxBytes []byte
 	unsignedTx      authsigning.Tx
 
-	util struct {
-		ir     codectypes.InterfaceRegistry
-		cdc    *codec.ProtoCodec
-		txConf client.TxConfig
-	}
+	ir     codectypes.InterfaceRegistry
+	cdc    *codec.ProtoCodec
+	txConf client.TxConfig
 }
 
 func (s *ConverterTestSuite) SetupTest() {
@@ -49,11 +47,9 @@ func (s *ConverterTestSuite) SetupTest() {
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	s.c = rosetta.NewConverter(cdc, ir, txConfig)
 	// add utils
-	s.util = struct {
-		ir     codectypes.InterfaceRegistry
-		cdc    *codec.ProtoCodec
-		txConf client.TxConfig
-	}{ir: ir, cdc: cdc, txConf: txConfig}
+	s.ir = ir
+	s.cdc = cdc
+	s.txConf = txConfig
 	// add authsigning tx
 	sdkTx, err := txConfig.TxDecoder()(unsignedTxBytes)
 	s.Require().NoError(err)
@@ -174,11 +170,11 @@ func (s *ConverterTestSuite) TestOpsAndSigners() {
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
 		}
 
-		builder := s.util.txConf.NewTxBuilder()
+		builder := s.txConf.NewTxBuilder()
 		s.Require().NoError(builder.SetMsgs(msg))
 
 		sdkTx := builder.GetTx()
-		txBytes, err := s.util.txConf.TxEncoder()(sdkTx)
+		txBytes, err := s.txConf.TxEncoder()(sdkTx)
 		s.Require().NoError(err)
 
 		ops, signers, err := s.c.ToRosetta().OpsAndSigners(txBytes)

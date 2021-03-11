@@ -22,7 +22,7 @@ message Plan {
   // reached and the software will exit.
   string name = 1;
 
-  // Time based upgrades has been deprecated. Time based upgrade logic
+  // Time based upgrades have been deprecated. Time based upgrade logic
   // has been removed from the SDK.
   reserved 2;
   reserved "time";

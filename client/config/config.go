@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -17,12 +18,12 @@ import (
 var ErrWrongNumberOfArgs = fmt.Errorf("wrong number of arguments")
 
 type ClientConfig struct {
-	ChainID        string `mapstructure:"chain-id"`
-	KeyringBackend string `mapstructure:"keyring-backend"`
-	Output         string `mapstructure:"output"`
-	Node           string `mapstructure:"node"`
-	BroadcastMode  string `mapstructure:"broadcast-mode"`
-	Trace          bool   `mapstructure:"trace"`
+	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
+	Output         string `mapstructure:"output" json:"output"`
+	Node           string `mapstructure:"node" json:"node"`
+	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
+	Trace          bool   `mapstructure:"trace" json:"trace"`
 }
 
 func DefaultClientConfig() *ClientConfig {
@@ -72,13 +73,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	switch len(args) {
 	case 0:
 		// print all client config fields to sdt out
-		// TODO implement method to print out all client config fields
-		fmt.Println(cliConfig.ChainID)
-		fmt.Println(cliConfig.KeyringBackend)
-		fmt.Println(cliConfig.Output)
-		fmt.Println(cliConfig.Node)
-		fmt.Println(cliConfig.BroadcastMode)
-		fmt.Println(cliConfig.Trace)
+		s, _ := json.MarshalIndent(cliConfig, "", "\t")
+		fmt.Print(string(s))
 
 	case 1:
 		// it's a get

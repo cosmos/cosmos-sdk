@@ -64,7 +64,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	txConfig := authtx.NewTxConfig(cfg.Codec, authtx.DefaultSignModes)
 
 	var supportedOperations []string
-	for _, ii := range cfg.InterfaceRegistry.ListImplementations("cosmos.base.v1beta1.Msg") {
+	for _, ii := range cfg.InterfaceRegistry.ListImplementations(sdk.MsgInterfaceProtoName) {
 		resolvedMsg, err := cfg.InterfaceRegistry.Resolve(ii)
 		if err != nil {
 			continue

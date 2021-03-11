@@ -15,6 +15,16 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
+// Default constants
+const (
+	chainID        = ""
+	keyringBackend = "os"
+	output         = "text"
+	node           = "tcp://localhost:26657"
+	broadcastMode  = "sync"
+	trace          = false
+)
+
 var ErrWrongNumberOfArgs = fmt.Errorf("wrong number of arguments")
 
 type ClientConfig struct {
@@ -27,14 +37,7 @@ type ClientConfig struct {
 }
 
 func DefaultClientConfig() *ClientConfig {
-	return &ClientConfig{
-		ChainID:        "",
-		KeyringBackend: "os",
-		Output:         "text",
-		Node:           "tcp://localhost:26657",
-		BroadcastMode:  "sync",
-		Trace:          false,
-	}
+	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode, trace}
 }
 
 // Cmd returns a CLI command to interactively create an application CLI

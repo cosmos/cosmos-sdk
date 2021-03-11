@@ -25,8 +25,6 @@ import (
 	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	transfer "github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer"
-	ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -40,8 +38,11 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	for acc := range maccPerms {
-		require.Equal(t, !allowedReceivingModAcc[acc], app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
-			"ensure that blocked addresses are properly set in bank keeper")
+		require.True(
+			t,
+			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
+			"ensure that blocked addresses are properly set in bank keeper",
+		)
 	}
 
 	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
@@ -171,11 +172,9 @@ func TestRunMigrations(t *testing.T) {
 					"slashing":     slashing.AppModule{}.ConsensusVersion(),
 					"gov":          gov.AppModule{}.ConsensusVersion(),
 					"params":       params.AppModule{}.ConsensusVersion(),
-					"ibc":          ibc.AppModule{}.ConsensusVersion(),
 					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 					"vesting":      vesting.AppModule{}.ConsensusVersion(),
 					"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
-					"transfer":     transfer.AppModule{}.ConsensusVersion(),
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"crisis":       crisis.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),

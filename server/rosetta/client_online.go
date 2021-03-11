@@ -91,6 +91,8 @@ func NewClient(cfg *Config) (*Client, error) {
 	}, nil
 }
 
+// ---------- cosmos-rosetta-gateway.types.Client implementation ------------ //
+
 // Bootstrap is gonna connect the client to the endpoints
 func (c *Client) Bootstrap() error {
 	grpcConn, err := grpc.Dial(c.config.GRPCEndpoint, grpc.WithInsecure())
@@ -233,8 +235,8 @@ func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes [
 	}
 }
 
-// GetTx returns a transaction given its hash. For Rosetta we  make a synthetic transaction for BeginBlock 
-//  and EndBlock to adhere to balance tracking rules. 
+// GetTx returns a transaction given its hash. For Rosetta we  make a synthetic transaction for BeginBlock
+//  and EndBlock to adhere to balance tracking rules.
 func (c *Client) GetTx(ctx context.Context, hash string) (*rosettatypes.Transaction, error) {
 	hashBytes, err := hex.DecodeString(hash)
 	if err != nil {

@@ -10,6 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// ---------- cosmos-rosetta-gateway.types.NetworkInformationProvider implementation ------------ //
+
 func (c *Client) OperationStatuses() []*types.OperationStatus {
 	return []*types.OperationStatus{
 		{
@@ -30,6 +32,8 @@ func (c *Client) Version() string {
 func (c *Client) SupportedOperations() []string {
 	return c.supportedOperations
 }
+
+// ---------- cosmos-rosetta-gateway.types.OfflineClient implementation ------------ //
 
 func (c *Client) SignedTx(_ context.Context, txBytes []byte, signatures []*types.Signature) (signedTxBytes []byte, err error) {
 	return c.converter.ToSDK().SignedTx(txBytes, signatures)

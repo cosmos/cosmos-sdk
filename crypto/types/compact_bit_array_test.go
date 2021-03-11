@@ -200,3 +200,14 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkNumTrueBitsBefore(b *testing.B) {
+	ba, _ := randCompactBitArray(100)
+
+	b.Run("new", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			ba.NumTrueBitsBefore(90)
+		}
+	})
+}

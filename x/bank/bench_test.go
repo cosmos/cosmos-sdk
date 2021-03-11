@@ -60,6 +60,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 }
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
+	b.ReportAllocs()
 	// Add an account at genesis
 	acc := authtypes.BaseAccount{
 		Address: addr1.String(),

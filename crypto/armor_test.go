@@ -162,6 +162,7 @@ func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
 	for securityParam := 9; securityParam < 16; securityParam++ {
 		param := securityParam
 		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
+			b.ReportAllocs()
 			saltBytes := tmcrypto.CRandBytes(16)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {

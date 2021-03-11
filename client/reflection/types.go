@@ -6,15 +6,23 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type Queries struct {
+type Query struct {
 	Service  string
 	Method   string
 	Request  string
 	Response string
 }
 
-func (q Queries) String() string {
+func (q Query) String() string {
 	return fmt.Sprintf("service: %s method: %s request: %s response: %s", q.Service, q.Method, q.Request, q.Response)
+}
+
+type Deliverable struct {
+	MsgName string
+}
+
+func (d Deliverable) String() string {
+	return fmt.Sprintf("deliverable: %s", d.MsgName)
 }
 
 type ServiceMsg struct {

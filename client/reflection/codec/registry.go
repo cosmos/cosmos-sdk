@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -71,8 +70,6 @@ func (b *Registry) Parse(rawDesc []byte) (fileDesc protoreflect.FileDescriptor, 
 	if err != nil {
 		return nil, err
 	}
-
-	log.Printf("processing file: %s", tmpDesc.Path())
 
 	// get dependencies
 	fileImports := tmpDesc.Imports()

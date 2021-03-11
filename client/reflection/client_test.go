@@ -56,6 +56,18 @@ func TestClientListQueries(t *testing.T) {
 	}
 }
 
+func TestClient_ListDeliverables(t *testing.T) {
+	c, err := NewClient("localhost:9090", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	qs := c.ListDeliverables()
+	for _, q := range qs {
+		t.Log(q.String())
+	}
+}
+
 func TestClient_Query(t *testing.T) {
 	c, err := NewClient("localhost:9090", "tcp://localhost:26657")
 	if err != nil {

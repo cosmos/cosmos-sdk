@@ -13,6 +13,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
+	"github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/client/reflection/codec"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
@@ -25,7 +27,7 @@ type Client struct {
 
 	tmClient tmrpc.Client
 
-	msgs     map[string]ServiceMsg
+	msgs     map[string]protoreflect.MessageDescriptor
 	queriers methodsMap
 
 	reg *codec.Registry
@@ -50,7 +52,7 @@ func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
 		sdkReflect:  sdkReflect,
 		grpcReflect: grpcReflect,
 		tmClient:    tmRpc,
-		msgs:        nil,
+		msgs:        make(map[string]protoreflect.MessageDescriptor),
 		queriers:    make(methodsMap),
 		reg:         codec.NewFetcherRegistry(fetcher),
 	}
@@ -62,10 +64,10 @@ func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
 	return c, nil
 }
 
-func (c *Client) ListQueries() []Queries {
-	var q []Queries
+func (c *Client) ListQueries() []Query {
+	var q []Query
 	for name, method := range c.queriers {
-		q = append(q, Queries{
+		q = append(q, Query{
 			Service:  method.ServiceName,
 			Method:   name,
 			Request:  (string)(method.Request.FullName()),
@@ -74,6 +76,14 @@ func (c *Client) ListQueries() []Queries {
 	}
 
 	return q
+}
+
+func (c *Client) ListDeliverables() []Deliverable {
+	d := make([]Deliverable, 0, len(c.msgs))
+	for name := range c.msgs {
+		d = append(d, Deliverable{MsgName: name})
+	}
+	return d
 }
 
 func (c *Client) Query(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
@@ -115,6 +125,54 @@ func (c *Client) init(ctx context.Context) error {
 }
 
 func (c *Client) buildMsgs(ctx context.Context) error {
+	implResp, err := c.sdkReflect.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.MsgInterfaceName})
+	if err != nil {
+		return err
+	}
+	// we create a map which contains the message names that we expect to process
+	// so in case one fail contains multiple messages we need then we won't need
+	// to resolve the same proto file multiple times :)
+	expectedMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageNames))
+	foundMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageNames))
+	for _, name := range implResp.ImplementationMessageNames {
+		expectedMsgs[name[1:]] = struct{}{} // remove '/'
+	}
+
+	// now resolve types
+	for name := range expectedMsgs {
+		// check if we already processed it
+		if _, exists := foundMsgs[name]; exists {
+			continue
+		}
+		rptResp, err := c.sdkReflect.ResolveProtoType(ctx, &reflection.ResolveProtoTypeRequest{Name: name})
+		if err != nil {
+			return err
+		}
+		desc, err := c.reg.Parse(rptResp.RawDescriptor)
+		if err != nil {
+			return err
+		}
+		// iterate over msgs
+		found := false // we assume to always find our message in the file descriptor... but still
+		for i := 0; i < desc.Messages().Len(); i++ {
+			msgDesc := desc.Messages().Get(i)
+			msgName := (string)(msgDesc.FullName())
+			// check if msg is required
+			if _, required := expectedMsgs[msgName]; !required {
+				continue
+			}
+			// ok msg is required, so insert it in found list
+			foundMsgs[msgName] = struct{}{}
+			if msgName == name {
+				found = true
+			}
+			// save in msgs
+			c.msgs[msgName] = msgDesc
+		}
+		if !found {
+			return fmt.Errorf("unable to find message %s in resolved descriptor", name)
+		}
+	}
 	return nil
 }
 

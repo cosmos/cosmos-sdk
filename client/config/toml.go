@@ -28,14 +28,14 @@ trace = "{{ .ClientConfig.Trace }}"
 
 // InitConfigTemplate initiates config template that will be used in
 // WriteConfigFile
-func InitConfigTemplate() *template.Template {
+func InitConfigTemplate() (*template.Template, error) {
 	tmpl := template.New("clientConfigFileTemplate")
 	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return configTemplate
+	return configTemplate, nil
 }
 
 // ParseConfig retrieves the default environment configuration for the
@@ -51,14 +51,16 @@ func ParseConfig(v *viper.Viper) (*ClientConfig, error) {
 
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(cfgFile string, config *ClientConfig, configTemplate *template.Template) {
+func WriteConfigFile(cfgFile string, config *ClientConfig, configTemplate *template.Template) error {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {
-		panic(err)
+		return err
 	}
 
 	tmos.MustWriteFile(cfgFile, buffer.Bytes(), 0644)
+	return nil
+
 }
 
 func ensureCfgPath(rootDir string) (string, error) {

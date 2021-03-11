@@ -132,9 +132,17 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			return errUnknownConfigKey(key)
 		}
 
-		configTemplate := InitConfigTemplate()
+		configTemplate, err := InitConfigTemplate()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to initiate config template, err: %v\n", err)
+			return err
+		}
+
 		cfgFile := path.Join(cfgPath, "config.toml")
-		WriteConfigFile(cfgFile, cliConfig, configTemplate)
+		if err := WriteConfigFile(cfgFile, cliConfig, configTemplate); err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to write client config to the file, err: %v\n", err)
+			return err
+		}
 
 	default:
 		// print error

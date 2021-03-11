@@ -127,6 +127,17 @@ func interfaceToProtoValue(interfaceValue interface{}, fieldDesc protoreflect.Fi
 			return protoreflect.Value{}, errTypeMismatch(desc, fieldDesc, interfaceValue)
 		}
 		return protoreflect.ValueOfBytes(v), nil
+	// handle message kind
+	case protoreflect.MessageKind:
+		ob, ok := interfaceValue.(Object)
+		if !ok {
+			return protoreflect.Value{}, fmt.Errorf("descriptor %s expected %s kind at %s which should be castable to unstructured.Object, got: %T", desc, protoreflect.MessageKind, fieldDesc, interfaceValue)
+		}
+		dpb, err := ob.Marshal(fieldDesc.Message())
+		if err != nil {
+			return protoreflect.Value{}, fmt.Errorf("descriptor %s failed to marshal Message for field descriptor %s: %w", desc, fieldDesc, err)
+		}
+		return protoreflect.ValueOfMessage(dpb), nil
 	default:
 		return protoreflect.Value{}, fmt.Errorf("descriptor %s field %s unsupported type: %s", desc.FullName(), fieldDesc.FullName(), fieldDesc.Kind().String())
 	}

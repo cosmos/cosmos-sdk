@@ -17,7 +17,6 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -30,7 +29,6 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
-	versionManager     module.VersionManager
 	protoManager       baseapp.ProtocolManager
 }
 
@@ -53,10 +51,6 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-func (k *Keeper) SetVersionManager(vm module.VersionManager) {
-	k.versionManager = vm
-}
-
 func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 	store := ctx.KVStore(k.storeKey)
 	versionBytes := make([]byte, 8)
@@ -75,36 +69,6 @@ func (k Keeper) GetProtocolVersion(ctx sdk.Context) uint64 {
 	protocolVersion := binary.LittleEndian.Uint64(pvBytes)
 
 	return protocolVersion
-}
-
-// SetConsensusVersions saves the consensus versions retrieved from module.Manager
-func (k Keeper) SetConsensusVersions(ctx sdk.Context) {
-	modules := k.versionManager.GetConsensusVersions()
-	store := ctx.KVStore(k.storeKey)
-	migrationStore := prefix.NewStore(store, []byte{types.MigrationMapByte})
-	for modName, ver := range modules {
-		nameBytes := []byte(modName)
-		verBytes := make([]byte, 8)
-		binary.LittleEndian.PutUint64(verBytes, ver)
-		migrationStore.Set(nameBytes, verBytes)
-	}
-}
-
-// GetConsensusVersions gets a MigrationMap from state
-func (k Keeper) GetConsensusVersions(ctx sdk.Context) module.MigrationMap {
-	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, []byte{types.MigrationMapByte})
-
-	migmap := make(module.MigrationMap)
-	defer it.Close()
-	for ; it.Valid(); it.Next() {
-		moduleBytes := it.Key()
-		name := string(moduleBytes[1:])
-		moduleVersion := binary.LittleEndian.Uint64(it.Value())
-		migmap[name] = moduleVersion
-	}
-
-	return migmap
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
@@ -250,17 +214,11 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
-	err := handler(ctx, plan, k.GetConsensusVersions(ctx))
-	if err != nil {
-		panic(err)
-	}
-
-	k.SetConsensusVersions(ctx)
+	handler(ctx, plan)
 
 	nextProtoVersion := k.GetProtocolVersion(ctx) + 1
 	// increment the protocol version in state
 	k.setProtocolVersion(ctx, nextProtoVersion)
-
 	k.protoManager.SetProtocolVersion(nextProtoVersion)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.

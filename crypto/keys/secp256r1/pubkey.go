@@ -10,7 +10,7 @@ import (
 
 // String implements proto.Message interface.
 func (m *PubKey) String() string {
-	return m.Key.String(name)
+	return m.Key.String(Name)
 }
 
 // Bytes implements SDK PubKey interface.
@@ -34,7 +34,7 @@ func (m *PubKey) Address() tmcrypto.Address {
 
 // Type returns key type name. Implements SDK PubKey interface.
 func (m *PubKey) Type() string {
-	return name
+	return Name
 }
 
 // VerifySignature implements SDK PubKey interface.

@@ -18,12 +18,12 @@ func (m *PrivKey) PubKey() cryptotypes.PubKey {
 
 // String implements SDK proto.Message interface.
 func (m *PrivKey) String() string {
-	return m.Secret.String(name)
+	return m.Secret.String(Name)
 }
 
 // Type returns key type name. Implements SDK PrivKey interface.
 func (m *PrivKey) Type() string {
-	return name
+	return Name
 }
 
 // Sign hashes and signs the message usign ECDSA. Implements sdk.PrivKey interface.

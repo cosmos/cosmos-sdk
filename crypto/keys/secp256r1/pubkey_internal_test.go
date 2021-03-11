@@ -41,7 +41,7 @@ func (suite *PKSuite) TestString() {
 }
 
 func (suite *PKSuite) TestType() {
-	suite.Require().Equal(name, suite.pk.Type())
+	suite.Require().Equal(Name, suite.pk.Type())
 }
 
 func (suite *PKSuite) TestEquals() {

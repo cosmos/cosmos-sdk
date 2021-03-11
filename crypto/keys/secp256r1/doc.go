@@ -15,7 +15,8 @@ const (
 	fieldSize  = 32
 	pubKeySize = fieldSize + 1
 
-	name = "secp256r1"
+	// Name is a typename for ECDSA secp256r1 keys in Cosmos SDK
+	Name = "secp256r1"
 )
 
 var secp256r1 elliptic.Curve

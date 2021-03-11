@@ -1,12 +1,14 @@
 package hd_test
 
 import (
+	"crypto/elliptic"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/stretchr/testify/require"
 
 	bip39 "github.com/cosmos/go-bip39"
@@ -25,6 +27,9 @@ type addrData struct {
 	Pub      string
 	Addr     string
 }
+
+var secp256k1Curve = btcec.S256()
+var secp256r1Curve = elliptic.P256()
 
 func TestFullFundraiserPath(t *testing.T) {
 	require.Equal(t, "m/44'/118'/0'/0/0", hd.NewFundraiserParams(0, 118, 0).String())
@@ -63,7 +68,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 		t.Logf("ROUND: %d MNEMONIC: %s", i, d.Mnemonic)
 
 		master, ch := hd.ComputeMastersFromSeed(seed)
-		priv, err := hd.DerivePrivateKeyForPath(master, ch, "m/44'/118'/0'/0/0")
+		priv, err := hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "m/44'/118'/0'/0/0")
 		require.NoError(t, err)
 
 		privKey := &secp256k1.PrivKey{Key: priv}

@@ -1,6 +1,7 @@
 package hd
 
 import (
+	"crypto/elliptic"
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/binary"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
+	bip39 "github.com/cosmos/go-bip39"
 )
 
 // BIP44Params wraps BIP 44 params (5 level BIP 32 path).
@@ -167,6 +169,15 @@ func (p BIP44Params) String() string {
 		p.AddressIndex)
 }
 
+func masterPrivKey(mnemonic string, bip39Passphrase string) (secret [32]byte, chainCode [32]byte, err error) {
+	var seed []byte
+	if seed, err = bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase); err != nil {
+		return
+	}
+	secret, chainCode = ComputeMastersFromSeed(seed)
+	return
+}
+
 // ComputeMastersFromSeed returns the master secret key's, and chain code.
 func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 	curveIdentifier := []byte("Bitcoin seed")
@@ -175,9 +186,9 @@ func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 	return
 }
 
-// DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
+// DeriveECDSAPrivKey derives the private key by following the BIP 32/44 path from privKeyBytes,
 // using the given chainCode.
-func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
+func DeriveECDSAPrivKey(curve elliptic.Curve, privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
 	// First step is to trim the right end path separator lest we panic.
 	// See issue https://github.com/cosmos/cosmos-sdk/issues/8557
 	path = strings.TrimRightFunc(path, func(r rune) bool { return r == filepath.Separator })
@@ -210,7 +221,7 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 			return []byte{}, fmt.Errorf("invalid BIP 32 path %s: %w", path, err)
 		}
 
-		data, chainCode = derivePrivateKey(data, chainCode, uint32(idx), harden)
+		data, chainCode = derivePrivateKey(curve, data, chainCode, uint32(idx), harden)
 	}
 
 	derivedKey := make([]byte, 32)
@@ -228,7 +239,7 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 // It returns the new private key and new chain code.
 // For more information on hardened keys see:
 //  - https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
-func derivePrivateKey(privKeyBytes [32]byte, chainCode [32]byte, index uint32, harden bool) ([32]byte, [32]byte) {
+func derivePrivateKey(curve elliptic.Curve, privKeyBytes, chainCode [32]byte, index uint32, harden bool) ([32]byte, [32]byte) {
 	var data []byte
 
 	if harden {
@@ -236,31 +247,25 @@ func derivePrivateKey(privKeyBytes [32]byte, chainCode [32]byte, index uint32, h
 
 		data = append([]byte{byte(0)}, privKeyBytes[:]...)
 	} else {
+		//  we use btcec instead of tendermint
 		// this can't return an error:
-		_, ecPub := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes[:])
+		_, ecPub := btcec.PrivKeyFromBytes(curve, privKeyBytes[:])
 		pubkeyBytes := ecPub.SerializeCompressed()
 		data = pubkeyBytes
-
-		/* By using btcec, we can remove the dependency on tendermint/crypto/secp256k1
-		pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
-		public := pubkey.(secp256k1.PubKeySecp256k1)
-		data = public[:]
-		*/
 	}
 
 	data = append(data, uint32ToBytes(index)...)
 	data2, chainCode2 := i64(chainCode[:], data)
-	x := addScalars(privKeyBytes[:], data2[:])
-
+	x := addScalars(privKeyBytes[:], data2[:], curve.Params().N)
 	return x, chainCode2
 }
 
 // modular big endian addition
-func addScalars(a []byte, b []byte) [32]byte {
+func addScalars(a []byte, b []byte, field *big.Int) [32]byte {
 	aInt := new(big.Int).SetBytes(a)
 	bInt := new(big.Int).SetBytes(b)
 	sInt := new(big.Int).Add(aInt, bInt)
-	x := sInt.Mod(sInt, btcec.S256().N).Bytes()
+	x := sInt.Mod(sInt, field).Bytes()
 	x2 := [32]byte{}
 	copy(x2[32-len(x):], x)
 

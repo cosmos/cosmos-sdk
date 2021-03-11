@@ -2,6 +2,7 @@ package unstructured
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/spf13/cast"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -28,6 +29,13 @@ func (o Map) Marshal(desc protoreflect.MessageDescriptor) (*dynamicpb.Message, e
 		}
 		switch {
 		case fieldDesc.IsList():
+			value := dyn.NewField(fieldDesc)
+			sliceValue := value.List()
+			err := fillList(interfaceValue, sliceValue, fieldDesc, desc)
+			if err != nil {
+				return nil, err
+			}
+			dyn.Set(fieldDesc, value)
 		case fieldDesc.IsMap():
 		default:
 			pv, err := interfaceToProtoValue(interfaceValue, fieldDesc, desc)
@@ -42,18 +50,21 @@ func (o Map) Marshal(desc protoreflect.MessageDescriptor) (*dynamicpb.Message, e
 	return dyn, nil
 }
 
-/*
-func fillList(v interface{}, list protoreflect.List, fd protoreflect.FieldDescriptor) (protoreflect.Value, error) {
+func fillList(v interface{}, list protoreflect.List, fd protoreflect.FieldDescriptor, desc protoreflect.MessageDescriptor) error {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Slice {
-		return protoreflect.Value{}, fmt.Errorf("slice expected")
+		return fmt.Errorf("slice expected")
 	}
-	underlyingType := rv.Type().Elem()
-	switch fd.Kind() {
-
+	for i := 0; i < rv.Len(); i++ {
+		iv := rv.Index(i).Interface()
+		v, err := interfaceToProtoValue(iv, fd, desc)
+		if err != nil {
+			return err
+		}
+		list.Append(v)
 	}
+	return nil
 }
-*/
 
 func interfaceToProtoValue(interfaceValue interface{}, fieldDesc protoreflect.FieldDescriptor, desc protoreflect.MessageDescriptor) (protoreflect.Value, error) {
 	switch fieldDesc.Kind() {

@@ -4,11 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/cosmos/cosmos-sdk/client/reflection/tx"
 
 	tmrpc "github.com/tendermint/tendermint/rpc/client"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"google.golang.org/grpc"
-	grpcreflectionv1alpha "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -22,18 +27,18 @@ import (
 )
 
 type Client struct {
-	sdkReflect  reflection.ReflectionServiceClient
-	grpcReflect grpcreflectionv1alpha.ServerReflectionClient
-
-	tmClient tmrpc.Client
+	sdk reflection.ReflectionServiceClient
+	tm  tmrpc.Client
 
 	msgs     map[string]protoreflect.MessageDescriptor
 	queriers methodsMap
 
 	reg *codec.Registry
+
+	accountInfoProvider AccountInfoProvider
 }
 
-func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
+func NewClient(grpcEndpoint, tmEndpoint string, provider AccountInfoProvider) (*Client, error) {
 	conn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
@@ -41,7 +46,6 @@ func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
 
 	sdkReflect := reflection.NewReflectionServiceClient(conn)
 	fetcher := dependencyFetcher{client: sdkReflect}
-	grpcReflect := grpcreflectionv1alpha.NewServerReflectionClient(conn)
 
 	tmRpc, err := tmhttp.New(tmEndpoint, "")
 	if err != nil {
@@ -49,12 +53,12 @@ func NewClient(grpcEndpoint, tmEndpoint string) (*Client, error) {
 	}
 
 	c := &Client{
-		sdkReflect:  sdkReflect,
-		grpcReflect: grpcReflect,
-		tmClient:    tmRpc,
-		msgs:        make(map[string]protoreflect.MessageDescriptor),
-		queriers:    make(methodsMap),
-		reg:         codec.NewFetcherRegistry(fetcher),
+		sdk:                 sdkReflect,
+		tm:                  tmRpc,
+		msgs:                make(map[string]protoreflect.MessageDescriptor),
+		queriers:            make(methodsMap),
+		reg:                 codec.NewFetcherRegistry(fetcher),
+		accountInfoProvider: provider,
 	}
 	err = c.init(context.TODO())
 	if err != nil {
@@ -102,13 +106,63 @@ func (c *Client) Query(ctx context.Context, method string, request unstructured.
 		return nil, err
 	}
 
-	tmResp, err := c.tmClient.ABCIQuery(ctx, method, b)
+	tmResp, err := c.tm.ABCIQuery(ctx, method, b)
 	if err != nil {
 		return nil, err
 	}
 
 	resp = dynamicpb.NewMessage(desc.Response)
 	return resp, proto.Unmarshal(tmResp.Response.Value, resp)
+}
+
+func (c *Client) Tx(ctx context.Context, method string, request unstructured.Map, signerInfo tx.SignerInfo) (resp *ctypes.ResultBroadcastTxCommit, err error) {
+	msgDesc, exists := c.msgs[method]
+	if !exists {
+		return nil, fmt.Errorf("deliverable not found: %s", method)
+	}
+	// marshal unstructured to proto.Message type
+	pb, err := request.Marshal(msgDesc)
+	if err != nil {
+		return nil, err
+	}
+
+	pbJs, err := protojson.Marshal(pb)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("%s", pbJs)
+	uBuilder := tx.NewUnsignedTxBuilder()
+	uBuilder.AddMsg(pb)
+	uBuilder.AddSigner(signerInfo)
+	uBuilder.SetChainID("testing")
+	uBuilder.SetFeePayer("cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j")
+	uBuilder.SetFees(types.NewCoins(types.NewInt64Coin("stake", 10)))
+	uBuilder.SetGasLimit(2500000)
+
+	sBuilder, err := uBuilder.SignedBuilder()
+	if err != nil {
+		return nil, err
+	}
+
+	bytesToSign, err := sBuilder.BytesToSign(signerInfo.PubKey)
+	if err != nil {
+		return nil, err
+	}
+
+	signedBytes, err := c.accountInfoProvider.Sign(signerInfo.PubKey, bytesToSign)
+
+	err = sBuilder.SetSignature(signerInfo.PubKey, signedBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	txBytes, err := sBuilder.Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	tmResp, err := c.tm.BroadcastTxCommit(ctx, txBytes)
+	return tmResp, err
 }
 
 func (c *Client) init(ctx context.Context) error {
@@ -125,7 +179,7 @@ func (c *Client) init(ctx context.Context) error {
 }
 
 func (c *Client) buildMsgs(ctx context.Context) error {
-	implResp, err := c.sdkReflect.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.MsgInterfaceName})
+	implResp, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.MsgInterfaceName})
 	if err != nil {
 		return err
 	}
@@ -144,7 +198,7 @@ func (c *Client) buildMsgs(ctx context.Context) error {
 		if _, exists := foundMsgs[name]; exists {
 			continue
 		}
-		rptResp, err := c.sdkReflect.ResolveProtoType(ctx, &reflection.ResolveProtoTypeRequest{Name: name})
+		rptResp, err := c.sdk.ResolveProtoType(ctx, &reflection.ResolveProtoTypeRequest{Name: name})
 		if err != nil {
 			return err
 		}
@@ -177,7 +231,7 @@ func (c *Client) buildMsgs(ctx context.Context) error {
 }
 
 func (c *Client) buildQueries(ctx context.Context) error {
-	queries, err := c.sdkReflect.ListQueryServices(ctx, nil)
+	queries, err := c.sdk.ListQueryServices(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -196,7 +250,7 @@ func (c *Client) buildQueries(ctx context.Context) error {
 	svcDescriptors := make([][]byte, 0, len(svcPerFile))
 
 	for file := range svcPerFile {
-		rawDesc, err := c.sdkReflect.ResolveService(ctx, &reflection.ResolveServiceRequest{FileName: file})
+		rawDesc, err := c.sdk.ResolveService(ctx, &reflection.ResolveServiceRequest{FileName: file})
 		if err != nil {
 			return err
 		}

@@ -2,9 +2,15 @@ package reflection
 
 import (
 	"fmt"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
+
+type AccountInfoProvider interface {
+	SigningInfo(pubKey cryptotypes.PubKey) (accountNumber, sequence uint64, err error)
+	Sign(pubKey cryptotypes.PubKey, b []byte) (signedBytes []byte, err error)
+}
 
 type Query struct {
 	Service  string
@@ -23,11 +29,6 @@ type Deliverable struct {
 
 func (d Deliverable) String() string {
 	return fmt.Sprintf("deliverable: %s", d.MsgName)
-}
-
-type ServiceMsg struct {
-	Method     string
-	Descriptor protoreflect.MessageDescriptor
 }
 
 type QueryDescriptor struct {

@@ -26,7 +26,7 @@ request_funds(1){
     loaded_account = find_balance({
       "account_identifier": {{random_account.account_identifier}},
       "minimum_balance":{
-        "value": "100",
+        "value": "50",
         "currency": {{currency}}
       }
     });
@@ -57,6 +57,8 @@ transfer(3){
         "currency": {{currency}}
       }
     });
+    acc_identifier = {{sender.account_identifier}};
+    sender_address = {{acc_identifier.address}};
     // Set the recipient_amount as some value <= sender.balance-max_fee
     max_fee = "0";
     fee_amount = "1";
@@ -76,34 +78,28 @@ transfer(3){
       "create_probability": 50
     });
     transfer.confirmation_depth = "1";
+    recipient_account_identifier = {{recipient.account_identifier}};
+    recipient_address = {{recipient_account_identifier.address}};
     transfer.operations = [
       {
         "operation_identifier":{"index":0},
-        "type":"fee",
-        "account":{{sender.account_identifier}},
-        "amount":{
-          "value":{{fee_value}},
-          "currency":{{currency}}
-        }
-      },
-      {
-        "operation_identifier":{"index":1},
         "type":"cosmos.bank.v1beta1.MsgSend",
         "account":{{sender.account_identifier}},
-        "amount":{
-          "value":{{sender_amount}},
-          "currency":{{currency}}
-        }
-      },
-      {
-        "operation_identifier":{"index":2},
-        "type":"cosmos.bank.v1beta1.MsgSend",
-        "account":{{recipient.account_identifier}},
-        "amount":{
-          "value":{{recipient_amount}},
-          "currency":{{currency}}
+        "metadata": {
+          "amount": [
+            {
+              "amount": {{recipient_amount}},
+              "denom":  {{currency.symbol}}
+            }
+          ],
+          "from_address": {{sender_address}},
+           "to_address": {{recipient_address}}
         }
       }
     ];
+    transfer.preprocess_metadata = {
+        "gas_price": "1stake",
+        "gas_limit": 250000
+    };
   }
 }

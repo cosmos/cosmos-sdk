@@ -113,7 +113,7 @@ func (c *Client) Bootstrap() error {
 	return nil
 }
 
-// Ready asserts if the client is ready or not
+// Ready performs a health check and returns an error if the client is not ready.
 func (c *Client) Ready() error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultNodeTimeout)
 	defer cancel()

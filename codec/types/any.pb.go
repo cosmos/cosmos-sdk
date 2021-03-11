@@ -358,13 +358,6 @@ func (this *Any) String() string {
 	}
 	return fmt.Sprintf("&Any{TypeUrl:%v,Value:%v,XXX_unrecognized:%v}",
 		this.TypeUrl, this.Value, this.XXX_unrecognized)
-	// s := strings.Join([]string{`&Any{`,
-	// 	`TypeUrl:` + fmt.Sprintf("%v", this.TypeUrl) + `,`,
-	// 	`Value:` + fmt.Sprintf("%v", this.Value) + `,`,
-	// 	`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
-	// 	`}`,
-	// }, "")
-	// return s
 }
 func valueToStringAny(v interface{}) string {
 	rv := reflect.ValueOf(v)

@@ -211,6 +211,20 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 
 }
 
+func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
+	currentProtocolVersion := s.app.BaseApp.ProtocolVersion()
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan) {})
+	dummyPlan := types.Plan{
+		Name: "dummy",
+		Info: "some text here",
+		Time: s.ctx.BlockTime().Add(time.Hour),
+	}
+	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	upgradedProtocolVersion := s.app.BaseApp.ProtocolVersion()
+
+	s.Require().Equal(currentProtocolVersion+1, upgradedProtocolVersion)
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

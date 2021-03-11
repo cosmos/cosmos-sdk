@@ -92,6 +92,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 	cmd.Flags().StringSlice(flagJailWhitelist, []string{}, "List of validators to not jail state export")
 	cmd.Flags().String(FlagEvmExportMode, "default", "Select export mode for evm state (default|files|db)")
 	cmd.Flags().String(FlagEvmExportPath, "", "Evm contract & storage db or files used for export")
+	cmd.Flags().Uint64(FlagGoroutineNum, 0, "Limit on the number of goroutines used to export evm data(ignored if evm-export-mode is 'default')")
 	return cmd
 }
 

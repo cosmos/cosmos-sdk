@@ -165,9 +165,9 @@ func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.Serv
 
 func parseOrderBy(orderBy txtypes.OrderBy) string {
 	switch orderBy {
-	case txtypes.OrderBy_ASC:
+	case txtypes.OrderBy_ORDER_BY_ASC:
 		return "asc"
-	case txtypes.OrderBy_DESC:
+	case txtypes.OrderBy_ORDER_BY_DESC:
 		return "desc"
 	default:
 		return "asc"

@@ -48,9 +48,12 @@ message GetTxsEventRequest {
 
 // OrderBy defines the sorting order
 enum OrderBy {
-  UNKNOWN = 0;
-  ASC     = 1;
-  DESC    = 2;
+  // ORDER_BY_UNKNOWN specifies an unknown sorting order
+  ORDER_BY_UNKNOWN = 0;
+  // ORDER_BY_ASC defines ascending order
+  ORDER_BY_ASC     = 1;
+  // ORDER_BY_DESC defines descending order
+  ORDER_BY_DESC    = 2;
 }
 
 // GetTxsEventResponse is the response type for the Service.TxsByEvents

@@ -177,7 +177,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			"request with order-by",
 			&tx.GetTxsEventRequest{
 				Events:  []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
-				OrderBy: tx.OrderBy_ASC,
+				OrderBy: tx.OrderBy_ORDER_BY_ASC,
 			},
 			false, "",
 		},
@@ -258,7 +258,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"expect pass with with order-by filter",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=asc", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
 			false,
 			"",
 		},

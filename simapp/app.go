@@ -544,9 +544,9 @@ func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.Ver
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 
-// Returns a map (VersionMap) of key module name and value module consensus version
-func (app *SimApp) GetConsensusVersions() module.VersionMap {
-	return app.mm.GetConsensusVersions()
+// GetVersionMap gets a map of key module name and value module consensus version
+func (app *SimApp) GetVersionMap() module.VersionMap {
+	return app.mm.GetVersionMap()
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

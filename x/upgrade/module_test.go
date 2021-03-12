@@ -19,6 +19,6 @@ func TestInitChainer(t *testing.T) {
 		},
 	)
 
-	versionMap := app.GetConsensusVersions()
+	versionMap := app.GetVersionMap()
 	require.NotEmpty(t, versionMap)
 }

@@ -63,7 +63,7 @@ func (k *Keeper) SetVersionManager(vm module.VersionManager) {
 // to state.
 func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) {
 	if k.versionManager != nil {
-		modules := k.versionManager.GetConsensusVersions()
+		modules := k.versionManager.GetVersionMap()
 		store := ctx.KVStore(k.storeKey)
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
 		for modName, ver := range modules {
@@ -75,8 +75,8 @@ func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) {
 	}
 }
 
-// GetConsensusVersions gets a VersionMap from state
-func (k Keeper) GetConsensusVersions(ctx sdk.Context) module.VersionMap {
+// GetVersionMap gets a VersionMap from state
+func (k Keeper) GetVersionMap(ctx sdk.Context) module.VersionMap {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 
@@ -236,7 +236,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
-	err := handler(ctx, plan, k.GetConsensusVersions(ctx))
+	err := handler(ctx, plan, k.GetVersionMap(ctx))
 	if err != nil {
 		panic(err)
 	}

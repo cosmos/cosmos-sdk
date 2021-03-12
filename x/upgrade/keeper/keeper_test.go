@@ -216,7 +216,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 // Mock version manager for TestMigrations
 type mockVersionManager struct{}
 
-func (m mockVersionManager) GetConsensusVersions() module.VersionMap {
+func (m mockVersionManager) GetVersionMap() module.VersionMap {
 	vermap := make(module.VersionMap)
 	vermap["bank"] = 1
 	return vermap
@@ -228,6 +228,7 @@ func (s *KeeperTestSuite) TestMigrations() {
 	mockVM := mockVersionManager{}
 	s.app.UpgradeKeeper.SetVersionManager(mockVM)
 	s.app.UpgradeKeeper.SetCurrentConsensusVersions(s.ctx)
+	vermapBefore := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, _ module.VersionMap) error { return nil })
 	dummyPlan := types.Plan{
 		Name: "dummy",
@@ -237,8 +238,9 @@ func (s *KeeperTestSuite) TestMigrations() {
 
 	s.app.UpgradeKeeper.SetVersionManager(s.app)
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	vermap := s.app.UpgradeKeeper.GetConsensusVersions(s.ctx)
+	vermap := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
 	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), vermap["bank"])
+	s.Require().Greater(vermap["bank"], vermapBefore["bank"])
 }
 
 func TestKeeperTestSuite(t *testing.T) {

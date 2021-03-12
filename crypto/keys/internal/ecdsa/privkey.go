@@ -23,7 +23,7 @@ func GenPrivKey(c elliptic.Curve) (PrivKey, error) {
 // deterministic.
 func NewPrivKey(c elliptic.Curve, random []byte) (PrivKey, error) {
 	if s := c.Params().BitSize; len(random) < s {
-		return PrivKey{}, fmt.Errorf("wrong secret lenght, must be at least %v", s)
+		return PrivKey{}, fmt.Errorf("wrong secret length, must be at least %v", s)
 	}
 	return privFromBuffer(c, bytes.NewBuffer(random))
 }
@@ -48,7 +48,7 @@ func privFromBuffer(c elliptic.Curve, buf io.Reader) (PrivKey, error) {
 	return PrivKey{*key}, nil
 }
 
-// PrivKey is type which paritally iimplements cryptotypes.PrivKey
+// PrivKey is type which partially iimplements cryptotypes.PrivKey
 type PrivKey struct {
 	ecdsa.PrivateKey
 }

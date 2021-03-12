@@ -114,16 +114,6 @@ func (suite *KeeperTestSuite) TestNewCapability() {
 	suite.Require().Nil(cap)
 }
 
-func (suite *KeeperTestSuite) TestOriginalCapabilityKeeper() {
-	got, ok := suite.app.ScopedIBCKeeper.GetCapability(suite.ctx, "invalid")
-	suite.Require().False(ok)
-	suite.Require().Nil(got)
-
-	port, ok := suite.app.ScopedIBCKeeper.GetCapability(suite.ctx, "ports/transfer")
-	suite.Require().True(ok)
-	suite.Require().NotNil(port)
-}
-
 func (suite *KeeperTestSuite) TestAuthenticateCapability() {
 	sk1 := suite.keeper.ScopeToModule(banktypes.ModuleName)
 	sk2 := suite.keeper.ScopeToModule(stakingtypes.ModuleName)

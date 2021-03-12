@@ -45,10 +45,12 @@ message Output {
 
 // Supply represents a struct that passively keeps track of the total supply
 // amounts in the network.
+// This message is deprecated now that supply is indexed by denom.
 message Supply {
+  option deprecated = true;
+
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
 
   option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/exported.SupplyI";
 
@@ -82,4 +84,9 @@ message Metadata {
   // display indicates the suggested denom that should be
   // displayed in clients.
   string display = 4;
+  // name defines the name of the token (eg: Cosmos Atom)
+  string name = 5;
+  // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
+  // be the same as the display.
+  string symbol = 6;
 }

@@ -2,17 +2,9 @@ package types
 
 import (
 	"bytes"
-	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/gogo/protobuf/proto"
-
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -24,6 +16,13 @@ const (
 	TypeMsgCreateValidator = "create_validator"
 	TypeMsgDelegate        = "delegate"
 	TypeMsgBeginRedelegate = "begin_redelegate"
+
+	// These are used for querying events by action.
+	TypeSvcMsgUndelegate      = "/cosmos.staking.v1beta1.Msg/Undelegate"
+	TypeSvcMsgEditValidator   = "/cosmos.staking.v1beta1.Msg/EditValidator"
+	TypeSvcMsgCreateValidator = "/cosmos.staking.v1beta1.Msg/CreateValidator"
+	TypeSvcMsgDelegate        = "/cosmos.staking.v1beta1.Msg/Delegate"
+	TypeSvcMsgBeginRedelegate = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
 
 var (
@@ -257,90 +256,6 @@ func (msg MsgDelegate) ValidateBasic() error {
 	return nil
 }
 
-// Rosetta Msg interface.
-func (msg *MsgDelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
-	var operations []*rosettatypes.Operation
-	delAddr := msg.DelegatorAddress
-	valAddr := msg.ValidatorAddress
-	coin := msg.Amount
-	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
-		var status string
-		if withStatus {
-			status = rosetta.StatusSuccess
-			if hasError {
-				status = rosetta.StatusReverted
-			}
-		}
-		return &rosettatypes.Operation{
-			OperationIdentifier: &rosettatypes.OperationIdentifier{
-				Index: int64(index),
-			},
-			Type:    proto.MessageName(msg),
-			Status:  status,
-			Account: account,
-			Amount: &rosettatypes.Amount{
-				Value: amount,
-				Currency: &rosettatypes.Currency{
-					Symbol: coin.Denom,
-				},
-			},
-		}
-	}
-	delAcc := &rosettatypes.AccountIdentifier{
-		Address: delAddr,
-	}
-	valAcc := &rosettatypes.AccountIdentifier{
-		Address: "staking_account",
-		SubAccount: &rosettatypes.SubAccountIdentifier{
-			Address: valAddr,
-		},
-	}
-	operations = append(operations,
-		delOp(delAcc, "-"+coin.Amount.String(), 0),
-		delOp(valAcc, coin.Amount.String(), 1),
-	)
-	return operations
-}
-
-func (msg *MsgDelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
-	var (
-		delAddr sdk.AccAddress
-		valAddr sdk.ValAddress
-		sendAmt sdk.Coin
-		err     error
-	)
-
-	for _, op := range ops {
-		if strings.HasPrefix(op.Amount.Value, "-") {
-			if op.Account == nil {
-				return nil, fmt.Errorf("account identifier must be specified")
-			}
-			delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
-			if err != nil {
-				return nil, err
-			}
-			continue
-		}
-
-		if op.Account.SubAccount == nil {
-			return nil, fmt.Errorf("account identifier subaccount must be specified")
-		}
-		valAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
-		if err != nil {
-			return nil, err
-		}
-
-		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid amount: %w", err)
-		}
-
-		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
-	}
-
-	return NewMsgDelegate(delAddr, valAddr, sendAmt), nil
-}
-
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
 //nolint:interfacer
 func NewMsgBeginRedelegate(
@@ -396,103 +311,6 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 	return nil
 }
 
-// Rosetta Msg interface.
-func (msg *MsgBeginRedelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
-	var operations []*rosettatypes.Operation
-	delAddr := msg.DelegatorAddress
-	srcValAddr := msg.ValidatorSrcAddress
-	destValAddr := msg.ValidatorDstAddress
-	coin := msg.Amount
-	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
-		var status string
-		if withStatus {
-			status = rosetta.StatusSuccess
-			if hasError {
-				status = rosetta.StatusReverted
-			}
-		}
-		return &rosettatypes.Operation{
-			OperationIdentifier: &rosettatypes.OperationIdentifier{
-				Index: int64(index),
-			},
-			Type:    proto.MessageName(msg),
-			Status:  status,
-			Account: account,
-			Amount: &rosettatypes.Amount{
-				Value: amount,
-				Currency: &rosettatypes.Currency{
-					Symbol: coin.Denom,
-				},
-			},
-		}
-	}
-	srcValAcc := &rosettatypes.AccountIdentifier{
-		Address: delAddr,
-		SubAccount: &rosettatypes.SubAccountIdentifier{
-			Address: srcValAddr,
-		},
-	}
-	destValAcc := &rosettatypes.AccountIdentifier{
-		Address: "staking_account",
-		SubAccount: &rosettatypes.SubAccountIdentifier{
-			Address: destValAddr,
-		},
-	}
-	operations = append(operations,
-		delOp(srcValAcc, "-"+coin.Amount.String(), 0),
-		delOp(destValAcc, coin.Amount.String(), 1),
-	)
-	return operations
-}
-
-func (msg *MsgBeginRedelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
-	var (
-		delAddr     sdk.AccAddress
-		srcValAddr  sdk.ValAddress
-		destValAddr sdk.ValAddress
-		sendAmt     sdk.Coin
-		err         error
-	)
-
-	for _, op := range ops {
-		if strings.HasPrefix(op.Amount.Value, "-") {
-			if op.Account == nil {
-				return nil, fmt.Errorf("account identifier must be specified")
-			}
-			delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
-			if err != nil {
-				return nil, err
-			}
-
-			if op.Account.SubAccount == nil {
-				return nil, fmt.Errorf("account identifier subaccount must be specified")
-			}
-			srcValAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
-			if err != nil {
-				return nil, err
-			}
-			continue
-		}
-
-		if op.Account.SubAccount == nil {
-			return nil, fmt.Errorf("account identifier subaccount must be specified")
-		}
-		destValAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
-		if err != nil {
-			return nil, err
-		}
-
-		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid amount: %w", err)
-		}
-
-		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
-	}
-
-	return NewMsgBeginRedelegate(delAddr, srcValAddr, destValAddr, sendAmt), nil
-}
-
 // NewMsgUndelegate creates a new MsgUndelegate instance.
 //nolint:interfacer
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
@@ -539,89 +357,4 @@ func (msg MsgUndelegate) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// Rosetta Msg interface.
-func (msg *MsgUndelegate) ToOperations(withStatus bool, hasError bool) []*rosettatypes.Operation {
-	var operations []*rosettatypes.Operation
-	delAddr := msg.DelegatorAddress
-	valAddr := msg.ValidatorAddress
-	coin := msg.Amount
-	delOp := func(account *rosettatypes.AccountIdentifier, amount string, index int) *rosettatypes.Operation {
-		var status string
-		if withStatus {
-			status = rosetta.StatusSuccess
-			if hasError {
-				status = rosetta.StatusReverted
-			}
-		}
-		return &rosettatypes.Operation{
-			OperationIdentifier: &rosettatypes.OperationIdentifier{
-				Index: int64(index),
-			},
-			Type:    proto.MessageName(msg),
-			Status:  status,
-			Account: account,
-			Amount: &rosettatypes.Amount{
-				Value: amount,
-				Currency: &rosettatypes.Currency{
-					Symbol: coin.Denom,
-				},
-			},
-		}
-	}
-	delAcc := &rosettatypes.AccountIdentifier{
-		Address: delAddr,
-	}
-	valAcc := &rosettatypes.AccountIdentifier{
-		Address: "staking_account",
-		SubAccount: &rosettatypes.SubAccountIdentifier{
-			Address: valAddr,
-		},
-	}
-	operations = append(operations,
-		delOp(valAcc, "-"+coin.Amount.String(), 0),
-		delOp(delAcc, coin.Amount.String(), 1),
-	)
-	return operations
-}
-
-func (msg *MsgUndelegate) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
-	var (
-		delAddr  sdk.AccAddress
-		valAddr  sdk.ValAddress
-		undelAmt sdk.Coin
-		err      error
-	)
-
-	for _, op := range ops {
-		if strings.HasPrefix(op.Amount.Value, "-") {
-			if op.Account.SubAccount == nil {
-				return nil, fmt.Errorf("account identifier subaccount must be specified")
-			}
-			valAddr, err = sdk.ValAddressFromBech32(op.Account.SubAccount.Address)
-			if err != nil {
-				return nil, err
-			}
-			continue
-		}
-
-		if op.Account == nil {
-			return nil, fmt.Errorf("account identifier must be specified")
-		}
-
-		delAddr, err = sdk.AccAddressFromBech32(op.Account.Address)
-		if err != nil {
-			return nil, err
-		}
-
-		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid amount")
-		}
-
-		undelAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
-	}
-
-	return NewMsgUndelegate(delAddr, valAddr, undelAmt), nil
 }

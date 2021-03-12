@@ -121,6 +121,8 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			&types.QueryDenomsMetadataResponse{
 				Metadatas: []types.Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*types.DenomUnit{
 							{
@@ -151,6 +153,8 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			&types.QueryDenomMetadataResponse{},
 			&types.QueryDenomMetadataResponse{
 				Metadata: types.Metadata{
+					Name:        "Cosmos Hub Atom",
+					Symbol:      "ATOM",
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{

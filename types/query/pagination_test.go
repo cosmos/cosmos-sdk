@@ -80,7 +80,7 @@ func (s *paginationTestSuite) TestPagination() {
 	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
 
 	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
-	pageReq := &query.PageRequest{}
+	pageReq := &query.PageRequest{Reverse: false}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().NoError(err)
@@ -162,6 +162,110 @@ func (s *paginationTestSuite) TestPagination() {
 
 	s.T().Log("verify paginate with offset greater than total results")
 	pageReq = &query.PageRequest{Offset: 300, Limit: defaultLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().LessOrEqual(res.Balances.Len(), 0)
+	s.Require().Nil(res.Pagination.NextKey)
+}
+
+func (s *paginationTestSuite) TestReversePagination() {
+	app, ctx, _ := setupTest()
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	var balances sdk.Coins
+
+	for i := 0; i < numBalances; i++ {
+		denom := fmt.Sprintf("foo%ddenom", i)
+		balances = append(balances, sdk.NewInt64Coin(denom, 100))
+	}
+
+	balances = balances.Sort()
+	addr1 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+
+	s.T().Log("verify paginate with custom limit and countTotal false")
+	pageReq := &query.PageRequest{Limit: 150}
+	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res1, err := queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res1.Balances.Len(), 150)
+	s.Require().NotNil(res1.Pagination.NextKey)
+	s.Require().Equal(res1.Pagination.Total, uint64(0))
+
+	s.T().Log("verify paginate with custom limit, key and Reverse true")
+	pageReq = &query.PageRequest{Limit: defaultLimit, Reverse: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err := queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), defaultLimit)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+
+	s.T().Log("verify paginate with custom limit, key and Reverse true")
+	pageReq = &query.PageRequest{Offset: 100, Limit: defaultLimit, Reverse: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), defaultLimit)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+
+	s.T().Log("verify paginate for last page, Reverse true")
+	pageReq = &query.PageRequest{Offset: 200, Limit: defaultLimit, Reverse: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), lastPageRecords)
+	s.Require().Nil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+
+	s.T().Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
+	pageReq = &query.PageRequest{Limit: overLimit, Reverse: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().LessOrEqual(res.Balances.Len(), overLimit)
+
+	s.T().Log("verify paginate with custom limit, key and countTotal false")
+	pageReq = &query.PageRequest{Key: res1.Pagination.NextKey, Limit: 50, Reverse: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), 50)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+
+	s.T().Log("verify paginate returns valid result with Reverse enable & disable")
+	s.Require().Equal(balances[100:150].String(), res.Balances.Sort().String())
+
+	s.T().Log("verify paginate with custom limit, key and countTotal false")
+	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: 50, Reverse: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), 50)
+	s.Require().NotNil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+
+	s.T().Log("verify paginate returns valid result with Reverse enable & disable")
+	s.Require().Equal(balances[50:100].String(), res.Balances.Sort().String())
+
+	s.T().Log("verify paginate with offset and key - error")
+	pageReq = &query.PageRequest{Key: res1.Pagination.NextKey, Offset: 100, Limit: defaultLimit, CountTotal: false}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().Error(err)
+	s.Require().Equal("rpc error: code = InvalidArgument desc = paginate: invalid request, either offset or key is expected, got both", err.Error())
+
+	s.T().Log("verify paginate with offset greater than total results")
+	pageReq = &query.PageRequest{Offset: 300, Limit: defaultLimit, CountTotal: false, Reverse: true}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().NoError(err)

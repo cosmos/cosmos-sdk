@@ -257,10 +257,22 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 			"",
 		},
 		{
-			"expect pass with with order-by filter",
+			"valid request: order by asc",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
 			false,
 			"",
+		},
+		{
+			"valid request: order by desc",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			false,
+			"",
+		},
+		{
+			"invalid request: invalid order by",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			true,
+			"is not a valid tx.OrderBy",
 		},
 		{
 			"expect pass with multiple-events",

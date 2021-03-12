@@ -7303,7 +7303,7 @@ OrderBy defines the sorting order
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| ORDER_BY_UNKNOWN | 0 | ORDER_BY_UNKNOWN specifies an unknown sorting order |
+| ORDER_BY_UNSPECIFIED | 0 | ORDER_BY_UNSPECIFIED specifies an unknown sorting order |
 | ORDER_BY_ASC | 1 | ORDER_BY_ASC defines ascending order |
 | ORDER_BY_DESC | 2 | ORDER_BY_DESC defines descending order |
 

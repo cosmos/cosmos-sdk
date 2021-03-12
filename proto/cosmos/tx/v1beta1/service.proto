@@ -48,7 +48,7 @@ message GetTxsEventRequest {
 
 // OrderBy defines the sorting order
 enum OrderBy {
-  // ORDER_BY_UNSPECIFIED specifies an unknown sorting order
+  // ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case.
   ORDER_BY_UNSPECIFIED = 0;
   // ORDER_BY_ASC defines ascending order
   ORDER_BY_ASC     = 1;

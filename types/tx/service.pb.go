@@ -37,7 +37,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type OrderBy int32
 
 const (
-	// ORDER_BY_UNSPECIFIED specifies an unknown sorting order
+	// ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case.
 	OrderBy_ORDER_BY_UNSPECIFIED OrderBy = 0
 	// ORDER_BY_ASC defines ascending order
 	OrderBy_ORDER_BY_ASC OrderBy = 1

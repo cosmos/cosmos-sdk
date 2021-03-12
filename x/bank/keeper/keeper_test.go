@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/suite"

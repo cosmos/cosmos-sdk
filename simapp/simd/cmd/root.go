@@ -79,6 +79,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
+		clicfg.Cmd(flags.FlagHome),
 	)
 
 	a := appCreator{encodingConfig}
@@ -94,8 +95,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	// add rosetta
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 
-	// add client config
-	rootCmd.AddCommand(clicfg.Cmd(flags.FlagHome))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {

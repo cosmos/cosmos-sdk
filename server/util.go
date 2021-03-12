@@ -245,15 +245,21 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 
 	// Adding default ClientConfig and writing it into "client.toml"
 	cliCfgFilePath := filepath.Join(configPath, "client.toml")
-	if _, err := os.Stat(cliCfgFilePath); os.IsNotExist(err) {
-		cliConfig, err := clicfg.ParseConfig(rootViper)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse %s: %w", cliCfgFilePath, err)
-		}
-
-		configTemplate := clicfg.InitConfigTemplate()
-		clicfg.WriteConfigFile(cliCfgFilePath, cliConfig, configTemplate)
+	//	if _, err := os.Stat(cliCfgFilePath); os.IsNotExist(err) {
+	cliConfig, err := clicfg.ParseConfig(rootViper)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %s: %w", cliCfgFilePath, err)
 	}
+
+	configTemplate, err := clicfg.InitConfigTemplate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initiate config template %s: %w", cliCfgFilePath, err)
+	}
+
+	if err := clicfg.WriteConfigFile(cliCfgFilePath, cliConfig, configTemplate); err != nil {
+		return nil, fmt.Errorf("failed to write into config file %s: %w", cliCfgFilePath, err)
+	}
+	//	}
 
 	return conf, nil
 }

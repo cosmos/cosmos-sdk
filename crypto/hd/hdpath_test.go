@@ -173,16 +173,23 @@ func TestDeriveHDPathRange(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.path, func(t *testing.T) {
+			require := require.New(t)
 			master, ch := hd.ComputeMastersFromSeed(seed)
 			_, err := hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, tt.path)
+			checkError(require, err, tt.wantErr)
 
-			if tt.wantErr == "" {
-				require.NoError(t, err, "unexpected error")
-			} else {
-				require.Error(t, err, "expected a report of an int overflow")
-				require.Contains(t, err.Error(), tt.wantErr)
-			}
+			_, err = hd.DeriveECDSAPrivKey(secp256r1Curve, master, ch, tt.path)
+			checkError(require, err, tt.wantErr)
 		})
+	}
+}
+
+func checkError(require *require.Assertions, err error, wantErr string) {
+	if wantErr == "" {
+		require.NoError(err, "unexpected error")
+	} else {
+		require.Error(err, "expected a report of an int overflow")
+		require.Contains(err.Error(), wantErr)
 	}
 }
 

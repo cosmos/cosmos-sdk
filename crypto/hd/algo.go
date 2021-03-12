@@ -2,7 +2,6 @@ package hd
 
 import (
 	"crypto/elliptic"
-	"fmt"
 
 	"github.com/btcsuite/btcd/btcec"
 
@@ -24,10 +23,10 @@ const (
 	Sr25519Type = PubKeyType("sr25519")
 )
 
+// Secp256 algos use the Bip39 derivation mechanism
 var (
-	// Secp256k1 uses the Bitcoin secp256k1 ECDSA parameters.
-	Secp256k1 = ecdsaAlgo{btcec.S256(), Secp256k1Type}
-	Secp256r1 = ecdsaAlgo{elliptic.P256(), Secp256r1Type}
+	Secp256k1 = ecdsaAlgo{btcec.S256(), Secp256k1Type, genSecp256k1}
+	Secp256r1 = ecdsaAlgo{elliptic.P256(), Secp256r1Type, genSecp256r1}
 )
 
 type DeriveFn func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
@@ -41,6 +40,7 @@ type WalletGenerator interface {
 type ecdsaAlgo struct {
 	curve elliptic.Curve
 	name  PubKeyType
+	gen   GenerateFn
 }
 
 // Name returns signature scheme name
@@ -64,13 +64,7 @@ func (s ecdsaAlgo) derive(mnemonic, bip39Passphrase, hdPath string) ([]byte, err
 
 // Generate generates a secp256k1 private key from the given bytes.
 func (s ecdsaAlgo) Generate() GenerateFn {
-	switch s.name {
-	case Secp256k1Type:
-		return genSecp256k1
-	case Secp256r1Type:
-		return genSecp256r1
-	}
-	panic(fmt.Sprint("not supported scheme:", s.name))
+	return s.gen
 }
 
 func genSecp256k1(bz []byte) types.PrivKey {
@@ -80,7 +74,9 @@ func genSecp256k1(bz []byte) types.PrivKey {
 }
 
 func genSecp256r1(bz []byte) types.PrivKey {
-	// TODO
-
-	return &secp256r1.PrivKey{}
+	key, err := secp256r1.NewPrivKeyFromSecret(bz)
+	if err != nil {
+		panic(err)
+	}
+	return key
 }

@@ -245,7 +245,7 @@ func derivePrivateKey(curve elliptic.Curve, privKeyBytes, chainCode [32]byte, in
 	if harden {
 		index |= 0x80000000
 
-		data = append([]byte{byte(0)}, privKeyBytes[:]...)
+		data = append([]byte{0}, privKeyBytes[:]...)
 	} else {
 		//  we use btcec instead of tendermint
 		// this can't return an error:
@@ -261,11 +261,11 @@ func derivePrivateKey(curve elliptic.Curve, privKeyBytes, chainCode [32]byte, in
 }
 
 // modular big endian addition
-func addScalars(a []byte, b []byte, field *big.Int) [32]byte {
+func addScalars(a []byte, b []byte, order *big.Int) [32]byte {
 	aInt := new(big.Int).SetBytes(a)
 	bInt := new(big.Int).SetBytes(b)
 	sInt := new(big.Int).Add(aInt, bInt)
-	x := sInt.Mod(sInt, field).Bytes()
+	x := sInt.Mod(sInt, order).Bytes()
 	x2 := [32]byte{}
 	copy(x2[32-len(x):], x)
 

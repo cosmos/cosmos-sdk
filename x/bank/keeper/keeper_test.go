@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/suite"
@@ -860,6 +862,12 @@ func (suite *IntegrationTestSuite) TestDelegateCoins() {
 	// require the ability for a vesting account to delegate
 	suite.Require().NoError(app.BankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
 	suite.Require().Equal(delCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
+
+	// require that delegated vesting amount is equal to what was delegated with DelegateCoins
+	acc = app.AccountKeeper.GetAccount(ctx, addr1)
+	vestingAcc, ok := acc.(exported.VestingAccount)
+	suite.Require().True(ok)
+	suite.Require().Equal(delCoins, vestingAcc.GetDelegatedVesting())
 }
 
 func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {

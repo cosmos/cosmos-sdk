@@ -246,14 +246,14 @@ func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
 
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
-func (tx StdTx) GetPubKeys() []cryptotypes.PubKey {
+func (tx StdTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	pks := make([]cryptotypes.PubKey, len(tx.Signatures))
 
 	for i, stdSig := range tx.Signatures {
 		pks[i] = stdSig.GetPubKey()
 	}
 
-	return pks
+	return pks, nil
 }
 
 // GetGas returns the Gas in StdFee

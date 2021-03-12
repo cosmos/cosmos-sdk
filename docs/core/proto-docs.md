@@ -515,6 +515,7 @@
     - [SimulateResponse](#cosmos.tx.v1beta1.SimulateResponse)
   
     - [BroadcastMode](#cosmos.tx.v1beta1.BroadcastMode)
+    - [OrderBy](#cosmos.tx.v1beta1.OrderBy)
   
     - [Service](#cosmos.tx.v1beta1.Service)
   
@@ -7221,7 +7222,7 @@ RPC method.
 | ----- | ---- | ----- | ----------- |
 | `events` | [string](#string) | repeated | events is the list of transaction event type. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
-| `order_by` | [string](#string) |  | order_by defines events sorting order |
+| `order_by` | [OrderBy](#cosmos.tx.v1beta1.OrderBy) |  |  |
 
 
 
@@ -7292,6 +7293,19 @@ BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC metho
 | BROADCAST_MODE_BLOCK | 1 | BROADCAST_MODE_BLOCK defines a tx broadcasting mode where the client waits for the tx to be committed in a block. |
 | BROADCAST_MODE_SYNC | 2 | BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for a CheckTx execution response only. |
 | BROADCAST_MODE_ASYNC | 3 | BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns immediately. |
+
+
+
+<a name="cosmos.tx.v1beta1.OrderBy"></a>
+
+### OrderBy
+OrderBy defines the sorting order
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| UNKNOWN | 0 |  |
+| ASC | 1 |  |
+| DESC | 2 |  |
 
 
  <!-- end enums -->

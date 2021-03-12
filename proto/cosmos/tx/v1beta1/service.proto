@@ -7,6 +7,7 @@ import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
+option (gogoproto.goproto_registration) = true;
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
 
 // Service defines a gRPC service for interacting with transactions.
@@ -42,8 +43,14 @@ message GetTxsEventRequest {
   repeated string events = 1;
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
-  // order_by defines events sorting order
-  string order_by = 3;
+  OrderBy order_by = 3;
+}
+
+// OrderBy defines the sorting order
+enum OrderBy {
+  UNKNOWN = 0;
+  ASC     = 1;
+  DESC    = 2;
 }
 
 // GetTxsEventResponse is the response type for the Service.TxsByEvents

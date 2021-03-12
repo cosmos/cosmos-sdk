@@ -163,9 +163,13 @@ func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.Serv
 	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
 }
 
-func parseOrderBy(orderBy string) string {
-	if orderBy == "desc" || orderBy == "asc" {
-		return orderBy
+func parseOrderBy(orderBy txtypes.OrderBy) string {
+	switch orderBy {
+	case txtypes.OrderBy_ASC:
+		return "asc"
+	case txtypes.OrderBy_DESC:
+		return "desc"
+	default:
+		return "asc"
 	}
-	return "asc"
 }

@@ -177,7 +177,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			"request with order-by",
 			&tx.GetTxsEventRequest{
 				Events:  []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
-				OrderBy: "asc",
+				OrderBy: tx.OrderBy_ASC,
 			},
 			false, "",
 		},

@@ -2115,7 +2115,8 @@ RPC.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `implementation_message_names` | [string](#string) | repeated |  |
+| `implementation_message_names` | [string](#string) | repeated | implementation_message_names returns the names as saved in the codec |
+| `implementation_message_proto_names` | [string](#string) | repeated | implementation_message_proto_names returns the protobuf names of the implementers |
 
 
 

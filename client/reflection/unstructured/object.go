@@ -27,7 +27,7 @@ func (o Map) Marshal(md protoreflect.MessageDescriptor) (*dynamicpb.Message, err
 		if fd == nil {
 			return nil, fmt.Errorf("descriptor %s does not contain field named %s", md.FullName(), fieldName)
 		}
-		pv, err := interfaceToProtoValue(dyn, interfaceValue, fd, md)
+		pv, err := interfaceToProtoValue(dyn, interfaceValue, fd, md, false)
 		if err != nil {
 			return nil, err
 		}
@@ -55,11 +55,11 @@ func fillMap(dyn *dynamicpb.Message, v interface{}, pMap protoreflect.Map, fd pr
 		v := mapIter.Value().Interface()
 
 		// cast k and v to kDesc and vDesc
-		kValue, err := interfaceToProtoValue(dyn, k, keyDesc, md)
+		kValue, err := interfaceToProtoValue(dyn, k, keyDesc, md, false)
 		if err != nil {
 			return fmt.Errorf("unable to set map key for map field descriptor %s: %w", fd, err)
 		}
-		vValue, err := interfaceToProtoValue(dyn, v, valueDesc, md)
+		vValue, err := interfaceToProtoValue(dyn, v, valueDesc, md, false)
 		if err != nil {
 			return fmt.Errorf("unable to set map value for map field descriptor %s: %w", fd, err)
 		}
@@ -78,7 +78,7 @@ func fillList(dyn *dynamicpb.Message, v interface{}, list protoreflect.List, fd 
 	}
 	for i := 0; i < rv.Len(); i++ {
 		iv := rv.Index(i).Interface()
-		v, err := interfaceToProtoValue(dyn, iv, fd, md)
+		v, err := interfaceToProtoValue(dyn, iv, fd, md, true)
 		if err != nil {
 			return err
 		}
@@ -87,9 +87,14 @@ func fillList(dyn *dynamicpb.Message, v interface{}, list protoreflect.List, fd 
 	return nil
 }
 
-func interfaceToProtoValue(dyn *dynamicpb.Message, interfaceValue interface{}, fd protoreflect.FieldDescriptor, md protoreflect.MessageDescriptor) (protoreflect.Value, error) {
+// interfaceToProtoValue converts the given interface value to the protoreflect.Value expected
+// isListElement tells if the interfaceValue we are processing is part of a list or not
+// as its protoreflect.FieldDescriptor would return that this is a list instead of returning
+// the descriptor for the list element. This can be done in this way as protobuf does not allow
+// rectangular (or more) arrays. So if we're dealing with a list it's gonna be of a singular dimension.
+func interfaceToProtoValue(dyn *dynamicpb.Message, interfaceValue interface{}, fd protoreflect.FieldDescriptor, md protoreflect.MessageDescriptor, isListElement bool) (protoreflect.Value, error) {
 	// handle list or map
-	if fd.IsList() {
+	if fd.IsList() && !isListElement {
 		value := dyn.NewField(fd)
 		listValue := value.List()
 		err := fillList(dyn, interfaceValue, listValue, fd, md)

@@ -37,9 +37,9 @@ type QueryDescriptor struct {
 	ServiceName string
 }
 
-type methodsMap map[string]QueryDescriptor
+type QueryMethodsMap map[string]QueryDescriptor
 
-func (m methodsMap) insert(methodName string, method protoreflect.MethodDescriptor) error {
+func (m QueryMethodsMap) insert(methodName string, method protoreflect.MethodDescriptor) error {
 
 	if _, exists := m[methodName]; exists {
 		return fmt.Errorf("method already exists: %s", methodName)
@@ -56,7 +56,7 @@ func (m methodsMap) insert(methodName string, method protoreflect.MethodDescript
 	return nil
 }
 
-func (m methodsMap) merge(m2 methodsMap) error {
+func (m QueryMethodsMap) merge(m2 QueryMethodsMap) error {
 	for k, v := range m2 {
 		if _, exists := m[k]; exists {
 			return fmt.Errorf("method already exists: %s", k)

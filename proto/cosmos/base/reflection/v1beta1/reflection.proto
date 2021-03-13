@@ -90,5 +90,8 @@ message ListImplementationsRequest {
 // ListImplementationsResponse is the response type of the ListImplementations
 // RPC.
 message ListImplementationsResponse {
+  // implementation_message_names returns the names as saved in the codec
   repeated string implementation_message_names = 1;
+  // implementation_message_proto_names returns the protobuf names of the implementers
+  repeated string implementation_message_proto_names = 2;
 }

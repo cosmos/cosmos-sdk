@@ -12,12 +12,12 @@ func TestBuilder_Parse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	builder := NewFetcherRegistry(f)
+	builder := NewResolverCodec(f)
 	dec, err := hex.DecodeString(f1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = builder.Parse(dec)
+	_, err = builder.RegisterRawFileDescriptor(dec)
 	if err != nil {
 		t.Fatal(err)
 	}

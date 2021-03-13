@@ -31,9 +31,9 @@ type Client struct {
 	tm  tmrpc.Client
 
 	msgs     map[string]protoreflect.MessageDescriptor
-	queriers methodsMap
+	queriers QueryMethodsMap
 
-	reg *codec.Registry
+	reg *codec.Codec
 
 	accountInfoProvider AccountInfoProvider
 }
@@ -56,8 +56,8 @@ func NewClient(grpcEndpoint, tmEndpoint string, provider AccountInfoProvider) (*
 		sdk:                 sdkReflect,
 		tm:                  tmRpc,
 		msgs:                make(map[string]protoreflect.MessageDescriptor),
-		queriers:            make(methodsMap),
-		reg:                 codec.NewFetcherRegistry(fetcher),
+		queriers:            make(QueryMethodsMap),
+		reg:                 codec.NewResolverCodec(fetcher),
 		accountInfoProvider: provider,
 	}
 	err = c.init(context.TODO())
@@ -66,6 +66,10 @@ func NewClient(grpcEndpoint, tmEndpoint string, provider AccountInfoProvider) (*
 	}
 
 	return c, nil
+}
+
+func (c *Client) Codec() *codec.Codec {
+	return c.reg
 }
 
 func (c *Client) ListQueries() []Query {
@@ -82,6 +86,10 @@ func (c *Client) ListQueries() []Query {
 	return q
 }
 
+func (c *Client) ListQueryMap() QueryMethodsMap {
+	return c.queriers
+}
+
 func (c *Client) ListDeliverables() []Deliverable {
 	d := make([]Deliverable, 0, len(c.msgs))
 	for name := range c.msgs {
@@ -90,7 +98,27 @@ func (c *Client) ListDeliverables() []Deliverable {
 	return d
 }
 
-func (c *Client) Query(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
+func (c *Client) Query(ctx context.Context, method string, request proto.Message) (resp proto.Message, err error) {
+	desc, exists := c.queriers[method]
+	if !exists {
+		return nil, fmt.Errorf("unknown method: %s", method)
+	}
+
+	reqBytes, err := proto.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+
+	tmResp, err := c.tm.ABCIQuery(ctx, method, reqBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	resp = dynamicpb.NewMessage(desc.Response)
+	return resp, proto.Unmarshal(tmResp.Response.Value, resp)
+}
+
+func (c *Client) QueryUnstructured(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
 	desc, exists := c.queriers[method]
 	if !exists {
 		return nil, fmt.Errorf("unknown method: %s", method)
@@ -175,6 +203,11 @@ func (c *Client) init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	err = c.resolveAnys(ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -186,10 +219,10 @@ func (c *Client) buildMsgs(ctx context.Context) error {
 	// we create a map which contains the message names that we expect to process
 	// so in case one fail contains multiple messages we need then we won't need
 	// to resolve the same proto file multiple times :)
-	expectedMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageNames))
-	foundMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageNames))
-	for _, name := range implResp.ImplementationMessageNames {
-		expectedMsgs[name[1:]] = struct{}{} // remove '/'
+	expectedMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageProtoNames))
+	foundMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageProtoNames))
+	for _, name := range implResp.ImplementationMessageProtoNames {
+		expectedMsgs[name] = struct{}{} // remove '/'
 	}
 
 	// now resolve types
@@ -202,7 +235,7 @@ func (c *Client) buildMsgs(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		desc, err := c.reg.Parse(rptResp.RawDescriptor)
+		desc, err := c.reg.RegisterRawFileDescriptor(rptResp.RawDescriptor)
 		if err != nil {
 			return err
 		}
@@ -259,7 +292,7 @@ func (c *Client) buildQueries(ctx context.Context) error {
 	}
 
 	for _, rawDesc := range svcDescriptors {
-		fileDesc, err := c.reg.Parse(rawDesc)
+		fileDesc, err := c.reg.RegisterRawFileDescriptor(rawDesc)
 		if err != nil && !errors.Is(err, codec.ErrFileRegistered) {
 			return err
 		}
@@ -277,10 +310,50 @@ func (c *Client) buildQueries(ctx context.Context) error {
 	return nil
 }
 
-func queryFromFileDesc(file protoreflect.FileDescriptor) (methodsMap, error) {
+func (c *Client) resolveAnys(ctx context.Context) error {
+	availableInterfaces, err := c.sdk.ListAllInterfaces(ctx, &reflection.ListAllInterfacesRequest{})
+	if err != nil {
+		return err
+	}
+
+	for _, implementation := range availableInterfaces.InterfaceNames {
+		implsResp, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: implementation})
+		if err != nil {
+			return err
+		}
+
+		for _, implementer := range implsResp.ImplementationMessageProtoNames {
+			err = c.resolveAny(ctx, implementation, implementer)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) resolveAny(ctx context.Context, implementation, implementer string) error {
+	// if it's known skip
+	if c.reg.KnownMessage(implementer) {
+		return nil
+	}
+	// if it's unknown then solve
+	desc, err := c.sdk.ResolveProtoType(ctx, &reflection.ResolveProtoTypeRequest{Name: implementer})
+	if err != nil {
+		return err
+	}
+	_, err = c.reg.RegisterRawFileDescriptor(desc.RawDescriptor)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func queryFromFileDesc(file protoreflect.FileDescriptor) (QueryMethodsMap, error) {
 	svcs := file.Services()
 
-	m := make(methodsMap)
+	m := make(QueryMethodsMap)
 
 	for i := 0; i < svcs.Len(); i++ {
 		svcDesc := svcs.Get(i)
@@ -298,8 +371,8 @@ func queryFromFileDesc(file protoreflect.FileDescriptor) (methodsMap, error) {
 	return m, nil
 }
 
-func methodsFromSvcDesc(desc protoreflect.ServiceDescriptor) (methodsMap, error) {
-	m := make(methodsMap)
+func methodsFromSvcDesc(desc protoreflect.ServiceDescriptor) (QueryMethodsMap, error) {
+	m := make(QueryMethodsMap)
 
 	methods := desc.Methods()
 	for i := 0; i < methods.Len(); i++ {

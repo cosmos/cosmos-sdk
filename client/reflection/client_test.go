@@ -73,14 +73,38 @@ func TestClient_ListDeliverables(t *testing.T) {
 	}
 }
 
+func TestClient_resolveAnys(t *testing.T) {
+	c, err := NewClient("localhost:9090", "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c.resolveAnys(context.TODO())
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestClient_Query(t *testing.T) {
 	c, err := NewClient("localhost:9090", "tcp://localhost:26657", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	t.Run("account test", func(t *testing.T) {
+		resp, err := c.QueryUnstructured(context.TODO(), "/cosmos.auth.v1beta1.Query/Account", unstructured.Map{
+			"address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
+		})
+
+		b, err := c.reg.MarshalJSON(resp)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("%s", b)
+	})
+
 	t.Run("bank test", func(t *testing.T) {
-		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Balance", unstructured.Map{
+		resp, err := c.QueryUnstructured(context.TODO(), "/cosmos.bank.v1beta1.Query/Balance", unstructured.Map{
 			"address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
 			"denom":   "stake",
 		})
@@ -99,7 +123,7 @@ func TestClient_Query(t *testing.T) {
 	})
 
 	t.Run("params", func(t *testing.T) {
-		resp, err := c.Query(context.TODO(), "/cosmos.bank.v1beta1.Query/Params", unstructured.Map{})
+		resp, err := c.QueryUnstructured(context.TODO(), "/cosmos.bank.v1beta1.Query/Params", unstructured.Map{})
 		if err != nil {
 			t.Fatal(err)
 		}

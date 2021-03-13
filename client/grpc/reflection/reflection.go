@@ -55,12 +55,28 @@ func (r *reflectionServiceServer) ListImplementations(_ context.Context, req *Li
 	}
 
 	impls := r.interfaceRegistry.ListImplementations(req.InterfaceName)
+	protoNames := make([]string, len(impls))
 
-	return &ListImplementationsResponse{ImplementationMessageNames: impls}, nil
+	for i, impl := range impls {
+		pb, err := r.interfaceRegistry.Resolve(impl)
+		// we should panic but let's return an error
+		if err != nil {
+			return nil, status.Errorf(codes.NotFound, "can not solve %s: %s", impl, err.Error())
+		}
+		// we should panic here too
+		name := proto.MessageName(pb)
+		if name == "" {
+			return nil, status.Errorf(codes.NotFound, "can not get proto name for %s")
+		}
+		protoNames[i] = name
+	}
+	return &ListImplementationsResponse{
+		ImplementationMessageNames:      impls,
+		ImplementationMessageProtoNames: protoNames,
+	}, nil
 }
 
-func (r *reflectionServiceServer) ListDeliverables(ctx context.Context, request *ListDeliverablesRequest) (*ListDeliverablesResponse, error) {
-
+func (r *reflectionServiceServer) ListDeliverables(_ context.Context, _ *ListDeliverablesRequest) (*ListDeliverablesResponse, error) {
 	implementersName := r.interfaceRegistry.ListImplementations(sdktypes.ServiceMsgInterfaceName)
 
 	deliverables := make([]*DeliverableDescriptor, len(implementersName))

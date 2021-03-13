@@ -38,15 +38,12 @@ type Codec struct {
 	dependencyFetcher DependencyFetcher
 }
 
+// NewCodec instantiates a codec with no dependency resolving capabilities
 func NewCodec() *Codec {
-	return &Codec{
-		files: &protoregistry.Files{},
-		types: &protoregistry.Types{},
-	}
+	return NewResolverCodec(nil)
 }
 
-// NewResolverCodec builds a registry which also
-// resolves protobuf dependencies
+// NewResolverCodec builds a codec which resolves dependencies for unknown protobuf types
 func NewResolverCodec(f DependencyFetcher) *Codec {
 	filesReg := new(protoregistry.Files)
 	typesReg := new(protoregistry.Types)
@@ -59,9 +56,7 @@ func NewResolverCodec(f DependencyFetcher) *Codec {
 			Resolver: typeResolver,
 		},
 		jsonUnmarshaler: protojson.UnmarshalOptions{
-			AllowPartial:   false,
-			DiscardUnknown: false,
-			Resolver:       typesReg,
+			Resolver: typesReg,
 		},
 		protoMarshaler: proto.MarshalOptions{},
 		protoUnmarshaler: proto.UnmarshalOptions{

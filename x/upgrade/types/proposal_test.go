@@ -26,9 +26,9 @@ func TestContentAccessors(t *testing.T) {
 	}{
 		"upgrade": {
 			p: types.NewSoftwareUpgradeProposal("Title", "desc", types.Plan{
-				Name: "due_time",
-				Info: "https://foo.bar",
-				Time: mustParseTime("2019-07-08T11:33:55Z"),
+				Name:   "due_height",
+				Info:   "https://foo.bar",
+				Height: 99999999999,
 			}),
 			title: "Title",
 			desc:  "desc",

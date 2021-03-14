@@ -22,9 +22,10 @@ message Plan {
   // reached and the software will exit.
   string name = 1;
 
-  // The time after which the upgrade must be performed.
-  // Leave set to its zero value to use a pre-defined Height instead.
-  google.protobuf.Timestamp time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  // Time based upgrades have been deprecated. Time based upgrade logic
+  // has been removed from the SDK.
+  reserved 2;
+  reserved "time";
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.

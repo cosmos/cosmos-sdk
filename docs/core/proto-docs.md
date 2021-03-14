@@ -80,6 +80,7 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
+    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -514,6 +515,7 @@
     - [SimulateResponse](#cosmos.tx.v1beta1.SimulateResponse)
   
     - [BroadcastMode](#cosmos.tx.v1beta1.BroadcastMode)
+    - [OrderBy](#cosmos.tx.v1beta1.OrderBy)
   
     - [Service](#cosmos.tx.v1beta1.Service)
   
@@ -1555,6 +1557,23 @@ sendable).
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `enabled` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+This message is deprecated now that supply is indexed by denom.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -7203,6 +7222,7 @@ RPC method.
 | ----- | ---- | ----- | ----------- |
 | `events` | [string](#string) | repeated | events is the list of transaction event type. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+| `order_by` | [OrderBy](#cosmos.tx.v1beta1.OrderBy) |  |  |
 
 
 
@@ -7275,6 +7295,19 @@ BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC metho
 | BROADCAST_MODE_ASYNC | 3 | BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns immediately. |
 
 
+
+<a name="cosmos.tx.v1beta1.OrderBy"></a>
+
+### OrderBy
+OrderBy defines the sorting order
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ORDER_BY_UNSPECIFIED | 0 | ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case. |
+| ORDER_BY_ASC | 1 | ORDER_BY_ASC defines ascending order |
+| ORDER_BY_DESC | 2 | ORDER_BY_DESC defines descending order |
+
+
  <!-- end enums -->
 
  <!-- end HasExtensions -->
@@ -7329,7 +7362,6 @@ Plan specifies information about a planned upgrade and when it should occur.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time after which the upgrade must be performed. Leave set to its zero value to use a pre-defined Height instead. |
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
 

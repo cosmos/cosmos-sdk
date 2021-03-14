@@ -25,7 +25,7 @@
     "constructor_dsl_file": "transfer.ros",
     "end_conditions": {
       "create_account": 1,
-      "transfer": 3
+      "transfer": 1
     }
   },
   "data": {

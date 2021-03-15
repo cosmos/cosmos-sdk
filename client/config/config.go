@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // Default constants
@@ -87,25 +87,24 @@ func Cmd(defaultCLIHome string) *cobra.Command {
 
 func runConfigCmd(cmd *cobra.Command, args []string) error {
 
-	v := viper.New()
+	clientCtx := client.GetClientContextFromCmd(cmd)
 
-	cfgPath, err := ensureCfgPath(v.GetString(flags.FlagHome))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to make config path: %v\n", err)
-		return err
+	configPath := filepath.Join(clientCtx.HomeDir, "config")
+
+	if err := ensureConfigPath(configPath); err != nil {
+		return fmt.Errorf("couldn't make config config: %v", err)
 	}
 
-	cliConfig, err := getClientConfig(cfgPath, v)
+	cliConfig, err := getClientConfig(configPath, clientCtx.Viper)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to get client config: %v\n", err)
-		return err
+		return fmt.Errorf("couldn't get client config: %v", err)
 	}
 
 	switch len(args) {
 	case 0:
 		// print all client config fields to sdt out
 		s, _ := json.MarshalIndent(cliConfig, "", "\t")
-		fmt.Print(string(s))
+		cmd.Println(string(s))
 
 	case 1:
 		// it's a get
@@ -114,21 +113,20 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		key := args[0]
 		switch key {
 		case flags.FlagChainID:
-			fmt.Println(cliConfig.ChainID)
+			cmd.Println(cliConfig.ChainID)
 		case flags.FlagKeyringBackend:
-			fmt.Println(cliConfig.KeyringBackend)
+			cmd.Println(cliConfig.KeyringBackend)
 		case tmcli.OutputFlag:
-			fmt.Println(cliConfig.Output)
+			cmd.Println(cliConfig.Output)
 		case flags.FlagNode:
-			fmt.Println(cliConfig.Node)
+			cmd.Println(cliConfig.Node)
 		case flags.FlagBroadcastMode:
-			fmt.Println(cliConfig.BroadcastMode)
+			cmd.Println(cliConfig.BroadcastMode)
 		case "trace":
-			fmt.Println(cliConfig.Trace)
+			cmd.Println(cliConfig.Trace)
 		default:
 			err := errUnknownConfigKey(key)
-			fmt.Fprintf(os.Stderr, "Unable to get the value for the key: %v, error:  %v\n", key, err)
-			return err
+			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v\n", key, err)
 		}
 
 	case 2:
@@ -149,8 +147,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			cliConfig.SetBroadcastMode(value)
 		case "trace":
 			if err := cliConfig.SetTrace(value); err != nil {
-				fmt.Fprintf(os.Stderr, "Unable to parse value to bool, err: %v\n", err)
-				return err
+				return fmt.Errorf("couldn't parse bool value: %v", err)
 			}
 		default:
 			return errUnknownConfigKey(key)
@@ -158,21 +155,17 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 		configTemplate, err := InitConfigTemplate()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to initiate config template, err: %v\n", err)
-			return err
+			return fmt.Errorf("could not initiate config template: %v", err)
 		}
 
-		cfgFile := path.Join(cfgPath, "config.toml")
-		if err := WriteConfigFile(cfgFile, cliConfig, configTemplate); err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to write client config to the file, err: %v\n", err)
-			return err
+		cliConfigFile := filepath.Join(configPath, "client.toml")
+		if err := WriteConfigFile(cliConfigFile, cliConfig, configTemplate); err != nil {
+			return fmt.Errorf("could not write client config to the file: %v", err)
 		}
 
 	default:
 		// print error
-		err := errors.New("unable to execute config command")
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		return err
+		return errors.New("cound not execute config command")
 	}
 
 	return nil

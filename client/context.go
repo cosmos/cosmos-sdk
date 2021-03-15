@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
@@ -45,6 +46,7 @@ type Context struct {
 	AccountRetriever  AccountRetriever
 	NodeURI           string
 	FeeGranter        sdk.AccAddress
+	Viper             *viper.Viper
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -210,6 +212,12 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 // WithInterfaceRegistry returns the context with an updated InterfaceRegistry
 func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) Context {
 	ctx.InterfaceRegistry = interfaceRegistry
+	return ctx
+}
+
+// WithViper returns the context with Viper field
+func (ctx Context) WithViper() Context {
+	ctx.Viper = viper.New()
 	return ctx
 }
 

@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	clicfg "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -23,6 +22,8 @@ import (
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	clicfg "github.com/cosmos/cosmos-sdk/client/config"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -244,9 +245,12 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	}
 
 	// TODO test It if it works
+
 	// Adding default ClientConfig and writing it into "client.toml"
 	cliCfgFilePath := filepath.Join(configPath, "client.toml")
 	//	if _, err := os.Stat(cliCfgFilePath); os.IsNotExist(err) {
+
+	// TODO use clientCtx.Viper instead of rootViper
 	cliConfig, err := clicfg.ParseConfig(rootViper)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse %s: %w", cliCfgFilePath, err)

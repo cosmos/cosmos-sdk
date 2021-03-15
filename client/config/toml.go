@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"os"
-	"path"
 	"text/template"
 
 	"github.com/spf13/viper"
@@ -63,25 +62,25 @@ func WriteConfigFile(cfgFile string, config *ClientConfig, configTemplate *templ
 
 }
 
-func ensureCfgPath(rootDir string) (string, error) {
-	cfgPath := path.Join(rootDir, "config")
-	if err := os.MkdirAll(cfgPath, os.ModePerm); err != nil { // config directory
-		return "", err
+func ensureConfigPath(configPath string) error {
+	if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+		return err
 	}
 
-	return cfgPath, nil
+	return nil
 }
 
-func getClientConfig(cfgPath string, v *viper.Viper) (*ClientConfig, error) {
-	v.AddConfigPath(cfgPath)
+func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
+
+	v.AddConfigPath(configPath)
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
-	v.AutomaticEnv()
+
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
 
-	conf := new(ClientConfig)
+	conf := DefaultClientConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, err
 	}

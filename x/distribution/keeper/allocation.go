@@ -83,7 +83,7 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
-	// bondedValidatorsVoteInfo is a list of all validators in the active set, and a flag saying whether they voted in the round or not.
+	// bondedValidatorsVoteInfo is a list of (validator address, validator voted on last block flag) for all validators in the active set.
 	for _, vote := range bondedValidatorsVoteInfo {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 

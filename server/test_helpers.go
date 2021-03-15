@@ -13,15 +13,9 @@ func FreeTCPAddr() (addr, port string, err error) {
 		return "", "", err
 	}
 
-	closer := func() {
-		err := l.Close()
-		if err != nil {
-			// TODO: Handle with #870
-			panic(err)
-		}
+	if err := l.Close(); err != nil {
+		return "", "", fmt.Errorf("couldn't close the listener: %w", err)
 	}
-
-	defer closer()
 
 	portI := l.Addr().(*net.TCPAddr).Port
 	port = fmt.Sprintf("%d", portI)

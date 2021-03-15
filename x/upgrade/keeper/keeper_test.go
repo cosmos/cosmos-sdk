@@ -64,16 +64,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 		expPass bool
 	}{
 		{
-			name: "successful time schedule",
-			plan: types.Plan{
-				Name: "all-good",
-				Info: "some text here",
-				Time: s.ctx.BlockTime().Add(time.Hour),
-			},
-			setup:   func() {},
-			expPass: true,
-		},
-		{
 			name: "successful height schedule",
 			plan: types.Plan{
 				Name:   "all-good",
@@ -103,16 +93,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			name: "unsuccessful schedule: invalid plan",
 			plan: types.Plan{
 				Height: 123450000,
-			},
-			setup:   func() {},
-			expPass: false,
-		},
-		{
-			name: "unsuccessful time schedule: due date in past",
-			plan: types.Plan{
-				Name: "all-good",
-				Info: "some text here",
-				Time: s.ctx.BlockTime(),
 			},
 			setup:   func() {},
 			expPass: false,

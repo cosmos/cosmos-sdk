@@ -3,6 +3,7 @@ package codec
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -22,9 +23,13 @@ var (
 	ErrBuild               = errors.New("unable to build the file descriptor")
 )
 
-// Codec is a recursive proto dependencies resolver
-// if instantiated with NewResolverCodec it will
-// resolve proto imports
+// Codec is a protobuf registry builder. It is capable of building
+// entire protobuf registries starting from one file and resolving
+// its imports dynamically. It's meant to be used in a contextualized
+// way in order to avoid namespace issues caused by identical filenames
+// package names and message names.
+// It has support for *anypb.Any type resolving, as long as the types
+// were correctly registered.
 type Codec struct {
 	files *protoregistry.Files
 	types *protoregistry.Types
@@ -35,16 +40,11 @@ type Codec struct {
 	protoMarshaler   proto.MarshalOptions
 	protoUnmarshaler proto.UnmarshalOptions
 
-	dependencyFetcher DependencyFetcher
+	dependencyFetcher ProtoImportsDownloader
 }
 
-// NewCodec instantiates a codec with no dependency resolving capabilities
-func NewCodec() *Codec {
-	return NewResolverCodec(nil)
-}
-
-// NewResolverCodec builds a codec which resolves dependencies for unknown protobuf types
-func NewResolverCodec(f DependencyFetcher) *Codec {
+// NewCodec builds a codec which resolves dependencies for unknown protobuf types
+func NewCodec(f ProtoImportsDownloader) *Codec {
 	filesReg := new(protoregistry.Files)
 	typesReg := new(protoregistry.Types)
 
@@ -90,19 +90,18 @@ func (c *Codec) Unmarshal(b []byte, o proto.Message) error {
 	return c.protoUnmarshaler.Unmarshal(b, o)
 }
 
-func (c *Codec) ImportedFiles() []string {
-	var resp []string
-	c.files.RangeFiles(func(descriptor protoreflect.FileDescriptor) bool {
-		resp = append(resp, descriptor.Path())
-		return true
-	})
-
-	return resp
+// FilesRegistry returns the codec proto file registry with read only access
+func (c *Codec) FilesRegistry() ReadonlyProtoFileRegistry {
+	return c.files
 }
 
-// RegisterRawFileDescriptor is going to parse the given descriptor
-// and also attempt to resolve its import dependencies
-func (c *Codec) RegisterRawFileDescriptor(rawDesc []byte) (fileDesc protoreflect.FileDescriptor, err error) {
+// TypesRegistry returns the codec proto type registry with read only access
+func (c *Codec) TypesRegistry() ReadonlyTypeRegistry {
+	return c.types
+}
+
+// RegisterRawFileDescriptor is going to parse the given descriptor and also attempt to resolve its import dependencies
+func (c *Codec) RegisterRawFileDescriptor(ctx context.Context, rawDesc []byte) (fileDesc protoreflect.FileDescriptor, err error) {
 
 	rawDesc, err = tryUnzip(rawDesc)
 	if err != nil {
@@ -137,11 +136,11 @@ func (c *Codec) RegisterRawFileDescriptor(rawDesc []byte) (fileDesc protoreflect
 		}
 		// get the missing import from the fetcher
 		// TODO: files such as gogoproto and co are empty :\
-		importDesc, err := c.dependencyFetcher.Fetch(imp.Path())
+		importDesc, err := c.dependencyFetcher.DownloadDescriptorByPath(ctx, imp.Path())
 		if err != nil {
 			return nil, fmt.Errorf("unable to fetch missing dependency for %s: %s: %w", tmpDesc.Path(), imp.Path(), err)
 		}
-		_, err = c.RegisterRawFileDescriptor(importDesc)
+		_, err = c.RegisterRawFileDescriptor(ctx, importDesc)
 		if err != nil && !errors.Is(err, ErrFileRegistered) {
 			return nil, fmt.Errorf("unable to parse missing dependency for %s: %s: %w", tmpDesc.Path(), imp.Path(), err)
 		}

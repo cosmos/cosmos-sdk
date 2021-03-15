@@ -12,7 +12,8 @@ import (
 
 // UnsignedBuilder implements a raw unsigned transaction builder
 // it of course cannot offer the full set of functionalities
-// since it cannot deduct the interface execution
+// of the standard sdk tx builder as it cannot deduct if a
+// given message is valid and who are the expected signers.
 type UnsignedBuilder struct {
 	msgs         []proto.Message
 	gasLimit     uint64

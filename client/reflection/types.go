@@ -1,6 +1,7 @@
 package reflection
 
 import (
+	"context"
 	"fmt"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
@@ -8,8 +9,9 @@ import (
 )
 
 type AccountInfoProvider interface {
-	SigningInfo(pubKey cryptotypes.PubKey) (accountNumber, sequence uint64, err error)
-	Sign(pubKey cryptotypes.PubKey, b []byte) (signedBytes []byte, err error)
+	Address(ctx context.Context, pubKey cryptotypes.PubKey) (string, error)
+	SigningInfo(ctx context.Context, pubKey cryptotypes.PubKey) (accountNumber, sequence uint64, err error)
+	Sign(ctx context.Context, pubKey cryptotypes.PubKey, b []byte) (signedBytes []byte, err error)
 }
 
 type Query struct {

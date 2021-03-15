@@ -26,15 +26,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/reflection/unstructured"
 )
 
+// ClientConfig defines Client configurations
+type ClientConfig struct {
+	// SDKReflectionClient is the client used to build the codec
+	// in a dynamic way, based on the chain the client is connected to.
+	SDKReflectionClient reflection.ReflectionServiceClient
+	// TMClient is the client used to interact with the tendermint endpoint
+	// for queries and transaction posting
+	TMClient tmrpc.Client
+	// AuthInfoProvider takes care of providing authentication information
+	// such as account sequence, number, address and signing capabilities.
+	AuthInfoProvider AccountInfoProvider
+}
+
 type Client struct {
-	sdk reflection.ReflectionServiceClient
-	tm  tmrpc.Client
-
-	msgs     map[string]protoreflect.MessageDescriptor
-	queriers QueryMethodsMap
-
-	reg *codec.Codec
-
+	sdk                 reflection.ReflectionServiceClient
+	tm                  tmrpc.Client
+	msgs                map[string]protoreflect.MessageDescriptor
+	queriers            QueryMethodsMap
+	cdc                 *codec.Codec
 	accountInfoProvider AccountInfoProvider
 }
 
@@ -57,7 +67,7 @@ func NewClient(grpcEndpoint, tmEndpoint string, provider AccountInfoProvider) (*
 		tm:                  tmRpc,
 		msgs:                make(map[string]protoreflect.MessageDescriptor),
 		queriers:            make(QueryMethodsMap),
-		reg:                 codec.NewResolverCodec(fetcher),
+		cdc:                 codec.NewCodec(fetcher),
 		accountInfoProvider: provider,
 	}
 	err = c.init(context.TODO())
@@ -69,7 +79,7 @@ func NewClient(grpcEndpoint, tmEndpoint string, provider AccountInfoProvider) (*
 }
 
 func (c *Client) Codec() *codec.Codec {
-	return c.reg
+	return c.cdc
 }
 
 func (c *Client) ListQueries() []Query {
@@ -177,7 +187,7 @@ func (c *Client) Tx(ctx context.Context, method string, request unstructured.Map
 		return nil, err
 	}
 
-	signedBytes, err := c.accountInfoProvider.Sign(signerInfo.PubKey, bytesToSign)
+	signedBytes, err := c.accountInfoProvider.Sign(ctx, signerInfo.PubKey, bytesToSign)
 
 	err = sBuilder.SetSignature(signerInfo.PubKey, signedBytes)
 	if err != nil {
@@ -199,7 +209,7 @@ func (c *Client) init(ctx context.Context) error {
 		return err
 	}
 
-	err = c.buildMsgs(ctx)
+	err = c.buildDeliverables(ctx)
 	if err != nil {
 		return err
 	}
@@ -211,18 +221,29 @@ func (c *Client) init(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) buildMsgs(ctx context.Context) error {
-	implResp, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.MsgInterfaceName})
+func (c *Client) buildDeliverables(ctx context.Context) error {
+	// get msg implementers
+	msgImplementers, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.MsgInterfaceName})
 	if err != nil {
 		return err
 	}
+	// get service msg implementers
+	svcMsgImplementers, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.ServiceMsgInterfaceName})
+	if err != nil {
+		return err
+	}
+	// join implementations as deliverables
+	deliverablesProtoNames := make([]string, 0, len(msgImplementers.ImplementationMessageProtoNames)+len(svcMsgImplementers.ImplementationMessageProtoNames))
+	deliverablesProtoNames = append(deliverablesProtoNames, msgImplementers.ImplementationMessageProtoNames...)
+	deliverablesProtoNames = append(deliverablesProtoNames, svcMsgImplementers.ImplementationMessageProtoNames...)
+
 	// we create a map which contains the message names that we expect to process
-	// so in case one fail contains multiple messages we need then we won't need
+	// so in case one file contains multiple messages we need then we won't need
 	// to resolve the same proto file multiple times :)
-	expectedMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageProtoNames))
-	foundMsgs := make(map[string]struct{}, len(implResp.ImplementationMessageProtoNames))
-	for _, name := range implResp.ImplementationMessageProtoNames {
-		expectedMsgs[name] = struct{}{} // remove '/'
+	expectedMsgs := make(map[string]struct{}, len(deliverablesProtoNames))
+	foundMsgs := make(map[string]struct{}, len(deliverablesProtoNames))
+	for _, name := range deliverablesProtoNames {
+		expectedMsgs[name] = struct{}{}
 	}
 
 	// now resolve types
@@ -235,7 +256,7 @@ func (c *Client) buildMsgs(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		desc, err := c.reg.RegisterRawFileDescriptor(rptResp.RawDescriptor)
+		desc, err := c.cdc.RegisterRawFileDescriptor(ctx, rptResp.RawDescriptor)
 		if err != nil {
 			return err
 		}
@@ -292,7 +313,7 @@ func (c *Client) buildQueries(ctx context.Context) error {
 	}
 
 	for _, rawDesc := range svcDescriptors {
-		fileDesc, err := c.reg.RegisterRawFileDescriptor(rawDesc)
+		fileDesc, err := c.cdc.RegisterRawFileDescriptor(ctx, rawDesc)
 		if err != nil && !errors.Is(err, codec.ErrFileRegistered) {
 			return err
 		}
@@ -335,7 +356,7 @@ func (c *Client) resolveAnys(ctx context.Context) error {
 
 func (c *Client) resolveAny(ctx context.Context, implementation, implementer string) error {
 	// if it's known skip
-	if c.reg.KnownMessage(implementer) {
+	if c.cdc.KnownMessage(implementer) {
 		return nil
 	}
 	// if it's unknown then solve
@@ -343,7 +364,7 @@ func (c *Client) resolveAny(ctx context.Context, implementation, implementer str
 	if err != nil {
 		return err
 	}
-	_, err = c.reg.RegisterRawFileDescriptor(desc.RawDescriptor)
+	_, err = c.cdc.RegisterRawFileDescriptor(ctx, desc.RawDescriptor)
 	if err != nil {
 		return err
 	}

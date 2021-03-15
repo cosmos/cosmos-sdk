@@ -11,8 +11,8 @@ type dependencyFetcher struct {
 	client reflection.ReflectionServiceClient
 }
 
-func (c dependencyFetcher) Fetch(filePath string) (desc []byte, err error) {
-	resp, err := c.client.ResolveService(context.TODO(), &reflection.ResolveServiceRequest{FileName: filePath})
+func (c dependencyFetcher) DownloadDescriptorByPath(ctx context.Context, path string) (desc []byte, err error) {
+	resp, err := c.client.ResolveService(ctx, &reflection.ResolveServiceRequest{FileName: path})
 	if err != nil {
 		return nil, err
 	}

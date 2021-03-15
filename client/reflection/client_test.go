@@ -96,7 +96,7 @@ func TestClient_Query(t *testing.T) {
 			"address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
 		})
 
-		b, err := c.reg.MarshalJSON(resp)
+		b, err := c.cdc.MarshalJSON(resp)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -152,12 +152,16 @@ func newInfoProvider(hexKey string, sequence, accountNumber uint64) testInfoProv
 	}
 }
 
-func (t testInfoProvider) SigningInfo(pubKey cryptotypes.PubKey) (accountNumber, sequence uint64, err error) {
+func (t testInfoProvider) SigningInfo(ctx context.Context, pubKey cryptotypes.PubKey) (accountNumber, sequence uint64, err error) {
 	panic("implement me")
 }
 
-func (t testInfoProvider) Sign(pubKey cryptotypes.PubKey, b []byte) (signedBytes []byte, err error) {
+func (t testInfoProvider) Sign(ctx context.Context, pubKey cryptotypes.PubKey, b []byte) (signedBytes []byte, err error) {
 	return t.pk.Sign(b)
+}
+
+func (t testInfoProvider) Address(ctx context.Context, pubKey cryptotypes.PubKey) (address string, err error) {
+	panic("implement mwe")
 }
 
 func TestClient_Tx(t *testing.T) {

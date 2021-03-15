@@ -111,10 +111,6 @@ func (m *GenesisState) GetTallyParams() types.TallyParams {
 	return types.TallyParams{}
 }
 
-func init() {
-	proto.RegisterType((*GenesisState)(nil), "cosmos.gov.v1beta1.GenesisState")
-}
-
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)

@@ -941,6 +941,12 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins() {
 
 	suite.Require().Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
 	suite.Require().True(app.BankKeeper.GetAllBalances(ctx, addrModule).Empty())
+
+	// require that delegated vesting amount is completely empty, since they were completely undelegated
+	acc = app.AccountKeeper.GetAccount(ctx, addr1)
+	vestingAcc, ok := acc.(exported.VestingAccount)
+	suite.Require().True(ok)
+	suite.Require().Empty(vestingAcc.GetDelegatedVesting())
 }
 
 func (suite *IntegrationTestSuite) TestUndelegateCoins_Invalid() {

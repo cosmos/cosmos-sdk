@@ -287,7 +287,7 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 	// Signatures contain PubKeys, which need to be unpacked.
 	for _, s := range tx.Signatures {
-		err := codectypes.UnpackInterfaces(s, unpacker)
+		err := s.UnpackInterfaces(unpacker)
 		if err != nil {
 			return err
 		}

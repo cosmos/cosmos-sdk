@@ -161,3 +161,17 @@ func RegisterTxService(
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
 }
+<<<<<<< HEAD
+=======
+
+func parseOrderBy(orderBy txtypes.OrderBy) string {
+	switch orderBy {
+	case txtypes.OrderBy_ORDER_BY_ASC:
+		return "asc"
+	case txtypes.OrderBy_ORDER_BY_DESC:
+		return "desc"
+	default:
+		return "" // Defaults to Tendermint's default, which is `asc` now.
+	}
+}
+>>>>>>> 553aac503... add orderBy parameter to TxsByEvents (#8815)

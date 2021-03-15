@@ -29,6 +29,7 @@ func FilteredPaginate(
 	key := pageRequest.Key
 	limit := pageRequest.Limit
 	countTotal := pageRequest.CountTotal
+	reverse := pageRequest.Reverse
 
 	if offset > 0 && key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
@@ -42,15 +43,20 @@ func FilteredPaginate(
 	}
 
 	if len(key) != 0 {
-		iterator := getIterator(prefixStore, key, nil, pageRequest.Reverse)
+		iterator := getIterator(prefixStore, key, nil, reverse)
 		defer iterator.Close()
 
 		var numHits uint64
 		var nextKey []byte
 
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == limit {
+			if numHits == limit-1 && reverse {
 				nextKey = iterator.Key()
+			}
+			if numHits == limit {
+				if !reverse {
+					nextKey = iterator.Key()
+				}
 				break
 			}
 
@@ -73,7 +79,7 @@ func FilteredPaginate(
 		}, nil
 	}
 
-	iterator := getIterator(prefixStore, nil, nil, pageRequest.Reverse)
+	iterator := getIterator(prefixStore, nil, nil, reverse)
 	defer iterator.Close()
 
 	end := offset + limit

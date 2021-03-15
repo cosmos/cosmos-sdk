@@ -188,10 +188,18 @@ func (s *paginationTestSuite) TestReversePagination() {
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
 
-	s.T().Log("verify paginate with custom limit and countTotal false")
-	pageReq := &query.PageRequest{Limit: 150}
+	s.T().Log("verify paginate with custom limit and countTotal, Reverse false")
+	pageReq := &query.PageRequest{Limit: 2, CountTotal: true, Reverse: true, Key: nil}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res1, err := queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res1.Balances.Len(), 2)
+	s.Require().NotNil(res1.Pagination.NextKey)
+
+	s.T().Log("verify paginate with custom limit and countTotal, Reverse false")
+	pageReq = &query.PageRequest{Limit: 150}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res1, err = queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().NoError(err)
 	s.Require().Equal(res1.Balances.Len(), 150)
 	s.Require().NotNil(res1.Pagination.NextKey)
@@ -233,7 +241,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().NotNil(res.Pagination.NextKey)
 	s.Require().LessOrEqual(res.Balances.Len(), overLimit)
 
-	s.T().Log("verify paginate with custom limit, key and countTotal false")
+	s.T().Log("verify paginate with custom limit, key, countTotal false and Reverse true")
 	pageReq = &query.PageRequest{Key: res1.Pagination.NextKey, Limit: 50, Reverse: true}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
@@ -242,10 +250,10 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().NotNil(res.Pagination.NextKey)
 	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	s.T().Log("verify paginate returns valid result with Reverse enable & disable")
+	s.T().Log("verify Reverse pagination returns valid result")
 	s.Require().Equal(balances[100:150].String(), res.Balances.Sort().String())
 
-	s.T().Log("verify paginate with custom limit, key and countTotal false")
+	s.T().Log("verify paginate with custom limit, key, countTotal false and Reverse true")
 	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: 50, Reverse: true}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
@@ -254,7 +262,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().NotNil(res.Pagination.NextKey)
 	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	s.T().Log("verify paginate returns valid result with Reverse enable & disable")
+	s.T().Log("verify Reverse pagination returns valid result")
 	s.Require().Equal(balances[50:100].String(), res.Balances.Sort().String())
 
 	s.T().Log("verify paginate with offset and key - error")

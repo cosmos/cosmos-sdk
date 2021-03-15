@@ -18,12 +18,12 @@ const defaultConfigTemplate = `# This is a TOML config file.
 ###############################################################################
 
 
-chain-id = "{{ .ClientConfig.ChainID }}"
-keyring-backend = "{{ .ClientConfig.KeyringBackend }}"
-output = "{{ .ClientConfig.Output }}"
-node = "{{ .ClientConfig.Node }}"
-broadcast-mode = "{{ .ClientConfig.BroadcastMode }}"
-trace = "{{ .ClientConfig.Trace }}"
+chain-id = "{{ .ChainID }}"
+keyring-backend = "{{ .KeyringBackend }}"
+output = "{{ .Output }}"
+node = "{{ .Node }}"
+broadcast-mode = "{{ .BroadcastMode }}"
+trace = "{{ .Trace }}"
 `
 
 // InitConfigTemplate initiates config template that will be used in

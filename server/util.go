@@ -243,6 +243,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
 
+	// TODO test It if it works
 	// Adding default ClientConfig and writing it into "client.toml"
 	cliCfgFilePath := filepath.Join(configPath, "client.toml")
 	//	if _, err := os.Stat(cliCfgFilePath); os.IsNotExist(err) {

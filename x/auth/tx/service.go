@@ -170,6 +170,6 @@ func parseOrderBy(orderBy txtypes.OrderBy) string {
 	case txtypes.OrderBy_ORDER_BY_DESC:
 		return "desc"
 	default:
-		return "asc"
+		return "" // Defaults to Tendermint's default, which is `asc` now.
 	}
 }

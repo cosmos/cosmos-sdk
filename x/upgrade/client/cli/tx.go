@@ -1,9 +1,6 @@
 package cli
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -16,11 +13,7 @@ import (
 )
 
 const (
-	// TimeFormat specifies ISO UTC format for submitting the time for a new upgrade proposal
-	TimeFormat = "2006-01-02T15:04:05Z"
-
 	FlagUpgradeHeight = "upgrade-height"
-	FlagUpgradeTime   = "upgrade-time"
 	FlagUpgradeInfo   = "upgrade-info"
 )
 
@@ -37,11 +30,11 @@ func GetTxCmd() *cobra.Command {
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "software-upgrade [name] (--upgrade-height [height] | --upgrade-time [time]) (--upgrade-info [info]) [flags]",
+		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
-			"Please specify a unique name and height OR time for the upgrade to take effect.\n" +
+			"Please specify a unique name and height for the upgrade to take effect.\n" +
 			"You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -84,8 +77,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen (not to be used together with --upgrade-time)")
-	cmd.Flags().String(FlagUpgradeTime, "", fmt.Sprintf("The time at which the upgrade must happen (ex. %s) (not to be used together with --upgrade-height)", TimeFormat))
+	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
 
 	return cmd
@@ -168,29 +160,12 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 		return nil, err
 	}
 
-	timeStr, err := cmd.Flags().GetString(FlagUpgradeTime)
-	if err != nil {
-		return nil, err
-	}
-
-	if height != 0 && len(timeStr) != 0 {
-		return nil, fmt.Errorf("only one of --upgrade-time or --upgrade-height should be specified")
-	}
-
-	var upgradeTime time.Time
-	if len(timeStr) != 0 {
-		upgradeTime, err = time.Parse(TimeFormat, timeStr)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	plan := types.Plan{Name: name, Time: upgradeTime, Height: height, Info: info}
+	plan := types.Plan{Name: name, Height: height, Info: info}
 	content := types.NewSoftwareUpgradeProposal(title, description, plan)
 	return content, nil
 }

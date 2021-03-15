@@ -13,7 +13,7 @@ by the corresponding module name of type `string`.
 
 - Plan: `0x0 -> Plan`
 - Done: `0x1 | byte(plan name)  -> BigEndian(Block Height)`
-- ConsensusVersion: `0x2 | byte(module name)  -> LittleEndian(Module Consensus Version)`
+- ConsensusVersion: `0x2 | byte(module name)  -> BigEndian(Module Consensus Version)`
 
 
 The `x/upgrade` module contains no genesis state.

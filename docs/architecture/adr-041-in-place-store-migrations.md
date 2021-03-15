@@ -82,48 +82,42 @@ Each module's migration functions are specific to the module's store evolutions,
 We introduce a new prefix store in `x/upgrade`'s store. This store will track each module's current version, it can be modelized as a `map[string]uint64` of module name to module ConsensusVersion, and will be used when running the migrations (see next section for details). The key prefix used is `0x1`, and the key/value format is:
 
 ```
-0x2 | {bytes(module_name)} => LittleEndian(module_consensus_version)
+0x2 | {bytes(module_name)} => BigEndian(module_consensus_version)
 ```
 
-s
-We add a new private field `versionManager` of type `VersionManager` to `x/upgrade`'s keeper, where `VersionManager` is:
+We add a new private field `versionMap` of type `VersionMap` to `x/upgrade`'s keeper, where `VersionManager` is:
 
 ```go
-type VersionManager interface {
-    GetConsensusVersions() VersionMap
-}
-
 // Map of module name => new module Consensus Version.
 type VersionMap map[string]uint64
 ```
 
-This `versionManager` field can be modified via the `SetVersionManager` field, and will allow the upgrade keeper to know the current versions of loaded modules. `SetVersionManager` MUST be called as early as possible in the app initialization; in the SDK's `simapp`, it is called in the `NewSimApp` constructor function.
+This `versionMap` field can be modified via the `SetInitialVersionMap` field, and will allow the upgrade keeper to know the current versions of loaded modules. `SetInitialVersionMap` MUST be called as early as possible in the app initialization; in the SDK's `simapp`, it is called in the `NewSimApp` constructor function.
 
-The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return an error:
+The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return a new `VersionMap` and an error:
 
 ```diff
 - type UpgradeHandler func(ctx sdk.Context, plan Plan)
-+ type UpgradeHandler func(ctx sdk.Context, plan Plan, versionMap VersionMap) error
++ type UpgradeHandler func(ctx sdk.Context, plan Plan, versionMap VersionMap) (VersionMap, error)
 ```
 
-To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pass it into the handler. The handler runs the actual migration functions (see next section), and if successful, the current ConsensusVersions of all loaded modules will be stored into state.
+To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pass it into the handler. The handler runs the actual migration functions (see next section), and if successful, returns the updated ConsensusVersions of the modules to be stored in state.
 
 ```diff
 func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
     // --snip--
 -   handler(ctx, plan)
-+   err := handler(ctx, plan, k.GetConsensusVersions()) // k.GetConsensusVersions() fetches the VersionMap stored in state.
++   updatedVM, err := handler(ctx, plan, k.GetConsensusVersions(ctx)) // k.GetConsensusVersions() fetches the VersionMap stored in state.
 +   if err != nil {
 +       return err
 +   }
 +
-+   // Get the current ConsensusVersions of the loaded modules (retrieved from
-+   // `k.versionManager`), and save them to state.
-+   k.SetCurrentConsensusVersions()
++   // Set the updated consensus versions to state
++   k.setConsensusVersions(ctx, updatedVM)
 }
 ```
 
-An gRPC query endpoint to query the `VersionMap` stored in `x/upgrade`'s state will also be added, so that app developers can double-check the `VersionMap` before the upgrade handler runs.
+A gRPC query endpoint to query the `VersionMap` stored in `x/upgrade`'s state will also be added, so that app developers can double-check the `VersionMap` before the upgrade handler runs.
 
 ### Running Migrations
 
@@ -139,7 +133,7 @@ If a required migration is missing (e.g. if it has not been registered in the `C
 In practice, the `RunMigrations` method should be called from inside an `UpgradeHandler`.
 
 ```go
-app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap VersionMap) error {
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap)  (module.VersionMap, error) {
     return app.mm.RunMigrations(ctx, versionMap)
 })
 ```

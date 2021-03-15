@@ -47,7 +47,7 @@ and not defined on a per-module basis. Registering a `Handler` is done via
 `Keeper#SetUpgradeHandler` in the application.
 
 ```go
-type UpgradeHandler func(Context, Plan, VersionMap) error
+type UpgradeHandler func(Context, Plan, VersionMap) (VersionMap, error)
 ```
 
 During each `EndBlock` execution, the `x/upgrade` module checks if there exists a

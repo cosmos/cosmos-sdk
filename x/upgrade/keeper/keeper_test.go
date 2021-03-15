@@ -117,7 +117,9 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.app.UpgradeKeeper.SetUpgradeHandler("all-good", func(_ sdk.Context, _ types.Plan, _ module.VersionMap) error { return nil })
+				s.app.UpgradeKeeper.SetUpgradeHandler("all-good", func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+					return vm, nil
+				})
 				s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
@@ -134,7 +136,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 		s.Run(tc.name, func() {
 			// reset suite
 			s.SetupTest()
-			s.app.UpgradeKeeper.SetVersionManager(s.app)
+			s.app.UpgradeKeeper.SetInitialVersionMap(module.VersionMap{})
 			// setup test case
 			tc.setup()
 
@@ -193,34 +195,28 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 
 }
 
-// Mock version manager for TestMigrations
-type mockVersionManager struct{}
-
-func (m mockVersionManager) GetVersionMap() module.VersionMap {
-	vermap := make(module.VersionMap)
-	vermap["bank"] = 1
-	return vermap
-}
-
 // Tests that the underlying state of x/upgrade is set correctly after
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
-	mockVM := mockVersionManager{}
-	s.app.UpgradeKeeper.SetVersionManager(mockVM)
+	initialVM := module.VersionMap{"bank": uint64(1)}
+	s.app.UpgradeKeeper.SetInitialVersionMap(initialVM)
 	s.app.UpgradeKeeper.SetCurrentConsensusVersions(s.ctx)
-	vermapBefore := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
-	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, _ module.VersionMap) error { return nil })
+	vmBefore := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		// simulate upgrading the bank module
+		vm["bank"] = vm["bank"] + 1
+		return vm, nil
+	})
 	dummyPlan := types.Plan{
-		Name: "dummy",
-		Info: "some text here",
-		Time: s.ctx.BlockTime().Add(time.Hour),
+		Name:   "dummy",
+		Info:   "some text here",
+		Height: 123450000,
 	}
 
-	s.app.UpgradeKeeper.SetVersionManager(s.app)
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
-	vermap := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
-	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), vermap["bank"])
-	s.Require().Greater(vermap["bank"], vermapBefore["bank"])
+	vm := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
+	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), vm["bank"])
+	s.Require().Greater(vm["bank"], vmBefore["bank"])
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -29,7 +29,7 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
-	versionManager     module.VersionManager
+	versionMap         module.VersionMap
 }
 
 // NewKeeper constructs an upgrade Keeper
@@ -40,6 +40,7 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc cod
 		storeKey:           storeKey,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
+		versionMap:         module.VersionMap{},
 	}
 }
 
@@ -50,26 +51,26 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-// SetVersionManager sets a VersionManager for the keeper to
-// gain access to app modules and their consensus versions.
-// This MUST be set in app.go, or versions will not be committed
-// to state.
-func (k *Keeper) SetVersionManager(vm module.VersionManager) {
-	k.versionManager = vm
+// SetInitialVersionMap sets an initial version map on the keeper
+func (k *Keeper) SetInitialVersionMap(vm module.VersionMap) {
+	k.versionMap = vm
 }
 
-// SetCurrentConsensusVersions saves the consensus versions retrieved from module.Manager
-// if versionManager is not set from app.go, consensus versions will NOT be saved
+// SetCurrentConsensusVersions saves the consensus versions.
+// If versionMap is not set from app.go, consensus versions will NOT be saved
 // to state.
 func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) {
-	if k.versionManager != nil {
-		modules := k.versionManager.GetVersionMap()
+	k.setConsensusVersions(ctx, k.versionMap)
+}
+
+func (k Keeper) setConsensusVersions(ctx sdk.Context, vm module.VersionMap) {
+	if len(vm) > 0 {
 		store := ctx.KVStore(k.storeKey)
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
-		for modName, ver := range modules {
+		for modName, ver := range vm {
 			nameBytes := []byte(modName)
 			verBytes := make([]byte, 8)
-			binary.LittleEndian.PutUint64(verBytes, ver)
+			binary.BigEndian.PutUint64(verBytes, ver)
 			versionStore.Set(nameBytes, verBytes)
 		}
 	}
@@ -81,17 +82,17 @@ func (k Keeper) GetVersionMap(ctx sdk.Context) module.VersionMap {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 
-	vermap := make(module.VersionMap)
+	vm := make(module.VersionMap)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
 		moduleBytes := it.Key()
 		// first byte is prefix key, so we remove it here
 		name := string(moduleBytes[1:])
-		moduleVersion := binary.LittleEndian.Uint64(it.Value())
-		vermap[name] = moduleVersion
+		moduleVersion := binary.BigEndian.Uint64(it.Value())
+		vm[name] = moduleVersion
 	}
 
-	return vermap
+	return vm
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
@@ -233,11 +234,12 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
-	err := handler(ctx, plan, k.GetVersionMap(ctx))
+	updatedVM, err := handler(ctx, plan, k.GetVersionMap(ctx))
 	if err != nil {
 		panic(err)
 	}
 
+	k.versionMap = updatedVM
 	k.SetCurrentConsensusVersions(ctx)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.

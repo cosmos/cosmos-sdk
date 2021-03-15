@@ -6,4 +6,4 @@ import (
 )
 
 // UpgradeHandler specifies the type of function that is called when an upgrade is applied
-type UpgradeHandler func(ctx sdk.Context, plan Plan, vm module.VersionMap) error
+type UpgradeHandler func(ctx sdk.Context, plan Plan, vm module.VersionMap) (module.VersionMap, error)

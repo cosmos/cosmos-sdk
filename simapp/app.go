@@ -315,8 +315,10 @@ func NewSimApp(
 		params.NewAppModule(app.ParamsKeeper),
 		authz.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
-	// give upgrade keeper the module manager
-	app.UpgradeKeeper.SetVersionManager(app.mm)
+
+	// Pass the version map to the upgrade keeper
+	app.UpgradeKeeper.SetInitialVersionMap(app.mm.GetVersionMap())
+	app.mm.Modules[upgradetypes.ModuleName] = upgrade.NewAppModule(app.UpgradeKeeper)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -334,7 +336,7 @@ func NewSimApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
+		upgradetypes.ModuleName, capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authztypes.ModuleName,
 		feegranttypes.ModuleName,
@@ -542,11 +544,6 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //   })
 func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) error {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
-}
-
-// GetVersionMap gets a map of key module name and value module consensus version
-func (app *SimApp) GetVersionMap() module.VersionMap {
-	return app.mm.GetVersionMap()
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

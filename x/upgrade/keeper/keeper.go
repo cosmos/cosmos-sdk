@@ -75,7 +75,8 @@ func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) {
 	}
 }
 
-// GetVersionMap gets a VersionMap from state
+// GetConsensusVersions returns a map of key module name and value module consensus version
+// as defined in ADR-041.
 func (k Keeper) GetVersionMap(ctx sdk.Context) module.VersionMap {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})

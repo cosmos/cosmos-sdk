@@ -75,7 +75,14 @@ func (m *LegacyAminoPubKey) UnmarshalAminoJSON(tmPk tmMultisig) error {
 		return err
 	}
 
-	*m = *protoPk
+	// Instead of just doing `*m = *protoPk`, we prefer to modify in-place the
+	// existing Anys inside `m` (instead of allocating new Anys), as so not to
+	// break the `.compat` fields in the existing Anys.
+	for i := range m.PubKeys {
+		m.PubKeys[i].TypeUrl = protoPk.PubKeys[i].TypeUrl
+		m.PubKeys[i].Value = protoPk.PubKeys[i].Value
+	}
+	m.Threshold = protoPk.Threshold
 
 	return nil
 }

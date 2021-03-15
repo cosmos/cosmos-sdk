@@ -1,13 +1,12 @@
 package v043
 
 import (
-	v040 "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // migrateWeightedVotes migrates the ADR-037 weighted votes.
-func migrateJSONWeightedVotes(oldVotes v040.Votes) types.Votes {
+func migrateJSONWeightedVotes(oldVotes v040gov.Votes) types.Votes {
 	newVotes := make(types.Votes, len(oldVotes))
 	for i, oldVote := range oldVotes {
 		newVotes[i] = migrateVote(oldVote)

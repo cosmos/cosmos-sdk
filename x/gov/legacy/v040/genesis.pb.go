@@ -1,6 +1,7 @@
 // Package v040 is taken from:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/gov/types/genesis.pb.go
 // by copy-pasted only the relevants parts for Genesis.
+//nolint
 package v040
 
 import (
@@ -35,32 +36,6 @@ type GenesisState struct {
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
 func (m *GenesisState) String() string { return proto.CompactTextString(m) }
 func (*GenesisState) ProtoMessage()    {}
-func (m *GenesisState) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *GenesisState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_GenesisState.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *GenesisState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GenesisState.Merge(m, src)
-}
-func (m *GenesisState) XXX_Size() int {
-	return m.Size()
-}
-func (m *GenesisState) XXX_DiscardUnknown() {
-	xxx_messageInfo_GenesisState.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
 func (m *GenesisState) GetStartingProposalId() uint64 {
 	if m != nil {
@@ -260,9 +235,6 @@ func (m *GenesisState) Size() (n int) {
 
 func sovGenesis(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
-}
-func sozGenesis(x uint64) (n int) {
-	return sovGenesis(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
 func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

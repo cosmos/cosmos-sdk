@@ -1,4 +1,4 @@
-package reflection
+package client
 
 import (
 	"context"
@@ -26,8 +26,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/reflection/unstructured"
 )
 
-// ClientConfig defines Client configurations
-type ClientConfig struct {
+// Config defines Client configurations
+type Config struct {
+	// ProtoImporter is used to import proto files dynamically
+	ProtoImporter codec.ProtoImportsDownloader
 	// SDKReflectionClient is the client used to build the codec
 	// in a dynamic way, based on the chain the client is connected to.
 	SDKReflectionClient reflection.ReflectionServiceClient
@@ -39,6 +41,9 @@ type ClientConfig struct {
 	AuthInfoProvider AccountInfoProvider
 }
 
+// Client defines a dynamic cosmos-sdk client, that can be used to query
+// different cosmos sdk versions with different messages and available
+// queries. It is gonna build the required codec in a dynamic fashion.
 type Client struct {
 	sdk                 reflection.ReflectionServiceClient
 	tm                  tmrpc.Client
@@ -48,34 +53,45 @@ type Client struct {
 	accountInfoProvider AccountInfoProvider
 }
 
-func NewClient(grpcEndpoint, tmEndpoint string, provider AccountInfoProvider) (*Client, error) {
+// NewClient inits a client given the provided configurations
+func NewClient(ctx context.Context, conf Config) (*Client, error) {
+	c := &Client{
+		sdk:                 conf.SDKReflectionClient,
+		tm:                  conf.TMClient,
+		msgs:                make(map[string]protoreflect.MessageDescriptor),
+		queriers:            make(QueryMethodsMap),
+		cdc:                 codec.NewCodec(conf.ProtoImporter),
+		accountInfoProvider: conf.AuthInfoProvider,
+	}
+
+	err := c.init(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// DialContext is going to create a new client by dialing to the tendermint and gRPC endpoints of the provided application.
+func DialContext(ctx context.Context, grpcEndpoint, tmEndpoint string, accountInfoProvider AccountInfoProvider) (*Client, error) {
 	conn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
 
 	sdkReflect := reflection.NewReflectionServiceClient(conn)
-	fetcher := dependencyFetcher{client: sdkReflect}
+	fetcher := protoDownloader{client: sdkReflect}
 
-	tmRpc, err := tmhttp.New(tmEndpoint, "")
+	tmRPC, err := tmhttp.New(tmEndpoint, "")
 	if err != nil {
 		return nil, err
 	}
 
-	c := &Client{
-		sdk:                 sdkReflect,
-		tm:                  tmRpc,
-		msgs:                make(map[string]protoreflect.MessageDescriptor),
-		queriers:            make(QueryMethodsMap),
-		cdc:                 codec.NewCodec(fetcher),
-		accountInfoProvider: provider,
-	}
-	err = c.init(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	return NewClient(ctx, Config{
+		ProtoImporter:       fetcher,
+		SDKReflectionClient: sdkReflect,
+		TMClient:            tmRPC,
+		AuthInfoProvider:    accountInfoProvider,
+	})
 }
 
 func (c *Client) Codec() *codec.Codec {
@@ -114,7 +130,7 @@ func (c *Client) Query(ctx context.Context, method string, request proto.Message
 		return nil, fmt.Errorf("unknown method: %s", method)
 	}
 
-	reqBytes, err := proto.Marshal(request)
+	reqBytes, err := c.cdc.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +141,7 @@ func (c *Client) Query(ctx context.Context, method string, request proto.Message
 	}
 
 	resp = dynamicpb.NewMessage(desc.Response)
-	return resp, proto.Unmarshal(tmResp.Response.Value, resp)
+	return resp, c.cdc.Unmarshal(tmResp.Response.Value, resp)
 }
 
 func (c *Client) QueryUnstructured(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
@@ -139,7 +155,7 @@ func (c *Client) QueryUnstructured(ctx context.Context, method string, request u
 		return nil, fmt.Errorf("unable to marshal request to proto message: %w", err)
 	}
 
-	b, err := proto.Marshal(reqProto)
+	b, err := c.cdc.Marshal(reqProto)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +166,7 @@ func (c *Client) QueryUnstructured(ctx context.Context, method string, request u
 	}
 
 	resp = dynamicpb.NewMessage(desc.Response)
-	return resp, proto.Unmarshal(tmResp.Response.Value, resp)
+	return resp, c.cdc.Unmarshal(tmResp.Response.Value, resp)
 }
 
 func (c *Client) Tx(ctx context.Context, method string, request unstructured.Map, signerInfo tx.SignerInfo) (resp *ctypes.ResultBroadcastTxCommit, err error) {

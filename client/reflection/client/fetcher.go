@@ -1,4 +1,4 @@
-package reflection
+package client
 
 import (
 	"context"
@@ -6,12 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 )
 
-// dependencyFetcher is
-type dependencyFetcher struct {
+// protoDownloader implements codec.ProtoImportsDownloader
+type protoDownloader struct {
 	client reflection.ReflectionServiceClient
 }
 
-func (c dependencyFetcher) DownloadDescriptorByPath(ctx context.Context, path string) (desc []byte, err error) {
+func (c protoDownloader) DownloadDescriptorByPath(ctx context.Context, path string) (desc []byte, err error) {
 	resp, err := c.client.ResolveService(ctx, &reflection.ResolveServiceRequest{FileName: path})
 	if err != nil {
 		return nil, err

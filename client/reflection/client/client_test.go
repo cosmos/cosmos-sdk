@@ -1,4 +1,4 @@
-package reflection
+package client
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	c, err := NewClient("localhost:9090", "", nil)
+	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestClientListQueries(t *testing.T) {
-	c, err := NewClient("localhost:9090", "", nil)
+	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestClientListQueries(t *testing.T) {
 }
 
 func TestClient_ListDeliverables(t *testing.T) {
-	c, err := NewClient("localhost:9090", "", nil)
+	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestClient_ListDeliverables(t *testing.T) {
 }
 
 func TestClient_resolveAnys(t *testing.T) {
-	c, err := NewClient("localhost:9090", "", nil)
+	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestClient_resolveAnys(t *testing.T) {
 }
 
 func TestClient_Query(t *testing.T) {
-	c, err := NewClient("localhost:9090", "tcp://localhost:26657", nil)
+	c, err := DialContext(context.TODO(), "localhost:9090", "tcp://localhost:26657", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,10 +166,10 @@ func (t testInfoProvider) Address(ctx context.Context, pubKey cryptotypes.PubKey
 
 func TestClient_Tx(t *testing.T) {
 	const keyHex = "8c7e006440ac5e358739bdc3d10a8b2d229e23d27660f6d3a8306cee4379594c"
-	const sequence uint64 = 2
+	const sequence uint64 = 3
 	const accNum uint64 = 0
-	infoProvider := newInfoProvider(keyHex, 0, 2)
-	c, err := NewClient("localhost:9090", "tcp://localhost:26657", infoProvider)
+	infoProvider := newInfoProvider(keyHex, 0, 0)
+	c, err := DialContext(context.TODO(), "localhost:9090", "tcp://localhost:26657", infoProvider)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,8 +1,9 @@
-package reflection
+package client
 
 import (
 	"context"
 	"fmt"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	"google.golang.org/protobuf/reflect/protoreflect"

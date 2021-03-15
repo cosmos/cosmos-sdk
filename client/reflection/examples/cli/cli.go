@@ -3,12 +3,14 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/reflection"
+	"os"
+	"sort"
+
 	"github.com/manifoldco/promptui"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
-	"os"
-	"sort"
+
+	"github.com/cosmos/cosmos-sdk/client/reflection/client"
 )
 
 const (
@@ -16,12 +18,12 @@ const (
 	actionQuery = "query"
 )
 
-func NewCLI(c *reflection.Client) *CLI {
+func NewCLI(c *client.Client) *CLI {
 	return &CLI{c: c}
 }
 
 type CLI struct {
-	c *reflection.Client
+	c *client.Client
 }
 
 func (p *CLI) Run() error {

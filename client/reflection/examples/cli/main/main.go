@@ -1,13 +1,15 @@
 package main
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/reflection"
-	"github.com/cosmos/cosmos-sdk/client/reflection/examples/cli"
+	"context"
 	"log"
+
+	"github.com/cosmos/cosmos-sdk/client/reflection/client"
+	"github.com/cosmos/cosmos-sdk/client/reflection/examples/cli"
 )
 
 func main() {
-	c, err := reflection.NewClient("localhost:9090", "tcp://localhost:26657", nil)
+	c, err := client.DialContext(context.TODO(), "localhost:9090", "tcp://localhost:26657", nil)
 	if err != nil {
 		panic(err)
 	}

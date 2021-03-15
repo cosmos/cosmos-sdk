@@ -6,7 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -250,12 +252,12 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
-	ab, err := kmultisig.AminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
+	ab, err := legacy.Cdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)
 	// like other cryptotypes.Pubkey implementations (e.g. ed25519.PubKey),
 	// LegacyAminoPubKey should be deserializable into a cryptotypes.LegacyAminoPubKey:
 	var pubKey kmultisig.LegacyAminoPubKey
-	err = kmultisig.AminoCdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
+	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
 	require.NoError(t, err)
 
 	require.Equal(t, multisigKey.Equals(&pubKey), true)
@@ -306,4 +308,76 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 	pubkeysCpy[1] = pk.PubKeys[0]
 	other = &kmultisig.LegacyAminoPubKey{Threshold: 2, PubKeys: pubkeysCpy}
 	return
+}
+
+func TestAminoBinary(t *testing.T) {
+	pubKey1 := secp256k1.GenPrivKey().PubKey()
+	pubKey2 := secp256k1.GenPrivKey().PubKey()
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
+
+	// Do a round-trip key->bytes->key.
+	bz, err := legacy.Cdc.MarshalBinaryBare(multisigKey)
+	require.NoError(t, err)
+	var newMultisigKey cryptotypes.PubKey
+	err = legacy.Cdc.UnmarshalBinaryBare(bz, &newMultisigKey)
+	require.NoError(t, err)
+	require.Equal(t, multisigKey.Threshold, newMultisigKey.(*kmultisig.LegacyAminoPubKey).Threshold)
+}
+
+func TestAminoMarshalJSON(t *testing.T) {
+	pubKey1 := secp256k1.GenPrivKey().PubKey()
+	pubKey2 := secp256k1.GenPrivKey().PubKey()
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
+
+	bz, err := legacy.Cdc.MarshalJSON(multisigKey)
+	require.NoError(t, err)
+
+	// Note the quotes around `"2"`. They are present because we are overriding
+	// the Amino JSON marshaling of LegacyAminoPubKey (using tmMultisig).
+	// Without the override, there would not be any quotes.
+	require.Contains(t, string(bz), "\"threshold\":\"2\"")
+}
+
+func TestAminoUnmarshalJSON(t *testing.T) {
+	// This is a real multisig from the Akash chain. It has been exported from
+	// v0.39, hence the `threshold` field as a string.
+	// We are testing that when unmarshaling this JSON into a LegacyAminoPubKey
+	// with amino, there's no error.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/8776
+	pkJSON := `{
+	"type": "tendermint/PubKeyMultisigThreshold",
+	"value": {
+		"pubkeys": [
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "AzYxq2VNeD10TyABwOgV36OVWDIMn8AtI4OFA0uQX2MK"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A39cdsrm00bTeQ3RVZVqjkH8MvIViO9o99c8iLiNO35h"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A/uLLCZph8MkFg2tCxqSMGwFfPHdt1kkObmmrqy9aiYD"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A4mOMhM5gPDtBAkAophjRs6uDGZm4tD4Dbok3ai4qJi8"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A90icFucrjNNz2SAdJWMApfSQcARIqt+M2x++t6w5fFs"
+			}
+		],
+		"threshold": "3"
+	}
+}`
+
+	cdc := codec.NewLegacyAmino()
+	cryptocodec.RegisterCrypto(cdc)
+
+	var pk cryptotypes.PubKey
+	err := cdc.UnmarshalJSON([]byte(pkJSON), &pk)
+	require.NoError(t, err)
+	require.Equal(t, uint32(3), pk.(*kmultisig.LegacyAminoPubKey).Threshold)
 }

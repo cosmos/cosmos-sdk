@@ -26,6 +26,9 @@ var v037Exported = `{
 }`
 
 // An example exported genesis file that's 0.40 compatible.
+// We added the following app_state:
+//
+// - x/gov: added votes to test ADR-037 split votes migration.
 var v040Valid = `{
 	"app_hash": "",
 	"app_state": {

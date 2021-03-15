@@ -3,8 +3,7 @@ name: Protobuf
 # This workflow is only run when a .proto file has been changed
 on:
   pull_request:
-    paths:
-      - "**.proto"
+
 jobs:
   lint:
     runs-on: ubuntu-latest

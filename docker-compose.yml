@@ -5,7 +5,7 @@ services:
     container_name: simdnode0
     image: "cosmossdk/simd-env"
     ports:
-      - "26656-26657:26656-26657"
+      - "26600-26601:26656-26657"
       - "1317:1317"
       - "9090:9090"
     environment:

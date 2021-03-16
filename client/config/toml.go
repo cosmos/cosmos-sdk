@@ -22,12 +22,11 @@ keyring-backend = "{{ .KeyringBackend }}"
 output = "{{ .Output }}"
 node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
-trace = "{{ .Trace }}"
 `
 
 // InitConfigTemplate initiates config template that will be used in
 // WriteConfigFile
-func InitConfigTemplate() (*template.Template, error) {
+func initConfigTemplate() (*template.Template, error) {
 	tmpl := template.New("clientConfigFileTemplate")
 	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
 	if err != nil {
@@ -37,20 +36,9 @@ func InitConfigTemplate() (*template.Template, error) {
 	return configTemplate, nil
 }
 
-// ParseConfig retrieves the default environment configuration for the
-// application.
-func ParseConfig(v *viper.Viper) (*ClientConfig, error) {
-	conf := DefaultClientConfig()
-	if err := v.Unmarshal(conf); err != nil {
-		return nil, err
-	}
-
-	return conf, nil
-}
-
-// WriteConfigFile renders config using the template and writes it to
+// writeConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(cfgFile string, config *ClientConfig, configTemplate *template.Template) error {
+func writeConfigFile(cfgFile string, config *ClientConfig, configTemplate *template.Template) error {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {

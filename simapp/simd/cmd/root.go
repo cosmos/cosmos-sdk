@@ -50,10 +50,13 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper()
 
+	initClientCtx = clicfg.UpdateClientContextFromClientConfig(initClientCtx)
+
 	rootCmd := &cobra.Command{
 		Use:   "simd",
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
@@ -80,7 +83,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
-		clicfg.Cmd(flags.FlagHome),
+		clicfg.Cmd(),
 	)
 
 	a := appCreator{encodingConfig}

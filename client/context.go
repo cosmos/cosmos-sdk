@@ -217,7 +217,10 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 
 // WithViper returns the context with Viper field
 func (ctx Context) WithViper() Context {
-	ctx.Viper = viper.New()
+	v := viper.New()
+	// Automatically overrides config field by env variable if this exists
+	v.AutomaticEnv()
+	ctx.Viper = v
 	return ctx
 }
 
@@ -331,7 +334,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 	return info.GetAddress(), info.GetName(), info.GetType(), nil
 }
 
-func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
+func NewKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly {
 		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input)
 	}

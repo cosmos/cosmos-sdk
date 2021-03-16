@@ -23,7 +23,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	clicfg "github.com/cosmos/cosmos-sdk/client/config"
+	// clicfg "github.com/cosmos/cosmos-sdk/client/config"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -243,28 +243,6 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	if err := rootViper.MergeInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
-
-	// TODO test It if it works
-
-	// Adding default ClientConfig and writing it into "client.toml"
-	cliCfgFilePath := filepath.Join(configPath, "client.toml")
-	//	if _, err := os.Stat(cliCfgFilePath); os.IsNotExist(err) {
-
-	// TODO use clientCtx.Viper instead of rootViper
-	cliConfig, err := clicfg.ParseConfig(rootViper)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse %s: %w", cliCfgFilePath, err)
-	}
-
-	configTemplate, err := clicfg.InitConfigTemplate()
-	if err != nil {
-		return nil, fmt.Errorf("failed to initiate config template %s: %w", cliCfgFilePath, err)
-	}
-
-	if err := clicfg.WriteConfigFile(cliCfgFilePath, cliConfig, configTemplate); err != nil {
-		return nil, fmt.Errorf("failed to write into config file %s: %w", cliCfgFilePath, err)
-	}
-	//	}
 
 	return conf, nil
 }

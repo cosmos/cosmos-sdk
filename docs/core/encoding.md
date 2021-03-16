@@ -91,7 +91,7 @@ object called `TxEncoder` and the decoding by an object called `TxDecoder`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/types/tx_msg.go#L83-L87
 
-A standard implementation of both these objects can be found in the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth):
+A standard implementation of both these objects can be found in the [`auth` module](../../x/auth/spec/README.md):
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/decoder.go
 

@@ -112,7 +112,7 @@ The main `eventCategory` you can subscribe to are:
 These events are triggered from the `state` package after a block is committed. You can get the
 full list of `event` categories [here](https://godoc.org/github.com/tendermint/tendermint/types#pkg-constants).
 
-The `type` and `attribute` value of the `query` allow you to filter the specific `event` you are looking for. For example, a `transfer` transaction triggers an `event` of type `Transfer` and has `Recipient` and `Sender` as `attributes` (as defined in the [`events` file of the `bank` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/types/events.go)). Subscribing to this `event` would be done like so:
+The `type` and `attribute` value of the `query` allow you to filter the specific `event` you are looking for. For example, a `transfer` transaction triggers an `event` of type `Transfer` and has `Recipient` and `Sender` as `attributes` (as defined in the [`events` file of the `bank` module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/bank/types/events.go)). Subscribing to this `event` would be done like so:
 
 ```json
 {

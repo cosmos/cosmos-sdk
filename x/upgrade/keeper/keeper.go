@@ -51,6 +51,7 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
+// setProtocolVersion sets the protocol version to state
 func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 	store := ctx.KVStore(k.storeKey)
 	versionBytes := make([]byte, 8)
@@ -58,17 +59,18 @@ func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 	store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
 }
 
-// GetAppVersion gets the protocol version
+// GetAppVersion gets the protocol version from state
 func (k Keeper) GetProtocolVersion(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	ok := store.Has([]byte{types.ProtocolVersionByte})
-	if !ok {
-		return 0
-	}
-	pvBytes := store.Get([]byte{types.ProtocolVersionByte})
-	protocolVersion := binary.LittleEndian.Uint64(pvBytes)
+	if ok {
+		pvBytes := store.Get([]byte{types.ProtocolVersionByte})
+		protocolVersion := binary.LittleEndian.Uint64(pvBytes)
 
-	return protocolVersion
+		return protocolVersion
+	}
+	// default value
+	return 0
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
@@ -212,8 +214,8 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 
 	handler(ctx, plan)
 
+	// incremement the protocol version and set it in state and baseapp
 	nextProtoVersion := k.GetProtocolVersion(ctx) + 1
-	// increment the protocol version in state
 	k.setProtocolVersion(ctx, nextProtoVersion)
 	k.protoManager.SetProtocolVersion(nextProtoVersion)
 

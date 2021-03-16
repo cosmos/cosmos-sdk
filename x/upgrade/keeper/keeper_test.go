@@ -195,9 +195,9 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	currentProtocolVersion := s.app.BaseApp.ProtocolVersion()
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan) {})
 	dummyPlan := types.Plan{
-		Name: "dummy",
-		Info: "some text here",
-		Time: s.ctx.BlockTime().Add(time.Hour),
+		Name:   "dummy",
+		Info:   "some text here",
+		Height: 100,
 	}
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	upgradedProtocolVersion := s.app.BaseApp.ProtocolVersion()

@@ -22,7 +22,7 @@ const (
 	// DoneByte is a prefix for to look up completed upgrade plan by name
 	DoneByte = 0x1
 
-	// ProtocolVersionByte is  aprefix to look up Protocol Version
+	// ProtocolVersionByte is a prefix to look up Protocol Version
 	ProtocolVersionByte = 0x3
 
 	// KeyUpgradedIBCState is the key under which upgraded ibc state is stored in the upgrade store

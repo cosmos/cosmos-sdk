@@ -6,24 +6,21 @@ import (
 	"fmt"
 	"log"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	"google.golang.org/protobuf/encoding/protojson"
-
-	"github.com/cosmos/cosmos-sdk/client/reflection/tx"
-
 	tmrpc "github.com/tendermint/tendermint/rpc/client"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
-	"github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/client/reflection/codec"
-
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+	"github.com/cosmos/cosmos-sdk/client/reflection/codec"
+	"github.com/cosmos/cosmos-sdk/client/reflection/descriptor"
+	"github.com/cosmos/cosmos-sdk/client/reflection/tx"
 	"github.com/cosmos/cosmos-sdk/client/reflection/unstructured"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // Config defines Client configurations
@@ -47,10 +44,9 @@ type Config struct {
 type Client struct {
 	sdk                 reflection.ReflectionServiceClient
 	tm                  tmrpc.Client
-	msgs                map[string]protoreflect.MessageDescriptor
-	queriers            QueryMethodsMap
-	cdc                 *codec.Codec
+	cdc                 *codec.Codec // chain specific codec generated at run time
 	accountInfoProvider AccountInfoProvider
+	chainDesc           descriptor.Chain
 }
 
 // NewClient inits a client given the provided configurations
@@ -58,8 +54,6 @@ func NewClient(ctx context.Context, conf Config) (*Client, error) {
 	c := &Client{
 		sdk:                 conf.SDKReflectionClient,
 		tm:                  conf.TMClient,
-		msgs:                make(map[string]protoreflect.MessageDescriptor),
-		queriers:            make(QueryMethodsMap),
 		cdc:                 codec.NewCodec(conf.ProtoImporter),
 		accountInfoProvider: conf.AuthInfoProvider,
 	}
@@ -94,40 +88,20 @@ func DialContext(ctx context.Context, grpcEndpoint, tmEndpoint string, accountIn
 	})
 }
 
+// Codec exposes the client specific codec
 func (c *Client) Codec() *codec.Codec {
 	return c.cdc
 }
 
-func (c *Client) ListQueries() []Query {
-	var q []Query
-	for name, method := range c.queriers {
-		q = append(q, Query{
-			Service:  method.ServiceName,
-			Method:   name,
-			Request:  (string)(method.Request.FullName()),
-			Response: (string)(method.Response.FullName()),
-		})
-	}
-
-	return q
+func (c *Client) ChainDescriptor() descriptor.Chain {
+	return c.chainDesc
 }
 
-func (c *Client) ListQueryMap() QueryMethodsMap {
-	return c.queriers
-}
-
-func (c *Client) ListDeliverables() []Deliverable {
-	d := make([]Deliverable, 0, len(c.msgs))
-	for name := range c.msgs {
-		d = append(d, Deliverable{MsgName: name})
-	}
-	return d
-}
-
-func (c *Client) Query(ctx context.Context, method string, request proto.Message) (resp proto.Message, err error) {
-	desc, exists := c.queriers[method]
+/*
+func (c *Client) Query(ctx context.Context, request proto.Message) (resp proto.Message, err error) {
+	desc, exists := c.queriers[codec.MessageName(request)]
 	if !exists {
-		return nil, fmt.Errorf("unknown method: %s", method)
+		return nil, fmt.Errorf("unknown method: %s", desc.Method)
 	}
 
 	reqBytes, err := c.cdc.Marshal(request)
@@ -135,7 +109,7 @@ func (c *Client) Query(ctx context.Context, method string, request proto.Message
 		return nil, err
 	}
 
-	tmResp, err := c.tm.ABCIQuery(ctx, method, reqBytes)
+	tmResp, err := c.tm.ABCIQuery(ctx, desc.Method, reqBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -144,13 +118,15 @@ func (c *Client) Query(ctx context.Context, method string, request proto.Message
 	return resp, c.cdc.Unmarshal(tmResp.Response.Value, resp)
 }
 
+*/
+
 func (c *Client) QueryUnstructured(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
-	desc, exists := c.queriers[method]
-	if !exists {
+	desc := c.chainDesc.Queriers().ByTMName(method)
+	if desc == nil {
 		return nil, fmt.Errorf("unknown method: %s", method)
 	}
 
-	reqProto, err := request.Marshal(desc.Request)
+	reqProto, err := request.Marshal(desc.Descriptor().Input())
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal request to proto message: %w", err)
 	}
@@ -165,17 +141,17 @@ func (c *Client) QueryUnstructured(ctx context.Context, method string, request u
 		return nil, err
 	}
 
-	resp = dynamicpb.NewMessage(desc.Response)
+	resp = dynamicpb.NewMessage(desc.Descriptor().Output())
 	return resp, c.cdc.Unmarshal(tmResp.Response.Value, resp)
 }
 
 func (c *Client) Tx(ctx context.Context, method string, request unstructured.Map, signerInfo tx.SignerInfo) (resp *ctypes.ResultBroadcastTxCommit, err error) {
-	msgDesc, exists := c.msgs[method]
-	if !exists {
+	msgDesc := c.chainDesc.Deliverables().ByName(method)
+	if msgDesc == nil {
 		return nil, fmt.Errorf("deliverable not found: %s", method)
 	}
 	// marshal unstructured to proto.Message type
-	pb, err := request.Marshal(msgDesc)
+	pb, err := request.Marshal(msgDesc.Descriptor())
 	if err != nil {
 		return nil, err
 	}
@@ -220,12 +196,13 @@ func (c *Client) Tx(ctx context.Context, method string, request unstructured.Map
 }
 
 func (c *Client) init(ctx context.Context) error {
-	err := c.buildQueries(ctx)
+	chainDescBuilder := descriptor.NewBuilder()
+	err := c.buildQueries(ctx, chainDescBuilder)
 	if err != nil {
 		return err
 	}
 
-	err = c.buildDeliverables(ctx)
+	err = c.buildDeliverables(ctx, chainDescBuilder)
 	if err != nil {
 		return err
 	}
@@ -234,10 +211,15 @@ func (c *Client) init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	c.chainDesc, err = chainDescBuilder.Build()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (c *Client) buildDeliverables(ctx context.Context) error {
+func (c *Client) buildDeliverables(ctx context.Context, builder *descriptor.Builder) error {
 	// get msg implementers
 	msgImplementers, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.MsgInterfaceName})
 	if err != nil {
@@ -273,6 +255,8 @@ func (c *Client) buildDeliverables(ctx context.Context) error {
 			return err
 		}
 		desc, err := c.cdc.RegisterRawFileDescriptor(ctx, rptResp.RawDescriptor)
+		// TODO: we should most likely check if error is file already registered and if it is
+		// skip it as some people might define a module into a single proto file which we might have imported already
 		if err != nil {
 			return err
 		}
@@ -291,7 +275,10 @@ func (c *Client) buildDeliverables(ctx context.Context) error {
 				found = true
 			}
 			// save in msgs
-			c.msgs[msgName] = msgDesc
+			err = builder.RegisterDeliverable(msgDesc)
+			if err != nil {
+				return err
+			}
 		}
 		if !found {
 			return fmt.Errorf("unable to find message %s in resolved descriptor", name)
@@ -300,7 +287,7 @@ func (c *Client) buildDeliverables(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) buildQueries(ctx context.Context) error {
+func (c *Client) buildQueries(ctx context.Context, descBuilder *descriptor.Builder) error {
 	queries, err := c.sdk.ListQueryServices(ctx, nil)
 	if err != nil {
 		return err
@@ -333,15 +320,11 @@ func (c *Client) buildQueries(ctx context.Context) error {
 		if err != nil && !errors.Is(err, codec.ErrFileRegistered) {
 			return err
 		}
-		queries, err := queryFromFileDesc(fileDesc)
+		err = registerServices(descBuilder, fileDesc)
 		if err != nil {
 			return err
 		}
 
-		err = c.queriers.merge(queries)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -387,39 +370,17 @@ func (c *Client) resolveAny(ctx context.Context, implementation, implementer str
 
 	return nil
 }
-func queryFromFileDesc(file protoreflect.FileDescriptor) (QueryMethodsMap, error) {
-	svcs := file.Services()
 
-	m := make(QueryMethodsMap)
+func registerServices(builder *descriptor.Builder, file protoreflect.FileDescriptor) error {
+	services := file.Services()
 
-	for i := 0; i < svcs.Len(); i++ {
-		svcDesc := svcs.Get(i)
-		methodsFromSvc, err := methodsFromSvcDesc(svcDesc)
+	for i := 0; i < services.Len(); i++ {
+		svcDesc := services.Get(i)
+		err := builder.RegisterQueryService(svcDesc)
 		if err != nil {
-			return nil, err
-		}
-
-		err = m.merge(methodsFromSvc)
-		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return m, nil
-}
-
-func methodsFromSvcDesc(desc protoreflect.ServiceDescriptor) (QueryMethodsMap, error) {
-	m := make(QueryMethodsMap)
-
-	methods := desc.Methods()
-	for i := 0; i < methods.Len(); i++ {
-		method := methods.Get(i)
-		methodName := fmt.Sprintf("/%s/%s", desc.FullName(), method.Name()) // TODO: why in the sdk we broke standard grpc query method invocation naming?
-		err := m.insert(methodName, method)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return m, nil
+	return nil
 }

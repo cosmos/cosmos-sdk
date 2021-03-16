@@ -50,27 +50,11 @@ func TestClient(t *testing.T) {
 }
 
 func TestClientListQueries(t *testing.T) {
-	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	qs := c.ListQueries()
-	for _, q := range qs {
-		t.Log(q.String())
-	}
 }
 
 func TestClient_ListDeliverables(t *testing.T) {
-	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	qs := c.ListDeliverables()
-	for _, q := range qs {
-		t.Log(q.String())
-	}
 }
 
 func TestClient_resolveAnys(t *testing.T) {
@@ -95,6 +79,9 @@ func TestClient_Query(t *testing.T) {
 		resp, err := c.QueryUnstructured(context.TODO(), "/cosmos.auth.v1beta1.Query/Account", unstructured.Map{
 			"address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
 		})
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		b, err := c.cdc.MarshalJSON(resp)
 		if err != nil {

@@ -36,13 +36,13 @@ func NewFilteredFeeAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*Fi
 }
 
 // GetAllowance returns allowed fee allowance.
-func (a *FilteredFeeAllowance) GetAllowance() FeeAllowanceI {
+func (a *FilteredFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
-		return nil
+		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
 	}
 
-	return allowance
+	return allowance, nil
 }
 
 // Accept method checks for the filtered messages has valid expiry
@@ -51,7 +51,12 @@ func (a *FilteredFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
-	return a.GetAllowance().Accept(fee, blockTime, blockHeight, msgs)
+	allowance, err := a.GetAllowance()
+	if err != nil {
+		return false, err
+	}
+
+	return allowance.Accept(fee, blockTime, blockHeight, msgs)
 }
 
 func (a *FilteredFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
@@ -79,7 +84,17 @@ func (a *FilteredFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
 // it will subtract the dumpHeight from any height-based expiration to ensure that
 // the elapsed number of blocks this allowance is valid for is fixed.
 func (a *FilteredFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	return nil
+	allowance, err := a.GetAllowance()
+	if err != nil {
+		panic("failed to get allowance")
+	}
+
+	f, err := NewFilteredFeeAllowance(allowance.PrepareForExport(dumpTime, dumpHeight), a.AllowedMessages)
+	if err != nil {
+		panic("failed to export filtered fee allowance")
+	}
+
+	return f
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
@@ -90,5 +105,11 @@ func (a *FilteredFeeAllowance) ValidateBasic() error {
 	if len(a.AllowedMessages) == 0 {
 		return sdkerrors.Wrap(ErrNoMessages, "allowed messages shouldn't be empty")
 	}
-	return nil
+
+	allowance, err := a.GetAllowance()
+	if err != nil {
+		return err
+	}
+
+	return allowance.ValidateBasic()
 }

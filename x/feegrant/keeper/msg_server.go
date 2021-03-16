@@ -42,7 +42,12 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
-	err = k.Keeper.GrantFeeAllowance(ctx, granter, grantee, msg.GetFeeAllowanceI())
+	allowance, err := msg.GetFeeAllowanceI()
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.Keeper.GrantFeeAllowance(ctx, granter, grantee, allowance)
 	if err != nil {
 		return nil, err
 	}

@@ -721,8 +721,12 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), resp), out.String())
 	s.Require().Equal(resp.Grantee, resp.Grantee)
 	s.Require().Equal(resp.Granter, resp.Granter)
+
+	filteredFeeGrant, err := resp.GetFeeGrant().(*types.FilteredFeeAllowance).GetAllowance()
+	s.Require().NoError(err)
+
 	s.Require().Equal(
-		resp.GetFeeGrant().(*types.FilteredFeeAllowance).GetAllowance().(*types.BasicFeeAllowance).SpendLimit.String(),
+		filteredFeeGrant.(*types.BasicFeeAllowance).SpendLimit.String(),
 		spendLimit.String(),
 	)
 

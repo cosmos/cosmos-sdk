@@ -69,7 +69,7 @@ func Paginate(
 	}
 
 	if len(key) != 0 {
-		iterator := getIterator(prefixStore, key, nil, reverse)
+		iterator := getIterator(prefixStore, key, reverse)
 		defer iterator.Close()
 
 		var count uint64
@@ -102,7 +102,7 @@ func Paginate(
 		}, nil
 	}
 
-	iterator := getIterator(prefixStore, nil, nil, reverse)
+	iterator := getIterator(prefixStore, nil, reverse)
 	defer iterator.Close()
 
 	end := offset + limit
@@ -141,9 +141,9 @@ func Paginate(
 	return res, nil
 }
 
-func getIterator(prefixStore types.KVStore, start []byte, end []byte, reverse bool) db.Iterator {
+func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Iterator {
 	if reverse {
-		return prefixStore.ReverseIterator(end, start)
+		return prefixStore.ReverseIterator(nil, start)
 	}
-	return prefixStore.Iterator(start, end)
+	return prefixStore.Iterator(start, nil)
 }

@@ -43,7 +43,7 @@ func FilteredPaginate(
 	}
 
 	if len(key) != 0 {
-		iterator := getIterator(prefixStore, key, nil, reverse)
+		iterator := getIterator(prefixStore, key, reverse)
 		defer iterator.Close()
 
 		var numHits uint64
@@ -79,7 +79,7 @@ func FilteredPaginate(
 		}, nil
 	}
 
-	iterator := getIterator(prefixStore, nil, nil, reverse)
+	iterator := getIterator(prefixStore, nil, reverse)
 	defer iterator.Close()
 
 	end := offset + limit

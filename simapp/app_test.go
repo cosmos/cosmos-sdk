@@ -160,7 +160,7 @@ func TestRunMigrations(t *testing.T) {
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
-			err = app.RunMigrations(
+			_, err = app.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
 				module.VersionMap{
 					"bank":         1,

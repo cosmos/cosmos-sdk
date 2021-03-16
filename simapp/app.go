@@ -541,7 +541,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) {
 //       return app.RunMigrations(ctx, versionMap)
 //   })
-func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) error {
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) (module.VersionMap, error) {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 

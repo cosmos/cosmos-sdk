@@ -40,7 +40,6 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc cod
 		storeKey:           storeKey,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
-		versionMap:         module.VersionMap{},
 	}
 }
 

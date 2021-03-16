@@ -338,20 +338,22 @@ type MigrationHandler func(sdk.Context) error
 type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, vm VersionMap) error {
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(configurator)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
+	updatedVM := make(VersionMap)
 	for moduleName, module := range m.Modules {
-		err := c.runModuleMigrations(ctx, moduleName, vm[moduleName], module.ConsensusVersion())
+		err := c.runModuleMigrations(ctx, moduleName, fromVM[moduleName], module.ConsensusVersion())
+		updatedVM[moduleName] = module.ConsensusVersion()
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return updatedVM, nil
 }
 
 // BeginBlock performs begin block functionality for all modules. It creates a

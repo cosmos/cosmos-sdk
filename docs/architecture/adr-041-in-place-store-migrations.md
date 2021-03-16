@@ -85,23 +85,23 @@ We introduce a new prefix store in `x/upgrade`'s store. This store will track ea
 0x2 | {bytes(module_name)} => BigEndian(module_consensus_version)
 ```
 
-We add a new private field `versionMap` of type `VersionMap` to `x/upgrade`'s keeper, where `VersionManager` is:
+We add a new private field `versionMap` of type `VersionMap` to `x/upgrade`'s keeper, where `VersionMap` is:
 
 ```go
 // Map of module name => new module Consensus Version.
 type VersionMap map[string]uint64
 ```
 
-This `versionMap` field can be modified via the `SetInitialVersionMap` field, and will allow the upgrade keeper to know the current versions of loaded modules. `SetInitialVersionMap` MUST be called as early as possible in the app initialization; in the SDK's `simapp`, it is called in the `NewSimApp` constructor function.
+This `versionMap` field can be modified via the `SetInitialVersionMap` field, and will allow the upgrade keeper to know the current versions of loaded modules. `SetInitialVersionMap` MUST be called AFTER the `module.NewManager()` is called; in the SDK's `simapp`, it is called in the `NewSimApp` constructor function.
 
-The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return a new `VersionMap` and an error:
+The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return an upgraded `VersionMap` and an error:
 
 ```diff
 - type UpgradeHandler func(ctx sdk.Context, plan Plan)
 + type UpgradeHandler func(ctx sdk.Context, plan Plan, versionMap VersionMap) (VersionMap, error)
 ```
 
-To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pass it into the handler. The handler runs the actual migration functions (see next section), and if successful, returns the updated ConsensusVersions of the modules to be stored in state.
+To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pass it into the handler. The handler runs the actual migration functions (see next section), and if successful, returns an updated `VersionMap` to be stored in state.
 
 ```diff
 func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {

@@ -57,13 +57,13 @@ In Cosmos SDK applications, events are managed by an abstraction called the `Eve
 Internally, the `EventManager` tracks a list of `Events` for the entire execution flow of a
 transaction or `BeginBlock`/`EndBlock`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/21814558eaa47b018018711e5fe16e0b16811fce/types/events.go#L17-L25
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L17-L25
 
 The `EventManager` comes with a set of useful methods to manage events. Among them, the one that is
 used the most by module and application developers is the `EmitEvent` method, which tracks
 an `event` in the `EventManager`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/21814558eaa47b018018711e5fe16e0b16811fce/types/events.go#L33-L37
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L33-L37
 
 Module developers should handle event emission via the `EventManager#EmitEvent` in each message
 `Handler` and in each `BeginBlock`/`EndBlock` handler. The `EventManager` is accessed via

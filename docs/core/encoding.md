@@ -170,7 +170,22 @@ fmt.Printf("%T\n", myProfile.Account.GetCachedValue()) // Prints "BaseAccount", 
 accAddr := myProfile.Account.GetCachedValue().(AccountI).GetAddress()
 ```
 
-For more information about interface encoding, and especially on how the `Any`'s `type_url` gets resolved using the `InterfaceRegistry`, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
+It is important to note that for `GetCachedValue()` to work, `Profile` (and any other structs embedding `Profile`) must implement the `UnpackInterfaces` method:
+
+```go
+func (p *Profile) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+  if p.Account != nil {
+    var account AccountI
+    return unpacker.UnpackAny(p.Account, &account)
+  }
+
+  return nil
+}
+```
+
+The `UnpackInterfaces` gets called recursively on all structs implementing this method, to allow all `Any`s to have their `GetCachedValue()` correctly populated.
+
+For more information about interface encoding, and especially on `UnpackInterfaces` and how the `Any`'s `type_url` gets resolved using the `InterfaceRegistry`, please refer to [ADR-019](../architecture/adr-019-protobuf-state-encoding.md).
 
 #### `Any` Encoding in the SDK
 

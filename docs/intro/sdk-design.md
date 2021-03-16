@@ -38,9 +38,9 @@ Here is a simplified view of how a transaction is processed by the application o
 ```
                                       +
                                       |
-                                      |  Transaction relayed from the full-node's Tendermint engine
-                                      |  to the node's application via DeliverTx
-                                      |
+                                      |  Transaction relayed from the full-node's
+                                      |  Tendermint engine to the node's application
+                                      |  via DeliverTx
                                       |
                                       |
                 +---------------------v--------------------------+
@@ -56,9 +56,9 @@ Here is a simplified view of how a transaction is processed by the application o
                                       +---------------------------+
                                                                   |
                                                                   |
-                                                                  |
-                                                                  |  Message routed to the correct
-                                                                  |  module to be processed
+                                                                  |  Message routed to
+                                                                  |  the correct module
+                                                                  |  to be processed
                                                                   |
                                                                   |
 +----------------+  +---------------+  +----------------+  +------v----------+

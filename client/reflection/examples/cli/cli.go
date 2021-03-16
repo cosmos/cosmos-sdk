@@ -48,12 +48,13 @@ func (p *CLI) Run() error {
 }
 
 func (p *CLI) query() error {
-	m := p.c.ListQueryMap()
+	qd := p.c.ChainDescriptor().Queriers()
 
-	selections := make([]string, 0, len(m))
+	selections := make([]string, 0, qd.Len())
 
-	for k := range m {
-		selections = append(selections, k)
+	for i := 0; i < qd.Len(); i++ {
+		q := qd.Get(i)
+		selections = append(selections, q.TMQueryPath())
 	}
 
 	sort.Slice(selections, func(i, j int) bool {
@@ -70,12 +71,12 @@ func (p *CLI) query() error {
 		return err
 	}
 
-	queryDesc, exists := m[res]
-	if !exists {
+	queryDesc := qd.ByTMName(res)
+	if queryDesc == nil {
 		return fmt.Errorf("not found: %s", res)
 	}
 
-	dpb, err := fillDynamicMessagePrompt(queryDesc.Request)
+	dpb, err := fillDynamicMessagePrompt(queryDesc.Descriptor().Input())
 	if err != nil {
 		return err
 	}

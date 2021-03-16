@@ -97,11 +97,10 @@ func (c *Client) ChainDescriptor() descriptor.Chain {
 	return c.chainDesc
 }
 
-/*
-func (c *Client) Query(ctx context.Context, request proto.Message) (resp proto.Message, err error) {
-	desc, exists := c.queriers[codec.MessageName(request)]
-	if !exists {
-		return nil, fmt.Errorf("unknown method: %s", desc.Method)
+func (c *Client) Query(ctx context.Context, method string, request proto.Message) (resp proto.Message, err error) {
+	desc := c.chainDesc.Queriers().ByTMName(method)
+	if desc == nil {
+		return nil, fmt.Errorf("unknown method: %s", method)
 	}
 
 	reqBytes, err := c.cdc.Marshal(request)
@@ -109,16 +108,14 @@ func (c *Client) Query(ctx context.Context, request proto.Message) (resp proto.M
 		return nil, err
 	}
 
-	tmResp, err := c.tm.ABCIQuery(ctx, desc.Method, reqBytes)
+	tmResp, err := c.tm.ABCIQuery(ctx, method, reqBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	resp = dynamicpb.NewMessage(desc.Response)
+	resp = dynamicpb.NewMessage(desc.Descriptor().Output())
 	return resp, c.cdc.Unmarshal(tmResp.Response.Value, resp)
 }
-
-*/
 
 func (c *Client) QueryUnstructured(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
 	desc := c.chainDesc.Queriers().ByTMName(method)

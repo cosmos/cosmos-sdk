@@ -63,7 +63,7 @@ type queriers struct {
 	byIndex  []querier
 }
 
-func (q queriers) insert(sd protoreflect.ServiceDescriptor, md protoreflect.MethodDescriptor) error {
+func (q *queriers) insert(sd protoreflect.ServiceDescriptor, md protoreflect.MethodDescriptor) error {
 	name := (string)(md.FullName())
 	if _, exists := q.byName[name]; exists {
 		return fmt.Errorf("%s: %w", name, ErrAlreadyExists)
@@ -136,7 +136,7 @@ type deliverables struct {
 	byIndex []deliverable
 }
 
-func (d deliverables) insert(md protoreflect.MessageDescriptor) error {
+func (d *deliverables) insert(md protoreflect.MessageDescriptor) error {
 	name := (string)(md.FullName())
 	if _, exists := d.byName[name]; exists {
 		return fmt.Errorf("%w: %s", ErrAlreadyExists, name)

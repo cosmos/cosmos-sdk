@@ -14,7 +14,7 @@ This document describes the in-built accounts system of the Cosmos SDK. {synopsi
 
 In the Cosmos SDK, an _account_ designates a pair of _public key_ `PubKey` and _private key_ `PrivKey`. The `PubKey` can be derived to generate various `Addresses`, which are used to identify users (among other parties) in the application. `Addresses` are also associated with [`message`s](../building-modules/messages-and-queries.md#messages) to identify the sender of the `message`. The `PrivKey` is used to generate [digital signatures](#signatures) to prove that an `Address` associated with the `PrivKey` approved of a given `message`.
 
-For HD key derivation the Cosmos SDK uses a standard called [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). This allows to create a HD wallet - a set of accounts derived from an initial secret seed. A seed is usually created form of a 12 or 24-words mnemonic. This single seed allows to derive any number of `PrivKey`s using one-way cryptographic function. Then, a `PubKey` can be derived from the `PrivKey`. Naturally, the mnemonic is the most sensitive information, as private keys can always be re-generated if the mnemonic is preserved.
+For HD key derivation the Cosmos SDK uses a standard called [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). This allows users to create an HD wallet - a set of accounts derived from an initial secret seed. A seed is usually created from a 12- or 24-word mnemonic. This single seed allows one to derive any number of `PrivKey`s using a one-way cryptographic function. Then, a `PubKey` can be derived from the `PrivKey`. Naturally, the mnemonic is the most sensitive information, as private keys can always be re-generated if the mnemonic is preserved.
 
 ```
      Account 0                         Account 1                         Account 2
@@ -61,9 +61,9 @@ In the Cosmos SDK, keys are stored and managed via an object called a [`Keyring`
 
 ## Keys, accounts, addresses and signatures
 
-The principal way of authenticating a user is done through a [digital signatures](https://en.wikipedia.org/wiki/Digital_signature). User is signing transactions using his/her private key. Signature verification is done with the associated public key. For the on-chain signature verification purpose we store public key in an `Account` object (alongside other data required for a proper transaction validation).
+The principal way of authenticating a user is done through [digital signatures](https://en.wikipedia.org/wiki/Digital_signature). Users signs transactions using their own private key. Signature verification is done with the associated public key. For on-chain signature verification purposes, we store the public key in an `Account` object (alongside other data required for a proper transaction validation).
 
-Currently, the SDK supports the following digital key schemes for creating digital signatures:
+Currently, the Cosmos SDK supports the following digital key schemes for creating digital signatures:
 
 - `secp256k1`, as implemented in the [SDK's `crypto/keys/secp256k1` package](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/keys/secp256k1/secp256k1.go).
 - `secp256r1`, as implemented in the [SDK's `crypto/keys/secp256r1` package](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/secp256r1/pubkey.go),

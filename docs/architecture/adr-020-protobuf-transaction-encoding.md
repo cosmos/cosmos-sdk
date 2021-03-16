@@ -289,7 +289,7 @@ and `FileDescriptor`s and returns a boolean result.
 
 Public keys in the Cosmos SDK implement the `cryptotypes.PubKey` interface.
 We propose to use `Any` for protobuf encoding as we are doing with other interfaces (e.g. in `BaseAccount` `PubKey` or `SignerInfo` `PublicKey`).
-Following public keys are implemented: secp256k1, secp256r1, ed25519 and multisignature.
+The following public keys are implemented: secp256k1, secp256r1, ed25519 and legacy-multisignature.
 
 Ex:
 

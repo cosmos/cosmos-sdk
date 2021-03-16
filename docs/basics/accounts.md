@@ -69,11 +69,14 @@ Currently, the SDK supports the following digital key schemes for creating digit
 - `secp256r1`, as implemented in the [SDK's `crypto/keys/secp256r1` package](https://github.com/cosmos/cosmos-sdk/blob/master/crypto/keys/secp256r1/pubkey.go),
 - `tm-ed25519`, as implemented in the [SDK's `crypto/keys/ed25519` package](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/keys/ed25519/ed25519.go). This scheme is only supported for the consensus validation, not user transaction.
 
-|              | Address length in bytes | public key length in bytes | Used for transaction authentication | Used for consensus (tendermint) |
-|--------------+-------------------------+----------------------------+-------------------------------------+---------------------------------|
-| `secp256k1`  |                      20 |                         33 | yes                                 | no                              |
-| `secp256k1`  |                      32 |                         33 | yes                                 | no                              |
-| `tm-ed25519` |          -- not used -- |                         32 | no                                  | yes                             |
+
+|              | Address length | Public key length | Used for transaction | Used for consensus |
+|              | in bytes       |          in bytes | authentication       | (tendermint)       |
+|--------------+----------------+-------------------+----------------------+--------------------|
+| `secp256k1`  | 20             |                33 | yes                  | no                 |
+| `secp256k1`  | 32             |                33 | yes                  | no                 |
+| `tm-ed25519` | -- not used -- |                32 | no                   | yes                |
+
 
 
 ## Addresses

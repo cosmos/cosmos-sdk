@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	c, err := client.DialContext(context.TODO(), "localhost:9090", "tcp://localhost:26657", nil)
+	c, err := client.Dial(context.TODO(), "localhost:9090", "tcp://localhost:26657", nil)
 	if err != nil {
 		panic(err)
 	}

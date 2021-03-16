@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 
@@ -12,7 +11,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
@@ -23,50 +21,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-// Config defines Client configurations
-type Config struct {
-	// ProtoImporter is used to import proto files dynamically
-	ProtoImporter codec.ProtoImportsDownloader
-	// SDKReflectionClient is the client used to build the codec
-	// in a dynamic way, based on the chain the client is connected to.
-	SDKReflectionClient reflection.ReflectionServiceClient
-	// TMClient is the client used to interact with the tendermint endpoint
-	// for queries and transaction posting
-	TMClient tmrpc.Client
-	// AuthInfoProvider takes care of providing authentication information
-	// such as account sequence, number, address and signing capabilities.
-	AuthInfoProvider AccountInfoProvider
-}
-
 // Client defines a dynamic cosmos-sdk client, that can be used to query
 // different cosmos sdk versions with different messages and available
-// queries. It is gonna build the required codec in a dynamic fashion.
+// queries. It is gonna Build the required codec in a dynamic fashion.
 type Client struct {
-	sdk                 reflection.ReflectionServiceClient
 	tm                  tmrpc.Client
 	cdc                 *codec.Codec // chain specific codec generated at run time
 	accountInfoProvider AccountInfoProvider
-	chainDesc           descriptor.Chain
+	chainDesc           descriptor.Chain // chain specific descriptor generated at runtime
 }
 
-// NewClient inits a client given the provided configurations
-func NewClient(ctx context.Context, conf Config) (*Client, error) {
-	c := &Client{
-		sdk:                 conf.SDKReflectionClient,
-		tm:                  conf.TMClient,
-		cdc:                 codec.NewCodec(conf.ProtoImporter),
-		accountInfoProvider: conf.AuthInfoProvider,
-	}
-
-	err := c.init(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
-}
-
-// DialContext is going to create a new client by dialing to the tendermint and gRPC endpoints of the provided application.
-func DialContext(ctx context.Context, grpcEndpoint, tmEndpoint string, accountInfoProvider AccountInfoProvider) (*Client, error) {
+// Dial is going to create a new client by dialing to the tendermint and gRPC endpoints of the provided application.
+func Dial(ctx context.Context, grpcEndpoint, tmEndpoint string, accountInfoProvider AccountInfoProvider) (*Client, error) {
 	conn, err := grpc.Dial(grpcEndpoint, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
@@ -80,12 +46,18 @@ func DialContext(ctx context.Context, grpcEndpoint, tmEndpoint string, accountIn
 		return nil, err
 	}
 
-	return NewClient(ctx, Config{
+	builder := NewBuilder(BuilderConfig{
 		ProtoImporter:       fetcher,
 		SDKReflectionClient: sdkReflect,
 		TMClient:            tmRPC,
 		AuthInfoProvider:    accountInfoProvider,
 	})
+	c, err := builder.Build(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 // Codec exposes the client specific codec
@@ -190,194 +162,4 @@ func (c *Client) Tx(ctx context.Context, method string, request unstructured.Map
 
 	tmResp, err := c.tm.BroadcastTxCommit(ctx, txBytes)
 	return tmResp, err
-}
-
-func (c *Client) init(ctx context.Context) error {
-	chainDescBuilder := descriptor.NewBuilder()
-	err := c.buildQueries(ctx, chainDescBuilder)
-	if err != nil {
-		return err
-	}
-
-	err = c.buildDeliverables(ctx, chainDescBuilder)
-	if err != nil {
-		return err
-	}
-
-	err = c.resolveAnys(ctx)
-	if err != nil {
-		return err
-	}
-
-	c.chainDesc, err = chainDescBuilder.Build()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) buildDeliverables(ctx context.Context, builder *descriptor.Builder) error {
-	// get msg implementers
-	msgImplementers, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.MsgInterfaceName})
-	if err != nil {
-		return err
-	}
-	// get service msg implementers
-	svcMsgImplementers, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: types.ServiceMsgInterfaceName})
-	if err != nil {
-		return err
-	}
-	// join implementations as deliverables
-	deliverablesProtoNames := make([]string, 0, len(msgImplementers.ImplementationMessageProtoNames)+len(svcMsgImplementers.ImplementationMessageProtoNames))
-	deliverablesProtoNames = append(deliverablesProtoNames, msgImplementers.ImplementationMessageProtoNames...)
-	deliverablesProtoNames = append(deliverablesProtoNames, svcMsgImplementers.ImplementationMessageProtoNames...)
-
-	// we create a map which contains the message names that we expect to process
-	// so in case one file contains multiple messages we need then we won't need
-	// to resolve the same proto file multiple times :)
-	expectedMsgs := make(map[string]struct{}, len(deliverablesProtoNames))
-	foundMsgs := make(map[string]struct{}, len(deliverablesProtoNames))
-	for _, name := range deliverablesProtoNames {
-		expectedMsgs[name] = struct{}{}
-	}
-
-	// now resolve types
-	for name := range expectedMsgs {
-		// check if we already processed it
-		if _, exists := foundMsgs[name]; exists {
-			continue
-		}
-		rptResp, err := c.sdk.ResolveProtoType(ctx, &reflection.ResolveProtoTypeRequest{Name: name})
-		if err != nil {
-			return err
-		}
-		desc, err := c.cdc.RegisterRawFileDescriptor(ctx, rptResp.RawDescriptor)
-		// TODO: we should most likely check if error is file already registered and if it is
-		// skip it as some people might define a module into a single proto file which we might have imported already
-		if err != nil {
-			return err
-		}
-		// iterate over msgs
-		found := false // we assume to always find our message in the file descriptor... but still
-		for i := 0; i < desc.Messages().Len(); i++ {
-			msgDesc := desc.Messages().Get(i)
-			msgName := (string)(msgDesc.FullName())
-			// check if msg is required
-			if _, required := expectedMsgs[msgName]; !required {
-				continue
-			}
-			// ok msg is required, so insert it in found list
-			foundMsgs[msgName] = struct{}{}
-			if msgName == name {
-				found = true
-			}
-			// save in msgs
-			err = builder.RegisterDeliverable(msgDesc)
-			if err != nil {
-				return err
-			}
-		}
-		if !found {
-			return fmt.Errorf("unable to find message %s in resolved descriptor", name)
-		}
-	}
-	return nil
-}
-
-func (c *Client) buildQueries(ctx context.Context, descBuilder *descriptor.Builder) error {
-	queries, err := c.sdk.ListQueryServices(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	svcPerFile := make(map[string][]string)
-
-	for _, q := range queries.Queries {
-		_, exists := svcPerFile[q.ProtoFile]
-		if !exists {
-			svcPerFile[q.ProtoFile] = nil
-		}
-
-		svcPerFile[q.ProtoFile] = append(svcPerFile[q.ProtoFile], q.ServiceName)
-	}
-
-	svcDescriptors := make([][]byte, 0, len(svcPerFile))
-
-	for file := range svcPerFile {
-		rawDesc, err := c.sdk.ResolveService(ctx, &reflection.ResolveServiceRequest{FileName: file})
-		if err != nil {
-			return err
-		}
-
-		svcDescriptors = append(svcDescriptors, rawDesc.RawDescriptor)
-	}
-
-	for _, rawDesc := range svcDescriptors {
-		fileDesc, err := c.cdc.RegisterRawFileDescriptor(ctx, rawDesc)
-		if err != nil && !errors.Is(err, codec.ErrFileRegistered) {
-			return err
-		}
-		err = registerServices(descBuilder, fileDesc)
-		if err != nil {
-			return err
-		}
-
-	}
-
-	return nil
-}
-
-func (c *Client) resolveAnys(ctx context.Context) error {
-	availableInterfaces, err := c.sdk.ListAllInterfaces(ctx, &reflection.ListAllInterfacesRequest{})
-	if err != nil {
-		return err
-	}
-
-	for _, implementation := range availableInterfaces.InterfaceNames {
-		implsResp, err := c.sdk.ListImplementations(ctx, &reflection.ListImplementationsRequest{InterfaceName: implementation})
-		if err != nil {
-			return err
-		}
-
-		for _, implementer := range implsResp.ImplementationMessageProtoNames {
-			err = c.resolveAny(ctx, implementation, implementer)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) resolveAny(ctx context.Context, implementation, implementer string) error {
-	// if it's known skip
-	if c.cdc.KnownMessage(implementer) {
-		return nil
-	}
-	// if it's unknown then solve
-	desc, err := c.sdk.ResolveProtoType(ctx, &reflection.ResolveProtoTypeRequest{Name: implementer})
-	if err != nil {
-		return err
-	}
-	_, err = c.cdc.RegisterRawFileDescriptor(ctx, desc.RawDescriptor)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func registerServices(builder *descriptor.Builder, file protoreflect.FileDescriptor) error {
-	services := file.Services()
-
-	for i := 0; i < services.Len(); i++ {
-		svcDesc := services.Get(i)
-		err := builder.RegisterQueryService(svcDesc)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

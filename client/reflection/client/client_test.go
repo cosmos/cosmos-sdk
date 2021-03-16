@@ -7,47 +7,12 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	"github.com/cosmos/cosmos-sdk/client/reflection/tx"
 	"github.com/cosmos/cosmos-sdk/client/reflection/unstructured"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
-
-func TestClient(t *testing.T) {
-	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	qs, err := c.sdk.ListQueryServices(context.TODO(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("%s", qs)
-
-	imp, err := c.sdk.ListDeliverables(context.TODO(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("%s", imp)
-
-	typeDesc, err := c.sdk.ResolveProtoType(context.TODO(), &reflection.ResolveProtoTypeRequest{Name: "cosmos.bank.v1beta1.MsgSend"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(typeDesc)
-
-	svcDesc, err := c.sdk.ResolveService(context.TODO(), &reflection.ResolveServiceRequest{FileName: qs.Queries[1].ProtoFile})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Logf("%s", svcDesc)
-}
 
 func TestClientListQueries(t *testing.T) {
 
@@ -57,20 +22,8 @@ func TestClient_ListDeliverables(t *testing.T) {
 
 }
 
-func TestClient_resolveAnys(t *testing.T) {
-	c, err := DialContext(context.TODO(), "localhost:9090", "", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = c.resolveAnys(context.TODO())
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestClient_Query(t *testing.T) {
-	c, err := DialContext(context.TODO(), "localhost:9090", "tcp://localhost:26657", nil)
+	c, err := Dial(context.TODO(), "localhost:9090", "tcp://localhost:26657", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +109,7 @@ func TestClient_Tx(t *testing.T) {
 	const sequence uint64 = 3
 	const accNum uint64 = 0
 	infoProvider := newInfoProvider(keyHex, 0, 0)
-	c, err := DialContext(context.TODO(), "localhost:9090", "tcp://localhost:26657", infoProvider)
+	c, err := Dial(context.TODO(), "localhost:9090", "tcp://localhost:26657", infoProvider)
 	if err != nil {
 		t.Fatal(err)
 	}

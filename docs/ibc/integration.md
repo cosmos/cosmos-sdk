@@ -126,7 +126,7 @@ IBC module.
 Adding the module routes allows the IBC handler to call the appropriate callback when processing a
 channel handshake or a packet.
 
-The second `Router` that is required is the evidence module router. This router handles genenal
+The second `Router` that is required is the evidence module router. This router handles general
 evidence submission and routes the business logic to each registered evidence handler. In the case
 of IBC, it is required to submit evidence for [light client
 misbehaviour](https://github.com/cosmos/ics/tree/master/spec/ics-002-client-semantics#misbehaviour)

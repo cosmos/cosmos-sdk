@@ -46,12 +46,6 @@ const (
 var (
 	_                          Keyring = &keystore{}
 	maxPassphraseEntryAttempts         = 3
-
-	// DefaultSupportedAlgorithms is the SigningAlgoList to be used through Keyring lifecycle.
-	DefaultSupportedAlgorithms = SigningAlgoList{hd.Secp256k1}
-
-	// DefaultSupportedLedgerAlgorithms is the SigningAlgoList to be used through Keyring lifecycle with Ledgers.
-	DefaultSupportedLedgerAlgorithms = SigningAlgoList{hd.Secp256k1}
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
@@ -209,8 +203,8 @@ type keystore struct {
 func newKeystore(kr keyring.Keyring, opts ...Option) keystore {
 	// Default options for keybase
 	options := Options{
-		SupportedAlgos:       DefaultSupportedAlgorithms,
-		SupportedAlgosLedger: DefaultSupportedLedgerAlgorithms,
+		SupportedAlgos:       SigningAlgoList{hd.Secp256k1},
+		SupportedAlgosLedger: SigningAlgoList{hd.Secp256k1},
 	}
 
 	for _, optionFn := range opts {

@@ -108,7 +108,7 @@ Whenever the `rootMulti.Store` needs to be branched, a [`cachemulti.Store`](http
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/store/cachemulti/store.go#L17-L28
 
-`cachemulti.Store` branches all substores (creates a virtual store for each substore) in its constructor and hold them in `Store.stores`. Moreover cachese all read queries. `Store.GetKVStore()` returns the store from `Store.stores`, and `Store.Write()` recursively calls `CacheWrap.Write()` on all the substores.
+`cachemulti.Store` branches all substores (creates a virtual store for each substore) in its constructor and hold them in `Store.stores`. Moreover caches all read queries. `Store.GetKVStore()` returns the store from `Store.stores`, and `Store.Write()` recursively calls `CacheWrap.Write()` on all the substores.
 
 ## Base-layer KVStores
 
@@ -180,7 +180,7 @@ This is the type used whenever an IAVL Store needs to be branched to create an i
 
 #### `Set`
 
-`Store.Set()` sets the key-value pair to the `Store.cache`. `cValue` has the field dirty bool which indicates whether the cached value is different from the underlying value. When `Store.Set()` cachees a new pair, the `cValue.dirty` is set `true` so when `Store.Write()` is called it can be written to the underlying store.
+`Store.Set()` sets the key-value pair to the `Store.cache`. `cValue` has the field dirty bool which indicates whether the cached value is different from the underlying value. When `Store.Set()` caches a new pair, the `cValue.dirty` is set `true` so when `Store.Write()` is called it can be written to the underlying store.
 
 #### `Iterator`
 

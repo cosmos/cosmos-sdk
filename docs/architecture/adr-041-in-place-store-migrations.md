@@ -75,7 +75,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 ```
 
-Each module's migration functions are specific to the module's store evolutions, and are not described in this ADR. An example of x/bank store key migrations following the introduction of ADR-028 length-prefixed addresses can be seen [here](https://github.com/cosmos/cosmos-sdk/blob/ef8dabcf0f2ecaf26db1c6c6d5922e9399458bb3/x/bank/legacy/v042/store.go#L15).
+Each module's migration functions are specific to the module's store evolutions, and are not described in this ADR. An example of x/bank store key migrations following the introduction of ADR-028 length-prefixed addresses can be seen [here](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62).
 
 ### Tracking Module Versions in `x/upgrade`
 

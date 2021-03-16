@@ -53,13 +53,13 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 
 See an example of application type definition from `simapp`, the SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L139-L181
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L145-L187
 
 ### Constructor Function
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L42-L44
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
 
 Here are the main actions performed by this function:
 
@@ -81,7 +81,7 @@ Note that this function only creates an instance of the app, while the actual st
 
 See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L192-L429
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L198-L441
 
 ### InitChainer
 
@@ -91,7 +91,7 @@ In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../build
 
 See an example of an `InitChainer` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L452-L459
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L464-L471
 
 ### BeginBlocker and EndBlocker
 
@@ -103,7 +103,7 @@ As a sidenote, it is important to remember that application-specific blockchains
 
 See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L442-L450
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L454-L462
 
 ### Register Codec
 
@@ -124,7 +124,7 @@ NOTE: this function is marked deprecated and should only be used to create an ap
 
 See an example of a `MakeCodecs` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L429-L435
++++ https://github.com/cosmos/cosmos-sdk/blob/590358652cc1cbc13872ea1659187e073ea38e75/simapp/encoding.go#L8-L19
 
 ## Modules
 

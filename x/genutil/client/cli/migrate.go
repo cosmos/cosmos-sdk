@@ -31,7 +31,7 @@ var migrationMap = types.MigrationMap{
 	"v0.36": v036.Migrate,
 	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible.
 	"v0.39": v039.Migrate,
-	"v0.40": v040.Migrate, // NOTE: v0.40, v0.41 and v0.42 are genesis compatible.
+	"v0.42": v040.Migrate, // NOTE: v0.40, v0.41 and v0.42 are genesis compatible.
 	"v0.43": v043.Migrate,
 }
 

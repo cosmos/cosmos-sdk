@@ -34,13 +34,13 @@ func (s *IntegrationTestSuite) TestMigrateGenesis() {
 			false, "", func(_ string) {},
 		},
 		{
-			"migrate 0.37 to 0.40",
+			"migrate 0.37 to 0.42",
 			v037Exported,
-			"v0.40",
+			"v0.42",
 			true, "Make sure that you have correctly migrated all Tendermint consensus params", func(_ string) {},
 		},
 		{
-			"migrate 0.40 to 0.43",
+			"migrate 0.42 to 0.43",
 			v040Valid,
 			"v0.43",
 			false, "",

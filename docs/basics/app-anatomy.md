@@ -124,11 +124,7 @@ NOTE: this function is marked deprecated and should only be used to create an ap
 
 See an example of a `MakeCodecs` from `simapp`:
 
-<<<<<<< HEAD
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L429-L435
-=======
 +++ https://github.com/cosmos/cosmos-sdk/blob/590358652cc1cbc13872ea1659187e073ea38e75/simapp/encoding.go#L8-L19
->>>>>>> 36f68eb9e... Update docs (#8751)
 
 ## Modules
 

@@ -131,7 +131,8 @@ func AddCommands(
 	ctx *Context, cdc *codec.Codec,
 	rootCmd *cobra.Command,
 	appCreator AppCreator, appExport AppExporter,
-	registerRouters func(rs *lcd.RestServer)) {
+	registerRouters func(rs *lcd.RestServer),
+	registerAppFlagFn func(cmd *cobra.Command)) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
 	rootCmd.PersistentFlags().String("log_file", ctx.Config.LogFile, "Log file")
@@ -150,7 +151,7 @@ func AddCommands(
 	)
 
 	rootCmd.AddCommand(
-		StartCmd(ctx, cdc, appCreator, registerRouters),
+		StartCmd(ctx, cdc, appCreator, registerRouters, registerAppFlagFn),
 		StopCmd(ctx),
 		UnsafeResetAllCmd(ctx),
 		flags.LineBreak,

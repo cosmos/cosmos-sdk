@@ -50,7 +50,8 @@ const (
 // Tendermint.
 func StartCmd(ctx *Context,
 	cdc *codec.Codec, appCreator AppCreator,
-	registerRoutesFn func(restServer *lcd.RestServer)) *cobra.Command {
+	registerRoutesFn func(restServer *lcd.RestServer),
+	registerAppFlagFn func(cmd *cobra.Command)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Run the full node",
@@ -133,7 +134,7 @@ which accepts a path for the resulting pprof file.
 	viper.BindPFlag(FlagGoroutineNum, cmd.Flags().Lookup(FlagGoroutineNum))
 
 	registerRestServerFlags(cmd)
-
+	registerAppFlagFn(cmd)
 	registerokexchainPluginFlags(cmd)
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

@@ -133,8 +133,8 @@ If a required migration is missing (e.g. if it has not been registered in the `C
 In practice, the `RunMigrations` method should be called from inside an `UpgradeHandler`.
 
 ```go
-app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap)  (module.VersionMap, error) {
-    return app.mm.RunMigrations(ctx, versionMap)
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
+    return app.mm.RunMigrations(ctx, vm)
 })
 ```
 

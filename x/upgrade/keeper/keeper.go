@@ -55,7 +55,7 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 	store := ctx.KVStore(k.storeKey)
 	versionBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(versionBytes, v)
+	binary.BigEndian.PutUint64(versionBytes, v)
 	store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
 }
 
@@ -65,7 +65,7 @@ func (k Keeper) GetProtocolVersion(ctx sdk.Context) uint64 {
 	ok := store.Has([]byte{types.ProtocolVersionByte})
 	if ok {
 		pvBytes := store.Get([]byte{types.ProtocolVersionByte})
-		protocolVersion := binary.LittleEndian.Uint64(pvBytes)
+		protocolVersion := binary.BigEndian.Uint64(pvBytes)
 
 		return protocolVersion
 	}

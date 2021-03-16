@@ -310,7 +310,7 @@ func NewSimApp(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(app.UpgradeKeeper),
+		upgrade.NewAppModule(&app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authz.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -318,7 +318,6 @@ func NewSimApp(
 
 	// Pass the version map to the upgrade keeper
 	app.UpgradeKeeper.SetInitialVersionMap(app.mm.GetVersionMap())
-	app.mm.Modules[upgradetypes.ModuleName] = upgrade.NewAppModule(app.UpgradeKeeper)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the

@@ -51,18 +51,19 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-// SetInitialVersionMap sets an initial version map on the keeper
+// SetInitialVersionMap sets an initial version map on the keeper.
+// This must be set from app.go after module Manager is initialized.
 func (k *Keeper) SetInitialVersionMap(vm module.VersionMap) {
 	k.versionMap = vm
 }
 
-// SetCurrentConsensusVersions saves the consensus versions.
-// If versionMap is not set from app.go, consensus versions will NOT be saved
-// to state.
+// SetCurrentConsensusVersions saves the current version map
+// to state from InitGenesis
 func (k Keeper) SetCurrentConsensusVersions(ctx sdk.Context) {
 	k.setConsensusVersions(ctx, k.versionMap)
 }
 
+// setConsensusVersions saves a given version map to state
 func (k Keeper) setConsensusVersions(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
 		store := ctx.KVStore(k.storeKey)
@@ -239,8 +240,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic(err)
 	}
 
-	k.versionMap = updatedVM
-	k.SetCurrentConsensusVersions(ctx)
+	k.setConsensusVersions(ctx, updatedVM)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

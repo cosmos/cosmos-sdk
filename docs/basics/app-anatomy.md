@@ -53,13 +53,13 @@ The first thing defined in `app.go` is the `type` of the application. It is gene
 
 See an example of application type definition from `simapp`, the SDK's own app used for demo and testing purposes:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L139-L181
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L145-L187
 
 ### Constructor Function
 
 This function constructs a new application of the type defined in the section above. It must fulfill the `AppCreator` signature in order to be used in the [`start` command](../core/node.md#start-command) of the application's daemon command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L42-L44
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
 
 Here are the main actions performed by this function:
 
@@ -69,7 +69,7 @@ Here are the main actions performed by this function:
 - Instantiate the application's [module manager](../building-modules/module-manager.md#manager) with the [`AppModule`](#application-module-interface) object of each of the application's modules.
 - With the module manager, initialize the application's [`Msg` services](../core/baseapp.md#msg-services), [gRPC `Query` services](../core/baseapp.md#grpc-query-services), [legacy `Msg` routes](../core/baseapp.md#routing) and [legacy query routes](../core/baseapp.md#query-routing). When a transaction is relayed to the application by Tendermint via the ABCI, it is routed to the appropriate module's [`Msg` service](#msg-services) using the routes defined here. Likewise, when a gRPC query request is received by the application, it is routed to the appropriate module's [`gRPC query service`](#grpc-query-services) using the gRPC routes defined here. The SDK still supports legacy `Msg`s and legacy Tendermint queries, which are routed using respectively the legacy `Msg` routes and the legacy query routes.
 - With the module manager, register the [application's modules' invariants](../building-modules/invariants.md). Invariants are variables (e.g. total supply of a token) that are evaluated at the end of each block. The process of checking invariants is done via a special module called the [`InvariantsRegistry`](../building-modules/invariants.md#invariant-registry). The value of the invariant should be equal to a predicted value defined in the module. Should the value be different than the predicted one, special logic defined in the invariant registry will be triggered (usually the chain is halted). This is useful to make sure no critical bug goes unnoticed and produces long-lasting effects that would be hard to fix.
-- With the module manager, set the order of execution between the `InitGenesis`, `BegingBlocker` and `EndBlocker` functions of each of the [application's modules](#application-module-interface). Note that not all modules implement these functions.
+- With the module manager, set the order of execution between the `InitGenesis`, `BeginBlocker` and `EndBlocker` functions of each of the [application's modules](#application-module-interface). Note that not all modules implement these functions.
 - Set the remainer of application's parameters:
   - [`InitChainer`](#initchainer): used to initialize the application when it is first started.
   - [`BeginBlocker`, `EndBlocker`](#beginblocker-and-endlbocker): called at the beginning and the end of every block).
@@ -81,7 +81,7 @@ Note that this function only creates an instance of the app, while the actual st
 
 See an example of application constructor from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L192-L429
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L198-L441
 
 ### InitChainer
 
@@ -91,7 +91,7 @@ In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../build
 
 See an example of an `InitChainer` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L452-L459
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L464-L471
 
 ### BeginBlocker and EndBlocker
 
@@ -103,7 +103,7 @@ As a sidenote, it is important to remember that application-specific blockchains
 
 See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L442-L450
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/app.go#L454-L462
 
 ### Register Codec
 
@@ -125,7 +125,7 @@ NOTE: this function is marked deprecated and should only be used to create an ap
 
 See an example of a `MakeTestEncodingConfig` from `simapp`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/simapp/simd/cmd/root.go#L179-196
++++ https://github.com/cosmos/cosmos-sdk/blob/590358652cc1cbc13872ea1659187e073ea38e75/simapp/encoding.go#L8-L19
 
 ## Modules
 

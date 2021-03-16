@@ -137,7 +137,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		return scanner.Err()
+		return scanner.UnmarshalErr()
 	}
 }
 

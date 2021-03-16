@@ -125,11 +125,11 @@ aa := sdk.AccAddress(pub.Address().Bytes())
 
 These addresses implement the `Address` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L73-L82
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L76-L85
 
 Of note, the `Marshal()` and `Bytes()` method both return the same raw `[]byte` form of the address, the former being needed for Protobuf compatibility. Also, the `String()` method is used to return the `bech32` encoded form of the address, which should be the only address format with which end-user interract. Here is an example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L232-L246
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L235-L249
 
 ## Next {hide}
 

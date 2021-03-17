@@ -13,7 +13,7 @@ adjusts applications keyring trust so that users are prompted for password only 
 ### Tx search results support for order-by
 
 Although the Tendermint Core's RPC `tx_search` endpoint has been supporting an order-by parameter for quite some time now,
-the Cosmos SDK was in fact preventing the application to customise such parameter by automatically setting requests' order-by to "".
+the Cosmos SDK did not respect the order-by parameter and incorrectly set the requests order-by to "" (null).
 This releases introduces [the relevant order-by parameter support](https://github.com/cosmos/cosmos-sdk/issues/8686) when searching through Txs.
 
 ### Multisig accounts and v0.40 genesis files migration

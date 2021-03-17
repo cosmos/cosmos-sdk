@@ -47,7 +47,7 @@ func (a *AllowedMsgFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
 
 // Accept method checks for the filtered messages has valid expiry
 func (a *AllowedMsgFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64, msgs []sdk.Msg) (bool, error) {
-	if !a.isMsgTypesAllowed(msgs) {
+	if !a.allMsgTypesAllowed(msgs) {
 		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
@@ -59,10 +59,9 @@ func (a *AllowedMsgFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, bloc
 	return allowance.Accept(fee, blockTime, blockHeight, msgs)
 }
 
-func (a *AllowedMsgFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
-	found := false
-
+func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(msgs []sdk.Msg) bool {
 	for _, msg := range msgs {
+		found := false
 		for _, allowedMsg := range a.AllowedMessages {
 			if allowedMsg == msg.Type() {
 				found = true
@@ -73,8 +72,6 @@ func (a *AllowedMsgFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
 		if !found {
 			return false
 		}
-
-		found = false
 	}
 
 	return true

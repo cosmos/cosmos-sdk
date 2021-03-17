@@ -741,12 +741,10 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		{
 			"valid tx",
 			func() (testutil.BufferWriter, error) {
-				out, err := govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
+				return govtestutil.MsgSubmitProposal(val.ClientCtx, grantee.String(),
 					"Text Proposal", "No desc", govtypes.ProposalTypeText,
 					fmt.Sprintf("--%s=%s", flags.FlagFeeAccount, granter.String()),
 				)
-
-				return out, err
 			},
 			false,
 			&sdk.TxResponse{},
@@ -765,9 +763,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 					commonFlags...,
 				)
 				cmd := cli.NewCmdFeeGrant()
-				out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-
-				return out, err
+				return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			},
 			false, &sdk.TxResponse{}, 7,
 		},

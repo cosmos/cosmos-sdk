@@ -14,7 +14,7 @@ This document describes the in-built accounts system of the Cosmos SDK. {synopsi
 
 In the Cosmos SDK, an _account_ designates a pair of _public key_ `PubKey` and _private key_ `PrivKey`. The `PubKey` can be derived to generate various `Addresses`, which are used to identify users (among other parties) in the application. `Addresses` are also associated with [`message`s](../building-modules/messages-and-queries.md#messages) to identify the sender of the `message`. The `PrivKey` is used to generate [digital signatures](#signatures) to prove that an `Address` associated with the `PrivKey` approved of a given `message`.
 
-For HD key derivation the Cosmos SDK uses a standard called [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). This allows users to create an HD wallet - a set of accounts derived from an initial secret seed. A seed is usually created from a 12- or 24-word mnemonic. This single seed allows one to derive any number of `PrivKey`s using a one-way cryptographic function. Then, a `PubKey` can be derived from the `PrivKey`. Naturally, the mnemonic is the most sensitive information, as private keys can always be re-generated if the mnemonic is preserved.
+For HD key derivation the Cosmos SDK uses a standard called [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki). The BIP32 allows users to create an HD wallet (as specified in [BIP44(https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki)]) - a set of accounts derived from an initial secret seed. A seed is usually created from a 12- or 24-word mnemonic. A single seed can derive any number of `PrivKey`s using a one-way cryptographic function. Then, a `PubKey` can be derived from the `PrivKey`. Naturally, the mnemonic is the most sensitive information, as private keys can always be re-generated if the mnemonic is preserved.
 
 ```
      Account 0                         Account 1                         Account 2
@@ -120,9 +120,9 @@ Public keys in Cosmos SDK are defined by `crypto/PubKey` interface. Since they a
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/crypto/types/types.go#L8-L17
 
-A compressed format is used for `secp256k1` and `secp256r1` serialization. 
-- The first byte is a `0x02` byte if the `y`-coordinate is the lexicographically largest of the two associated with the `x`-coordinate. 
-- Otherwise the first byte is a `0x03`. 
+A compressed format is used for `secp256k1` and `secp256r1` serialization.
+- The first byte is a `0x02` byte if the `y`-coordinate is the lexicographically largest of the two associated with the `x`-coordinate.
+- Otherwise the first byte is a `0x03`.
 
 This prefix is followed by the `x`-coordinate.
 

@@ -154,7 +154,7 @@ bz, err := cdc.MarshalBinaryBare(profile)
 jsonBz, err := cdc.MarshalJSON(profile)
 ```
 
-To summarize, if you want to encode an interface, you need to 1/ pack it into an `Any` and 2/ marshal the `Any`. For convenience, the SDK provides a `MarshalInterface` method to bundle the 2 steps into one. Have a look at [a real-life example in the x/auth module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/keeper/keeper.go#L218-L221).
+To summarize, to encode an interface, you must 1/ pack the interface into an `Any` and 2/ marshal the `Any`. For convenience, the SDK provides a `MarshalInterface` method to bundle these two steps. Have a look at [a real-life example in the x/auth module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/keeper/keeper.go#L218-L221).
 
 The reverse operation of retrieving the concrete Go type from inside an `Any`, called "unpacking", is done with the `GetCachedValue()` on `Any`.
 

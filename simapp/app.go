@@ -332,7 +332,7 @@ func NewSimApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
-		upgradetypes.ModuleName, capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
+		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authztypes.ModuleName,
 		feegranttypes.ModuleName,
@@ -421,7 +421,7 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	app.UpgradeKeeper.SetConsensusVersions(ctx, app.mm.GetVersionMap())
+	app.UpgradeKeeper.SetVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -536,8 +536,8 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //
 // Example:
 //   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan, versionMap module.VersionMap) {
-//       return app.RunMigrations(ctx, versionMap)
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) {
+//       return app.RunMigrations(ctx, vm)
 //   })
 func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) (module.VersionMap, error) {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)

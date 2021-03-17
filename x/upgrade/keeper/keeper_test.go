@@ -135,6 +135,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 		s.Run(tc.name, func() {
 			// reset suite
 			s.SetupTest()
+
 			// setup test case
 			tc.setup()
 
@@ -197,7 +198,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
 	initialVM := module.VersionMap{"bank": uint64(1)}
-	s.app.UpgradeKeeper.SetConsensusVersions(s.ctx, initialVM)
+	s.app.UpgradeKeeper.SetVersionMap(s.ctx, initialVM)
 	vmBefore := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// simulate upgrading the bank module

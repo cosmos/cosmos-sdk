@@ -49,8 +49,8 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-// SetConsensusVersions saves a given version map to state
-func (k Keeper) SetConsensusVersions(ctx sdk.Context, vm module.VersionMap) {
+// SetVersionMap saves a given version map to state
+func (k Keeper) SetVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
 		store := ctx.KVStore(k.storeKey)
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
@@ -63,7 +63,7 @@ func (k Keeper) SetConsensusVersions(ctx sdk.Context, vm module.VersionMap) {
 	}
 }
 
-// GetConsensusVersions returns a map of key module name and value module consensus version
+// GetVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
 func (k Keeper) GetVersionMap(ctx sdk.Context) module.VersionMap {
 	store := ctx.KVStore(k.storeKey)
@@ -226,7 +226,7 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic(err)
 	}
 
-	k.SetConsensusVersions(ctx, updatedVM)
+	k.SetVersionMap(ctx, updatedVM)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

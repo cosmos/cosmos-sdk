@@ -73,7 +73,7 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 ### Guidelines for protobuf message definitions
 
-In addition to [following official guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend to use these annotations in .proto files when dealing with interfaces:
+In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
 - fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
   using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`

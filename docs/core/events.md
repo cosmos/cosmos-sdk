@@ -59,8 +59,8 @@ transaction or `BeginBlock`/`EndBlock`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L17-L25
 
-The `EventManager` comes with a set of useful methods to manage events. Among them, the one that is
-used the most by module and application developers is the `EmitEvent` method, which tracks
+The `EventManager` comes with a set of useful methods to manage events. The method
+that is used most by module and application developers is `EmitEvent` that tracks
 an `event` in the `EventManager`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/events.go#L33-L37

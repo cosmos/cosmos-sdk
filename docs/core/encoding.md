@@ -114,7 +114,7 @@ message Profile {
 }
 ```
 
-In the above `Profile`, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../../x/auth/spec/05_vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would one create a `Profile` which allows all these types of accounts, with an `account` field accepting an `AccountI` interface?
+In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../../x/auth/spec/05_vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/types/account.go#L307-L330
 

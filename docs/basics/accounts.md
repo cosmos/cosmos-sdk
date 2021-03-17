@@ -116,7 +116,7 @@ Addresses and public keys are formatted using [Bech32](https://en.bitcoin.it/wik
 
 ### Public Keys
 
-Public keys in Cosmos SDK are defined by `crypto/PubKey` interface. Since they are saved in a store, it extends the `proto.Message` interface:
+Public keys in Cosmos SDK are defined by `cryptotypes.PubKey` interface. Since public keys are saved in a store, `cryptotypes.PubKey` extends the `proto.Message` interface:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/master/crypto/types/types.go#L8-L17
 
@@ -126,7 +126,7 @@ A compressed format is used for `secp256k1` and `secp256r1` serialization.
 
 This prefix is followed by the `x`-coordinate.
 
-Similarly to `Address`, bech32 is used to format `PubKey` and for all communication with a blockchain:
+Like `Address`, Bech32 is used to format `PubKey` and for all communication with a blockchain:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L579-L729
 

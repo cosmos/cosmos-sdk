@@ -477,6 +477,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo("foobar")
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.

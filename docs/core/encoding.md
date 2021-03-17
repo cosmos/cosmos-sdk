@@ -84,10 +84,12 @@ In addition to [following official Protocol Buffer guidelines](https://developer
 
 Another important use of Protobuf is the encoding and decoding of
 [transactions](./transactions.md). Transactions are defined by the application or
-the SDK, but passed to the underlying consensus engine in order to be relayed to
+the SDK but are then passed to the underlying consensus engine to be relayed to
 other peers. Since the underlying consensus engine is agnostic to the application,
-it only accepts transactions in the form of raw bytes. The encoding is done by an
-object called `TxEncoder` and the decoding by an object called `TxDecoder`.
+the consensus engine accepts only transactions in the form of raw bytes. 
+
+- The `TxEncoder` object performs the encoding.
+- The `TxDecoder` object performs the decoding.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/types/tx_msg.go#L83-L87
 

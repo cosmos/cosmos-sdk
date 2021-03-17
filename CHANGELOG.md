@@ -34,10 +34,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.42.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.2) - 2021-03-17
 
 ### Improvements
+
 * (grpc) [\#8815](https://github.com/cosmos/cosmos-sdk/pull/8815) Add orderBy parameter to `TxsByEvents` endpoint.
+* (cli) [\#8826](https://github.com/cosmos/cosmos-sdk/pull/8826) Add trust to macOS Keychain for caller app by default.
+* (store) [\#8811](https://github.com/cosmos/cosmos-sdk/pull/8811) store/cachekv: use typed types/kv.List instead of container/list.List
+
+### Bug Fixes
+
+* (crypto) [\#8841](https://github.com/cosmos/cosmos-sdk/pull/8841) Fix legacy multisig amino marshaling, allowing migrations to work between v0.39 and v0.40+.
+* (cli) [\#8873](https://github.com/cosmos/cosmos-sdk/pull/8873) add --output-document to multisign-batch.
 
 ## [v0.42.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.1) - 2021-03-10
 

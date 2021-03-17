@@ -1,16 +1,22 @@
-# Cosmos SDK v0.42.0 "Stargate" Release Notes
+# Cosmos SDK v0.42.2 "Stargate" Release Notes
 
-This release includes an important security fix for all non "Cosmos Hub" chains (e.g. any chain that does not use the default `cosmos` bech32 prefix), and a few performance improvements.
+This maintenance release includes various bugfixes and performance improvements, and it does not introduce any breaking changes.
 
-See the [Cosmos SDK v0.42.0 milestone](https://github.com/cosmos/cosmos-sdk/milestone/42?closed=1) on our issue tracker for further details.
+See the [Cosmos SDK v0.42.2 milestone](https://github.com/cosmos/cosmos-sdk/milestone/41?closed=1) on our issue tracker for further details.
 
-# Security fix: validator address conversion in evidence handling
+### Keyring UX improvement
 
-The security fix resolves the issue regarding incorrect handling of validators' consensus addresses. Because of this incorrect handling, Cosmos SDK apps that were not using the default `cosmos` Bech32 address prefix were not able to jail validators that committed misbehaviors such as double signing.
+A number of macOS [users have reported](https://github.com/cosmos/cosmos-sdk/issues/8809) that their operating system's `keychain` prompt them for password to unlock the
+keyring when using the `os` backend before executing any action. This release includes a small fix that automatically
+adjusts applications keyring trust so that users are prompted for password only once when the keyring is unlocked.
 
-Although the issue does **not** affect the Cosmos Hub, this issue potentially renders the `v0.41` and `v0.40` release series unsafe for most chains. 
+### Tx search results support for order-by
 
-# Full header is emitted on IBC UpdateClient message event
+Although the Tendermint Core's RPC `tx_search` endpoint has been supporting an order-by parameter for quite some time now,
+the Cosmos SDK did not respect the order-by parameter and incorrectly set the requests order-by to "" (null).
+This releases introduces [the relevant order-by parameter support](https://github.com/cosmos/cosmos-sdk/issues/8686) when searching through Txs.
 
-The event emitted by the IBC UpdateClient message now contains the full header.
-This change makes header tracking easier and improves the handling of misbehaviors.
+### Multisig accounts and v0.40 genesis files migration
+
+This release includes a bug fix for [a v0.39 to v0.42 migration issue](https://github.com/cosmos/cosmos-sdk/issues/8776) affecting genesis files that contain
+multisig accounts.

@@ -445,6 +445,7 @@
     - [SimulateResponse](#cosmos.tx.v1beta1.SimulateResponse)
   
     - [BroadcastMode](#cosmos.tx.v1beta1.BroadcastMode)
+    - [OrderBy](#cosmos.tx.v1beta1.OrderBy)
   
     - [Service](#cosmos.tx.v1beta1.Service)
   
@@ -9490,6 +9491,11 @@ GenesisState defines the ibc module's genesis state.
 
  <!-- end services -->
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `events` | [string](#string) | repeated | events is the list of transaction event type. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+| `order_by` | [OrderBy](#cosmos.tx.v1beta1.OrderBy) |  |  |
 
 
 <a name="ibc/lightclients/localhost/v1/localhost.proto"></a>
@@ -9564,6 +9570,20 @@ state and if the client is frozen.
 | `allow_update_after_proposal` | [bool](#bool) |  | when set to true, will allow governance to update a solo machine client. The client will be unfrozen if it is frozen. |
 
 
+
+<a name="cosmos.tx.v1beta1.OrderBy"></a>
+
+### OrderBy
+OrderBy defines the sorting order
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ORDER_BY_UNSPECIFIED | 0 | ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case. |
+| ORDER_BY_ASC | 1 | ORDER_BY_ASC defines ascending order |
+| ORDER_BY_DESC | 2 | ORDER_BY_DESC defines descending order |
+
+
+ <!-- end enums -->
 
 
 

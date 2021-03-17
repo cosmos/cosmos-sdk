@@ -18,5 +18,5 @@ This releases introduces [the relevant order-by parameter support](https://githu
 
 ### Multisig accounts and v0.40 genesis files migration
 
-This release includes a bug fix for [a v0.40 migration issue](https://github.com/cosmos/cosmos-sdk/issues/8776) affecting genesis files that contain
+This release includes a bug fix for [a v0.39 to v0.42 migration issue](https://github.com/cosmos/cosmos-sdk/issues/8776) affecting genesis files that contain
 multisig accounts was reported.

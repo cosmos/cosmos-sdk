@@ -62,8 +62,8 @@ address which can be derived from the validator's `ConsPubKey`.
 
 `ValidatorsByPower` is an additional index that provides a sorted list of
 potential validators to quickly determine the current active set. Here
-ConsensusPower is validator.Tokens/10^18. Note that all validators where
-`Jailed` is true are not stored within this index.
+ConsensusPower is validator.Tokens/10^6 by default. Note that all validators
+where `Jailed` is true are not stored within this index.
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but

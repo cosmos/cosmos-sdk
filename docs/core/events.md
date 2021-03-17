@@ -41,7 +41,7 @@ Events are returned to the underlying consensus engine in the response of the fo
 
 ### Examples
 
-Below are some examples of Events you can query using the SDK.
+The following examples show how to query Events using the SDK.
 
 | Event                                            | Description                                                                                                                                              |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |

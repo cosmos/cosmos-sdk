@@ -18,7 +18,7 @@ func Test_validateAuxFuncs(t *testing.T) {
 		wantErr bool
 	}{
 		{"wrong type", args{10.5}, true},
-		{"nil Int pointer", args{sdk.Dec{}}, true},
+		{"empty sdk.Dec", args{sdk.Dec{}}, true},
 		{"negative", args{sdk.NewDec(-1)}, true},
 		{"one dec", args{sdk.NewDec(1)}, false},
 		{"two dec", args{sdk.NewDec(2)}, true},

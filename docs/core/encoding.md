@@ -199,7 +199,7 @@ The above `Profile` example is a fictive example used for educational purposes. 
 - the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
 - the `AuthorizationI` interface for encoding different types of x/authz authorizations.
 
-A real-life example of encoding the pubkey as `Any` inside the Validator struct in x/staking is given below:
+A real-life example of encoding the pubkey as `Any` inside the Validator struct in x/staking is shown in the following example:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/staking/types/validator.go#L40-L61
 

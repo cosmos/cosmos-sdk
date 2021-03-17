@@ -66,7 +66,7 @@ func (p Params) ValidateBasic() error {
 	}
 	if v := p.BaseProposerReward.Add(p.BonusProposerReward).Add(p.CommunityTax); v.GT(sdk.OneDec()) {
 		return fmt.Errorf(
-			"sum of base and bonus proposer rewards, and community tax cannot be greater than one: %s", v,
+			"sum of base, bonus proposer rewards, and community tax cannot be greater than one: %s", v,
 		)
 	}
 

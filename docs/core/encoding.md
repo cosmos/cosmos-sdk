@@ -69,7 +69,7 @@ typically used for when the data needs to be streamed or grouped together
 
 ### Gogoproto
 
-Modules are encouraged to utilize Protobuf encoding for their respective types. In the SDK, we use a specific implementation of the Protobuf spec, called [Gogoproto](https://github.com/gogo/protobuf), which offers speed and DX improvements compared to the official [Google implementation](https://github.com/protocolbuffers/protobuf).
+Modules are encouraged to utilize Protobuf encoding for their respective types. In the SDK, we use the [Gogoproto](https://github.com/gogo/protobuf) specific implementation of the Protobuf spec that offers speed and DX improvements compared to the official [Google protobuf implementation](https://github.com/protocolbuffers/protobuf).
 
 ### Guidelines for protobuf message definitions
 

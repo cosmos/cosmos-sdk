@@ -126,7 +126,7 @@ is the canonical state of the application and the volatile states, `checkState` 
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
-From this root state, we derive two volatile state through a mechanism called _store branching_ (performed by `CacheWrap` function).
+From this root state, we derive two volatile states by using a mechanism called _store branching_ (performed by `CacheWrap` function).
 The types can be illustrated as follows:
 
 ![Types](./baseapp_state_types.png)

@@ -12,7 +12,6 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -136,7 +135,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 		s.Run(tc.name, func() {
 			// reset suite
 			s.SetupTest()
-			s.app.UpgradeKeeper.SetInitialVersionMap(module.VersionMap{})
 			// setup test case
 			tc.setup()
 
@@ -199,8 +197,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
 	initialVM := module.VersionMap{"bank": uint64(1)}
-	s.app.UpgradeKeeper.SetInitialVersionMap(initialVM)
-	s.app.UpgradeKeeper.SetCurrentConsensusVersions(s.ctx)
+	s.app.UpgradeKeeper.SetConsensusVersions(s.ctx, initialVM)
 	vmBefore := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// simulate upgrading the bank module
@@ -215,7 +212,7 @@ func (s *KeeperTestSuite) TestMigrations() {
 
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	vm := s.app.UpgradeKeeper.GetVersionMap(s.ctx)
-	s.Require().Equal(bank.AppModule{}.ConsensusVersion(), vm["bank"])
+	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
 	s.Require().Greater(vm["bank"], vmBefore["bank"])
 }
 

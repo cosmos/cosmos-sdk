@@ -101,9 +101,9 @@ A standard implementation of both these objects can be found in the [`auth` modu
 
 See [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) for details of how a transaction is encoded.
 
-### Interface Encoding and Usage of `Any`s
+### Interface Encoding and Usage of `Any`
 
-The Protobuf DSL is strongly typed, which can make inserting variable-typed fields difficult. Imagine we want to create a `Profile` protobuf message, which serves as a wrapper over [an account](../basics/accounts.md):
+The Protobuf DSL is strongly typed, which can make inserting variable-typed fields difficult. Imagine we want to create a `Profile` protobuf message that serves as a wrapper over [an account](../basics/accounts.md):
 
 ```proto
 message Profile {

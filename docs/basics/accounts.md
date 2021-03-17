@@ -74,7 +74,7 @@ The Cosmos SDK supports the following digital key schemes for creating digital s
 |              | in bytes       |          in bytes | authentication       | (tendermint)       |
 |--------------+----------------+-------------------+----------------------+--------------------|
 | `secp256k1`  | 20             |                33 | yes                  | no                 |
-| `secp256k1`  | 32             |                33 | yes                  | no                 |
+| `secp256r1`  | 32             |                33 | yes                  | no                 |
 | `tm-ed25519` | -- not used -- |                32 | no                   | yes                |
 
 

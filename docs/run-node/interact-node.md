@@ -16,7 +16,7 @@ There are multiple ways to interact with a node: using the CLI, using gRPC or us
 Now that your chain is running, it is time to try sending tokens from the first account you created to a second account. In a new terminal window, start by running the following query command:
 
 ```bash
-simd query account $MY_VALIDATOR_ADDRESS --chain-id my-test-chain
+simd query bank balances $MY_VALIDATOR_ADDRESS --chain-id my-test-chain
 ```
 
 You should see the current balance of the account you created, equal to the original balance of `stake` you granted it minus the amount you delegated via the `gentx`. Now, create a second account:
@@ -31,16 +31,16 @@ RECIPIENT=$(simd keys show recipient -a --keyring-backend test)
 The command above creates a local key-pair that is not yet registered on the chain. An account is created the first time it receives tokens from another account. Now, run the following command to send tokens to the `recipient` account:
 
 ```bash
-simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000stake --chain-id my-test-chain
+simd tx bank send $MY_VALIDATOR_ADDRESS $RECIPIENT 1000000stake --chain-id my-test-chain --keyring-backend test
 
 # Check that the recipient account did receive the tokens.
-simd query account $RECIPIENT --chain-id my-test-chain
+simd query bank balances $RECIPIENT --chain-id my-test-chain
 ```
 
 Finally, delegate some of the stake tokens sent to the `recipient` account to the validator:
 
 ```bash
-simd tx staking delegate $(simd keys show my_validator --bech val -a --keyring-backend test) 500stake --from recipient --chain-id my-test-chain
+simd tx staking delegate $(simd keys show my_validator --bech val -a --keyring-backend test) 500stake --from recipient --chain-id my-test-chain --keyring-backend test
 
 # Query the total delegations to `validator`.
 simd query staking delegations-to $(simd keys show my_validator --bech val -a --keyring-backend test) --chain-id my-test-chain
@@ -50,7 +50,7 @@ You should see two delegations, the first one made from the `gentx`, and the sec
 
 ## Using gRPC
 
-The Protobuf ecosystem developed tools for different use cases, including code-generation from `*.proto` files into various languages. These tools allow to build clients easily. Often, the client connection (i.e. the transport) can be plugged and replaced very easily. Let's explore one of the most popular transport: [gRPC](../core/grpc_rest.md).
+The Protobuf ecosystem developed tools for different use cases, including code-generation from `*.proto` files into various languages. These tools allow the building of clients easily. Often, the client connection (i.e. the transport) can be plugged and replaced very easily. Let's explore one of the most popular transport: [gRPC](../core/grpc_rest.md).
 
 Since the code generation library largely depends on your own tech stack, we will only present three alternatives:
 

@@ -15,7 +15,6 @@ const UndefinedCodespace = "undefined"
 
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
-	//nolint
 	errInternal = Register(UndefinedCodespace, 1, "internal")
 
 	// ErrTxDecode is returned if we cannot parse a transaction
@@ -257,6 +256,14 @@ func (e *Error) Is(err error) bool {
 		}
 	}
 }
+
+// Wrap extends this error with an additional information.
+// It's a handy function to call Wrap with sdk errors.
+func (e Error) Wrap(desc string) error { return Wrap(e, desc) }
+
+// Wrapf extends this error with an additional information.
+// It's a handy function to call Wrapf with sdk errors.
+func (e Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
 
 func isNilErr(err error) bool {
 	// Reflect usage is necessary to correctly compare with

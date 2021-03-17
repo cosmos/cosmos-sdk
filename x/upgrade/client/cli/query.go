@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -41,7 +40,7 @@ func GetCurrentPlanCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := types.QueryCurrentPlanRequest{}
-			res, err := queryClient.CurrentPlan(context.Background(), &params)
+			res, err := queryClient.CurrentPlan(cmd.Context(), &params)
 			if err != nil {
 				return err
 			}
@@ -74,9 +73,9 @@ func GetAppliedPlanCmd() *cobra.Command {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-
+			ctx := cmd.Context()
 			params := types.QueryAppliedPlanRequest{Name: args[0]}
-			res, err := queryClient.AppliedPlan(context.Background(), &params)
+			res, err := queryClient.AppliedPlan(ctx, &params)
 			if err != nil {
 				return err
 			}
@@ -90,7 +89,7 @@ func GetAppliedPlanCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			headers, err := node.BlockchainInfo(context.Background(), res.Height, res.Height)
+			headers, err := node.BlockchainInfo(ctx, res.Height, res.Height)
 			if err != nil {
 				return err
 			}

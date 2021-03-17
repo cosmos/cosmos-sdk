@@ -5,16 +5,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
-
-// Interface implementation checks
-var _ codectypes.UnpackInterfacesMessage = StdTx{}
 
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
@@ -35,6 +31,9 @@ type StdSignDoc struct {
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
+		// If msg is a legacy Msg, then GetSignBytes is implemented.
+		// If msg is a ServiceMsg, then GetSignBytes has graceful support of
+		// calling GetSignBytes from its underlying Msg.
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
 	}
 

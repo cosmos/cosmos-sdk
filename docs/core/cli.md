@@ -72,7 +72,7 @@ The root-level `status` and `keys` subcommands are common across most applicatio
 
 This `txCmd` function adds all the transaction available to end-users for the application. This typically includes:
 
-- **Sign command** from the [`auth`](../../x/auth/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, thithe signing command is necessary for every application.
+- **Sign command** from the [`auth`](../../x/auth/spec/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
 - **Broadcast command** from the SDK client tools, to broadcast transactions.
 - **All [module transaction commands](../building-modules/module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../building-modules/module-manager.md#basic-manager) `AddTxCommands()` function.
 
@@ -96,7 +96,7 @@ This `queryCmd` function adds all the queries available to end-users for the app
 
 Here is an example of a `queryCmd` aggregating subcommands from the `simapp` application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/0.40.0/simapp/simd/cmd/root.go#L99-L121
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L99-L121
 
 ## Flags
 
@@ -106,7 +106,25 @@ A _persistent_ flag (as opposed to a _local_ flag) added to a command transcends
 
 Flags are added to commands directly (generally in the [module's CLI file](../building-modules/module-interfaces.md#flags) where module commands are defined) and no flag except for the `rootCmd` persistent flags has to be added at application level. It is common to add a _persistent_ flag for `--chain-id`, the unique identifier of the blockchain the application pertains to, to the root command. Adding this flag can be done in the `main()` function. Adding this flag makes sense as the chain ID should not be changing across commands in this application CLI. Here is an example from the `simapp` application:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L118
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/simapp/simd/cmd/root.go#L118-L119
+
+## Environment variables
+
+Each flag is bound to it's respecteve named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows to reduce amount of flags typed for routine operations. For example instead of:
+```sh
+gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>
+```
+this will be more convinient:
+```sh
+# define env variables in .env, .envrc etc
+GAIA_HOME=<path to home>
+GAIA_NODE=<node address>
+GAIA_CHAIN_ID="testchain-1"
+GAIA_KEYRING_BACKEND="test"
+
+# and later just use
+gaia tx ... --from=<key name>
+```
 
 ## Configurations
 

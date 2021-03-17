@@ -1,15 +1,12 @@
 package keeper
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -24,8 +21,9 @@ type Keeper interface {
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
 
-	GetSupply(ctx sdk.Context) exported.SupplyI
-	SetSupply(ctx sdk.Context, supply exported.SupplyI)
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+	GetTotalSupply(ctx sdk.Context) sdk.Coins
+	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
 
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
@@ -41,8 +39,6 @@ type Keeper interface {
 
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-	MarshalSupply(supplyI exported.SupplyI) ([]byte, error)
-	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
 
 	types.QueryServer
 }
@@ -55,6 +51,16 @@ type BaseKeeper struct {
 	cdc        codec.BinaryMarshaler
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
+}
+
+func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
+	balances := sdk.NewCoins()
+	k.IterateTotalSupply(ctx, func(balance sdk.Coin) bool {
+		balances = balances.Add(balance)
+		return false
+	})
+
+	return balances.Sort()
 }
 
 func NewBaseKeeper(
@@ -102,17 +108,21 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		}
 
 		balances = balances.Add(balance)
-		err := k.SetBalance(ctx, delegatorAddr, balance.Sub(coin))
+		err := k.setBalance(ctx, delegatorAddr, balance.Sub(coin))
 		if err != nil {
 			return err
 		}
 	}
 
-	if err := k.trackDelegation(ctx, delegatorAddr, ctx.BlockHeader().Time, balances, amt); err != nil {
+	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
 		return sdkerrors.Wrap(err, "failed to track delegation")
 	}
+	// emit coin spent event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinSpentEvent(delegatorAddr, amt),
+	)
 
-	err := k.AddCoins(ctx, moduleAccAddr, amt)
+	err := k.addCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -135,7 +145,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
 
-	err := k.SubtractCoins(ctx, moduleAccAddr, amt)
+	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -144,7 +154,7 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 		return sdkerrors.Wrap(err, "failed to track undelegation")
 	}
 
-	err = k.AddCoins(ctx, delegatorAddr, amt)
+	err = k.addCoins(ctx, delegatorAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -153,30 +163,52 @@ func (k BaseKeeper) UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAdd
 }
 
 // GetSupply retrieves the Supply from store
-func (k BaseKeeper) GetSupply(ctx sdk.Context) exported.SupplyI {
+func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.SupplyKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	bz := supplyStore.Get([]byte(denom))
 	if bz == nil {
-		panic("stored supply should not have been nil")
+		return sdk.Coin{
+			Denom:  denom,
+			Amount: sdk.NewInt(0),
+		}
 	}
 
-	supply, err := k.UnmarshalSupply(bz)
+	var coin sdk.Coin
+	err := k.cdc.UnmarshalBinaryBare(bz, &coin)
 	if err != nil {
 		panic(err)
 	}
 
-	return supply
+	return coin
 }
 
 // SetSupply sets the Supply to store
-func (k BaseKeeper) SetSupply(ctx sdk.Context, supply exported.SupplyI) {
+func (k BaseKeeper) setSupply(ctx sdk.Context, supply sdk.Coins) {
 	store := ctx.KVStore(k.storeKey)
-	bz, err := k.MarshalSupply(supply)
-	if err != nil {
-		panic(err)
-	}
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	store.Set(types.SupplyKey, bz)
+	var newSupply []sdk.Coin
+	storeSupply := k.GetTotalSupply(ctx)
+
+	// update supply for coins which have non zero amount
+	for _, coin := range storeSupply {
+		if supply.AmountOf(coin.Denom).IsZero() {
+			zeroCoin := &sdk.Coin{
+				Denom:  coin.Denom,
+				Amount: sdk.NewInt(0),
+			}
+			bz := k.cdc.MustMarshalBinaryBare(zeroCoin)
+			supplyStore.Set([]byte(coin.Denom), bz)
+		}
+	}
+	newSupply = append(newSupply, supply...)
+
+	for i := range newSupply {
+		bz := k.cdc.MustMarshalBinaryBare(&supply[i])
+		supplyStore.Set([]byte(supply[i].Denom), bz)
+	}
 }
 
 // GetDenomMetaData retrieves the denomination metadata
@@ -336,19 +368,24 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
-	err := k.AddCoins(ctx, acc.GetAddress(), amt)
+	err := k.addCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}
 
 	// update total supply
-	supply := k.GetSupply(ctx)
-	supply.Inflate(amt)
+	supply := k.GetTotalSupply(ctx)
+	supply = supply.Add(amt...)
 
-	k.SetSupply(ctx, supply)
+	k.setSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
 	logger.Info("minted coins from module account", "amount", amt.String(), "from", moduleName)
+
+	// emit mint event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinMintEvent(acc.GetAddress(), amt),
+	)
 
 	return nil
 }
@@ -365,23 +402,29 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
-	err := k.SubtractCoins(ctx, acc.GetAddress(), amt)
+	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amt)
 	if err != nil {
 		return err
 	}
 
 	// update total supply
-	supply := k.GetSupply(ctx)
-	supply.Deflate(amt)
-	k.SetSupply(ctx, supply)
+	supply := k.GetTotalSupply(ctx)
+	supply = supply.Sub(amt)
+
+	k.setSupply(ctx, supply)
 
 	logger := k.Logger(ctx)
 	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)
 
+	// emit burn event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinBurnEvent(acc.GetAddress(), amt),
+	)
+
 	return nil
 }
 
-func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockTime time.Time, balance, amt sdk.Coins) error {
+func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
@@ -390,7 +433,7 @@ func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockT
 	vacc, ok := acc.(vestexported.VestingAccount)
 	if ok {
 		// TODO: return error on account.TrackDelegation
-		vacc.TrackDelegation(blockTime, balance, amt)
+		vacc.TrackDelegation(ctx.BlockHeader().Time, balance, amt)
 	}
 
 	return nil
@@ -411,14 +454,19 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	return nil
 }
 
-// MarshalSupply protobuf serializes a Supply interface
-func (k BaseKeeper) MarshalSupply(supplyI exported.SupplyI) ([]byte, error) {
-	return k.cdc.MarshalInterface(supplyI)
-}
+func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-// UnmarshalSupply returns a Supply interface from raw encoded supply
-// bytes of a Proto-based Supply type
-func (k BaseKeeper) UnmarshalSupply(bz []byte) (exported.SupplyI, error) {
-	var evi exported.SupplyI
-	return evi, k.cdc.UnmarshalInterface(bz, &evi)
+	iterator := supplyStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var balance sdk.Coin
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
+
+		if cb(balance) {
+			break
+		}
+	}
 }

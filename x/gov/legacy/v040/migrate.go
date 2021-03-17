@@ -106,7 +106,6 @@ func migrateContent(oldContent v036gov.Content) *codectypes.Any {
 				Title:       oldContent.Title,
 				Plan: v040upgrade.Plan{
 					Name:   oldContent.Plan.Name,
-					Time:   oldContent.Plan.Time,
 					Height: oldContent.Plan.Height,
 					Info:   oldContent.Plan.Info,
 				},
@@ -164,7 +163,7 @@ func Migrate(oldGovState v036gov.GenesisState) *v040gov.GenesisState {
 		newVotes[i] = v040gov.Vote{
 			ProposalId: oldVote.ProposalID,
 			Voter:      oldVote.Voter.String(),
-			Option:     migrateVoteOption(oldVote.Option),
+			Options:    v040gov.NewNonSplitVoteOption(migrateVoteOption(oldVote.Option)),
 		}
 	}
 

@@ -16,12 +16,13 @@ simd init simd --chain-id testing
 simd keys add fd --keyring-backend=test
 
 addr=$(simd keys show fd -a --keyring-backend=test)
+val_addr=$(simd keys show fd  --keyring-backend=test --bech val -a)
 
 # give the accounts some money
 simd add-genesis-account "$addr" 1000000000000stake --keyring-backend=test
 
 # save configs for the daemon
-simd gentx fd --chain-id testing --keyring-backend=test
+simd gentx fd 10000000stake --chain-id testing --keyring-backend=test
 
 # input genTx to the genesis file
 simd collect-gentxs
@@ -44,7 +45,7 @@ sleep 10
 
 # send transaction to deterministic address
 echo sending transaction with addr $addr
-simd tx bank send "$addr" cosmos1wjmt63j4fv9nqda92nsrp2jp2vsukcke4va3pt 100stake --yes --keyring-backend=test --broadcast-mode=block --chain-id=testing
+simd tx bank send "$addr" cosmos19g9cm8ymzchq2qkcdv3zgqtwayj9asv3hjv5u5 100stake --yes --keyring-backend=test --broadcast-mode=block --chain-id=testing
 
 sleep 10
 
@@ -55,4 +56,4 @@ echo zipping data dir and saving to /tmp/data.tar.gz
 
 tar -czvf /tmp/data.tar.gz /root/.simapp
 
-echo new address for bootstrap.json "$addr"
+echo new address for bootstrap.json "$addr" "$val_addr"

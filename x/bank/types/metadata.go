@@ -1,14 +1,29 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Validate performs a basic validation of the coin metadata fields
+// Validate performs a basic validation of the coin metadata fields. It checks:
+//  - Name and Symbol are not blank
+//  - Base and Display denominations are valid coin denominations
+//  - Base and Display denominations are present in the DenomUnit slice
+//  - Base denomination has exponent 0
+//  - Denomination units are sorted in ascending order
+//  - Denomination units not duplicated
 func (m Metadata) Validate() error {
+	if strings.TrimSpace(m.Name) == "" {
+		return errors.New("name field cannot be blank")
+	}
+
+	if strings.TrimSpace(m.Symbol) == "" {
+		return errors.New("symbol field cannot be blank")
+	}
+
 	if err := sdk.ValidateDenom(m.Base); err != nil {
 		return fmt.Errorf("invalid metadata base denom: %w", err)
 	}
@@ -17,10 +32,35 @@ func (m Metadata) Validate() error {
 		return fmt.Errorf("invalid metadata display denom: %w", err)
 	}
 
+	var (
+		hasDisplay      bool
+		currentExponent uint32 // check that the exponents are increasing
+	)
+
 	seenUnits := make(map[string]bool)
-	for _, denomUnit := range m.DenomUnits {
+
+	for i, denomUnit := range m.DenomUnits {
+		// The first denomination unit MUST be the base
+		if i == 0 {
+			// validate denomination and exponent
+			if denomUnit.Denom != m.Base {
+				return fmt.Errorf("metadata's first denomination unit must be the one with base denom '%s'", m.Base)
+			}
+			if denomUnit.Exponent != 0 {
+				return fmt.Errorf("the exponent for base denomination unit %s must be 0", m.Base)
+			}
+		} else if currentExponent >= denomUnit.Exponent {
+			return errors.New("denom units should be sorted asc by exponent")
+		}
+
+		currentExponent = denomUnit.Exponent
+
 		if seenUnits[denomUnit.Denom] {
 			return fmt.Errorf("duplicate denomination unit %s", denomUnit.Denom)
+		}
+
+		if denomUnit.Denom == m.Display {
+			hasDisplay = true
 		}
 
 		if err := denomUnit.Validate(); err != nil {
@@ -28,6 +68,10 @@ func (m Metadata) Validate() error {
 		}
 
 		seenUnits[denomUnit.Denom] = true
+	}
+
+	if !hasDisplay {
+		return fmt.Errorf("metadata must contain a denomination unit with display denom '%s'", m.Display)
 	}
 
 	return nil

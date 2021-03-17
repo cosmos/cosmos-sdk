@@ -128,9 +128,9 @@ where `senderAddress` is an address following the [`AccAddress`](../basics/accou
 
 ## Typed Events (coming soon)
 
-As described above, events are defined on a per-module basis, and it is the responsability of the module developer to define event types and event attributes. Except in the `spec/XX_events.md` file, these types and attributes are unfortunately not easily discoverable, so the SDK proposes to use Protobuf-defined [Typed Events](../architecture/adr-032-typed-events.md) for emitting and querying for events.
+As previously described, Events are defined on a per-module basis. It is the responsibility of the module developer to define event types and event attributes. Except in the `spec/XX_events.md` file, these event types and attributes are unfortunately not easily discoverable, so the SDK proposes to use Protobuf-defined [Typed Events](../architecture/adr-032-typed-events.md) for emitting and querying Events.
 
-The Typed Events proposal has not yet been fully implemented, and its documentation will follow with a future release of the SDK.
+The Typed Events proposal has not yet been fully implemented. Documentation is not yet available. 
 
 ## Next {hide}
 

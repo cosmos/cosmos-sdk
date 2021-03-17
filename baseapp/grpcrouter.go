@@ -158,6 +158,7 @@ func (qrt *GRPCQueryRouter) returnTypeOf(method string) (reflect.Type, error) {
 	return returnType, nil
 }
 
+// ListServices provides the list of registered services
 func (qrt *GRPCQueryRouter) ListServices() []*grpc.ServiceDesc {
 	svcDesc := make([]*grpc.ServiceDesc, len(qrt.serviceData))
 	for i, svc := range qrt.serviceData {

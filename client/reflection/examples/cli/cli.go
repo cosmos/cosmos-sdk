@@ -81,7 +81,7 @@ func (p *CLI) query() error {
 		return err
 	}
 
-	resp, err := p.c.Query(context.TODO(), res, dpb)
+	resp, err := p.c.Query(context.TODO(), dpb)
 	if err != nil {
 		return err
 	}

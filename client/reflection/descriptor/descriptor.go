@@ -1,6 +1,7 @@
 package descriptor
 
 import (
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -38,6 +39,8 @@ type Queriers interface {
 	Len() int
 	// Get returns the querier by index
 	Get(i int) Querier
+	// ByInput returns the querier given its input proto.Message
+	ByInput(input proto.Message) Querier
 	// ByName gets the Querier descriptor
 	// given its service method name
 	ByName(name string) Querier

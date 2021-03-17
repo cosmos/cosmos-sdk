@@ -15,14 +15,14 @@ import (
 // of the standard sdk tx builder as it cannot deduct if a
 // given message is valid and who are the expected signers.
 type UnsignedBuilder struct {
-	msgs         []proto.Message
-	gasLimit     uint64
-	fees         sdktypes.Coins
-	chainID      string
-	memo         string
-	accountsInfo map[string]SignerInfo
-
-	feePayer string
+	msgs          []proto.Message
+	gasLimit      uint64
+	fees          sdktypes.Coins
+	chainID       string
+	memo          string
+	accountsInfo  map[string]SignerInfo
+	feePayer      string
+	timeoutHeight uint64
 }
 
 func NewUnsignedTxBuilder() *UnsignedBuilder {

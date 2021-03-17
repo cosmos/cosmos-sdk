@@ -28,7 +28,7 @@ type BuilderConfig struct {
 	AuthInfoProvider AccountInfoProvider
 }
 
-// Builder is used to generate a *Client, it wraps all the complex logic
+// Builder is used to generate a *Client, it wraps all the logic
 // required to build the *codec.Codec and the descriptor.Chain
 type Builder struct {
 	tm               tmrpc.Client

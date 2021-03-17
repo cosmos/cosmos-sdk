@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -51,16 +53,18 @@ func (b *Builder) RegisterQueryService(desc protoreflect.ServiceDescriptor) erro
 
 func newQueriers() queriers {
 	return queriers{
-		byName:   make(map[string]querier),
-		byTMName: make(map[string]querier),
-		byIndex:  nil,
+		byName:      make(map[string]querier),
+		byTMName:    make(map[string]querier),
+		byInputName: make(map[string]querier),
+		byIndex:     nil,
 	}
 }
 
 type queriers struct {
-	byName   map[string]querier
-	byTMName map[string]querier
-	byIndex  []querier
+	byName      map[string]querier
+	byTMName    map[string]querier
+	byInputName map[string]querier
+	byIndex     []querier
 }
 
 func (q *queriers) insert(sd protoreflect.ServiceDescriptor, md protoreflect.MethodDescriptor) error {
@@ -74,6 +78,11 @@ func (q *queriers) insert(sd protoreflect.ServiceDescriptor, md protoreflect.Met
 	}
 	q.byName[name] = qr
 	q.byTMName[qr.tmQueryPath] = qr
+	reqName := (string)(qr.desc.Input().FullName())
+	if _, exists := q.byInputName[reqName]; exists {
+		return fmt.Errorf("message name to query descriptor override %s: %w", reqName, ErrAlreadyExists)
+	}
+	q.byInputName[reqName] = qr
 	q.byIndex = append(q.byIndex, qr)
 
 	return nil
@@ -99,6 +108,13 @@ func (q queriers) ByName(name string) Querier {
 
 func (q queriers) ByTMName(tmName string) Querier {
 	if o, exists := q.byTMName[tmName]; exists {
+		return o
+	}
+	return nil
+}
+
+func (q queriers) ByInput(input proto.Message) Querier {
+	if o, exists := q.byInputName[(string)(input.ProtoReflect().Descriptor().FullName())]; exists {
 		return o
 	}
 	return nil

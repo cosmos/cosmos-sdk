@@ -114,7 +114,7 @@ func TestClient_Tx(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := c.Tx(context.TODO(), "cosmos.bank.v1beta1.MsgSend",
+	resp, err := c.TxBeta(context.TODO(), "cosmos.bank.v1beta1.MsgSend",
 		unstructured.Map{
 			"from_address": "cosmos1ujtnemf6jmfm995j000qdry064n5lq854gfe3j",
 			"to_address":   "cosmos1caa3es6q3mv8t4gksn9wjcwyzw7cnf5gn5cx7j",

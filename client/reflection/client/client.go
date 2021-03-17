@@ -23,7 +23,7 @@ import (
 
 // Client defines a dynamic cosmos-sdk client, that can be used to query
 // different cosmos sdk versions with different messages and available
-// queries. It is gonna Build the required codec in a dynamic fashion.
+// queries.
 type Client struct {
 	tm                  tmrpc.Client
 	cdc                 *codec.Codec // chain specific codec generated at run time
@@ -69,7 +69,8 @@ func (c *Client) ChainDescriptor() descriptor.Chain {
 	return c.chainDesc
 }
 
-func (c *Client) Query(ctx context.Context, method string, request proto.Message) (resp proto.Message, err error) {
+// QueryTM routes the query via tendermint abci.Query, given the tendermint full query name
+func (c *Client) QueryTM(ctx context.Context, method string, request proto.Message) (resp proto.Message, err error) {
 	desc := c.chainDesc.Queriers().ByTMName(method)
 	if desc == nil {
 		return nil, fmt.Errorf("unknown method: %s", method)
@@ -87,6 +88,14 @@ func (c *Client) Query(ctx context.Context, method string, request proto.Message
 
 	resp = dynamicpb.NewMessage(desc.Descriptor().Output())
 	return resp, c.cdc.Unmarshal(tmResp.Response.Value, resp)
+}
+
+func (c *Client) Query(ctx context.Context, request proto.Message) (resp proto.Message, err error) {
+	desc := c.chainDesc.Queriers().ByInput(request)
+	if desc == nil {
+		return nil, fmt.Errorf("unknown input: %s", request.ProtoReflect().Descriptor().FullName())
+	}
+	return c.QueryTM(ctx, desc.TMQueryPath(), request)
 }
 
 func (c *Client) QueryUnstructured(ctx context.Context, method string, request unstructured.Map) (resp proto.Message, err error) {
@@ -114,7 +123,11 @@ func (c *Client) QueryUnstructured(ctx context.Context, method string, request u
 	return resp, c.cdc.Unmarshal(tmResp.Response.Value, resp)
 }
 
-func (c *Client) Tx(ctx context.Context, method string, request unstructured.Map, signerInfo tx.SignerInfo) (resp *ctypes.ResultBroadcastTxCommit, err error) {
+func (c *Client) Tx() *Tx {
+	return NewTx()
+}
+
+func (c *Client) TxBeta(ctx context.Context, method string, request unstructured.Map, signerInfo tx.SignerInfo) (resp *ctypes.ResultBroadcastTxCommit, err error) {
 	msgDesc := c.chainDesc.Deliverables().ByName(method)
 	if msgDesc == nil {
 		return nil, fmt.Errorf("deliverable not found: %s", method)

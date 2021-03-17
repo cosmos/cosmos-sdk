@@ -92,7 +92,7 @@ We add a new private field `versionMap` of type `VersionMap` to `x/upgrade`'s ke
 type VersionMap map[string]uint64
 ```
 
-This `versionMap` field can be modified via the `SetInitialVersionMap` field, and will allow the upgrade keeper to know the current versions of loaded modules. `SetInitialVersionMap` MUST be called AFTER the `module.NewManager()` is called; in the SDK's `simapp`, it is called in the `NewSimApp` constructor function.
+This `versionMap` field can be modified via the `SetVersionMap` method, and will allow the upgrade keeper to store in state the current versions of loaded modules. To initialize the x/upgrade store correctly, `SetVersionMap` MUST be called during the app's `InitChain`.
 
 The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return an upgraded `VersionMap` and an error:
 

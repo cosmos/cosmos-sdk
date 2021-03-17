@@ -20,12 +20,6 @@ take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
 An Event contains:
 
-<<<<<<< HEAD
-- A `type`, which is meant to categorize an event at a high-level (e.g. by module or action).
-- A list of `attributes`, which are key-value pairs that give more information about
-  the categorized `event`.
-  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/events.go#L51-L56
-=======
 - A `type` to categorize the Event at a high-level; for example, the SDK uses the `"message"` type to filter Events by `Msg`s.
 - A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter Events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 
@@ -37,7 +31,6 @@ Events, the `type` and `attributes` are defined on a **per-module basis** in the
 `/types/events.go` file, and triggered from the module's [`Msg` service](../building-modules/msg-services.md)
 by using the [`EventManager`](#eventmanager). In addition, each module documents its Events under
 `spec/xx_events.md`.
->>>>>>> 1a4418b32... Docs: Anys Usage, Events & small cleanups (#8895)
 
 Events are returned to the underlying consensus engine in the response of the following ABCI messages:
 

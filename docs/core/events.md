@@ -20,8 +20,8 @@ take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
 An Event contains:
 
-- A `type`, which is meant to categorize an event at a high-level, e.g. the SDK uses the `"message"` type to filter events by `Msg`s.
-- A list of `attributes`, which are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
+- A `type` to categorize the Event at a high-level; for example, the SDK uses the `"message"` type to filter events by `Msg`s.
+- A list of `attributes` are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 
 ::: tip
 To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.

@@ -24,12 +24,12 @@ An Event contains:
 - A list of `attributes`, which are key-value pairs that give more information about the categorized Event. For example, for the `"message"` type, we can filter events by key-value pairs using `message.action={some_action}`, `message.module={some_module}` or `message.sender={some_sender}`.
 
 ::: tip
-If you want the attribute values to be parsed as strings, make sure to add `'` (single quotes) around each attribute value.
+To parse the attribute values as strings, make sure to add `'` (single quotes) around each attribute value.
 :::
 
 Events, the `type` and `attributes` are defined on a **per-module basis** in the module's
 `/types/events.go` file, and triggered from the module's [`Msg` service](../building-modules/msg-services.md)
-via the [`EventManager`](#eventmanager). In addition, each module documents its events under
+by using the [`EventManager`](#eventmanager). In addition, each module documents its events under
 `spec/xx_events.md`.
 
 Events are returned to the underlying consensus engine in the response of the following ABCI messages:

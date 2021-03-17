@@ -99,7 +99,7 @@ A standard implementation of both these objects can be found in the [`auth` modu
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc4/x/auth/tx/encoder.go
 
-Please also refer to [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) on the details of how a transaction is encoded.
+See [ADR-020](../architecture/adr-020-protobuf-transaction-encoding.md) for details of how a transaction is encoded.
 
 ### Interface Encoding and Usage of `Any`s
 

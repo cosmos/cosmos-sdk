@@ -91,7 +91,7 @@ Each account is identified using `Address` which is a sequence of bytes derived 
 
 These types implement the `Address` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L104-L113
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L71-L90
 
 Address construction algorithm is defined in [ADR-28](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md).
 Here is the standard way to obtain an account address from a `pub` public key:
@@ -104,7 +104,7 @@ Of note, the `Marshal()` and `Bytes()` method both return the same raw `[]byte` 
 
 Addresses and public keys are formatted using [Bech32](https://en.bitcoin.it/wiki/Bech32) and implemented by the `String` method. The Bech32 method is the only supported format to use when interacting with a blockchain. The Bech32 human-readable part (Bech32 prefix) is used to denote an address type. Example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L235-L249
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L230-L244
 
 
 |                    | Address bech32 Prefix | Pubkey bech32 Prefix |
@@ -135,7 +135,7 @@ Like `Address`, Bech32 is used to format `PubKey` and for all communication with
 
 A `Keyring` is an object that stores and manages accounts. In the Cosmos SDK, a `Keyring` implementation follows the `Keyring` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/keyring/keyring.go#L51-L92
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/keyring/keyring.go#L51-L89
 
 The default implementation of `Keyring` comes from the third-party [`99designs/keyring`](https://github.com/99designs/keyring) library.
 

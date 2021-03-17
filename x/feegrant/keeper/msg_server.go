@@ -23,6 +23,27 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+func (k msgServer) validAllowedMsgs(msg *types.MsgGrantFeeAllowance) error {
+	f, err := msg.GetFeeAllowanceI()
+	if err != nil {
+		return err
+	}
+
+	allowedFeeAllowance, ok := f.(*types.AllowedMsgFeeAllowance)
+	if ok {
+		msgs := allowedFeeAllowance.AllowedMessages
+
+		for _, m := range msgs {
+			// If the granted service Msg doesn't exist, we throw an error.
+			if k.router.Handler(m) == nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist", m)
+			}
+		}
+	}
+
+	return nil
+}
+
 func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantFeeAllowance) (*types.MsgGrantFeeAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -33,6 +54,11 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
+		return nil, err
+	}
+
+	// checks for the allowed messages are existed in router for AllowedMsgFeeAllowance.
+	if err := k.validAllowedMsgs(msg); err != nil {
 		return nil, err
 	}
 

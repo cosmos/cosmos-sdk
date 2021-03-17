@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,14 +18,16 @@ type Keeper struct {
 	cdc        codec.BinaryMarshaler
 	storeKey   sdk.StoreKey
 	authKeeper types.AccountKeeper
+	router     *baseapp.MsgServiceRouter
 }
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, router *baseapp.MsgServiceRouter) Keeper {
 	return Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		authKeeper: ak,
+		router:     router,
 	}
 }
 

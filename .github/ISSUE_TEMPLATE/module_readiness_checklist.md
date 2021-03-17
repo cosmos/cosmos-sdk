@@ -8,7 +8,6 @@ labels: 'module-readiness-checklist'
 
 This checklist is to be used for tracking the final internal audit of new Cosmos SDK modules prior to inclusion in a published release.
 
-
 ### Release Candidate Checklist
 
 The following checklist should be gone through once the module has been fully implemented. This audit should be performed directly on `master`, or preferably on a `alpha` or `beta` release tag that includes the module.

@@ -150,7 +150,7 @@ Examples:
 			}
 
 			if len(allowedMsgs) > 0 {
-				grant, err = types.NewFilteredFeeAllowance(grant, allowedMsgs)
+				grant, err = types.NewAllowedMsgFeeAllowance(grant, allowedMsgs)
 				if err != nil {
 					return err
 				}

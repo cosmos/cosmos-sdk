@@ -722,7 +722,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	s.Require().Equal(resp.Grantee, resp.Grantee)
 	s.Require().Equal(resp.Granter, resp.Granter)
 
-	filteredFeeGrant, err := resp.GetFeeGrant().(*types.FilteredFeeAllowance).GetAllowance()
+	filteredFeeGrant, err := resp.GetFeeGrant().(*types.AllowedMsgFeeAllowance).GetAllowance()
 	s.Require().NoError(err)
 
 	s.Require().Equal(

@@ -9,17 +9,17 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 )
 
-var _ FeeAllowanceI = (*FilteredFeeAllowance)(nil)
-var _ types.UnpackInterfacesMessage = (*FilteredFeeAllowance)(nil)
+var _ FeeAllowanceI = (*AllowedMsgFeeAllowance)(nil)
+var _ types.UnpackInterfacesMessage = (*AllowedMsgFeeAllowance)(nil)
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a *FilteredFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a *AllowedMsgFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
-// NewFilteredFeeAllowance creates new filtered fee allowance.
-func NewFilteredFeeAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*FilteredFeeAllowance, error) {
+// NewAllowedMsgFeeAllowance creates new filtered fee allowance.
+func NewAllowedMsgFeeAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgFeeAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
@@ -29,14 +29,14 @@ func NewFilteredFeeAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*Fi
 		return nil, err
 	}
 
-	return &FilteredFeeAllowance{
+	return &AllowedMsgFeeAllowance{
 		Allowance:       any,
 		AllowedMessages: allowedMsgs,
 	}, nil
 }
 
 // GetAllowance returns allowed fee allowance.
-func (a *FilteredFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
+func (a *AllowedMsgFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
 		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
@@ -46,7 +46,7 @@ func (a *FilteredFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
 }
 
 // Accept method checks for the filtered messages has valid expiry
-func (a *FilteredFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64, msgs []sdk.Msg) (bool, error) {
+func (a *AllowedMsgFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64, msgs []sdk.Msg) (bool, error) {
 	if !a.isMsgTypesAllowed(msgs) {
 		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
@@ -59,7 +59,7 @@ func (a *FilteredFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockH
 	return allowance.Accept(fee, blockTime, blockHeight, msgs)
 }
 
-func (a *FilteredFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
+func (a *AllowedMsgFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
 	found := false
 
 	for _, msg := range msgs {
@@ -83,13 +83,13 @@ func (a *FilteredFeeAllowance) isMsgTypesAllowed(msgs []sdk.Msg) bool {
 // PrepareForExport will adjust the expiration based on export time. In particular,
 // it will subtract the dumpHeight from any height-based expiration to ensure that
 // the elapsed number of blocks this allowance is valid for is fixed.
-func (a *FilteredFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
+func (a *AllowedMsgFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
 	allowance, err := a.GetAllowance()
 	if err != nil {
 		panic("failed to get allowance")
 	}
 
-	f, err := NewFilteredFeeAllowance(allowance.PrepareForExport(dumpTime, dumpHeight), a.AllowedMessages)
+	f, err := NewAllowedMsgFeeAllowance(allowance.PrepareForExport(dumpTime, dumpHeight), a.AllowedMessages)
 	if err != nil {
 		panic("failed to export filtered fee allowance")
 	}
@@ -98,7 +98,7 @@ func (a *FilteredFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight i
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
-func (a *FilteredFeeAllowance) ValidateBasic() error {
+func (a *AllowedMsgFeeAllowance) ValidateBasic() error {
 	if a.Allowance == nil {
 		return sdkerrors.Wrap(ErrNoAllowance, "allowance should not be empty")
 	}

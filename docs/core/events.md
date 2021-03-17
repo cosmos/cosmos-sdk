@@ -89,8 +89,7 @@ view on how to typically implement `Events` and use the `EventManager` in module
 
 ## Subscribing to Events
 
-It is possible to subscribe to `Events` via Tendermint's [Websocket](https://docs.tendermint.com/master/tendermint-core/subscription.html#subscribing-to-events-via-websocket).
-This is done by calling the `subscribe` RPC method via Websocket:
+You can use Tendermint's [Websocket](https://docs.tendermint.com/master/tendermint-core/subscription.html#subscribing-to-events-via-websocket) to subscribe to `Events` by calling the `subscribe` RPC method:
 
 ```json
 {

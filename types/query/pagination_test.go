@@ -80,7 +80,7 @@ func (s *paginationTestSuite) TestPagination() {
 	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
 
 	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
-	pageReq := &query.PageRequest{Reverse: false}
+	pageReq := &query.PageRequest{}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq)
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
 	s.Require().NoError(err)

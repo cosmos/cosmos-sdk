@@ -239,6 +239,31 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			0,
 			300,
 		},
+		{
+			"periodic vesting, start time and endtime passed",
+			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
+
+				startTime := ctx.BlockTime().AddDate(-1, 0, 0).Unix()
+				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
+				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
+
+				periods := []types.Period{
+					{
+						Length: 1,
+						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(100))),
+					},
+				}
+
+				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+
+				app.AccountKeeper.SetAccount(ctx, delayedAccount)
+
+				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+			},
+			0,
+			300,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -298,8 +323,8 @@ func trackingCorrected(ctx sdk.Context, t *testing.T, ak authkeeper.AccountKeepe
 
 	vestedOk := expDelVesting.IsEqual(vDA.GetDelegatedVesting())
 	freeOk := expDelFree.IsEqual(vDA.GetDelegatedFree())
-	require.True(t, vestedOk, vDA.GetDelegatedVesting().String())
-	require.True(t, freeOk, vDA.GetDelegatedFree().String())
+	require.True(t, vestedOk, fmt.Sprint("delegated vesting ", vDA.GetDelegatedVesting().String()))
+	require.True(t, freeOk, fmt.Sprint("delegated free ", vDA.GetDelegatedFree().String()))
 }
 
 func introduceTrackingBug(ctx sdk.Context, vesting exported.VestingAccount, app *simapp.SimApp) error {

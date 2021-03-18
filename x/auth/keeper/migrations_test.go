@@ -23,45 +23,68 @@ import (
 )
 
 func TestMigrateVestingAccounts(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	testCases := []struct {
+		name         string
+		prepareFunc  func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress)
+		expectedFunc func(app *simapp.SimApp, ctx sdk.Context, address sdk.AccAddress)
+	}{
+		{
+			"not end time",
+			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
+				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+				_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+				_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+			},
+			func(app *simapp.SimApp, ctx sdk.Context, address sdk.AccAddress) {
+				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
+				trackingCorrected(
+					ctx,
+					t,
+					app.AccountKeeper,
+					address,
+					vestedCoins,
+					sdk.Coins{},
+				)
+			},
+		},
+	}
 
-	addrs := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(310))
-	delegatorAddr := addrs[0]
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			app := simapp.Setup(false)
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	_, valAddr := createValidator(t, ctx, app, 300)
-	validator, found := app.StakingKeeper.GetValidator(ctx, valAddr)
-	require.True(t, found)
+			addrs := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(310))
+			delegatorAddr := addrs[0]
 
-	baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
-	vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
-	delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, time.Now().Unix())
-	app.AccountKeeper.SetAccount(ctx, delayedAccount)
+			_, valAddr := createValidator(t, ctx, app, 300)
+			validator, found := app.StakingKeeper.GetValidator(ctx, valAddr)
+			require.True(t, found)
 
-	_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
-	require.NoError(t, err)
-	_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
-	require.NoError(t, err)
-	_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
-	require.NoError(t, err)
+			baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
+			vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
+			delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, time.Now().Unix())
+			app.AccountKeeper.SetAccount(ctx, delayedAccount)
 
-	// We introduce the bug
-	savedAccount := app.AccountKeeper.GetAccount(ctx, delayedAccount.GetAddress())
-	vestingAccount, ok := savedAccount.(exported.VestingAccount)
-	require.True(t, ok)
-	require.NoError(t, introduceTrackingBug(ctx, vestingAccount, app))
+			tc.prepareFunc(app, ctx, validator, delegatorAddr)
 
-	migrator := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
-	require.NoError(t, migrator.Migrate1to2(ctx))
+			// We introduce the bug
+			savedAccount := app.AccountKeeper.GetAccount(ctx, delegatorAddr)
+			vestingAccount, ok := savedAccount.(exported.VestingAccount)
+			require.True(t, ok)
+			require.NoError(t, introduceTrackingBug(ctx, vestingAccount, app))
 
-	trackingCorrected(
-		ctx,
-		t,
-		app.AccountKeeper,
-		baseAccount.GetAddress(),
-		vestedCoins,
-		sdk.Coins{},
-	)
+			migrator := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
+			require.NoError(t, migrator.Migrate1to2(ctx))
+
+			tc.expectedFunc(app, ctx, savedAccount.GetAddress())
+		})
+	}
+
 }
 
 func trackingCorrected(ctx sdk.Context, t *testing.T, ak authkeeper.AccountKeeper, addr sdk.AccAddress, expDelVesting sdk.Coins, expDelFree sdk.Coins) {

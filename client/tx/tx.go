@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -50,7 +51,7 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := calculateGas(clientCtx, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -76,13 +77,13 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
 func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
-	txf, err := PrepareFactory(clientCtx, txf)
+	txf, err := prepareFactory(clientCtx, txf)
 	if err != nil {
 		return err
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
-		_, adjusted, err := calculateGas(clientCtx, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -173,7 +174,7 @@ func WriteGeneratedTxResponse(
 			return
 		}
 
-		_, adjusted, err := calculateGas(clientCtx, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -247,10 +248,10 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	return tx, nil
 }
 
-// buildSimTx creates an unsigned tx with an empty single signature and returns
+// BuildSimTx creates an unsigned tx with an empty single signature and returns
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
-func buildSimTx(txf Factory, msgs ...sdk.Msg) (*tx.SimulateRequest, error) {
+func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	txb, err := BuildUnsignedTx(txf, msgs...)
 	if err != nil {
 		return nil, err
@@ -270,34 +271,34 @@ func buildSimTx(txf Factory, msgs ...sdk.Msg) (*tx.SimulateRequest, error) {
 	}
 
 	return txf.txConfig.TxEncoder()(txb.GetTx())
-	if err != nil {
-		return nil, err
-	}
-
-	return &tx.SimulateRequest{TxBytes: txBytes}, nil
 }
 
-// calculateGas simulates the execution of a transaction and returns the
+// CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
-func calculateGas(
-	clientCtx client.Context, txf Factory, msgs ...sdk.Msg,
+func CalculateGas(
+	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.Msg,
 ) (*tx.SimulateResponse, uint64, error) {
-	simReq, err := buildSimTx(txf, msgs...)
+	txBytes, err := BuildSimTx(txf, msgs...)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	txSvcClient := tx.NewServiceClient(clientCtx)
-	simRes, err := txSvcClient.Simulate(context.Background(), simReq)
+	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
+		TxBytes: txBytes,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
 
 	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }
 
-// PrepareFactory ensures the account defined by ctx.GetFromAddress() exists and
+// prepareFactory ensures the account defined by ctx.GetFromAddress() exists and
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory. A new Factory with
 // the updated fields will be returned.
-func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
+func prepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	from := clientCtx.GetFromAddress()
 
 	if err := txf.accountRetriever.EnsureExists(clientCtx, from); err != nil {

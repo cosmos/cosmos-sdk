@@ -35,7 +35,7 @@ func (k msgServer) validAllowedMsgs(msg *types.MsgGrantFeeAllowance) error {
 
 		for _, m := range msgs {
 			// If the granted service Msg doesn't exist, we throw an error.
-			if k.router.Handler(m) == nil {
+			if k.msgSvcRouter.Handler(m) == nil {
 				return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist", m)
 			}
 		}

@@ -15,19 +15,19 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc        codec.BinaryMarshaler
-	storeKey   sdk.StoreKey
-	authKeeper types.AccountKeeper
-	router     *baseapp.MsgServiceRouter
+	cdc          codec.BinaryMarshaler
+	storeKey     sdk.StoreKey
+	authKeeper   types.AccountKeeper
+	msgSvcRouter *baseapp.MsgServiceRouter
 }
 
 // NewKeeper creates a fee grant Keeper
 func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, router *baseapp.MsgServiceRouter) Keeper {
 	return Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		authKeeper: ak,
-		router:     router,
+		cdc:          cdc,
+		storeKey:     storeKey,
+		authKeeper:   ak,
+		msgSvcRouter: router,
 	}
 }
 

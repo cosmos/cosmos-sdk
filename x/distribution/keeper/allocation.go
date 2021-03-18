@@ -85,14 +85,7 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Move comment to docstring
-	for _, vote := range bondedValidatorsVoteInfo {
-=======
 	for _, vote := range bondedVotes {
->>>>>>> Change variable name
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
 		// TODO consider microslashing for missing votes.

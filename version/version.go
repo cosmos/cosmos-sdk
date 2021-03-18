@@ -61,6 +61,7 @@ func NewInfo() Info {
 
 func (vi Info) String() string {
 	return fmt.Sprintf(`%s: %s
+
 git commit: %s
 build tags: %s
 %s`,

@@ -38,7 +38,7 @@ const (
 //
 // - 0x06<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
 //
-// - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
+// - 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentCommission
 //
 // - 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
 var (

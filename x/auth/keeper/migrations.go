@@ -54,7 +54,15 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 			m.queryServer,
 		)
 
-		asVesting.TrackDelegation(ctx.BlockTime(), balance.Add(delegations...), delegations)
+		if delegations.IsAllGTE(asVesting.GetOriginalVesting()) {
+			delegations = asVesting.GetOriginalVesting()
+		}
+
+		if balance.IsAllLT(delegations) {
+			balance = balance.Add(delegations...)
+		}
+
+		asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
 
 		m.keeper.SetAccount(ctx, account)
 

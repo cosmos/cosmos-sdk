@@ -99,13 +99,13 @@ To apply an upgrade, we query the `VersionMap` from the `x/upgrade` store and pa
 func (k UpgradeKeeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
     // --snip--
 -   handler(ctx, plan)
-+   updatedVM, err := handler(ctx, plan, k.GetVersionMap(ctx)) // k.GetVersionMap() fetches the VersionMap stored in state.
++   updatedVM, err := handler(ctx, plan, k.GetModuleVersionMap(ctx)) // k.GetModuleVersionMap() fetches the VersionMap stored in state.
 +   if err != nil {
 +       return err
 +   }
 +
 +   // Set the updated consensus versions to state
-+   k.SetVersionMap(ctx, updatedVM)
++   k.SetModuleVersionMap(ctx, updatedVM)
 }
 ```
 

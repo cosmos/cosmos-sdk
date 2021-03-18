@@ -1,6 +1,6 @@
 ---
 name: Module Readiness Checklist
-about: Pre-flight checklist that modules must pass before ready for being enabled in stable builds of regen ledger
+about: Pre-flight checklist that modules must pass in order to be included in a release of the Cosmos SDK
 labels: 'module-readiness-checklist'
 ---
 

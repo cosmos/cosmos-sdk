@@ -201,50 +201,12 @@ jobs:
         if: env.GIT_DIFF
       - name: test & coverage report creation
         run: |
-          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -json -timeout 30m -race -tags='cgo ledger test_ledger_mock' | tee ${{ matrix.part }}-race-output.txt
+          xargs --arg-file=pkgs.txt.part.${{ matrix.part }} go test -mod=readonly -timeout 30m -race -tags='cgo ledger test_ledger_mock'
         if: env.GIT_DIFF
       - uses: actions/upload-artifact@v2
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt
-
-  race-detector-report:
-    runs-on: ubuntu-latest
-    needs: [test-race, install-tparse]
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v4
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-00-race-output"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-01-race-output"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-02-race-output"
-        if: env.GIT_DIFF
-      - uses: actions/download-artifact@v2
-        with:
-          name: "${{ github.sha }}-03-race-output"
-        if: env.GIT_DIFF
-      - uses: actions/cache@v2.1.3
-        with:
-          path: ~/go/bin
-          key: ${{ runner.os }}-go-tparse-binary
-        if: env.GIT_DIFF
-      - name: Generate test report (go test -race)
-        run: cat ./*-race-output.txt | ~/go/bin/tparse
-        if: env.GIT_DIFF
 
   liveness-test:
     runs-on: ubuntu-latest

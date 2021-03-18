@@ -11,6 +11,8 @@ import (
 )
 
 // AllocateTokens handles distribution of the collected fees
+// bondedValidatorsVoteInfo is a list of (validator address, validator voted on
+// last block flag) for all validators in the active set.
 func (k Keeper) AllocateTokens(
 	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, bondedValidatorsVoteInfo []abci.VoteInfo,
@@ -83,7 +85,9 @@ func (k Keeper) AllocateTokens(
 
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
-	// bondedValidatorsVoteInfo is a list of (validator address, validator voted on last block flag) for all validators in the active set.
+<<<<<<< HEAD
+=======
+>>>>>>> Move comment to docstring
 	for _, vote := range bondedValidatorsVoteInfo {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 

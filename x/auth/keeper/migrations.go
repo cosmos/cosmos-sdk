@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"log"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
@@ -12,6 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+)
+
+const (
+	delegatorDelegationPath = "/cosmos.staking.v1beta1.Query/DelegatorDelegations"
+	balancesPath            = "/cosmos.bank.v1beta1.Query/AllBalances"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -27,35 +35,104 @@ func NewMigrator(keeper AccountKeeper, queryServer grpc.Server) Migrator {
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	const fqPath = "/cosmos.bank.v1beta1.Query/AllBalances"
-	querier, ok := m.queryServer.(*baseapp.GRPCQueryRouter)
-	if !ok {
-		panic(fmt.Sprintf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", m.queryServer))
-	}
-	log.Printf("%#v", querier)
-	queryFn := querier.Route(fqPath)
 	m.keeper.IterateAccounts(ctx, func(account types.AccountI) (stop bool) {
-		q := &banktypes.QueryAllBalancesRequest{
-			Address:    account.GetAddress().String(),
-			Pagination: nil,
+		asVesting := vesting(account)
+		if asVesting == nil {
+			return false
 		}
-		b, err := proto.Marshal(q)
-		if err != nil {
-			panic(err)
-		}
-		req := abci.RequestQuery{
-			Data: b,
-			Path: fqPath,
-		}
-		resp, err := queryFn(ctx, req)
-		if err != nil {
-			panic(err)
-		}
-		balance := new(banktypes.QueryAllBalancesResponse)
-		err = proto.Unmarshal(resp.Value, balance)
-		log.Printf("%s", balance.String())
+
+		addr := account.GetAddress().String()
+		balance := getBalance(
+			ctx,
+			addr,
+			m.queryServer,
+		)
+
+		delegations := getDelegatorDelegations(
+			ctx,
+			addr,
+			m.queryServer,
+		)
+
+		asVesting.TrackDelegation(ctx.BlockTime(), balance.Add(delegations...), delegations)
+
+		m.keeper.SetAccount(ctx, account)
+
 		return false
 	})
 
 	return nil
+}
+
+func vesting(account types.AccountI) exported.VestingAccount {
+	v, ok := account.(exported.VestingAccount)
+	if !ok {
+		return nil
+	}
+
+	return v
+}
+
+func getDelegatorDelegations(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Coins {
+	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
+	if !ok {
+		panic(fmt.Sprintf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer))
+	}
+
+	queryFn := querier.Route(delegatorDelegationPath)
+
+	q := &stakingtypes.QueryDelegatorDelegationsRequest{
+		DelegatorAddr: address,
+	}
+
+	b, err := proto.Marshal(q)
+	if err != nil {
+		panic(err)
+	}
+	req := abci.RequestQuery{
+		Data: b,
+		Path: delegatorDelegationPath,
+	}
+	resp, err := queryFn(ctx, req)
+	if err != nil {
+		panic(err)
+	}
+	balance := new(stakingtypes.QueryDelegatorDelegationsResponse)
+	err = proto.Unmarshal(resp.Value, balance)
+
+	res := sdk.NewCoins()
+	for _, i := range balance.DelegationResponses {
+		res = res.Add(i.Balance)
+	}
+
+	return res
+}
+
+func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Coins {
+	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
+	if !ok {
+		panic(fmt.Sprintf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer))
+	}
+
+	queryFn := querier.Route(balancesPath)
+
+	q := &banktypes.QueryAllBalancesRequest{
+		Address:    address,
+		Pagination: nil,
+	}
+	b, err := proto.Marshal(q)
+	if err != nil {
+		panic(err)
+	}
+	req := abci.RequestQuery{
+		Data: b,
+		Path: balancesPath,
+	}
+	resp, err := queryFn(ctx, req)
+	if err != nil {
+		panic(err)
+	}
+	balance := new(banktypes.QueryAllBalancesResponse)
+	err = proto.Unmarshal(resp.Value, balance)
+	return balance.Balances
 }

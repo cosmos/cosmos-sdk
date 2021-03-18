@@ -106,8 +106,12 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 		var err error
 		txBytes, err = proto.Marshal(req.Tx)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "invalid tx; %v", err)
+			return nil, status.Errorf(codes.InvalidArgument, "invalid tx; %v", err)
 		}
+	}
+
+	if txBytes == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
 	gasInfo, result, err := s.simulate(txBytes)

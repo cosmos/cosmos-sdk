@@ -70,7 +70,6 @@ func TestCalculateGas(t *testing.T) {
 			WithTxConfig(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 		t.Run(stc.name, func(t *testing.T) {
-			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)
 			simRes, gotAdjusted, err := tx.CalculateGas(queryFunc, txf.WithGasAdjustment(stc.args.adjustment))
 			if stc.expPass {
 				require.NoError(t, err)

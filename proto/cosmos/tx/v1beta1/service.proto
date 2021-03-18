@@ -101,7 +101,10 @@ message BroadcastTxResponse {
 // RPC method.
 message SimulateRequest {
   // tx is the transaction to simulate.
+  // Deprecated. Send raw tx bytes instead.
   cosmos.tx.v1beta1.Tx tx = 1;
+  // tx_bytes is the raw transaction.
+  bytes tx_bytes = 2;
 }
 
 // SimulateResponse is the response type for the

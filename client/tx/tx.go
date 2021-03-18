@@ -2,6 +2,7 @@ package tx
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
@@ -50,7 +50,7 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := calculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := calculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -142,8 +142,9 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
 // Note that this function returns the legacy StdTx Amino JSON format for compatibility
 // with legacy clients.
+// Deprecated: We are removing Amino soon.
 func WriteGeneratedTxResponse(
-	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
+	clientCtx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
@@ -163,7 +164,7 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxConfig(ctx.TxConfig).
+		WithTxConfig(clientCtx.TxConfig).
 		WithTimeoutHeight(br.TimeoutHeight)
 
 	if br.Simulate || gasSetting.Simulate {
@@ -172,7 +173,7 @@ func WriteGeneratedTxResponse(
 			return
 		}
 
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+		_, adjusted, err := calculateGas(clientCtx, txf, msgs...)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -180,7 +181,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.LegacyAmino, txf.Gas())
+			rest.WriteSimulationResponse(w, clientCtx.LegacyAmino, txf.Gas())
 			return
 		}
 	}
@@ -190,12 +191,12 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
+	stdTx, err := ConvertTxToStdTx(clientCtx.LegacyAmino, tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
 
-	output, err := ctx.LegacyAmino.MarshalJSON(stdTx)
+	output, err := clientCtx.LegacyAmino.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -246,10 +247,10 @@ func BuildUnsignedTx(txf Factory, msgs ...sdk.Msg) (client.TxBuilder, error) {
 	return tx, nil
 }
 
-// BuildSimTx creates an unsigned tx with an empty single signature and returns
+// buildSimTx creates an unsigned tx with an empty single signature and returns
 // the encoded transaction or an error if the unsigned transaction cannot be
 // built.
-func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
+func buildSimTx(txf Factory, msgs ...sdk.Msg) (*tx.SimulateRequest, error) {
 	txb, err := BuildUnsignedTx(txf, msgs...)
 	if err != nil {
 		return nil, err
@@ -268,37 +269,26 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	protoProvider, ok := txb.(authtx.ProtoTxProvider)
-	if !ok {
-		return nil, fmt.Errorf("cannot simulate amino tx")
+	return txf.txConfig.TxEncoder()(txb.GetTx())
+	if err != nil {
+		return nil, err
 	}
-	simReq := tx.SimulateRequest{Tx: protoProvider.GetProtoTx()}
 
-	return simReq.Marshal()
+	return &tx.SimulateRequest{TxBytes: txBytes}, nil
 }
 
-// CalculateGas simulates the execution of a transaction and returns the
+// calculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
-func CalculateGas(
-	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
-) (tx.SimulateResponse, uint64, error) {
-	txBytes, err := BuildSimTx(txf, msgs...)
+func calculateGas(
+	clientCtx client.Context, txf Factory, msgs ...sdk.Msg,
+) (*tx.SimulateResponse, uint64, error) {
+	simReq, err := buildSimTx(txf, msgs...)
 	if err != nil {
-		return tx.SimulateResponse{}, 0, err
+		return nil, 0, err
 	}
 
-	// TODO This should use the generated tx service Client.
-	// https://github.com/cosmos/cosmos-sdk/issues/7726
-	bz, _, err := queryFunc("/cosmos.tx.v1beta1.Service/Simulate", txBytes)
-	if err != nil {
-		return tx.SimulateResponse{}, 0, err
-	}
-
-	var simRes tx.SimulateResponse
-
-	if err := simRes.Unmarshal(bz); err != nil {
-		return tx.SimulateResponse{}, 0, err
-	}
+	txSvcClient := tx.NewServiceClient(clientCtx)
+	simRes, err := txSvcClient.Simulate(context.Background(), simReq)
 
 	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }

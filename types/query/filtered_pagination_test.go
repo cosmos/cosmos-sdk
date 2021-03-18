@@ -166,7 +166,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().Nil(res.NextKey)
 
 	s.T().Log("verify Reverse pagination returns valid result")
-	s.Require().Equal(balns.String(), balances[2:4].Sort().String())
+	s.Require().Equal(balances[235:241].String(), balns.Sort().String())
 
 }
 

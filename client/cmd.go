@@ -99,6 +99,11 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithHomeDir(homeDir)
 	}
 
+	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
+		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
+		clientCtx = clientCtx.WithSimulation(dryRun)
+	}
+
 	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
 		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
 
@@ -189,11 +194,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	if !clientCtx.GenerateOnly || flagSet.Changed(flags.FlagGenerateOnly) {
 		genOnly, _ := flagSet.GetBool(flags.FlagGenerateOnly)
 		clientCtx = clientCtx.WithGenerateOnly(genOnly)
-	}
-
-	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
-		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
-		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
 	if !clientCtx.Offline || flagSet.Changed(flags.FlagOffline) {

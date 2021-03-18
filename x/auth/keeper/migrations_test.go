@@ -35,8 +35,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 
 	baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
 	vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
-
 	delayedAccount := types.NewDelayedVestingAccount(baseAccount, vestedCoins, time.Now().Unix())
+	app.AccountKeeper.SetAccount(ctx, delayedAccount)
 
 	_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
 	require.NoError(t, err)
@@ -45,11 +45,13 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
 	require.NoError(t, err)
 
-	migrator := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
-
 	// We introduce the bug
-	require.NoError(t, introduceTrackingBug(ctx, delayedAccount, app))
+	savedAccount := app.AccountKeeper.GetAccount(ctx, delayedAccount.GetAddress())
+	vestingAccount, ok := savedAccount.(exported.VestingAccount)
+	require.True(t, ok)
+	require.NoError(t, introduceTrackingBug(ctx, vestingAccount, app))
 
+	migrator := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
 	require.NoError(t, migrator.Migrate1to2(ctx))
 
 	trackingCorrected(

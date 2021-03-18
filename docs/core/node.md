@@ -46,10 +46,10 @@ The flow of the `start` command is pretty straightforward. First, it retrieves t
 
 With the `db`, the `start` command creates a new instance of the application using an `appCreator` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L227
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L227-L228
 
 Note that an `appCreator` is a function that fulfills the `AppCreator` signature:
-+++https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
 
 In practice, the [constructor of the application](../basics/app-anatomy.md#constructor-function) is passed as the `appCreator`.
 

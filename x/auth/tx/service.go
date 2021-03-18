@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -99,13 +99,14 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 	txBytes := req.TxBytes
 	if txBytes == nil && req.Tx != nil {
-		var err error
-		// We used to supported passing a `Tx` here. But if we do that, sig
+		// This block is for backwards-compatibility.
+		// We used to supported passing a `Tx` in req. But if we do that, sig
 		// verification might not pass, because the .Marshal() below might not
 		// be the same marshaling done by the client.
+		var err error
 		txBytes, err = proto.Marshal(req.Tx)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "invalid tx; %w", err)
+			return nil, status.Errorf(codes.Internal, "invalid tx; %v", err)
 		}
 	}
 

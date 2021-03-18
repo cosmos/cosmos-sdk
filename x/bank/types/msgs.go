@@ -1,13 +1,6 @@
 package types
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/gogo/protobuf/proto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -67,83 +60,6 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{from}
-}
-
-// Rosetta interface
-func (msg *MsgSend) ToOperations(withStatus bool, hasError bool) []*types.Operation {
-	var operations []*types.Operation
-
-	fromAddress := msg.FromAddress
-	toAddress := msg.ToAddress
-	amounts := msg.Amount
-	if len(amounts) == 0 {
-		return []*types.Operation{}
-	}
-
-	coin := amounts[0]
-	sendOp := func(account, amount string, index int) *types.Operation {
-		var status string
-		if withStatus {
-			status = "Success"
-			if hasError {
-				status = "Reverted"
-			}
-		}
-		return &types.Operation{
-			OperationIdentifier: &types.OperationIdentifier{
-				Index: int64(index),
-			},
-			Type:   proto.MessageName(msg),
-			Status: status,
-			Account: &types.AccountIdentifier{
-				Address: account,
-			},
-			Amount: &types.Amount{
-				Value: amount,
-				Currency: &types.Currency{
-					Symbol: coin.Denom,
-				},
-			},
-		}
-	}
-	operations = append(operations,
-		sendOp(fromAddress, "-"+coin.Amount.String(), 0),
-		sendOp(toAddress, coin.Amount.String(), 1),
-	)
-
-	return operations
-}
-
-func (msg MsgSend) FromOperations(ops []*types.Operation) (sdk.Msg, error) {
-	var (
-		from, to sdk.AccAddress
-		sendAmt  sdk.Coin
-		err      error
-	)
-
-	for _, op := range ops {
-		if strings.HasPrefix(op.Amount.Value, "-") {
-			from, err = sdk.AccAddressFromBech32(op.Account.Address)
-			if err != nil {
-				return nil, err
-			}
-			continue
-		}
-
-		to, err = sdk.AccAddressFromBech32(op.Account.Address)
-		if err != nil {
-			return nil, err
-		}
-
-		amount, err := strconv.ParseInt(op.Amount.Value, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid amount")
-		}
-
-		sendAmt = sdk.NewCoin(op.Amount.Currency.Symbol, sdk.NewInt(amount))
-	}
-
-	return NewMsgSend(from, to, sdk.NewCoins(sendAmt)), nil
 }
 
 var _ sdk.Msg = &MsgMultiSend{}

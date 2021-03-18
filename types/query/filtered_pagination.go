@@ -50,13 +50,8 @@ func FilteredPaginate(
 		var nextKey []byte
 
 		for ; iterator.Valid(); iterator.Next() {
-			if numHits == limit-1 && reverse {
-				nextKey = iterator.Key()
-			}
 			if numHits == limit {
-				if !reverse {
-					nextKey = iterator.Key()
-				}
+				nextKey = iterator.Key()
 				break
 			}
 

@@ -126,7 +126,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().Nil(res.NextKey)
 
 	s.T().Log("verify default limit")
-	pageReq = &query.PageRequest{Key: nil, Limit: 0, Reverse: true}
+	pageReq = &query.PageRequest{Reverse: true}
 	balns, res, err = execFilterPaginate(store, pageReq, appCodec)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
@@ -134,7 +134,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().Equal(uint64(10), res.Total)
 
 	s.T().Log("verify nextKey is returned if there are more results")
-	pageReq = &query.PageRequest{Key: nil, Limit: 2, CountTotal: true, Reverse: true}
+	pageReq = &query.PageRequest{Limit: 2, CountTotal: true, Reverse: true}
 	balns, res, err = execFilterPaginate(store, pageReq, appCodec)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
@@ -149,7 +149,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().Error(err)
 
 	s.T().Log("use nextKey for query and reverse true")
-	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, CountTotal: true, Reverse: true}
+	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, Reverse: true}
 	balns, res, err = execFilterPaginate(store, pageReq, appCodec)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
@@ -162,7 +162,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	balns, res, err = execFilterPaginate(store, pageReq, appCodec)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
-	s.Require().Equal(5, len(balns))
+	s.Require().Equal(6, len(balns))
 	s.Require().Nil(res.NextKey)
 
 	s.T().Log("verify Reverse pagination returns valid result")

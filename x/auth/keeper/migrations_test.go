@@ -180,11 +180,11 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			300,
 		},
 		{
-			"continuous vesting has vested, single delegation greater than the total account balance",
+			"continuous vesting, start time after blocktime",
 			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
 
-				startTime := ctx.BlockTime().AddDate(-1, 0, 0).Unix()
-				endTime := ctx.BlockTime().AddDate(1, 0, 0).Unix()
+				startTime := ctx.BlockTime().AddDate(1, 0, 0).Unix()
+				endTime := ctx.BlockTime().AddDate(2, 0, 0).Unix()
 				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
 				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
 				delayedAccount := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
@@ -196,8 +196,48 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
-			150,
-			150,
+			300,
+			0,
+		},
+		{
+			"continuous vesting, start time passed but not ended",
+			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
+
+				startTime := ctx.BlockTime().AddDate(-1, 0, 0).Unix()
+				endTime := ctx.BlockTime().AddDate(2, 0, 0).Unix()
+				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
+				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
+				delayedAccount := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+
+				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
+
+				app.AccountKeeper.SetAccount(ctx, delayedAccount)
+
+				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+			},
+			200,
+			100,
+		},
+		{
+			"continuous vesting, start time and endtime passed",
+			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
+
+				startTime := ctx.BlockTime().AddDate(-2, 0, 0).Unix()
+				endTime := ctx.BlockTime().AddDate(-1, 0, 0).Unix()
+				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
+				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
+				delayedAccount := types.NewContinuousVestingAccount(baseAccount, vestedCoins, startTime, endTime)
+
+				ctx = ctx.WithBlockTime(ctx.BlockTime().AddDate(1, 0, 0))
+
+				app.AccountKeeper.SetAccount(ctx, delayedAccount)
+
+				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+			},
+			0,
+			300,
 		},
 	}
 

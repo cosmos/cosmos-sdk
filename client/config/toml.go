@@ -63,12 +63,13 @@ func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
+	v.AutomaticEnv()
 
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
 
-	conf := DefaultClientConfig()
+	conf := new(ClientConfig)
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, err
 	}

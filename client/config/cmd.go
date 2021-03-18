@@ -63,8 +63,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			cmd.Println(cliConfig.Node)
 		case flags.FlagBroadcastMode:
 			cmd.Println(cliConfig.BroadcastMode)
-			//	case "trace":
-			//		cmd.Println(cliConfig.Trace)
 		default:
 			err := errUnknownConfigKey(key)
 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
@@ -86,12 +84,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			cliConfig.SetNode(value)
 		case flags.FlagBroadcastMode:
 			cliConfig.SetBroadcastMode(value)
-		/*
-			case "trace":
-				if err := cliConfig.SetTrace(value); err != nil {
-					return fmt.Errorf("couldn't parse bool value: %v", err)
-				}
-		*/
 		default:
 			return errUnknownConfigKey(key)
 		}

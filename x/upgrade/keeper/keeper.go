@@ -49,8 +49,8 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-// SetVersionMap saves a given version map to state
-func (k Keeper) SetVersionMap(ctx sdk.Context, vm module.VersionMap) {
+// SetModuleVersionMap saves a given version map to state
+func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	if len(vm) > 0 {
 		store := ctx.KVStore(k.storeKey)
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
@@ -63,9 +63,9 @@ func (k Keeper) SetVersionMap(ctx sdk.Context, vm module.VersionMap) {
 	}
 }
 
-// GetVersionMap returns a map of key module name and value module consensus version
+// GetModuleVersionMap returns a map of key module name and value module consensus version
 // as defined in ADR-041.
-func (k Keeper) GetVersionMap(ctx sdk.Context) module.VersionMap {
+func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 
@@ -221,12 +221,12 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
-	updatedVM, err := handler(ctx, plan, k.GetVersionMap(ctx))
+	updatedVM, err := handler(ctx, plan, k.GetModuleVersionMap(ctx))
 	if err != nil {
 		panic(err)
 	}
 
-	k.SetVersionMap(ctx, updatedVM)
+	k.SetModuleVersionMap(ctx, updatedVM)
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

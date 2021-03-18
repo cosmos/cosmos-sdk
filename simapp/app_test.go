@@ -209,7 +209,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false, tmproto.Header{})
-	vm := app.UpgradeKeeper.GetVersionMap(ctx)
+	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	for v, i := range app.mm.Modules {
 		require.Equal(t, vm[v], i.ConsensusVersion())
 	}

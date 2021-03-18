@@ -77,13 +77,8 @@ func Paginate(
 
 		for ; iterator.Valid(); iterator.Next() {
 
-			if count == limit-1 && reverse {
-				nextKey = iterator.Key()
-			}
 			if count == limit {
-				if !reverse {
-					nextKey = iterator.Key()
-				}
+				nextKey = iterator.Key()
 				break
 			}
 			if iterator.Error() != nil {
@@ -143,7 +138,16 @@ func Paginate(
 
 func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Iterator {
 	if reverse {
-		return prefixStore.ReverseIterator(nil, start)
+		var end []byte
+		if start != nil {
+			itr := prefixStore.Iterator(start, nil)
+			if itr.Valid() {
+				itr.Next()
+				end = itr.Key()
+			}
+			itr.Close()
+		}
+		return prefixStore.ReverseIterator(nil, end)
 	}
 	return prefixStore.Iterator(start, nil)
 }

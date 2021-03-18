@@ -144,11 +144,11 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().Equal(uint64(10), res.Total)
 
 	s.T().Log("verify both key and offset can't be given")
-	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, Offset: 2, CountTotal: true, Reverse: true}
+	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 1, Offset: 2, Reverse: true}
 	_, _, err = execFilterPaginate(store, pageReq, appCodec)
 	s.Require().Error(err)
 
-	s.T().Log("use nextKey for query")
+	s.T().Log("use nextKey for query and reverse true")
 	pageReq = &query.PageRequest{Key: res.NextKey, Limit: 2, CountTotal: true, Reverse: true}
 	balns, res, err = execFilterPaginate(store, pageReq, appCodec)
 	s.Require().NoError(err)
@@ -157,12 +157,11 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().NotNil(res.NextKey)
 	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test5denom"))
 
-	s.T().Log("use nextKey for query")
-	pageReq = &query.PageRequest{Key: res.NextKey, CountTotal: true, Reverse: true}
+	s.T().Log("verify last page records, nextKey for query and reverse true")
+	pageReq = &query.PageRequest{Key: res.NextKey, Reverse: true}
 	balns, res, err = execFilterPaginate(store, pageReq, appCodec)
 	s.Require().NoError(err)
 	s.Require().NotNil(res)
-	fmt.Println(balns)
 	s.Require().Equal(5, len(balns))
 	s.Require().Nil(res.NextKey)
 

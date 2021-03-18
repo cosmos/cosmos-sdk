@@ -251,7 +251,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().Equal(res.Pagination.Total, uint64(0))
 
 	s.T().Log("verify Reverse pagination returns valid result")
-	s.Require().Equal(balances[100:150].String(), res.Balances.Sort().String())
+	s.Require().Equal(balances[101:151].String(), res.Balances.Sort().String())
 
 	s.T().Log("verify paginate with custom limit, key, countTotal false and Reverse true")
 	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: 50, Reverse: true}
@@ -263,7 +263,19 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().Equal(res.Pagination.Total, uint64(0))
 
 	s.T().Log("verify Reverse pagination returns valid result")
-	s.Require().Equal(balances[50:100].String(), res.Balances.Sort().String())
+	s.Require().Equal(balances[51:101].String(), res.Balances.Sort().String())
+
+	s.T().Log("verify paginate for last page Reverse true")
+	pageReq = &query.PageRequest{Key: res.Pagination.NextKey, Limit: defaultLimit, Reverse: true}
+	request = types.NewQueryAllBalancesRequest(addr1, pageReq)
+	res, err = queryClient.AllBalances(gocontext.Background(), request)
+	s.Require().NoError(err)
+	s.Require().Equal(res.Balances.Len(), 51)
+	s.Require().Nil(res.Pagination.NextKey)
+	s.Require().Equal(res.Pagination.Total, uint64(0))
+
+	s.T().Log("verify Reverse pagination returns valid result")
+	s.Require().Equal(balances[0:51].String(), res.Balances.Sort().String())
 
 	s.T().Log("verify paginate with offset and key - error")
 	pageReq = &query.PageRequest{Key: res1.Pagination.NextKey, Offset: 100, Limit: defaultLimit, CountTotal: false}

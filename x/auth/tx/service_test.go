@@ -91,7 +91,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
+		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
 		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
 	}
 
@@ -127,7 +127,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
+		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
 		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
 	}
 

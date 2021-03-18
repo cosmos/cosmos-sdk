@@ -25,7 +25,7 @@ func (s *IntegrationTestSuite) TestMigrateGenesis() {
 		target    string
 		expErr    bool
 		expErrMsg string
-		posttests func(jsonOut string)
+		check     func(jsonOut string)
 	}{
 		{
 			"migrate 0.34 to 0.36",
@@ -59,7 +59,7 @@ func (s *IntegrationTestSuite) TestMigrateGenesis() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				tc.posttests(jsonOutput.String())
+				tc.check(jsonOutput.String())
 			}
 		})
 	}

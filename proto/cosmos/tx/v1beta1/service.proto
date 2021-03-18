@@ -102,7 +102,7 @@ message BroadcastTxResponse {
 message SimulateRequest {
   // tx is the transaction to simulate.
   // Deprecated. Send raw tx bytes instead.
-  cosmos.tx.v1beta1.Tx tx = 1;
+  cosmos.tx.v1beta1.Tx tx = 1 [deprecated=true];
   // tx_bytes is the raw transaction.
   bytes tx_bytes = 2;
 }

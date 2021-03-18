@@ -7256,7 +7256,7 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the transaction to simulate. Deprecated. Send raw tx bytes instead. |
+| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | **Deprecated.** tx is the transaction to simulate. Deprecated. Send raw tx bytes instead. |
 | `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the raw transaction. |
 
 

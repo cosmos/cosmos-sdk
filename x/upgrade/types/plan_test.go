@@ -27,14 +27,6 @@ func TestPlanString(t *testing.T) {
 		p      types.Plan
 		expect string
 	}{
-		"with time": {
-			p: types.Plan{
-				Name: "due_time",
-				Info: "https://foo.bar",
-				Time: mustParseTime("2019-07-08T11:33:55Z"),
-			},
-			expect: "Upgrade Plan\n  Name: due_time\n  Time: 2019-07-08T11:33:55Z\n  Info: https://foo.bar.",
-		},
 		"with height": {
 			p: types.Plan{
 				Name:   "by height",
@@ -65,14 +57,6 @@ func TestPlanValid(t *testing.T) {
 		p     types.Plan
 		valid bool
 	}{
-		"proper": {
-			p: types.Plan{
-				Name: "all-good",
-				Info: "some text here",
-				Time: mustParseTime("2019-07-08T11:33:55Z"),
-			},
-			valid: true,
-		},
 		"proper by height": {
 			p: types.Plan{
 				Name:   "all-good",
@@ -120,34 +104,7 @@ func TestShouldExecute(t *testing.T) {
 		ctxHeight int64
 		expected  bool
 	}{
-		"past time": {
-			p: types.Plan{
-				Name: "do-good",
-				Info: "some text here",
-				Time: mustParseTime("2019-07-08T11:33:55Z"),
-			},
-			ctxTime:   mustParseTime("2019-07-08T11:32:00Z"),
-			ctxHeight: 100000,
-			expected:  false,
-		},
-		"on time": {
-			p: types.Plan{
-				Name: "do-good",
-				Time: mustParseTime("2019-07-08T11:33:55Z"),
-			},
-			ctxTime:   mustParseTime("2019-07-08T11:33:55Z"),
-			ctxHeight: 100000,
-			expected:  true,
-		},
-		"future time": {
-			p: types.Plan{
-				Name: "do-good",
-				Time: mustParseTime("2019-07-08T11:33:55Z"),
-			},
-			ctxTime:   mustParseTime("2019-07-08T11:33:57Z"),
-			ctxHeight: 100000,
-			expected:  true,
-		},
+
 		"past height": {
 			p: types.Plan{
 				Name:   "do-good",

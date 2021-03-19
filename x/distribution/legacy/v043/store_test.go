@@ -1,4 +1,4 @@
-package v042_test
+package v043_test
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v040"
-	v042distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v042"
+	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v043"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -83,7 +83,7 @@ func TestStoreMigration(t *testing.T) {
 	}
 
 	// Run migrations.
-	err := v042distribution.MigrateStore(ctx, distributionKey)
+	err := v043distribution.MigrateStore(ctx, distributionKey)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.

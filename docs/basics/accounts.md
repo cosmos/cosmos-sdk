@@ -98,7 +98,7 @@ Also see the [`Addresses`](#addresses) section for more information.
 
 `PubKey`s used in the Cosmos SDK are Protobuf messages and have the following methods:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/crypto/types/types.go#L8-L17
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/crypto/types/types.go#L8-L17
 
 - For `secp256k1` keys, the actual implementation can be found [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/keys/secp256k1/secp256k1.go).
 - For `ed25519` keys, it can be found [here](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/crypto/keys/ed25519/ed25519.go).
@@ -125,11 +125,11 @@ aa := sdk.AccAddress(pub.Address().Bytes())
 
 These addresses implement the `Address` interface:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L73-L82
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L76-L85
 
 Of note, the `Marshal()` and `Bytes()` method both return the same raw `[]byte` form of the address, the former being needed for Protobuf compatibility. Also, the `String()` method is used to return the `bech32` encoded form of the address, which should be the only address format with which end-user interract. Here is an example:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L232-L246
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/address.go#L235-L249
 
 ## Next {hide}
 

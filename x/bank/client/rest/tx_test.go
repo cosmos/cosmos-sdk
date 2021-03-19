@@ -5,7 +5,6 @@ package rest_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -17,7 +16,6 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestCoinSend() {
-	encodingConfig := simapp.MakeTestEncodingConfig()
 	val := s.network.Validators[0]
 
 	account, err := getAccountInfo(val)

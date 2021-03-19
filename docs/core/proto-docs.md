@@ -4040,7 +4040,7 @@ Msg defines the evidence Msg service.
 <a name="cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance"></a>
 
 ### AllowedMsgFeeAllowance
-AllowedMsgFeeAllowance extends FeeAllowance to allow conditional messages.
+AllowedMsgFeeAllowance creates allowance only for specified message types.
 
 
 | Field | Type | Label | Description |

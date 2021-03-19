@@ -52,7 +52,7 @@ message PeriodicFeeAllowance {
   ExpiresAt period_reset = 5 [(gogoproto.nullable) = false];
 }
 
-// AllowedMsgFeeAllowance extends FeeAllowance to allow conditional messages.
+// AllowedMsgFeeAllowance creates allowance only for specified message types.
 message AllowedMsgFeeAllowance {
   option (gogoproto.goproto_getters)         = false;
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";

@@ -177,7 +177,7 @@ func (m *PeriodicFeeAllowance) GetPeriodReset() ExpiresAt {
 	return ExpiresAt{}
 }
 
-// AllowedMsgFeeAllowance extends FeeAllowance to allow conditional messages.
+// AllowedMsgFeeAllowance creates allowance only for specified message types.
 type AllowedMsgFeeAllowance struct {
 	// allowance can be any of basic and filtered fee allowance.
 	Allowance *types1.Any `protobuf:"bytes,1,opt,name=allowance,proto3" json:"allowance,omitempty"`

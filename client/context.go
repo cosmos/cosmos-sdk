@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -218,9 +220,23 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 // WithViper returns the context with Viper field
 func (ctx Context) WithViper() Context {
 	v := viper.New()
-	// Automatically overrides config field by env variable if this exists
-	v.AutomaticEnv()
 	ctx.Viper = v
+	return ctx
+}
+
+// WithHomeFlag checks if home flag is changed.
+// If this is a case, we update HomeDir field of Client Context
+/* Discovered a bug with Cory
+./build/simd init andrei --home ./test
+cd test/config there is no client.toml configuration file
+*/
+
+func (ctx Context) WithHomeFlag(cmd *cobra.Command) Context {
+	if cmd.Flags().Changed(flags.FlagHome) {
+		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+		ctx = ctx.WithHomeDir(rootDir)
+	}
+
 	return ctx
 }
 

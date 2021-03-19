@@ -29,12 +29,13 @@ func Cmd() *cobra.Command {
 func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 	clientCtx := client.GetClientContextFromCmd(cmd)
-
 	configPath := filepath.Join(clientCtx.HomeDir, "config")
 
-	if err := ensureConfigPath(configPath); err != nil {
-		return fmt.Errorf("couldn't make client config: %v", err)
-	}
+	/*
+		if err := ensureConfigPath(configPath); err != nil {
+			return fmt.Errorf("couldn't make client config: %v", err)
+		}
+	*/
 
 	cliConfig, err := getClientConfig(configPath, clientCtx.Viper)
 	if err != nil {

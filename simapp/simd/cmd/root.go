@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -56,11 +55,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 
+			initClientCtx = initClientCtx.WithHomeFlag(cmd)
+
 			initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Node URI is %s", initClientCtx.NodeURI)
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err

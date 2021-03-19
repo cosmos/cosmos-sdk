@@ -51,6 +51,7 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
+
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
 

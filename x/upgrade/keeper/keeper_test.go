@@ -214,7 +214,6 @@ func (s *KeeperTestSuite) TestMigrations() {
 	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
 	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
-	s.Require().Greater(vm["bank"], vmBefore["bank"])
 }
 
 func TestKeeperTestSuite(t *testing.T) {

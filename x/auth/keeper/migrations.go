@@ -81,7 +81,7 @@ func vesting(account types.AccountI) exported.VestingAccount {
 	return v
 }
 
-func getDelegatorDelegations(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Coins {
+func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Coins {
 	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
 	if !ok {
 		panic(fmt.Sprintf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer))

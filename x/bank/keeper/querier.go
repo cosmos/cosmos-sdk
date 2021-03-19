@@ -84,11 +84,15 @@ func queryTotalSupply(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQu
 	}
 
 	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(ctx, params.Pagination)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
 
 	supplyRes := &types.QueryTotalSupplyResponse{
 		Supply:     totalSupply,
 		Pagination: pageRes,
 	}
+
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, supplyRes)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())

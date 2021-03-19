@@ -16,7 +16,7 @@ State transitions in validators are performed on every [`EndBlock`](./05_end_blo
 in order to check for changes in the active `ValidatorSet`.
 
 A validator can be `Unbonded`, `Unbonding` or `Bonded`. `Unbonded`
-and `Unbonded` are collectively called `Not Bonded`. A validator can move
+and `Unbonding` are collectively called `Not Bonded`. A validator can move
 directly between all the states, except for from `Bonded` to `Unbonded`.
 
 ### Not bonded to Bonded

@@ -19,7 +19,7 @@ var (
 	// ErrNoAllowance error if there is no allowance for that pair
 	ErrNoAllowance = sdkerrors.Register(DefaultCodespace, 5, "no allowance")
 	// ErrNoMessages error if there is no message
-	ErrNoMessages = sdkerrors.Register(DefaultCodespace, 6, "message not allowed")
+	ErrNoMessages = sdkerrors.Register(DefaultCodespace, 6, "allowed messages are empty")
 	// ErrMessageNotAllowed error if message is not allowed
-	ErrMessageNotAllowed = sdkerrors.Register(DefaultCodespace, 7, "allowed messages are empty")
+	ErrMessageNotAllowed = sdkerrors.Register(DefaultCodespace, 7, "message not allowed")
 )

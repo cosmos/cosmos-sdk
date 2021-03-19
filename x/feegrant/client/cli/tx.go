@@ -56,8 +56,10 @@ func NewCmdFeeGrant() *cobra.Command {
 
 Examples:
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 36000 or
-%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --period 3600 --period-limit 10stake --expiration 36000
-				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
+%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --period 3600 --period-limit 10stake --expiration 36000 or
+%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 36000 
+	--allowed-messages "/cosmos.gov.v1beta1.Msg/SubmitProposal,/cosmos.gov.v1beta1.Msg/Vote"
+				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args: cobra.ExactArgs(2),
@@ -177,7 +179,7 @@ Examples:
 	cmd.Flags().Int64(FlagExpiration, 0, "The second unit of time duration which the grant is active for the user")
 	cmd.Flags().String(FlagSpendLimit, "", "Spend limit specifies the max limit can be used, if not mentioned there is no limit")
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")
-	cmd.Flags().String(FlagPeriodLimit, "", "// period limit specifies the maximum number of coins that can be spent in the period")
+	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
 
 	return cmd
 }

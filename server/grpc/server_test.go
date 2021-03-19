@@ -99,18 +99,29 @@ func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 	reflectClient := rpb.NewServerReflectionClient(s.conn)
 	stream, err := reflectClient.ServerReflectionInfo(context.Background(), grpc.WaitForReady(true))
 	s.Require().NoError(err)
+	defer stream.CloseSend()
+
 	s.Require().NoError(stream.Send(&rpb.ServerReflectionRequest{
 		MessageRequest: &rpb.ServerReflectionRequest_ListServices{},
 	}))
 	res, err := stream.Recv()
 	s.Require().NoError(err)
 	services := res.GetListServicesResponse().Service
-	servicesMap := make(map[string]bool)
-	for _, s := range services {
-		servicesMap[s.Name] = true
+	s.Require().Greater(len(services), 0)
+
+	for _, svc := range services {
+		// make sure every service is resolvable
+		s.Require().NoError(stream.Send(&rpb.ServerReflectionRequest{
+			MessageRequest: &rpb.ServerReflectionRequest_FileContainingSymbol{
+				FileContainingSymbol: svc.Name,
+			},
+		}))
+
+		res, err = stream.Recv()
+		s.Require().NoError(err)
+
+		s.Require().Nil(res.GetErrorResponse(), "error", res.GetErrorResponse())
 	}
-	// Make sure the following services are present
-	s.Require().True(servicesMap["cosmos.bank.v1beta1.Query"])
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {

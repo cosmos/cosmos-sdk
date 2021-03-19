@@ -42,10 +42,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"reflect"
 	"sort"
 	"sync"
 
+	gogoproto "github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"google.golang.org/grpc"
@@ -131,7 +133,7 @@ func (s *serverReflectionServer) processFile(fd *dpb.FileDescriptorProto, proces
 	}
 
 	for _, dep := range fd.Dependency {
-		fdenc := proto.FileDescriptor(dep)
+		fdenc := getFileDescriptor(dep)
 		fdDep, err := decodeFileDesc(fdenc)
 		if err != nil {
 			continue
@@ -225,7 +227,7 @@ func decompress(b []byte) ([]byte, error) {
 }
 
 func typeForName(name string) (reflect.Type, error) {
-	pt := proto.MessageType(name)
+	pt := getMessageType(name)
 	if pt == nil {
 		return nil, fmt.Errorf("unknown type: %q", name)
 	}
@@ -240,8 +242,8 @@ func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescripto
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
 
-	var extDesc *proto.ExtensionDesc
-	for id, desc := range proto.RegisteredExtensions(m) {
+	var extDesc *gogoproto.ExtensionDesc
+	for id, desc := range gogoproto.RegisteredExtensions(m) {
 		if id == ext {
 			extDesc = desc
 			break
@@ -252,7 +254,7 @@ func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescripto
 		return nil, fmt.Errorf("failed to find registered extension for extension number %v", ext)
 	}
 
-	return decodeFileDesc(proto.FileDescriptor(extDesc.Filename))
+	return decodeFileDesc(getFileDescriptor(extDesc.Filename))
 }
 
 func (s *serverReflectionServer) allExtensionNumbersForType(st reflect.Type) ([]int32, error) {
@@ -261,7 +263,7 @@ func (s *serverReflectionServer) allExtensionNumbersForType(st reflect.Type) ([]
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
 
-	exts := proto.RegisteredExtensions(m)
+	exts := gogoproto.RegisteredExtensions(m)
 	out := make([]int32, 0, len(exts))
 	for id := range exts {
 		out = append(out, id)
@@ -287,7 +289,7 @@ func fileDescWithDependencies(fd *dpb.FileDescriptorProto, sentFileDescriptors m
 			r = append(r, currentfdEncoded)
 		}
 		for _, dep := range currentfd.Dependency {
-			fdenc := proto.FileDescriptor(dep)
+			fdenc := getFileDescriptor(dep)
 			fdDep, err := decodeFileDesc(fdenc)
 			if err != nil {
 				continue
@@ -302,7 +304,7 @@ func fileDescWithDependencies(fd *dpb.FileDescriptorProto, sentFileDescriptors m
 // finds all of its previously unsent transitive dependencies, does marshalling
 // on them, and returns the marshalled result.
 func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFileDescriptors map[string]bool) ([][]byte, error) {
-	enc := proto.FileDescriptor(name)
+	enc := getFileDescriptor(name)
 	if enc == nil {
 		return nil, fmt.Errorf("unknown file: %v", name)
 	}
@@ -320,7 +322,7 @@ func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFil
 func parseMetadata(meta interface{}) ([]byte, bool) {
 	// Check if meta is the file name.
 	if fileNameForMeta, ok := meta.(string); ok {
-		return proto.FileDescriptor(fileNameForMeta), true
+		return getFileDescriptor(fileNameForMeta), true
 	}
 
 	// Check if meta is the byte slice.
@@ -454,6 +456,7 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 						ErrorMessage: err.Error(),
 					},
 				}
+				log.Printf("OH NO: %s", err)
 			} else {
 				out.MessageResponse = &rpb.ServerReflectionResponse_AllExtensionNumbersResponse{
 					AllExtensionNumbersResponse: &rpb.ExtensionNumberResponse{
@@ -478,7 +481,6 @@ func (s *serverReflectionServer) ServerReflectionInfo(stream rpb.ServerReflectio
 		default:
 			return status.Errorf(codes.InvalidArgument, "invalid MessageRequest: %v", in.MessageRequest)
 		}
-
 		if err := stream.Send(out); err != nil {
 			return err
 		}

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"testing"
 	"time"
 
@@ -93,7 +94,8 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	suite.NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))
 
-	total := app.BankKeeper.GetTotalSupply(ctx)
+	total, _, err := app.BankKeeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
+	suite.Require().NoError(err)
 	suite.Require().Equal(totalSupply, total)
 }
 

@@ -35,11 +35,7 @@ Validators can have one of three statuses
   during the period of time that the tokens were bonded.
 - `Unbonding`: When a validator leaves the active set, either by choice or due to slashing, jailing or
   tombstoning, an unbonding of all their delegations begins. All delegations must then wait the UnbondingTime
-<<<<<<< HEAD
-  before moving receiving their tokens to their accounts from the `BondedPool`.
-=======
   before their tokens are moved to their accounts from the `BondedPool`.
->>>>>>> 0b2497049... Staking spec updates (#8843)
 
 Validators objects should be primarily stored and accessed by the
 `OperatorAddr`, an SDK validator address for the operator of the validator. Two

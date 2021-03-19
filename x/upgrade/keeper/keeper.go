@@ -11,7 +11,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -29,11 +28,11 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
-	protoManager       baseapp.ProtocolManager
+	protoManager       ProtocolManager // Implements setting the protocol version field on BaseApp
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, pm baseapp.ProtocolManager) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, pm ProtocolManager) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -49,6 +48,12 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc cod
 // must be set even if it is a no-op function.
 func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandler) {
 	k.upgradeHandlers[name] = upgradeHandler
+}
+
+// ProtocolManager defines the interface fulfilled by BaseApp
+// which allows setting it's protocol version field.
+type ProtocolManager interface {
+	SetProtocolVersion(uint64)
 }
 
 // setProtocolVersion sets the protocol version to state
@@ -217,7 +222,10 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	// incremement the protocol version and set it in state and baseapp
 	nextProtoVersion := k.GetProtocolVersion(ctx) + 1
 	k.setProtocolVersion(ctx, nextProtoVersion)
-	k.protoManager.SetProtocolVersion(nextProtoVersion)
+	if k.protoManager != nil {
+		// set protocol version field on BaseApp
+		k.protoManager.SetProtocolVersion(nextProtoVersion)
+	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
 	// This will prevent resubmission of upgrade msg after upgrade is already completed.

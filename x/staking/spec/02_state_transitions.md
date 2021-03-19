@@ -15,7 +15,11 @@ This document describes the state transition operations pertaining to:
 State transitions in validators are performed on every [`EndBlock`](./05_end_block.md#validator-set-changes)
 in order to check for changes in the active `ValidatorSet`.
 
-### Unbonded to Bonded
+A validator can be `Unbonded`, `Unbonding` or `Bonded`. `Unbonded`
+and `Unbonding` are collectively called `Not Bonded`. A validator can move
+directly between all the states, except for from `Bonded` to `Unbonded`.
+
+### Not bonded to Bonded
 
 The following transition occurs when a validator's ranking in the `ValidatorPowerIndex` surpasses
 that of the `LastValidator`.
@@ -54,6 +58,9 @@ this process may be also be reversed. the following operations occur:
 - set `Validator.Jailed` and update object
 - if jailed delete record from `ValidatorByPowerIndex`
 - if unjailed add record to `ValidatorByPowerIndex`
+
+Jailed validators are not present in any of the following stores:
+- the power store (from consensus power to address)
 
 ## Delegations
 

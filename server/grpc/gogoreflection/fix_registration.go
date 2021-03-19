@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"log"
 	"reflect"
 
 	_ "github.com/gogo/protobuf/gogoproto" // required so it does register the gogoproto file descriptor
@@ -87,10 +86,9 @@ func getFileDescriptor(filePath string) []byte {
 }
 
 func getMessageType(name string) reflect.Type {
-	log.Printf("asking for type: %s", name)
 	typ := gogoproto.MessageType(name)
-	if typ == nil {
-		log.Printf("failed type: %s", name)
+	if typ != nil {
+		return typ
 	}
-	return typ
+	return proto.MessageType(name)
 }

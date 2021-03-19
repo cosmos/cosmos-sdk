@@ -106,7 +106,9 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 		panic(err)
 	}
 	balance := new(stakingtypes.QueryDelegatorDelegationsResponse)
-	err = proto.Unmarshal(resp.Value, balance)
+	if err := proto.Unmarshal(resp.Value, balance); err != nil {
+		panic(err)
+	}
 
 	res := sdk.NewCoins()
 	for _, i := range balance.DelegationResponses {

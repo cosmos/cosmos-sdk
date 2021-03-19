@@ -23,7 +23,6 @@ type Keeper interface {
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
-	GetTotalSupply(ctx sdk.Context) sdk.Coins
 	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)

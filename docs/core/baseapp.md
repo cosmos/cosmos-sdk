@@ -126,7 +126,7 @@ is the canonical state of the application and the volatile states, `checkState` 
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
-From this root state, we derive two volatile state through a mechanism called _store branching_ (performed by `CacheWrap` function). 
+From this root state, we derive two volatile states by using a mechanism called _store branching_ (performed by `CacheWrap` function).
 The types can be illustrated as follows:
 
 ![Types](./baseapp_state_types.png)
@@ -333,7 +333,7 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 - Perform preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees.
 - Play a role in the incentivisation of stakeholders via the collection of transaction fees.
 
-`BaseApp` holds an `anteHandler` as paraemter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/ante.go).
+`BaseApp` holds an `anteHandler` as parameter that is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` is the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/ante/ante.go).
 
 Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`.
 

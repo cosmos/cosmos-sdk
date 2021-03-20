@@ -16,6 +16,7 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -76,6 +77,39 @@ func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 	}
 	// default value
 	return 0
+}
+
+// SetModuleVersionMap saves a given version map to state
+func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
+	if len(vm) > 0 {
+		store := ctx.KVStore(k.storeKey)
+		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
+		for modName, ver := range vm {
+			nameBytes := []byte(modName)
+			verBytes := make([]byte, 8)
+			binary.BigEndian.PutUint64(verBytes, ver)
+			versionStore.Set(nameBytes, verBytes)
+		}
+	}
+}
+
+// GetModuleVersionMap returns a map of key module name and value module consensus version
+// as defined in ADR-041.
+func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+
+	vm := make(module.VersionMap)
+	defer it.Close()
+	for ; it.Valid(); it.Next() {
+		moduleBytes := it.Key()
+		// first byte is prefix key, so we remove it here
+		name := string(moduleBytes[1:])
+		moduleVersion := binary.BigEndian.Uint64(it.Value())
+		vm[name] = moduleVersion
+	}
+
+	return vm
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
@@ -217,7 +251,12 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 		panic("ApplyUpgrade should never be called without first checking HasHandler")
 	}
 
-	handler(ctx, plan)
+	updatedVM, err := handler(ctx, plan, k.GetModuleVersionMap(ctx))
+	if err != nil {
+		panic(err)
+	}
+
+	k.SetModuleVersionMap(ctx, updatedVM)
 
 	// incremement the protocol version and set it in state and baseapp
 	nextProtoVersion := k.getProtocolVersion(ctx) + 1

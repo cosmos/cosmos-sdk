@@ -259,11 +259,11 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	k.SetModuleVersionMap(ctx, updatedVM)
 
 	// incremement the protocol version and set it in state and baseapp
-	nextProtoVersion := k.getProtocolVersion(ctx) + 1
-	k.setProtocolVersion(ctx, nextProtoVersion)
+	nextProtocolVersion := k.getProtocolVersion(ctx) + 1
+	k.setProtocolVersion(ctx, nextProtocolVersion)
 	if k.protocolManager != nil {
 		// set protocol version on BaseApp
-		k.protocolManager.SetProtocolVersion(nextProtoVersion)
+		k.protocolManager.SetProtocolVersion(nextProtocolVersion)
 	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.

@@ -62,7 +62,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/upgrade) [\#8673](https://github.com/cosmos/cosmos-sdk/pull/8673) Remove IBC logic from x/upgrade. Deprecates IBC fields in an Upgrade Plan. IBC upgrade logic moved to 02-client and an IBC UpgradeProposal is added.
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) `SupplyI` interface and `Supply` are removed and uses `sdk.Coins` for supply tracking
 * (x/auth) [\#8129](https://github.com/cosmos/cosmos-sdk/pull/8828) Updated `SigVerifiableTx.GetPubKeys` method signature to return error.
-* (x/upgrade) [\7487](https://github.com/cosmos/cosmos-sdk/pull/8897) Upgrade `Keeper` takes new argument `ProtocolManager` which implements setting a protocol version on baseapp.
+* (x/upgrade) [\7487](https://github.com/cosmos/cosmos-sdk/pull/8897) Upgrade `Keeper` takes new argument `ProtocolVersionManager` which implements setting a protocol version on baseapp.
+* (BaseApp) [\7487](https://github.com/cosmos/cosmos-sdk/pull/8897) BaseApp's fields appVersion and version were swapped to match Tendermint's fields.
 
 
 ### State Machine Breaking

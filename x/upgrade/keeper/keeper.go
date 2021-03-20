@@ -28,18 +28,18 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
-	protoManager       ProtocolManager // Implements setting the protocol version field on BaseApp
+	protocolManager    ProtocolVersionManager // Implements setting the protocol version field on BaseApp
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, pm ProtocolManager) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, pm ProtocolVersionManager) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
-		protoManager:       pm,
+		protocolManager:    pm,
 	}
 }
 
@@ -50,9 +50,9 @@ func (k Keeper) SetUpgradeHandler(name string, upgradeHandler types.UpgradeHandl
 	k.upgradeHandlers[name] = upgradeHandler
 }
 
-// ProtocolManager defines the interface fulfilled by BaseApp
-// which allows setting it's protocol version field.
-type ProtocolManager interface {
+// ProtocolVersionManager defines the interface fulfilled by BaseApp
+// which allows setting it's appVersion field.
+type ProtocolVersionManager interface {
 	SetProtocolVersion(uint64)
 }
 
@@ -65,7 +65,7 @@ func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 }
 
 // GetAppVersion gets the protocol version from state
-func (k Keeper) GetProtocolVersion(ctx sdk.Context) uint64 {
+func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	ok := store.Has([]byte{types.ProtocolVersionByte})
 	if ok {
@@ -220,11 +220,11 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	handler(ctx, plan)
 
 	// incremement the protocol version and set it in state and baseapp
-	nextProtoVersion := k.GetProtocolVersion(ctx) + 1
+	nextProtoVersion := k.getProtocolVersion(ctx) + 1
 	k.setProtocolVersion(ctx, nextProtoVersion)
-	if k.protoManager != nil {
-		// set protocol version field on BaseApp
-		k.protoManager.SetProtocolVersion(nextProtoVersion)
+	if k.protocolManager != nil {
+		// set protocol version on BaseApp
+		k.protocolManager.SetProtocolVersion(nextProtoVersion)
 	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.

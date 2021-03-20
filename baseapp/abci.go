@@ -109,8 +109,8 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	return abci.ResponseInfo{
 		Data:             app.name,
-		Version:          app.appVersion,
-		AppVersion:       app.protocolVersion,
+		Version:          app.version,
+		AppVersion:       app.appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}
@@ -757,7 +757,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 			return abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     []byte(app.appVersion),
+				Value:     []byte(app.version),
 			}
 
 		default:

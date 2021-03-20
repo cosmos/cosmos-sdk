@@ -117,10 +117,11 @@ type BaseApp struct { // nolint: maligned
 	minRetainBlocks uint64
 
 	// application's version string
-	appVersion string
+	version string
 
 	// application's protocol version that increments on every upgrade
-	protocolVersion uint64
+	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
+	appVersion uint64
 
 	// recovery handler for app.runTx method
 	runTxRecoveryMiddleware recoveryMiddleware
@@ -173,13 +174,14 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
-// AppVersion returns the application's version string.
-func (app *BaseApp) AppVersion() string {
+// AppVersion returns the application's protocol version.
+func (app *BaseApp) AppVersion() uint64 {
 	return app.appVersion
 }
 
-func (app *BaseApp) ProtocolVersion() uint64 {
-	return app.protocolVersion
+// Version returns the application's version string.
+func (app *BaseApp) Version() string {
+	return app.version
 }
 
 // Logger returns the logger of the BaseApp.

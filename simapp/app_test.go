@@ -160,9 +160,9 @@ func TestRunMigrations(t *testing.T) {
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
-			err = app.RunMigrations(
+			_, err = app.RunMigrations(
 				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
-				module.MigrationMap{
+				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
 					"authz":        authz.AppModule{}.ConsensusVersion(),
@@ -188,5 +188,29 @@ func TestRunMigrations(t *testing.T) {
 				require.Equal(t, tc.expCalled, called)
 			}
 		})
+	}
+}
+
+func TestUpgradeStateOnGenesis(t *testing.T) {
+	encCfg := MakeTestEncodingConfig()
+	db := dbm.NewMemDB()
+	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
+	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
+	require.NoError(t, err)
+
+	// Initialize the chain
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:    []abci.ValidatorUpdate{},
+			AppStateBytes: stateBytes,
+		},
+	)
+
+	// make sure the upgrade keeper has version map in state
+	ctx := app.NewContext(false, tmproto.Header{})
+	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+	for v, i := range app.mm.Modules {
+		require.Equal(t, vm[v], i.ConsensusVersion())
 	}
 }

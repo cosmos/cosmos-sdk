@@ -174,7 +174,7 @@ Once an acknowledgement is received successfully on the original sender the chai
 If you want to learn more about IBC, check the following specifications:
 
 * [IBC specification overview](https://github.com/cosmos/ics/blob/master/ibc/README.md)
-* [IBC SDK specification](../../modules/ibc)
+* [IBC SDK specification](../../x/ibc/spec/README.md)
 
 ## Next {hide}
 

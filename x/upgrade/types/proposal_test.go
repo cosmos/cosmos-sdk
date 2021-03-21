@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -28,9 +26,9 @@ func TestContentAccessors(t *testing.T) {
 	}{
 		"upgrade": {
 			p: types.NewSoftwareUpgradeProposal("Title", "desc", types.Plan{
-				Name: "due_time",
-				Info: "https://foo.bar",
-				Time: mustParseTime("2019-07-08T11:33:55Z"),
+				Name:   "due_height",
+				Info:   "https://foo.bar",
+				Height: 99999999999,
 			}),
 			title: "Title",
 			desc:  "desc",
@@ -79,17 +77,12 @@ func TestContentAccessors(t *testing.T) {
 	}
 }
 
-// tests a software update proposal can be marshaled and unmarshaled, and the
-// client state can be unpacked
+// tests a software update proposal can be marshaled and unmarshaled
 func TestMarshalSoftwareUpdateProposal(t *testing.T) {
-	cs, err := clienttypes.PackClientState(&ibctmtypes.ClientState{})
-	require.NoError(t, err)
-
 	// create proposal
 	plan := types.Plan{
-		Name:                "upgrade ibc",
-		Height:              1000,
-		UpgradedClientState: cs,
+		Name:   "upgrade",
+		Height: 1000,
 	}
 	content := types.NewSoftwareUpgradeProposal("title", "description", plan)
 	sup, ok := content.(*types.SoftwareUpgradeProposal)
@@ -98,9 +91,7 @@ func TestMarshalSoftwareUpdateProposal(t *testing.T) {
 	// create codec
 	ir := codectypes.NewInterfaceRegistry()
 	types.RegisterInterfaces(ir)
-	clienttypes.RegisterInterfaces(ir)
 	gov.RegisterInterfaces(ir)
-	ibctmtypes.RegisterInterfaces(ir)
 	cdc := codec.NewProtoCodec(ir)
 
 	// marshal message
@@ -110,9 +101,5 @@ func TestMarshalSoftwareUpdateProposal(t *testing.T) {
 	// unmarshal proposal
 	newSup := &types.SoftwareUpgradeProposal{}
 	err = cdc.UnmarshalJSON(bz, newSup)
-	require.NoError(t, err)
-
-	// unpack client state
-	_, err = clienttypes.UnpackClientState(newSup.Plan.UpgradedClientState)
 	require.NoError(t, err)
 }

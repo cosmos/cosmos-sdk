@@ -16,7 +16,7 @@ The full-node client of any SDK application is built by running a `main` functio
 
 In general, developers will implement the `main.go` function with the following structure:
 
-- First, an [`appCodec`](./encoding.md) is instanciated for the application.
+- First, an [`appCodec`](./encoding.md) is instantiated for the application.
 - Then, the `config` is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts.md#addresses-and-pubkeys).
   +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/config.go#L13-L24
 - Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`.
@@ -46,10 +46,10 @@ The flow of the `start` command is pretty straightforward. First, it retrieves t
 
 With the `db`, the `start` command creates a new instance of the application using an `appCreator` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L227
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L227-L228
 
 Note that an `appCreator` is a function that fulfills the `AppCreator` signature:
-+++https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
 
 In practice, the [constructor of the application](../basics/app-anatomy.md#constructor-function) is passed as the `appCreator`.
 

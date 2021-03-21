@@ -2,7 +2,6 @@ package tx
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -11,11 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pagination "github.com/cosmos/cosmos-sdk/types/query"
@@ -57,62 +52,42 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	if err != nil {
 		return nil, err
 	}
+	orderBy := parseOrderBy(req.OrderBy)
 
 	if len(req.Events) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
 	}
 
-	tmEvents := make([]string, len(req.Events))
-	for i, event := range req.Events {
-		if !strings.Contains(event, "=") {
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
-		} else if strings.Count(event, "=") > 1 {
+	for _, event := range req.Events {
+		if !strings.Contains(event, "=") || strings.Count(event, "=") > 1 {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		}
-
-		tokens := strings.Split(event, "=")
-		if tokens[0] == tmtypes.TxHeightKey {
-			event = fmt.Sprintf("%s=%s", tokens[0], tokens[1])
-		} else {
-			event = fmt.Sprintf("%s='%s'", tokens[0], tokens[1])
-		}
-
-		tmEvents[i] = event
 	}
 
-	query := strings.Join(tmEvents, " AND ")
-
-	result, err := s.clientCtx.Client.TxSearch(ctx, query, false, &page, &limit, "")
+	result, err := QueryTxsByEvents(s.clientCtx, req.Events, page, limit, orderBy)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a proto codec, we need it to unmarshal the tx bytes.
-	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-	txRespList := make([]*sdk.TxResponse, len(result.Txs))
 	txsList := make([]*txtypes.Tx, len(result.Txs))
 
 	for i, tx := range result.Txs {
-		txResp := txResultToTxResponse(&tx.TxResult)
-		txResp.Height = tx.Height
-		txResp.TxHash = tx.Hash.String()
-		txRespList[i] = txResp
-
-		var protoTx txtypes.Tx
-		if err := cdc.UnmarshalBinaryBare(tx.Tx, &protoTx); err != nil {
-			return nil, err
+		protoTx, ok := tx.Tx.GetCachedValue().(*txtypes.Tx)
+		if !ok {
+			return nil, status.Errorf(codes.Internal, "expected %T, got %T", txtypes.Tx{}, tx.Tx.GetCachedValue())
 		}
-		txsList[i] = &protoTx
+
+		txsList[i] = protoTx
 	}
 
 	return &txtypes.GetTxsEventResponse{
 		Txs:         txsList,
-		TxResponses: txRespList,
+		TxResponses: result.Txs,
 		Pagination: &pagination.PageResponse{
-			Total: uint64(result.TotalCount),
+			Total: result.TotalCount,
 		},
 	}, nil
-
 }
 
 // Simulate implements the ServiceServer.Simulate RPC method.
@@ -147,34 +122,21 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	// We get hash as a hex string in the request, convert it to bytes.
-	hash, err := hex.DecodeString(req.Hash)
-	if err != nil {
-		return nil, err
-	}
-
 	// TODO We should also check the proof flag in gRPC header.
 	// https://github.com/cosmos/cosmos-sdk/issues/7036.
-	result, err := s.clientCtx.Client.Tx(ctx, hash, false)
+	result, err := QueryTx(s.clientCtx, req.Hash)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a proto codec, we need it to unmarshal the tx bytes.
-	cdc := codec.NewProtoCodec(s.clientCtx.InterfaceRegistry)
-
-	var protoTx txtypes.Tx
-	if err := cdc.UnmarshalBinaryBare(result.Tx, &protoTx); err != nil {
-		return nil, err
+	protoTx, ok := result.Tx.GetCachedValue().(*txtypes.Tx)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "expected %T, got %T", txtypes.Tx{}, result.Tx.GetCachedValue())
 	}
 
-	txResp := txResultToTxResponse(&result.TxResult)
-	txResp.Height = result.Height
-	txResp.TxHash = result.Hash.String()
-
 	return &txtypes.GetTxResponse{
-		Tx:         &protoTx,
-		TxResponse: txResp,
+		Tx:         protoTx,
+		TxResponse: result,
 	}, nil
 }
 
@@ -201,14 +163,13 @@ func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.Serv
 	txtypes.RegisterServiceHandlerClient(context.Background(), mux, txtypes.NewServiceClient(clientConn))
 }
 
-func txResultToTxResponse(respTx *abci.ResponseDeliverTx) *sdk.TxResponse {
-	logs, _ := sdk.ParseABCILogs(respTx.Log)
-	return &sdk.TxResponse{
-		Code:      respTx.Code,
-		Codespace: respTx.Codespace,
-		GasUsed:   respTx.GasUsed,
-		GasWanted: respTx.GasWanted,
-		Info:      respTx.Info,
-		Logs:      logs,
+func parseOrderBy(orderBy txtypes.OrderBy) string {
+	switch orderBy {
+	case txtypes.OrderBy_ORDER_BY_ASC:
+		return "asc"
+	case txtypes.OrderBy_ORDER_BY_DESC:
+		return "desc"
+	default:
+		return "" // Defaults to Tendermint's default, which is `asc` now.
 	}
 }

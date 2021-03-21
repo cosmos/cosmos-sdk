@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	flagMultisig  = "multisig"
-	flagOverwrite = "overwrite"
-	flagSigOnly   = "signature-only"
-	flagAmino     = "amino"
+	flagMultisig        = "multisig"
+	flagOverwrite       = "overwrite"
+	flagSigOnly         = "signature-only"
+	flagAmino           = "amino"
+	flagNoAutoIncrement = "no-auto-increment"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -136,7 +137,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		return scanner.Err()
+		return scanner.UnmarshalErr()
 	}
 }
 
@@ -203,8 +204,10 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 }
 
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, err := client.GetClientTxContext(cmd)
+	return func(cmd *cobra.Command, args []string) (err error) {
+		var clientCtx client.Context
+
+		clientCtx, err = client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}

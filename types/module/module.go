@@ -40,9 +40,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-//__________________________________________________________________________________________
 
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
@@ -145,8 +144,6 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-//_________________________________________________________
-
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
@@ -174,12 +171,16 @@ type AppModule interface {
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
 
+	// ConsensusVersion is a sequence number for state-breaking change of the
+	// module. It should be incremented on each consensus-breaking change
+	// introduced by the module. To avoid wrong/empty versions, the initial version
+	// should be set to 1.
+	ConsensusVersion() uint64
+
 	// ABCI
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
-
-//___________________________
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
@@ -208,6 +209,9 @@ func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Que
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
 
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (gam GenesisOnlyAppModule) ConsensusVersion() uint64 { return 1 }
+
 // BeginBlock returns an empty module begin-block
 func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {}
 
@@ -215,8 +219,6 @@ func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBegi
 func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
-
-//____________________________________________________________________________
 
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
@@ -328,6 +330,32 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[st
 	return genesisData
 }
 
+// MigrationHandler is the migration function that each module registers.
+type MigrationHandler func(sdk.Context) error
+
+// VersionMap is a map of moduleName -> version, where version denotes the
+// version from which we should perform the migration for each module.
+type VersionMap map[string]uint64
+
+// RunMigrations performs in-place store migrations for all modules.
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
+	c, ok := cfg.(configurator)
+	if !ok {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+	}
+
+	updatedVM := make(VersionMap)
+	for moduleName, module := range m.Modules {
+		err := c.runModuleMigrations(ctx, moduleName, fromVM[moduleName], module.ConsensusVersion())
+		updatedVM[moduleName] = module.ConsensusVersion()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return updatedVM, nil
+}
+
 // BeginBlock performs begin block functionality for all modules. It creates a
 // child context with an event manager to aggregate events emitted from all
 // modules.
@@ -368,4 +396,16 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}
+}
+
+// GetVersionMap gets consensus version from all modules
+func (m *Manager) GetVersionMap() VersionMap {
+	vermap := make(VersionMap)
+	for _, v := range m.Modules {
+		version := v.ConsensusVersion()
+		name := v.Name()
+		vermap[name] = version
+	}
+
+	return vermap
 }

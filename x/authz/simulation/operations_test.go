@@ -17,6 +17,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type SimTestSuite struct {
@@ -79,8 +80,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+		suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins))
 	}
 
 	return accounts
@@ -137,7 +137,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	authorization := types.NewSendAuthorization(initCoins)
+	authorization := banktypes.NewSendAuthorization(initCoins)
 
 	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
@@ -153,7 +153,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-	suite.Require().Equal(types.SendAuthorization{}.MethodName(), msg.MethodName)
+	suite.Require().Equal(banktypes.SendAuthorization{}.MethodName(), msg.MethodName)
 	suite.Require().Len(futureOperations, 0)
 
 }
@@ -172,7 +172,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	authorization := types.NewSendAuthorization(initCoins)
+	authorization := banktypes.NewSendAuthorization(initCoins)
 
 	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)

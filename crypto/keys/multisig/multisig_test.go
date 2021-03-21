@@ -6,7 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -14,6 +16,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
+
+func TestNewMultiSig(t *testing.T) {
+	require := require.New(t)
+	pk1 := secp256k1.GenPrivKey().PubKey()
+	pks := []cryptotypes.PubKey{pk1, pk1}
+
+	require.NotNil(kmultisig.NewLegacyAminoPubKey(1, pks),
+		"Should support not unique public keys")
+}
 
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
@@ -85,21 +96,20 @@ func TestVerifyMultisignature(t *testing.T) {
 
 	testCases := []struct {
 		msg        string
-		malleate   func()
+		malleate   func(*require.Assertions)
 		expectPass bool
 	}{
 		{
 			"nested multisignature",
-			func() {
+			func(require *require.Assertions) {
 				genPk, genSig := generateNestedMultiSignature(3, msg)
 				sig = genSig
 				pk = genPk
 			},
 			true,
-		},
-		{
+		}, {
 			"wrong size for sig bit array",
-			func() {
+			func(require *require.Assertions) {
 				pubKeys, _ := generatePubKeysAndSignatures(3, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(3, pubKeys)
 				sig = multisig.NewMultisig(1)
@@ -108,7 +118,7 @@ func TestVerifyMultisignature(t *testing.T) {
 		},
 		{
 			"single signature data, expects the first k signatures to be valid",
-			func() {
+			func(require *require.Assertions) {
 				k := 2
 				signingIndices := []int{0, 3, 1}
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
@@ -119,32 +129,26 @@ func TestVerifyMultisignature(t *testing.T) {
 				for i := 0; i < k-1; i++ {
 					signingIndex := signingIndices[i]
 					require.NoError(
-						t,
 						multisig.AddSignatureFromPubKey(sig, sigs[signingIndex], pubKeys[signingIndex], pubKeys),
 					)
 					require.Error(
-						t,
 						pk.VerifyMultisignature(signBytesFn, sig),
 						"multisig passed when i < k, i %d", i,
 					)
 					require.NoError(
-						t,
 						multisig.AddSignatureFromPubKey(sig, sigs[signingIndex], pubKeys[signingIndex], pubKeys),
 					)
 					require.Equal(
-						t,
 						i+1,
 						len(sig.Signatures),
 						"adding a signature for the same pubkey twice increased signature count by 2, index %d", i,
 					)
 				}
 				require.Error(
-					t,
 					pk.VerifyMultisignature(signBytesFn, sig),
 					"multisig passed with k - 1 sigs",
 				)
 				require.NoError(
-					t,
 					multisig.AddSignatureFromPubKey(
 						sig,
 						sigs[signingIndices[k]],
@@ -153,30 +157,50 @@ func TestVerifyMultisignature(t *testing.T) {
 					),
 				)
 				require.NoError(
-					t,
 					pk.VerifyMultisignature(signBytesFn, sig),
 					"multisig failed after k good signatures",
 				)
 			},
 			true,
-		},
-		{
+		}, {
 			"duplicate signatures",
-			func() {
+			func(require *require.Assertions) {
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 				sig = multisig.NewMultisig(5)
 
-				require.Error(t, pk.VerifyMultisignature(signBytesFn, sig))
+				require.Error(pk.VerifyMultisignature(signBytesFn, sig))
 				multisig.AddSignatureFromPubKey(sig, sigs[0], pubKeys[0], pubKeys)
 				// Add second signature manually
 				sig.Signatures = append(sig.Signatures, sigs[0])
 			},
 			false,
-		},
-		{
+		}, {
+			"duplicated key",
+			func(require *require.Assertions) {
+				// here we test an edge case where we create a multi sig with two same
+				// keys. It  should work.
+				pubkeys, sigs := generatePubKeysAndSignatures(3, msg)
+				pubkeys[1] = pubkeys[0]
+				pk = kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+				sig = multisig.NewMultisig(len(pubkeys))
+				multisig.AddSignature(sig, sigs[0], 0)
+				multisig.AddSignature(sig, sigs[0], 1)
+			},
+			true,
+		}, {
+			"same key used twice",
+			func(require *require.Assertions) {
+				pubkeys, sigs := generatePubKeysAndSignatures(3, msg)
+				pk = kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+				sig = multisig.NewMultisig(len(pubkeys))
+				multisig.AddSignature(sig, sigs[0], 0)
+				multisig.AddSignature(sig, sigs[0], 1)
+			},
+			false,
+		}, {
 			"unable to verify signature",
-			func() {
+			func(require *require.Assertions) {
 				pubKeys, _ := generatePubKeysAndSignatures(2, msg)
 				_, sigs := generatePubKeysAndSignatures(2, msg)
 				pk = kmultisig.NewLegacyAminoPubKey(2, pubKeys)
@@ -190,7 +214,7 @@ func TestVerifyMultisignature(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.msg, func(t *testing.T) {
-			tc.malleate()
+			tc.malleate(require.New(t))
 			err := pk.VerifyMultisignature(signBytesFn, sig)
 			if tc.expectPass {
 				require.NoError(t, err)
@@ -250,12 +274,12 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	pubkeys, _ := generatePubKeysAndSignatures(5, msg)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
-	ab, err := kmultisig.AminoCdc.MarshalBinaryLengthPrefixed(multisigKey)
+	ab, err := legacy.Cdc.MarshalBinaryLengthPrefixed(multisigKey)
 	require.NoError(t, err)
 	// like other cryptotypes.Pubkey implementations (e.g. ed25519.PubKey),
 	// LegacyAminoPubKey should be deserializable into a cryptotypes.LegacyAminoPubKey:
 	var pubKey kmultisig.LegacyAminoPubKey
-	err = kmultisig.AminoCdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
+	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
 	require.NoError(t, err)
 
 	require.Equal(t, multisigKey.Equals(&pubKey), true)
@@ -306,4 +330,76 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 	pubkeysCpy[1] = pk.PubKeys[0]
 	other = &kmultisig.LegacyAminoPubKey{Threshold: 2, PubKeys: pubkeysCpy}
 	return
+}
+
+func TestAminoBinary(t *testing.T) {
+	pubKey1 := secp256k1.GenPrivKey().PubKey()
+	pubKey2 := secp256k1.GenPrivKey().PubKey()
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
+
+	// Do a round-trip key->bytes->key.
+	bz, err := legacy.Cdc.MarshalBinaryBare(multisigKey)
+	require.NoError(t, err)
+	var newMultisigKey cryptotypes.PubKey
+	err = legacy.Cdc.UnmarshalBinaryBare(bz, &newMultisigKey)
+	require.NoError(t, err)
+	require.Equal(t, multisigKey.Threshold, newMultisigKey.(*kmultisig.LegacyAminoPubKey).Threshold)
+}
+
+func TestAminoMarshalJSON(t *testing.T) {
+	pubKey1 := secp256k1.GenPrivKey().PubKey()
+	pubKey2 := secp256k1.GenPrivKey().PubKey()
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
+
+	bz, err := legacy.Cdc.MarshalJSON(multisigKey)
+	require.NoError(t, err)
+
+	// Note the quotes around `"2"`. They are present because we are overriding
+	// the Amino JSON marshaling of LegacyAminoPubKey (using tmMultisig).
+	// Without the override, there would not be any quotes.
+	require.Contains(t, string(bz), "\"threshold\":\"2\"")
+}
+
+func TestAminoUnmarshalJSON(t *testing.T) {
+	// This is a real multisig from the Akash chain. It has been exported from
+	// v0.39, hence the `threshold` field as a string.
+	// We are testing that when unmarshaling this JSON into a LegacyAminoPubKey
+	// with amino, there's no error.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/8776
+	pkJSON := `{
+	"type": "tendermint/PubKeyMultisigThreshold",
+	"value": {
+		"pubkeys": [
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "AzYxq2VNeD10TyABwOgV36OVWDIMn8AtI4OFA0uQX2MK"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A39cdsrm00bTeQ3RVZVqjkH8MvIViO9o99c8iLiNO35h"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A/uLLCZph8MkFg2tCxqSMGwFfPHdt1kkObmmrqy9aiYD"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A4mOMhM5gPDtBAkAophjRs6uDGZm4tD4Dbok3ai4qJi8"
+			},
+			{
+			"type": "tendermint/PubKeySecp256k1",
+			"value": "A90icFucrjNNz2SAdJWMApfSQcARIqt+M2x++t6w5fFs"
+			}
+		],
+		"threshold": "3"
+	}
+}`
+
+	cdc := codec.NewLegacyAmino()
+	cryptocodec.RegisterCrypto(cdc)
+
+	var pk cryptotypes.PubKey
+	err := cdc.UnmarshalJSON([]byte(pkJSON), &pk)
+	require.NoError(t, err)
+	require.Equal(t, uint32(3), pk.(*kmultisig.LegacyAminoPubKey).Threshold)
 }

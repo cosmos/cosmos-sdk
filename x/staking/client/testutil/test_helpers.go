@@ -28,6 +28,7 @@ func MsgRedelegateExec(clientCtx client.Context, from, src, dst, amount fmt.Stri
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from.String()),
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	}
+	args = append(args, extraArgs...)
 
 	args = append(args, commonArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewRedelegateCmd(), args)
@@ -44,5 +45,6 @@ func MsgUnbondExec(clientCtx client.Context, from fmt.Stringer, valAddress,
 	}
 
 	args = append(args, commonArgs...)
+	args = append(args, extraArgs...)
 	return clitestutil.ExecTestCLICmd(clientCtx, stakingcli.NewUnbondCmd(), args)
 }

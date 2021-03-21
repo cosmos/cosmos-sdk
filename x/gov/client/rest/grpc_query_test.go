@@ -57,6 +57,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	// create a proposal3 with deposit
+	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// vote for proposal3 as val
+	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestGetProposalGRPC() {
@@ -107,10 +119,11 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		expErr  bool
+		name             string
+		url              string
+		headers          map[string]string
+		wantNumProposals int
+		expErr           bool
 	}{
 		{
 			"get proposals with height 1",
@@ -118,12 +131,21 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
+			0,
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals", val.APIAddress),
 			map[string]string{},
+			3,
+			false,
+		},
+		{
+			"valid request with filter by status",
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals?proposal_status=1", val.APIAddress),
+			map[string]string{},
+			1,
 			false,
 		},
 	}
@@ -141,7 +163,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 				s.Require().Empty(proposals.Proposals)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(proposals.Proposals, 2)
+				s.Require().Len(proposals.Proposals, tc.wantNumProposals)
 			}
 		})
 	}
@@ -153,29 +175,45 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	voterAddressBech32 := val.Address.String()
 
 	testCases := []struct {
-		name   string
-		url    string
-		expErr bool
+		name           string
+		url            string
+		expErr         bool
+		expVoteOptions types.WeightedVoteOptions
 	}{
 		{
 			"empty proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "", voterAddressBech32),
 			true,
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get non existing proposal",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "10", voterAddressBech32),
 			true,
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get proposal with wrong voter address",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", "wrongVoterAddress"),
 			true,
+			types.NewNonSplitVoteOption(types.OptionYes),
 		},
 		{
 			"get proposal with id",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "1", voterAddressBech32),
 			false,
+			types.NewNonSplitVoteOption(types.OptionYes),
+		},
+		{
+			"get proposal with id for split vote",
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals/%s/votes/%s", val.APIAddress, "3", voterAddressBech32),
+			false,
+			types.WeightedVoteOptions{
+				types.WeightedVoteOption{Option: types.OptionYes, Weight: sdk.NewDecWithPrec(60, 2)},
+				types.WeightedVoteOption{Option: types.OptionNo, Weight: sdk.NewDecWithPrec(30, 2)},
+				types.WeightedVoteOption{Option: types.OptionAbstain, Weight: sdk.NewDecWithPrec(5, 2)},
+				types.WeightedVoteOption{Option: types.OptionNoWithVeto, Weight: sdk.NewDecWithPrec(5, 2)},
+			},
 		},
 	}
 
@@ -193,7 +231,11 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(vote.Vote)
-				s.Require().Equal(types.OptionYes, vote.Vote.Option)
+				s.Require().Equal(len(vote.Vote.Options), len(tc.expVoteOptions))
+				for i, option := range tc.expVoteOptions {
+					s.Require().Equal(option.Option, vote.Vote.Options[i].Option)
+					s.Require().True(option.Weight.Equal(vote.Vote.Options[i].Weight))
+				}
 			}
 		})
 	}

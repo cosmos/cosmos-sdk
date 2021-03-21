@@ -50,7 +50,7 @@ func TestTallyNoQuorum(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	err = app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes)
+	err = app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes))
 	require.Nil(t, err)
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
@@ -73,9 +73,9 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionYes)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -99,8 +99,8 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.NewNonSplitVoteOption(types.OptionNo)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -123,8 +123,8 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.NewNonSplitVoteOption(types.OptionNo)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -148,9 +148,9 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.OptionNoWithVeto))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.NewNonSplitVoteOption(types.OptionNoWithVeto)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -174,9 +174,9 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionAbstain))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.NewNonSplitVoteOption(types.OptionAbstain)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.NewNonSplitVoteOption(types.OptionNo)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.NewNonSplitVoteOption(types.OptionYes)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -200,9 +200,9 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.OptionAbstain))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[0], types.NewNonSplitVoteOption(types.OptionAbstain)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddrs[2], types.NewNonSplitVoteOption(types.OptionNo)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -227,8 +227,8 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr1, types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr2, types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr1, types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, valAccAddr2, types.NewNonSplitVoteOption(types.OptionNo)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -261,10 +261,10 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[3], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[4], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[3], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[4], types.NewNonSplitVoteOption(types.OptionNo)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -297,9 +297,9 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionNo)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionNo)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionYes)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -336,10 +336,10 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[3], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[3], types.NewNonSplitVoteOption(types.OptionNo)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -378,9 +378,9 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionNo)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionNo)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -421,9 +421,9 @@ func TestTallyJailedValidator(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionNo))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionNo)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionNo)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)
@@ -454,9 +454,9 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	proposal.Status = types.StatusVotingPeriod
 	app.GovKeeper.SetProposal(ctx, proposal)
 
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.OptionYes))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.OptionNo))
-	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.OptionYes))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[0], types.NewNonSplitVoteOption(types.OptionYes)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[1], types.NewNonSplitVoteOption(types.OptionNo)))
+	require.NoError(t, app.GovKeeper.AddVote(ctx, proposalID, addrs[2], types.NewNonSplitVoteOption(types.OptionYes)))
 
 	proposal, ok := app.GovKeeper.GetProposal(ctx, proposalID)
 	require.True(t, ok)

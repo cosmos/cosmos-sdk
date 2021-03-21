@@ -37,19 +37,15 @@ func (suite *SimTestSuite) SetupTest() {
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	app, ctx := suite.app, suite.ctx
 	accounts := simtypes.RandomAccounts(r, n)
-	require := suite.Require()
 
 	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		err := app.BankKeeper.SetBalances(ctx, account.Address, initCoins)
-		require.NoError(err)
+		err := simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
+		suite.Require().NoError(err)
 	}
 
 	return accounts

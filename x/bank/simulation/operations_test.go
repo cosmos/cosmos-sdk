@@ -131,8 +131,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+		suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins))
 	}
 
 	return accounts

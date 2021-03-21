@@ -9,6 +9,7 @@ In this section we describe the processing of the staking messages and the corre
 ## Msg/CreateValidator
 
 A validator is created using the `Msg/CreateValidator` service message.
+The validator must be created with an initial delegation from the operator.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L16-L17
 
@@ -61,12 +62,23 @@ assigned to `Delegation.Shares`.
 This service message is expected to fail if:
 
 - the validator is does not exist
-- the validator is jailed
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
+- the exchange rate is invalid, meaning the validator has no tokens (due to slashing) but there are outstanding shares
+- the amount delegated is less than the minimum allowed delegation
 
 If an existing `Delegation` object for provided addresses does not already
-exist than it is created as part of this service message otherwise the existing
+exist then it is created as part of this message otherwise the existing
 `Delegation` is updated to include the newly received shares.
+
+The delegator receives newly minted shares at the current exchange rate.
+The exchange rate is the number of existing shares in the validator divided by
+the number of currently delegated tokens.
+
+The validator is updated in the `ValidatorByPower` index, and the delegation is
+tracked in validator object in the `Validators` index.
+
+It is possible to delegate to a jailed validator, the only difference being it
+will not be added to the power index until it is unjailed.
 
 ## Msg/Undelegate
 

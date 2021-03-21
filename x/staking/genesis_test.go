@@ -25,20 +25,6 @@ func bootstrapGenesisTest(numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccA
 	_, app, ctx := getBaseSimappWithCustomKeeper()
 
 	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
-<<<<<<< HEAD
-
-	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
-	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
-
-	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
-	require.NoError(t, err)
-
-	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
-
-=======
->>>>>>> upstream/master
 	return app, ctx, addrDels
 }
 

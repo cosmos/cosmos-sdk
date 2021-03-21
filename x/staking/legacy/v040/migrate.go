@@ -129,6 +129,7 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 			MaxEntries:        uint32(stakingState.Params.MaxEntries),
 			HistoricalEntries: uint32(stakingState.Params.HistoricalEntries),
 			BondDenom:         stakingState.Params.BondDenom,
+			PowerReduction:    v040staking.DefaultParams().PowerReduction,
 		},
 		LastTotalPower:       stakingState.LastTotalPower,
 		LastValidatorPowers:  newLastValidatorPowers,

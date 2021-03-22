@@ -48,6 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#8346](https://github.com/cosmos/cosmos-sdk/pull/8346) All CLI `tx` commands generate ServiceMsgs by default. Graceful Amino support has been added to ServiceMsgs to support signing legacy Msgs.
 * (crypto/ed25519) [\#8690] Adopt zip1215 ed2559 verification rules.
 * [\#8849](https://github.com/cosmos/cosmos-sdk/pull/8849) Upgrade module no longer supports time based upgrades. 
+* [\#8880](https://github.com/cosmos/cosmos-sdk/pull/8880) The CLI `simd migrate v0.40 ...` command has been renamed to `simd migrate v0.42`.
 
 
 ### API Breaking Changes
@@ -78,6 +79,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/staking) [\#8909](https://github.com/cosmos/cosmos-sdk/pull/8909) Require self delegation in `MsgCreateValidator` to be at least one consensus power. 
 * (x/bank) [\#8614](https://github.com/cosmos/cosmos-sdk/issues/8614) Add `Name` and `Symbol` fields to denom metadata
 * (x/auth) [\#8522](https://github.com/cosmos/cosmos-sdk/pull/8522) Allow to query all stored accounts
 * (crypto/types) [\#8600](https://github.com/cosmos/cosmos-sdk/pull/8600) `CompactBitArray`: optimize the `NumTrueBitsBefore` method and add an `Equal` method.

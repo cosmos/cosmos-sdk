@@ -26,15 +26,15 @@ var (
 // mint parameters
 type Params struct {
 	MintDenom           string  `json:"mint_denom" yaml:"mint_denom"`                       // type of coin to mint
-	InflationRateChange sdk.Dec `json:"inflation_rate_change" yaml:"inflation_rate_change"` // maximum annual change in inflation rate
-	InflationMax        sdk.Dec `json:"inflation_max" yaml:"inflation_max"`                 // maximum inflation rate
-	InflationMin        sdk.Dec `json:"inflation_min" yaml:"inflation_min"`                 // minimum inflation rate
-	GoalBonded          sdk.Dec `json:"goal_bonded" yaml:"goal_bonded"`                     // goal of percent bonded atoms
-	BlocksPerYear       uint64  `json:"blocks_per_year" yaml:"blocks_per_year"`             // expected blocks per year
+	InflationRateChange sdk.Dec `json:"inflation_rate_change" yaml:"inflation_rate_change"` // Deprecated: maximum annual change in inflation rate
+	InflationMax        sdk.Dec `json:"inflation_max" yaml:"inflation_max"`                 // Deprecated: maximum inflation rate
+	InflationMin        sdk.Dec `json:"inflation_min" yaml:"inflation_min"`                 // Deprecated: minimum inflation rate
+	GoalBonded          sdk.Dec `json:"goal_bonded" yaml:"goal_bonded"`                     // Deprecated: goal of percent bonded atoms
+	BlocksPerYear       uint64  `json:"blocks_per_year" yaml:"blocks_per_year"`             // blocks per year according to one block per 3s
 
-	DeflationRate  sdk.Dec `json:"deflation_rate" yaml:"deflation_rate"` // maximum annual change in deflation rate
-	DeflationEpoch uint64  `json:"deflation_epoch" yaml:"deflation_epoch"`
-	FarmProportion sdk.Dec `json:"farm_proportion" yaml:"farm_proportion"`
+	DeflationRate  sdk.Dec `json:"deflation_rate" yaml:"deflation_rate"` // deflation rate every DeflationEpoch
+	DeflationEpoch uint64  `json:"deflation_epoch" yaml:"deflation_epoch"` // block number to deflate
+	FarmProportion sdk.Dec `json:"farm_proportion" yaml:"farm_proportion"` // proportion of minted for farm
 }
 
 // ParamTable for minting module.

@@ -430,6 +430,7 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -544,16 +545,10 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //
 // Example:
 //   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
-//       err := app.RunMigrations(ctx, module.MigrationMap{
-//           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
-//           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
-//      })
-//      if err != nil {
-//           panic(err)
-//      }
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) {
+//       return app.RunMigrations(ctx, vm)
 //   })
-func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) (module.VersionMap, error) {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 

@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func TestStoreMigration(t *testing.T) {
+func TestMigrateStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	govKey := sdk.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))

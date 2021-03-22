@@ -28,7 +28,7 @@ var importsToFix = map[string]string{
 func fixRegistration(registeredAs, importedAs string) error {
 	raw := gogoproto.FileDescriptor(registeredAs)
 	if len(raw) == 0 {
-		return fmt.Errorf("file descriptor not found: %s", registeredAs)
+		return fmt.Errorf("file descriptor not found for %s", registeredAs)
 	}
 
 	fd, err := decodeFileDesc(raw)

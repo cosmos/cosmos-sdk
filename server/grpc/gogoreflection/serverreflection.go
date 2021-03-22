@@ -47,7 +47,6 @@ import (
 	"sort"
 	"sync"
 
-	gogoproto "github.com/gogo/protobuf/proto"
 	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -243,13 +242,7 @@ func fileDescContainingExtension(st reflect.Type, ext int32) (*dpb.FileDescripto
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
 
-	var extDesc *gogoproto.ExtensionDesc
-	for id, desc := range gogoproto.RegisteredExtensions(m) {
-		if id == ext {
-			extDesc = desc
-			break
-		}
-	}
+	extDesc := getExtension(ext, m)
 
 	if extDesc == nil {
 		return nil, fmt.Errorf("failed to find registered extension for extension number %v", ext)
@@ -264,11 +257,7 @@ func (s *serverReflectionServer) allExtensionNumbersForType(st reflect.Type) ([]
 		return nil, fmt.Errorf("failed to create message from type: %v", st)
 	}
 
-	exts := gogoproto.RegisteredExtensions(m)
-	out := make([]int32, 0, len(exts))
-	for id := range exts {
-		out = append(out, id)
-	}
+	out := getExtensionsNumbers(m)
 	return out, nil
 }
 

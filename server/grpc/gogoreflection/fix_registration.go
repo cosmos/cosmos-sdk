@@ -98,3 +98,46 @@ func getMessageType(name string) reflect.Type {
 	// nolint: staticcheck
 	return proto.MessageType(name)
 }
+
+func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
+	// check first in gogoproto registry
+	for id, desc := range gogoproto.RegisteredExtensions(m) {
+		if id == extID {
+			return desc
+		}
+	}
+	// check into proto registry
+	// nolint: staticcheck
+	for id, desc := range proto.RegisteredExtensions(m) {
+		if id == extID {
+			return &gogoproto.ExtensionDesc{
+				ExtendedType:  desc.ExtendedType,
+				ExtensionType: desc.ExtensionType,
+				Field:         desc.Field,
+				Name:          desc.Name,
+				Tag:           desc.Tag,
+				Filename:      desc.Filename,
+			}
+		}
+	}
+
+	return nil
+}
+
+func getExtensionsNumbers(m proto.Message) []int32 {
+	gogoProtoExts := gogoproto.RegisteredExtensions(m)
+	out := make([]int32, 0, len(gogoProtoExts))
+	for id := range gogoProtoExts {
+		out = append(out, id)
+	}
+	if len(out) != 0 {
+		return out
+	}
+	// nolint: staticcheck
+	protoExts := proto.RegisteredExtensions(m)
+	out = make([]int32, 0, len(protoExts))
+	for id := range protoExts {
+		out = append(out, id)
+	}
+	return out
+}

@@ -6,6 +6,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/jhump/protoreflect/grpcreflect"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -97,21 +100,25 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 
 func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 	// Test server reflection
-	reflectClient := rpb.NewServerReflectionClient(s.conn)
-	stream, err := reflectClient.ServerReflectionInfo(context.Background(), grpc.WaitForReady(true))
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	stub := rpb.NewServerReflectionClient(s.conn)
+	// NOTE(fdymylja): we use grpcreflect because it solves imports too
+	// so that we can always assert that given a reflection server it is
+	// possible to fully query all the methods, without having any context
+	// on the proto registry
+	rc := grpcreflect.NewClient(ctx, stub)
+
+	services, err := rc.ListServices()
 	s.Require().NoError(err)
-	s.Require().NoError(stream.Send(&rpb.ServerReflectionRequest{
-		MessageRequest: &rpb.ServerReflectionRequest_ListServices{},
-	}))
-	res, err := stream.Recv()
-	s.Require().NoError(err)
-	services := res.GetListServicesResponse().Service
-	servicesMap := make(map[string]bool)
-	for _, s := range services {
-		servicesMap[s.Name] = true
+	s.Require().Greater(len(services), 0)
+
+	for _, svc := range services {
+		file, err := rc.FileContainingSymbol(svc)
+		s.Require().NoError(err)
+		sd := file.FindSymbol(svc)
+		s.Require().NotNil(sd)
 	}
-	// Make sure the following services are present
-	s.Require().True(servicesMap["cosmos.bank.v1beta1.Query"])
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {

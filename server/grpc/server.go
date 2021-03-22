@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server/grpc/gogoreflection"
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -19,7 +19,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, address st
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
-	reflection.Register(grpcSrv)
+	gogoreflection.Register(grpcSrv)
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {

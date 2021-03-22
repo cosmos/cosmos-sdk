@@ -239,6 +239,32 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			0,
 			300,
 		},
+		{
+			"periodic vesting account, yet to be vested, some rewards delegated",
+			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
+
+				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
+				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(100)))
+
+				start := ctx.BlockTime().Unix() + int64(time.Hour/time.Second)
+
+				periods := []types.Period{
+					{
+						Length: int64((24 * time.Hour) / time.Second),
+						Amount: vestedCoins,
+					},
+				}
+
+				account := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, start, periods)
+
+				app.AccountKeeper.SetAccount(ctx, account)
+
+				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(150), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+			},
+			100,
+			50,
+		},
 	}
 
 	for _, tc := range testCases {

@@ -48,7 +48,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 			m.queryServer,
 		)
 
-		delegations := getDelegatorDelegations(
+		delegations := getDelegatorDelegationsSum(
 			ctx,
 			addr,
 			m.queryServer,

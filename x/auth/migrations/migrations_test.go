@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -290,7 +291,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			require.True(t, ok)
 			require.NoError(t, introduceTrackingBug(ctx, vestingAccount, app))
 
-			migrator := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
+			migrator := migrations.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
 			require.NoError(t, migrator.Migrate1to2(ctx))
 
 			var expVested sdk.Coins

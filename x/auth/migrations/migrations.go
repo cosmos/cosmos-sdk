@@ -61,6 +61,11 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 			return false
 		}
 
+		// balance before any delegation includes balance of delegation
+		for _, coin := range delegations {
+			balance = balance.Add(coin)
+		}
+
 		asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
 
 		m.keeper.SetAccount(ctx, account)
@@ -84,13 +89,6 @@ func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.Ves
 	// reset `DelegatedVesting` and `DelegatedFree` to zero
 	df := sdk.NewCoins()
 	dv := sdk.NewCoins()
-
-	for _, coin := range evacct.GetDelegatedFree() {
-		df = df.Add(sdk.NewCoin(coin.Denom, sdk.NewInt(0)))
-	}
-	for _, coin := range evacct.GetDelegatedVesting() {
-		dv = dv.Add(sdk.NewCoin(coin.Denom, sdk.NewInt(0)))
-	}
 
 	switch vacct := evacct.(type) {
 	case *vestingtypes.ContinuousVestingAccount:

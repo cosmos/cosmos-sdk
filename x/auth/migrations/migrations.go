@@ -135,7 +135,9 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 		panic(err)
 	}
 	balance := new(stakingtypes.QueryDelegatorDelegationsResponse)
-	err = proto.Unmarshal(resp.Value, balance)
+	if err := proto.Unmarshal(resp.Value, balance); err != nil {
+		panic(fmt.Errorf("unable to unmarshal delegator query delegations: %w", err))
+	}
 
 	res := sdk.NewCoins()
 	for _, i := range balance.DelegationResponses {
@@ -170,6 +172,8 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Co
 		panic(err)
 	}
 	balance := new(banktypes.QueryAllBalancesResponse)
-	err = proto.Unmarshal(resp.Value, balance)
+	if err := proto.Unmarshal(resp.Value, balance); err != nil {
+		panic(fmt.Errorf("unable to unmarshal bank balance response: %w", err))
+	}
 	return balance.Balances
 }

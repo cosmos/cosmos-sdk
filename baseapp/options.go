@@ -103,9 +103,9 @@ func (app *BaseApp) SetVersion(v string) {
 	app.version = v
 }
 
-// ProtocolVersionManager exposes functionality to set
+// ProtocolVersionSetter exposes functionality to set
 // BaseApp's protocol version.
-type ProtocolVersionManager interface {
+type ProtocolVersionSetter interface {
 	SetProtocolVersion(uint64)
 }
 

@@ -83,10 +83,12 @@ func (s sr25519Algo) Name() PubKeyType {
 
 // Derive derives and returns the sr25519 private key for the given seed and HD path.
 func (s sr25519Algo) Derive() DeriveFn {
-	return func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
-		seed, err := schnorrkel.SeedFromMnemonic(mnemonic, bip39Passphrase)
-		return seed[:], err
-	}
+	return deriveSr25519
+}
+
+func deriveSr25519(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
+	seed, err := schnorrkel.SeedFromMnemonic(mnemonic, bip39Passphrase)
+	return seed[:], err
 }
 
 // Generate generates a sr25519 private key from the given bytes.

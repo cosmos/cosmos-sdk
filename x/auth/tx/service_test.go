@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,13 +77,13 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
-	encCfg := simapp.MakeTestEncodingConfig()
+	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
 	// Encode the txBuilder to txBytes.
-	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -124,6 +123,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
+	// Encode the txBuilder to txBytes.
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -132,7 +134,8 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 		expErrMsg string
 	}{
 		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
-		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"valid request with proto tx (deprecated)", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"valid request with tx_bytes", &tx.SimulateRequest{TxBytes: txBytes}, false, ""},
 	}
 
 	for _, tc := range testCases {

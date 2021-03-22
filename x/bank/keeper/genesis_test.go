@@ -53,3 +53,50 @@ func (suite *IntegrationTestSuite) TestInitGenesis() {
 	m2 := bk.GetDenomMetaData(suite.ctx, m.Base)
 	suite.Require().Equal(m, m2)
 }
+
+func (suite *IntegrationTestSuite) TestTotalSupply() {
+	// Prepare some test data.
+	defaultGenesis := types.DefaultGenesisState()
+	balances := []types.Balance{
+		{Coins: sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(1))), Address: "cosmos1f9xjhxm0plzrh9cskf4qee4pc2xwp0n0556gh0"},
+		{Coins: sdk.NewCoins(sdk.NewCoin("barcoin", sdk.NewInt(1))), Address: "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"},
+		{Coins: sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(10)), sdk.NewCoin("barcoin", sdk.NewInt(20))), Address: "cosmos1m3h30wlvsf8llruxtpukdvsy0km2kum8g38c8q"},
+	}
+	totalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(11)), sdk.NewCoin("barcoin", sdk.NewInt(21)))
+
+	testcases := []struct {
+		name        string
+		genesis     *types.GenesisState
+		expSupply   sdk.Coins
+		expPanic    bool
+		expPanicMsg string
+	}{
+		{
+			"calculation NOT matching genesis Supply field",
+			types.NewGenesisState(defaultGenesis.Params, balances, sdk.NewCoins(sdk.NewCoin("wrongcoin", sdk.NewInt(1))), defaultGenesis.DenomMetadata),
+			nil, true, "genesis supply is incorrect, expected 1wrongcoin, got 21barcoin,11foocoin",
+		},
+		{
+			"calculation matches genesis Supply field",
+			types.NewGenesisState(defaultGenesis.Params, balances, totalSupply, defaultGenesis.DenomMetadata),
+			totalSupply, false, "",
+		},
+		{
+			"calculation is correct, empty genesis Supply field",
+			types.NewGenesisState(defaultGenesis.Params, balances, nil, defaultGenesis.DenomMetadata),
+			totalSupply, false, "",
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			if tc.expPanic {
+				suite.PanicsWithError(tc.expPanicMsg, func() { suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis) })
+			} else {
+				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
+				suite.Require().Equal(tc.expSupply, suite.app.BankKeeper.GetTotalSupply(suite.ctx))
+			}
+		})
+	}
+}

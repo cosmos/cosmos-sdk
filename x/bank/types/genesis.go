@@ -18,6 +18,8 @@ func (gs GenesisState) Validate() error {
 	seenBalances := make(map[string]bool)
 	seenMetadatas := make(map[string]bool)
 
+	totalSupply := sdk.Coins{}
+
 	for _, balance := range gs.Balances {
 		if seenBalances[balance.Address] {
 			return fmt.Errorf("duplicate balance for address %s", balance.Address)
@@ -28,6 +30,8 @@ func (gs GenesisState) Validate() error {
 		}
 
 		seenBalances[balance.Address] = true
+
+		totalSupply = totalSupply.Add(balance.Coins...)
 	}
 
 	for _, metadata := range gs.DenomMetadata {
@@ -42,8 +46,24 @@ func (gs GenesisState) Validate() error {
 		seenMetadatas[metadata.Base] = true
 	}
 
+<<<<<<< HEAD
 	// NOTE: this errors if supply for any given coin is zero
 	return NewSupply(gs.Supply).ValidateBasic()
+=======
+	if !gs.Supply.Empty() {
+		// NOTE: this errors if supply for any given coin is zero
+		err := gs.Supply.Validate()
+		if err != nil {
+			return err
+		}
+
+		if !gs.Supply.IsEqual(totalSupply) {
+			return fmt.Errorf("genesis supply is incorrect, expected %v, got %v", gs.Supply, totalSupply)
+		}
+	}
+
+	return nil
+>>>>>>> e9e978d54... Fix genesis supply handling (#8930)
 }
 
 // NewGenesisState creates a new genesis state.

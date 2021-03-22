@@ -27,12 +27,13 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87
 	github.com/improbable-eng/grpc-web v0.14.0
+	github.com/jhump/protoreflect v1.8.2
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-isatty v0.0.12
 	github.com/otiai10/copy v1.5.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.10.0
 	github.com/prometheus/common v0.19.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
@@ -53,7 +54,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f
 	google.golang.org/grpc v1.36.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.25.1-0.20200805231151-a709e31e5d12
 	gopkg.in/ini.v1 v1.61.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	nhooyr.io/websocket v1.8.6 // indirect

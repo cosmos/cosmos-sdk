@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func TestStoreMigration(t *testing.T) {
+func TestMigrateStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	govKey := sdk.NewKVStoreKey("gov")
 	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
@@ -82,7 +82,7 @@ func TestStoreMigration(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			if bytes.Compare(tc.oldKey, tc.newKey) != 0 {
+			if !bytes.Equal(tc.oldKey, tc.newKey) {
 				require.Nil(t, store.Get(tc.oldKey))
 			}
 			require.Equal(t, tc.newValue, store.Get(tc.newKey))

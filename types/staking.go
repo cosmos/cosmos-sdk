@@ -1,9 +1,5 @@
 package types
 
-import (
-	"math/big"
-)
-
 // staking constants
 const (
 
@@ -23,7 +19,7 @@ const (
 )
 
 // DefaultPowerReduction is the default amount of staking tokens required for 1 unit of consensus-engine power
-var DefaultPowerReduction = NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
+var DefaultPowerReduction = NewIntFromUint64(1000000)
 
 // TokensToConsensusPower - convert input tokens to potential consensus-engine power
 func TokensToConsensusPower(tokens Int, powerReduction Int) int64 {

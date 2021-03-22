@@ -903,8 +903,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 	pubkeys = make([]cryptotypes.PubKey, n)
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
-		var privkey cryptotypes.PrivKey
-		privkey = secp256k1.GenPrivKey()
+		var privkey cryptotypes.PrivKey = secp256k1.GenPrivKey()
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789

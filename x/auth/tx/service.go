@@ -100,7 +100,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 	txBytes := req.TxBytes
 	if txBytes == nil && req.Tx != nil {
 		// This block is for backwards-compatibility.
-		// We used to supported passing a `Tx` in req. But if we do that, sig
+		// We used to support passing a `Tx` in req. But if we do that, sig
 		// verification might not pass, because the .Marshal() below might not
 		// be the same marshaling done by the client.
 		var err error

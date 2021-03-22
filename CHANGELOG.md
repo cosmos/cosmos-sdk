@@ -49,8 +49,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto/ed25519) [\#8690] Adopt zip1215 ed2559 verification rules.
 * [\#8849](https://github.com/cosmos/cosmos-sdk/pull/8849) Upgrade module no longer supports time based upgrades. 
 * [\#8880](https://github.com/cosmos/cosmos-sdk/pull/8880) The CLI `simd migrate v0.40 ...` command has been renamed to `simd migrate v0.42`.
-* (client) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) `client/tx.PrepareFactory` has been converted to a private function, as it's only used internally.
-* (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 
 ### API Breaking Changes
 
@@ -65,7 +63,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) `SupplyI` interface and `Supply` are removed and uses `sdk.Coins` for supply tracking
 * (x/upgrade) [\#8743](https://github.com/cosmos/cosmos-sdk/pull/8743) `UpgradeHandler` includes a new argument `VersionMap` which helps facilitate in-place migrations.
 * (x/auth) [\#8129](https://github.com/cosmos/cosmos-sdk/pull/8828) Updated `SigVerifiableTx.GetPubKeys` method signature to return error.
-
+* (client) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) `client/tx.PrepareFactory` has been converted to a private function, as it's only used internally.
+* (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 
 ### State Machine Breaking
 

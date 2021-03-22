@@ -2,7 +2,7 @@ package keys
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
+	//"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -37,8 +37,8 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 	cmd.SetOut(cmd.OutOrStdout())
 
 	if ok, _ := cmd.Flags().GetBool(flagListNames); !ok {
-		output, _ := cmd.Flags().GetString(cli.OutputFlag)
-		printInfos(cmd.OutOrStdout(), infos, output)
+
+		printInfos(cmd.OutOrStdout(), infos, clientCtx.OutputFormat)
 		return nil
 	}
 

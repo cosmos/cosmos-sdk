@@ -23,7 +23,7 @@ func GetQueryCmd() *cobra.Command {
 		Short:                      "Querying commands for the governance module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	govQueryCmd.AddCommand(

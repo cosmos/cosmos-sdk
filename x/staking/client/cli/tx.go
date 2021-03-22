@@ -35,7 +35,7 @@ func NewTxCmd() *cobra.Command {
 		Short:                      "Staking transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	stakingTxCmd.AddCommand(

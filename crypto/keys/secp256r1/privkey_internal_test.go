@@ -5,11 +5,12 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	proto "github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	proto "github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 )
 
 var _ cryptotypes.PrivKey = &PrivKey{}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 	tmos "github.com/tendermint/tendermint/libs/os"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
 const defaultConfigTemplate = `# This is a TOML config file.
@@ -24,8 +25,8 @@ node = "{{ .Node }}"
 broadcast-mode = "{{ .BroadcastMode }}"
 `
 
-// InitConfigTemplate initiates config template that will be used in
-// WriteConfigFile
+// initConfigTemplate initiates config template that will be used in
+// writeConfigFile
 func initConfigTemplate() (*template.Template, error) {
 	tmpl := template.New("clientConfigFileTemplate")
 	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
@@ -38,18 +39,19 @@ func initConfigTemplate() (*template.Template, error) {
 
 // writeConfigFile renders config using the template and writes it to
 // configFilePath.
-func writeConfigFile(cfgFile string, config *ClientConfig, configTemplate *template.Template) error {
+func writeConfigFile(configFilePath string, config *ClientConfig, configTemplate *template.Template) error {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {
 		return err
 	}
 
-	tmos.MustWriteFile(cfgFile, buffer.Bytes(), 0644)
+	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
 	return nil
 
 }
 
+// ensureConfigPath creates a directory configPath if it does not exist
 func ensureConfigPath(configPath string) error {
 	if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
 		return err
@@ -58,6 +60,13 @@ func ensureConfigPath(configPath string) error {
 	return nil
 }
 
+// newClientFromNodeFlag sets up Client implementation that communicates with a Tendermint node over
+// JSON RPC and WebSockets
+func newClientFromNodeFlag(nodeURI string) (*rpchttp.HTTP, error) {
+	return rpchttp.New(nodeURI, "/websocket")
+}
+
+// getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
 func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 
 	v.AddConfigPath(configPath)

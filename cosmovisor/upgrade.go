@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/hashicorp/go-getter"
 )
 
 // DoUpgrade will be called after the log message has been parsed and the process has terminated.

@@ -31,13 +31,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	configPath := filepath.Join(clientCtx.HomeDir, "config")
 
-	/*
-		if err := ensureConfigPath(configPath); err != nil {
-			return fmt.Errorf("couldn't make client config: %v", err)
-		}
-	*/
-
-	cliConfig, err := getClientConfig(configPath, clientCtx.Viper)
+	conf, err := getClientConfig(configPath, clientCtx.Viper)
 	if err != nil {
 		return fmt.Errorf("couldn't get client config: %v", err)
 	}
@@ -45,25 +39,24 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	switch len(args) {
 	case 0:
 		// print all client config fields to sdt out
-		s, _ := json.MarshalIndent(cliConfig, "", "\t")
+		s, _ := json.MarshalIndent(conf, "", "\t")
 		cmd.Println(string(s))
 
 	case 1:
 		// it's a get
-		// TODO implement method for get
-		// should i implement getters here?
+
 		key := args[0]
 		switch key {
 		case flags.FlagChainID:
-			cmd.Println(cliConfig.ChainID)
+			cmd.Println(conf.ChainID)
 		case flags.FlagKeyringBackend:
-			cmd.Println(cliConfig.KeyringBackend)
+			cmd.Println(conf.KeyringBackend)
 		case tmcli.OutputFlag:
-			cmd.Println(cliConfig.Output)
+			cmd.Println(conf.Output)
 		case flags.FlagNode:
-			cmd.Println(cliConfig.Node)
+			cmd.Println(conf.Node)
 		case flags.FlagBroadcastMode:
-			cmd.Println(cliConfig.BroadcastMode)
+			cmd.Println(conf.BroadcastMode)
 		default:
 			err := errUnknownConfigKey(key)
 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
@@ -76,15 +69,15 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 		switch key {
 		case flags.FlagChainID:
-			cliConfig.SetChainID(value)
+			conf.SetChainID(value)
 		case flags.FlagKeyringBackend:
-			cliConfig.SetKeyringBackend(value)
+			conf.SetKeyringBackend(value)
 		case tmcli.OutputFlag:
-			cliConfig.SetOutput(value)
+			conf.SetOutput(value)
 		case flags.FlagNode:
-			cliConfig.SetNode(value)
+			conf.SetNode(value)
 		case flags.FlagBroadcastMode:
-			cliConfig.SetBroadcastMode(value)
+			conf.SetBroadcastMode(value)
 		default:
 			return errUnknownConfigKey(key)
 		}
@@ -94,8 +87,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("could not initiate config template: %v", err)
 		}
 
-		cliConfigFile := filepath.Join(configPath, "client.toml")
-		if err := writeConfigFile(cliConfigFile, cliConfig, configTemplate); err != nil {
+		confFile := filepath.Join(configPath, "client.toml")
+		if err := writeConfigFile(confFile, conf, configTemplate); err != nil {
 			return fmt.Errorf("could not write client config to the file: %v", err)
 		}
 

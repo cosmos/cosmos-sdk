@@ -16,7 +16,7 @@ func NewQueryCmd() *cobra.Command {
 		Short:                      "Querying commands for the params module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	cmd.AddCommand(NewQuerySubspaceParamsCmd())

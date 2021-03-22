@@ -25,6 +25,7 @@ type ClientConfig struct {
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
+// DefaultClientConfig returns the reference to ClientConfig with default values.
 func DefaultClientConfig() *ClientConfig {
 	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
 }
@@ -57,12 +58,8 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	conf := DefaultClientConfig()
 
-	switch _, err := os.Stat(configFilePath); {
-	// config file does not exist
-	case os.IsNotExist(err):
-		// we create  ~/.simapp/config/client.toml with default values
-
-		// create a directority configPath
+	// if config.toml file does not exist we create it and write default ClientConfig values into it.
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		if err := ensureConfigPath(configPath); err != nil {
 			return ctx, fmt.Errorf("couldn't make client config: %v", err)
 		}
@@ -75,23 +72,34 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 		if err := writeConfigFile(configFilePath, conf, configTemplate); err != nil {
 			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
 		}
-	// config file exists and we read config values from client.toml file
-	default:
-		conf, err = getClientConfig(configPath, ctx.Viper)
-		if err != nil {
-			return ctx, fmt.Errorf("couldn't get client config: %v", err)
-		}
 	}
+
+	conf, err := getClientConfig(configPath, ctx.Viper)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't get client config: %v", err)
+	}
+
+	ctx = ctx.WithOutputFormat(conf.Output)
+
+	//we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromFlags
+	ctx = ctx.WithKeyringDir(ctx.HomeDir)
+
+	ctx = ctx.WithChainID(conf.ChainID)
 
 	keyring, err := client.NewKeyringFromFlags(ctx, conf.KeyringBackend)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get key ring: %v", err)
 	}
 
-	ctx = ctx.WithChainID(conf.ChainID).
-		WithKeyring(keyring).
-		WithOutputFormat(conf.Output).
-		WithNodeURI(conf.Node).
+	ctx = ctx.WithKeyring(keyring)
+
+	client, err := newClientFromNodeFlag(conf.Node)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)
+	}
+
+	ctx = ctx.WithNodeURI(conf.Node).
+		WithClient(client).
 		WithBroadcastMode(conf.BroadcastMode)
 
 	return ctx, nil

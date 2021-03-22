@@ -21,7 +21,7 @@ func GetQueryCmd() *cobra.Command {
 		Short:                      "Querying commands for the staking module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	stakingQueryCmd.AddCommand(

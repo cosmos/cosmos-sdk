@@ -26,9 +26,28 @@ var v037Exported = `{
 }`
 
 // An example exported genesis file that's 0.40 compatible.
+// We added the following app_state:
+//
+// - x/gov: added votes to test ADR-037 split votes migration.
 var v040Valid = `{
 	"app_hash": "",
-	"app_state": {},
+	"app_state": {
+		"gov": {
+			"starting_proposal_id": "0",
+			"deposits": [],
+			"votes": [
+			  {
+				"proposal_id": "5",
+				"voter": "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh",
+				"option": "VOTE_OPTION_YES"
+			  }
+			],
+			"proposals": [],
+			"deposit_params": { "min_deposit": [], "max_deposit_period": "0s" },
+			"voting_params": { "voting_period": "0s" },
+			"tally_params": { "quorum": "0", "threshold": "0", "veto_threshold": "0" }
+		}	  
+	},
 	"chain_id": "test",
 	"consensus_params": {
 		"block": {

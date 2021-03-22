@@ -8,6 +8,8 @@ import (
 
 	_ "github.com/gogo/protobuf/gogoproto" // required so it does register the gogoproto file descriptor
 	gogoproto "github.com/gogo/protobuf/proto"
+
+	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	_ "github.com/regen-network/cosmos-proto" // look above
@@ -57,6 +59,8 @@ func init() {
 	}
 }
 
+// compress compresses the given file descriptor
+// nolint: interfacer
 func compress(fd *dpb.FileDescriptorProto) ([]byte, error) {
 	fdBytes, err := proto.Marshal(fd)
 	if err != nil {
@@ -82,6 +86,7 @@ func getFileDescriptor(filePath string) []byte {
 	if len(fd) != 0 {
 		return fd
 	}
+	// nolint: staticcheck
 	return proto.FileDescriptor(filePath)
 }
 
@@ -90,5 +95,6 @@ func getMessageType(name string) reflect.Type {
 	if typ != nil {
 		return typ
 	}
+	// nolint: staticcheck
 	return proto.MessageType(name)
 }

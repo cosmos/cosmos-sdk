@@ -502,11 +502,15 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 
 // protoTxProvider is a type which can provide a proto transaction. It is a
 // workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field.
 type protoTxProvider interface {
 	GetProtoTx() *tx.Tx
 }
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {

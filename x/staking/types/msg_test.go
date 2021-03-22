@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	coinPos  = sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)
+	coinPos  = sdk.NewInt64Coin(sdk.DefaultBondDenom, sdk.PowerReduction.Int64())
 	coinZero = sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)
 )
 
@@ -75,6 +75,7 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"zero min self delegation", "a", "b", "c", "d", "e", commission1, sdk.ZeroInt(), valAddr1, pk1, coinPos, false},
 		{"negative min self delegation", "a", "b", "c", "d", "e", commission1, sdk.NewInt(-1), valAddr1, pk1, coinPos, false},
 		{"delegation less than min self delegation", "a", "b", "c", "d", "e", commission1, coinPos.Amount.Add(sdk.OneInt()), valAddr1, pk1, coinPos, false},
+		{"delegation less than one consensus power", "a", "b", "c", "d", "e", commission1, sdk.OneInt(), valAddr1, pk1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000), false},
 	}
 
 	for _, tc := range tests {

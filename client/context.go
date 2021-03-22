@@ -5,12 +5,16 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -46,6 +50,7 @@ type Context struct {
 	AccountRetriever  AccountRetriever
 	NodeURI           string
 	FeeGranter        sdk.AccAddress
+	Viper             *viper.Viper
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -220,6 +225,33 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
+// WithViper returns the context with Viper field
+func (ctx Context) WithViper() Context {
+	v := viper.New()
+	ctx.Viper = v
+	return ctx
+}
+
+// WithHomeFlag checks if home flag is changed.
+// If this is a case, we update HomeDir field of Client Context
+/* Discovered a bug with Cory
+./build/simd init andrei --home ./test
+cd test/config there is no client.toml configuration file
+*/
+
+func (ctx Context) WithHomeFlag(cmd *cobra.Command) Context {
+	if cmd.Flags().Changed(flags.FlagHome) {
+		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+
+		// maybe I should make this check if rootDir != "" inside WithHomeDir?
+		if rootDir != "" {
+			ctx = ctx.WithHomeDir(rootDir)
+		}
+	}
+
+	return ctx
+}
+
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -330,7 +362,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 	return info.GetAddress(), info.GetName(), info.GetType(), nil
 }
 
-func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
+func NewKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly || ctx.Simulate {
 		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
 	}

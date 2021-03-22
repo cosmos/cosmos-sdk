@@ -50,7 +50,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			0,
-			200,
+			300,
 		},
 		{
 			"delayed vesting has vested, single delegations which exceed the vested amount",
@@ -68,7 +68,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			0,
-			200,
+			300,
 		},
 		{
 			"delayed vesting has vested, multiple delegations which exceed the vested amount",
@@ -90,7 +90,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			0,
-			200,
+			300,
 		},
 		{
 			"delayed vesting has not vested, single delegations  which exceed the vested amount",
@@ -106,7 +106,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			200,
-			0,
+			100,
 		},
 		{
 			"delayed vesting has not vested, multiple delegations which exceed the vested amount",
@@ -126,7 +126,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			200,
-			0,
+			100,
 		},
 		{
 			"not end time",
@@ -319,6 +319,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 }
 
 func trackingCorrected(ctx sdk.Context, t *testing.T, ak authkeeper.AccountKeeper, addr sdk.AccAddress, expDelVesting sdk.Coins, expDelFree sdk.Coins) {
+	t.Helper()
 	baseAccount := ak.GetAccount(ctx, addr)
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)

@@ -404,10 +404,11 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	}
 
 	// update total supply
-	supply := k.GetTotalSupply(ctx)
-	supply = supply.Sub(amt)
-
-	k.setSupply(ctx, supply)
+	for _, sa := range amt {
+		supply := k.GetSupply(ctx, sa.GetDenom())
+		supply = supply.Sub(sa)
+		k.setCoinSupply(ctx, supply)
+	}
 
 	logger := k.Logger(ctx)
 	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)
@@ -418,6 +419,14 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	)
 
 	return nil
+}
+
+func (k BaseKeeper) setCoinSupply(ctx sdk.Context, coin sdk.Coin) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	bz := k.cdc.MustMarshalBinaryBare(&coin)
+	supplyStore.Set([]byte(coin.GetDenom()), bz)
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {

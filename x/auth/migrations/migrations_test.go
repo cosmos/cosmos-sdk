@@ -1,4 +1,4 @@
-package keeper_test
+package migrations_test
 
 import (
 	"fmt"

@@ -17,7 +17,7 @@ To enable your application to conform to the upgrade module's specifications, a 
 Each app module's consensus version must be saved to state on the application's genesis. This can be done by adding the following line to the `InitChainer` method in `app.go`
 
 ```diff
-func (app *thorChainApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
   ...
 + app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
   ...

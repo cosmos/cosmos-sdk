@@ -427,5 +427,7 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 	var pk cryptotypes.PubKey
 	err := cdc.UnmarshalJSON([]byte(pkJSON), &pk)
 	require.NoError(t, err)
-	require.Equal(t, uint32(3), pk.(*kmultisig.LegacyAminoPubKey).Threshold)
+	lpk := pk.(*kmultisig.LegacyAminoPubKey)
+	require.Equal(t, uint32(3), lpk.Threshold)
+
 }

@@ -26,7 +26,6 @@ func ProtoMarshalJSON(msg proto.Message, resolver jsonpb.AnyResolver) ([]byte, e
 	}
 
 	buf := new(bytes.Buffer)
-
 	if err := jm.Marshal(buf, msg); err != nil {
 		return nil, err
 	}

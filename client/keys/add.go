@@ -92,7 +92,7 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return RunAddCmd(cmd, args, clientCtx.Keyring, buf)
+	return RunAddCmd(clientCtx, cmd, args, buf)
 }
 
 /*
@@ -104,13 +104,15 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
+func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
+	// func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
 	showMnemonic := !noBackup
+	kb := ctx.Keyring
 
 	keyringAlgos, _ := kb.SupportedAlgorithms()
 	algoStr, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)

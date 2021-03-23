@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -21,7 +22,11 @@ type KeyOutput struct {
 
 // NewKeyOutput creates a default KeyOutput instance without Mnemonic, Threshold and PubKeys
 func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.PubKey) (KeyOutput, error) { // nolint:interfacer
-	bz, err := codec.ProtoMarshalJSON(pk, nil)
+	apk, err := codectypes.NewAnyWithValue(pk)
+	if err != nil {
+		return KeyOutput{}, err
+	}
+	bz, err := codec.ProtoMarshalJSON(apk, nil)
 	if err != nil {
 		return KeyOutput{}, err
 	}

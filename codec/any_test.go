@@ -74,8 +74,8 @@ func TestMarshalProtoPubKey(t *testing.T) {
 	var pkAny2 codectypes.Any
 	err = ccfg.Marshaler.UnmarshalJSON(bz, &pkAny2)
 	require.NoError(err)
-	// we before getting a cached value we need to unpack it.
-	// Normally this happens in in types which implement UnpackInterfaces
+	// Before getting a cached value we need to unpack it.
+	// Normally this happens in types which implement UnpackInterfaces
 	var pkI cryptotypes.PubKey
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny2, &pkI)
 	require.NoError(err)

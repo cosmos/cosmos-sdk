@@ -57,14 +57,14 @@ func MkKeysOutput(infos []Info) ([]KeyOutput, error) {
 // MkConsKeyOutput create a KeyOutput in with "cons" Bech32 prefixes.
 func MkConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
-	addr := sdk.ConsAddress(pk.Address().Bytes())
+	addr := sdk.ConsAddress(pk.Address())
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
 // MkValKeyOutput create a KeyOutput in with "val" Bech32 prefixes.
 func MkValKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
-	addr := sdk.ValAddress(pk.Address().Bytes())
+	addr := sdk.ValAddress(pk.Address())
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
@@ -73,6 +73,6 @@ func MkValKeyOutput(keyInfo Info) (KeyOutput, error) {
 // public keys will be added.
 func MkKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
-	addr := sdk.AccAddress(pk.Address().Bytes())
+	addr := sdk.AccAddress(pk.Address())
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }

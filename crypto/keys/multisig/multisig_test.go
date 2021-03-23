@@ -10,11 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
@@ -359,24 +361,21 @@ func TestDisplay(t *testing.T) {
 }
 
 func TestAminoBinary(t *testing.T) {
-	pubKey1 := secp256k1.GenPrivKey().PubKey()
-	pubKey2 := secp256k1.GenPrivKey().PubKey()
-	multisigKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
+	pubkeys := generatePubKeys(2)
+	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
 	// Do a round-trip key->bytes->key.
-	bz, err := legacy.Cdc.MarshalBinaryBare(multisigKey)
+	bz, err := legacy.Cdc.MarshalBinaryBare(msig)
 	require.NoError(t, err)
-	var newMultisigKey cryptotypes.PubKey
-	err = legacy.Cdc.UnmarshalBinaryBare(bz, &newMultisigKey)
+	var newMsig cryptotypes.PubKey
+	err = legacy.Cdc.UnmarshalBinaryBare(bz, &newMsig)
 	require.NoError(t, err)
-	require.Equal(t, multisigKey.Threshold, newMultisigKey.(*kmultisig.LegacyAminoPubKey).Threshold)
+	require.Equal(t, msig.Threshold, newMsig.(*kmultisig.LegacyAminoPubKey).Threshold)
 }
 
 func TestAminoMarshalJSON(t *testing.T) {
-	pubKey1 := secp256k1.GenPrivKey().PubKey()
-	pubKey2 := secp256k1.GenPrivKey().PubKey()
-	multisigKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubKey1, pubKey2})
-
+	pubkeys := generatePubKeys(2)
+	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 	bz, err := legacy.Cdc.MarshalJSON(multisigKey)
 	require.NoError(t, err)
 
@@ -429,5 +428,31 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 	require.NoError(t, err)
 	lpk := pk.(*kmultisig.LegacyAminoPubKey)
 	require.Equal(t, uint32(3), lpk.Threshold)
+}
 
+func TestProtoMarshalJSON(t *testing.T) {
+	require := require.New(t)
+	pubkeys := generatePubKeys(3)
+	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
+
+	registry := types.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	bz, err := cdc.MarshalInterfaceJSON(msig)
+	require.NoError(err)
+
+	var pk2 cryptotypes.PubKey
+	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
+	require.NoError(err)
+	require.True(pk2.Equals(msig))
+
+	// Test that we can correctly unmarshal key from keyring output
+
+	info, err := keyring.NewMultiInfo("my multisig", msig)
+	require.NoError(err)
+	ko, err := keyring.MkKeyOutput(info)
+	require.NoError(err)
+	require.Equal(ko.Address, sdk.AccAddress(pk2.Address()).String())
+	require.Equal(ko.PubKey, string(bz))
 }

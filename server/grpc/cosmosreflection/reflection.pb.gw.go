@@ -2,11 +2,11 @@
 // source: cosmos/base/reflection/v1beta1/reflection.proto
 
 /*
-Package reflection is a reverse proxy.
+Package cosmosreflection is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package reflection
+package cosmosreflection
 
 import (
 	"context"
@@ -30,6 +30,24 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
+
+func request_ReflectionService_GetAppDescriptor_0(ctx context.Context, marshaler runtime.Marshaler, client ReflectionServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetAppDescriptorRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.GetAppDescriptor(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ReflectionService_GetAppDescriptor_0(ctx context.Context, marshaler runtime.Marshaler, server ReflectionServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetAppDescriptorRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.GetAppDescriptor(ctx, &protoReq)
+	return msg, metadata, err
+
+}
 
 func request_ReflectionService_ListAllInterfaces_0(ctx context.Context, marshaler runtime.Marshaler, client ReflectionServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListAllInterfacesRequest
@@ -108,6 +126,26 @@ func local_request_ReflectionService_ListImplementations_0(ctx context.Context, 
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 // Note that using this registration option will cause many gRPC library features (such as grpc.SendHeader, etc) to stop working. Consider using RegisterReflectionServiceHandlerFromEndpoint instead.
 func RegisterReflectionServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ReflectionServiceServer) error {
+
+	mux.Handle("GET", pattern_ReflectionService_GetAppDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ReflectionService_GetAppDescriptor_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ReflectionService_GetAppDescriptor_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
 
 	mux.Handle("GET", pattern_ReflectionService_ListAllInterfaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -190,6 +228,26 @@ func RegisterReflectionServiceHandler(ctx context.Context, mux *runtime.ServeMux
 // "ReflectionServiceClient" to call the correct interceptors.
 func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client ReflectionServiceClient) error {
 
+	mux.Handle("GET", pattern_ReflectionService_GetAppDescriptor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ReflectionService_GetAppDescriptor_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ReflectionService_GetAppDescriptor_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ReflectionService_ListAllInterfaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -234,12 +292,16 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
+	pattern_ReflectionService_GetAppDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor"}, "", runtime.AssumeColonVerbOpt(false)))
+
 	pattern_ReflectionService_ListAllInterfaces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_ReflectionService_ListImplementations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces", "interface_name", "implementations"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
+	forward_ReflectionService_GetAppDescriptor_0 = runtime.ForwardResponseMessage
+
 	forward_ReflectionService_ListAllInterfaces_0 = runtime.ForwardResponseMessage
 
 	forward_ReflectionService_ListImplementations_0 = runtime.ForwardResponseMessage

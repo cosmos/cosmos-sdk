@@ -2,6 +2,8 @@ package grpc
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/grpc/cosmosreflection"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"net"
 	"time"
 
@@ -16,11 +18,26 @@ import (
 func StartGRPCServer(clientCtx client.Context, app types.Application, address string) (*grpc.Server, error) {
 	grpcSrv := grpc.NewServer()
 	app.RegisterGRPCServer(clientCtx, grpcSrv)
-
+	// cosmosreflection allows consumers to build dynamic clients that can write
+	// to any cosmos-sdk application without relying on application packages at compile time
+	err := cosmosreflection.Register(grpcSrv, cosmosreflection.Config{
+		SigningModes: func() []string {
+			modes := make([]string, len(clientCtx.TxConfig.SignModeHandler().Modes()))
+			for i, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
+				modes[i] = m.String()
+			}
+			return modes
+		}(),
+		ChainID:           clientCtx.ChainID,
+		SdkConfig:         sdk.GetConfig(),
+		InterfaceRegistry: clientCtx.InterfaceRegistry,
+	})
+	if err != nil {
+		return nil, err
+	}
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
 	gogoreflection.Register(grpcSrv)
-
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		return nil, err

@@ -175,13 +175,15 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 		}
 	}
 
-	var coin sdk.Coin
-	err := k.cdc.UnmarshalBinaryBare(bz, &coin)
-	if err != nil {
-		panic(err)
+	amount, ok := sdk.NewIntFromString(string(bz))
+	if !ok {
+		panic("unexpected supply")
 	}
 
-	return coin
+	return sdk.Coin{
+		Denom:  denom,
+		Amount: amount,
+	}
 }
 
 // GetDenomMetaData retrieves the denomination metadata
@@ -397,8 +399,7 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	bz := k.cdc.MustMarshalBinaryBare(&coin)
-	supplyStore.Set([]byte(coin.GetDenom()), bz)
+	supplyStore.Set([]byte(coin.GetDenom()), []byte(coin.Amount.String()))
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
@@ -439,8 +440,15 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var balance sdk.Coin
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
+		amount, ok := sdk.NewIntFromString(string(iterator.Value()))
+		if !ok {
+			panic("unexpected supply")
+		}
+
+		balance := sdk.Coin{
+			Denom: string(iterator.Key()),
+			Amount: amount,
+		}
 
 		if cb(balance) {
 			break

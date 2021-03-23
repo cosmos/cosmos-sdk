@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
@@ -131,7 +131,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing pubkey)",
 			[]string{
-				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, sdk.PowerReduction.Int64()),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
 				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
@@ -151,7 +151,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing moniker)",
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
-				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, sdk.PowerReduction.Int64()),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
 				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
@@ -171,7 +171,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 			"valid transaction",
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
-				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, sdk.PowerReduction.Int64()),
 				fmt.Sprintf("--%s=NewValidator", cli.FlagMoniker),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),

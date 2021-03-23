@@ -90,7 +90,7 @@ func TestStoreMigration(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			if bytes.Compare(tc.oldKey, tc.newKey) != 0 {
+			if !bytes.Equal(tc.oldKey, tc.newKey) {
 				require.Nil(t, store.Get(tc.oldKey))
 			}
 			require.Equal(t, value, store.Get(tc.newKey))

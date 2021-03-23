@@ -446,7 +446,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 		}
 
 		balance := sdk.Coin{
-			Denom: string(iterator.Key()),
+			Denom:  string(iterator.Key()),
 			Amount: amount,
 		}
 

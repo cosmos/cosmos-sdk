@@ -1,10 +1,11 @@
-package keeper_test
+package migrations_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -49,7 +50,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			0,
-			200,
+			300,
 		},
 		{
 			"delayed vesting has vested, single delegations which exceed the vested amount",
@@ -67,7 +68,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			0,
-			200,
+			300,
 		},
 		{
 			"delayed vesting has vested, multiple delegations which exceed the vested amount",
@@ -89,7 +90,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			0,
-			200,
+			300,
 		},
 		{
 			"delayed vesting has not vested, single delegations  which exceed the vested amount",
@@ -105,7 +106,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			200,
-			0,
+			100,
 		},
 		{
 			"delayed vesting has not vested, multiple delegations which exceed the vested amount",
@@ -125,7 +126,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			200,
-			0,
+			100,
 		},
 		{
 			"not end time",
@@ -239,6 +240,32 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			0,
 			300,
 		},
+		{
+			"periodic vesting account, yet to be vested, some rewards delegated",
+			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
+
+				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
+				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(100)))
+
+				start := ctx.BlockTime().Unix() + int64(time.Hour/time.Second)
+
+				periods := []types.Period{
+					{
+						Length: int64((24 * time.Hour) / time.Second),
+						Amount: vestedCoins,
+					},
+				}
+
+				account := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, start, periods)
+
+				app.AccountKeeper.SetAccount(ctx, account)
+
+				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(150), stakingtypes.Unbonded, validator, true)
+				require.NoError(t, err)
+			},
+			100,
+			50,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -264,7 +291,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			require.True(t, ok)
 			require.NoError(t, introduceTrackingBug(ctx, vestingAccount, app))
 
-			migrator := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
+			migrator := migrations.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
 			require.NoError(t, migrator.Migrate1to2(ctx))
 
 			var expVested sdk.Coins
@@ -292,6 +319,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 }
 
 func trackingCorrected(ctx sdk.Context, t *testing.T, ak authkeeper.AccountKeeper, addr sdk.AccAddress, expDelVesting sdk.Coins, expDelFree sdk.Coins) {
+	t.Helper()
 	baseAccount := ak.GetAccount(ctx, addr)
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)

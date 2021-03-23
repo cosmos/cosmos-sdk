@@ -1,11 +1,13 @@
-package keeper
+package migrations
 
 import (
 	"fmt"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
@@ -24,12 +26,12 @@ const (
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper      AccountKeeper
+	keeper      keeper.AccountKeeper
 	queryServer grpc.Server
 }
 
 // NewMigrator returns a new Migrator.
-func NewMigrator(keeper AccountKeeper, queryServer grpc.Server) Migrator {
+func NewMigrator(keeper keeper.AccountKeeper, queryServer grpc.Server) Migrator {
 	return Migrator{keeper: keeper, queryServer: queryServer}
 }
 
@@ -48,18 +50,20 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 			m.queryServer,
 		)
 
-		delegations := getDelegatorDelegations(
+		delegations := getDelegatorDelegationsSum(
 			ctx,
 			addr,
 			m.queryServer,
 		)
 
-		if delegations.IsAllGTE(asVesting.GetOriginalVesting()) {
-			delegations = asVesting.GetOriginalVesting()
+		asVesting, ok := resetVestingDelegatedBalances(asVesting)
+		if !ok {
+			return false
 		}
 
-		if balance.IsAllLT(delegations) {
-			balance = balance.Add(delegations...)
+		// balance before any delegation includes balance of delegation
+		for _, coin := range delegations {
+			balance = balance.Add(coin)
 		}
 
 		asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
@@ -79,6 +83,29 @@ func vesting(account types.AccountI) exported.VestingAccount {
 	}
 
 	return v
+}
+
+func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.VestingAccount, bool) {
+	// reset `DelegatedVesting` and `DelegatedFree` to zero
+	df := sdk.NewCoins()
+	dv := sdk.NewCoins()
+
+	switch vacct := evacct.(type) {
+	case *vestingtypes.ContinuousVestingAccount:
+		vacct.DelegatedVesting = dv
+		vacct.DelegatedFree = df
+		return vacct, true
+	case *vestingtypes.DelayedVestingAccount:
+		vacct.DelegatedVesting = dv
+		vacct.DelegatedFree = df
+		return vacct, true
+	case *vestingtypes.PeriodicVestingAccount:
+		vacct.DelegatedVesting = dv
+		vacct.DelegatedFree = df
+		return vacct, true
+	default:
+		return nil, false
+	}
 }
 
 func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Coins {
@@ -106,7 +133,9 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 		panic(err)
 	}
 	balance := new(stakingtypes.QueryDelegatorDelegationsResponse)
-	err = proto.Unmarshal(resp.Value, balance)
+	if err := proto.Unmarshal(resp.Value, balance); err != nil {
+		panic(fmt.Errorf("unable to unmarshal delegator query delegations: %w", err))
+	}
 
 	res := sdk.NewCoins()
 	for _, i := range balance.DelegationResponses {
@@ -141,6 +170,8 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Co
 		panic(err)
 	}
 	balance := new(banktypes.QueryAllBalancesResponse)
-	err = proto.Unmarshal(resp.Value, balance)
+	if err := proto.Unmarshal(resp.Value, balance); err != nil {
+		panic(fmt.Errorf("unable to unmarshal bank balance response: %w", err))
+	}
 	return balance.Balances
 }

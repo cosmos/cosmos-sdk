@@ -92,21 +92,7 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var kr keyring.Keyring
-
-	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
-	if dryRun {
-		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, clientCtx.KeyringDir, buf)
-	} else {
-		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		kr, err = keyring.New(sdk.KeyringServiceName(), backend, clientCtx.KeyringDir, buf)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return runAddCmd(clientCtx, cmd, args, kr, buf)
+	return RunAddCmd(cmd, args, clientCtx.Keyring, buf)
 }
 
 /*

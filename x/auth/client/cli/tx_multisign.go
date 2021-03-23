@@ -217,6 +217,7 @@ The SIGN_MODE_DIRECT sign mode is not supported.'
 		flagMultisig, "",
 		"Address of the multisig account that the transaction signs on behalf of",
 	)
+	cmd.Flags().String(flags.FlagOutputDocument, "", "The document is written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -276,6 +277,15 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 
 			txFactory = txFactory.WithAccountNumber(accnum).WithSequence(seq)
 		}
+
+		// prepare output document
+		closeFunc, err := setOutputFile(cmd)
+		if err != nil {
+			return err
+		}
+
+		defer closeFunc()
+		clientCtx.WithOutput(cmd.OutOrStdout())
 
 		for i := 0; scanner.Scan(); i++ {
 			txBldr, err := txCfg.WrapTxBuilder(scanner.Tx())
@@ -350,7 +360,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			txFactory = txFactory.WithSequence(sequence)
 		}
 
-		return nil
+		return scanner.UnmarshalErr()
 	}
 }
 

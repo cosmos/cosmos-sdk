@@ -26,7 +26,7 @@ const (
 func RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccounts {
 	genesisAccs := make(types.GenesisAccounts, len(simState.Accounts))
 	for i, acc := range simState.Accounts {
-		bacc := types.NewBaseAccountWithAddress(acc.Address)
+		bacc := types.NewBaseAccount(acc.Address, acc.PubKey, uint64(i), 0)
 
 		// Only consider making a vesting account once the initial bonded validator
 		// set is exhausted due to needing to track DelegatedVesting.

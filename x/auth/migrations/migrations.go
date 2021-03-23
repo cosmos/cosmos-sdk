@@ -35,8 +35,12 @@ func NewMigrator(keeper keeper.AccountKeeper, queryServer grpc.Server) Migrator 
 	return Migrator{keeper: keeper, queryServer: queryServer}
 }
 
-// Migrate1to2 migrates from version 1 to 2.
+// Migrate1to2 migrates vesting account to make the DelegatedVesting and DelegatedFree fields correctly
+// track delegations.
+// References: https://github.com/cosmos/cosmos-sdk/issues/8601, https://github.com/cosmos/cosmos-sdk/issues/8812
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+	var iterationErr error
+
 	m.keeper.IterateAccounts(ctx, func(account types.AccountI) (stop bool) {
 		asVesting := vesting(account)
 		if asVesting == nil {
@@ -44,17 +48,27 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 		}
 
 		addr := account.GetAddress().String()
-		balance := getBalance(
+		balance, err := getBalance(
 			ctx,
 			addr,
 			m.queryServer,
 		)
 
-		delegations := getDelegatorDelegationsSum(
+		if err != nil {
+			iterationErr = err
+			return true
+		}
+
+		delegations, err := getDelegatorDelegationsSum(
 			ctx,
 			addr,
 			m.queryServer,
 		)
+
+		if err != nil {
+			iterationErr = err
+			return true
+		}
 
 		asVesting, ok := resetVestingDelegatedBalances(asVesting)
 		if !ok {
@@ -73,7 +87,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 		return false
 	})
 
-	return nil
+	return iterationErr
 }
 
 func vesting(account types.AccountI) exported.VestingAccount {
@@ -108,10 +122,10 @@ func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.Ves
 	}
 }
 
-func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Coins {
+func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.Coins, error) {
 	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
 	if !ok {
-		panic(fmt.Sprintf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer))
+		return nil, fmt.Errorf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer)
 	}
 
 	queryFn := querier.Route(delegatorDelegationPath)
@@ -122,7 +136,7 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 
 	b, err := proto.Marshal(q)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("cannot marshal staking type query request, %w", err)
 	}
 	req := abci.RequestQuery{
 		Data: b,
@@ -130,11 +144,12 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 	}
 	resp, err := queryFn(ctx, req)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("staking query error, %w", err)
 	}
+
 	balance := new(stakingtypes.QueryDelegatorDelegationsResponse)
 	if err := proto.Unmarshal(resp.Value, balance); err != nil {
-		panic(fmt.Errorf("unable to unmarshal delegator query delegations: %w", err))
+		return nil, fmt.Errorf("unable to unmarshal delegator query delegations: %w", err)
 	}
 
 	res := sdk.NewCoins()
@@ -142,13 +157,13 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 		res = res.Add(i.Balance)
 	}
 
-	return res
+	return res, nil
 }
 
-func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Coins {
+func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.Coins, error) {
 	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
 	if !ok {
-		panic(fmt.Sprintf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer))
+		return nil, fmt.Errorf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer)
 	}
 
 	queryFn := querier.Route(balancesPath)
@@ -159,19 +174,20 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) sdk.Co
 	}
 	b, err := proto.Marshal(q)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("cannot marshal bank type query request, %w", err)
 	}
+
 	req := abci.RequestQuery{
 		Data: b,
 		Path: balancesPath,
 	}
 	resp, err := queryFn(ctx, req)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("bank query error, %w", err)
 	}
 	balance := new(banktypes.QueryAllBalancesResponse)
 	if err := proto.Unmarshal(resp.Value, balance); err != nil {
-		panic(fmt.Errorf("unable to unmarshal bank balance response: %w", err))
+		return nil, fmt.Errorf("unable to unmarshal bank balance response: %w", err)
 	}
-	return balance.Balances
+	return balance.Balances, nil
 }

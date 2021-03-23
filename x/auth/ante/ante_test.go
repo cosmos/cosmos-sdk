@@ -1010,15 +1010,26 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	suite.SetupTest(false) // setup
 
 	// setup an ante handler that only accepts PubKeyEd25519
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
-		switch pubkey := sig.PubKey.(type) {
-		case *ed25519.PubKey:
-			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-			return nil
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
-		}
-	}, suite.clientCtx.TxConfig.SignModeHandler())
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   suite.app.AccountKeeper,
+			BankKeeper:      suite.app.BankKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
+			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
+				switch pubkey := sig.PubKey.(type) {
+				case *ed25519.PubKey:
+					meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+					return nil
+				default:
+					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+				}
+			},
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.anteHandler = anteHandler
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(1)

@@ -64,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) `SupplyI` interface and `Supply` are removed and uses `sdk.Coins` for supply tracking
 * (x/upgrade) [\#8743](https://github.com/cosmos/cosmos-sdk/pull/8743) `UpgradeHandler` includes a new argument `VersionMap` which helps facilitate in-place migrations.
 * (x/auth) [\#8129](https://github.com/cosmos/cosmos-sdk/pull/8828) Updated `SigVerifiableTx.GetPubKeys` method signature to return error.
+* [\#8682](https://github.com/cosmos/cosmos-sdk/pull/8682) `ante.NewAnteHandler` updated to receive all positional params as `ante.HandlerOptions` struct. If required fields aren't set, throws error accordingly.
 
 
 ### State Machine Breaking

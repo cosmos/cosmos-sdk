@@ -2,14 +2,16 @@ package cosmosreflection
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+
+	"github.com/gogo/protobuf/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/gogo/protobuf/proto"
-	"google.golang.org/grpc"
-	"log"
 )
 
 type Config struct {
@@ -31,7 +33,9 @@ func Register(srv *grpc.Server, conf Config) error {
 }
 
 type reflectionServiceServer struct {
-	desc *AppDescriptor
+	desc                  *AppDescriptor
+	interfacesList        []string
+	interfaceImplementers map[string][]string
 }
 
 func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionServiceServer, error) {
@@ -72,21 +76,38 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		QueryServices: queryServiceDescriptor,
 		Tx:            deliverDescriptor,
 	}
-	b, _ := json.Marshal(desc)
-	log.Printf("%s", b)
-	return reflectionServiceServer{desc: desc}, nil
+	ifaceList := make([]string, len(desc.Codec.Interfaces))
+	ifaceImplementers := make(map[string][]string, len(desc.Codec.Interfaces))
+	for i, iface := range desc.Codec.Interfaces {
+		ifaceList[i] = iface.Fullname
+		impls := make([]string, len(iface.InterfaceImplementers))
+		for j, impl := range iface.InterfaceImplementers {
+			impls[j] = impl.TypeUrl
+		}
+		ifaceImplementers[iface.Fullname] = impls
+	}
+	return reflectionServiceServer{
+		desc:                  desc,
+		interfacesList:        ifaceList,
+		interfaceImplementers: ifaceImplementers,
+	}, nil
 }
 
-func (r reflectionServiceServer) GetAppDescriptor(ctx context.Context, request *GetAppDescriptorRequest) (*GetAppDescriptorResponse, error) {
-	panic("implement me")
+func (r reflectionServiceServer) GetAppDescriptor(_ context.Context, _ *GetAppDescriptorRequest) (*GetAppDescriptorResponse, error) {
+	return &GetAppDescriptorResponse{App: r.desc}, nil
 }
 
-func (r reflectionServiceServer) ListAllInterfaces(ctx context.Context, request *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
-	panic("implement me")
+func (r reflectionServiceServer) ListAllInterfaces(_ context.Context, _ *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
+	return &ListAllInterfacesResponse{InterfaceNames: r.interfacesList}, nil
 }
 
-func (r reflectionServiceServer) ListImplementations(ctx context.Context, request *ListImplementationsRequest) (*ListImplementationsResponse, error) {
-	panic("implement me")
+func (r reflectionServiceServer) ListImplementations(_ context.Context, request *ListImplementationsRequest) (*ListImplementationsResponse, error) {
+	implementers, ok := r.interfaceImplementers[request.InterfaceName]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "interface name %s does not exist", request.InterfaceName)
+	}
+
+	return &ListImplementationsResponse{ImplementationMessageNames: implementers}, nil
 }
 
 // newCodecDescriptor describes the codec given the codectypes.InterfaceRegistry

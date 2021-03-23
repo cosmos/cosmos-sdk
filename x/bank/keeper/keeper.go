@@ -342,13 +342,11 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 		return err
 	}
 
-	var newSupply sdk.Coins
 	for _, amount := range amounts {
 		supply := k.GetSupply(ctx, amount.GetDenom())
 		supply = supply.Add(amount)
-		newSupply = append(newSupply, supply)
+		k.setSupply(ctx, supply)
 	}
-	k.setSupply(ctx, newSupply)
 
 	logger := k.Logger(ctx)
 	logger.Info("minted coins from module account", "amount", amounts.String(), "from", moduleName)
@@ -378,13 +376,11 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 		return err
 	}
 
-	var newSupply sdk.Coins
 	for _, amount := range amounts {
 		supply := k.GetSupply(ctx, amount.GetDenom())
 		supply = supply.Sub(amount)
-		newSupply = append(newSupply, supply)
+		k.setSupply(ctx, supply)
 	}
-	k.setSupply(ctx, newSupply)
 
 	logger := k.Logger(ctx)
 	logger.Info("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
@@ -397,14 +393,12 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 	return nil
 }
 
-func (k BaseKeeper) setSupply(ctx sdk.Context, coins sdk.Coins) {
+func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	for i := range coins {
-		bz := k.cdc.MustMarshalBinaryBare(&coins[i])
-		supplyStore.Set([]byte(coins[i].GetDenom()), bz)
-	}
+	bz := k.cdc.MustMarshalBinaryBare(&coin)
+	supplyStore.Set([]byte(coin.GetDenom()), bz)
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {

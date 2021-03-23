@@ -1,11 +1,12 @@
-package migrations_test
+package v043_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations"
+	v043 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v043"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -499,8 +500,12 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			require.True(t, ok)
 			require.NoError(t, introduceTrackingBug(ctx, vestingAccount, app))
 
-			migrator := migrations.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
-			require.NoError(t, migrator.Migrate1to2(ctx))
+			newData, err := v043.MigrateStore(ctx, app.AccountKeeper.GetAllAccounts(ctx), app.GRPCQueryRouter())
+			require.NoError(t, err)
+
+			for _, a := range newData {
+				app.AccountKeeper.SetAccount(ctx, a)
+			}
 
 			var expVested sdk.Coins
 			var expFree sdk.Coins

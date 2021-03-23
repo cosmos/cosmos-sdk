@@ -1,22 +1,18 @@
-package migrations
+package v043
 
 import (
 	"fmt"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-
-	"github.com/gogo/protobuf/grpc"
-	"github.com/gogo/protobuf/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/grpc"
+	"github.com/gogo/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 const (
@@ -24,55 +20,39 @@ const (
 	balancesPath            = "/cosmos.bank.v1beta1.Query/AllBalances"
 )
 
-// Migrator is a struct for handling in-place store migrations.
-type Migrator struct {
-	keeper      keeper.AccountKeeper
-	queryServer grpc.Server
-}
-
-// NewMigrator returns a new Migrator.
-func NewMigrator(keeper keeper.AccountKeeper, queryServer grpc.Server) Migrator {
-	return Migrator{keeper: keeper, queryServer: queryServer}
-}
-
-// Migrate1to2 migrates vesting account to make the DelegatedVesting and DelegatedFree fields correctly
-// track delegations.
-// References: https://github.com/cosmos/cosmos-sdk/issues/8601, https://github.com/cosmos/cosmos-sdk/issues/8812
-func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	var iterationErr error
-
-	m.keeper.IterateAccounts(ctx, func(account types.AccountI) (stop bool) {
-		asVesting := vesting(account)
+func migrateVestingAccounts(ctx sdk.Context, accounts []types.AccountI, queryServer grpc.Server) ([]types.AccountI, error) {
+	for i := 0; i < len(accounts); i++ {
+		asVesting := vesting(accounts[i])
 		if asVesting == nil {
-			return false
+			continue
 		}
+
+		account := accounts[i]
 
 		addr := account.GetAddress().String()
 		balance, err := getBalance(
 			ctx,
 			addr,
-			m.queryServer,
+			queryServer,
 		)
 
 		if err != nil {
-			iterationErr = err
-			return true
+			return nil, err
 		}
 
 		delegations, err := getDelegatorDelegationsSum(
 			ctx,
 			addr,
-			m.queryServer,
+			queryServer,
 		)
 
 		if err != nil {
-			iterationErr = err
-			return true
+			return nil, err
 		}
 
 		asVesting, ok := resetVestingDelegatedBalances(asVesting)
 		if !ok {
-			return false
+			continue
 		}
 
 		// balance before any delegation includes balance of delegation
@@ -82,12 +62,10 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 
 		asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
 
-		m.keeper.SetAccount(ctx, account)
+		accounts[i] = asVesting.(types.AccountI)
+	}
 
-		return false
-	})
-
-	return iterationErr
+	return accounts, nil
 }
 
 func vesting(account types.AccountI) exported.VestingAccount {
@@ -190,4 +168,11 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 		return nil, fmt.Errorf("unable to unmarshal bank balance response: %w", err)
 	}
 	return balance.Balances, nil
+}
+
+// MigrateStore migrates vesting account to make the DelegatedVesting and DelegatedFree fields correctly
+// track delegations.
+// References: https://github.com/cosmos/cosmos-sdk/issues/8601, https://github.com/cosmos/cosmos-sdk/issues/8812
+func MigrateStore(ctx sdk.Context, accounts []types.AccountI, queryServer grpc.Server) ([]types.AccountI, error) {
+	return migrateVestingAccounts(ctx, accounts, queryServer)
 }

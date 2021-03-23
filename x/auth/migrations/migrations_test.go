@@ -1,10 +1,11 @@
-package keeper_test
+package migrations_test
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -26,10 +27,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	testCases := []struct {
 		name        string
 		prepareFunc func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress)
-		tokenAmount int64
 		expVested   int64
 		expFree     int64
-		blockTime   int64
 	}{
 		{
 			"delayed vesting has vested, multiple delegations less than the total account balance",
@@ -50,10 +49,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
+			0,
 			300,
-			0,
-			200,
-			0,
 		},
 		{
 			"delayed vesting has vested, single delegations which exceed the vested amount",
@@ -70,10 +67,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
+			0,
 			300,
-			0,
-			200,
-			0,
 		},
 		{
 			"delayed vesting has vested, multiple delegations which exceed the vested amount",
@@ -94,10 +89,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
+			0,
 			300,
-			0,
-			200,
-			0,
 		},
 		{
 			"delayed vesting has not vested, single delegations  which exceed the vested amount",
@@ -112,10 +105,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
-			300,
 			200,
-			0,
-			0,
+			100,
 		},
 		{
 			"delayed vesting has not vested, multiple delegations which exceed the vested amount",
@@ -134,10 +125,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err = app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(100), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
-			300,
 			200,
-			0,
-			0,
+			100,
 		},
 		{
 			"not end time",
@@ -156,8 +145,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			300,
-			300,
-			0,
 			0,
 		},
 		{
@@ -173,8 +160,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			300,
-			300,
-			0,
 			0,
 		},
 		{
@@ -192,10 +177,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
-			300,
 			0,
 			300,
-			0,
 		},
 		{
 			"continuous vesting, start time after blocktime",
@@ -215,8 +198,6 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 			},
 			300,
-			300,
-			0,
 			0,
 		},
 		{
@@ -236,10 +217,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
-			300,
 			200,
 			100,
-			0,
 		},
 		{
 			"continuous vesting, start time and endtime passed",
@@ -258,179 +237,34 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
-			300,
 			0,
 			300,
-			0,
 		},
 		{
-			"periodic vesting, start time and endtime passed",
+			"periodic vesting account, yet to be vested, some rewards delegated",
 			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
 
-				startTime := ctx.BlockTime().AddDate(-1, 0, 0).Unix()
 				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
-				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(300)))
+				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(100)))
+
+				start := ctx.BlockTime().Unix() + int64(time.Hour/time.Second)
 
 				periods := []types.Period{
 					{
-						Length: 1,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(100))),
+						Length: int64((24 * time.Hour) / time.Second),
+						Amount: vestedCoins,
 					},
 				}
 
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
+				account := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, start, periods)
 
-				app.AccountKeeper.SetAccount(ctx, delayedAccount)
+				app.AccountKeeper.SetAccount(ctx, account)
 
-				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(300), stakingtypes.Unbonded, validator, true)
+				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(150), stakingtypes.Unbonded, validator, true)
 				require.NoError(t, err)
 			},
-			300,
-			0,
-			300,
-			0,
-		},
-		{
-			"periodic vesting account, nothing has vested yet",
-			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
-				startTime := int64(1601042400)
-				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
-				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(3666666670000)))
-				periods := []types.Period{
-					{
-						Length: 31536000,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1833333335000))),
-					},
-					{
-						Length: 15638400,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-					{
-						Length: 15897600,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-				}
-
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
-
-				app.AccountKeeper.SetAccount(ctx, delayedAccount)
-
-				// delegation of the original vesting
-				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(3666666670000), stakingtypes.Unbonded, validator, true)
-				require.NoError(t, err)
-			},
-			3666666670000,
-			3666666670000,
-			0,
-			0,
-		},
-		{
-			"periodic vesting account, all has vested",
-			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
-				startTime := int64(1601042400)
-				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
-				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(3666666670000)))
-				periods := []types.Period{
-					{
-						Length: 31536000,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1833333335000))),
-					},
-					{
-						Length: 15638400,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-					{
-						Length: 15897600,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-				}
-
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
-
-				ctx = ctx.WithBlockTime(time.Unix(1601042400+31536000+15897600+15897600+1, 0))
-
-				app.AccountKeeper.SetAccount(ctx, delayedAccount)
-
-				// delegation of the original vesting
-				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(3666666670000), stakingtypes.Unbonded, validator, true)
-				require.NoError(t, err)
-			},
-			3666666670000,
-			0,
-			3666666670000,
-			1601042400 + 31536000 + 15897600 + 15897600 + 1,
-		},
-		{
-			"periodic vesting account, first period has vested",
-			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
-				startTime := int64(1601042400)
-				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
-				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(3666666670000)))
-				periods := []types.Period{
-					{
-						Length: 31536000,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1833333335000))),
-					},
-					{
-						Length: 15638400,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-					{
-						Length: 15897600,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-				}
-
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
-
-				ctx = ctx.WithBlockTime(time.Unix(1601042400+31536000+1, 0))
-
-				app.AccountKeeper.SetAccount(ctx, delayedAccount)
-
-				// delegation of the original vesting
-				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(3666666670000), stakingtypes.Unbonded, validator, true)
-				require.NoError(t, err)
-			},
-			3666666670000,
-			3666666670000 - 1833333335000,
-			1833333335000,
-			1601042400 + 31536000 + 1,
-		},
-		{
-			"periodic vesting account, first 2 period has vested",
-			func(app *simapp.SimApp, ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress) {
-				startTime := int64(1601042400)
-				baseAccount := types3.NewBaseAccountWithAddress(delegatorAddr)
-				vestedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(3666666670000)))
-				periods := []types.Period{
-					{
-						Length: 31536000,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1833333335000))),
-					},
-					{
-						Length: 15638400,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-					{
-						Length: 15897600,
-						Amount: sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(916666667500))),
-					},
-				}
-
-				delayedAccount := types.NewPeriodicVestingAccount(baseAccount, vestedCoins, startTime, periods)
-
-				ctx = ctx.WithBlockTime(time.Unix(1601042400+31536000+15638400+1, 0))
-
-				app.AccountKeeper.SetAccount(ctx, delayedAccount)
-
-				// delegation of the original vesting
-				_, err := app.StakingKeeper.Delegate(ctx, delegatorAddr, sdk.NewInt(3666666670000), stakingtypes.Unbonded, validator, true)
-				require.NoError(t, err)
-			},
-			3666666670000,
-			3666666670000 - 1833333335000 - 916666667500,
-			1833333335000 + 916666667500,
-			1601042400 + 31536000 + 15638400 + 1,
+			100,
+			50,
 		},
 	}
 
@@ -442,18 +276,14 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				Time: time.Now(),
 			})
 
-			addrs := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(tc.tokenAmount+10))
+			addrs := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(310))
 			delegatorAddr := addrs[0]
 
-			_, valAddr := createValidator(t, ctx, app, tc.tokenAmount*2)
+			_, valAddr := createValidator(t, ctx, app, 300)
 			validator, found := app.StakingKeeper.GetValidator(ctx, valAddr)
 			require.True(t, found)
 
 			tc.prepareFunc(app, ctx, validator, delegatorAddr)
-
-			if tc.blockTime != 0 {
-				ctx = ctx.WithBlockTime(time.Unix(tc.blockTime, 0))
-			}
 
 			// We introduce the bug
 			savedAccount := app.AccountKeeper.GetAccount(ctx, delegatorAddr)
@@ -461,7 +291,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			require.True(t, ok)
 			require.NoError(t, introduceTrackingBug(ctx, vestingAccount, app))
 
-			migrator := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
+			migrator := migrations.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
 			require.NoError(t, migrator.Migrate1to2(ctx))
 
 			var expVested sdk.Coins
@@ -489,14 +319,15 @@ func TestMigrateVestingAccounts(t *testing.T) {
 }
 
 func trackingCorrected(ctx sdk.Context, t *testing.T, ak authkeeper.AccountKeeper, addr sdk.AccAddress, expDelVesting sdk.Coins, expDelFree sdk.Coins) {
+	t.Helper()
 	baseAccount := ak.GetAccount(ctx, addr)
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)
 
 	vestedOk := expDelVesting.IsEqual(vDA.GetDelegatedVesting())
 	freeOk := expDelFree.IsEqual(vDA.GetDelegatedFree())
-	require.True(t, vestedOk, fmt.Sprint("delegated vesting ", vDA.GetDelegatedVesting().String()))
-	require.True(t, freeOk, fmt.Sprint("delegated free ", vDA.GetDelegatedFree().String()))
+	require.True(t, vestedOk, vDA.GetDelegatedVesting().String())
+	require.True(t, freeOk, vDA.GetDelegatedFree().String())
 }
 
 func introduceTrackingBug(ctx sdk.Context, vesting exported.VestingAccount, app *simapp.SimApp) error {
@@ -538,7 +369,7 @@ func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers i
 	require.NoError(t, err)
 
 	app.StakingKeeper.SetValidator(ctx, val1)
-	require.NoError(t, app.StakingKeeper.SetValidatorByConsAddr(ctx, val1))
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
 
 	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers), stakingtypes.Unbonded, val1, true)

@@ -3,6 +3,8 @@ package client
 import (
 	"github.com/spf13/pflag"
 
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -68,4 +70,10 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 		CountTotal: countTotal,
 		Reverse:    reverse,
 	}, nil
+}
+
+// NewClientFromNode sets up Client implementation that communicates with a Tendermint node over
+// JSON RPC and WebSockets
+func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
+	return rpchttp.New(nodeURI, "/websocket")
 }

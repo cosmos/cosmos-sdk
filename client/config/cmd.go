@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -27,7 +26,6 @@ func Cmd() *cobra.Command {
 }
 
 func runConfigCmd(cmd *cobra.Command, args []string) error {
-
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	configPath := filepath.Join(clientCtx.HomeDir, "config")
 
@@ -44,11 +42,13 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 	case 1:
 		// it's a get
-
 		key := args[0]
+
 		switch key {
 		case flags.FlagChainID:
 			cmd.Println(conf.ChainID)
+		case flags.FlagKeyringDir:
+			cmd.Println(conf.KeyringDir)
 		case flags.FlagKeyringBackend:
 			cmd.Println(conf.KeyringBackend)
 		case tmcli.OutputFlag:
@@ -64,12 +64,13 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 	case 2:
 		// it's set
-
 		key, value := args[0], args[1]
 
 		switch key {
 		case flags.FlagChainID:
 			conf.SetChainID(value)
+		case flags.FlagKeyringDir:
+			conf.SetKeyringDir(value)
 		case flags.FlagKeyringBackend:
 			conf.SetKeyringBackend(value)
 		case tmcli.OutputFlag:
@@ -82,19 +83,13 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			return errUnknownConfigKey(key)
 		}
 
-		configTemplate, err := initConfigTemplate()
-		if err != nil {
-			return fmt.Errorf("could not initiate config template: %v", err)
-		}
-
 		confFile := filepath.Join(configPath, "client.toml")
-		if err := writeConfigFile(confFile, conf, configTemplate); err != nil {
+		if err := writeConfigToFile(confFile, conf); err != nil {
 			return fmt.Errorf("could not write client config to the file: %v", err)
 		}
 
 	default:
-		// print error
-		return errors.New("cound not execute config command")
+		panic("cound not execute config command")
 	}
 
 	return nil

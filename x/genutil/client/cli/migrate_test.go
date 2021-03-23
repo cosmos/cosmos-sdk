@@ -25,35 +25,41 @@ func (s *IntegrationTestSuite) TestMigrateGenesis() {
 		target    string
 		expErr    bool
 		expErrMsg string
+		check     func(jsonOut string)
 	}{
 		{
-			"migrate to 0.36",
+			"migrate 0.34 to 0.36",
 			`{"chain_id":"test","app_state":{}}`,
 			"v0.36",
-			false, "",
+			false, "", func(_ string) {},
 		},
 		{
-			"exported 0.37 genesis file",
+			"migrate 0.37 to 0.42",
 			v037Exported,
-			"v0.40",
-			true, "Make sure that you have correctly migrated all Tendermint consensus params",
+			"v0.42",
+			true, "Make sure that you have correctly migrated all Tendermint consensus params", func(_ string) {},
 		},
 		{
-			"valid 0.40 genesis file",
+			"migrate 0.42 to 0.43",
 			v040Valid,
-			"v0.40",
+			"v0.43",
 			false, "",
+			func(jsonOut string) {
+				// Make sure the json output contains the ADR-037 gov weighted votes.
+				s.Require().Contains(jsonOut, "\"weight\":\"1.000000000000000000\"")
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
-			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})
+			jsonOutput, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})
 			if tc.expErr {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
+				tc.check(jsonOutput.String())
 			}
 		})
 	}

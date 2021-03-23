@@ -38,22 +38,6 @@ func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.Pu
 	}, nil
 }
 
-// MkKeysOutput returns a slice of KeyOutput objects, each with the "acc"
-// Bech32 prefixes, given a slice of Info objects. It returns an error if any
-// call to MkKeyOutput fails.
-func MkKeysOutput(infos []Info) ([]KeyOutput, error) {
-	kos := make([]KeyOutput, len(infos))
-	var err error
-	for i, info := range infos {
-		kos[i], err = MkKeyOutput(info)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return kos, nil
-}
-
 // MkConsKeyOutput create a KeyOutput in with "cons" Bech32 prefixes.
 func MkConsKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
@@ -75,4 +59,20 @@ func MkKeyOutput(keyInfo Info) (KeyOutput, error) {
 	pk := keyInfo.GetPubKey()
 	addr := sdk.AccAddress(pk.Address())
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
+}
+
+// MkKeysOutput returns a slice of KeyOutput objects, each with the "acc"
+// Bech32 prefixes, given a slice of Info objects. It returns an error if any
+// call to MkKeyOutput fails.
+func MkKeysOutput(infos []Info) ([]KeyOutput, error) {
+	kos := make([]KeyOutput, len(infos))
+	var err error
+	for i, info := range infos {
+		kos[i], err = MkKeyOutput(info)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return kos, nil
 }

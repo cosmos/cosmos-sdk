@@ -17,16 +17,14 @@ func TestBech32KeysOutput(t *testing.T) {
 	tmpKey := sk.PubKey()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
 
-	multiInfo, err := NewMultiInfo("multisig", multisigPk)
+	info, err := NewMultiInfo("multisig", multisigPk)
 	require.NoError(t, err)
-	accAddr := sdk.AccAddress(multiInfo.GetPubKey().Address().Bytes())
-
-	expectedOutput, err := NewKeyOutput(multiInfo.GetName(), multiInfo.GetType(), accAddr, multisigPk)
+	accAddr := sdk.AccAddress(info.GetPubKey().Address())
+	expectedOutput, err := NewKeyOutput(info.GetName(), info.GetType(), accAddr, multisigPk)
 	require.NoError(t, err)
 
-	outputs, err := Bech32KeysOutput([]Info{multiInfo})
-	require.NoError(MkKeysOutput
-	require.Equal(t, expectedOutput, outputs[0])
-	require.Len(t, outputs, 1)
-	require.Equal(t, `{Name:multisig Type:multi Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{"threshold":1,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}]} Mnemonic:}`, fmt.Sprintf("%+v", outputs[0]))
+	out, err := MkKeyOutput(info)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput, out)
+	require.Equal(t, `{Name:multisig Type:multi Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":1,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}]} Mnemonic:}`, fmt.Sprintf("%+v", out))
 }

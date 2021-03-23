@@ -110,7 +110,6 @@ func TestPublicKeySafe(t *testing.T) {
 }
 
 func TestPublicKeyHDPath(t *testing.T) {
-	// TODO: convert this tests to not use bech32
 	expectedPubKeys := []string{
 		"cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
 		"cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65",
@@ -142,8 +141,8 @@ func TestPublicKeyHDPath(t *testing.T) {
 	privKeys := make([]types.LedgerPrivKey, numIters)
 
 	// Check with device
-	for i := uint32(0); i < 10; i++ {
-		path := *hd.NewFundraiserParams(0, sdk.CoinType, i)
+	for i := 0; i < len(expectedAddrs); i++ {
+		path := *hd.NewFundraiserParams(0, sdk.CoinType, uint32(i))
 		t.Logf("Checking keys at %s\n", path)
 
 		priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")

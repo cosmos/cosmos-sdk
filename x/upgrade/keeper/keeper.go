@@ -29,18 +29,18 @@ type Keeper struct {
 	storeKey           sdk.StoreKey
 	cdc                codec.BinaryMarshaler
 	upgradeHandlers    map[string]types.UpgradeHandler
-	protocolSetter     ProtocolVersionSetter // Implements setting the protocol version field on BaseApp
+	versionSetter      ProtocolVersionSetter // Implements setting the protocol version field on BaseApp
 }
 
 // NewKeeper constructs an upgrade Keeper
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, pm ProtocolVersionSetter) Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, vs ProtocolVersionSetter) Keeper {
 	return Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
 		cdc:                cdc,
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
-		protocolSetter:     pm,
+		versionSetter:      vs,
 	}
 }
 
@@ -261,9 +261,9 @@ func (k Keeper) ApplyUpgrade(ctx sdk.Context, plan types.Plan) {
 	// incremement the protocol version and set it in state and baseapp
 	nextProtocolVersion := k.getProtocolVersion(ctx) + 1
 	k.setProtocolVersion(ctx, nextProtocolVersion)
-	if k.protocolSetter != nil {
+	if k.versionSetter != nil {
 		// set protocol version on BaseApp
-		k.protocolSetter.SetProtocolVersion(nextProtocolVersion)
+		k.versionSetter.SetProtocolVersion(nextProtocolVersion)
 	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.

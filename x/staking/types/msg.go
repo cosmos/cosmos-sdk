@@ -140,6 +140,11 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return ErrMinSelfDelegationInvalid
 	}
 
+	// ensure delegation is at least one consensus power
+	if sdk.TokensToConsensusPower(msg.Value.Amount) <= 0 {
+		return sdkerrors.Wrapf(ErrBadDelegationAmount, "self delegation amount (%s) must be at least one consensus power (%s)", msg.Value.Amount, sdk.PowerReduction)
+	}
+
 	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
 		return ErrSelfDelegationBelowMinimum
 	}

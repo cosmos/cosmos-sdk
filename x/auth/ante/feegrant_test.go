@@ -5,9 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,41 +17,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
-
-// AnteTestSuite is a test suite to be used with ante handler tests.
-type AnteTestSuite struct {
-	suite.Suite
-
-	app         *simapp.SimApp
-	anteHandler sdk.AnteHandler
-	ctx         sdk.Context
-	clientCtx   client.Context
-	txBuilder   client.TxBuilder
-}
-
-// SetupTest setups a new test, with new app, context, and anteHandler.
-func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
-	suite.app, suite.ctx = createTestApp(isCheckTx)
-	suite.ctx = suite.ctx.WithBlockHeight(1)
-
-	// Set up TxConfig.
-	encodingConfig := simapp.MakeTestEncodingConfig()
-	// We're using TestMsg encoding in some tests, so register it here.
-	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-
-	suite.clientCtx = client.Context{}.
-		WithTxConfig(encodingConfig.TxConfig)
-
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper, authante.DefaultSigVerificationGasConsumer, encodingConfig.TxConfig.SignModeHandler())
-}
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.SetupTest(false)
@@ -63,8 +32,8 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	protoTxCfg := tx.NewTxConfig(codec.NewProtoCodec(app.InterfaceRegistry()), tx.DefaultSignModes)
 
 	// this just tests our handler
-	dfd := ante.NewDeductGrantedFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper)
-	ourAnteHandler := sdk.ChainAnteDecorators(dfd)
+	dfd := ante.NewDeductFeeDecorator(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper)
+	feeAnteHandler := sdk.ChainAnteDecorators(dfd)
 
 	// this tests the whole stack
 	anteHandlerStack := suite.anteHandler
@@ -97,79 +66,68 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	suite.Require().NoError(err)
 
 	cases := map[string]struct {
-		signerKey     cryptotypes.PrivKey
-		signer        sdk.AccAddress
-		feeAccount    sdk.AccAddress
-		feeAccountKey cryptotypes.PrivKey
-		handler       sdk.AnteHandler
-		fee           int64
-		valid         bool
+		signerKey  cryptotypes.PrivKey
+		signer     sdk.AccAddress
+		feeAccount sdk.AccAddress
+		fee        int64
+		valid      bool
 	}{
-		"paying with low funds (only ours)": {
+		"paying with low funds": {
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       50,
-			handler:   ourAnteHandler,
 			valid:     false,
 		},
-		"paying with good funds (only ours)": {
+		"paying with good funds": {
 			signerKey: priv2,
 			signer:    addr2,
 			fee:       50,
-			handler:   ourAnteHandler,
 			valid:     true,
 		},
-		"paying with no account (only ours)": {
+		"paying with no account": {
 			signerKey: priv3,
 			signer:    addr3,
 			fee:       1,
-			handler:   ourAnteHandler,
 			valid:     false,
 		},
-		"no fee with real account (only ours)": {
+		"no fee with real account": {
 			signerKey: priv1,
 			signer:    addr1,
 			fee:       0,
-			handler:   ourAnteHandler,
 			valid:     true,
 		},
-		"no fee with no account (only ours)": {
+		"no fee with no account": {
 			signerKey: priv5,
 			signer:    addr5,
 			fee:       0,
-			handler:   ourAnteHandler,
 			valid:     false,
 		},
-		"valid fee grant without account (only ours)": {
+		"valid fee grant without account": {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr2,
 			fee:        50,
-			handler:    ourAnteHandler,
 			valid:      true,
 		},
-		"no fee grant (only ours)": {
+		"no fee grant": {
 			signerKey:  priv3,
 			signer:     addr3,
 			feeAccount: addr1,
 			fee:        2,
-			handler:    ourAnteHandler,
 			valid:      false,
 		},
-		"allowance smaller than requested fee (only ours)": {
+		"allowance smaller than requested fee": {
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr2,
 			fee:        50,
-			handler:    ourAnteHandler,
 			valid:      false,
 		},
-		"granter cannot cover allowed fee grant (only ours)": {
+		"granter cannot cover allowed fee grant": {
 			signerKey:  priv4,
 			signer:     addr4,
 			feeAccount: addr1,
 			fee:        50,
-			handler:    ourAnteHandler,
 			valid:      false,
 		},
 	}
@@ -188,14 +146,14 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 
 			tx, err := genTxWithFeeGranter(protoTxCfg, msgs, fee, helpers.DefaultGenTxGas, ctx.ChainID(), accNums, seqs, tc.feeAccount, privs...)
 			suite.Require().NoError(err)
-			_, err = ourAnteHandler(ctx, tx, false)
+			_, err = feeAnteHandler(ctx, tx, false) // tests only feegrant ante
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 			}
 
-			_, err = anteHandlerStack(ctx, tx, false)
+			_, err = anteHandlerStack(ctx, tx, false) // tests while stack
 			if tc.valid {
 				suite.Require().NoError(err)
 			} else {
@@ -203,15 +161,6 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 			}
 		})
 	}
-}
-
-// returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-
-	return app, ctx
 }
 
 // don't consume any gas
@@ -279,8 +228,4 @@ func genTxWithFeeGranter(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, 
 	}
 
 	return tx.GetTx(), nil
-}
-
-func TestAnteTestSuite(t *testing.T) {
-	suite.Run(t, new(AnteTestSuite))
 }

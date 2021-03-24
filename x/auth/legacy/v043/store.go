@@ -1,10 +1,12 @@
 package v043
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -13,14 +15,24 @@ import (
 	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
-	delegatorDelegationPath = "/cosmos.staking.v1beta1.Query/DelegatorDelegations"
-	balancesPath            = "/cosmos.bank.v1beta1.Query/AllBalances"
+	delegatorDelegationPath           = "/cosmos.staking.v1beta1.Query/DelegatorDelegations"
+	stakingParamsPath                 = "/cosmos.staking.v1beta1.Query/Params"
+	delegatorUnbondingDelegationsPath = "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations"
+	balancesPath                      = "/cosmos.bank.v1beta1.Query/AllBalances"
 )
 
 func migrateVestingAccounts(ctx sdk.Context, accounts []types.AccountI, queryServer grpc.Server) ([]types.AccountI, error) {
+	bondDenom, err := getBondDenom(ctx, queryServer)
+
+	if err != nil {
+		return nil, err
+	}
+
 	for i := 0; i < len(accounts); i++ {
 		asVesting, ok := accounts[i].(exported.VestingAccount)
 		if !ok {
@@ -46,9 +58,14 @@ func migrateVestingAccounts(ctx sdk.Context, accounts []types.AccountI, querySer
 			queryServer,
 		)
 
-		if err != nil {
-			return nil, err
-		}
+		unbondingDelegations, err := getDelegatorUnbondingDelegationsSum(
+			ctx,
+			addr,
+			bondDenom,
+			queryServer,
+		)
+
+		delegations = delegations.Add(unbondingDelegations...)
 
 		asVesting, ok = resetVestingDelegatedBalances(asVesting)
 		if !ok {
@@ -113,6 +130,10 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 	}
 	resp, err := queryFn(ctx, req)
 	if err != nil {
+		e, ok := status.FromError(err)
+		if ok && e.Code() == codes.NotFound {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("staking query error, %w", err)
 	}
 
@@ -124,6 +145,50 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 	res := sdk.NewCoins()
 	for _, i := range balance.DelegationResponses {
 		res = res.Add(i.Balance)
+	}
+
+	return res, nil
+}
+
+func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom string, queryServer grpc.Server) (sdk.Coins, error) {
+	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer)
+	}
+
+	queryFn := querier.Route(delegatorUnbondingDelegationsPath)
+
+	q := &stakingtypes.QueryDelegatorUnbondingDelegationsRequest{
+		DelegatorAddr: address,
+	}
+
+	b, err := proto.Marshal(q)
+	if err != nil {
+		return nil, fmt.Errorf("cannot marshal staking type query request, %w", err)
+	}
+	req := abci.RequestQuery{
+		Data: b,
+		Path: delegatorUnbondingDelegationsPath,
+	}
+	resp, err := queryFn(ctx, req)
+	if err != nil && !errors.Is(err, sdkerrors.ErrNotFound) {
+		e, ok := status.FromError(err)
+		if ok && e.Code() == codes.NotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("staking query error, %w", err)
+	}
+
+	balance := new(stakingtypes.QueryDelegatorUnbondingDelegationsResponse)
+	if err := proto.Unmarshal(resp.Value, balance); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal delegator query delegations: %w", err)
+	}
+
+	res := sdk.NewCoins()
+	for _, i := range balance.UnbondingResponses {
+		for _, r := range i.Entries {
+			res = res.Add(sdk.NewCoin(bondDenom, r.Balance))
+		}
 	}
 
 	return res, nil
@@ -159,6 +224,38 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 		return nil, fmt.Errorf("unable to unmarshal bank balance response: %w", err)
 	}
 	return balance.Balances, nil
+}
+
+func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
+	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
+	if !ok {
+		return "", fmt.Errorf("unexpected type: %T wanted *baseapp.GRPCQueryRouter", queryServer)
+	}
+
+	queryFn := querier.Route(stakingParamsPath)
+
+	q := &stakingtypes.QueryParamsRequest{}
+
+	b, err := proto.Marshal(q)
+	if err != nil {
+		return "", fmt.Errorf("cannot marshal staking params query request, %w", err)
+	}
+	req := abci.RequestQuery{
+		Data: b,
+		Path: stakingParamsPath,
+	}
+
+	resp, err := queryFn(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("staking query error, %w", err)
+	}
+
+	params := new(stakingtypes.QueryParamsResponse)
+	if err := proto.Unmarshal(resp.Value, params); err != nil {
+		return "", fmt.Errorf("unable to unmarshal delegator query delegations: %w", err)
+	}
+
+	return params.Params.BondDenom, nil
 }
 
 // MigrateStore migrates vesting account to make the DelegatedVesting and DelegatedFree fields correctly

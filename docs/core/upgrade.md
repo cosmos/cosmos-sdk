@@ -25,7 +25,7 @@ func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.R
 ```
 
 ### Consensus Version
-The consensus version is defined on each app module. This is a `uint64` that tracks breaking changes of each module for migrations. 
+The consensus version is defined on each app module by the module developer. It serves as the breaking change version of the module. 
 
 ### Version Map
 The version map is a mapping of module names to consensus versions. The map is persisted to state for use during in-place migrations. 

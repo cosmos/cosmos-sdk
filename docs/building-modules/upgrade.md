@@ -2,13 +2,15 @@
 order: 13
 -->
 
-# Upgrade
+# In-Place Store Migrations
 
-The Upgrade module allows your modules to smoothly transition to new versions with breaking changes. This document outlines how to build modules to take advantage of this functionality. 
+In-place store migrations allow your modules to smoothly transition to new versions with breaking changes. This document outlines how to build modules to take advantage of this functionality. 
+## Pre-requisite Readings
 
-# Consensus Version
+- [In-Place Store Migration](../core-concepts/upgrade.md) {prereq}
+## Consensus Version
 
-In order to successfully upgrade your existing modules, your `AppModule`s must implement the function `ConsensusVersion() uint64`. The `uint64` returned will serve as the consensus version and should be hard coded by the module developer. This number will serve as a state-breaking version of each app module. The initial version *MUST* be set to 1.
+In order to successfully upgrade your existing modules, your `AppModule`s must implement the function `ConsensusVersion() uint64`. The `uint64` returned will serve as the consensus version and should be hard coded by the module developer. This number will serve as a state-breaking version of each app module, so it *MUST* be incremented on each consensus-breaking change introduced by the module. The initial version *MUST* be set to 1.
 
 # Registering Migrations
 
@@ -26,7 +28,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 ```
 
-Since these migrations are functions that need access to a Keeper's store, we use a wrapper around the keepers called `Migrator`. An example of this can be found (here)[https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/keeper/migrations.go]. In addition to the `Migrator` wrapper, we also define our migration scripts. More on that below.
+Since these migrations are functions that need access to a Keeper's store, we use a wrapper around the keepers called `Migrator`. An example of this can be found here:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/6ac8898fec9bd7ea2c1e5c79e0ed0c3f827beb55/x/bank/keeper/migrations.go#L8-L21
+
+In addition to the `Migrator` wrapper, we also define our migration scripts. More on that below.
 
 # Writing Migration Scripts
 
@@ -39,4 +45,4 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 ```
 
-If you would like to see example code of changes implemented in a migration, you can check out the code [here](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as perscribed in (ADR-028)[https://docs.cosmos.network/master/architecture/adr-028-public-key-addresses.html].
+If you would like to see example code of changes implemented in a migration, you can check out the code [here](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as perscribed in (ADR-028)[../architecture/adr-028-public-key-addresses.md].

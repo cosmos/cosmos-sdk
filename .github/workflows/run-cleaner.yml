@@ -1,4 +1,4 @@
-name: Run Cleaner
+name: Janitor
 on:
   pull_request:
 

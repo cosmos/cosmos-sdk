@@ -45,4 +45,4 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 ```
 
-If you would like to see example code of changes implemented in a migration, you can check out the code [here](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as perscribed in (ADR-028)[https://docs.cosmos.network/master/architecture/adr-028-public-key-addresses.html].
+If you would like to see example code of changes implemented in a migration, you can check out the code [here](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as perscribed in (ADR-028)[../architecture/adr-028-public-key-addresses.md].

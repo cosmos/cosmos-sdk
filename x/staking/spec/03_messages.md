@@ -61,12 +61,21 @@ assigned to `Delegation.Shares`.
 This service message is expected to fail if:
 
 - the validator is does not exist
-- the validator is jailed
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
 
 If an existing `Delegation` object for provided addresses does not already
 exist than it is created as part of this service message otherwise the existing
 `Delegation` is updated to include the newly received shares.
+
+The delegator receives newly minted shares at the current exchange rate.
+The exchange rate is the number of existing shares in the validator divided by
+the number of currently delegated tokens.
+
+The validator is updated in the `ValidatorByPower` index, and the delegation is
+tracked in validator object in the `Validators` index.
+
+It is possible to delegate to a jailed validator, the only difference being it
+will not be added to the power index until it is unjailed.
 
 ## Msg/Undelegate
 

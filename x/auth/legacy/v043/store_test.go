@@ -585,7 +585,8 @@ func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers i
 	require.NoError(t, app.StakingKeeper.SetValidatorByConsAddr(ctx, val1))
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
 
-	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers), stakingtypes.Unbonded, val1, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers), stakingtypes.Unbonded, val1, true)
+	require.NoError(t, err)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 

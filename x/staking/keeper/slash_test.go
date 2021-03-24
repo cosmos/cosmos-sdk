@@ -268,8 +268,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
 	ubdTokens := sdk.TokensFromConsensusPower(4)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), ubdTokens)
+	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens)
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
 	// slash validator for the first time

@@ -133,9 +133,9 @@ func newCodecDescriptor(ir codectypes.InterfaceRegistry) (*CodecDescriptor, erro
 			}
 		}
 		interfaceDescriptors[i] = &InterfaceDescriptor{
-			Fullname:                iface,
-			InterfaceAcceptingTypes: nil, // NOTE(fdymylja): this will be used in the future when we will replace *anypb.Any fields with the interface
-			InterfaceImplementers:   interfaceImplementers,
+			Fullname:                   iface,
+			InterfaceAcceptingMessages: nil, // NOTE(fdymylja): this will be used in the future when we will replace *anypb.Any fields with the interface
+			InterfaceImplementers:      interfaceImplementers,
 		}
 	}
 

@@ -81,8 +81,8 @@ message CodecDescriptor {
 message InterfaceDescriptor {
   // fullname is the name of the interface
   string fullname = 1;
-  // interface_type_descriptors contains information regarding the types which contain the interface
-  repeated InterfaceAcceptingTypeDescriptor interface_accepting_types = 2;
+  // interface_accepting_messages contains information regarding the proto messages which contain the interface as google.protobuf.Any field
+  repeated InterfaceAcceptingMessageDescriptor interface_accepting_messages = 2;
   // interface_implementers is a list of the descriptors of the interface implementers
   repeated InterfaceImplementerDescriptor interface_implementers = 3;
 }
@@ -98,9 +98,9 @@ message InterfaceImplementerDescriptor {
   string type_url = 2;
 }
 
-// InterfaceAcceptingTypeDescriptor describes a protobuf message which contains
+// InterfaceAcceptingMessageDescriptor describes a protobuf message which contains
 // an interface represented as a google.protobuf.Any
-message InterfaceAcceptingTypeDescriptor {
+message InterfaceAcceptingMessageDescriptor {
   // fullname is the protobuf fullname of the type containing the interface
   string fullname = 1;
   // field_descriptor_names is a list of the protobuf name (not fullname) of the field
@@ -118,7 +118,7 @@ message ConfigurationDescriptor {
   // bech32_consensus_address_prefix is the bech32 prefix for consensus nodes addresses
   string bech32_consensus_address_prefix = 3;
   // bech32_account_public_key_prefix is the bech32 prefix for accounts public keys
-  string bech32AccountPublicKeyPrefix = 4;
+  string bech32_account_public_key_prefix = 4;
   // bech32_validator_public_key_prefix is the bech32 prefix for validators public keys
   string bech32_validator_public_key_prefix = 5;
   // bech32_consensus_public_key_prefix is the bech32 prefix for consensus nodes public keys

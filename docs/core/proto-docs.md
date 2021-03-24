@@ -124,7 +124,7 @@
     - [ConfigurationDescriptor](#cosmos.base.reflection.v1beta1.ConfigurationDescriptor)
     - [GetAppDescriptorRequest](#cosmos.base.reflection.v1beta1.GetAppDescriptorRequest)
     - [GetAppDescriptorResponse](#cosmos.base.reflection.v1beta1.GetAppDescriptorResponse)
-    - [InterfaceAcceptingTypeDescriptor](#cosmos.base.reflection.v1beta1.InterfaceAcceptingTypeDescriptor)
+    - [InterfaceAcceptingMessageDescriptor](#cosmos.base.reflection.v1beta1.InterfaceAcceptingMessageDescriptor)
     - [InterfaceDescriptor](#cosmos.base.reflection.v1beta1.InterfaceDescriptor)
     - [InterfaceImplementerDescriptor](#cosmos.base.reflection.v1beta1.InterfaceImplementerDescriptor)
     - [LegacyMsgDescriptor](#cosmos.base.reflection.v1beta1.LegacyMsgDescriptor)
@@ -2109,7 +2109,7 @@ ConfigurationDescriptor contains metadata information on the sdk.Config
 | `bech32_account_address_prefix` | [string](#string) |  | bech32_account_address_prefix is the account address prefix |
 | `bech32_validator_address_prefix` | [string](#string) |  | bech32_validator_address_prefix is the bech32 prefix for validator addresses |
 | `bech32_consensus_address_prefix` | [string](#string) |  | bech32_consensus_address_prefix is the bech32 prefix for consensus nodes addresses |
-| `bech32AccountPublicKeyPrefix` | [string](#string) |  | bech32_account_public_key_prefix is the bech32 prefix for accounts public keys |
+| `bech32_account_public_key_prefix` | [string](#string) |  | bech32_account_public_key_prefix is the bech32 prefix for accounts public keys |
 | `bech32_validator_public_key_prefix` | [string](#string) |  | bech32_validator_public_key_prefix is the bech32 prefix for validators public keys |
 | `bech32_consensus_public_key_prefix` | [string](#string) |  | bech32_consensus_public_key_prefix is the bech32 prefix for consensus nodes public keys |
 | `purpose` | [uint32](#uint32) |  | purpose is the BIP-0044 purpose code |
@@ -2147,10 +2147,10 @@ GetAppDescriptorResponse is the response type of the GetAppDescriptor RPC.
 
 
 
-<a name="cosmos.base.reflection.v1beta1.InterfaceAcceptingTypeDescriptor"></a>
+<a name="cosmos.base.reflection.v1beta1.InterfaceAcceptingMessageDescriptor"></a>
 
-### InterfaceAcceptingTypeDescriptor
-InterfaceAcceptingTypeDescriptor describes a protobuf message which contains
+### InterfaceAcceptingMessageDescriptor
+InterfaceAcceptingMessageDescriptor describes a protobuf message which contains
 an interface represented as a google.protobuf.Any
 
 
@@ -2173,7 +2173,7 @@ InterfaceDescriptor describes the implementation of an interface
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `fullname` | [string](#string) |  | fullname is the name of the interface |
-| `interface_accepting_types` | [InterfaceAcceptingTypeDescriptor](#cosmos.base.reflection.v1beta1.InterfaceAcceptingTypeDescriptor) | repeated | interface_type_descriptors contains information regarding the types which contain the interface |
+| `interface_accepting_messages` | [InterfaceAcceptingMessageDescriptor](#cosmos.base.reflection.v1beta1.InterfaceAcceptingMessageDescriptor) | repeated | interface_accepting_messages contains information regarding the proto messages which contain the interface as google.protobuf.Any field |
 | `interface_implementers` | [InterfaceImplementerDescriptor](#cosmos.base.reflection.v1beta1.InterfaceImplementerDescriptor) | repeated | interface_implementers is a list of the descriptors of the interface implementers |
 
 

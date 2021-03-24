@@ -22,8 +22,8 @@ const (
 
 func migrateVestingAccounts(ctx sdk.Context, accounts []types.AccountI, queryServer grpc.Server) ([]types.AccountI, error) {
 	for i := 0; i < len(accounts); i++ {
-		asVesting := vesting(accounts[i])
-		if asVesting == nil {
+		asVesting, ok := accounts[i].(exported.VestingAccount)
+		if !ok {
 			continue
 		}
 
@@ -50,7 +50,7 @@ func migrateVestingAccounts(ctx sdk.Context, accounts []types.AccountI, querySer
 			return nil, err
 		}
 
-		asVesting, ok := resetVestingDelegatedBalances(asVesting)
+		asVesting, ok = resetVestingDelegatedBalances(asVesting)
 		if !ok {
 			continue
 		}
@@ -66,15 +66,6 @@ func migrateVestingAccounts(ctx sdk.Context, accounts []types.AccountI, querySer
 	}
 
 	return accounts, nil
-}
-
-func vesting(account types.AccountI) exported.VestingAccount {
-	v, ok := account.(exported.VestingAccount)
-	if !ok {
-		return nil
-	}
-
-	return v
 }
 
 func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.VestingAccount, bool) {

@@ -26,7 +26,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 ```
 
-Since these migrations are functions that need access to a Keeper's store, we use a wrapper around the keepers called `Migrator`. An example of this can be found (here)[https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/keeper/migrations.go]. In addition to the `Migrator` wrapper, we also define our migration scripts. More on that below.
+Since these migrations are functions that need access to a Keeper's store, we use a wrapper around the keepers called `Migrator`. An example of this can be found here:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/6ac8898fec9bd7ea2c1e5c79e0ed0c3f827beb55/x/bank/keeper/migrations.go#L8-L21
+
+In addition to the `Migrator` wrapper, we also define our migration scripts. More on that below.
 
 # Writing Migration Scripts
 

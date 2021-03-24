@@ -19,7 +19,7 @@ service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) a
 
 ## Context
 
-In the current Cosmos SDK documentation on the [Object-Capability Model](../docs/core/ocap.md), it is stated that:
+In the current Cosmos SDK documentation on the [Object-Capability Model](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/ocap.md), it is stated that:
 
 > We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 

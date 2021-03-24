@@ -116,7 +116,7 @@ func (s *IntegrationTestSuite) TestEncodeDecode() {
 	err = cdc.UnmarshalJSON(res, &encodeResp)
 	require.NoError(err)
 
-	bz, err = cdc.MarshalJSON(authrest.DecodeReq{Tx: encodeResp.Tx})
+	bz, err = cdc.MarshalJSON(authrest.DecodeReq(encodeResp))
 	require.NoError(err)
 
 	res, err = rest.PostRequest(fmt.Sprintf("%s/txs/decode", val.APIAddress), "application/json", bz)

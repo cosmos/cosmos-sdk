@@ -112,10 +112,21 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateValidator, "balance is negative"), nil, nil
 		}
 
-		amount, err := simtypes.RandPositiveInt(r, balance)
+		// A validator can only be created if it has at least one consensus power worth of tokens.
+		// Construct a maximum random value that is reduced by the PowerReduction, allowing
+		// for a minimum self delegation of the PowerReduction.
+		max := balance.Sub(sdk.PowerReduction)
+		if !max.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateValidator, "balance doesn't have enough delegation amount"), nil, nil
+		}
+
+		amount, err := simtypes.RandPositiveInt(r, max)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCreateValidator, "unable to generate positive amount"), nil, err
 		}
+
+		// ensure self delegation meets minimum requirement
+		amount = amount.Add(sdk.PowerReduction)
 
 		selfDelegation := sdk.NewCoin(denom, amount)
 

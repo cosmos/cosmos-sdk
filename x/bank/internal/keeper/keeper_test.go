@@ -96,7 +96,7 @@ func TestKeeper(t *testing.T) {
 	// Test retrieving black listed accounts
 	for acc := range simapp.GetMaccPerms() {
 		addr := supply.NewModuleAddress(acc)
-		require.Equal(t, app.BlacklistedAccAddrs()[addr.String()], app.BankKeeper.BlacklistedAddr(addr))
+		require.Equal(t, app.ModuleAccountAddrs()[addr.String()], app.BankKeeper.BlacklistedAddr(addr))
 	}
 }
 

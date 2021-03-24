@@ -2,7 +2,7 @@
 order: 13
 -->
 
-# Upgrade
+# In-Place Store Migrations
 
 The Upgrade module allows your modules to smoothly transition to new versions with breaking changes. This document outlines how to build modules to take advantage of this functionality. 
 

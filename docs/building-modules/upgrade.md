@@ -6,7 +6,7 @@ order: 13
 
 In-place store migrations allow your modules to smoothly transition to new versions with breaking changes. This document outlines how to build modules to take advantage of this functionality. 
 
-# Consensus Version
+## Consensus Version
 
 In order to successfully upgrade your existing modules, your `AppModule`s must implement the function `ConsensusVersion() uint64`. The `uint64` returned will serve as the consensus version and should be hard coded by the module developer. This number will serve as a state-breaking version of each app module, so it *MUST* be incremented on each consensus-breaking change introduced by the module. The initial version *MUST* be set to 1.
 

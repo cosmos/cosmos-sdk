@@ -194,7 +194,7 @@ func Test_getBechKeyOut(t *testing.T) {
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{sdk.PrefixAccount}, keyring.MkKeyOutput, false},
+		{"acc", args{sdk.PrefixAccount}, keyring.MkAccKeyOutput, false},
 		{"val", args{sdk.PrefixValidator}, keyring.MkValKeyOutput, false},
 		{"cons", args{sdk.PrefixConsensus}, keyring.MkConsKeyOutput, false},
 	}

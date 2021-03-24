@@ -52,7 +52,7 @@ func printKeyInfo(w io.Writer, keyInfo cryptokeyring.Info, bechKeyOut bechKeyOut
 }
 
 func printInfos(w io.Writer, infos []cryptokeyring.Info, output string) {
-	kos, err := cryptokeyring.MkKeysOutput(infos)
+	kos, err := cryptokeyring.MkAccKeysOutput(infos)
 	if err != nil {
 		panic(err)
 	}

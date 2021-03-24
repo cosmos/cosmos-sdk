@@ -184,7 +184,7 @@ func validateMultisigThreshold(k, nKeys int) error {
 func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 	switch bechPrefix {
 	case sdk.PrefixAccount:
-		return keyring.MkKeyOutput, nil
+		return keyring.MkAccKeyOutput, nil
 	case sdk.PrefixValidator:
 		return keyring.MkValKeyOutput, nil
 	case sdk.PrefixConsensus:

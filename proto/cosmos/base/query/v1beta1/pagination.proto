@@ -30,6 +30,9 @@ message PageRequest {
   // count_total is only respected when offset is used. It is ignored when key
   // is set.
   bool count_total = 4;
+
+  // reverse is set to true indicates that, results to be returned in the descending order.
+  bool reverse = 5;
 }
 
 // PageResponse is to be embedded in gRPC response messages where the

@@ -69,7 +69,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) `client/tx.PrepareFactory` has been converted to a private function, as it's only used internally.
 * (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 
->>>>>>> a78f777ea8527438cb90b80f7aab65c356523c4d
 
 ### State Machine Breaking
 

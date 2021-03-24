@@ -2,6 +2,7 @@ package simulation_test
 
 import (
 	"encoding/json"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"math/rand"
 	"testing"
 
@@ -20,6 +21,7 @@ import (
 func TestRandomizedGenState(t *testing.T) {
 	registry := codectypes.NewInterfaceRegistry()
 	types.RegisterInterfaces(registry)
+	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
 
 	s := rand.NewSource(1)

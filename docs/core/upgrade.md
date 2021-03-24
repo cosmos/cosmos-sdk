@@ -2,7 +2,7 @@
 order: 15
 -->
 
-# Upgrades
+# In-Place Store Migrations
 
 Upgrade your app modules smoothly with custom in-place migration logic.
 

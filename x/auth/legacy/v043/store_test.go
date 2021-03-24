@@ -565,7 +565,8 @@ func introduceTrackingBug(ctx sdk.Context, vesting exported.VestingAccount, app 
 }
 
 func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers int64) (sdk.AccAddress, sdk.ValAddress) {
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(30000000))
+	valTokens := sdk.TokensFromConsensusPower(powers)
+	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, valTokens)
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
 	pks := simapp.CreateTestPubKeys(1)
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
@@ -585,7 +586,7 @@ func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers i
 	require.NoError(t, app.StakingKeeper.SetValidatorByConsAddr(ctx, val1))
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val1)
 
-	_, err = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers), stakingtypes.Unbonded, val1, true)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[0], valTokens, stakingtypes.Unbonded, val1, true)
 	require.NoError(t, err)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)

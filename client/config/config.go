@@ -19,24 +19,19 @@ const (
 
 type ClientConfig struct {
 	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
-	KeyringDir     string `mapstructure:"keyringdir" json:"keyringdir"`
 	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
 	Output         string `mapstructure:"output" json:"output"`
 	Node           string `mapstructure:"node" json:"node"`
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
-// DefaultClientConfig returns the reference to ClientConfig with default values.
-func DefaultClientConfig(keyringDir string) *ClientConfig {
-	return &ClientConfig{chainID, keyringDir, keyringBackend, output, node, broadcastMode}
+// defaultClientConfig returns the reference to ClientConfig with default values.
+func defaultClientConfig() *ClientConfig {
+	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
 }
 
 func (c *ClientConfig) SetChainID(chainID string) {
 	c.ChainID = chainID
-}
-
-func (c *ClientConfig) SetKeyringDir(keyringDir string) {
-	c.KeyringDir = keyringDir
 }
 
 func (c *ClientConfig) SetKeyringBackend(keyringBackend string) {
@@ -59,7 +54,7 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
-	conf := DefaultClientConfig(ctx.HomeDir)
+	conf := defaultClientConfig()
 
 	// if config.toml file does not exist we create it and write default ClientConfig values into it.
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
@@ -78,7 +73,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	}
 	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
 	ctx = ctx.WithOutputFormat(conf.Output).
-		WithKeyringDir(conf.KeyringDir).
+		WithKeyringDir(ctx.HomeDir).
 		WithChainID(conf.ChainID)
 
 	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
@@ -88,6 +83,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 
 	ctx = ctx.WithKeyring(keyring)
 
+	// https://github.com/cosmos/cosmos-sdk/issues/8986
 	client, err := client.NewClientFromNode(conf.Node)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)

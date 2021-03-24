@@ -47,8 +47,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		switch key {
 		case flags.FlagChainID:
 			cmd.Println(conf.ChainID)
-		case flags.FlagKeyringDir:
-			cmd.Println(conf.KeyringDir)
 		case flags.FlagKeyringBackend:
 			cmd.Println(conf.KeyringBackend)
 		case tmcli.OutputFlag:
@@ -69,8 +67,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		switch key {
 		case flags.FlagChainID:
 			conf.SetChainID(value)
-		case flags.FlagKeyringDir:
-			conf.SetKeyringDir(value)
 		case flags.FlagKeyringBackend:
 			conf.SetKeyringBackend(value)
 		case tmcli.OutputFlag:

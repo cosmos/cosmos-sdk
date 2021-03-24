@@ -18,7 +18,6 @@ const defaultConfigTemplate = `# This is a TOML config file.
 
 
 chain-id = "{{ .ChainID }}"
-keyringdir = "{{ .KeyringDir }}"
 keyring-backend = "{{ .KeyringBackend }}"
 output = "{{ .Output }}"
 node = "{{ .Node }}"
@@ -40,7 +39,7 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 		return err
 	}
 
-	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0644)
+	return ioutil.WriteFile(configFilePath, buffer.Bytes(), 0600)
 }
 
 // ensureConfigPath creates a directory configPath if it does not exist

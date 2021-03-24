@@ -53,7 +53,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Use:   "simd",
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			initClientCtx = initClientCtx.WithHomeFlag(cmd)
+			initClientCtx = client.ReadHomeFlag(initClientCtx, cmd)
 
 			initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
 			if err != nil {
@@ -113,7 +113,7 @@ func queryCommand() *cobra.Command {
 		Short:                      "Querying subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	cmd.AddCommand(
@@ -136,7 +136,7 @@ func txCommand() *cobra.Command {
 		Short:                      "Transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	cmd.AddCommand(

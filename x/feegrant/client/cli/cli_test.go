@@ -636,7 +636,6 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
 
 	allowMsgs := "/cosmos.gov.v1beta1.Msg/SubmitProposal"
-	wrongMsgs := "/cosmos.gov.v1beta1.Msg/SubmitProposal,foo"
 
 	testCases := []struct {
 		name         string
@@ -672,20 +671,6 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				commonFlags...,
 			),
 			true, &sdk.TxResponse{}, 0,
-		},
-		{
-			"wrong msg type",
-			append(
-				[]string{
-					granter.String(),
-					grantee.String(),
-					fmt.Sprintf("--%s=%s", cli.FlagAllowedMsgs, wrongMsgs),
-					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, spendLimit.String()),
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-				},
-				commonFlags...,
-			),
-			false, &sdk.TxResponse{}, 29,
 		},
 		{
 			"valid filter fee grant",

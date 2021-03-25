@@ -63,8 +63,17 @@ func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
 	return balances.Sort()
 }
 
+// NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated
+// store key, an AccountKeeper implementation and a parameter Subspace used to
+// store and fetch module parameters. In addition, the BaseKeeper accepts a
+// black-list map. This list describes the set of addresses which are not allowed
+// to receive funds through direct and explicit actions, e.g. via a MsgSend or
+// via a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
-	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryMarshaler,
+	storeKey sdk.StoreKey,
+	ak types.AccountKeeper,
+	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
 ) BaseKeeper {
 

@@ -75,6 +75,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `ToTmValidator` function: added `error` to return values.
   * `Validator.ConsensusPubkey` type changed from `string` to `codectypes.Any`.
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
+* (client) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) `client/tx.PrepareFactory` has been converted to a private function, as it's only used internally.
+* (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 
 ### State Machine Breaking
 
@@ -119,6 +121,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [v0.42.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.1) - 2021-03-10
 
 This release fixes security vulnerability identified in the simapp.
+
+### Deprecated
+
+* (grpc) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `tx` field in `SimulateRequest` has been deprecated, prefer to pass `tx_bytes` instead.
 
 ## [v0.42.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.0) - 2021-03-08
 

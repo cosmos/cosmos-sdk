@@ -59,7 +59,7 @@ func (k Keeper) setProtocolVersion(ctx sdk.Context, v uint64) {
 	store.Set([]byte{types.ProtocolVersionByte}, versionBytes)
 }
 
-// getAppVersion gets the protocol version from state
+// getProtocolVersion gets the protocol version from state
 func (k Keeper) getProtocolVersion(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	ok := store.Has([]byte{types.ProtocolVersionByte})

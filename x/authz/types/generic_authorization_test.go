@@ -9,12 +9,11 @@ import (
 )
 
 func TestGenericAuthorization(t *testing.T) {
-
-	// validateBasic returns error not a valida service msg
+	t.Log("verify ValidateBasic returns error for non-service msg")
 	authorization := types.NewGenericAuthorization(banktypes.TypeMsgSend)
 	require.Error(t, authorization.ValidateBasic())
 
-	// valid service msg
+	t.Log("verify ValidateBasic returns nil for service msg")
 	authorization = types.NewGenericAuthorization(banktypes.SendAuthorization{}.MethodName())
 	require.NoError(t, authorization.ValidateBasic())
 	require.Equal(t, banktypes.SendAuthorization{}.MethodName(), authorization.MessageName)

@@ -14,9 +14,9 @@ permissions are limited in the way that you expect.
 
 ## Blacklisting Addresses
 
-The `x/bank` module accepts a map of addresses that are considered blacklisted
+The `x/bank` module accepts a map of addresses that are considered blocklisted
 from directly and explicitly receiving funds through means such as `MsgSend` and
-`MsgMultiSend` in addition to direct API calls such as `SendCoinsFromModuleToAccount`.
+`MsgMultiSend` and direct API calls like `SendCoinsFromModuleToAccount`.
 
 Typically, these addresses are module accounts. If these addresses receive funds
 outside of the expected rules of the state machine, invariants are likely to be

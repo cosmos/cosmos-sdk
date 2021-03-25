@@ -92,7 +92,7 @@ type Keeper interface {
 ## SendKeeper
 
 The send keeper provides access to account balances and the ability to transfer coins between
-accounts, but not to alter the total supply (mint or burn coins).
+accounts. The send keeper does not alter the total supply (mint or burn coins).
 
 ```go
 // SendKeeper defines a module interface that facilitates the transfer of coins

@@ -1,10 +1,12 @@
 package tx_test
 
 import (
-	"errors"
+	gocontext "context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -24,30 +26,34 @@ func NewTestTxConfig() client.TxConfig {
 	return cfg.TxConfig
 }
 
-func TestCalculateGas(t *testing.T) {
-	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, []byte) ([]byte, int64, error) {
-		return func(string, []byte) ([]byte, int64, error) {
-			if wantErr {
-				return nil, 0, errors.New("query failed")
-			}
-			simRes := &txtypes.SimulateResponse{
-				GasInfo: &sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
-				Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
-			}
+// mockContext is a mock client.Context to return abitrary simulation response, used to
+// unit test CalculateGas.
+type mockContext struct {
+	gasUsed uint64
+	wantErr bool
+}
 
-			bz, err := simRes.Marshal()
-			if err != nil {
-				return nil, 0, err
-			}
-
-			return bz, 0, nil
-		}
+func (m mockContext) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
+	if m.wantErr {
+		return fmt.Errorf("mock err")
 	}
 
+	*(reply.(*txtypes.SimulateResponse)) = txtypes.SimulateResponse{
+		GasInfo: &sdk.GasInfo{GasUsed: m.gasUsed, GasWanted: m.gasUsed},
+		Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
+	}
+
+	return nil
+}
+func (mockContext) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+	panic("not implemented")
+}
+
+func TestCalculateGas(t *testing.T) {
 	type args struct {
-		queryFuncGasUsed uint64
-		queryFuncWantErr bool
-		adjustment       float64
+		mockGasUsed uint64
+		mockWantErr bool
+		adjustment  float64
 	}
 
 	testCases := []struct {
@@ -70,8 +76,11 @@ func TestCalculateGas(t *testing.T) {
 			WithTxConfig(txCfg).WithSignMode(txCfg.SignModeHandler().DefaultMode())
 
 		t.Run(stc.name, func(t *testing.T) {
-			queryFunc := makeQueryFunc(stc.args.queryFuncGasUsed, stc.args.queryFuncWantErr)
-			simRes, gotAdjusted, err := tx.CalculateGas(queryFunc, txf.WithGasAdjustment(stc.args.adjustment))
+			mockClientCtx := mockContext{
+				gasUsed: tc.args.mockGasUsed,
+				wantErr: tc.args.mockWantErr,
+			}
+			simRes, gotAdjusted, err := tx.CalculateGas(mockClientCtx, txf.WithGasAdjustment(stc.args.adjustment))
 			if stc.expPass {
 				require.NoError(t, err)
 				require.Equal(t, simRes.GasInfo.GasUsed, stc.wantEstimate)
@@ -79,7 +88,7 @@ func TestCalculateGas(t *testing.T) {
 				require.NotNil(t, simRes.Result)
 			} else {
 				require.Error(t, err)
-				require.Nil(t, simRes.Result)
+				require.Nil(t, simRes)
 			}
 		})
 	}

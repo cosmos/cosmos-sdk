@@ -31,7 +31,9 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("genesis supply is incorrect, expected %v, got %v", genState.Supply, totalSupply))
 	}
 
-	k.setSupply(ctx, totalSupply)
+	for _, supply := range totalSupply {
+		k.setSupply(ctx, supply)
+	}
 
 	for _, meta := range genState.DenomMetadata {
 		k.SetDenomMetaData(ctx, meta)

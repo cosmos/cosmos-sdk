@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,9 @@ import (
 
 func Test_writeReadLedgerInfo(t *testing.T) {
 	tmpKey := make([]byte, secp256k1.PubKeySize)
-	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
+	hexPK := "035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A"
+	bz, err := hex.DecodeString(hexPK)
+	require.NoError(t, err)
 	copy(tmpKey[:], bz)
 
 	lInfo := newLedgerInfo("some_name", &secp256k1.PubKey{Key: tmpKey}, *hd.NewFundraiserParams(5, sdk.CoinType, 1), hd.Secp256k1Type)
@@ -23,8 +26,8 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "m/44'/118'/5'/0/1", path.String())
 	require.Equal(t,
-		"cosmospub1addwnpepqddddqg2glc8x4fl7vxjlnr7p5a3czm5kcdp4239sg6yqdc4rc2r5wmxv8p",
-		sdk.MustBech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, lInfo.GetPubKey()))
+		fmt.Sprintf("PubKeySecp256k1{%s}", hexPK),
+		lInfo.GetPubKey().String())
 
 	// Serialize and restore
 	serialized := marshalInfo(lInfo)

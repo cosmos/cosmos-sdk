@@ -167,7 +167,7 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		return sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
-	remove, err := grant.GetFeeGrant().Accept(fee, ctx.BlockTime(), ctx.BlockHeight(), msgs)
+	remove, err := grant.GetFeeGrant().Accept(ctx, fee, msgs)
 	if err == nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

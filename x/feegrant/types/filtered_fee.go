@@ -46,8 +46,8 @@ func (a *AllowedMsgFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
 }
 
 // Accept method checks for the filtered messages has valid expiry
-func (a *AllowedMsgFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64, msgs []sdk.Msg) (bool, error) {
-	if !a.allMsgTypesAllowed(msgs) {
+func (a *AllowedMsgFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
+	if !a.allMsgTypesAllowed(ctx, msgs) {
 		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
 
@@ -56,20 +56,23 @@ func (a *AllowedMsgFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, bloc
 		return false, err
 	}
 
-	return allowance.Accept(fee, blockTime, blockHeight, msgs)
+	return allowance.Accept(ctx, fee, msgs)
 }
 
-func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(msgs []sdk.Msg) bool {
-	for _, msg := range msgs {
-		found := false
-		for _, allowedMsg := range a.AllowedMessages {
-			if allowedMsg == msg.Type() {
-				found = true
-				break
-			}
-		}
+func (a *AllowedMsgFeeAllowance) allowedMsgsToMap() map[string]bool {
+	msgsMap := make(map[string]bool, len(a.AllowedMessages))
+	for _, msg := range a.AllowedMessages {
+		msgsMap[msg] = true
+	}
 
-		if !found {
+	return msgsMap
+}
+
+func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.Msg) bool {
+	msgsMap := a.allowedMsgsToMap()
+
+	for _, msg := range msgs {
+		if !msgsMap[msg.Type()] {
 			return false
 		}
 	}

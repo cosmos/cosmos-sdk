@@ -81,15 +81,23 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // been pruned, an empty immutable IAVL tree will be used.
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (*Store, error) {
-	if !st.VersionExists(version) {
-		return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, nil
-	}
+	var iTree *iavl.ImmutableTree
+	var err error
+	if !abci.GetCloseMutex() {
+		if !st.VersionExists(version) {
+			return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, nil
+		}
 
-	iTree, err := st.tree.GetImmutable(version)
-	if err != nil {
-		return nil, err
+		iTree, err = st.tree.GetImmutable(version)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		iTree, err = st.tree.GetImmutable(version)
+		if err != nil {
+			return &Store{tree: &immutableTree{&iavl.ImmutableTree{}}}, nil
+		}
 	}
-
 	return &Store{
 		tree: &immutableTree{iTree},
 	}, nil

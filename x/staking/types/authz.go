@@ -51,9 +51,6 @@ func (authorization StakeAuthorization) ValidateBasic() error {
 	if authorization.MaxTokens != nil && authorization.MaxTokens.IsNegative() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", authorization.MaxTokens)
 	}
-	if authorization.GetValidators().Size() == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "validator set is empty")
-	}
 	return nil
 }
 
@@ -112,9 +109,9 @@ func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceM
 }
 
 func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {
-	if len(allowed) == 0 && len(denied) == 0 {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "both allowed & deny list cannot be empty")
-	}
+	// if len(allowed) == 0 && len(denied) == 0 {
+	// 	return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "both allowed & deny list cannot be empty")
+	// }
 
 	if len(allowed) > 0 && len(denied) > 0 {
 		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "cannot set both allowed & deny list")

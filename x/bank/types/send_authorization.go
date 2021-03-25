@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
@@ -47,10 +46,10 @@ func (authorization SendAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMs
 // ValidateBasic implements Authorization.ValidateBasic.
 func (authorization SendAuthorization) ValidateBasic() error {
 	if authorization.SpendLimit == nil {
-		return sdkerrors.Wrapf(errors.ErrInvalidCoins, "spend limit cannot be nil")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend limit cannot be nil")
 	}
 	if !authorization.SpendLimit.IsAllPositive() {
-		return sdkerrors.Wrapf(errors.ErrInvalidCoins, "spend limit cannot be negitive")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "spend limit cannot be negitive")
 	}
 	return nil
 }

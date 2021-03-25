@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
@@ -33,7 +32,7 @@ func (authorization GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Servic
 // ValidateBasic implements Authorization.ValidateBasic.
 func (authorization GenericAuthorization) ValidateBasic() error {
 	if !isServiceMsg(authorization.MessageName) {
-		return sdkerrors.Wrapf(errors.ErrInvalidType, " %s is not a valid service msg", authorization.MessageName)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, " %s is not a valid service msg", authorization.MessageName)
 	}
 	return nil
 }

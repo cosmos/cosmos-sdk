@@ -160,6 +160,10 @@ Examples:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
+			if err = authorization.ValidateBasic(); err != nil {
+				return err
+			}
+
 			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
 			if err != nil {
 				return err

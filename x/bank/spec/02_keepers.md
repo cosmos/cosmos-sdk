@@ -115,8 +115,7 @@ type SendKeeper interface {
 
 ## ViewKeeper
 
-The view keeper provides read-only access to account balances but no balance alteration
-functionality. All balance lookups are `O(1)`.
+The view keeper provides read-only access to account balances. The view keeper does not have balance alteration functionality. All balance lookups are `O(1)`.
 
 ```go
 // ViewKeeper defines a module interface that facilitates read only access to

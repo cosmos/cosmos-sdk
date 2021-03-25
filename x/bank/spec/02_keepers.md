@@ -9,7 +9,7 @@ passed to other modules that read or update account balances. Modules
 should use the least-permissive interface that provides the functionality they
 require.
 
-Note that you should always review the `bank` module code to ensure that
+Best practices dictate careful review of `bank` module code to ensure that
 permissions are limited in the way that you expect.
 
 ## Blacklisting Addresses

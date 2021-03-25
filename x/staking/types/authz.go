@@ -1,18 +1,17 @@
 package types
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_                   authz.Authorization = &StakeAuthorization{}
-	TypeDelegate                            = "/cosmos.staking.v1beta1.Msg/Delegate"
-	TypeUndelegate                          = "/cosmos.staking.v1beta1.Msg/Undelegate"
-	TypeBeginRedelegate                     = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
+	_ authz.Authorization = &StakeAuthorization{}
+
+	TypeDelegate        = "/cosmos.staking.v1beta1.Msg/Delegate"
+	TypeUndelegate      = "/cosmos.staking.v1beta1.Msg/Undelegate"
+	TypeBeginRedelegate = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
@@ -46,8 +45,13 @@ func (authorization StakeAuthorization) MethodName() string {
 	return authzType
 }
 
+func (authorization StakeAuthorization) ValidateBasic() error {
+	// TODO
+	return nil
+}
+
 // Accept implements Authorization.Accept.
-func (authorization StakeAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated authz.Authorization, delete bool, err error) {
+func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (updated authz.Authorization, delete bool, err error) {
 	var validatorAddress string
 	var amount sdk.Coin
 

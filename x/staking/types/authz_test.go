@@ -5,11 +5,30 @@ import (
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+type AuthzTestSuite struct {
+	suite.Suite
+
+	app *simapp.SimApp
+	ctx sdk.Context
+}
+
+func TestAuthzTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthzTestSuite))
+}
+
+func (suite *AuthzTestSuite) SetupTest() {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = ctx
+
+}
 
 var (
 	coin100 = sdk.NewInt64Coin("steak", 100)
@@ -20,23 +39,23 @@ var (
 	val3    = sdk.ValAddress("_____validator3_____")
 )
 
-func TestAuthzAuthorizations(t *testing.T) {
+func (suite *AuthzTestSuite) TestAuthzAuthorizations() {
 
 	// verify MethodName
 	delAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
-	require.Equal(t, delAuth.MethodName(), stakingtypes.TypeDelegate)
+	suite.Require().Equal(delAuth.MethodName(), stakingtypes.TypeDelegate)
 
 	// error both allow & deny list
 	_, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
-	require.Error(t, err)
+	suite.Require().Error(err)
 
 	// verify MethodName
 	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, &coin100)
-	require.Equal(t, undelAuth.MethodName(), stakingtypes.TypeUndelegate)
+	suite.Require().Equal(undelAuth.MethodName(), stakingtypes.TypeUndelegate)
 
 	// verify MethodName
 	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, &coin100)
-	require.Equal(t, beginRedelAuth.MethodName(), stakingtypes.TypeBeginRedelegate)
+	suite.Require().Equal(beginRedelAuth.MethodName(), stakingtypes.TypeBeginRedelegate)
 
 	validators1_2 := []string{val1.String(), val2.String()}
 
@@ -240,18 +259,18 @@ func TestAuthzAuthorizations(t *testing.T) {
 
 	for _, tc := range testCases {
 		tc := tc
-		t.Run(tc.msg, func(t *testing.T) {
+		suite.Run(tc.msg, func() {
 			delAuth, err := stakingtypes.NewStakeAuthorization(tc.allowed, tc.denied, tc.msgType, tc.limit)
-			require.NoError(t, err)
-			updated, del, err := delAuth.Accept(tc.srvMsg, tmproto.Header{})
+			suite.Require().NoError(err)
+			updated, del, err := delAuth.Accept(suite.ctx, tc.srvMsg)
 			if tc.expectErr {
-				require.Error(t, err)
-				require.Equal(t, tc.isDelete, del)
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.isDelete, del)
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.isDelete, del)
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.isDelete, del)
 				if tc.updatedAuthorization != nil {
-					require.Equal(t, tc.updatedAuthorization.String(), updated.String())
+					suite.Require().Equal(tc.updatedAuthorization.String(), updated.String())
 				}
 			}
 		})

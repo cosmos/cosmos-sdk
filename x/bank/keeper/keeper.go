@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,13 +61,12 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 
 	supply := sdk.NewCoins()
 
-	pageRes, err := query.Paginate(supplyStore, pagination, func(_, value []byte) error {
-		var result sdk.Coin
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
-		if err != nil {
-			return err
+	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
+		amount, ok := sdk.NewIntFromString(string(value))
+		if !ok {
+			return fmt.Errorf("unable to convert amount string to Int")
 		}
-		supply = append(supply, result)
+		supply = append(supply, sdk.NewCoin(string(key), amount))
 		return nil
 	})
 
@@ -74,16 +75,6 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 	}
 
 	return supply, pageRes, nil
-}
-
-func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
-	balances := sdk.NewCoins()
-	k.IterateTotalSupply(ctx, func(balance sdk.Coin) bool {
-		balances = balances.Add(balance)
-		return false
-	})
-
-	return balances.Sort()
 }
 
 func NewBaseKeeper(

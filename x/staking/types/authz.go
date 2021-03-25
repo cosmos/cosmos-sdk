@@ -85,7 +85,7 @@ func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceM
 
 	denyList := authorization.GetDenyList().GetAddress()
 	for _, validator := range denyList {
-		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "iteration: stake authorization deny list")
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
 		if validator == validatorAddress {
 			return nil, false, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, " cannot delegate/undelegate to %s validator", validator)
 		}

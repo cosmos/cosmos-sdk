@@ -4,9 +4,27 @@ order: 2
 
 # Keepers
 
-The bank module provides three different exported keeper interfaces which can be passed to other modules which need to read or update account balances. Modules should use the least-permissive interface which provides the functionality they require.
+The bank module provides three different exported keeper interfaces which can be
+passed to other modules which need to read or update account balances. Modules
+should use the least-permissive interface which provides the functionality they
+require.
 
-Note that you should always review the `bank` module code to ensure that permissions are limited in the way that you expect.
+Note that you should always review the `bank` module code to ensure that
+permissions are limited in the way that you expect.
+
+## Blacklisting Addresses
+
+The `x/bank` module accepts a map of addresses that are considered blacklisted
+from directly and explicitly receiving funds through means such as `MsgSend` and
+`MsgMultiSend` in addition to direct API calls such as `SendCoinsFromModuleToAccount`.
+
+Typically, these addresses are module accounts and if they were to receive funds
+outside of the expected rules of the state-machine, invariants are likely to be
+broken and could result in a halted network.
+
+By providing the `x/bank` module with a blacklisted set of addresses, if a user
+or client attempts to directly or indirectly, e.g. via IBC, send funds to any one
+of these blacklisted accounts, the operation will error.
 
 ## Common Types
 
@@ -73,7 +91,8 @@ type Keeper interface {
 
 ## SendKeeper
 
-The send keeper provides access to account balances and the ability to transfer coins between accounts, but not to alter the total supply (mint or burn coins).
+The send keeper provides access to account balances and the ability to transfer coins between
+accounts, but not to alter the total supply (mint or burn coins).
 
 ```go
 // SendKeeper defines a module interface that facilitates the transfer of coins
@@ -96,7 +115,8 @@ type SendKeeper interface {
 
 ## ViewKeeper
 
-The view keeper provides read-only access to account balances but no balance alteration functionality. All balance lookups are `O(1)`.
+The view keeper provides read-only access to account balances but no balance alteration
+functionality. All balance lookups are `O(1)`.
 
 ```go
 // ViewKeeper defines a module interface that facilitates read only access to

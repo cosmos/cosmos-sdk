@@ -59,6 +59,7 @@ type BaseApp struct { // nolint: maligned
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
+	GasRefundHandler sdk.GasRefundHandler // gas refund handler for gas refund
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
 	beginBlocker   sdk.BeginBlocker // logic to run before any txs
 	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
@@ -608,6 +609,20 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		return sdk.GasInfo{}, nil, err
 	}
 
+	defer func() {
+		if mode == runTxModeDeliver {
+			var GasRefundCtx sdk.Context
+			var msCache sdk.CacheMultiStore
+			GasRefundCtx, msCache = app.cacheTxContext(ctx, txBytes)
+
+			err := app.GasRefundHandler(GasRefundCtx, tx, false)
+			if err != nil{
+				panic(err)
+			}
+			msCache.Write()
+		}
+	}()
+
 	msgs := tx.GetMsgs()
 	if err := validateBasicTxMsgs(msgs); err != nil {
 		return sdk.GasInfo{}, nil, err
@@ -669,6 +684,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			// append the events in the order of occurrence
 			result.Events = append(events.ToABCIEvents(), result.Events...)
 		}
+	} else if mode == runTxModeDeliver {
+		ctx = ctx.WithGasMeter(runMsgCtx.GasMeter())
 	}
 
 	return gInfo, result, err

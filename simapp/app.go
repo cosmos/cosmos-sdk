@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/x/auth/refund"
 	"io"
 	"net/http"
 	"os"
@@ -385,11 +386,19 @@ func NewSimApp(
 		},
 	)
 
+	gasRefundHandler := refund.NewGasRefundHandler(
+		refund.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+		},
+	)
+
 	if err != nil {
 		panic(err)
 	}
 
 	app.SetAnteHandler(anteHandler)
+	app.SetGasRefundHandler(gasRefundHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {

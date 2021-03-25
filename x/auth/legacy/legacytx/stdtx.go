@@ -1,10 +1,6 @@
 package legacytx
 
 import (
-	"fmt"
-
-	"gopkg.in/yaml.v2"
-
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -72,55 +68,6 @@ func (fee StdFee) Bytes() []byte {
 // as fee = ceil(gasWanted * gasPrices).
 func (fee StdFee) GasPrices() sdk.DecCoins {
 	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
-}
-
-// Deprecated
-func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
-	return StdSignature{PubKey: pk, Signature: sig}
-}
-
-// GetSignature returns the raw signature bytes.
-func (ss StdSignature) GetSignature() []byte {
-	return ss.Signature
-}
-
-// GetPubKey returns the public key of a signature as a cryptotypes.PubKey using the
-// Amino codec.
-func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
-	return ss.PubKey
-}
-
-// MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
-	var (
-		bz     []byte
-		pubkey string
-		err    error
-	)
-
-	if ss.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.GetPubKey())
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bz, err = yaml.Marshal(struct {
-		PubKey    string
-		Signature string
-	}{
-		PubKey:    pubkey,
-		Signature: fmt.Sprintf("%X", ss.Signature),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
-}
-
-func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	return codectypes.UnpackInterfaces(ss.PubKey, unpacker)
 }
 
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.

@@ -62,7 +62,7 @@ A useful analogy is to consider IBC modules as internet apps on a computer. A ch
 
 ### [Ports](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/05-port)
 
-An IBC module can bind to any number of ports. Each port must be identified by a unique `portID`. Since IBC is designed to be secure with mutually-distrusted modules that operate on the same ledger, binding a port returns a dynamic object capability. To take action on a particular port, for example, to open a channel with its portID, a module must provide the dynamic object capability to the IBC handler. This requirement prevents a malicious module from opening channels with ports it does not own.
+An IBC module can bind to any number of ports. Each port must be identified by a unique `portID`. Since IBC is designed to be secure with mutually-distrusted modules that operate on the same ledger, binding a port returns the dynamic object capability. To take action on a particular port, for example, to open a channel with its portID, a module must provide the dynamic object capability to the IBC handler. This requirement prevents a malicious module from opening channels with ports it does not own.
 
 IBC modules are responsible for claiming the capability that is returned on `BindPort`.
 

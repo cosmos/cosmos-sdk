@@ -346,11 +346,19 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 
 	updatedVM := make(VersionMap)
 	for moduleName, module := range m.Modules {
-		err := c.runModuleMigrations(ctx, moduleName, fromVM[moduleName], module.ConsensusVersion())
-		updatedVM[moduleName] = module.ConsensusVersion()
-		if err != nil {
-			return nil, err
+		fromVersion := fromVM[moduleName]
+		toVersion := module.ConsensusVersion()
+
+		// only run migrations when the from version is > 0
+		// from version will be 0 when a new module is added and migrations shouldn't be run in this case
+		if fromVersion > 0 {
+			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
+			if err != nil {
+				return nil, err
+			}
 		}
+
+		updatedVM[moduleName] = toVersion
 	}
 
 	return updatedVM, nil

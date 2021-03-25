@@ -77,11 +77,11 @@ const (
 var (
 	// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
 	// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
-	accAddrMu     sync.RWMutex
+	accAddrMu     sync.Mutex
 	accAddrCache  *simplelru.LRU
-	consAddrMu    sync.RWMutex
+	consAddrMu    sync.Mutex
 	consAddrCache *simplelru.LRU
-	valAddrMu     sync.RWMutex
+	valAddrMu     sync.Mutex
 	valAddrCache  *simplelru.LRU
 )
 
@@ -267,13 +267,13 @@ func (aa AccAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(aa)
-	accAddrMu.RLock()
+	accAddrMu.Lock()
+	defer accAddrMu.Unlock()
 	addr, ok := accAddrCache.Get(key)
-	accAddrMu.RUnlock()
 	if ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key, &accAddrMu)
+	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -417,13 +417,13 @@ func (va ValAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(va)
-	valAddrMu.RLock()
+	valAddrMu.Lock()
+	defer valAddrMu.Unlock()
 	addr, ok := valAddrCache.Get(key)
-	valAddrMu.RUnlock()
 	if ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key, &valAddrMu)
+	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -572,13 +572,13 @@ func (ca ConsAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(ca)
-	consAddrMu.RLock()
+	consAddrMu.Lock()
+	defer consAddrMu.Unlock()
 	addr, ok := consAddrCache.Get(key)
-	consAddrMu.RUnlock()
 	if ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key, &consAddrMu)
+	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
@@ -650,13 +650,12 @@ func addressBytesFromHexString(address string) ([]byte, error) {
 	return hex.DecodeString(address)
 }
 
-func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey string, m sync.Locker) string {
+// cacheBech32Addr is not concurrency safe. Concurrent access to cache causes race condition.
+func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey string) string {
 	bech32Addr, err := bech32.ConvertAndEncode(prefix, addr)
 	if err != nil {
 		panic(err)
 	}
-	m.Lock()
 	cache.Add(cacheKey, bech32Addr)
-	m.Unlock()
 	return bech32Addr
 }

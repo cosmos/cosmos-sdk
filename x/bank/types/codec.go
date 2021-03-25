@@ -22,6 +22,15 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+
+	// Register legacy interfaces. These interfaces are only used for migration
+	// scripts.
+	// Deprecated.
+	registry.RegisterInterface(
+		"cosmos.bank.v1beta1.SupplyI",
+		(*SupplyI)(nil),
+		&Supply{},
+	)
 }
 
 var (

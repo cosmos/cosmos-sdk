@@ -367,7 +367,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 	// try export non existing key
 	_, err = kb.ExportPrivKeyArmor("john3", "wrongpassword")
-	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
+	require.EqualError(t, err, "john3.info: key not found")
 }
 
 func TestInMemoryLanguage(t *testing.T) {

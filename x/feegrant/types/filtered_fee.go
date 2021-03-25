@@ -70,8 +70,10 @@ func (a *AllowedMsgFeeAllowance) allowedMsgsToMap() map[string]bool {
 
 func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.Msg) bool {
 	msgsMap := a.allowedMsgsToMap()
+	const gas = uint64(1000)
 
 	for _, msg := range msgs {
+		ctx.GasMeter().ConsumeGas(gas, "check msg")
 		if !msgsMap[msg.Type()] {
 			return false
 		}

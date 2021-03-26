@@ -33,9 +33,9 @@ type Configurator interface {
 	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error
 
-	// Cdc defines the app-wide codec interface used for serialization and
+	// Codec defines the app-wide codec interface used for serialization and
 	// deserialization.
-	Cdc() codec.Marshaler
+	Codec() codec.Marshaler
 }
 
 type configurator struct {
@@ -70,7 +70,7 @@ func (c configurator) QueryServer() grpc.Server {
 }
 
 // Cdc implements the Configurator.Cdc method
-func (c configurator) Cdc() codec.Marshaler {
+func (c configurator) Codec() codec.Marshaler {
 	return c.cdc
 }
 

@@ -1,10 +1,9 @@
 package types
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
@@ -31,14 +30,8 @@ func (authorization GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Servic
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (authorization GenericAuthorization) ValidateBasic() error {
-	if !isServiceMsg(authorization.MessageName) {
+	if !tx.IsServiceMsg(authorization.MessageName) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, " %s is not a valid service msg", authorization.MessageName)
 	}
 	return nil
-}
-
-// isServiceMsg checks if a type URL corresponds to a service method name,
-// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
-func isServiceMsg(typeURL string) bool {
-	return strings.Count(typeURL, "/") >= 2
 }

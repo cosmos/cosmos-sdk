@@ -27,7 +27,7 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
 		var msg sdk.Msg
-		if isServiceMsg(any.TypeUrl) {
+		if IsServiceMsg(any.TypeUrl) {
 			req := any.GetCachedValue()
 			if req == nil {
 				panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
@@ -183,7 +183,7 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
 		// If the any's typeUrl contains 2 slashes, then we unpack the any into
 		// a ServiceMsg struct as per ADR-031.
-		if isServiceMsg(any.TypeUrl) {
+		if IsServiceMsg(any.TypeUrl) {
 			var req sdk.MsgRequest
 			err := unpacker.UnpackAny(any, &req)
 			if err != nil {
@@ -223,8 +223,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
 }
 
-// isServiceMsg checks if a type URL corresponds to a service method name,
+// IsServiceMsg checks if a type URL corresponds to a service method name,
 // i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
-func isServiceMsg(typeURL string) bool {
+func IsServiceMsg(typeURL string) bool {
 	return strings.Count(typeURL, "/") >= 2
 }

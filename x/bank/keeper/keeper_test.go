@@ -98,6 +98,36 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	suite.Require().Equal(totalSupply, total)
 }
 
+func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blacklist() {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
+	appCodec := app.AppCodec()
+
+	// add module accounts to supply keeper
+	maccPerms := simapp.GetMaccPerms()
+	maccPerms[holder] = nil
+	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
+	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+
+	authKeeper := authkeeper.NewAccountKeeper(
+		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms,
+	)
+	keeper := keeper.NewBaseKeeper(
+		appCodec, app.GetKey(types.StoreKey), authKeeper,
+		app.GetSubspace(types.ModuleName), map[string]bool{addr1.String(): true},
+	)
+
+	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	suite.Require().Error(keeper.SendCoinsFromModuleToAccount(
+		ctx, minttypes.ModuleName, addr1, initCoins,
+	))
+}
+
 func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})

@@ -175,39 +175,14 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 		}
 	}
 
-	var coin sdk.Coin
-	err := k.cdc.UnmarshalBinaryBare(bz, &coin)
-	if err != nil {
-		panic(err)
+	amount, ok := sdk.NewIntFromString(string(bz))
+	if !ok {
+		panic("unexpected supply")
 	}
 
-	return coin
-}
-
-// SetSupply sets the Supply to store
-func (k BaseKeeper) setSupply(ctx sdk.Context, supply sdk.Coins) {
-	store := ctx.KVStore(k.storeKey)
-	supplyStore := prefix.NewStore(store, types.SupplyKey)
-
-	var newSupply []sdk.Coin
-	storeSupply := k.GetTotalSupply(ctx)
-
-	// update supply for coins which have non zero amount
-	for _, coin := range storeSupply {
-		if supply.AmountOf(coin.Denom).IsZero() {
-			zeroCoin := &sdk.Coin{
-				Denom:  coin.Denom,
-				Amount: sdk.NewInt(0),
-			}
-			bz := k.cdc.MustMarshalBinaryBare(zeroCoin)
-			supplyStore.Set([]byte(coin.Denom), bz)
-		}
-	}
-	newSupply = append(newSupply, supply...)
-
-	for i := range newSupply {
-		bz := k.cdc.MustMarshalBinaryBare(&supply[i])
-		supplyStore.Set([]byte(supply[i].Denom), bz)
+	return sdk.Coin{
+		Denom:  denom,
+		Amount: amount,
 	}
 }
 
@@ -268,7 +243,8 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 }
 
 // SendCoinsFromModuleToAccount transfers coins from a ModuleAccount to an AccAddress.
-// It will panic if the module account does not exist.
+// It will panic if the module account does not exist. An error is returned if
+// the recipient address is black-listed or if sending the tokens fails.
 func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
 ) error {
@@ -276,6 +252,10 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	senderAddr := k.ak.GetModuleAddress(senderModule)
 	if senderAddr == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
+	}
+
+	if k.BlockedAddr(recipientAddr) {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipientAddr)
 	}
 
 	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
@@ -354,7 +334,7 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 
 // MintCoins creates new coins from thin air and adds it to the module account.
 // It will panic if the module account does not exist or is unauthorized.
-func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
+func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error {
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
@@ -364,23 +344,23 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
 
-	err := k.addCoins(ctx, acc.GetAddress(), amt)
+	err := k.addCoins(ctx, acc.GetAddress(), amounts)
 	if err != nil {
 		return err
 	}
 
-	// update total supply
-	supply := k.GetTotalSupply(ctx)
-	supply = supply.Add(amt...)
-
-	k.setSupply(ctx, supply)
+	for _, amount := range amounts {
+		supply := k.GetSupply(ctx, amount.GetDenom())
+		supply = supply.Add(amount)
+		k.setSupply(ctx, supply)
+	}
 
 	logger := k.Logger(ctx)
-	logger.Info("minted coins from module account", "amount", amt.String(), "from", moduleName)
+	logger.Info("minted coins from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit mint event
 	ctx.EventManager().EmitEvent(
-		types.NewCoinMintEvent(acc.GetAddress(), amt),
+		types.NewCoinMintEvent(acc.GetAddress(), amounts),
 	)
 
 	return nil
@@ -388,7 +368,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 
 // BurnCoins burns coins deletes coins from the balance of the module account.
 // It will panic if the module account does not exist or is unauthorized.
-func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error {
+func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error {
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
@@ -398,26 +378,33 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to burn tokens", moduleName))
 	}
 
-	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amt)
+	err := k.subUnlockedCoins(ctx, acc.GetAddress(), amounts)
 	if err != nil {
 		return err
 	}
 
-	// update total supply
-	supply := k.GetTotalSupply(ctx)
-	supply = supply.Sub(amt)
-
-	k.setSupply(ctx, supply)
+	for _, amount := range amounts {
+		supply := k.GetSupply(ctx, amount.GetDenom())
+		supply = supply.Sub(amount)
+		k.setSupply(ctx, supply)
+	}
 
 	logger := k.Logger(ctx)
-	logger.Info("burned tokens from module account", "amount", amt.String(), "from", moduleName)
+	logger.Info("burned tokens from module account", "amount", amounts.String(), "from", moduleName)
 
 	// emit burn event
 	ctx.EventManager().EmitEvent(
-		types.NewCoinBurnEvent(acc.GetAddress(), amt),
+		types.NewCoinBurnEvent(acc.GetAddress(), amounts),
 	)
 
 	return nil
+}
+
+func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	supplyStore.Set([]byte(coin.GetDenom()), []byte(coin.Amount.String()))
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
@@ -460,8 +447,15 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var balance sdk.Coin
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
+		amount, ok := sdk.NewIntFromString(string(iterator.Value()))
+		if !ok {
+			panic("unexpected supply")
+		}
+
+		balance := sdk.Coin{
+			Denom:  string(iterator.Key()),
+			Amount: amount,
+		}
 
 		if cb(balance) {
 			break

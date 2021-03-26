@@ -14,7 +14,7 @@ import (
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7092
 func migrateSupply(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
 	// Old supply was stored as a single blob under the SupplyKey.
-	var oldSupply types.Supply // nolint:staticcheck
+	var oldSupply types.Supply
 	err := cdc.UnmarshalBinaryBare(store.Get(v040bank.SupplyKey), &oldSupply)
 	if err != nil {
 		return err

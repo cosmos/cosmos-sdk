@@ -15,6 +15,7 @@ import (
 )
 
 type Config struct {
+	Address           string
 	SigningModes      []string
 	ChainID           string
 	SdkConfig         *sdk.Config
@@ -24,6 +25,7 @@ type Config struct {
 // Register registers the cosmos sdk reflection service
 // to the provided *grpc.Server given a Config
 func Register(srv *grpc.Server, conf Config) error {
+
 	reflectionServer, err := newReflectionServiceServer(srv, conf)
 	if err != nil {
 		return err
@@ -217,8 +219,8 @@ func newDeliverDescriptor(ir codectypes.InterfaceRegistry, signingModes []string
 		signModesDesc[i] = &SigningModeDescriptor{Name: m}
 	}
 	return &TxDescriptor{
-		Fullname:   txPbName,
-		AuthConfig: &AuthConfigDescriptor{SigningModes: signModesDesc},
-		Msgs:       msgsDesc,
+		Fullname: txPbName,
+		Authn:    &AuthnDescriptor{}, // TODO
+		Msgs:     msgsDesc,
 	}, nil
 }

@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.base.reflection.v1beta1;
 
 import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/server/grpc/cosmosreflection";
 
@@ -43,17 +44,21 @@ message AppDescriptor {
 message TxDescriptor {
   // fullname is the protobuf fullname of the raw transaction type (for instance the tx.Tx type)
   string fullname = 1;
-  // auth_config provides information on the accepted signatures
-  AuthConfigDescriptor auth_config = 2;
+  // authn provides information on how to authenticate a transaction in offline mode
+  AuthnDescriptor authn = 2;
   // msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg)
   // NOTE: not to be confused with proto.Message types
   repeated MsgDescriptor msgs = 3;
 }
 
-// AuthConfigDescriptor provides information on how to sign transactions
-message AuthConfigDescriptor {
-  // signing_modes is a list of descriptors of the sign modes
-  repeated SigningModeDescriptor signing_modes = 1;
+// AuthnDescriptor provides information on how to sign transactions without relying
+// on the online RPCs GetTxMetadata and CombineUnsignedTxAndSignatures
+message AuthnDescriptor {
+  // sign_mode defines the signature algorithm
+  string sign_mode = 1;
+  // authn_info_provider_method_fullname defines the fullname of the method to call to get
+  // the metadata required to authenticate
+  string authn_info_provider_method_fullname = 2;
 }
 
 // SigningModeDescriptor provides information on a signing flow of the application

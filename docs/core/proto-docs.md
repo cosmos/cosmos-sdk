@@ -118,7 +118,7 @@
   
 - [cosmos/base/reflection/v1beta1/reflection.proto](#cosmos/base/reflection/v1beta1/reflection.proto)
     - [AppDescriptor](#cosmos.base.reflection.v1beta1.AppDescriptor)
-    - [AuthConfigDescriptor](#cosmos.base.reflection.v1beta1.AuthConfigDescriptor)
+    - [AuthnDescriptor](#cosmos.base.reflection.v1beta1.AuthnDescriptor)
     - [ChainDescriptor](#cosmos.base.reflection.v1beta1.ChainDescriptor)
     - [CodecDescriptor](#cosmos.base.reflection.v1beta1.CodecDescriptor)
     - [ConfigurationDescriptor](#cosmos.base.reflection.v1beta1.ConfigurationDescriptor)
@@ -2053,15 +2053,17 @@ AppDescriptor describes a cosmos-sdk based application
 
 
 
-<a name="cosmos.base.reflection.v1beta1.AuthConfigDescriptor"></a>
+<a name="cosmos.base.reflection.v1beta1.AuthnDescriptor"></a>
 
-### AuthConfigDescriptor
-AuthConfigDescriptor provides information on how to sign transactions
+### AuthnDescriptor
+AuthnDescriptor provides information on how to sign transactions without relying
+on the online RPCs GetTxMetadata and CombineUnsignedTxAndSignatures
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `signing_modes` | [SigningModeDescriptor](#cosmos.base.reflection.v1beta1.SigningModeDescriptor) | repeated | signing_modes is a list of descriptors of the sign modes |
+| `sign_mode` | [string](#string) |  | sign_mode defines the signature algorithm |
+| `authn_info_provider_method_fullname` | [string](#string) |  | authn_info_provider_method_fullname defines the fullname of the method to call to get the metadata required to authenticate |
 
 
 
@@ -2379,7 +2381,7 @@ TxDescriptor describes the accepted transaction type
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `fullname` | [string](#string) |  | fullname is the protobuf fullname of the raw transaction type (for instance the tx.Tx type) |
-| `auth_config` | [AuthConfigDescriptor](#cosmos.base.reflection.v1beta1.AuthConfigDescriptor) |  | auth_config provides information on the accepted signatures |
+| `authn` | [AuthnDescriptor](#cosmos.base.reflection.v1beta1.AuthnDescriptor) |  | authn provides information on how to authenticate a transaction in offline mode |
 | `msgs` | [MsgDescriptor](#cosmos.base.reflection.v1beta1.MsgDescriptor) | repeated | msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg) NOTE: not to be confused with proto.Message types |
 
 

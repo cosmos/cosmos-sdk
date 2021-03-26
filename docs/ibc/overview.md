@@ -24,21 +24,21 @@ The following requirements must be met for a module to interact over IBC:
 
 ## Components Overview
 
-This section describes the IBC components.
+This section describes the IBC components and links to the repos.
 
-### [Clients](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/02-client)
+### [Clients](https://github.com/cosmos/ibc-go/blob/main/modules/core/02-client)
 
 IBC clients are light clients that are identified by a unique client id. IBC clients track the consensus states of other blockchains and the proof specs of those blockchains that are required to properly verify proofs against the client's consensus state. A client can be associated with any number of connections to multiple chains. The supported IBC clients are:
 
-- [Solo Machine light client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/light-clients/06-solomachine): devices such as phones, browsers, or laptops.
-- [Tendermint light client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/light-clients/07-tendermint): The default for Cosmos SDK-based chains.
-- [Localhost (loopback) client](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/light-clients/09-localhost): Useful for testing, simulation, and relaying packets to modules on the same application.
+- [Solo Machine light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/06-solomachine): devices such as phones, browsers, or laptops.
+- [Tendermint light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/07-tendermint): The default for Cosmos SDK-based chains.
+- [Localhost (loopback) client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/09-localhost): Useful for testing, simulation, and relaying packets to modules on the same application.
 
-### [Connections](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/03-connection)
+### [Connections](https://github.com/cosmos/ibc-go/blob/main/modules/core/03-connection)
 
 Connections encapsulate two `ConnectionEnd` objects on two separate blockchains. Each `ConnectionEnd` is associated with a client of the other blockchain (the counterparty blockchain). The connection handshake is responsible for verifying that the light clients on each chain are correct for their respective counterparties. Connections, once established, are responsible for facilitating all cross-chain verification of IBC state. A connection can be associated with any number of channels.
 
-### [Proofs](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/23-commitment) and [Paths](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/24-host)
+### [Proofs](https://github.com/cosmos/ibc-go/blob/main/modules/core/23-commitment) and [Paths](https://github.com/cosmos/ibc-go/blob/main/modules/core/24-host)
 
 In IBC, blockchains do not directly pass messages to each other over the network.
 
@@ -58,15 +58,15 @@ While this explanation is useful background information, IBC modules do not need
 
 Write your IBC applications as self-contained **modules**. A module on one blockchain can communicate with other modules on other blockchains by sending, receiving, and acknowledging packets through channels that are uniquely identified by the `(channelID, portID)` tuple.
 
-A useful analogy is to consider IBC modules as internet apps on a computer. A channel can then be conceptualized as an IP connection, with the IBC portID being like to a IP port, and the IBC channelID being like to an IP address. A single instance of an IBC module can communicate on the same port with any number of other modules and IBC correctly routes all packets to the relevant module using the `(channelID, portID)` tuple. An IBC module can also communicate with another IBC module over multiple ports by sending each `(portID<->portID)` packet stream on a different unique channel.
+A useful analogy is to consider IBC modules as internet apps on a computer. A channel can then be conceptualized as an IP connection, with the IBC portID being analogous to a IP port, and the IBC channelID being analogous to an IP address. A single instance of an IBC module can communicate on the same port with any number of other modules and IBC correctly routes all packets to the relevant module using the `(channelID, portID)` tuple. An IBC module can also communicate with another IBC module over multiple ports by sending each `(portID<->portID)` packet stream on a different unique channel.
 
-### [Ports](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/05-port)
+### [Ports](https://github.com/cosmos/ibc-go/blob/main/modules/core/05-port)
 
 An IBC module can bind to any number of ports. Each port must be identified by a unique `portID`. Since IBC is designed to be secure with mutually-distrusted modules that operate on the same ledger, binding a port returns the dynamic object capability. To take action on a particular port, for example, to open a channel with its portID, a module must provide the dynamic object capability to the IBC handler. This requirement prevents a malicious module from opening channels with ports it does not own.
 
 IBC modules are responsible for claiming the capability that is returned on `BindPort`.
 
-### [Channels](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
+### [Channels](https://github.com/cosmos/ibc-go/blob/main/modules/core/04-channel)
 
 An IBC channel can be established between two IBC ports. A port is exclusively owned by a single module. IBC packets are sent over channels. Just as IP packets contain the destination IP address, IP port, the source IP address, and source IP port, IBC packets contain the destination portID, channelID, the source portID, and channelID. The IBC packets enable IBC to correctly route the packets to the destination module, while also allowing modules receiving packets to know the sender module.
 
@@ -87,7 +87,7 @@ If all of these actions happen successfully, the channel is open on both sides. 
 
 Just as ports came with dynamic capabilities, channel initialization returns a dynamic capability that the module **must** claim so that they can pass in a capability to authenticate channel actions like sending packets. The channel capability is passed into the callback on the first parts of the handshake: `OnChanOpenInit` on the initializing chain or `OnChanOpenTry` on the other chain.
 
-### [Packets](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
+### [Packets](https://github.com/cosmos/ibc-go/blob/main/modules/core/04-channel)
 
 Modules communicate with each other by sending packets over IBC channels. All IBC packets contain:
 
@@ -111,7 +111,7 @@ Modules communicate with each other by sending packets over IBC channels. All IB
 
 Modules send custom application data to each other inside the `Data []byte` field of the IBC packet. Packet data is completely opaque to IBC handlers. The sender module must encode their application-specific packet information into the `Data` field of packets. The receiver module must decode that `Data` back to the original application data.
 
-### [Receipts and Timeouts](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
+### [Receipts and Timeouts](https://github.com/cosmos/ibc-go/blob/main/modules/core/04-channel)
 
 Since IBC works over a distributed network and relies on potentially faulty relayers to relay messages between ledgers, IBC must handle the case where a packet does not get sent to its destination in a timely manner or at all. Packets must specify a timeout height or timeout timestamp after which a packet can no longer be successfully received on the destination chain.
 
@@ -123,7 +123,7 @@ In the UNORDERED case, packets can be received in any order. IBC writes a packet
 
 For this reason, most modules that use UNORDERED channels are recommended as they require less liveness guarantees to function effectively for users of that channel.
 
-### [Acknowledgements](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel)
+### [Acknowledgements](https://github.com/cosmos/ibc-go/blob/main/modules/core/04-channel)
 
 Modules also write application-specific acknowledgements when processing a packet. Acknowledgements can be done:
 

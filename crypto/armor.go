@@ -102,7 +102,6 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 		return nil, "", fmt.Errorf("header's version field is empty")
 	default:
 		err = fmt.Errorf("unrecognized version: %v", header[headerVersion])
-
 		return nil, "", err
 	}
 }

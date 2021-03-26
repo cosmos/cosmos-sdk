@@ -364,7 +364,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 				return nil, err
 			}
 		} else {
-			moduleValUpdates := module.InitGenesis(ctx, cfg.Cdc(), nil)
+			moduleValUpdates := module.InitGenesis(ctx, cfg.Cdc(), module.DefaultGenesis(cfg.Cdc()))
 			// The module manager assumes only one module will update the
 			// validator set, and that it will not be by a new module.
 			if len(moduleValUpdates) > 0 {

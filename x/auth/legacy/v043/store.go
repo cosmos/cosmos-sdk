@@ -55,12 +55,20 @@ func migrateVestingAccounts(ctx sdk.Context, account types.AccountI, queryServer
 		queryServer,
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	unbondingDelegations, err := getDelegatorUnbondingDelegationsSum(
 		ctx,
 		addr,
 		bondDenom,
 		queryServer,
 	)
+
+	if err != nil {
+		return nil, err
+	}
 
 	delegations = delegations.Add(unbondingDelegations...)
 

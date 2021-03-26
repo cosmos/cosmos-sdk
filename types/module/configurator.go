@@ -69,7 +69,7 @@ func (c configurator) QueryServer() grpc.Server {
 	return c.queryServer
 }
 
-// QueryServer implements the Configurator.Cdc method
+// Cdc implements the Configurator.Cdc method
 func (c configurator) Cdc() codec.Marshaler {
 	return c.cdc
 }

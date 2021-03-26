@@ -2,6 +2,7 @@ package keeper
 
 import (
 	v043 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v043"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/gogo/protobuf/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,14 +21,22 @@ func NewMigrator(keeper AccountKeeper, queryServer grpc.Server) Migrator {
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	wb, err := v043.MigrateStore(ctx, m.keeper.GetAllAccounts(ctx), m.queryServer)
-	if err != nil {
-		return err
-	}
+	var iterErr error
 
-	for _, a := range wb {
-		m.keeper.SetAccount(ctx, a)
-	}
+	m.keeper.IterateAccounts(ctx, func(account types.AccountI) (stop bool) {
+		wb, err := v043.MigrateStore(ctx, account, m.queryServer)
+		if err != nil {
+			iterErr = err
+			return true
+		}
 
-	return nil
+		if wb == nil {
+			return false
+		}
+
+		m.keeper.SetAccount(ctx, wb)
+		return false
+	})
+
+	return iterErr
 }

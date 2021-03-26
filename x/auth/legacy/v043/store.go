@@ -26,63 +26,57 @@ const (
 	balancesPath                      = "/cosmos.bank.v1beta1.Query/AllBalances"
 )
 
-func migrateVestingAccounts(ctx sdk.Context, accounts []types.AccountI, queryServer grpc.Server) ([]types.AccountI, error) {
+func migrateVestingAccounts(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
 	bondDenom, err := getBondDenom(ctx, queryServer)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for i := 0; i < len(accounts); i++ {
-		asVesting, ok := accounts[i].(exported.VestingAccount)
-		if !ok {
-			continue
-		}
-
-		account := accounts[i]
-
-		addr := account.GetAddress().String()
-		balance, err := getBalance(
-			ctx,
-			addr,
-			queryServer,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		delegations, err := getDelegatorDelegationsSum(
-			ctx,
-			addr,
-			queryServer,
-		)
-
-		unbondingDelegations, err := getDelegatorUnbondingDelegationsSum(
-			ctx,
-			addr,
-			bondDenom,
-			queryServer,
-		)
-
-		delegations = delegations.Add(unbondingDelegations...)
-
-		asVesting, ok = resetVestingDelegatedBalances(asVesting)
-		if !ok {
-			continue
-		}
-
-		// balance before any delegation includes balance of delegation
-		for _, coin := range delegations {
-			balance = balance.Add(coin)
-		}
-
-		asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
-
-		accounts[i] = asVesting.(types.AccountI)
+	asVesting, ok := account.(exported.VestingAccount)
+	if !ok {
+		return nil, nil
 	}
 
-	return accounts, nil
+	addr := account.GetAddress().String()
+	balance, err := getBalance(
+		ctx,
+		addr,
+		queryServer,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	delegations, err := getDelegatorDelegationsSum(
+		ctx,
+		addr,
+		queryServer,
+	)
+
+	unbondingDelegations, err := getDelegatorUnbondingDelegationsSum(
+		ctx,
+		addr,
+		bondDenom,
+		queryServer,
+	)
+
+	delegations = delegations.Add(unbondingDelegations...)
+
+	asVesting, ok = resetVestingDelegatedBalances(asVesting)
+	if !ok {
+		return nil, nil
+	}
+
+	// balance before any delegation includes balance of delegation
+	for _, coin := range delegations {
+		balance = balance.Add(coin)
+	}
+
+	asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
+
+	return asVesting.(types.AccountI), nil
 }
 
 func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.VestingAccount, bool) {
@@ -261,6 +255,6 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 // MigrateStore migrates vesting account to make the DelegatedVesting and DelegatedFree fields correctly
 // track delegations.
 // References: https://github.com/cosmos/cosmos-sdk/issues/8601, https://github.com/cosmos/cosmos-sdk/issues/8812
-func MigrateStore(ctx sdk.Context, accounts []types.AccountI, queryServer grpc.Server) ([]types.AccountI, error) {
-	return migrateVestingAccounts(ctx, accounts, queryServer)
+func MigrateStore(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
+	return migrateVestingAccounts(ctx, account, queryServer)
 }

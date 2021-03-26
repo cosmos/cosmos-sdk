@@ -1,10 +1,10 @@
 package codec
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"bytes"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"

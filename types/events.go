@@ -1,11 +1,11 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"sort"
-	"bytes"
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"

@@ -44,9 +44,9 @@ In IBC, blockchains do not directly pass messages to each other over the network
 
 - To communicate, a blockchain commits some state to a precisely defined path reserved for a specific message type and a specific counterparty. For example, a blockchain that stores a specific connectionEnd as part of a handshake or a packet intended to be relayed to a module on the counterparty chain.
 
-- A relayer process monitors for updates to these paths, and relays message that are submitted by the data stored under the path along with a proof to the counterparty chain.
+- A relayer process monitors for updates to these paths and relays messages by submitting the data stored under the path along with a proof of that data to the counterparty chain.
 
-- The paths that all IBC implementations require for committing IBC messages is defined in [ICS-24 host requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements).
+- The paths that all IBC implementations must support for committing IBC messages are defined in [ICS-24 host requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements).
 
 - The proof format that all implementations must produce and verify is defined in [ICS-23 implementation](https://github.com/confio/ics23).
 
@@ -74,7 +74,7 @@ An IBC channel can be established between two IBC ports. A port is exclusively o
 
 - Recommended, a channel may be `UNORDERED` so that packets from a sending module are processed in the order they arrive, which may not be the order the packets were sent.
 
-Modules may choose which channels they wish to communicate over with. IBC expects modules to implement callbacks that are called during the channel handshake. These callbacks may do custom channel initialization logic, if any return an error, the channel handshake fails. By returning errors on callbacks, modules can programmatically reject and accept channels.
+Modules may choose which channels they wish to communicate over with. IBC expects modules to implement callbacks that are called during the channel handshake. These callbacks may do custom channel initialization logic. If an error is returned, the channel handshake fails. By returning errors on callbacks, modules can programmatically reject and accept channels.
 
 The channel handshake is a 4-step handshake. Briefly, if a given chain A wants to open a channel with chain B using an already established connection:
 
@@ -83,7 +83,7 @@ The channel handshake is a 4-step handshake. Briefly, if a given chain A wants t
 3. Chain A sends a `ChanOpenAck` message to mark its channel end status as open.
 4. Chain B sends a `ChanOpenConfirm` message to mark its channel end status as open.
 
-If all of these actions happen successfully, the channel is open on both sides. At each step in the handshake, the module associated with the `ChannelEnd` executes it's callback for that step of the handshake. So on `ChanOpenInit`, the module on chain A has its callback `OnChanOpenInit` executed.
+If all of these actions happen successfully, the channel is open on both sides. At each step in the handshake, the module associated with the `ChannelEnd` executes its callback for that step of the handshake. So on `ChanOpenInit`, the module on chain A has its callback `OnChanOpenInit` executed.
 
 Just as ports came with dynamic capabilities, channel initialization returns a dynamic capability that the module **must** claim so that they can pass in a capability to authenticate channel actions like sending packets. The channel capability is passed into the callback on the first parts of the handshake: `OnChanOpenInit` on the initializing chain or `OnChanOpenTry` on the other chain.
 

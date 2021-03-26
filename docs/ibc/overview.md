@@ -131,7 +131,7 @@ Modules also write application-specific acknowledgements when processing a packe
 
 - Asynchronously if module processes packets at some later point after receiving the packet.
 
-This acknowledgement data is opaque to IBC much like the packet `Data` and is treated by IBC as a simple byte string `[]byte`. The receiver modules must encode their acknowledgement so that the sender module can decode it correctly and decided through version negotiation during the channel handshake.
+This acknowledgement data is opaque to IBC much like the packet `Data` and is treated by IBC as a simple byte string `[]byte`. The receiver modules must encode their acknowledgement so that the sender module can decode it correctly. How the acknowledgement is encoded should be decided through version negotiation during the channel handshake.
 
 The acknowledgement can encode whether the packet processing succeeded or failed, along with additional information that allows the sender module to take appropriate action.
 

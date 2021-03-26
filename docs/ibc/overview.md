@@ -6,7 +6,7 @@ Learn what IBC is, its components, and use cases. {synopsis}
 
 ## What is the Inter-Blockchain Communication Protocol (IBC)?
 
-This document serves as a guide for developers who want to write their own IBC apps for custom use cases. <!--[use-cases](https://github.com/cosmos/ics/blob/master/ibc/4_IBC_USECASES.md)-->.
+This document is a guide for developers who want to write their own IBC apps for custom use cases.
 
 The modular design of the IBC protocol means that IBC app developers do not require in-depth knowledge of the low-level details of clients, connections, and proof verification. This brief explanation of the lower levels of the stack is provided so that app developers can gain a high-level understanding of the IBC protocol.
 

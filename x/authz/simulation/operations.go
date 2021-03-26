@@ -96,8 +96,12 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		}
 
 		blockTime := ctx.BlockTime()
+		spendLimit := spendableCoins.Sub(fees)
+		if spendLimit == nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, "spend limit is nil"), nil, nil
+		}
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			banktype.NewSendAuthorization(spendableCoins.Sub(fees)), blockTime.AddDate(1, 0, 0))
+			banktype.NewSendAuthorization(spendLimit), blockTime.AddDate(1, 0, 0))
 
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err

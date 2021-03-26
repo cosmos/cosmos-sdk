@@ -200,21 +200,23 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
 	// adding during a migration.
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockModule := mocks.NewMockAppModuleGenesis(mockCtrl)
-	goam := module.NewGenesisOnlyAppModule(mockModule)
+	mockModule := mocks.NewMockAppModule(mockCtrl)
+	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
+	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
 
-	app.mm.Modules["mock"] = goam
+	app.mm.Modules["mock"] = mockModule
 
 	// Run migrations only for "mock" module. That's why we put the initial
 	// version for bank as 0 (to run its InitGenesis), and for all other
 	// modules, we put their latest ConsensusVersion to skip migrations.
-	_, err := app.RunMigrations(
-		app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
+	_, err := app.RunMigrations(ctx,
 		module.VersionMap{
 			"mock":         0,
 			"bank":         bank.AppModule{}.ConsensusVersion(),
@@ -236,8 +238,6 @@ func TestInitGenesisOnMigration(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
-
-	// TODO FInd a way to test that InitGenesis has been called.
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {

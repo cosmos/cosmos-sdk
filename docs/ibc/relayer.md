@@ -4,7 +4,7 @@ order: 4
 
 # Relayer
 
-## Pre-requisites Readings
+## Prerequisites Readings
 
 - [IBC Overview](./overview.md) {prereq}
 - [Events](https://github.com/cosmos/cosmos-sdk/blob/master/docs/core/events.md) {prereq}

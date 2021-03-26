@@ -109,7 +109,7 @@ For user interaction, addresses are formatted using [Bech32](https://en.bitcoin.
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/types/address.go#L230-L244
 
 
-|                    | Address bech32 Prefix |
+|                    | Address Bech32 Prefix |
 | ------------------ | --------------------- |
 | Accounts           | cosmos                |
 | Validator Operator | cosmosvaloper         |

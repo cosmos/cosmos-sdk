@@ -3,6 +3,7 @@ package module
 import (
 	"github.com/gogo/protobuf/grpc"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -31,9 +32,14 @@ type Configurator interface {
 	// will panic. If the ConsensusVersion bump does not introduce any store
 	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error
+
+	// Cdc defines the app-wide codec interface used for serialization and
+	// deserialization.
+	Cdc() codec.Marshaler
 }
 
 type configurator struct {
+	cdc         codec.Marshaler
 	msgServer   grpc.Server
 	queryServer grpc.Server
 
@@ -42,8 +48,9 @@ type configurator struct {
 }
 
 // NewConfigurator returns a new Configurator instance
-func NewConfigurator(msgServer grpc.Server, queryServer grpc.Server) Configurator {
+func NewConfigurator(cdc codec.Marshaler, msgServer grpc.Server, queryServer grpc.Server) Configurator {
 	return configurator{
+		cdc:         cdc,
 		msgServer:   msgServer,
 		queryServer: queryServer,
 		migrations:  map[string]map[uint64]MigrationHandler{},
@@ -60,6 +67,11 @@ func (c configurator) MsgServer() grpc.Server {
 // QueryServer implements the Configurator.QueryServer method
 func (c configurator) QueryServer() grpc.Server {
 	return c.queryServer
+}
+
+// QueryServer implements the Configurator.Cdc method
+func (c configurator) Cdc() codec.Marshaler {
+	return c.cdc
 }
 
 // RegisterMigration implements the Configurator.RegisterMigration method

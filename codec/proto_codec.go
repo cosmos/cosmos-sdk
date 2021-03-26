@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"strings"
+	"bytes"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
@@ -159,7 +159,7 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	}
 
 	unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
-	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), m)
+	err := unmarshaler.Unmarshal(bytes.NewReader(bz), m)
 	if err != nil {
 		return err
 	}

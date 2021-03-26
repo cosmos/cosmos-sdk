@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
 
@@ -155,7 +154,7 @@ func GetTxEncoder(cdc *codec.LegacyAmino) (encoder sdk.TxEncoder) {
 
 func ParseQueryResponse(bz []byte) (sdk.SimulationResponse, error) {
 	var simRes sdk.SimulationResponse
-	if err := jsonpb.Unmarshal(strings.NewReader(string(bz)), &simRes); err != nil {
+	if err := jsonpb.Unmarshal(bytes.NewReader(bz), &simRes); err != nil {
 		return sdk.SimulationResponse{}, err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"bytes"
 	"strings"
 
 	"github.com/gogo/protobuf/jsonpb"
@@ -130,7 +131,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 		return nil, err
 	}
 
-	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
+	err = jsonpb.Unmarshal(bytes.NewReader(attrBytes), protoMsg)
 	if err != nil {
 		return nil, err
 	}

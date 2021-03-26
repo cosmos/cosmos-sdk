@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	v043 "github.com/cosmos/cosmos-sdk/x/auth/legacy/v043"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -574,12 +573,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 			require.True(t, ok)
 			require.NoError(t, tc.garbageFunc(ctx, vestingAccount, app))
 
-			newData, err := v043.MigrateStore(ctx, app.AccountKeeper.GetAllAccounts(ctx), app.GRPCQueryRouter())
-			require.NoError(t, err)
-
-			for _, a := range newData {
-				app.AccountKeeper.SetAccount(ctx, a)
-			}
+			m := authkeeper.NewMigrator(app.AccountKeeper, app.GRPCQueryRouter())
+			require.NoError(t, m.Migrate1to2(ctx))
 
 			var expVested sdk.Coins
 			var expFree sdk.Coins

@@ -138,7 +138,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 				grantee.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			"no fee allowance found",
+			"no allowance",
 			true, nil, nil,
 		},
 		{
@@ -170,9 +170,13 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().Equal(tc.respType.Grantee, tc.respType.Grantee)
 				s.Require().Equal(tc.respType.Granter, tc.respType.Granter)
+				grant, err := tc.respType.GetFeeGrant()
+				s.Require().NoError(err)
+				grant1, err1 := tc.resp.GetFeeGrant()
+				s.Require().NoError(err1)
 				s.Require().Equal(
-					tc.respType.GetFeeGrant().(*types.BasicFeeAllowance).SpendLimit,
-					tc.resp.GetFeeGrant().(*types.BasicFeeAllowance).SpendLimit,
+					grant.(*types.BasicFeeAllowance).SpendLimit,
+					grant1.(*types.BasicFeeAllowance).SpendLimit,
 				)
 			}
 		})
@@ -724,7 +728,10 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	s.Require().Equal(resp.Grantee, resp.Grantee)
 	s.Require().Equal(resp.Granter, resp.Granter)
 
-	filteredFeeGrant, err := resp.GetFeeGrant().(*types.AllowedMsgFeeAllowance).GetAllowance()
+	grant, err := resp.GetFeeGrant()
+	s.Require().NoError(err)
+
+	filteredFeeGrant, err := grant.(*types.AllowedMsgFeeAllowance).GetAllowance()
 	s.Require().NoError(err)
 
 	s.Require().Equal(

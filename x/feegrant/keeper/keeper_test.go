@@ -109,7 +109,8 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	for name, tc := range cases {
 		tc := tc
 		suite.Run(name, func() {
-			allow := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
+			allow, _ := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
+
 			if tc.allowance == nil {
 				suite.Nil(allow)
 				return
@@ -249,7 +250,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 				suite.Error(err)
 			}
 
-			loaded := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
+			loaded, _ := k.GetFeeAllowance(ctx, tc.granter, tc.grantee)
 
 			suite.Equal(tc.final, loaded)
 		})

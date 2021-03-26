@@ -95,10 +95,10 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 // GetFeeAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) types.FeeAllowanceI {
+func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (types.FeeAllowanceI, error) {
 	grant, found := k.GetFeeGrant(ctx, granter, grantee)
 	if !found {
-		return nil
+		return nil, sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
 	return grant.GetFeeGrant()
@@ -162,12 +162,17 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
-	grant, found := k.GetFeeGrant(ctx, granter, grantee)
-	if !found || grant.GetFeeGrant() == nil {
+	f, found := k.GetFeeGrant(ctx, granter, grantee)
+	if !found {
 		return sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
-	remove, err := grant.GetFeeGrant().Accept(ctx, fee, msgs)
+	grant, err := f.GetFeeGrant()
+	if err != nil {
+		return err
+	}
+
+	remove, err := grant.Accept(ctx, fee, msgs)
 	if err == nil {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -189,5 +194,5 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	// if we accepted, store the updated state of the allowance
-	return k.GrantFeeAllowance(ctx, granter, grantee, grant.GetFeeGrant())
+	return k.GrantFeeAllowance(ctx, granter, grantee, grant)
 }

@@ -58,7 +58,7 @@ While this explanation is useful background information, IBC modules do not need
 
 Write your IBC applications as self-contained **modules**. A module on one blockchain can communicate with other modules on other blockchains by sending, receiving, and acknowledging packets through channels that are uniquely identified by the `(channelID, portID)` tuple.
 
-A useful analogy is to consider IBC modules as internet apps on a computer. A channel can then be conceptualized as an IP connection, with the IBC portID being analogous to a IP port, and the IBC channelID being analogous to an IP address. A single instance of an IBC module can communicate on the same port with any number of other modules and IBC correctly routes all packets to the relevant module using the `(channelID, portID)` tuple. An IBC module can also communicate with another IBC module over multiple ports by sending each `(portID<->portID)` packet stream on a different unique channel.
+A useful analogy is to consider IBC modules as internet apps on a computer. A channel can then be conceptualized as an IP connection, with the IBC portID is like an IP port, and the IBC channelID is like an IP address. A single instance of an IBC module can communicate on the same port with any number of other modules and IBC correctly routes all packets to the relevant module using the `(channelID, portID)` tuple. An IBC module can also communicate with another IBC module over multiple ports by sending each `(portID<->portID)` packet stream on a different unique channel.
 
 ### [Ports](https://github.com/cosmos/ibc-go/blob/main/modules/core/05-port)
 

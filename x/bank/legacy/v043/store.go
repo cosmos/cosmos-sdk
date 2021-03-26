@@ -23,6 +23,10 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
 	// We delete the single key holding the whole blob.
 	store.Delete(v040bank.SupplyKey)
 
+	if oldSupplyI == nil {
+		return nil
+	}
+
 	// We add a new key for each denom
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 

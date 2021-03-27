@@ -26,6 +26,11 @@ service Query {
   rpc UpgradedConsensusState(QueryUpgradedConsensusStateRequest) returns (QueryUpgradedConsensusStateResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}";
   }
+
+  // VersionMap queries the version map from state.
+  rpc VersionMap(QueryVersionMap) returns (QueryVersionMapResponse) {
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/versionmap";
+  }
 }
 
 // QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC
@@ -67,4 +72,14 @@ message QueryUpgradedConsensusStateResponse {
   reserved 1;
 
   bytes upgraded_consensus_state = 2;
+}
+
+// QueryVersionMap is the request type for the Query/VersionMap
+// RPC method.
+message QueryVersionMap {}
+
+// QueryVersionMapResponse is the response type for the Query/VersionMap RPC
+// method.
+message QueryVersionMapResponse {
+  map<string, uint64> version_map = 1;
 }

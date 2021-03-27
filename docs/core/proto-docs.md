@@ -531,6 +531,9 @@
     - [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse)
     - [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest)
     - [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse)
+    - [QueryVersionMap](#cosmos.upgrade.v1beta1.QueryVersionMap)
+    - [QueryVersionMapResponse](#cosmos.upgrade.v1beta1.QueryVersionMapResponse)
+    - [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry)
   
     - [Query](#cosmos.upgrade.v1beta1.Query)
   
@@ -1624,7 +1627,7 @@ GenesisState defines the bank module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
 | `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. If it is left empty, then supply will be calculated based on the provided balances. Otherwise, it will be used to validate that the sum of the balances equals this amount. |
 | `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
 
 
@@ -7496,6 +7499,49 @@ RPC method.
 
 
 
+
+<a name="cosmos.upgrade.v1beta1.QueryVersionMap"></a>
+
+### QueryVersionMap
+QueryVersionMap is the request type for the Query/VersionMap
+RPC method.
+
+
+
+
+
+
+<a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse"></a>
+
+### QueryVersionMapResponse
+QueryVersionMapResponse is the response type for the Query/VersionMap RPC
+method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `version_map` | [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry"></a>
+
+### QueryVersionMapResponse.VersionMapEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [uint64](#uint64) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -7513,6 +7559,7 @@ Query defines the gRPC upgrade querier service.
 | `CurrentPlan` | [QueryCurrentPlanRequest](#cosmos.upgrade.v1beta1.QueryCurrentPlanRequest) | [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse) | CurrentPlan queries the current upgrade plan. | GET|/cosmos/upgrade/v1beta1/current_plan|
 | `AppliedPlan` | [QueryAppliedPlanRequest](#cosmos.upgrade.v1beta1.QueryAppliedPlanRequest) | [QueryAppliedPlanResponse](#cosmos.upgrade.v1beta1.QueryAppliedPlanResponse) | AppliedPlan queries a previously applied upgrade plan by its name. | GET|/cosmos/upgrade/v1beta1/applied_plan/{name}|
 | `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier | GET|/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}|
+| `VersionMap` | [QueryVersionMap](#cosmos.upgrade.v1beta1.QueryVersionMap) | [QueryVersionMapResponse](#cosmos.upgrade.v1beta1.QueryVersionMapResponse) | VersionMap queries the version map from state. | GET|/cosmos/upgrade/v1beta1/versionmap|
 
  <!-- end services -->
 

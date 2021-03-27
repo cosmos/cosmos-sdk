@@ -46,3 +46,12 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 		UpgradedConsensusState: consState,
 	}, nil
 }
+
+func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMap) (*types.QueryVersionMapResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	vm := k.GetModuleVersionMap(ctx)
+
+	return &types.QueryVersionMapResponse{
+		VersionMap: vm,
+	}, nil
+}

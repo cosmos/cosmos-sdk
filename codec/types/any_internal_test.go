@@ -51,3 +51,15 @@ func TestAnyPackUnpack(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 }
+
+func TestString(t *testing.T) {
+	require := require.New(t)
+	spot := &Dog{Name: "Spot"}
+	any, err := NewAnyWithValue(spot)
+	require.NoError(err)
+
+	require.Equal("&Any{TypeUrl:/tests/dog,Value:[10 4 83 112 111 116],XXX_unrecognized:[]}", any.String())
+	require.Equal(`&Any{TypeUrl: "/tests/dog",
+  Value: []byte{0xa, 0x4, 0x53, 0x70, 0x6f, 0x74}
+}`, any.GoString())
+}

@@ -14,12 +14,12 @@ This ADR introduces a system for permissioned inter-module communication leverag
 service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) and
 [ADR 031](./adr-031-msg-service.md) which provides:
 - stable protobuf based module interfaces to potentially later replace the keeper paradigm
-- stronger inter-module object capabilities guarantees
+- stronger inter-module object capabilities (OCAPs) guarantees
 - module accounts and sub-account authorization
 
 ## Context
 
-In the current Cosmos SDK documentation on the [Object-Capability Model](../docs/core/ocap.md), it is state that:
+In the current Cosmos SDK documentation on the [Object-Capability Model](../core/ocap.md), it is stated that:
 
 > We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -34,7 +34,7 @@ of module keeper interfaces inevitable because the current interfaces are poorly
 Currently the `x/bank` keeper gives pretty much unrestricted access to any module which references it. For instance, the
 `SetBalance` method allows the caller to set the balance of any account to anything, bypassing even proper tracking of supply.
 
-There appears to have been some later attempts to implement some semblance of Ocaps using module-level minting, staking
+There appears to have been some later attempts to implement some semblance of OCAPs using module-level minting, staking
 and burning permissions. These permissions allow a module to mint, burn or delegate tokens with reference to the module’s
 own account. These permissions are actually stored as a `[]string` array on the `ModuleAccount` type in state.
 
@@ -42,13 +42,13 @@ However, these permissions don’t really do much. They control what modules can
 `BurnCoins` and `DelegateCoins***` methods, but for one there is no unique object capability token that controls access —
 just a simple string. So the `x/upgrade` module could mint tokens for the `x/staking` module simple by calling
 `MintCoins(“staking”)`. Furthermore, all modules which have access to these keeper methods, also have access to
-`SetBalance` negating any other attempt at Ocaps and breaking even basic object-oriented encapsulation.
+`SetBalance` negating any other attempt at OCAPs and breaking even basic object-oriented encapsulation.
 
 ## Decision
 
-Starting from the work in [ADR 021](./adr-021-protobuf-query-encoding.md) and [ADR 31](./adr-031-msg-service.md), we introduce
-the following inter-module communication system as an new paradigm for secure module based authorization and OCAPS
-framework. When implemented, this could also serve as an alternative the existing paradigm of passing keepers between
+Based on [ADR-021](./adr-021-protobuf-query-encoding.md) and [ADR-031](./adr-031-msg-service.md), we introduce the
+Inter-Module Communication framework for secure module authorization and OCAPs.
+When implemented, this could also serve as an alternative to the existing paradigm of passing keepers between
 modules. The approach outlined here-in is intended to form the basis of a Cosmos SDK v1.0 that provides the necessary
 stability and encapsulation guarantees that allow a thriving module ecosystem to emerge.
 
@@ -61,7 +61,7 @@ addressed as amendments to this ADR.
 In [ADR 021](./adr-021-protobuf-query-encoding.md), a mechanism for using protobuf service definitions to define queriers
 was introduced and in [ADR 31](./adr-031-msg-service.md), a mechanism for using protobuf service to define `Msg`s was added.
 Protobuf service definitions generate two golang interfaces representing the client and server sides of a service plus
-some helper code. Here is a minimal example for the bank `Send` `Msg`.
+some helper code. Here is a minimal example for the bank `cosmos.bank.Msg/Send` message type:
 
 ```go
 package bank
@@ -83,45 +83,67 @@ and `MsgClient` interfaces and propose this mechanism as a replacement for the e
 this ADR does not necessitate the creation of new protobuf definitions or services. Rather, it leverages the same proto
 based service interfaces already used by clients for inter-module communication.
 
-Using this `QueryClient`/`MsgClient` approach has the following key benefits over keepers:
+Using this `QueryClient`/`MsgClient` approach has the following key benefits over exposing keepers to external modules:
 1. Protobuf types are checked for breaking changes using [buf](https://buf.build/docs/breaking-overview) and because of
 the way protobuf is designed this will give us strong backwards compatibility guarantees while allowing for forward
 evolution.
 2. The separation between the client and server interfaces will allow us to insert permission checking code in between
 the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
-object capability system.
+object capability system (see below).
 3. The router for inter-module communication gives us a convenient place to handle rollback of transactions,
 enabling atomicy of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
 transaction
 
 This mechanism has the added benefits of:
 - reducing boilerplate through code generation, and
-- allowing for modules in other languages either via a VM like CosmWasm or sub-processes using gRPC 
+- allowing for modules in other languages either via a VM like CosmWasm or sub-processes using gRPC
 
 ### Inter-module Communication
 
-To use the `Client` generated by the protobuf compiler we need a `grpc.ClientConn` implementation. For this we introduce
+To use the `Client` generated by the protobuf compiler we need a `grpc.ClientConn` [interface](https://github.com/regen-network/protobuf/blob/cosmos/grpc/types.go#L12)
+implementation. For this we introduce
 a new type, `ModuleKey`, which implements the `grpc.ClientConn` interface. `ModuleKey` can be thought of as the "private
-key" corresponding to a module account, where authentication is provided through use of a special `Invoker()` function, 
+key" corresponding to a module account, where authentication is provided through use of a special `Invoker()` function,
 described in more detail below.
 
-Whereas external clients use their account's private key to sign transactions containing `Msg`s where they are listed as signers,
-modules use their `ModuleKey` to send `Msg`s where they are listed as the sole signer to other modules. For example, modules
-could use their `ModuleKey` to "sign" a `/cosmos.bank.Msg/Send` transaction to send coins from the module's account to another
-account.
+Blockchain users (external clients) use their account's private key to sign transactions containing `Msg`s where they are listed as signers (each
+message specifies required signers with `Msg.GetSigner`). The authentication checks is performed by `AnteHandler`.
+
+Here, we extend this process, by allowing modules to be identified in `Msg.GetSigners`. When a module wants to trigger the execution a `Msg` in another module,
+its `ModuleKey` acts as the sender (through the `ClientConn` interface we describe below) and is set as a sole "signer". It's worth to note
+that we don't use any cryptographic signature in this case.
+For example, module `A` could use its `A.ModuleKey` to create `MsgSend` object for `/cosmos.bank.Msg/Send` transaction. `MsgSend` validation
+will assure that the `from` account (`A.ModuleKey` in this case) is the signer.
 
 Here's an example of a hypothetical module `foo` interacting with `x/bank`:
 ```go
 package foo
 
-func (fooMsgServer *MsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarResponse, error) {
-  bankQueryClient := bank.NewQueryClient(fooMsgServer.moduleKey)
-  balance, err := bankQueryClient.Balance(&bank.QueryBalanceRequest{Address: fooMsgServer.moduleKey.Address(), Denom: "foo"})
-  
+
+type FooMsgServer {
+  // ...
+
+  bankQuery bank.QueryClient
+  bankMsg   bank.MsgClient
+}
+
+func NewFooMsgServer(moduleKey RootModuleKey, ...) FooMsgServer {
+  // ...
+
+  return FooMsgServer {
+    // ...
+    modouleKey: moduleKey,
+    bankQuery: bank.NewQueryClient(moduleKey),
+    bankMsg: bank.NewMsgClient(moduleKey),
+  }
+}
+
+func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarResponse, error) {
+  balance, err := foo.bankQuery.Balance(&bank.QueryBalanceRequest{Address: fooMsgServer.moduleKey.Address(), Denom: "foo"})
+
   ...
 
-  bankMsgClient := bank.NewMsgClient(fooMsgServer.moduleKey)
-  res, err := bankMsgClient.Send(ctx, &bank.MsgSendRequest{FromAddress: fooMsgServer.moduleKey.Address(), ...})
+  res, err := foo.bankMsg.Send(ctx, &bank.MsgSendRequest{FromAddress: fooMsgServer.moduleKey.Address(), ...})
 
   ...
 }
@@ -138,7 +160,7 @@ corresponding "public key". From the [ADR 028](./adr-028-public-key-addresses.md
 or derived accounts that can be used for different pools (ex. staking pools) or managed accounts (ex. group
 accounts). We can also think of module sub-accounts as similar to derived keys - there is a root key and then some
 derivation path. `ModuleID` is a simple struct which contains the module name and optional "derivation" path,
-and forms its address based on the `AddressHash` method from [the ADR 028 draft](https://github.com/cosmos/cosmos-sdk/pull/7086):
+and forms its address based on the `AddressHash` method from [the ADR-028](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md):
 
 ```go
 type ModuleID struct {
@@ -151,8 +173,8 @@ func (key ModuleID) Address() []byte {
 }
 ```
 
-In addition to being able to generate a `ModuleID` and address, a `ModuleKey` contains a special function closure called
-the `Invoker` which is the key to safe inter-module access. The `InvokeFn` closure corresponds to the `Invoke` method in
+In addition to being able to generate a `ModuleID` and address, a `ModuleKey` contains a special function called
+`Invoker` which is the key to safe inter-module access. The `Invoker` creates an `InvokeFn` closure which is used as an `Invoke` method in
 the `grpc.ClientConn` interface and under the hood is able to route messages to the appropriate `Msg` and `Query` handlers
 performing appropriate security checks on `Msg`s. This allows for even safer inter-module access than keeper's whose
 private member variables could be manipulated through reflection. Golang does not support reflection on a function
@@ -162,7 +184,7 @@ the `ModuleKey` security.
 The two `ModuleKey` types are `RootModuleKey` and `DerivedModuleKey`:
 
 ```go
-func Invoker(callInfo CallInfo) func(ctx context.Context, request, response interface{}, opts ...interface{}) error
+type Invoker func(callInfo CallInfo) func(ctx context.Context, request, response interface{}, opts ...interface{}) error
 
 type CallInfo {
   Method string
@@ -173,6 +195,8 @@ type RootModuleKey struct {
   moduleName string
   invoker Invoker
 }
+
+func (rm RootModuleKey) Derive(path []byte) DerivedModuleKey { /* ... */}
 
 type DerivedModuleKey struct {
   moduleName string
@@ -230,7 +254,7 @@ type Configurator interface {
    QueryServer() grpc.Server
 
    ModuleKey() ModuleKey
-   RequireServer(serverInterface interface{})
+   RequireServer(msgServer interface{})
 }
 ```
 
@@ -290,7 +314,7 @@ type Configurator interface {
 As an example, x/slashing's Slash must call x/staking's Slash, but we don't want to expose x/staking's Slash to end users
 and clients.
 
-This wound also require creating a corresponding `internal.proto` file with a protobuf service in the given module's
+Internal protobuf services will be defined in a corresponding `internal.proto` file in the given module's
 proto package.
 
 Services registered against `InternalServer` will be callable from other modules but not by external clients.
@@ -302,7 +326,7 @@ ADR.
 ### Authorization
 
 By default, the inter-module router requires that messages are sent by the first signer returned by `GetSigners`. The
-inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/pull/7105).
+inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-030-authz-module.md).
 This middleware will allow accounts to otherwise specific module accounts to perform actions on their behalf.
 Authorization middleware should take into account the need to grant certain modules effectively "admin" privileges to
 other modules. This will be addressed in separate ADRs or updates to this ADR.
@@ -313,7 +337,7 @@ Other future improvements may include:
 * custom code generation that:
   * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
   * optimizes inter-module calls - for instance caching resolved methods after first invocation
-* combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single Ocaps handle
+* combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
 * code generation which makes inter-module communication more performant
 * decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
 * inter-module hooks and plugins
@@ -323,7 +347,7 @@ Other future improvements may include:
 ### MsgServices vs `x/capability`
 
 The `x/capability` module does provide a proper object-capability implementation that can be used by any module in the
-SDK and could even be used for inter-module Ocaps as described in [\#5931](https://github.com/cosmos/cosmos-sdk/issues/5931).
+SDK and could even be used for inter-module OCAPs as described in [\#5931](https://github.com/cosmos/cosmos-sdk/issues/5931).
 
 The advantages of the approach described in this ADR are mostly around how it integrates with other parts of the SDK,
 specifically:
@@ -348,7 +372,7 @@ replacing `Keeper` interfaces altogether.
 ### Positive
 
 - an alternative to keepers which can more easily lead to stable inter-module interfaces
-- proper inter-module Ocaps
+- proper inter-module OCAPs
 - improved module developer DevX, as commented on by several particpants on
     [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
 - lays the groundwork for what can be a greatly simplified `app.go`

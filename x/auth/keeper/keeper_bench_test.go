@@ -26,6 +26,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 }
 
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
+	b.ReportAllocs()
 	app, ctx := createTestApp(false)
 
 	b.ResetTimer()

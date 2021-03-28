@@ -1,3 +1,5 @@
+// build +norace
+
 package tx_test
 
 import (
@@ -14,12 +16,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	query "github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -78,9 +79,13 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
+	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+	// Encode the txBuilder to txBytes.
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -90,8 +95,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
-		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
+		{"valid request with proto tx (deprecated)", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"valid request with tx_bytes", &tx.SimulateRequest{TxBytes: txBytes}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -106,7 +112,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(res.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().Equal(len(res.GetResult().GetEvents()), 6) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
 				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -119,6 +125,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
+	// Encode the txBuilder to txBytes.
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -126,8 +135,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
-		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
+		{"valid request with proto tx (deprecated)", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"valid request with tx_bytes", &tx.SimulateRequest{TxBytes: txBytes}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -143,7 +153,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
-				s.Require().Equal(len(result.GetResult().GetEvents()), 4) // 1 transfer, 3 messages.
+				s.Require().Equal(len(result.GetResult().GetEvents()), 6) // 1 coin recv, 1 coin spent,1 transfer, 3 messages.
 				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)    // Gas used sometimes change, just check it's not empty.
 			}
 		})
@@ -173,16 +183,24 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 			true, "event foobar should be of the format: {eventType}.{eventAttribute}={value}",
 		},
 		{
+			"request with order-by",
+			&tx.GetTxsEventRequest{
+				Events:  []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
+				OrderBy: tx.OrderBy_ORDER_BY_ASC,
+			},
+			false, "",
+		},
+		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=/cosmos.bank.v1beta1.Msg/Send"},
+				Events: []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
 			},
 			false, "",
 		},
 		{
 			"with pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=/cosmos.bank.v1beta1.Msg/Send"},
+				Events: []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
 				Pagination: &query.PageRequest{
 					CountTotal: false,
 					Offset:     0,
@@ -194,7 +212,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action=/cosmos.bank.v1beta1.Msg/Send", "message.module=bank"},
+				Events: []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"},
 			},
 			false, "",
 		},
@@ -210,6 +228,12 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+
+				// Make sure fields are populated.
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
+				s.Require().NotEmpty(grpcRes.TxResponses[0].Timestamp)
+				s.Require().NotEmpty(grpcRes.TxResponses[0].RawLog)
 			}
 		})
 	}
@@ -231,25 +255,43 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action=/cosmos.bank.v1beta1.Msg/Send"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'"),
 			false,
 			"",
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action=/cosmos.bank.v1beta1.Msg/Send", 0, 10),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", 0, 10),
 			false,
 			"",
 		},
 		{
+			"valid request: order by asc",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			false,
+			"",
+		},
+		{
+			"valid request: order by desc",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			false,
+			"",
+		},
+		{
+			"invalid request: invalid order by",
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			true,
+			"is not a valid tx.OrderBy",
+		},
+		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action=/cosmos.bank.v1beta1.Msg/Send", "message.module=bank"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
 			false,
 			"",
 		},
 		{
 			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D%2Fcosmos.bank.v1beta1.Msg%2FSend"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'%2Fcosmos.bank.v1beta1.Msg%2FSend'"),
 			false,
 			"",
 		},
@@ -335,6 +377,12 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 				s.Require().NoError(err)
 				s.Require().Equal("foobar", result.Tx.Body.Memo)
 				s.Require().NotZero(result.TxResponse.Height)
+
+				// Make sure fields are populated.
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
+				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
+				s.Require().NotEmpty(result.TxResponse.Timestamp)
+				s.Require().NotEmpty(result.TxResponse.RawLog)
 			}
 		})
 	}
@@ -412,7 +460,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 				var result tx.BroadcastTxResponse
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
-				s.Require().Equal(uint32(0), result.TxResponse.Code)
+				s.Require().Equal(uint32(0), result.TxResponse.Code, "rawlog", result.TxResponse.RawLog)
 			}
 		})
 	}
@@ -454,9 +502,19 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	return txBuilder
 }
 
+// protoTxProvider is a type which can provide a proto transaction. It is a
+// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field.
+type protoTxProvider interface {
+	GetProtoTx() *tx.Tx
+}
+
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
-	protoProvider, ok := txBuilder.(authtx.ProtoTxProvider)
+	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +59,10 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
-	pubkeys := sigTx.GetPubKeys()
+	pubkeys, err := sigTx.GetPubKeys()
+	if err != nil {
+		return ctx, err
+	}
 	signers := sigTx.GetSigners()
 
 	for i, pk := range pubkeys {
@@ -182,7 +186,7 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:
-		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON //nolint:staticcheck
 	case *signing.MultiSignatureData:
 		for _, s := range v.Signatures {
 			if !OnlyLegacyAminoSigners(s) {
@@ -338,7 +342,10 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	params := vscd.ak.GetParams(ctx)
-	pubKeys := sigTx.GetPubKeys()
+	pubKeys, err := sigTx.GetPubKeys()
+	if err != nil {
+		return ctx, err
+	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {
@@ -366,6 +373,10 @@ func DefaultSigVerificationGasConsumer(
 
 	case *secp256k1.PubKey:
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
+		return nil
+
+	case *secp256r1.PubKey:
+		meter.ConsumeGas(params.SigVerifyCostSecp256r1(), "ante verify: secp256r1")
 		return nil
 
 	case multisig.PubKey:

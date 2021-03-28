@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -52,13 +54,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network = network.New(s.T(), cfg)
 
 	kb := s.network.Validators[0].ClientCtx.Keyring
-	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account1, _, err := kb.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	account2, _, err := kb.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{account1.GetPubKey(), account2.GetPubKey()})
@@ -812,6 +814,83 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	s.Require().NoError(err)
 }
 
+func (s *IntegrationTestSuite) TestMultisignBatch() {
+	val := s.network.Validators[0]
+
+	// Fetch 2 accounts and a multisig.
+	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+
+	// Send coins from validator to multisig.
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
+	_, err = bankcli.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		multisigInfo.GetAddress(),
+		sdk.NewCoins(sendTokens),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	generatedStd, err := bankcli.MsgSendExec(
+		val.ClientCtx,
+		multisigInfo.GetAddress(),
+		val.Address,
+		sdk.NewCoins(
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
+		),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+
+	// Write the output to disk
+	filename := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
+	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
+
+	queryResJSON, err := authtest.QueryAccountExec(val.ClientCtx, multisigInfo.GetAddress())
+	s.Require().NoError(err)
+	var account authtypes.AccountI
+	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
+
+	// sign-batch file
+	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+	// write sigs to file
+	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
+
+	// sign-batch file with account2
+	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+
+	// multisign the file
+	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
+	res, err = authtest.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
+	s.Require().NoError(err)
+	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
+
+	// Broadcast transactions.
+	for _, signedTx := range signedTxs {
+		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
+		val.ClientCtx.BroadcastMode = flags.BroadcastBlock
+		res, err = authtest.TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
+		s.T().Log(res)
+		s.Require().NoError(err)
+		s.Require().NoError(s.network.WaitForNextBlock())
+	}
+}
+
 func (s *IntegrationTestSuite) TestGetAccountCmd() {
 	val := s.network.Validators[0]
 	_, _, addr1 := testdata.KeyTestPubAddr()
@@ -1025,7 +1104,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit()) // min required is 101892
 	require.Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
@@ -1049,7 +1128,12 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
 	// Now let's try to send this tx.
-	res, err := authtest.TxBroadcastExec(val0.ClientCtx, signedTxFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock))
+	res, err := authtest.TxBroadcastExec(
+		val0.ClientCtx,
+		signedTxFile.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+	)
+
 	require.NoError(err)
 	var txRes sdk.TxResponse
 	require.NoError(val0.ClientCtx.JSONMarshaler.UnmarshalJSON(res.Bytes(), &txRes))

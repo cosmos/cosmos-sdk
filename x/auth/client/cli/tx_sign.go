@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	flagMultisig  = "multisig"
-	flagOverwrite = "overwrite"
-	flagSigOnly   = "signature-only"
-	flagAmino     = "amino"
+	flagMultisig        = "multisig"
+	flagOverwrite       = "overwrite"
+	flagSigOnly         = "signature-only"
+	flagAmino           = "amino"
+	flagNoAutoIncrement = "no-auto-increment"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -114,7 +115,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				}
 			} else {
 				if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-					txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+					txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON) //nolint:staticcheck
 				}
 				err = authclient.SignTxWithSignerAddress(
 					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
@@ -136,7 +137,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		return scanner.Err()
+		return scanner.UnmarshalErr()
 	}
 }
 
@@ -203,8 +204,10 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 }
 
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, err := client.GetClientTxContext(cmd)
+	return func(cmd *cobra.Command, args []string) (err error) {
+		var clientCtx client.Context
+
+		clientCtx, err = client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
@@ -216,7 +219,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if txF.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-			txF = txF.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+			txF = txF.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON) //nolint:staticcheck
 		}
 		txCfg := clientCtx.TxConfig
 		txBuilder, err := txCfg.WrapTxBuilder(newTx)

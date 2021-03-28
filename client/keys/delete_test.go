@@ -39,7 +39,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
-	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 
 	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
@@ -49,7 +49,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.Equal(t, "The specified item could not be found in the keyring", err.Error())
+	require.EqualError(t, err, "blah.info: key not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{

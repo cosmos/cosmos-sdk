@@ -2,7 +2,6 @@ package rest
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
@@ -32,7 +31,6 @@ type PlanRequest struct {
 	Deposit       sdk.Coins    `json:"deposit" yaml:"deposit"`
 	UpgradeName   string       `json:"upgrade_name" yaml:"upgrade_name"`
 	UpgradeHeight int64        `json:"upgrade_height" yaml:"upgrade_height"`
-	UpgradeTime   string       `json:"upgrade_time" yaml:"upgrade_time"`
 	UpgradeInfo   string       `json:"upgrade_info" yaml:"upgrade_info"`
 }
 
@@ -76,15 +74,7 @@ func newPostPlanHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		var t time.Time
-		if req.UpgradeTime != "" {
-			t, err = time.Parse(time.RFC3339, req.UpgradeTime)
-			if rest.CheckBadRequestError(w, err) {
-				return
-			}
-		}
-
-		plan := types.Plan{Name: req.UpgradeName, Time: t, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
+		plan := types.Plan{Name: req.UpgradeName, Height: req.UpgradeHeight, Info: req.UpgradeInfo}
 		content := types.NewSoftwareUpgradeProposal(req.Title, req.Description, plan)
 		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
 		if rest.CheckBadRequestError(w, err) {

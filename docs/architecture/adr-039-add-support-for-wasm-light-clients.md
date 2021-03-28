@@ -10,7 +10,7 @@ Draft
 
 ## Abstract
 
-Currently in the SDK, light clients are part of Cosmos SDK codebase. This makes upgrading existing IBC light client or add
+In the Cosmos SDK light clients are current hardcoded in Go. This makes upgrading existing IBC light clients or add
 support for new light client is multi step process which is time-consuming.
 
 To remedy this, we are proposing a WASM VM to host light client bytecode, which allows easier upgrading of
@@ -35,9 +35,9 @@ want support for light client X, they may not be able to convince governance to 
 3. Validator upgrade: After governance voting succeeds, validators need to upgrade their nodes in order to enable new
 IBC light client implementation. This is both time consuming and error prone.
    
-Another problem stemming from above process is, if a chain want to upgrade its own consensus, it will need to convince every chain
+Another problem stemming from the above process is that if a chain want to upgrade its own consensus, it will need to convince every chain
 or hub connected to it to upgrade its light client in order to stay connected. Due to time consuming process required
-to upgrade light client, a chain with lots of connection need to be disconnected for quite some time after upgrading 
+to upgrade light client, a chain with lots of connections need to be disconnected for quite some time after upgrading 
 its consensus, which can be very expensive.
 
 We are proposing simplifying this workflow by integrating a WASM light client module which makes adding support for
@@ -45,7 +45,7 @@ a new light client a simple transaction. The light client bytecode, written in W
 VM. The Wasm light client submodule exposes a proxy light client interface that routes incoming messages to the
 appropriate handler function, inside the Wasm VM for execution.
 
-With WASM light client module, anybody can add new IBC light client in the form of WASM bytecode (provided they are able to pay huge gas fee for the transaction)
+With WASM light client module, anybody can add new IBC light client in the form of WASM bytecode (provided they are able to pay the requisite gas fee for the transaction)
 as well as instantiate clients using any created client type. This allows any chain to update its own light client in other chains
 without going through steps outlined above.
 

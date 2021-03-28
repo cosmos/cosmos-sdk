@@ -561,7 +561,7 @@ func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQu
 
 	res, err := handler(ctx, req)
 	if err != nil {
-		res = sdkerrors.QueryResult(gRPCErrorToSDKError(err))
+		res = sdkerrors.QueryResult(err)
 		res.Height = req.Height
 		return res
 	}

@@ -2,14 +2,17 @@ package legacytx
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"gopkg.in/yaml.v2"
 )
 
 // StdSignDoc is replay-prevention structure.
@@ -57,6 +60,47 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 type StdSignature struct {
 	cryptotypes.PubKey `json:"pub_key" yaml:"pub_key"` // optional
 	Signature          []byte                          `json:"signature" yaml:"signature"`
+}
+
+// Deprecated
+func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
+	return StdSignature{PubKey: pk, Signature: sig}
+}
+
+// GetSignature returns the raw signature bytes.
+func (ss StdSignature) GetSignature() []byte {
+	return ss.Signature
+}
+
+// GetPubKey returns the public key of a signature as a cryptotypes.PubKey using the
+// Amino codec.
+func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
+	return ss.PubKey
+}
+
+// MarshalYAML returns the YAML representation of the signature.
+func (ss StdSignature) MarshalYAML() (interface{}, error) {
+	pk := ""
+	if ss.PubKey != nil {
+		pk = ss.PubKey.String()
+	}
+
+	bz, err := yaml.Marshal(struct {
+		PubKey    string
+		Signature string
+	}{
+		pk,
+		fmt.Sprintf("%X", ss.Signature),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
+}
+
+func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return codectypes.UnpackInterfaces(ss.PubKey, unpacker)
 }
 
 // StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2

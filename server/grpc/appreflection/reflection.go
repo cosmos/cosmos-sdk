@@ -52,8 +52,9 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		Bech32ConsensusPublicKeyPrefix: conf.SdkConfig.GetBech32ConsensusPubPrefix(),
 		Purpose:                        conf.SdkConfig.GetPurpose(),
 		CoinType:                       conf.SdkConfig.GetCoinType(),
-		FullFundraiserPath:             conf.SdkConfig.GetFullFundraiserPath(),
-		FullBip44Path:                  conf.SdkConfig.GetFullBIP44Path(),
+		// nolint: staticcheck
+		FullFundraiserPath: conf.SdkConfig.GetFullFundraiserPath(),
+		FullBip44Path:      conf.SdkConfig.GetFullBIP44Path(),
 	}
 	// set codec descriptor
 	codecDescriptor, err := newCodecDescriptor(conf.InterfaceRegistry)
@@ -61,12 +62,9 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		return reflectionServiceServer{}, fmt.Errorf("unable to create codec descriptor: %w", err)
 	}
 	// set query service descriptor
-	queryServiceDescriptor, err := newQueryServiceDescriptor(grpcSrv)
-	if err != nil {
-		return reflectionServiceServer{}, fmt.Errorf("unable to create query services descriptor: %w", err)
-	}
+	queryServiceDescriptor := newQueryServiceDescriptor(grpcSrv)
 	// set deliver descriptor
-	deliverDescriptor, err := newDeliverDescriptor(conf.InterfaceRegistry, conf.SigningModes)
+	txDescriptor, err := newTxDescriptor(conf.InterfaceRegistry, conf.SigningModes)
 	if err != nil {
 		return reflectionServiceServer{}, fmt.Errorf("unable to create deliver descriptor: %w", err)
 	}
@@ -75,7 +73,7 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		Codec:         codecDescriptor,
 		Configuration: configurationDescriptor,
 		QueryServices: queryServiceDescriptor,
-		Tx:            deliverDescriptor,
+		Tx:            txDescriptor,
 	}
 	ifaceList := make([]string, len(desc.Codec.Interfaces))
 	ifaceImplementers := make(map[string][]string, len(desc.Codec.Interfaces))
@@ -145,7 +143,7 @@ func newCodecDescriptor(ir codectypes.InterfaceRegistry) (*CodecDescriptor, erro
 	}, nil
 }
 
-func newQueryServiceDescriptor(srv *grpc.Server) (*QueryServicesDescriptor, error) {
+func newQueryServiceDescriptor(srv *grpc.Server) *QueryServicesDescriptor {
 	svcInfo := srv.GetServiceInfo()
 	queryServices := make([]*QueryServiceDescriptor, 0, len(svcInfo))
 	for name, info := range svcInfo {
@@ -161,10 +159,10 @@ func newQueryServiceDescriptor(srv *grpc.Server) (*QueryServicesDescriptor, erro
 			Methods:  methods,
 		})
 	}
-	return &QueryServicesDescriptor{QueryServices: queryServices}, nil
+	return &QueryServicesDescriptor{QueryServices: queryServices}
 }
 
-func newDeliverDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*TxDescriptor, error) {
+func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*TxDescriptor, error) {
 	// get base tx type name
 	txPbName := proto.MessageName(&tx.Tx{})
 	if txPbName == "" {

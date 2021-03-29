@@ -97,7 +97,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (AppModule) Route() string { return RouterKey }
 
 // NewHandler returns an sdk.Handler for the bank module.
-func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.keeper) }
+func (am AppModule) NewHandler() sdk.Handler { return nil }
 
 // QuerierRoute returns the bank module's querier route name.
 func (AppModule) QuerierRoute() string { return RouterKey }

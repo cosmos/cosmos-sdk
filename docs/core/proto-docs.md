@@ -142,18 +142,6 @@
   
     - [ReflectionService](#cosmos.base.reflection.v1beta1.ReflectionService)
   
-- [cosmos/base/reflection/v1beta1/txreflection.proto](#cosmos/base/reflection/v1beta1/txreflection.proto)
-    - [CombineRequest](#cosmos.base.reflection.v1beta1.CombineRequest)
-    - [CombineResponse](#cosmos.base.reflection.v1beta1.CombineResponse)
-    - [Intent](#cosmos.base.reflection.v1beta1.Intent)
-    - [PayloadRequest](#cosmos.base.reflection.v1beta1.PayloadRequest)
-    - [PayloadResponse](#cosmos.base.reflection.v1beta1.PayloadResponse)
-    - [PubKeyDescriptor](#cosmos.base.reflection.v1beta1.PubKeyDescriptor)
-    - [SignatureDescriptor](#cosmos.base.reflection.v1beta1.SignatureDescriptor)
-    - [TxMetadata](#cosmos.base.reflection.v1beta1.TxMetadata)
-  
-    - [ReflectionTxBuilderService](#cosmos.base.reflection.v1beta1.ReflectionTxBuilderService)
-  
 - [cosmos/base/snapshots/v1beta1/snapshot.proto](#cosmos/base/snapshots/v1beta1/snapshot.proto)
     - [Metadata](#cosmos.base.snapshots.v1beta1.Metadata)
     - [Snapshot](#cosmos.base.snapshots.v1beta1.Snapshot)
@@ -2074,8 +2062,7 @@ on the online RPCs GetTxMetadata and CombineUnsignedTxAndSignatures
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `sign_mode` | [string](#string) |  | sign_mode defines the signature algorithm |
-| `authn_info_provider_method_fullname` | [string](#string) |  | authn_info_provider_method_fullname defines the fullname of the method to call to get the metadata required to authenticate |
+| `sign_modes` | [SigningModeDescriptor](#cosmos.base.reflection.v1beta1.SigningModeDescriptor) | repeated | sign_modes defines the supported signature algorithm |
 
 
 
@@ -2378,6 +2365,7 @@ this another time
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | name defines the unique name of the signing mode |
+| `authn_info_provider_method_fullname` | [string](#string) |  | authn_info_provider_method_fullname defines the fullname of the method to call to get the metadata required to authenticate using the provided sign_modes |
 
 
 
@@ -2417,154 +2405,6 @@ ReflectionService defines a service for application reflection.
 | `GetAppDescriptor` | [GetAppDescriptorRequest](#cosmos.base.reflection.v1beta1.GetAppDescriptorRequest) | [GetAppDescriptorResponse](#cosmos.base.reflection.v1beta1.GetAppDescriptorResponse) | GetAppDescriptor returns the full cosmos application descriptor | GET|/cosmos/base/reflection/v1beta1/app_descriptor|
 | `ListAllInterfaces` | [ListAllInterfacesRequest](#cosmos.base.reflection.v1beta1.ListAllInterfacesRequest) | [ListAllInterfacesResponse](#cosmos.base.reflection.v1beta1.ListAllInterfacesResponse) | ListAllInterfaces lists all the interfaces registered in the interface registry. | GET|/cosmos/base/reflection/v1beta1/interfaces|
 | `ListImplementations` | [ListImplementationsRequest](#cosmos.base.reflection.v1beta1.ListImplementationsRequest) | [ListImplementationsResponse](#cosmos.base.reflection.v1beta1.ListImplementationsResponse) | ListImplementations list all the concrete types that implement a given interface. | GET|/cosmos/base/reflection/v1beta1/interfaces/{interface_name}/implementations|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/reflection/v1beta1/txreflection.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/reflection/v1beta1/txreflection.proto
-
-
-
-<a name="cosmos.base.reflection.v1beta1.CombineRequest"></a>
-
-### CombineRequest
-
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.CombineResponse"></a>
-
-### CombineResponse
-
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.Intent"></a>
-
-### Intent
-Intent defines the intent of a transaction, which consists in the expected
-msgs which the client wants to send
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated | msgs is the any representation of msgs |
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.PayloadRequest"></a>
-
-### PayloadRequest
-PayloadRequest is the request type used for the Payload RPC.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `intent` | [Intent](#cosmos.base.reflection.v1beta1.Intent) |  | intent defines the intent of a transaction (the expected msgs) |
-| `tx_metadata` | [TxMetadata](#cosmos.base.reflection.v1beta1.TxMetadata) |  | tx_metadata defines transaction metadata information |
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.PayloadResponse"></a>
-
-### PayloadResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `unsigned_tx` | [bytes](#bytes) |  | unsigned_tx is the unsigned tx bytes |
-| `expected_signatures` | [SignatureDescriptor](#cosmos.base.reflection.v1beta1.SignatureDescriptor) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.PubKeyDescriptor"></a>
-
-### PubKeyDescriptor
-PubKeyDescriptor describes a public key
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  | key is the public key raw bytes |
-| `fullname` | [string](#string) |  | fullname is the public key protobuf fullname |
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.SignatureDescriptor"></a>
-
-### SignatureDescriptor
-SignatureDescriptor describes a signature expected to authenticate a transaction
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `bytes_to_sign` | [bytes](#bytes) |  | bytes_to_sign are the bytes that the public key is expected to sign |
-| `pub_key` | [PubKeyDescriptor](#cosmos.base.reflection.v1beta1.PubKeyDescriptor) |  | pub_key is the public key descriptor for the signer |
-
-
-
-
-
-
-<a name="cosmos.base.reflection.v1beta1.TxMetadata"></a>
-
-### TxMetadata
-TxMetadata defines the metadata information for a transaction
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `fee_payer_address` | [bytes](#bytes) |  | fee_payer_address is the fee payer of the transaction IT MUST BE EXPLICITLY PROVIDED |
-| `fee_granter_address` | [bytes](#bytes) |  | fee_granter_address is the address of the fee granter it is optional |
-| `memo` | [string](#string) |  | memo is the memo of the trasnsaction |
-| `timeout_height` | [uint64](#uint64) |  | timeout_height is optional and is the timeout height for a tx |
-| `fee_amount` | [string](#string) |  | fee_amount is the string representation of the expected fee should it be sdk.Coins? |
-| `gas_limit` | [uint64](#uint64) |  | gas_limit is the gas_limit for the tx |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.base.reflection.v1beta1.ReflectionTxBuilderService"></a>
-
-### ReflectionTxBuilderService
-ReflectionTxBuilderService can be used by clients to build transactions on any chain
-without having context on the TX building semantics.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Payload` | [PayloadRequest](#cosmos.base.reflection.v1beta1.PayloadRequest) | [PayloadResponse](#cosmos.base.reflection.v1beta1.PayloadResponse) | Payload provides the transaction payload and the expected bytes to sign given an intent expressed via msgs and transaction metadata such as fees, memo etc. IMPORTANT NOTE: when interacting with untrusted nodes, it is required by clients to perform intent verification on the returned transaction bytes | |
-| `Combine` | [CombineRequest](#cosmos.base.reflection.v1beta1.CombineRequest) | [CombineResponse](#cosmos.base.reflection.v1beta1.CombineResponse) | Combine combines together the unsigned transaction bytes and the signatures | |
 
  <!-- end services -->
 

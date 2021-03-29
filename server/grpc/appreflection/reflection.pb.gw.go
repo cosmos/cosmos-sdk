@@ -2,11 +2,11 @@
 // source: cosmos/base/reflection/v1beta1/reflection.proto
 
 /*
-Package cosmosreflection is a reverse proxy.
+Package appreflection is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package cosmosreflection
+package appreflection
 
 import (
 	"context"

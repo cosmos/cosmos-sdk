@@ -1,4 +1,4 @@
-package cosmosreflection
+package appreflection
 
 import (
 	"context"
@@ -15,7 +15,6 @@ import (
 )
 
 type Config struct {
-	Address           string
 	SigningModes      []string
 	ChainID           string
 	SdkConfig         *sdk.Config
@@ -216,13 +215,15 @@ func newDeliverDescriptor(ir codectypes.InterfaceRegistry, signingModes []string
 
 	signModesDesc := make([]*SigningModeDescriptor, len(signingModes))
 	for i, m := range signingModes {
-		signModesDesc[i] = &SigningModeDescriptor{Name: m}
+		signModesDesc[i] = &SigningModeDescriptor{
+			Name:                            m,
+			AuthnInfoProviderMethodFullname: "", // this cannot be filled as of now
+		}
 	}
 	return &TxDescriptor{
 		Fullname: txPbName,
 		Authn: &AuthnDescriptor{
-			SignMode:                        "",
-			AuthnInfoProviderMethodFullname: "",
+			SignModes: signModesDesc,
 		}, // TODO
 		Msgs: msgsDesc,
 	}, nil

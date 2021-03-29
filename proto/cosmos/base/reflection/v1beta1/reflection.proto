@@ -3,11 +3,7 @@ package cosmos.base.reflection.v1beta1;
 
 import "google/api/annotations.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/server/grpc/cosmosreflection";
-
-service AuthReflectionService {
-
-}
+option go_package = "github.com/cosmos/cosmos-sdk/server/grpc/appreflection";
 
 // ReflectionService defines a service for application reflection.
 service ReflectionService {
@@ -58,10 +54,7 @@ message TxDescriptor {
 // on the online RPCs GetTxMetadata and CombineUnsignedTxAndSignatures
 message AuthnDescriptor {
   // sign_modes defines the supported signature algorithm
-  repeated string sign_modes = 1;
-  // authn_info_provider_method_fullname defines the fullname of the method to call to get
-  // the metadata required to authenticate using the provided sign_modes
-  string authn_info_provider_method_fullname = 2;
+  repeated SigningModeDescriptor sign_modes = 1;
 }
 
 // SigningModeDescriptor provides information on a signing flow of the application
@@ -71,6 +64,9 @@ message AuthnDescriptor {
 message SigningModeDescriptor {
   // name defines the unique name of the signing mode
   string name = 1;
+  // authn_info_provider_method_fullname defines the fullname of the method to call to get
+  // the metadata required to authenticate using the provided sign_modes
+  string authn_info_provider_method_fullname = 2;
 }
 
 // ChainDescriptor describes chain information of the application
@@ -143,6 +139,7 @@ message ConfigurationDescriptor {
 
 // MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
 message MsgDescriptor {
+  // msg contains a descriptor of sdk.ServiceMsg or sdk.Msg
   oneof msg {
     // service_msg is used when the message is an sdk.ServiceMsg type
     ServiceMsgDescriptor service_msg = 1;

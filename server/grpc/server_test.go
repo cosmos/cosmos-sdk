@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/server/grpc/appreflection"
+
 	"github.com/jhump/protoreflect/grpcreflect"
 
 	"github.com/stretchr/testify/require"
@@ -118,6 +120,16 @@ func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 		sd := file.FindSymbol(svc)
 		s.Require().NotNil(sd)
 	}
+}
+
+func (s *IntegrationTestSuite) TestAppReflection() {
+	// this tests the application reflection capabilities
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	c := appreflection.NewReflectionServiceClient(s.conn)
+	_, err := c.GetAppDescriptor(ctx, nil)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {

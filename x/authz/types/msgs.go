@@ -67,11 +67,7 @@ func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (exported.Authorization)(nil), msg.Authorization.GetCachedValue())
 	}
-	if err = authorization.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return nil
+	return authorization.ValidateBasic()
 }
 
 // GetGrantAuthorization returns the cache value from the MsgGrantAuthorization.Authorization if present.

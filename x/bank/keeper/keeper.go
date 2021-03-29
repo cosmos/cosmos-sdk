@@ -77,8 +77,17 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 	return supply, pageRes, nil
 }
 
+// NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated
+// store key, an AccountKeeper implementation, and a parameter Subspace used to
+// store and fetch module parameters. The BaseKeeper also accepts a
+// blocklist map. This blocklist describes the set of addresses that are not allowed
+// to receive funds through direct and explicit actions, for example, by using a MsgSend or
+// by using a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
-	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
+	cdc codec.BinaryMarshaler,
+	storeKey sdk.StoreKey,
+	ak types.AccountKeeper,
+	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
 ) BaseKeeper {
 

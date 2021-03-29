@@ -128,8 +128,20 @@ func (s *IntegrationTestSuite) TestAppReflection() {
 	defer cancel()
 
 	c := appreflection.NewReflectionServiceClient(s.conn)
-	_, err := c.GetAppDescriptor(ctx, nil)
+	appDesc, err := c.GetAppDescriptor(ctx, nil)
 	s.Require().NoError(err)
+
+	interfaces, err := c.ListAllInterfaces(ctx, nil)
+	s.Require().NoError(err)
+	s.Require().Equal(len(appDesc.App.Codec.Interfaces), len(interfaces.InterfaceNames))
+	s.Require().Equal(len(s.cfg.InterfaceRegistry.ListAllInterfaces()), len(appDesc.App.Codec.Interfaces))
+
+	for _, iface := range interfaces.InterfaceNames {
+		impls, err := c.ListImplementations(ctx, &appreflection.ListImplementationsRequest{InterfaceName: iface})
+		s.Require().NoError(err)
+
+		s.Require().ElementsMatch(impls.ImplementationMessageNames, s.cfg.InterfaceRegistry.ListImplementations(iface))
+	}
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {

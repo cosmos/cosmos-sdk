@@ -25,11 +25,14 @@ func TestSupplyMigration(t *testing.T) {
 	oldBarCoin := sdk.NewCoin("bar", sdk.NewInt(200))
 
 	// Old supply was stored as a single blob under the `SupplyKey`.
-	oldSupply := types.Supply{Total: sdk.NewCoins(oldFooCoin, oldBarCoin)}
-	store.Set(v040bank.SupplyKey, encCfg.Marshaler.MustMarshalBinaryBare(&oldSupply))
+	var oldSupply v040bank.SupplyI
+	oldSupply = &types.Supply{Total: sdk.NewCoins(oldFooCoin, oldBarCoin)}
+	oldSupplyBz, err := encCfg.Marshaler.MarshalInterface(oldSupply)
+	require.NoError(t, err)
+	store.Set(v040bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
-	err := v043bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
+	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	// New supply is indexed by denom.

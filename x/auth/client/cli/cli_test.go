@@ -78,11 +78,11 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	val := s.network.Validators[0]
-	defaultTokens := sdk.NewCoins(
+	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-	)
-	res, err := s.createBankMsg(val, val.Address, defaultTokens,
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)))
+
+	res, err := s.createBankMsg(val, val.Address, sendTokens,
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
 	s.Require().NoError(err)
 
@@ -110,12 +110,13 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
-	var defaultTokens = sdk.NewCoins(
+	var sendTokens = sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
+
 	generatedStd, err := s.createBankMsg(val, val.Address,
-		defaultTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+		sendTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
 	s.Require().NoError(err)
 
 	outputFile := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
@@ -469,7 +470,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	val1 := s.network.Validators[0]
 
-	// Generate 2 accounts and a multisig.
+	// Fetch account and a multisig info
 	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
 	s.Require().NoError(err)
 

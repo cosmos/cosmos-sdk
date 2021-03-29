@@ -24,12 +24,12 @@ import (
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
-	homePath           string
-	skipUpgradeHeights map[int64]bool
-	storeKey           sdk.StoreKey
-	cdc                codec.BinaryMarshaler
-	upgradeHandlers    map[string]types.UpgradeHandler
-	versionSetter      xp.ProtocolVersionSetter // Implements setting the protocol version field on BaseApp
+	homePath           string                          // root directory of app config
+	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
+	storeKey           sdk.StoreKey                    // key to access x/upgrade store
+	cdc                codec.BinaryMarshaler           // App-wide binary codec
+	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
+	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 }
 
 // NewKeeper constructs an upgrade Keeper

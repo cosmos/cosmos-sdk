@@ -19,15 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
-// Codec defines the x/auth account codec to be used for use with the
-// AccountRetriever. The application must be sure to set this to their respective
-// codec that implements the Codec interface and must be the same codec that
-// passed to the x/auth module.
-//
-// TODO:/XXX: Using a package-level global isn't ideal and we should consider
-// refactoring the module manager to allow passing in the correct module codec.
-var Codec codec.Marshaler
-
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
 	GasEstimate uint64 `json:"gas_estimate" yaml:"gas_estimate"`

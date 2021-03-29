@@ -78,3 +78,28 @@ func (sk DummySupplyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string)
 func (sk DummySupplyKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(moduleName)))
 }
+
+func (sk DummySupplyKeeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error {
+	recipientAcc := sk.ak.GetAccount(ctx, recipientAddr)
+	moduleAcc := sk.GetModuleAccount(ctx, senderModule)
+
+	newFromCoins, hasNeg := moduleAcc.GetCoins().SafeSub(amt)
+	if hasNeg {
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, moduleAcc.GetCoins().String())
+	}
+
+	newToCoins := recipientAcc.GetCoins().Add(amt...)
+
+	if err := moduleAcc.SetCoins(newFromCoins); err != nil {
+		return err
+	}
+
+	if err := recipientAcc.SetCoins(newToCoins); err != nil {
+		return err
+	}
+
+	sk.ak.SetAccount(ctx, recipientAcc)
+	sk.ak.SetAccount(ctx, moduleAcc)
+
+	return nil
+}

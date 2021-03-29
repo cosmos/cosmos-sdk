@@ -7,6 +7,8 @@ type Handler func(ctx Context, msg Msg) (*Result, error)
 // If newCtx.IsZero(), ctx is used instead.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
+type GasRefundHandler func(ctx Context, tx Tx) (err error)
+
 // AnteDecorator wraps the next AnteHandler to perform custom pre- and post-processing.
 type AnteDecorator interface {
 	AnteHandle(ctx Context, tx Tx, simulate bool, next AnteHandler) (newCtx Context, err error)

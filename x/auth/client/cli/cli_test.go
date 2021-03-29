@@ -1,6 +1,6 @@
 // +build norace
 
-package cli_te
+package cli_test
 
 import (
 	"context"

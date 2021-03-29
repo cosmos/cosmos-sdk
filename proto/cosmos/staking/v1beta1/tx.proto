@@ -30,6 +30,9 @@ service Msg {
   // Undelegate defines a method for performing an undelegation from a
   // delegate and a validator.
   rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
+
+  // RotateConsPubKey defines a method for performing a rotation of a validator's consensus public key.
+  rpc RotateConsPubKey(MsgRotateConsPubKey) returns (MsgRotateConsPubKeyResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -124,3 +127,15 @@ message MsgUndelegate {
 message MsgUndelegateResponse {
   google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
+
+// MsgRotateConsPubKey defines a SDK message for performing a rotation of a validator's consensus public key.
+message MsgRotateConsPubKey {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string              validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  google.protobuf.Any new_cons_pub_key  = 2 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+}
+
+// MsgRotateConsPubKeyResponse defines the Msg/RotateConsPubKey response type.
+message MsgRotateConsPubKeyResponse {}

@@ -332,3 +332,25 @@ message Pool {
     (gogoproto.moretags)   = "yaml:\"bonded_tokens\""
   ];
 }
+
+// ConsPubKeyRotationHistory contains a validator's consensus public key rotation history.
+message ConsPubKeyRotationHistory {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  // operator_address defines the address of the validator's operator; bech encoded in JSON.
+  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
+  // old_cons_pub_key is the old consensus public key of the validator, as a Protobuf Any.
+  google.protobuf.Any old_cons_pub_key = 2 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
+    (gogoproto.moretags)             = "yaml:\"old_consensus_pubkey\""
+  ];
+  // new_cons_pub_key is the new consensus public key of the validator, as a Protobuf Any.
+  google.protobuf.Any new_cons_pub_key = 3 [
+    (cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey",
+    (gogoproto.moretags)             = "yaml:\"new_consensus_pubkey\""
+  ];
+  // height defines the block height at which the rotation event occured.
+  uint64 height = 4;
+}

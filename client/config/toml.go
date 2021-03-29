@@ -16,11 +16,15 @@ const defaultConfigTemplate = `# This is a TOML config file.
 ###                           Client Configuration                            ###
 ###############################################################################
 
-
+# The network chain ID
 chain-id = "{{ .ChainID }}"
+# The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
 keyring-backend = "{{ .KeyringBackend }}"
+# CLI output format (text|json)
 output = "{{ .Output }}"
+# <host>:<port> to Tendermint RPC interface for this chain
 node = "{{ .Node }}"
+# Transaction broadcasting mode (sync|async|block)
 broadcast-mode = "{{ .BroadcastMode }}"
 `
 

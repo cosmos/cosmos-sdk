@@ -73,7 +73,6 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 	}
 	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
 	ctx = ctx.WithOutputFormat(conf.Output).
-		WithKeyringDir(ctx.HomeDir).
 		WithChainID(conf.ChainID)
 
 	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)

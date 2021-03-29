@@ -93,11 +93,6 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
-	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
-		homeDir, _ := flagSet.GetString(flags.FlagHome)
-		clientCtx = clientCtx.WithHomeDir(homeDir)
-	}
-
 	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
 		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
 		clientCtx = clientCtx.WithSimulation(dryRun)

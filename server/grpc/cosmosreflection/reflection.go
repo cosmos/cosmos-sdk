@@ -220,7 +220,10 @@ func newDeliverDescriptor(ir codectypes.InterfaceRegistry, signingModes []string
 	}
 	return &TxDescriptor{
 		Fullname: txPbName,
-		Authn:    &AuthnDescriptor{}, // TODO
-		Msgs:     msgsDesc,
+		Authn: &AuthnDescriptor{
+			SignMode:                        "",
+			AuthnInfoProviderMethodFullname: "",
+		}, // TODO
+		Msgs: msgsDesc,
 	}, nil
 }

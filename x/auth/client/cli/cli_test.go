@@ -1,4 +1,6 @@
-package cli_test
+// +build norace
+
+package cli_te
 
 import (
 	"context"

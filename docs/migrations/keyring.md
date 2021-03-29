@@ -21,6 +21,4 @@ For each key material entry, the command will prompt if the key should be skippe
 The `migrate` CLI commands takes the following flags:
 - `--dry-run` boolean flag. If it is set to false, it runs the migration without actually persisting any changes to the new Keybase. If it is set to true, it persists keys. This flag is useful for testing purposes: we recommend you to dry run the migration once before running it persistently.
 - `--keyring-backend` string flag. It allows you to select a backend. For more detailed information about the available backends, you can read [the keyring guide](../run-node/keyring.md).
-    
-
 

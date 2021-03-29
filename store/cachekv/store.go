@@ -2,16 +2,14 @@ package cachekv
 
 import (
 	"bytes"
-	"container/list"
 	"io"
-	"reflect"
 	"sort"
 	"sync"
 	"time"
-	"unsafe"
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -31,7 +29,7 @@ type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]*cValue
 	unsortedCache map[string]struct{}
-	sortedCache   *list.List // always ascending sorted
+	sortedCache   *kv.List // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -42,7 +40,7 @@ func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   list.New(),
+		sortedCache:   kv.NewList(),
 		parent:        parent,
 	}
 }
@@ -135,7 +133,7 @@ func (store *Store) Write() {
 	// Clear the cache
 	store.cache = make(map[string]*cValue)
 	store.unsortedCache = make(map[string]struct{})
-	store.sortedCache = list.New()
+	store.sortedCache = kv.NewList()
 }
 
 // CacheWrap implements CacheWrapper.
@@ -179,35 +177,13 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	return newCacheMergeIterator(parent, cache, ascending)
 }
 
-// strToByte is meant to make a zero allocation conversion
-// from string -> []byte to speed up operations, it is not meant
-// to be used generally, but for a specific pattern to check for available
-// keys within a domain.
-func strToByte(s string) []byte {
-	var b []byte
-	hdr := (*reflect.SliceHeader)(unsafe.Pointer(&b))
-	hdr.Cap = len(s)
-	hdr.Len = len(s)
-	hdr.Data = (*reflect.StringHeader)(unsafe.Pointer(&s)).Data
-	return b
-}
-
-// byteSliceToStr is meant to make a zero allocation conversion
-// from []byte -> string to speed up operations, it is not meant
-// to be used generally, but for a specific pattern to delete keys
-// from a map.
-func byteSliceToStr(b []byte) string {
-	hdr := (*reflect.StringHeader)(unsafe.Pointer(&b))
-	return *(*string)(unsafe.Pointer(hdr))
-}
-
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	unsorted := make([]*kv.Pair, 0)
 
 	n := len(store.unsortedCache)
 	for key := range store.unsortedCache {
-		if dbm.IsKeyInDomain(strToByte(key), start, end) {
+		if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 			cacheValue := store.cache[key]
 			unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
 		}
@@ -219,7 +195,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 		}
 	} else { // Otherwise, normally delete the unsorted keys from the map.
 		for _, kv := range unsorted {
-			delete(store.unsortedCache, byteSliceToStr(kv.Key))
+			delete(store.unsortedCache, conv.UnsafeBytesToStr(kv.Key))
 		}
 	}
 
@@ -229,7 +205,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 	for e := store.sortedCache.Front(); e != nil && len(unsorted) != 0; {
 		uitem := unsorted[0]
-		sitem := e.Value.(*kv.Pair)
+		sitem := e.Value
 		comp := bytes.Compare(uitem.Key, sitem.Key)
 
 		switch comp {

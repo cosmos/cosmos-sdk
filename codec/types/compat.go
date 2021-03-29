@@ -37,7 +37,7 @@ func anyCompatError(errType string, x interface{}) error {
 func (any Any) MarshalAmino() ([]byte, error) {
 	ac := any.compat
 	if ac == nil {
-		return nil, anyCompatError("amino binary unmarshal", any)
+		return nil, anyCompatError("amino binary marshal", any)
 	}
 	return ac.aminoBz, ac.err
 }

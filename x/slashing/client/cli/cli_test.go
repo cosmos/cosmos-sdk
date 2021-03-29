@@ -49,9 +49,9 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 	val := s.network.Validators[0]
-
-	valConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, val.PubKey)
+	pubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(val.PubKey)
 	s.Require().NoError(err)
+	pubKeyStr := string(pubKeyBz)
 
 	testCases := []struct {
 		name           string
@@ -63,7 +63,7 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 		{
 			"valid address (json output)",
 			[]string{
-				valConsPubKey,
+				pubKeyStr,
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) TestGetCmdQuerySigningInfo() {
 		{
 			"valid address (text output)",
 			[]string{
-				valConsPubKey,
+				pubKeyStr,
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
@@ -145,7 +145,6 @@ slash_fraction_downtime: "0.010000000000000000"`,
 
 func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
 	val := s.network.Validators[0]
-
 	testCases := []struct {
 		name         string
 		args         []string

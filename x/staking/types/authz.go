@@ -51,6 +51,10 @@ func (authorization StakeAuthorization) ValidateBasic() error {
 	if authorization.MaxTokens != nil && authorization.MaxTokens.IsNegative() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", authorization.MaxTokens)
 	}
+	if authorization.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type")
+	}
+
 	return nil
 }
 

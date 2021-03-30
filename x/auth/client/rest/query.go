@@ -9,17 +9,16 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	genutilrest "github.com/cosmos/cosmos-sdk/x/genutil/client/rest"
 )
 
-const unRegisteredConcreteTypeErr = "unregistered concrete type"
-
-// query accountREST Handler
+// QueryAccountRequestHandlerFn is the query accountREST Handler.
 func QueryAccountRequestHandlerFn(storeName string, clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -100,7 +99,7 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		searchResult, err := authclient.QueryTxsByEvents(clientCtx, events, page, limit, "")
+		searchResult, err := authtx.QueryTxsByEvents(clientCtx, events, page, limit, "")
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -109,9 +108,10 @@ func QueryTxsRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			packStdTxResponse(w, clientCtx, txRes)
 		}
 
-		err = checkSignModeError(w, clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
+		err = checkAminoMarshalError(clientCtx, searchResult, "/cosmos/tx/v1beta1/txs")
 		if err != nil {
-			// Error is already returned by checkSignModeError.
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+
 			return
 		}
 
@@ -131,7 +131,7 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		output, err := authclient.QueryTx(clientCtx, hashHexStr)
+		output, err := authtx.QueryTx(clientCtx, hashHexStr)
 		if err != nil {
 			if strings.Contains(err.Error(), hashHexStr) {
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -151,9 +151,10 @@ func QueryTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, fmt.Sprintf("no transaction found with hash %s", hashHexStr))
 		}
 
-		err = checkSignModeError(w, clientCtx, output, "/cosmos/tx/v1beta1/tx/{txhash}")
+		err = checkAminoMarshalError(clientCtx, output, "/cosmos/tx/v1beta1/txs/{txhash}")
 		if err != nil {
-			// Error is already returned by checkSignModeError.
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+
 			return
 		}
 
@@ -197,17 +198,22 @@ func packStdTxResponse(w http.ResponseWriter, clientCtx client.Context, txRes *s
 	return nil
 }
 
-func checkSignModeError(w http.ResponseWriter, ctx client.Context, resp interface{}, grpcEndPoint string) error {
+// checkAminoMarshalError checks if there are errors with marshalling non-amino
+// txs with amino.
+func checkAminoMarshalError(ctx client.Context, resp interface{}, grpcEndPoint string) error {
 	// LegacyAmino used intentionally here to handle the SignMode errors
 	marshaler := ctx.LegacyAmino
 
 	_, err := marshaler.MarshalJSON(resp)
-	if err != nil && strings.Contains(err.Error(), unRegisteredConcreteTypeErr) {
-		rest.WriteErrorResponse(w, http.StatusInternalServerError,
-			"This transaction was created with the new SIGN_MODE_DIRECT signing method, and therefore cannot be displayed"+
-				" via legacy REST handlers, please use CLI or directly query the Tendermint RPC endpoint to query"+
-				" this transaction. gRPC gateway endpoint is "+grpcEndPoint)
-		return err
+	if err != nil {
+
+		// If there's an unmarshalling error, we assume that it's because we're
+		// using amino to unmarshal a non-amino tx.
+		return fmt.Errorf("this transaction cannot be displayed via legacy REST endpoints, because it does not support"+
+			" Amino serialization. Please either use CLI, gRPC, gRPC-gateway, or directly query the Tendermint RPC"+
+			" endpoint to query this transaction. The new REST endpoint (via gRPC-gateway) is %s. Please also see the"+
+			"REST endpoints migration guide at %s for more info", grpcEndPoint, clientrest.DeprecationURL)
+
 	}
 
 	return nil

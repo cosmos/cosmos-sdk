@@ -4,10 +4,11 @@
 
 - 2020/06/23: Initial version
 - 2020/08/06: Revisions per review & to reference version
+- 2021/01/15: Revision to support substitute clients for unfreezing
 
 ## Status
 
-*Proposed*
+*Accepted*
 
 ## Context
 
@@ -36,20 +37,24 @@ We elect not to deal with chains which have actually halted, which is necessaril
     1. `allow_governance_override_after_expiry` (boolean, default false)
 1. Require Tendermint light clients (ICS 07) to expose the following additional internal query functions
     1. `Expired() boolean`, which returns whether or not the client has passed the trusting period since the last update (in which case no headers can be validated)
-1. Require Tendermint light clients (ICS 07) to expose the following additional state mutation functions
-    1. `Unfreeze()`, which unfreezes a light client after misbehaviour and clears any frozen height previously set
 1. Require Tendermint light clients (ICS 07) & solo machine clients (ICS 06) to be created with the following additional flags
     1. `allow_governance_override_after_misbehaviour` (boolean, default false)
+1. Require Tendermint light clients (ICS 07) to expose the following additional state mutation functions
+    1. `Unfreeze()`, which unfreezes a light client after misbehaviour and clears any frozen height previously set
 1. Add a new governance proposal type, `ClientUpdateProposal`, in the `x/ibc` module
-    1. Extend the base `Proposal` with a client identifier (`string`) and a header (`bytes`, encoded in a client-type-specific format)
-    1. If this governance proposal passes, the client is updated with the provided header, if and only if:
+    1. Extend the base `Proposal` with two client identifiers (`string`) and an initial height ('exported.Height'). 
+    1. The first client identifier is the proposed client to be updated. This client must be either frozen or expired.
+    1. The second client is a substitute client. It carries all the state for the client which may be updated. It must have identitical client and chain parameters to the client which may be updated (except for latest height, frozen height, and chain-id). It should be continually updated during the voting period. 
+    1. The initial height represents the starting height consensus states which will be copied from the substitute client to the frozen/expired client.
+    1. If this governance proposal passes, the client on trial will be updated with all the state of the substitute, if and only if:
         1. `allow_governance_override_after_expiry` is true and the client has expired (`Expired()` returns true)
         1. `allow_governance_override_after_misbehaviour` is true and the client has been frozen (`Frozen()` returns true)
             1. In this case, additionally, the client is unfrozen by calling `Unfreeze()`
 
-Note additionally that the header submitted by governance must be new enough that it will be possible to update the light client after the new header is inserted into the client state (which will only happen after the governance proposal has passed).
 
-This ADR does not address planned upgrades, which are handled separately as per the [specification](https://github.com/cosmos/ics/tree/master/spec/ics-007-tendermint-client#upgrades).
+Note that clients frozen due to misbehaviour must wait for the evidence to expire to avoid becoming refrozen. 
+
+This ADR does not address planned upgrades, which are handled separately as per the [specification](https://github.com/cosmos/ibc/tree/master/spec/client/ics-007-tendermint-client#upgrades).
 
 ## Consequences
 
@@ -58,11 +63,13 @@ This ADR does not address planned upgrades, which are handled separately as per 
 - Establishes a mechanism for client recovery in the case of expiry
 - Establishes a mechanism for client recovery in the case of misbehaviour
 - Clients can elect to disallow this recovery mechanism if they do not wish to allow for it
+- Constructing an ClientUpdate Proposal is as difficult as creating a new client
 
 ### Negative
 
 - Additional complexity in client creation which must be understood by the user
-- Governance participants must pick a new header, which is a bit different from their usual tasks
+- Coping state of the substitute adds complexity
+- Governance participants must vote on a substitute client
 
 ### Neutral
 

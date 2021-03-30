@@ -9,7 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -19,6 +18,7 @@ import (
 	v038 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v038"
 	v039 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v039"
 	v040 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v040"
+	v043 "github.com/cosmos/cosmos-sdk/x/genutil/legacy/v043"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
@@ -29,9 +29,10 @@ const flagGenesisTime = "genesis-time"
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/5041
 var migrationMap = types.MigrationMap{
 	"v0.36": v036.Migrate,
-	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible
+	"v0.38": v038.Migrate, // NOTE: v0.37 and v0.38 are genesis compatible.
 	"v0.39": v039.Migrate,
-	"v0.40": v040.Migrate,
+	"v0.42": v040.Migrate, // NOTE: v0.40, v0.41 and v0.42 are genesis compatible.
+	"v0.43": v043.Migrate,
 }
 
 // GetMigrationCallback returns a MigrationCallback for a given version.
@@ -74,9 +75,17 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 			target := args[0]
 			importGenesis := args[1]
 
-			genDoc, err := tmtypes.GenesisDocFromFile(importGenesis)
+			genDoc, err := validateGenDoc(importGenesis)
 			if err != nil {
-				return errors.Wrapf(err, "failed to read genesis document from file %s", importGenesis)
+				return err
+			}
+
+			// Since some default values are valid values, we just print to
+			// make sure the user didn't forget to update these values.
+			if genDoc.ConsensusParams.Evidence.MaxBytes == 0 {
+				fmt.Printf("Warning: consensus_params.evidence.max_bytes is set to 0. If this is"+
+					" deliberate, feel free to ignore this warning. If not, please have a look at the chain"+
+					" upgrade guide at %s.\n", chainUpgradeGuide)
 			}
 
 			var initialState types.AppMap
@@ -124,7 +133,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				return errors.Wrap(err, "failed to sort JSON genesis doc")
 			}
 
-			fmt.Println(string(sortedBz))
+			cmd.Println(string(sortedBz))
 			return nil
 		},
 	}

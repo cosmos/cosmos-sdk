@@ -5,12 +5,13 @@ package signing
 
 import (
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
-	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
-	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+
+	types "github.com/cosmos/cosmos-sdk/codec/types"
+	types1 "github.com/cosmos/cosmos-sdk/crypto/types"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -38,7 +39,7 @@ const (
 	// human-readable textual representation on top of the binary representation
 	// from SIGN_MODE_DIRECT
 	SignMode_SIGN_MODE_TEXTUAL SignMode = 2
-	// SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
+	// Deprecated: SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
 	// Amino JSON and will be removed in the future
 	SignMode_SIGN_MODE_LEGACY_AMINO_JSON SignMode = 127
 )
@@ -867,10 +868,7 @@ func (m *SignatureDescriptors) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSigning
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSigning
 			}
 			if (iNdEx + skippy) > l {
@@ -1011,10 +1009,7 @@ func (m *SignatureDescriptor) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSigning
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSigning
 			}
 			if (iNdEx + skippy) > l {
@@ -1134,10 +1129,7 @@ func (m *SignatureDescriptor_Data) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSigning
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSigning
 			}
 			if (iNdEx + skippy) > l {
@@ -1240,10 +1232,7 @@ func (m *SignatureDescriptor_Data_Single) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSigning
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSigning
 			}
 			if (iNdEx + skippy) > l {
@@ -1363,10 +1352,7 @@ func (m *SignatureDescriptor_Data_Multi) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSigning
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSigning
 			}
 			if (iNdEx + skippy) > l {

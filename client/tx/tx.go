@@ -2,17 +2,18 @@ package tx
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +51,7 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -76,13 +77,13 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
 func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
-	txf, err := PrepareFactory(clientCtx, txf)
+	txf, err := prepareFactory(clientCtx, txf)
 	if err != nil {
 		return err
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -117,7 +118,8 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	err = Sign(txf, clientCtx.GetFromName(), tx)
+	tx.SetFeeGranter(clientCtx.GetFeeGranterAddress())
+	err = Sign(txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return err
 	}
@@ -133,7 +135,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		return err
 	}
 
-	return clientCtx.PrintOutput(res)
+	return clientCtx.PrintProto(res)
 }
 
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the
@@ -141,8 +143,9 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
 // Note that this function returns the legacy StdTx Amino JSON format for compatibility
 // with legacy clients.
+// Deprecated: We are removing Amino soon.
 func WriteGeneratedTxResponse(
-	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
+	clientCtx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
@@ -162,7 +165,7 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxConfig(ctx.TxConfig).
+		WithTxConfig(clientCtx.TxConfig).
 		WithTimeoutHeight(br.TimeoutHeight)
 
 	if br.Simulate || gasSetting.Simulate {
@@ -171,7 +174,7 @@ func WriteGeneratedTxResponse(
 			return
 		}
 
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -179,7 +182,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.LegacyAmino, txf.Gas())
+			rest.WriteSimulationResponse(w, clientCtx.LegacyAmino, txf.Gas())
 			return
 		}
 	}
@@ -189,12 +192,12 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
+	stdTx, err := ConvertTxToStdTx(clientCtx.LegacyAmino, tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
 
-	output, err := ctx.LegacyAmino.MarshalJSON(stdTx)
+	output, err := clientCtx.LegacyAmino.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -263,57 +266,39 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		},
 		Sequence: txf.Sequence(),
 	}
-
 	if err := txb.SetSignatures(sig); err != nil {
 		return nil, err
 	}
 
-	any, ok := txb.(codectypes.IntoAny)
-	if !ok {
-		return nil, fmt.Errorf("cannot simulate tx that cannot be wrapped into any")
-	}
-	cached := any.AsAny().GetCachedValue()
-	protoTx, ok := cached.(*tx.Tx)
-	if !ok {
-		return nil, fmt.Errorf("cannot simulate amino tx")
-	}
-
-	simReq := tx.SimulateRequest{Tx: protoTx}
-
-	return simReq.Marshal()
+	return txf.txConfig.TxEncoder()(txb.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
-	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
-) (tx.SimulateResponse, uint64, error) {
+	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.Msg,
+) (*tx.SimulateResponse, uint64, error) {
 	txBytes, err := BuildSimTx(txf, msgs...)
 	if err != nil {
-		return tx.SimulateResponse{}, 0, err
+		return nil, 0, err
 	}
 
-	// TODO This should use the generated tx service Client.
-	// https://github.com/cosmos/cosmos-sdk/issues/7726
-	bz, _, err := queryFunc("/cosmos.tx.v1beta1.Service/Simulate", txBytes)
+	txSvcClient := tx.NewServiceClient(clientCtx)
+	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
+		TxBytes: txBytes,
+	})
 	if err != nil {
-		return tx.SimulateResponse{}, 0, err
-	}
-
-	var simRes tx.SimulateResponse
-
-	if err := simRes.Unmarshal(bz); err != nil {
-		return tx.SimulateResponse{}, 0, err
+		return nil, 0, err
 	}
 
 	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }
 
-// PrepareFactory ensures the account defined by ctx.GetFromAddress() exists and
+// prepareFactory ensures the account defined by ctx.GetFromAddress() exists and
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory. A new Factory with
 // the updated fields will be returned.
-func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
+func prepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	from := clientCtx.GetFromAddress()
 
 	if err := txf.accountRetriever.EnsureExists(clientCtx, from); err != nil {
@@ -375,10 +360,21 @@ func SignWithPrivKey(
 	return sigV2, nil
 }
 
-// Sign signs a given tx with the provided name and passphrase. The bytes signed
-// over are canconical. The resulting signature will be set on the transaction.
+func checkMultipleSigners(mode signing.SignMode, tx authsigning.Tx) error {
+	if mode == signing.SignMode_SIGN_MODE_DIRECT &&
+		len(tx.GetSigners()) > 1 {
+		return sdkerrors.Wrap(sdkerrors.ErrNotSupported, "Signing in DIRECT mode is only supported for transactions with one signer only")
+	}
+	return nil
+}
+
+// Sign signs a given tx with a named key. The bytes signed over are canconical.
+// The resulting signature will be added to the transaction builder overwriting the previous
+// ones if overwrite=true (otherwise, the signature will be appended).
+// Signing a transaction with mutltiple signers in the DIRECT mode is not supprted and will
+// return an error.
 // An error is returned upon failure.
-func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
+func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig bool) error {
 	if txf.keybase == nil {
 		return errors.New("keybase must be set prior to signing a transaction")
 	}
@@ -388,12 +384,14 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		// use the SignModeHandler's default mode if unspecified
 		signMode = txf.txConfig.SignModeHandler().DefaultMode()
 	}
+	if err := checkMultipleSigners(signMode, txBuilder.GetTx()); err != nil {
+		return err
+	}
 
 	key, err := txf.keybase.Key(name)
 	if err != nil {
 		return err
 	}
-
 	pubKey := key.GetPubKey()
 	signerData := authsigning.SignerData{
 		ChainID:       txf.chainID,
@@ -418,18 +416,25 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Data:     &sigData,
 		Sequence: txf.Sequence(),
 	}
+	var prevSignatures []signing.SignatureV2
+	if !overwriteSig {
+		prevSignatures, err = txBuilder.GetTx().GetSignaturesV2()
+		if err != nil {
+			return err
+		}
+	}
 	if err := txBuilder.SetSignatures(sig); err != nil {
 		return err
 	}
 
 	// Generate the bytes to be signed.
-	signBytes, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
+	bytesToSign, err := txf.txConfig.SignModeHandler().GetSignBytes(signMode, signerData, txBuilder.GetTx())
 	if err != nil {
 		return err
 	}
 
 	// Sign those bytes
-	sigBytes, _, err := txf.keybase.Sign(name, signBytes)
+	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign)
 	if err != nil {
 		return err
 	}
@@ -445,8 +450,11 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder) error {
 		Sequence: txf.Sequence(),
 	}
 
-	// And here the tx is populated with the signature
-	return txBuilder.SetSignatures(sig)
+	if overwriteSig {
+		return txBuilder.SetSignatures(sig)
+	}
+	prevSignatures = append(prevSignatures, sig)
+	return txBuilder.SetSignatures(prevSignatures...)
 }
 
 // GasEstimateResponse defines a response definition for tx gas estimation.

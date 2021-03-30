@@ -37,7 +37,7 @@ func anyCompatError(errType string, x interface{}) error {
 func (any Any) MarshalAmino() ([]byte, error) {
 	ac := any.compat
 	if ac == nil {
-		return nil, anyCompatError("amino binary unmarshal", any)
+		return nil, anyCompatError("amino binary marshal", any)
 	}
 	return ac.aminoBz, ac.err
 }
@@ -89,8 +89,7 @@ func (a AminoUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return err
 	}
 	if m, ok := val.(proto.Message); ok {
-		err := any.Pack(m)
-		if err != nil {
+		if err = any.pack(m); err != nil {
 			return err
 		}
 	} else {
@@ -148,8 +147,7 @@ func (a AminoJSONUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return err
 	}
 	if m, ok := val.(proto.Message); ok {
-		err := any.Pack(m)
-		if err != nil {
+		if err = any.pack(m); err != nil {
 			return err
 		}
 	} else {

@@ -6,6 +6,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -19,7 +20,6 @@ var (
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
 )
 
-//-----------------------------------------------------------------------------
 // Base Vesting Account
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
@@ -188,35 +188,19 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    bva.AccountNumber,
+		PubKey:           getPKString(bva),
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
 	}
-
-	pk := bva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Continuous Vesting Account
 
 var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
@@ -316,9 +300,10 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    cva.AccountNumber,
+		PubKey:           getPKString(cva),
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
 		DelegatedFree:    cva.DelegatedFree,
@@ -326,26 +311,9 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		EndTime:          cva.EndTime,
 		StartTime:        cva.StartTime,
 	}
-
-	pk := cva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Periodic Vesting Account
 
 var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
@@ -474,9 +442,10 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    pva.AccountNumber,
+		PubKey:           getPKString(pva),
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
 		DelegatedFree:    pva.DelegatedFree,
@@ -485,26 +454,9 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		StartTime:        pva.StartTime,
 		VestingPeriods:   pva.VestingPeriods,
 	}
-
-	pk := pva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Delayed Vesting Account
 
 var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
@@ -569,4 +521,23 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) String() string {
 	out, _ := dva.MarshalYAML()
 	return out.(string)
+}
+
+type getPK interface {
+	GetPubKey() cryptotypes.PubKey
+}
+
+func getPKString(g getPK) string {
+	if pk := g.GetPubKey(); pk != nil {
+		return pk.String()
+	}
+	return ""
+}
+
+func marshalYaml(i interface{}) (interface{}, error) {
+	bz, err := yaml.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	return string(bz), nil
 }

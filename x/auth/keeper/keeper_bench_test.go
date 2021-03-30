@@ -7,6 +7,7 @@ import (
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
+	b.ReportAllocs()
 	app, ctx := createTestApp(false)
 
 	// assumes b.N < 2**24
@@ -25,6 +26,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 }
 
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
+	b.ReportAllocs()
 	app, ctx := createTestApp(false)
 
 	b.ResetTimer()

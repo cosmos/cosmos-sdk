@@ -566,8 +566,9 @@ func TestMultistoreSnapshot_Checksum(t *testing.T) {
 			chunks, err := store.Snapshot(version, tc.format)
 			require.NoError(t, err)
 			hashes := []string{}
+			hasher := sha256.New()
 			for chunk := range chunks {
-				hasher := sha256.New()
+				hasher.Reset()
 				_, err := io.Copy(hasher, chunk)
 				require.NoError(t, err)
 				hashes = append(hashes, hex.EncodeToString(hasher.Sum(nil)))
@@ -657,11 +658,18 @@ func TestSetInitialVersion(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db, types.PruneNothing)
 
+	require.NoError(t, multi.LoadLatestVersion())
+
 	multi.SetInitialVersion(5)
 	require.Equal(t, int64(5), multi.initialVersion)
 
 	multi.Commit()
 	require.Equal(t, int64(5), multi.LastCommitID().Version)
+
+	ckvs := multi.GetCommitKVStore(multi.keysByName["store1"])
+	iavlStore, ok := ckvs.(*iavl.Store)
+	require.True(t, ok)
+	require.True(t, iavlStore.VersionExists(5))
 }
 
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {
@@ -681,6 +689,9 @@ func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
 }
 
 func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
+	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
+
+	b.ReportAllocs()
 	b.StopTimer()
 	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
 	version := source.LastCommitID().Version
@@ -708,6 +719,9 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 }
 
 func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
+	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
+
+	b.ReportAllocs()
 	b.StopTimer()
 	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
 	version := uint64(source.LastCommitID().Version)

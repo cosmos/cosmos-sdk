@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -150,20 +151,30 @@ func delegatorTxsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 			actions []string
 		)
 
+		// For each case, we search txs for both:
+		// - legacy messages: their Type() is a custom string, e.g. "delegate"
+		// - service Msgs: their Type() is their FQ method name, e.g. "/cosmos.staking.v1beta1.Msg/Delegate"
+		// and we combine the results.
 		switch {
 		case isBondTx:
-			actions = append(actions, types.MsgDelegate{}.Type())
+			actions = append(actions, types.TypeMsgDelegate)
+			actions = append(actions, types.TypeSvcMsgDelegate)
 
 		case isUnbondTx:
-			actions = append(actions, types.MsgUndelegate{}.Type())
+			actions = append(actions, types.TypeMsgUndelegate)
+			actions = append(actions, types.TypeSvcMsgUndelegate)
 
 		case isRedTx:
-			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.TypeMsgBeginRedelegate)
+			actions = append(actions, types.TypeSvcMsgBeginRedelegate)
 
 		case noQuery:
-			actions = append(actions, types.MsgDelegate{}.Type())
-			actions = append(actions, types.MsgUndelegate{}.Type())
-			actions = append(actions, types.MsgBeginRedelegate{}.Type())
+			actions = append(actions, types.TypeMsgDelegate)
+			actions = append(actions, types.TypeSvcMsgDelegate)
+			actions = append(actions, types.TypeMsgUndelegate)
+			actions = append(actions, types.TypeSvcMsgUndelegate)
+			actions = append(actions, types.TypeMsgBeginRedelegate)
+			actions = append(actions, types.TypeSvcMsgBeginRedelegate)
 
 		default:
 			w.WriteHeader(http.StatusNoContent)
@@ -278,6 +289,19 @@ func validatorsHandlerFn(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		status := r.FormValue("status")
+		// These are query params that were available in =<0.39. We show a nice
+		// error message for this breaking change.
+		if status == "bonded" || status == "unbonding" || status == "unbonded" {
+			err := fmt.Errorf("cosmos sdk v0.40 introduces a breaking change on this endpoint:"+
+				" instead of querying using `?status=%s`, please use `status=BOND_STATUS_%s`. For more"+
+				" info, please see our REST endpoint migration guide at %s", status, strings.ToUpper(status), clientrest.DeprecationURL)
+
+			if rest.CheckBadRequestError(w, err) {
+				return
+			}
+
+		}
+
 		if status == "" {
 			status = types.BondStatusBonded
 		}

@@ -37,6 +37,8 @@ func mod(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Mod(i, i2) }
 
 func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
 
+func abs(i *big.Int) *big.Int { return new(big.Int).Abs(i) }
+
 func min(i *big.Int, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
 		return new(big.Int).Set(i2)
@@ -304,6 +306,11 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
+// Abs returns the absolute value of Int.
+func (i Int) Abs() Int {
+	return Int{abs(i.i)}
+}
+
 // return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
@@ -375,7 +382,7 @@ func (i *Int) MarshalTo(data []byte) (n int, err error) {
 	if i.i == nil {
 		i.i = new(big.Int)
 	}
-	if len(i.i.Bytes()) == 0 {
+	if i.i.BitLen() == 0 { // The value 0
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

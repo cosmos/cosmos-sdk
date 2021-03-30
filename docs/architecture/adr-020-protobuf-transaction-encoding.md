@@ -12,6 +12,7 @@
 - 2020 August 19: Move sequence field from `SignDoc` to `SignerInfo`, as discussed in [#6966](https://github.com/cosmos/cosmos-sdk/issues/6966).
 - 2020 September 25: Remove `PublicKey` type in favor of `secp256k1.PubKey`, `ed25519.PubKey` and `multisig.LegacyAminoPubKey`.
 - 2020 October 15: Add `GetAccount` and `GetAccountWithHeight` methods to the `AccountRetriever` interface.
+- 2021 Feb 24: The SDK does not use Tendermint's `PubKey` interface anymore, but its own `cryptotypes.PubKey`. Updates to reflect this.
 
 ## Status
 
@@ -286,9 +287,9 @@ and `FileDescriptor`s and returns a boolean result.
 
 ### Public Key Encoding
 
-Public keys in the Cosmos SDK implement Tendermint's `crypto.PubKey` interface.
-We propose to use `Any` for protobuf encoding as we are doing with other interfaces (e.g. in `BaseAccount` `PubKey` or `SignerInfo` `PublicKey`).
-Following public keys are implemented: secp256k1, ed25519 and multisignature.
+Public keys in the Cosmos SDK implement the `cryptotypes.PubKey` interface.
+We propose to use `Any` for protobuf encoding as we are doing with other interfaces (for example, in `BaseAccount.PubKey` and `SignerInfo.PublicKey`).
+The following public keys are implemented: secp256k1, secp256r1, ed25519 and legacy-multisignature.
 
 Ex:
 

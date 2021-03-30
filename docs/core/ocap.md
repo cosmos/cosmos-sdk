@@ -1,5 +1,5 @@
 <!--
-order: 9
+order: 11
 -->
 
 # Object-Capability Model
@@ -68,7 +68,7 @@ sumValue := externalModule.ComputeSumValue(*account)
 In the Cosmos SDK, you can see the application of this principle in the
 gaia app.
 
-+++ https://github.com/cosmos/gaia/blob/master/app/app.go#L197-L209
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.4/simapp/app.go#L249-L273
 
 ## Next {hide}
 

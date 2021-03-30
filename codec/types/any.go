@@ -1,8 +1,11 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	fmt "fmt"
+
 	"github.com/gogo/protobuf/proto"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type Any struct {
@@ -57,31 +60,27 @@ type Any struct {
 // returns an error if that value couldn't be packed. This also caches
 // the packed value so that it can be retrieved from GetCachedValue without
 // unmarshaling
-func NewAnyWithValue(value proto.Message) (*Any, error) {
-	any := &Any{}
+func NewAnyWithValue(v proto.Message) (*Any, error) {
+	if v == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
+	}
+	return NewAnyWithCustomTypeURL(v, "/"+proto.MessageName(v))
+}
 
-	err := any.Pack(value)
+// NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead
+// using the one from proto.Message.
+// NOTE: This functions should be only used for types with additional logic bundled
+// into the protobuf Any serialization. For simple marshaling you should use NewAnyWithValue.
+func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
+	bz, err := proto.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
-
-	return any, nil
-}
-
-// Pack packs the value x in the Any or returns an error. This also caches
-// the packed value so that it can be retrieved from GetCachedValue without
-// unmarshaling
-func (any *Any) Pack(x proto.Message) error {
-	any.TypeUrl = "/" + proto.MessageName(x)
-	bz, err := proto.Marshal(x)
-	if err != nil {
-		return err
-	}
-
-	any.Value = bz
-	any.cachedValue = x
-
-	return nil
+	return &Any{
+		TypeUrl:     typeURL,
+		Value:       bz,
+		cachedValue: v,
+	}, nil
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error
@@ -99,21 +98,20 @@ func UnsafePackAny(x interface{}) *Any {
 	return &Any{cachedValue: x}
 }
 
-// PackAny is a checked and safe version of UnsafePackAny. It assures that
-// `x` implements the proto.Message interface and uses it to serialize `x`.
-// [DEPRECATED]: should be moved away: https://github.com/cosmos/cosmos-sdk/issues/7479
-func PackAny(x interface{}) (*Any, error) {
-	if x == nil {
-		return nil, nil
+// pack packs the value x in the Any or returns an error. This also caches
+// the packed value so that it can be retrieved from GetCachedValue without
+// unmarshaling
+func (any *Any) pack(x proto.Message) error {
+	any.TypeUrl = "/" + proto.MessageName(x)
+	bz, err := proto.Marshal(x)
+	if err != nil {
+		return err
 	}
-	if intoany, ok := x.(IntoAny); ok {
-		return intoany.AsAny(), nil
-	}
-	protoMsg, ok := x.(proto.Message)
-	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting %T to implement proto.Message", x)
-	}
-	return NewAnyWithValue(protoMsg)
+
+	any.Value = bz
+	any.cachedValue = x
+
+	return nil
 }
 
 // GetCachedValue returns the cached value from the Any if present
@@ -121,12 +119,25 @@ func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
 }
 
-// ClearCachedValue clears the cached value from the Any
-func (any *Any) ClearCachedValue() {
-	any.cachedValue = nil
+// GoString returns a string representing valid go code to reproduce the current state of
+// the struct.
+func (any *Any) GoString() string {
+	if any == nil {
+		return "nil"
+	}
+	extra := ""
+	if any.XXX_unrecognized != nil {
+		extra = fmt.Sprintf(",\n  XXX_unrecognized: %#v,\n", any.XXX_unrecognized)
+	}
+	return fmt.Sprintf("&Any{TypeUrl: %#v,\n  Value: %#v%s\n}",
+		any.TypeUrl, any.Value, extra)
 }
 
-// IntoAny represents a type that can be wrapped into an Any.
-type IntoAny interface {
-	AsAny() *Any
+// String implements the stringer interface
+func (any *Any) String() string {
+	if any == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("&Any{TypeUrl:%v,Value:%v,XXX_unrecognized:%v}",
+		any.TypeUrl, any.Value, any.XXX_unrecognized)
 }

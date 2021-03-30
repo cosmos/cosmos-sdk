@@ -1,0 +1,12 @@
+[
+  {
+    "account_identifier": {
+      "address":"cosmos1gykh2dsytj0lde8wr9msl9xd2nyj88duvmsnn7"
+    },
+    "currency":{
+      "symbol":"stake",
+      "decimals":0
+    },
+    "value": "999990000000"
+  }
+]

@@ -41,3 +41,36 @@ type UpgradeHandler func(ctx sdk.Context, plan Plan, versionMap VersionMap) (Ver
 ## Running Migrations
 
 In practice, the handlers should simply call and return the values from the `app.mm.RunMigrations` function. The `RunMigrations` function should be passed the `VersionMap` from the `UpgradeHandler`. With this, the `RunMigration` function will loop through the `VersionMap`, and for any current app module who's consensus version is greater than its corresponding value in the `VersionMap`, have its migration scripts ran. To learn how to configure migration scripts, refer to (this guide)[../building-modules/upgrade.md].
+
+## Adding New Modules In Upgrades
+
+New modules can be introduced to the application during an upgrade. The SDK recognizes new modules during upgrades and will call the corresponding module's `DefaultGenesis` function to setup the its initial state. This can be skipped if the module does not require any inital state. 
+
+If you wish to overwrite the default behavior of running InitGenesis during an upgrade for new modules, make sure to pass the latest `ConsensusVersion` of the new module into the returned `module.VersionMap`. This will then skip running InitGenesis for the module:
+
+```go
+// Foo is a new module being introduced
+// in this upgrade plan
+import foo "github.com/my/module/foo"
+
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
+    // We make sure to set foo's version to the latest ConsensusVersion in the VersionMap.
+    // This will skip running InitGenesis on Foo
+    vm["foo"] = foo.AppModule{}.ConsensusVersion()
+
+    return app.mm.RunMigrations(ctx, vm)
+})
+```
+
+Using the same method, you can also run InitGenesis on your new module with a custom genesis state:
+
+```go
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
+    vm["foo"] = foo.AppModule{}.ConsensusVersion()
+
+    // Run custom InitGenesis for foo
+    app.mm["foo"].InitGenesis(ctx, app.appCodec, myCustomGenesisState)
+
+    return app.mm.RunMigrations(ctx, vm)
+})
+```

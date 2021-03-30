@@ -46,10 +46,3 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 ```
 
 If you would like to see example code of changes implemented in a migration, you can check out the code [here](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as perscribed in (ADR-028)[../architecture/adr-028-public-key-addresses.md].
-
-
-## Adding New Modules In Upgrades
-
-When introducing a new module to your application during an upgrade, your `AppModule` must begin at consensus version 0. When an upgrade is being executed, all modules with consensus versions set to 0 will be recognized as new modules. This will result in the new module's `InitGenesis` function executing. This allows new modules to setup some inital state. The result of this will set the `AppModule`s consensus version to `1`.
-
-If your module does not require any initial state, you do not need to implement any `InitGenesis`. The `InitGenesis` will result in a no-op, but still upgrade your consensus version to `1` for future upgrades. 

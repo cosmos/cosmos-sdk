@@ -54,7 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * updated the keyring display structure (it uses protobuf JSON serialization) - the output is more verbose.
   * Renamed `MarshalAny` and `UnmarshalAny` to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take an interface as parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
   * CLI: removed `--text` flag from `show-node-id` command; the text format for public keys is not used any more - instead we use ProtoJSON.
-* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) The `tx sign` CLI command uses SIGN_MODE_DIRECT by default, and fallbacks to LEGACY_AMINO_JSON for multisigs and ledger keys.
+* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) The `tx sign` CLI command uses SIGN_MODE_DIRECT by default for local pubkeys. For multisigs and ledger keys, the default LEGACY_AMINO_JSON is kept.
 
 ### API Breaking Changes
 

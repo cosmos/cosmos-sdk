@@ -143,18 +143,16 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 }
 
 func (suite *UpgradeTestSuite) TestVersionMap() {
-
 	var req *types.QueryVersionMap
-
 	req = &types.QueryVersionMap{}
 
-	suite.SetupTest() // reset
 	res, err := suite.queryClient.VersionMap(gocontext.Background(), req)
 	require.NoError(suite.T(), err)
 	appVM := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
-	require.Equal(suite.T(), len(appVM), len(res.VersionMap))
-	for module := range res.VersionMap {
-		require.Equal(suite.T(), appVM[module], res.VersionMap[module])
+	require.Greater(suite.T(), len(res.Versionmap), 0)
+	require.Equal(suite.T(), len(appVM), len(res.Versionmap))
+	for module := range res.Versionmap {
+		require.Equal(suite.T(), appVM[module], res.Versionmap[module])
 	}
 }
 

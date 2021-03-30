@@ -2,14 +2,12 @@ package rest
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -21,9 +19,6 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc(
 		"/upgrade/applied/{name}", getDonePlanHandler(clientCtx),
 	).Methods("GET")
-	r.HandleFunc(
-		"/upgrade/versionmap", getVersionMap(clientCtx),
-	)
 }
 
 func getCurrentPlanHandler(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {
@@ -74,34 +69,5 @@ func getDonePlanHandler(clientCtx client.Context) func(http.ResponseWriter, *htt
 		applied := int64(binary.BigEndian.Uint64(res))
 		fmt.Println(applied)
 		rest.PostProcessResponse(w, clientCtx, applied)
-	}
-}
-
-func getVersionMap(clientCtx client.Context) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		req := types.QueryVersionMap{}
-		bz, err := clientCtx.LegacyAmino.MarshalJSON(req)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		res, _, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/%s", types.QuerierKey, types.QueryVM), bz)
-		if rest.CheckBadRequestError(w, err) {
-			return
-		}
-
-		if len(res) == 0 {
-			http.NotFound(w, r)
-			return
-		}
-		if len(res) != 8 {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, "unknown format for applied-upgrade")
-		}
-
-		vm := make(module.VersionMap)
-		err = json.Unmarshal(res, &vm)
-		fmt.Println(vm)
-		rest.PostProcessResponse(w, clientCtx, vm)
 	}
 }

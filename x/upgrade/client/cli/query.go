@@ -126,13 +126,12 @@ func GetVersionMapCmd() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := types.QueryVersionMap{}
-			res, err := queryClient.VersionMap(cmd.Context(), &params)
+			res, err := queryClient.VersionMap(cmd.Context(), &types.QueryVersionMap{})
 			if err != nil {
 				return err
 			}
 
-			if res.VersionMap == nil {
+			if res.Versionmap == nil {
 				return fmt.Errorf("no version map in state")
 			}
 

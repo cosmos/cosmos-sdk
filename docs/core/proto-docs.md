@@ -533,7 +533,7 @@
     - [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse)
     - [QueryVersionMap](#cosmos.upgrade.v1beta1.QueryVersionMap)
     - [QueryVersionMapResponse](#cosmos.upgrade.v1beta1.QueryVersionMapResponse)
-    - [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry)
+    - [QueryVersionMapResponse.VersionmapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionmapEntry)
   
     - [Query](#cosmos.upgrade.v1beta1.Query)
   
@@ -7520,16 +7520,16 @@ method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `version_map` | [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry) | repeated |  |
+| `versionmap` | [QueryVersionMapResponse.VersionmapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionmapEntry) | repeated |  |
 
 
 
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry"></a>
+<a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionmapEntry"></a>
 
-### QueryVersionMapResponse.VersionMapEntry
+### QueryVersionMapResponse.VersionmapEntry
 
 
 

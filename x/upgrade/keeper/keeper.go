@@ -38,7 +38,6 @@ type Keeper struct {
 // cdc: the app wide binary codec
 // homePath: root directory of the application's config
 // vs: the interface implemented by baseapp which allows setting baseapp's protocol version field.
-//     Developers should pass the baseApp object as an argument to satisfy the interface requirement.
 func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, vs xp.ProtocolVersionSetter) Keeper {
 	return Keeper{
 		homePath:           homePath,

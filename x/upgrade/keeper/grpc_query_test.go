@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -138,6 +139,22 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				suite.Require().Error(err)
 			}
 		})
+	}
+}
+
+func (suite *UpgradeTestSuite) TestVersionMap() {
+
+	var req *types.QueryVersionMap
+
+	req = &types.QueryVersionMap{}
+
+	suite.SetupTest() // reset
+	res, err := suite.queryClient.VersionMap(gocontext.Background(), req)
+	require.NoError(suite.T(), err)
+	appVM := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
+	require.Equal(suite.T(), len(appVM), len(res.VersionMap))
+	for module := range res.VersionMap {
+		require.Equal(suite.T(), appVM[module], res.VersionMap[module])
 	}
 }
 

@@ -5,29 +5,20 @@ import (
 	"fmt"
 	"testing"
 
-<<<<<<< Updated upstream
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
-=======
->>>>>>> Stashed changes
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/spf13/pflag"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 func NewTestTxConfig() client.TxConfig {
@@ -247,106 +238,4 @@ func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.
 		require.True(sigs[i].PubKey.Equals(pks[i]), "Signature is signed with a wrong pubkey. Got: %s, expected: %s", sigs[i].PubKey, pks[i])
 	}
 	return sigs
-}
-
-type IntegrationTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
-
-	kr := s.network.Validators[0].ClientCtx.Keyring
-
-	_, _, err := kr.NewMnemonic("newAccount1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-
-	account2, _, err := kr.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-
-	account3, _, err := kr.NewMnemonic("newAccount3", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-
-	account4, _, err := kr.NewMnemonic("newAccount4", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-
-	multi := kmultisig.NewLegacyAminoPubKey(3, []cryptotypes.PubKey{account2.GetPubKey(), account3.GetPubKey(), account4.GetPubKey()})
-	_, err = kr.SaveMultisig("multi", multi)
-	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TestCalcGasMultiSig() {
-	// makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, []byte) ([]byte, int64, error) {
-	// 	return func(string, []byte) ([]byte, int64, error) {
-	// 		if wantErr {
-	// 			return nil, 0, errors.New("query failed")
-	// 		}
-	// 		simRes := &txtypes.SimulateResponse{
-	// 			GasInfo: &sdk.GasInfo{GasUsed: gasUsed, GasWanted: gasUsed},
-	// 			Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
-	// 		}
-
-	// 		bz, err := simRes.Marshal()
-	// 		if err != nil {
-	// 			return nil, 0, err
-	// 		}
-
-	// 		return bz, 0, nil
-	// 	}
-	// }
-	val := s.network.Validators[0]
-
-	acc1, err := val.ClientCtx.Keyring.Key("newAccount1")
-	s.Require().NoError(err)
-
-	// acc2, err := val.ClientCtx.Keyring.Key("newAccount2")
-	// s.Require().NoError(err)
-
-	mult, err := val.ClientCtx.Keyring.Key("multi")
-	s.Require().NoError(err)
-
-	msig := types.NewBaseAccount(mult.GetAddress(), mult.GetPubKey(), 1, 2)
-	s.Require().NoError(err)
-
-	s.T().Log("setting up txCfg and txfactory")
-	fs := pflag.NewFlagSet("", pflag.PanicOnError)
-	txf := tx.NewFactoryCLI(val.ClientCtx, fs)
-	txf = txf.WithSequence(msig.GetSequence()).
-		WithAccountNumber(msig.GetAccountNumber()).
-		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON).
-		WithGasAdjustment(1.5).
-		WithGasPrices(val.AppConfig.GetMinGasPrices().String()).
-		WithGas(0).
-		WithSimulateAndExecute(true)
-
-	s.T().Log("Signing the message...")
-	msg := banktypes.NewMsgSend(msig.GetAddress(), acc1.GetAddress(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(3))))
-	//msg2 := banktypes.NewMsgSend(msig.GetAddress(), acc1.GetAddress(), sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(15))))
-	msgs := []sdk.Msg{msg}
-
-	s.T().Log("Running the main show...")
-	//qfunc := makeQueryFunc(uint64(100), false)
-	_, adjusted, err := tx.CalculateGas(val.ClientCtx.QueryWithData, txf.WithGasAdjustment(100.5), msgs...)
-	s.Require().NoError(err)
-	txf = txf.WithGas(adjusted)
-	_, err = tx.BuildUnsignedTx(txf, msg)
-	s.Require().NoError(err)
-	// val.ClientCtx.QueryWithData()
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
-	t.Log("testing...")
 }

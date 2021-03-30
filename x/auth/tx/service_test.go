@@ -591,7 +591,7 @@ func (s *IntegrationTestSuite) TestSimMultisigTx() {
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
-	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 100)
 	_, err = bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
@@ -607,7 +607,7 @@ func (s *IntegrationTestSuite) TestSimMultisigTx() {
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
-
+	// verify balances after tx
 	var balRes banktypes.QueryAllBalancesResponse
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
@@ -635,83 +635,24 @@ func (s *IntegrationTestSuite) TestSimMultisigTx() {
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
 	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
-
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-	// Sign with account1
+	// Sign with account2
 	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
-
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
-	sim := &tx.SimulateRequest{TxBytes: multiSigWith2Signatures.Bytes()}
-	_, err = s.queryClient.Simulate(context.Background(), sim)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
-}
+	// convert from protoJSON to protoBinary for sim
+	sdkTx, err := val1.ClientCtx.TxConfig.TxJSONDecoder()(multiSigWith2Signatures.Bytes())
+	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(sdkTx)
 
-func (s *IntegrationTestSuite) TestSimTx() {
-	val1 := *s.network.Validators[0]
-
-	// Generate 2 accounts and a multisig.
-	account1, err := val1.ClientCtx.Keyring.Key("newAccount1")
-	s.Require().NoError(err)
-
-	// Send coins from validator to multisig.
-	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
-	_, err = bankcli.MsgSendExec(
-		val1.ClientCtx,
-		val1.Address,
-		account1.GetAddress(),
-		sdk.NewCoins(sendTokens),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-	)
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, account1.GetAddress())
-	s.Require().NoError(err)
-
-	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
-	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
-
-	// Generate a tx.
-	multiGeneratedTx, err := bankcli.MsgSendExec(
-		val1.ClientCtx,
-		account1.GetAddress(),
-		val1.Address,
-		sdk.NewCoins(
-			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	)
-	s.Require().NoError(err)
-
-	// Save tx to file
-	multiGeneratedTxFile := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
-
-	// Sign with account1
-	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-
-	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name())
-	s.Require().NoError(err)
-
-	// sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
-
-	sim := &tx.SimulateRequest{TxBytes: account1Signature.Bytes()}
-	_, err = s.queryClient.Simulate(context.Background(), sim)
+	sim := &tx.SimulateRequest{TxBytes: txBytes}
+	res, err := s.queryClient.Simulate(context.Background(), sim)
+	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 }

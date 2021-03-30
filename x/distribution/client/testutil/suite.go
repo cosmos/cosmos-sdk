@@ -1,12 +1,9 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"context"
 	"fmt"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -17,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
@@ -31,6 +29,10 @@ type IntegrationTestSuite struct {
 	network *testnet.Network
 }
 
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 // SetupTest creates a new network for _each_ integration test. We create a new
 // network for each test because there are some state modifications that are
 // needed to be made in order to make useful queries. However, we don't want
@@ -38,25 +40,21 @@ type IntegrationTestSuite struct {
 func (s *IntegrationTestSuite) SetupTest() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := testnet.DefaultConfig()
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
-
+	genesisState := s.cfg.GenesisState
 	var mintData minttypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
 
 	inflation := sdk.MustNewDecFromStr("1.0")
 	mintData.Minter.Inflation = inflation
 	mintData.Params.InflationMin = inflation
 	mintData.Params.InflationMax = inflation
 
-	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
+	mintDataBz, err := s.cfg.Codec.MarshalJSON(&mintData)
 	s.Require().NoError(err)
 	genesisState[minttypes.ModuleName] = mintDataBz
-	cfg.GenesisState = genesisState
+	s.cfg.GenesisState = genesisState
 
-	s.cfg = cfg
-	s.network = testnet.New(s.T(), cfg)
+	s.network = testnet.New(s.T(), s.cfg)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -752,8 +750,4 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

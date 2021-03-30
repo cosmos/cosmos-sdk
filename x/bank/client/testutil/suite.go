@@ -34,7 +34,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	genesisState := s.cfg.GenesisState
-
 	var bankGenesis types.GenesisState
 	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
 
@@ -83,8 +82,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[types.ModuleName] = bankGenesisBz
 	s.cfg.GenesisState = genesisState
 
-	// s.cfg = cfg
-	// s.network = network.New(s.T(), cfg)
 	s.network = network.New(s.T(), s.cfg)
 
 	_, err = s.network.WaitForHeight(1)

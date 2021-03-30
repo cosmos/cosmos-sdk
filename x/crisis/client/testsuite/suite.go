@@ -1,10 +1,7 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -23,15 +20,14 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
-
+	s.network = network.New(s.T(), s.cfg)
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
@@ -105,8 +101,4 @@ func (s *IntegrationTestSuite) TestNewMsgVerifyInvariantTxCmd() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -208,7 +208,6 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		f := cmd.Flags()
-		txFactory := tx.NewFactoryCLI(clientCtx, f)
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
@@ -224,7 +223,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
 		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, _, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
+		_, fromName, _, err := client.GetFromFields(txF.Keybase(), from, clientCtx.GenerateOnly)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}

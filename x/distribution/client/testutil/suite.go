@@ -18,7 +18,6 @@ import (
 	testnet "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -504,7 +503,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 			ctx := context.Background()
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
-			bz, err := distrtestutil.MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
+			bz, err := MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {

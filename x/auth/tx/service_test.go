@@ -522,41 +522,6 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	return txBuilder
 }
 
-func (s IntegrationTestSuite) mkTxBuilderMsig() client.TxBuilder {
-	val := s.network.Validators[0]
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
-	s.Require().NoError(err)
-
-	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
-	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(
-		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: multisigInfo.GetAddress().String(),
-			ToAddress:   val.Address.String(),
-			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
-		}),
-	)
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
-
-	// setup txFactory
-	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-
-	// Sign Tx.
-	err = authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
-	s.Require().NoError(err)
-
-	return txBuilder
-}
-
 // protoTxProvider is a type which can provide a proto transaction. It is a
 // workaround to get access to the wrapper TxBuilder's method GetProtoTx().
 // Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint

@@ -42,6 +42,8 @@ message AppDescriptor {
 // TxDescriptor describes the accepted transaction type
 message TxDescriptor {
   // fullname is the protobuf fullname of the raw transaction type (for instance the tx.Tx type)
+  // it is not meant to support polymorphism of transaction types, it is supposed to be used by
+  // reflection clients to understand if they can handle a specific transaction type in an application.
   string fullname = 1;
   // authn provides information on how to authenticate a transaction in offline mode
   AuthnDescriptor authn = 2;

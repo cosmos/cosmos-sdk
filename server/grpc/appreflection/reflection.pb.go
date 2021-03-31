@@ -113,6 +113,8 @@ func (m *AppDescriptor) GetTx() *TxDescriptor {
 // TxDescriptor describes the accepted transaction type
 type TxDescriptor struct {
 	// fullname is the protobuf fullname of the raw transaction type (for instance the tx.Tx type)
+	// it is not meant to support polymorphism of transaction types, it is supposed to be used by
+	// reflection clients to understand if they can handle a specific transaction type in an application.
 	Fullname string `protobuf:"bytes,1,opt,name=fullname,proto3" json:"fullname,omitempty"`
 	// authn provides information on how to authenticate a transaction in offline mode
 	Authn *AuthnDescriptor `protobuf:"bytes,2,opt,name=authn,proto3" json:"authn,omitempty"`
@@ -682,6 +684,8 @@ func (m *ConfigurationDescriptor) GetFullBip44Path() string {
 
 // MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
 type MsgDescriptor struct {
+	// msg contains a descriptor of sdk.ServiceMsg or sdk.Msg
+	//
 	// Types that are valid to be assigned to Msg:
 	//	*MsgDescriptor_ServiceMsg
 	//	*MsgDescriptor_LegacyMsg

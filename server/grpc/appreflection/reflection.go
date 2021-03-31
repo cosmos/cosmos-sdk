@@ -177,9 +177,10 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*T
 
 		msgsDesc = append(msgsDesc, &MsgDescriptor{Msg: &MsgDescriptor_ServiceMsg{
 			ServiceMsg: &ServiceMsgDescriptor{
-				RequestFullname: pbName,
-				RequestRoute:    svcMsg,
-				RequestTypeUrl:  svcMsg,
+				RequestFullname:  pbName,
+				RequestRoute:     svcMsg,
+				RequestTypeUrl:   svcMsg,
+				ResponseFullname: "", // NOTE: this cannot be filled as of now
 			},
 		}})
 	}

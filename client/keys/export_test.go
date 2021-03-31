@@ -45,7 +45,9 @@ func Test_runExportCmd(t *testing.T) {
 	mockIn.Reset("123456789\n123456789\n")
 	cmd.SetArgs(args)
 
-	clientCtx := client.Context{}.WithKeyring(kb)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	require.NoError(t, cmd.ExecuteContext(ctx))

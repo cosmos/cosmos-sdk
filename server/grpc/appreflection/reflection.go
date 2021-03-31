@@ -15,7 +15,7 @@ import (
 )
 
 type Config struct {
-	SigningModes      []string
+	SigningModes      map[string]int32
 	ChainID           string
 	SdkConfig         *sdk.Config
 	InterfaceRegistry codectypes.InterfaceRegistry
@@ -159,7 +159,7 @@ func newQueryServiceDescriptor(srv *grpc.Server) *QueryServicesDescriptor {
 	return &QueryServicesDescriptor{QueryServices: queryServices}
 }
 
-func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*TxDescriptor, error) {
+func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes map[string]int32) (*TxDescriptor, error) {
 	// get base tx type name
 	txPbName := proto.MessageName(&tx.Tx{})
 	if txPbName == "" {
@@ -194,15 +194,15 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*T
 			},
 		}})
 	}
-
-	signModesDesc := make([]*SigningModeDescriptor, len(signingModes))
+	signModesDesc := make([]*SigningModeDescriptor, 0, len(signingModes))
 	for i, m := range signingModes {
-		signModesDesc[i] = &SigningModeDescriptor{
-			Name: m,
+		signModesDesc = append(signModesDesc, &SigningModeDescriptor{
+			Name:   i,
+			Number: m,
 			// NOTE(fdymylja): this cannot be filled as of now, auth and the sdk itself don't support as of now
 			// a service which allows to get authentication metadata for the provided sign mode.
 			AuthnInfoProviderMethodFullname: "",
-		}
+		})
 	}
 	return &TxDescriptor{
 		Fullname: txPbName,

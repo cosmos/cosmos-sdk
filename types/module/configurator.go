@@ -32,10 +32,6 @@ type Configurator interface {
 	// will panic. If the ConsensusVersion bump does not introduce any store
 	// changes, then a no-op function must be registered here.
 	RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error
-
-	// Codec defines the app-wide codec interface used for serialization and
-	// deserialization.
-	Codec() codec.Marshaler
 }
 
 type configurator struct {
@@ -70,7 +66,7 @@ func (c configurator) QueryServer() grpc.Server {
 }
 
 // Cdc implements the Configurator.Cdc method
-func (c configurator) Codec() codec.Marshaler {
+func (c configurator) codec() codec.Marshaler {
 	return c.cdc
 }
 

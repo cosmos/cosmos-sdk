@@ -364,7 +364,14 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 				return nil, err
 			}
 		} else {
-			moduleValUpdates := module.InitGenesis(ctx, cfg.Codec(), module.DefaultGenesis(cfg.Codec()))
+			cfgtor, ok := cfg.(configurator)
+			if !ok {
+				// Currently, the only implementator of Configurator (the interface)
+				// is configurator (the struct).
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+			}
+
+			moduleValUpdates := module.InitGenesis(ctx, cfgtor.cdc, module.DefaultGenesis(cfgtor.cdc))
 			// The module manager assumes only one module will update the
 			// validator set, and that it will not be by a new module.
 			if len(moduleValUpdates) > 0 {

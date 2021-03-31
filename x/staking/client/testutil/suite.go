@@ -1,6 +1,4 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"context"
@@ -24,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -35,6 +32,10 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
@@ -42,8 +43,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	s.cfg = network.DefaultConfig()
-	s.cfg.NumValidators = 2
 	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
@@ -56,7 +55,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = stakingtestutil.MsgRedelegateExec(
+	_, err = MsgRedelegateExec(
 		val.ClientCtx,
 		val.Address,
 		val.ValAddress,
@@ -68,7 +67,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 	// unbonding
-	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
+	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -1343,8 +1342,4 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 
 		s.network.WaitForNextBlock()
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

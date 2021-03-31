@@ -42,7 +42,11 @@ func TestBlackListedAddrs(t *testing.T) {
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, 0)
 
 	for acc := range maccPerms {
-		require.Equal(t, !allowedReceivingModAcc[acc], app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)))
+		require.True(
+			t,
+			app.BankKeeper.BlacklistedAddr(app.SupplyKeeper.GetModuleAddress(acc)),
+			"ensure that blocked addresses are properly set in bank keeper",
+		)
 	}
 }
 

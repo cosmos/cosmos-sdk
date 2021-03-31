@@ -132,7 +132,7 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
-func (s *IntegrationTestSuite) TestCLISign() {
+func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
@@ -140,6 +140,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	fileUnsigned := testutil.WriteToNewTempFile(s.T(), txBz.String())
 	chainFlag := fmt.Sprintf("--%s=%s", flags.FlagChainID, val1.ClientCtx.ChainID)
 	sigOnlyFlag := "--signature-only"
+	signModeAminoFlag := "--sign-mode=amino-json"
 
 	// SIC! validators have same key names and same adddresses as those registered in the keyring,
 	//      BUT the keys are different!
@@ -154,7 +155,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 
 	/****  test signature-only  ****/
 	res, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
-		sigOnlyFlag)
+		sigOnlyFlag, signModeAminoFlag)
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 	sigs, err := txCfg.UnmarshalSignatureJSON(res.Bytes())
@@ -163,7 +164,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	require.Equal(account.GetSequence(), sigs[0].Sequence)
 
 	/****  test full output  ****/
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag)
+	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, signModeAminoFlag)
 	require.NoError(err)
 
 	// txCfg.UnmarshalSignatureJSON can't unmarshal a fragment of the signature, so we create this structure.
@@ -178,7 +179,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	/****  test file output  ****/
 	filenameSigned := filepath.Join(s.T().TempDir(), "test_sign_out.json")
 	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
-	_, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag)
+	_, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
 	require.NoError(err)
 	fContent, err := ioutil.ReadFile(filenameSigned)
 	require.NoError(err)
@@ -186,7 +187,7 @@ func (s *IntegrationTestSuite) TestCLISign() {
 
 	/****  try to append to the previously signed transaction  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		sigOnlyFlag)
+		sigOnlyFlag, signModeAminoFlag)
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey(), valInfo.GetPubKey())
 
@@ -197,12 +198,12 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	// provide functionality to check / manage `auth_info`.
 	// Cases with different keys are are covered in unit tests of `tx.Sign`.
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		sigOnlyFlag, "--overwrite")
+		sigOnlyFlag, "--overwrite", signModeAminoFlag)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 
 	/****  test flagAmino  ****/
 	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
-		"--amino=true")
+		"--amino=true", signModeAminoFlag)
 	require.NoError(err)
 
 	var txAmino authrest.BroadcastReq
@@ -1087,7 +1088,8 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	_, _, addr1 := testdata.KeyTestPubAddr()
 
 	// Creating a tx with 2 msgs from 2 signers: val0 and val1.
-	// The validators sign with SIGN_MODE_LEGACY_AMINO_JSON by default.
+	// The validators need to sign with SIGN_MODE_LEGACY_AMINO_JSON,
+	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we we amino, we don't need to pre-populate signer_infos.
 	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
 	txBuilder.SetMsgs(
@@ -1104,7 +1106,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 
 	// Let val0 sign first the file with the unsignedTx.
-	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite")
+	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite", "--sign-mode=amino-json")
 	require.NoError(err)
 	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
 
@@ -1113,7 +1115,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	require.NoError(err)
 	signedTx, err := authtest.TxSignExec(
 		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
-		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq),
+		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq), "--sign-mode=amino-json",
 	)
 	require.NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())

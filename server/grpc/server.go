@@ -22,10 +22,10 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, address st
 	// cosmosreflection allows consumers to build dynamic clients that can write
 	// to any cosmos-sdk application without relying on application packages at compile time
 	err := appreflection.Register(grpcSrv, appreflection.Config{
-		SigningModes: func() []string {
-			modes := make([]string, len(clientCtx.TxConfig.SignModeHandler().Modes()))
-			for i, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
-				modes[i] = m.String()
+		SigningModes: func() map[string]int32 {
+			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().Modes()))
+			for _, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
+				modes[m.String()] = (int32)(m)
 			}
 			return modes
 		}(),

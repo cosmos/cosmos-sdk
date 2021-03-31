@@ -44,7 +44,7 @@ In practice, the handlers should simply call and return the values from the `app
 
 ## Adding New Modules In Upgrades
 
-New modules can be introduced to the application during an upgrade. The SDK recognizes new modules during upgrades and will call the corresponding module's `DefaultGenesis` function to setup the its initial state. This can be skipped if the module does not require any inital state. 
+New modules can be introduced to the application during an upgrade. The SDK recognizes new modules during upgrades and will call the corresponding module's `InitGenesis` function to setup the its initial state. This can be skipped if the module does not require any inital state. 
 
 If you wish to overwrite the default behavior of running InitGenesis during an upgrade for new modules, make sure to pass the latest `ConsensusVersion` of the new module into the returned `module.VersionMap`. This will then skip running InitGenesis for the module:
 

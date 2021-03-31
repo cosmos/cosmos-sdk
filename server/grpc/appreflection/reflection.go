@@ -122,8 +122,15 @@ func newCodecDescriptor(ir codectypes.InterfaceRegistry) (*CodecDescriptor, erro
 			}
 		}
 		interfaceDescriptors[i] = &InterfaceDescriptor{
-			Fullname:                   iface,
-			InterfaceAcceptingMessages: nil, // NOTE(fdymylja): this will be used in the future when we will replace *anypb.Any fields with the interface
+			Fullname: iface,
+			// NOTE(fdymylja): this could be filled, but it won't be filled as of now
+			// doing this would require us to fully rebuild in a (dependency) transitive way the proto
+			// registry of the supported proto.Messages for the application, this could be easily
+			// done if we weren't relying on gogoproto which does not allow us to iterate over the
+			// registry. Achieving this right now would mean to start slowly building descriptors
+			// getting their files dependencies, building those dependencies then rebuilding the
+			// descriptor builder. It's too much work as of now.
+			InterfaceAcceptingMessages: nil,
 			InterfaceImplementers:      interfaceImplementers,
 		}
 	}
@@ -177,10 +184,13 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*T
 
 		msgsDesc = append(msgsDesc, &MsgDescriptor{Msg: &MsgDescriptor_ServiceMsg{
 			ServiceMsg: &ServiceMsgDescriptor{
-				RequestFullname:  pbName,
-				RequestRoute:     svcMsg,
-				RequestTypeUrl:   svcMsg,
-				ResponseFullname: "", // NOTE: this cannot be filled as of now
+				RequestFullname: pbName,
+				RequestRoute:    svcMsg,
+				RequestTypeUrl:  svcMsg,
+				// NOTE(fdymylja): this cannot be filled as of now, the Configurator is not held inside the *BaseApp type
+				// but is local to specific applications, hence we have no way of getting the MsgServer's descriptors
+				// which contain response information.
+				ResponseFullname: "",
 			},
 		}})
 	}
@@ -188,15 +198,17 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*T
 	signModesDesc := make([]*SigningModeDescriptor, len(signingModes))
 	for i, m := range signingModes {
 		signModesDesc[i] = &SigningModeDescriptor{
-			Name:                            m,
-			AuthnInfoProviderMethodFullname: "", // this cannot be filled as of now
+			Name: m,
+			// NOTE(fdymylja): this cannot be filled as of now, auth and the sdk itself don't support as of now
+			// a service which allows to get authentication metadata for the provided sign mode.
+			AuthnInfoProviderMethodFullname: "",
 		}
 	}
 	return &TxDescriptor{
 		Fullname: txPbName,
 		Authn: &AuthnDescriptor{
 			SignModes: signModesDesc,
-		}, // TODO
+		},
 		Msgs: msgsDesc,
 	}, nil
 }

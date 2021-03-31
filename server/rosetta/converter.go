@@ -312,8 +312,8 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	}
 	// get operations from msgs
 	msgs := tx.GetMsgs()
-
 	var rawTxOps []*rosettatypes.Operation
+
 	for _, msg := range msgs {
 		ops, err := c.Ops(status, msg)
 		if err != nil {

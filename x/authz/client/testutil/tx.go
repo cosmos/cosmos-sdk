@@ -720,7 +720,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		})
 	}
 
-	//test delegate no spend-limit
+	// test delegate no spend-limit
 	_, err = ExecGrantAuthorization(
 		val,
 		[]string{

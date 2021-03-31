@@ -127,7 +127,6 @@
     - [InterfaceAcceptingMessageDescriptor](#cosmos.base.reflection.v1beta1.InterfaceAcceptingMessageDescriptor)
     - [InterfaceDescriptor](#cosmos.base.reflection.v1beta1.InterfaceDescriptor)
     - [InterfaceImplementerDescriptor](#cosmos.base.reflection.v1beta1.InterfaceImplementerDescriptor)
-    - [LegacyMsgDescriptor](#cosmos.base.reflection.v1beta1.LegacyMsgDescriptor)
     - [ListAllInterfacesRequest](#cosmos.base.reflection.v1beta1.ListAllInterfacesRequest)
     - [ListAllInterfacesResponse](#cosmos.base.reflection.v1beta1.ListAllInterfacesResponse)
     - [ListImplementationsRequest](#cosmos.base.reflection.v1beta1.ListImplementationsRequest)
@@ -2201,22 +2200,6 @@ InterfaceImplementerDescriptor describes an interface implementer
 
 
 
-<a name="cosmos.base.reflection.v1beta1.LegacyMsgDescriptor"></a>
-
-### LegacyMsgDescriptor
-LegacyMsgDescriptor describes an sdk.Msg type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `fullname` | [string](#string) |  | fullname is the protobuf fullname of the message |
-| `type_url` | [string](#string) |  | type_url defines the type URL used when marshalling the type as any this is required so we can provide type safe google.protobuf.Any marshalling and unmarshalling, making sure that we don't accept just 'any' type in our interface fields |
-
-
-
-
-
-
 <a name="cosmos.base.reflection.v1beta1.ListAllInterfacesRequest"></a>
 
 ### ListAllInterfacesRequest
@@ -2283,7 +2266,6 @@ MsgDescriptor describes a cosmos-sdk message that can be delivered with a transa
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `service_msg` | [ServiceMsgDescriptor](#cosmos.base.reflection.v1beta1.ServiceMsgDescriptor) |  | service_msg is used when the message is an sdk.ServiceMsg type |
-| `legacy_msg` | [LegacyMsgDescriptor](#cosmos.base.reflection.v1beta1.LegacyMsgDescriptor) |  | legacy_msg is used when the message is an sdk.Msg type |
 
 
 

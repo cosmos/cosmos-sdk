@@ -141,12 +141,12 @@ message ConfigurationDescriptor {
 
 // MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
 message MsgDescriptor {
-  // msg contains a descriptor of sdk.ServiceMsg or sdk.Msg
+  // msg contains a descriptor of sdk.ServiceMsg, note: sdk.Msg is not supported
+  // as every sdk.Msg is already an sdk.ServiceMsg. It is defined as a oneof in case
+  // different representation of a msg will be implemented.
   oneof msg {
     // service_msg is used when the message is an sdk.ServiceMsg type
     ServiceMsgDescriptor service_msg = 1;
-    // legacy_msg is used when the message is an sdk.Msg type
-    LegacyMsgDescriptor legacy_msg = 2;
   }
 }
 
@@ -161,17 +161,6 @@ message ServiceMsgDescriptor {
   // unmarshalling, making sure that we don't accept just 'any' type
   // in our interface fields
   string type_url = 3;
-}
-
-// LegacyMsgDescriptor describes an sdk.Msg type
-message LegacyMsgDescriptor {
-  // fullname is the protobuf fullname of the message
-  string fullname = 1;
-  // type_url defines the type URL used when marshalling the type as any
-  // this is required so we can provide type safe google.protobuf.Any marshalling and
-  // unmarshalling, making sure that we don't accept just 'any' type
-  // in our interface fields
-  string type_url = 2;
 }
 
 // GetAppDescriptorRequest is the request type of the GetAppDescriptor RPC.

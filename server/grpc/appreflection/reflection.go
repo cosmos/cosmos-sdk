@@ -174,23 +174,6 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes []string) (*T
 
 	msgsDesc := make([]*MsgDescriptor, 0, len(msgImplementers)+len(svcMsgImplementers))
 
-	// process sdk.Msg
-	for _, msg := range msgImplementers {
-		pb, err := ir.Resolve(msg)
-		if err != nil {
-			return nil, fmt.Errorf("unable to resolve sdk.Msg %s: %w", msg, err)
-		}
-		pbName := proto.MessageName(pb)
-		if pbName == "" {
-			return nil, fmt.Errorf("unable to get proto name for sdk.Msg %s", msg)
-		}
-		msgsDesc = append(msgsDesc, &MsgDescriptor{Msg: &MsgDescriptor_LegacyMsg{
-			LegacyMsg: &LegacyMsgDescriptor{
-				Fullname: pbName,
-				TypeUrl:  msg,
-			},
-		}})
-	}
 	// process sdk.ServiceMsg
 	for _, svcMsg := range svcMsgImplementers {
 		resolved, err := ir.Resolve(svcMsg)

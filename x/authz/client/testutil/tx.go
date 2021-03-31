@@ -22,7 +22,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -342,7 +341,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 		{
 			"invalid grantee address",
 			[]string{
-				"invlid grantee",
+				"invalid grantee",
 				typeMsgSend,
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -561,7 +560,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	tokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(12)),
 	)
-	normalGeneratedTx, err := bankcli.MsgSendExec(
+	normalGeneratedTx, err := banktestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		grantee,

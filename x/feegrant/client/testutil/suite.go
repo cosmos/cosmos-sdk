@@ -1,6 +1,4 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"fmt"
@@ -32,6 +30,10 @@ type IntegrationTestSuite struct {
 	addedGrant   types.FeeAllowanceGrant
 }
 
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
@@ -39,11 +41,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -615,8 +613,4 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	var resp sdk.TxResponse
 	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().Equal(uint32(0), resp.Code)
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

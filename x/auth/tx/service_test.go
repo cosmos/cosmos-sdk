@@ -572,6 +572,7 @@ func (s *IntegrationTestSuite) TestSimMultisigTx() {
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
+
 	// verify balances after tx
 	var balRes banktypes.QueryAllBalancesResponse
 	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
@@ -607,6 +608,7 @@ func (s *IntegrationTestSuite) TestSimMultisigTx() {
 	s.Require().NoError(err)
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
+	// multisign tx
 	val1.ClientCtx.Offline = false
 	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
@@ -615,9 +617,11 @@ func (s *IntegrationTestSuite) TestSimMultisigTx() {
 	sdkTx, err := val1.ClientCtx.TxConfig.TxJSONDecoder()(multiSigWith2Signatures.Bytes())
 	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(sdkTx)
 
+	// simulate tx
 	sim := &tx.SimulateRequest{TxBytes: txBytes}
 	res, err := s.queryClient.Simulate(context.Background(), sim)
-	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// make sure gas was used
+	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
 }

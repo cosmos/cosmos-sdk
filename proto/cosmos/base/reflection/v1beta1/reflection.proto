@@ -134,15 +134,17 @@ message MsgDescriptor {
 
 // ServiceMsgDescriptor describes an sdk.ServiceMsg type
 message ServiceMsgDescriptor {
-  // fullname is the protobuf fullname of the given sdk.ServiceMsg
-  string fullname = 1;
-  // route is the sdk.ServiceMsg route, it is equal to type_url
-  string route = 2;
-  // type_url defines the type URL used when marshalling the type as any
-  // this is required so we can provide type safe google.protobuf.Any marshalling and
-  // unmarshalling, making sure that we don't accept just 'any' type
-  // in our interface fields
-  string type_url = 3;
+  // request_fullname is the protobuf fullname of the given sdk.ServiceMsg request
+  // this is the protobuf message type which should be used as google.protobuf.Any.value
+  // when delivering the msg to the DeliverTx endpoint
+  string request_fullname = 1;
+  // request_route is the sdk.ServiceMsg route, it is equal to type_url
+  string request_route = 2;
+  // request_type_url is the identifier that should be used as google.protobuf.Any.type_url
+  // when delivering the msg to the DeliverTx endpoint
+  string request_type_url = 3;
+  // response_fullname is the protobuf fullname of the given sdk.ServiceMsg response
+  string response_fullname = 4;
 }
 
 // GetAppDescriptorRequest is the request type of the GetAppDescriptor RPC.

@@ -2320,9 +2320,10 @@ ServiceMsgDescriptor describes an sdk.ServiceMsg type
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `fullname` | [string](#string) |  | fullname is the protobuf fullname of the given sdk.ServiceMsg |
-| `route` | [string](#string) |  | route is the sdk.ServiceMsg route, it is equal to type_url |
-| `type_url` | [string](#string) |  | type_url defines the type URL used when marshalling the type as any this is required so we can provide type safe google.protobuf.Any marshalling and unmarshalling, making sure that we don't accept just 'any' type in our interface fields |
+| `request_fullname` | [string](#string) |  | request_fullname is the protobuf fullname of the given sdk.ServiceMsg request this is the protobuf message type which should be used as google.protobuf.Any.value when delivering the msg to the DeliverTx endpoint |
+| `request_route` | [string](#string) |  | request_route is the sdk.ServiceMsg route, it is equal to type_url |
+| `request_type_url` | [string](#string) |  | request_type_url is the identifier that should be used as google.protobuf.Any.type_url when delivering the msg to the DeliverTx endpoint |
+| `response_fullname` | [string](#string) |  | response_fullname is the protobuf fullname of the given sdk.ServiceMsg response |
 
 
 

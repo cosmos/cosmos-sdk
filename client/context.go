@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
@@ -46,6 +48,7 @@ type Context struct {
 	AccountRetriever  AccountRetriever
 	NodeURI           string
 	FeeGranter        sdk.AccAddress
+	Viper             *viper.Viper
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -133,7 +136,9 @@ func (ctx Context) WithChainID(chainID string) Context {
 
 // WithHomeDir returns a copy of the Context with HomeDir set.
 func (ctx Context) WithHomeDir(dir string) Context {
-	ctx.HomeDir = dir
+	if dir != "" {
+		ctx.HomeDir = dir
+	}
 	return ctx
 }
 
@@ -217,6 +222,14 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 // WithInterfaceRegistry returns the context with an updated InterfaceRegistry
 func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) Context {
 	ctx.InterfaceRegistry = interfaceRegistry
+	return ctx
+}
+
+// WithViper returns the context with Viper field. This Viper instance is used to read
+// client-side config from the config file.
+func (ctx Context) WithViper() Context {
+	v := viper.New()
+	ctx.Viper = v
 	return ctx
 }
 
@@ -330,7 +343,8 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 	return info.GetAddress(), info.GetName(), info.GetType(), nil
 }
 
-func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
+// NewKeyringFromBackend gets a Keyring object from a backend
+func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly || ctx.Simulate {
 		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
 	}

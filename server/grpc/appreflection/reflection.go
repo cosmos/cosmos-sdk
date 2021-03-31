@@ -44,17 +44,7 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 	chainDescriptor := &ChainDescriptor{Id: conf.ChainID}
 	// set configuration descriptor
 	configurationDescriptor := &ConfigurationDescriptor{
-		Bech32AccountAddressPrefix:     conf.SdkConfig.GetBech32AccountAddrPrefix(),
-		Bech32ValidatorAddressPrefix:   conf.SdkConfig.GetBech32ValidatorAddrPrefix(),
-		Bech32ConsensusAddressPrefix:   conf.SdkConfig.GetBech32ConsensusAddrPrefix(),
-		Bech32AccountPublicKeyPrefix:   conf.SdkConfig.GetBech32AccountPubPrefix(),
-		Bech32ValidatorPublicKeyPrefix: conf.SdkConfig.GetBech32ValidatorPubPrefix(),
-		Bech32ConsensusPublicKeyPrefix: conf.SdkConfig.GetBech32ConsensusPubPrefix(),
-		Purpose:                        conf.SdkConfig.GetPurpose(),
-		CoinType:                       conf.SdkConfig.GetCoinType(),
-		// nolint: staticcheck
-		FullFundraiserPath: conf.SdkConfig.GetFullFundraiserPath(),
-		FullBip44Path:      conf.SdkConfig.GetFullBIP44Path(),
+		Bech32AccountAddressPrefix: conf.SdkConfig.GetBech32AccountAddrPrefix(),
 	}
 	// set codec descriptor
 	codecDescriptor, err := newCodecDescriptor(conf.InterfaceRegistry)

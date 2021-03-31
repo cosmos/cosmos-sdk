@@ -119,24 +119,6 @@ message InterfaceAcceptingMessageDescriptor {
 message ConfigurationDescriptor {
   // bech32_account_address_prefix is the account address prefix
   string bech32_account_address_prefix = 1;
-  // bech32_validator_address_prefix is the bech32 prefix for validator addresses
-  string bech32_validator_address_prefix = 2;
-  // bech32_consensus_address_prefix is the bech32 prefix for consensus nodes addresses
-  string bech32_consensus_address_prefix = 3;
-  // bech32_account_public_key_prefix is the bech32 prefix for accounts public keys
-  string bech32_account_public_key_prefix = 4;
-  // bech32_validator_public_key_prefix is the bech32 prefix for validators public keys
-  string bech32_validator_public_key_prefix = 5;
-  // bech32_consensus_public_key_prefix is the bech32 prefix for consensus nodes public keys
-  string bech32_consensus_public_key_prefix = 6;
-  // purpose is the BIP-0044 purpose code
-  uint32 purpose = 7;
-  // coin_type is the BIP-0044 coin type code
-  uint32 coin_type = 8;
-  // full_fundraiser_path is the BIP-0044 prefix (deprecated in favor of full_bip44_path)
-  string full_fundraiser_path = 9;
-  // full_bip44_path is the BIP-0044 prefix
-  string full_bip44_path = 10;
 }
 
 // MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction

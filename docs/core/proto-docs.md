@@ -2110,15 +2110,6 @@ ConfigurationDescriptor contains metadata information on the sdk.Config
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `bech32_account_address_prefix` | [string](#string) |  | bech32_account_address_prefix is the account address prefix |
-| `bech32_validator_address_prefix` | [string](#string) |  | bech32_validator_address_prefix is the bech32 prefix for validator addresses |
-| `bech32_consensus_address_prefix` | [string](#string) |  | bech32_consensus_address_prefix is the bech32 prefix for consensus nodes addresses |
-| `bech32_account_public_key_prefix` | [string](#string) |  | bech32_account_public_key_prefix is the bech32 prefix for accounts public keys |
-| `bech32_validator_public_key_prefix` | [string](#string) |  | bech32_validator_public_key_prefix is the bech32 prefix for validators public keys |
-| `bech32_consensus_public_key_prefix` | [string](#string) |  | bech32_consensus_public_key_prefix is the bech32 prefix for consensus nodes public keys |
-| `purpose` | [uint32](#uint32) |  | purpose is the BIP-0044 purpose code |
-| `coin_type` | [uint32](#uint32) |  | coin_type is the BIP-0044 coin type code |
-| `full_fundraiser_path` | [string](#string) |  | full_fundraiser_path is the BIP-0044 prefix (deprecated in favor of full_bip44_path) |
-| `full_bip44_path` | [string](#string) |  | full_bip44_path is the BIP-0044 prefix |
 
 
 

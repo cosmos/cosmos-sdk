@@ -843,11 +843,11 @@ func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
 			if tc.error {
 				s.Require().Error(err)
 			} else {
-				var historical_info types.HistoricalInfo
+				var historicalInfo types.HistoricalInfo
 
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &historical_info)
+				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &historicalInfo)
 				s.Require().NoError(err)
-				s.Require().NotNil(historical_info)
+				s.Require().NotNil(historicalInfo)
 			}
 		})
 	}

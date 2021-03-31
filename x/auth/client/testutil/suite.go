@@ -129,7 +129,7 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().Error(err)
 }
 
-func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
+func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
@@ -942,7 +942,7 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 	s.Require().NotEmpty(res.Accounts)
 }
 
-func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
+func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
 	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
 
@@ -953,7 +953,7 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	require.EqualError(t, cmd.Execute(), "cannot broadcast tx during offline mode")
 }
 
-func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
+func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
 	txCfg := simapp.MakeTestEncodingConfig().TxConfig
 	clientCtx = clientCtx.WithTxConfig(txCfg)
@@ -1081,7 +1081,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	s.Require().NotEqual(0, res.Code)
 }
 
-func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
+func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	// test case:
 	// Create a transaction with 2 messages which has to be signed with 2 different keys
 	// Sign and append the signatures using the CLI with Amino signing mode.

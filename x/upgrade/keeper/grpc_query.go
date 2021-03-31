@@ -52,6 +52,6 @@ func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMap) (*type
 	vm := k.GetModuleVersionMap(ctx)
 
 	return &types.QueryVersionMapResponse{
-		Versionmap: vm,
+		VersionMap: vm,
 	}, nil
 }

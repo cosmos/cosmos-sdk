@@ -81,5 +81,5 @@ message QueryVersionMap {}
 // QueryVersionMapResponse is the response type for the Query/VersionMap RPC
 // method.
 message QueryVersionMapResponse {
-  map<string, uint64> versionmap = 1;
+  map<string, uint64> version_map = 1;
 }

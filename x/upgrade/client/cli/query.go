@@ -131,7 +131,7 @@ func GetVersionMapCmd() *cobra.Command {
 				return err
 			}
 
-			if res.Versionmap == nil {
+			if res.VersionMap == nil {
 				return fmt.Errorf("no version map in state")
 			}
 

@@ -80,6 +80,7 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
+    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -535,7 +536,7 @@
     - [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse)
     - [QueryVersionMap](#cosmos.upgrade.v1beta1.QueryVersionMap)
     - [QueryVersionMapResponse](#cosmos.upgrade.v1beta1.QueryVersionMapResponse)
-    - [QueryVersionMapResponse.VersionmapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionmapEntry)
+    - [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry)
   
     - [Query](#cosmos.upgrade.v1beta1.Query)
   
@@ -1568,6 +1569,23 @@ sendable).
 
 
 
+
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+This message is deprecated now that supply is indexed by denom.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2209,7 +2227,8 @@ between a store name and the commit ID.
 
 ### StoreKVPair
 StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
-It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and Deletes
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
+Deletes
 
 
 | Field | Type | Label | Description |
@@ -7540,16 +7559,16 @@ method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `versionmap` | [QueryVersionMapResponse.VersionmapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionmapEntry) | repeated |  |
+| `version_map` | [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry) | repeated |  |
 
 
 
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionmapEntry"></a>
+<a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry"></a>
 
-### QueryVersionMapResponse.VersionmapEntry
+### QueryVersionMapResponse.VersionMapEntry
 
 
 

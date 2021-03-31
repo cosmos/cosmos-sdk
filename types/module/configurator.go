@@ -65,11 +65,6 @@ func (c configurator) QueryServer() grpc.Server {
 	return c.queryServer
 }
 
-// Cdc implements the Configurator.Cdc method
-func (c configurator) codec() codec.Marshaler {
-	return c.cdc
-}
-
 // RegisterMigration implements the Configurator.RegisterMigration method
 func (c configurator) RegisterMigration(moduleName string, forVersion uint64, handler MigrationHandler) error {
 	if forVersion == 0 {

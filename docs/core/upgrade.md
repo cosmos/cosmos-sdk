@@ -42,6 +42,21 @@ type UpgradeHandler func(ctx sdk.Context, plan Plan, versionMap VersionMap) (Ver
 
 In practice, the handlers should simply call and return the values from the `app.mm.RunMigrations` function. The `RunMigrations` function should be passed the `VersionMap` from the `UpgradeHandler`. With this, the `RunMigration` function will loop through the `VersionMap`, and for any current app module who's consensus version is greater than its corresponding value in the `VersionMap`, have its migration scripts ran. To learn how to configure migration scripts, refer to (this guide)[../building-modules/upgrade.md].
 
+When upgrades are executed, they refer to the functionality described in an upgrade handler. All upgrade handlers should describe the logic needed for the upgrade plan, and end with returning the values from a call to `app.RunMigrations(ctx, vm)`. This will return the updated `VersionMap` to be saved to the upgrade module's store.
+
+```golang
+app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+
+    // ...
+    // do upgrade logic
+    // ...
+
+    // RunMigrations returns the VersionMap
+    // with the updated module ConsensusVersions
+    return app.RunMigrations(ctx, vm)
+})
+```
+
 ## Adding New Modules In Upgrades
 
 New modules can be introduced to the application during an upgrade. The SDK recognizes new modules during upgrades and will call the corresponding module's `DefaultGenesis` function to setup the its initial state. This can be skipped if the module does not require any inital state. 

@@ -59,7 +59,10 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
 	}
 
-	pubkeys := sigTx.GetPubKeys()
+	pubkeys, err := sigTx.GetPubKeys()
+	if err != nil {
+		return ctx, err
+	}
 	signers := sigTx.GetSigners()
 
 	for i, pk := range pubkeys {
@@ -183,7 +186,7 @@ func NewSigVerificationDecorator(ak AccountKeeper, signModeHandler authsigning.S
 func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	switch v := sigData.(type) {
 	case *signing.SingleSignatureData:
-		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+		return v.SignMode == signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON //nolint:staticcheck
 	case *signing.MultiSignatureData:
 		for _, s := range v.Signatures {
 			if !OnlyLegacyAminoSigners(s) {
@@ -339,7 +342,10 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	params := vscd.ak.GetParams(ctx)
-	pubKeys := sigTx.GetPubKeys()
+	pubKeys, err := sigTx.GetPubKeys()
+	if err != nil {
+		return ctx, err
+	}
 
 	sigCount := 0
 	for _, pk := range pubKeys {

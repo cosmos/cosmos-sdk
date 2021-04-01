@@ -337,7 +337,31 @@ type MigrationHandler func(sdk.Context) error
 // version from which we should perform the migration for each module.
 type VersionMap map[string]uint64
 
-// RunMigrations performs in-place store migrations for all modules.
+// RunMigrations performs in-place store migrations for all modules. This
+// function MUST be called insde an x/upgrade UpgradeHandler.
+//
+// Recall that in an upgrade handler, the `fromVM` VersionMap is retrieved from
+// x/upgrade's store, and the function needs to return to target VersionMap
+// that will in turn be persisted to the x/upgrade's store. In general,
+// returning RunMigrations should be enough:
+//
+// Example:
+//   cfg := module.NewConfigurator(...)
+//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) {
+//       return app.mm.RunMigrations(ctx, cfg, fromVM)
+//   })
+//
+// Internally, RunMigrations will perform the following steps:
+// - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
+// - make a diff of `fromVM` and `udpatedVM`, and for each module:
+//    - if the module's `fromVM` version is less than its `updatedVM` version,
+//      then run in-place store migrations for that module between those versions.
+//    - if the module's `fromVM` is 0 (which means that it's a new module,
+//      because it was not in the previous x/upgrade's store), then run
+//      `InitGenesis` on that module.
+// - return the `updatedVM` to be persisted in the x/upgrade's store.
+//
+// Please also refer to docs/core/upgrade.md for more information.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(configurator)
 	if !ok {

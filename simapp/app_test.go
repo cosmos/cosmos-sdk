@@ -163,8 +163,8 @@ func TestRunMigrations(t *testing.T) {
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
-			_, err = app.RunMigrations(
-				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
+			_, err = app.mm.RunMigrations(
+				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), app.configurator,
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -216,7 +216,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	// Run migrations only for "mock" module. That's why we put the initial
 	// version for bank as 0 (to run its InitGenesis), and for all other
 	// modules, we put their latest ConsensusVersion to skip migrations.
-	_, err := app.RunMigrations(ctx,
+	_, err := app.mm.RunMigrations(ctx, app.configurator,
 		module.VersionMap{
 			"mock":         0,
 			"bank":         bank.AppModule{}.ConsensusVersion(),

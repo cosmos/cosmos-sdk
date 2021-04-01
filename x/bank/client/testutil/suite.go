@@ -1,14 +1,12 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -195,7 +193,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			respType: &sdk.Coin{},
-			expected: &sdk.Coin{s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))},
+			expected: &sdk.Coin{
+				Denom:  s.cfg.BondDenom,
+				Amount: s.cfg.StakingTokens.Add(sdk.NewInt(10)),
+			},
 		},
 		{
 			name: "total supply of a bogus denom",
@@ -205,7 +206,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			respType: &sdk.Coin{},
-			expected: &sdk.Coin{"foobar", sdk.ZeroInt()},
+			expected: &sdk.Coin{
+				Denom:  "foobar",
+				Amount: sdk.ZeroInt(),
+			},
 		},
 	}
 
@@ -359,9 +363,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	val := s.network.Validators[0]
 
 	clientCtx := val.ClientCtx
-
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	from := val.Address
 	to := val.Address

@@ -86,7 +86,8 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), res.String())
 	txBuilder, err := val.ClientCtx.TxConfig.WrapTxBuilder(signedTx)
-	res, err = TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
+	_, err = TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	txBuilder.SetMemo("MODIFIED TX")
@@ -95,7 +96,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 	modifiedTxFile := testutil.WriteToNewTempFile(s.T(), string(bz))
 
-	res, err = TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
+	_, err = TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
 }
 
@@ -106,11 +107,11 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
 	// sign-batch file - offline is set but account-number and sequence are not
-	res, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
+	_, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// sign-batch file
-	res, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	res, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
@@ -121,11 +122,11 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 
 	// Sign batch malformed tx file.
 	malformedFile := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf("%smalformed", generatedStd))
-	res, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().Error(err)
 
 	// Sign batch malformed tx file signature only.
-	res, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
 }
 
@@ -196,6 +197,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	// Cases with different keys are are covered in unit tests of `tx.Sign`.
 	res, err = TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		sigOnlyFlag, "--overwrite", signModeAminoFlag)
+	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 
 	/****  test flagAmino  ****/
@@ -406,12 +408,12 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Test sign
 
 	// Does not work in offline mode
-	res, err = TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline")
+	_, err = TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// But works offline if we set account number and sequence
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	res, err = TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
+	_, err = TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
 	s.Require().NoError(err)
 
 	// Sign transaction
@@ -446,14 +448,14 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Test broadcast
 
 	// Does not work in offline mode
-	res, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
+	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "cannot broadcast tx during offline mode")
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Broadcast correct transaction.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
-	res, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -688,7 +690,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
-
+	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
@@ -760,6 +762,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -808,7 +811,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 
 	// write sigs to file2
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
-	res, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name())
+	_, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
 }
 
@@ -821,6 +824,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)

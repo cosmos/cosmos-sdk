@@ -573,7 +573,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 		{
 			"without proposal id",
 			[]string{
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), //10stake
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -596,7 +596,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 			"deposit on non existing proposal",
 			[]string{
 				"10",
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), //10stake
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -608,7 +608,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 			"deposit on non existing proposal",
 			[]string{
 				"1",
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), //10stake
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -787,7 +787,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 			"vote for invalid proposal",
 			[]string{
 				"10",
-				fmt.Sprintf("%s", "yes"),
+				"yes",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -799,7 +799,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 			"valid vote",
 			[]string{
 				"1",
-				fmt.Sprintf("%s", "yes"),
+				"yes",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -847,7 +847,7 @@ func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
 			"vote for invalid proposal",
 			[]string{
 				"10",
-				fmt.Sprintf("%s", "yes"),
+				"yes",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -859,7 +859,7 @@ func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
 			"valid vote",
 			[]string{
 				"1",
-				fmt.Sprintf("%s", "yes"),
+				"yes",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -871,7 +871,7 @@ func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
 			"invalid valid split vote string",
 			[]string{
 				"1",
-				fmt.Sprintf("%s", "yes/0.6,no/0.3,abstain/0.05,no_with_veto/0.05"),
+				"yes/0.6,no/0.3,abstain/0.05,no_with_veto/0.05",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -883,7 +883,7 @@ func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
 			"valid split vote",
 			[]string{
 				"1",
-				fmt.Sprintf("%s", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05"),
+				"yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),

@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -10,7 +9,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -498,9 +496,6 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 			bz, err := MsgWithdrawDelegatorRewardExec(clientCtx, tc.valAddr, tc.args...)
 			if tc.expectErr {

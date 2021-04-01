@@ -1314,6 +1314,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 
 	// Create a HTTP rpc client.
 	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.
 	// By experience, it happens around 2 blocks after `delHeight`.

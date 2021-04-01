@@ -52,6 +52,7 @@ func (s *IntegrationTestSuite) TestMigrateGenesis() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		s.Run(tc.name, func() {
 			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
 			jsonOutput, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})

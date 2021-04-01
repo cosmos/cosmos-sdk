@@ -116,8 +116,8 @@ func GetAppliedPlanCmd() *cobra.Command {
 func GetVersionMapCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "versionmap",
-		Short: "get the version map",
-		Long:  "Gets the map of module names to consensus versions",
+		Short: "get module version map",
+		Long:  "Gets the map of module names and their respective consensus versions.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

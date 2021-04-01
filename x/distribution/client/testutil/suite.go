@@ -130,7 +130,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"rewards":[{"denom":"stake","amount":"232.260000000000000000"}]}`,
+			`{"rewards":[{"denom":"stake","amount":"1164.240000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -141,7 +141,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 			},
 			false,
 			`rewards:
-- amount: "232.260000000000000000"
+- amount: "1164.240000000000000000"
   denom: stake`,
 		},
 	}
@@ -193,7 +193,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false,
-			`{"commission":[{"denom":"stake","amount":"116.130000000000000000"}]}`,
+			`{"commission":[{"denom":"stake","amount":"464.520000000000000000"}]}`,
 		},
 		{
 			"text output",
@@ -204,7 +204,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorCommission() {
 			},
 			false,
 			`commission:
-- amount: "116.130000000000000000"
+- amount: "464.520000000000000000"
   denom: stake`,
 		},
 	}
@@ -341,7 +341,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 		{
 			"json output",
 			[]string{
-				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
@@ -351,7 +351,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 		{
 			"json output (specific validator)",
 			[]string{
-				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(), valAddr.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
@@ -362,7 +362,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegatorRewards() {
 			"text output",
 			[]string{
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
-				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(),
 			},
 			false,
@@ -379,7 +379,7 @@ total:
 			"text output (specific validator)",
 			[]string{
 				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
-				fmt.Sprintf("--%s=10", flags.FlagHeight),
+				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(), valAddr.String(),
 			},
 			false,

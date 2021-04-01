@@ -5,12 +5,10 @@ package tx_test
 import (
 	"context"
 	"fmt"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
 	"strings"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -567,17 +565,6 @@ func (s *IntegrationTestSuite) TestSimMultisigTx() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
 	)
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
-	s.Require().NoError(err)
-
-	// verify balances after tx
-	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &balRes)
-	s.Require().NoError(err)
-	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(

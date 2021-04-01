@@ -178,7 +178,7 @@ func (gi *gasIterator) Error() error {
 	return gi.parent.Error()
 }
 
-// consumeSeekGas consumes a flat gas cost for seeking and a variable gas cost
+// consumeSeekGas consumes on each iteration step a flat gas cost and a variable gas cost
 // based on the current value's length.
 func (gi *gasIterator) consumeSeekGas() {
 	value := gi.Value()

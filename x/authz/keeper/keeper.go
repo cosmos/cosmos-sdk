@@ -82,6 +82,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
+		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
 			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
 			if authorization == nil {
@@ -129,16 +130,7 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, authorization.MethodName())
 	store.Set(grantStoreKey, bz)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventGrantAuthorization,
-			sdk.NewAttribute(types.AttributeKeyGrantType, authorization.MethodName()),
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyGranterAddress, granter.String()),
-			sdk.NewAttribute(types.AttributeKeyGranteeAddress, grantee.String()),
-		),
-	)
+	emitEvent(ctx, types.EventGrantAuthorization, grantee, granter)
 	return nil
 }
 
@@ -151,17 +143,20 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "authorization not found")
 	}
 	store.Delete(grantStoreKey)
+	emitEvent(ctx, types.EventRevokeAuthorization, grantee, granter)
+	return nil
+}
 
+func emitEvent(ctx sdk.Context, name string, grantee sdk.AccAddress, granter sdk.AccAddress) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventRevokeAuthorization,
+			name,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyGrantType, msgType),
+			sdk.NewAttributemitEvene(types.AttributeKeyGrantType, msgType),
 			sdk.NewAttribute(types.AttributeKeyGranterAddress, granter.String()),
 			sdk.NewAttribute(types.AttributeKeyGranteeAddress, grantee.String()),
 		),
 	)
-	return nil
 }
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
@@ -178,9 +173,9 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	return authorizations
 }
 
-// GetOrRevokeAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
-// granted to the grantee by the granter for the provided msg type.
-// If the Authorization is expired already, it will revoke the authorization and return nil
+// GetOrRevokeAuthorization returns an `Authorization` and it's expiration time if the granter
+// has a grant for (granter, message name) pair. If there is no grant `nil` is returned.
+// If the grant is expired, the grant is revoked, removed from the storage, and `nil` is returned.
 func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap exported.Authorization, expiration time.Time) {
 	grant, found := k.getAuthorizationGrant(ctx, types.GetAuthorizationStoreKey(grantee, granter, msgType))
 	if !found {

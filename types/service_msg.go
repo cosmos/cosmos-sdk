@@ -6,8 +6,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-// MsgRequest is the interface a transaction message, defined as a proto
-// service method, must fulfill.
+// MsgRequest is a functionality each transaction message (parameter of a protobuf service RPC)
+// must implement.
 type MsgRequest interface {
 	proto.Message
 	// ValidateBasic does a simple validation check that

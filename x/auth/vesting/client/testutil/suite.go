@@ -44,8 +44,8 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 	testCases := map[string]struct {
 		args         []string
 		expectErr    bool
-		respType     proto.Message
 		expectedCode uint32
+		respType     proto.Message
 	}{
 		"create a continuous vesting account": {
 			args: []string{
@@ -58,8 +58,8 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
 		},
 		"create a delayed vesting account": {
 			args: []string{
@@ -73,8 +73,8 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			expectErr:    false,
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
 		},
 		"invalid address": {
 			args: []string{
@@ -84,8 +84,8 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			},
 			expectErr:    true,
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
 		},
 		"invalid coins": {
 			args: []string{
@@ -95,8 +95,8 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			},
 			expectErr:    true,
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
 		},
 		"invalid end time": {
 			args: []string{
@@ -106,8 +106,8 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			},
 			expectErr:    true,
-			respType:     &sdk.TxResponse{},
 			expectedCode: 0,
+			respType:     &sdk.TxResponse{},
 		},
 	}
 

@@ -396,8 +396,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
-		respType     proto.Message
 		expectedCode uint32
+		respType     proto.Message
 	}{
 		{
 			"valid transaction",
@@ -412,9 +412,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			&sdk.TxResponse{},
-			0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"not enough fees",
@@ -430,8 +428,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
 			},
 			false,
-			&sdk.TxResponse{},
 			sdkerrors.ErrInsufficientFee.ABCICode(),
+			&sdk.TxResponse{},
 		},
 		{
 			"not enough gas",
@@ -448,8 +446,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				"--gas=10",
 			},
 			false,
-			&sdk.TxResponse{},
 			sdkerrors.ErrOutOfGas.ABCICode(),
+			&sdk.TxResponse{},
 		},
 	}
 
@@ -484,8 +482,8 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 		amount         sdk.Coins
 		args           []string
 		expectErr      bool
-		respType       proto.Message
 		expectedCode   uint32
+		respType       proto.Message
 		rawLogContains string
 	}{
 		{
@@ -502,8 +500,8 @@ func (s *IntegrationTestSuite) TestBankMsgService() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
 			false,
-			&sdk.TxResponse{},
 			0,
+			&sdk.TxResponse{},
 			"/cosmos.bank.v1beta1.Msg/Send", // indicates we are using ServiceMsg and not a regular Msg
 		},
 	}

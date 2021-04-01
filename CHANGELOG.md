@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * updated the keyring display structure (it uses protobuf JSON serialization) - the output is more verbose.
   * Renamed `MarshalAny` and `UnmarshalAny` to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take an interface as parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
   * CLI: removed `--text` flag from `show-node-id` command; the text format for public keys is not used any more - instead we use ProtoJSON.
+* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) The `tx sign` and `tx sign-batch` CLI commands use SIGN_MODE_DIRECT by default for local pubkeys. For multisigs and ledger keys, the default LEGACY_AMINO_JSON is kept.
 
 ### API Breaking Changes
 
@@ -96,14 +97,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/upgrade) [\#8743](https://github.com/cosmos/cosmos-sdk/pull/8743) Add tracking module versions as per ADR-041
 * (types) [\#8962](https://github.com/cosmos/cosmos-sdk/issues/8962) Add `Abs()` method to `sdk.Int`.
 * (x/bank) [\#8950](https://github.com/cosmos/cosmos-sdk/pull/8950) Improve efficiency on supply updates.
+* (store) [\#8012](https://github.com/cosmos/cosmos-sdk/pull/8012) Implementation of ADR-038 WriteListener and listen.KVStore
 
 ### Bug Fixes
 
+* (gRPC) [\#9015](https://github.com/cosmos/cosmos-sdk/pull/9015) Fix invalid status code when accessing gRPC endpoints.
 * (gRPC) [\#8945](https://github.com/cosmos/cosmos-sdk/pull/8945) gRPC reflection now works correctly.
 * (keyring) [#\8635](https://github.com/cosmos/cosmos-sdk/issues/8635) Remove hardcoded default passphrase value on `NewMnemonic`
 * (x/bank) [\#8434](https://github.com/cosmos/cosmos-sdk/pull/8434) Fix legacy REST API `GET /bank/total` and `GET /bank/total/{denom}` in swagger
 * (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
 * (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
+* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) Fix bug of `gentx` command not working with ledger keys.
 
 ## [v0.42.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.2) - 2021-03-19
 

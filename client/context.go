@@ -229,6 +229,7 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 // client-side config from the config file.
 func (ctx Context) WithViper() Context {
 	v := viper.New()
+	v.AutomaticEnv()
 	ctx.Viper = v
 	return ctx
 }

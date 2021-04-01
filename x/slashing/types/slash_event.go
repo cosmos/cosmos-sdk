@@ -13,7 +13,6 @@ const (
 var _ sdk.Msg = &SlashEvent{}
 
 // NewSlashEvent creates a new SlashEvent instance
-//nolint:interfacer
 func NewSlashEvent(address sdk.ValAddress, votingPercent sdk.Dec, slashPercent sdk.Dec, height int64, power int64) *SlashEvent {
 	return &SlashEvent{
 		Address:                address,

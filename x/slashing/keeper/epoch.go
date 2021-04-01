@@ -10,7 +10,7 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 	k.ek.QueueMsgForEpoch(ctx, epochNumber, action)
 }
 
-// RestoreEpochAction restore the actions that need to be exectued on next epoch
+// RestoreEpochAction restore the actions that need to be executed on next epoch
 func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
 	k.ek.RestoreEpochAction(ctx, epochNumber, action)
 }

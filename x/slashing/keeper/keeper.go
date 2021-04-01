@@ -17,7 +17,6 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        codec.BinaryMarshaler
 	sk         types.StakingKeeper
-	SK         types.StakingKeeper
 	ek         epochingkeeper.Keeper
 	paramspace types.ParamSubspace
 }
@@ -33,7 +32,6 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey, sk types.StakingKeep
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
-		SK:         sk,
 		ek:         epochingkeeper.NewKeeper(cdc, key),
 		paramspace: paramspace,
 	}

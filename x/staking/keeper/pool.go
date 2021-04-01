@@ -17,7 +17,7 @@ func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authtypes.Modul
 }
 
 // GetEpochDelegationPool returns the epoch temp tokens pool's module account
-func (k Keeper) GetEpochDelegationPool(ctx sdk.Context) (EpochDelegationPool authtypes.ModuleAccountI) {
+func (k Keeper) GetEpochDelegationPool(ctx sdk.Context) (epochDelegationPool authtypes.ModuleAccountI) {
 	return k.authKeeper.GetModuleAccount(ctx, types.EpochDelegationPoolName)
 }
 

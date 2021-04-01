@@ -10,6 +10,7 @@ Messages are queued to run at the end of epochs.
 Queued messages have epoch number to be run and at the end of epochs, it run messages queued for the epoch and execute the message.
 
 ### Staking messages
+
 - **MsgCreateValidator**: Move user's funds to `EpochDelegationPool` inside handler and move funds in `EpochDelegationPool` to `UnbondedPool` on Epoch while doing self delegation. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
 - **MsgEditValidator**: Validate message and if valid queue the message for execution at the end of the Epoch.
 - **MsgDelegate**: Move user's funds to `EpochDelegationPool` inside handler and move funds in `EpochDelegationPool` to `UnbondedPool` on Epoch while doing delegation to a selected validator. If Epoch execution fail, return back funds from `EpochDelegationPool` to user's account.
@@ -17,23 +18,28 @@ Queued messages have epoch number to be run and at the end of epochs, it run mes
 - **MsgUndelegate**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
 All `staking` module messages are queued.
+
 ### Message queues
 
 Each module has 1 message queue. Currently, there are two queues, one for `staking` and the other for `slashing`.
 Each `module` message queue, saves the queued messages for the module.
 
 ### Slashing messages
+
 - **MsgUnjail**: Validate message and if valid queue the message for execution at the end of the Epoch.
 
 All `slashing` module messages are queued.
 
 Note: `SlashEvent` execution is also put on slashing message queue and executed at the end of the current epoch.
+
 ### Evidence messages
+
 - **MsgSubmitEvidence**: No changes
 
 No messages are queued on `evidence` module for now.
 
 ### Distribution messages
+
 - **MsgSetWithdrawAddress**: No changes
 - **MsgWithdrawDelegatorReward**: No changes
 - **MsgWithdrawValidatorCommission**: No changes
@@ -51,6 +57,7 @@ Currently validator set update is only done on staking module's endblocker and s
 No changes were made on `evidence` module since it's related to `Jail` which requires instant action.
 
 ## Execution on epochs
+
 - Try executing the message for the epoch
 - If success, make changes as it is
 - If failure, try making revert extra actions done on handlers (e.g. EpochDelegationPool deposit)

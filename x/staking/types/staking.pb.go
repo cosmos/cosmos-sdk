@@ -842,8 +842,10 @@ type Params struct {
 	MaxEntries uint32 `protobuf:"varint,3,opt,name=max_entries,json=maxEntries,proto3" json:"max_entries,omitempty" yaml:"max_entries"`
 	// historical_entries is the number of historical entries to persist.
 	HistoricalEntries uint32 `protobuf:"varint,4,opt,name=historical_entries,json=historicalEntries,proto3" json:"historical_entries,omitempty" yaml:"historical_entries"`
-	BondDenom         string `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty" yaml:"bond_denom"`
-	EpochInterval     int64  `protobuf:"varint,6,opt,name=epoch_interval,json=epochInterval,proto3" json:"epoch_interval,omitempty" yaml:"epoch_interval"`
+	// bond_denom defines the bondable coin denomination.
+	BondDenom string `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty" yaml:"bond_denom"`
+	// epoch_interval defines the length of a staking epoch in blocks
+	EpochInterval int64 `protobuf:"varint,6,opt,name=epoch_interval,json=epochInterval,proto3" json:"epoch_interval,omitempty" yaml:"epoch_interval"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }

@@ -60,11 +60,8 @@ message Params {
 // SlashEvent represents a singular slash event that is queued in order to be
 // executed at a later time (i.e. end of an epoch)
 message SlashEvent {
-  string address = 1 [
-    (gogoproto.moretags) = "yaml:\"address\"",
-    (gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.ValAddress"
-  ];
-  bytes validator_voting_percent = 2 [
+  string address                  = 1 [(gogoproto.moretags) = "yaml:\"address\""];
+  bytes  validator_voting_percent = 2 [
     (gogoproto.moretags)   = "yaml:\"validator_voting_percent\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false

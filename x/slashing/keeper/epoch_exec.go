@@ -31,9 +31,13 @@ func (k Keeper) executeQueuedUnjailMsg(ctx sdk.Context, msg *types.MsgUnjail) er
 }
 
 func (k Keeper) executeQueuedSlashEvent(ctx sdk.Context, msg *types.SlashEvent) error {
-	validator := k.sk.Validator(ctx, msg.Address)
+	valAddr, err := sdk.ValAddressFromBech32(msg.Address)
+	if err != nil {
+		return err
+	}
+	validator := k.sk.Validator(ctx, valAddr)
 	if validator == nil {
-		return sdkerrors.Wrap(types.ErrBadValidatorAddr, msg.Address.String())
+		return sdkerrors.Wrap(types.ErrBadValidatorAddr, msg.Address)
 	}
 	consAddr, err := validator.GetConsAddr()
 	if err != nil {

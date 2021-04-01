@@ -15,7 +15,7 @@ var _ sdk.Msg = &SlashEvent{}
 // NewSlashEvent creates a new SlashEvent instance
 func NewSlashEvent(address sdk.ValAddress, votingPercent sdk.Dec, slashPercent sdk.Dec, height int64, power int64) *SlashEvent {
 	return &SlashEvent{
-		Address:                address,
+		Address:                address.String(),
 		ValidatorVotingPercent: votingPercent,
 		SlashPercent:           slashPercent,
 		DistributionHeight:     height,

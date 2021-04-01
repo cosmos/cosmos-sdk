@@ -33,11 +33,11 @@ type Keeper struct {
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
-// skipUpgradeHeights: a map of heights to skip a planned upgrade
-// storeKey: a store key with which to access upgrade's state
-// cdc: the app wide binary codec
-// homePath: root directory of the application's config
-// vs: the interface implemented by baseapp which allows setting baseapp's protocol version field.
+// skipUpgradeHeights - map of heights to skip an upgrade
+// storeKey - a store key with which to access upgrade's store
+// cdc - the app-wide binary codec
+// homePath - root directory of the application's config
+// vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
 func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, homePath string, vs xp.ProtocolVersionSetter) Keeper {
 	return Keeper{
 		homePath:           homePath,

@@ -4,6 +4,16 @@ order: 1
 
 # Concepts
 
+Rewards are calculated per period, and the period is updated each time a validator's delegation changes, for example when it receives a new delegation.
+The rewards for a single validator can then be calculated by taking the total rewards for the period before the delegation started, minus the current total rewards.
+Further details can be found in [this document](/docs/spec/fee_distribution/f1_fee_distr.pdf).
+
+In the Cosmos SDK implementation of the F1 fee distribution all rewards are distributed to a delegator when they change or remove their delegation, or when they request a withdrawal.
+At that time, all slashes to the validator that occurred during the current delegation are iterated over.
+
+The commission to the validator is paid when the validator is removed, or when the validator requests a withdrawal.
+The commission is calculated and incremented at every `BeginBlock`, as part of updating accumulated fee amounts.
+
 ## Reference Counting in F1 Fee Distribution
 
 In F1 fee distribution, in order to calculate the rewards a delegator ought to receive when they

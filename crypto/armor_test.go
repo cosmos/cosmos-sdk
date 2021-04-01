@@ -158,12 +158,11 @@ func TestUnarmorInfoBytesErrors(t *testing.T) {
 }
 
 func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
-	b.ReportAllocs()
-
 	passphrase := []byte("passphrase")
 	for securityParam := 9; securityParam < 16; securityParam++ {
 		param := securityParam
 		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
+			b.ReportAllocs()
 			saltBytes := tmcrypto.CRandBytes(16)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {

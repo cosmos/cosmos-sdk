@@ -56,7 +56,6 @@ import (
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantante "github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -130,11 +129,6 @@ var (
 		stakingtypes.NotBondedPoolName:       {authtypes.Burner, authtypes.Staking},
 		stakingtypes.EpochDelegationPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:                  {authtypes.Burner},
-	}
-
-	// module accounts that are allowed to receive tokens
-	allowedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName: true,
 	}
 )
 
@@ -243,7 +237,7 @@ func NewSimApp(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
+		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
@@ -384,12 +378,22 @@ func NewSimApp(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(
-		feegrantante.NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, ante.DefaultSigVerificationGasConsumer,
-			encodingConfig.TxConfig.SignModeHandler(),
-		),
+
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		},
 	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -437,6 +441,7 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
+	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -453,17 +458,6 @@ func (app *SimApp) ModuleAccountAddrs() map[string]bool {
 	}
 
 	return modAccAddrs
-}
-
-// BlockedAddrs returns all the app's module account addresses that are not
-// allowed to receive external tokens.
-func (app *SimApp) BlockedAddrs() map[string]bool {
-	blockedAddrs := make(map[string]bool)
-	for acc := range maccPerms {
-		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
-	}
-
-	return blockedAddrs
 }
 
 // LegacyAmino returns SimApp's amino codec.
@@ -562,16 +556,10 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 //
 // Example:
 //   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan) {
-//       err := app.RunMigrations(ctx, module.MigrationMap{
-//           "bank": 1,     // Migrate x/bank from v1 to current x/bank's ConsensusVersion
-//           "staking": 8,  // Migrate x/staking from v8 to current x/staking's ConsensusVersion
-//      })
-//      if err != nil {
-//           panic(err)
-//      }
+//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) {
+//       return app.RunMigrations(ctx, vm)
 //   })
-func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
+func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) (module.VersionMap, error) {
 	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 

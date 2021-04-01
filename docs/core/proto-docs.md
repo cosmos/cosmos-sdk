@@ -80,7 +80,6 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
-    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -132,6 +131,9 @@
     - [CommitID](#cosmos.base.store.v1beta1.CommitID)
     - [CommitInfo](#cosmos.base.store.v1beta1.CommitInfo)
     - [StoreInfo](#cosmos.base.store.v1beta1.StoreInfo)
+  
+- [cosmos/base/store/v1beta1/listening.proto](#cosmos/base/store/v1beta1/listening.proto)
+    - [StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair)
   
 - [cosmos/base/store/v1beta1/snapshot.proto](#cosmos/base/store/v1beta1/snapshot.proto)
     - [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem)
@@ -518,6 +520,7 @@
     - [SimulateResponse](#cosmos.tx.v1beta1.SimulateResponse)
   
     - [BroadcastMode](#cosmos.tx.v1beta1.BroadcastMode)
+    - [OrderBy](#cosmos.tx.v1beta1.OrderBy)
   
     - [Service](#cosmos.tx.v1beta1.Service)
   
@@ -682,6 +685,7 @@ pagination. Ex:
 | `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
 | `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
 | `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
+| `reverse` | [bool](#bool) |  | reverse is set to true indicates that, results to be returned in the descending order. |
 
 
 
@@ -1564,23 +1568,6 @@ sendable).
 
 
 
-
-<a name="cosmos.bank.v1beta1.Supply"></a>
-
-### Supply
-Supply represents a struct that passively keeps track of the total supply
-amounts in the network.
-This message is deprecated now that supply is indexed by denom.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2196,6 +2183,41 @@ between a store name and the commit ID.
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
 | `commit_id` | [CommitID](#cosmos.base.store.v1beta1.CommitID) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/store/v1beta1/listening.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/store/v1beta1/listening.proto
+
+
+
+<a name="cosmos.base.store.v1beta1.StoreKVPair"></a>
+
+### StoreKVPair
+StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and Deletes
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `store_key` | [string](#string) |  | the store key for the KVStore this pair originates from |
+| `delete` | [bool](#bool) |  | true indicates a delete operation, false indicates a set operation |
+| `key` | [bytes](#bytes) |  |  |
+| `value` | [bytes](#bytes) |  |  |
 
 
 
@@ -7281,6 +7303,7 @@ RPC method.
 | ----- | ---- | ----- | ----------- |
 | `events` | [string](#string) | repeated | events is the list of transaction event type. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+| `order_by` | [OrderBy](#cosmos.tx.v1beta1.OrderBy) |  |  |
 
 
 
@@ -7314,7 +7337,8 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the transaction to simulate. |
+| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | **Deprecated.** tx is the transaction to simulate. Deprecated. Send raw tx bytes instead. |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the raw transaction. |
 
 
 
@@ -7351,6 +7375,19 @@ BroadcastMode specifies the broadcast mode for the TxService.Broadcast RPC metho
 | BROADCAST_MODE_BLOCK | 1 | BROADCAST_MODE_BLOCK defines a tx broadcasting mode where the client waits for the tx to be committed in a block. |
 | BROADCAST_MODE_SYNC | 2 | BROADCAST_MODE_SYNC defines a tx broadcasting mode where the client waits for a CheckTx execution response only. |
 | BROADCAST_MODE_ASYNC | 3 | BROADCAST_MODE_ASYNC defines a tx broadcasting mode where the client returns immediately. |
+
+
+
+<a name="cosmos.tx.v1beta1.OrderBy"></a>
+
+### OrderBy
+OrderBy defines the sorting order
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ORDER_BY_UNSPECIFIED | 0 | ORDER_BY_UNSPECIFIED specifies an unknown sorting order. OrderBy defaults to ASC in this case. |
+| ORDER_BY_ASC | 1 | ORDER_BY_ASC defines ascending order |
+| ORDER_BY_DESC | 2 | ORDER_BY_DESC defines descending order |
 
 
  <!-- end enums -->
@@ -7407,7 +7444,6 @@ Plan specifies information about a planned upgrade and when it should occur.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time after which the upgrade must be performed. Leave set to its zero value to use a pre-defined Height instead. |
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
 

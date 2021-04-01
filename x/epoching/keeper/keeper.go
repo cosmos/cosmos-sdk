@@ -71,7 +71,7 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 	k.SetNewActionID(ctx, actionID+1)
 }
 
-// RestoreEpochAction restore the actions that need to be exectued on next epoch
+// RestoreEpochAction restore the actions that need to be executed on next epoch
 func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *codectypes.Any) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -119,8 +119,7 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
 
 // GetEpochActionsIterator returns iterator for EpochActions
 func (k Keeper) GetEpochActionsIterator(ctx sdk.Context) db.Iterator {
-	prefixKey := fmt.Sprintf("%s", EpochActionQueuePrefix)
-	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(prefixKey))
+	return sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
 }
 
 // DequeueEpochActions dequeue all the actions store on epoch

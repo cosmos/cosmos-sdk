@@ -5,28 +5,11 @@ import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/server/grpc/appreflection";
 
-// ReflectionService defines a service for application reflection.
-service ReflectionService {
-  // GetAppDescriptor returns the full cosmos application descriptor
-  rpc GetAppDescriptor(GetAppDescriptorRequest) returns (GetAppDescriptorResponse) {
-    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor";
-  };
-  // ListAllInterfaces lists all the interfaces registered in the interface
-  // registry.
-  rpc ListAllInterfaces(ListAllInterfacesRequest) returns (ListAllInterfacesResponse) {
-    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces";
-  };
-
-  // ListImplementations list all the concrete types that implement a given
-  // interface.
-  rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {
-    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces/"
-                                   "{interface_name}/implementations";
-  };
-}
-
 // AppDescriptor describes a cosmos-sdk based application
 message AppDescriptor {
+  // AuthnDescriptor provides information on how to authenticate transactions on the application
+  // NOTE: experimental and subject to change in future releases.
+  AuthnDescriptor authn = 1;
   // chain provides the chain descriptor
   ChainDescriptor chain = 2;
   // codec provides metadata information regarding codec related types
@@ -45,11 +28,9 @@ message TxDescriptor {
   // it is not meant to support polymorphism of transaction types, it is supposed to be used by
   // reflection clients to understand if they can handle a specific transaction type in an application.
   string fullname = 1;
-  // authn provides information on how to authenticate a transaction in offline mode
-  AuthnDescriptor authn = 2;
   // msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg)
   // NOTE: not to be confused with proto.Message types
-  repeated MsgDescriptor msgs = 3;
+  repeated MsgDescriptor msgs = 2;
 }
 
 // AuthnDescriptor provides information on how to sign transactions without relying
@@ -149,14 +130,97 @@ message ServiceMsgDescriptor {
   string response_fullname = 4;
 }
 
-// GetAppDescriptorRequest is the request type of the GetAppDescriptor RPC.
-message GetAppDescriptorRequest {}
+// ReflectionService defines a service for application reflection.
+service ReflectionService {
+  // GetAuthnDescriptor returns information on how to authenticate transactions in the application
+  // NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
+  // future releases of the cosmos-sdk.
+  rpc GetAuthnDescriptor(GetAuthnDescriptorRequest) returns (GetAuthnDescriptorResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/authn";
+  }
+  // GetChainDescriptor returns the description of the chain
+  rpc GetChainDescriptor(GetChainDescriptorRequest) returns (GetChainDescriptorResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/chain";
+  };
+  // GetCodecDescriptor returns the descriptor of the codec of the application
+  rpc GetCodecDescriptor(GetCodecDescriptorRequest) returns (GetCodecDescriptorResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/codec";
+  }
+  // GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
+  rpc GetConfigurationDescriptor(GetConfigurationDescriptorRequest) returns (GetConfigurationDescriptorResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/configuration";
+  }
+  // GetQueryServicesDescriptor returns the available gRPC queryable services of the application
+  rpc GetQueryServicesDescriptor(GetQueryServicesDescriptorRequest) returns (GetQueryServicesDescriptorResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/query_services";
+  }
+  // GetTxDescriptor returns information on the used transaction object and available msgs that can be used
+  rpc GetTxDescriptor(GetTxDescriptorRequest) returns (GetTxDescriptorResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/app_descriptor/tx_descriptor";
+  }
+  // ListAllInterfaces lists all the interfaces registered in the interface
+  // registry.
+  rpc ListAllInterfaces(ListAllInterfacesRequest) returns (ListAllInterfacesResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces";
+  };
 
-// GetAppDescriptorResponse is the response type of the GetAppDescriptor RPC.
-message GetAppDescriptorResponse {
-  // app contains the cosmos-sdk application descriptor
-  AppDescriptor app = 1;
+  // ListImplementations list all the concrete types that implement a given
+  // interface.
+  rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {
+    option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces/"
+        "{interface_name}/implementations";
+  };
 }
+
+// GetAuthnDescriptorRequest is the request used for the GetAuthnDescriptor RPC
+message GetAuthnDescriptorRequest {}
+// GetAuthnDescriptorResponse is the response returned by the GetAuthnDescriptor RPC
+message GetAuthnDescriptorResponse {
+  // authn describes how to authenticate to the application when sending transactions
+  AuthnDescriptor authn = 1;
+}
+
+// GetChainDescriptorRequest is the request used for the GetChainDescriptor RPC
+message GetChainDescriptorRequest {}
+// GetChainDescriptorResponse is the response returned by the GetChainDescriptor RPC
+message GetChainDescriptorResponse {
+  // chain describes application chain information
+  ChainDescriptor chain = 1;
+}
+
+// GetCodecDescriptorRequest is the request used for the GetCodecDescriptor RPC
+message GetCodecDescriptorRequest {}
+// GetCodecDescriptorResponse is the response returned by the GetCodecDescriptor RPC
+message GetCodecDescriptorResponse {
+  // codec describes the application codec such as registered interfaces and implementations
+  CodecDescriptor codec = 1;
+}
+
+// GetConfigurationDescriptorRequest is the request used for the GetConfigurationDescriptor RPC
+message GetConfigurationDescriptorRequest {}
+// GetConfigurationDescriptorResponse is the response returned by the GetConfigurationDescriptor RPC
+message GetConfigurationDescriptorResponse {
+  // config describes the application's sdk.Config
+  ConfigurationDescriptor config = 1;
+}
+
+// GetQueryServicesDescriptorRequest is the request used for the GetQueryServicesDescriptor RPC
+message GetQueryServicesDescriptorRequest {}
+// GetQueryServicesDescriptorResponse is the response returned by the GetQueryServicesDescriptor RPC
+message GetQueryServicesDescriptorResponse {
+  // queries provides information on the available queryable services
+  QueryServicesDescriptor queries = 1;
+}
+
+// GetTxDescriptorRequest is the request used for the GetTxDescriptor RPC
+message GetTxDescriptorRequest {}
+// GetTxDescriptorResponse is the response returned by the GetTxDescriptor RPC
+message GetTxDescriptorResponse {
+  // tx provides information on msgs that can be forwarded to the application
+  // alongside the accepted transaction protobuf type
+  TxDescriptor tx = 1;
+}
+
 
 // QueryServicesDescriptor contains the list of cosmos-sdk queriable services
 message QueryServicesDescriptor {

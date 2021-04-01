@@ -39,6 +39,30 @@ type reflectionServiceServer struct {
 	interfaceImplementers map[string][]string
 }
 
+func (r reflectionServiceServer) GetAuthnDescriptor(_ context.Context, _ *GetAuthnDescriptorRequest) (*GetAuthnDescriptorResponse, error) {
+	return &GetAuthnDescriptorResponse{Authn: r.desc.Authn}, nil
+}
+
+func (r reflectionServiceServer) GetChainDescriptor(_ context.Context, _ *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error) {
+	return &GetChainDescriptorResponse{Chain: r.desc.Chain}, nil
+}
+
+func (r reflectionServiceServer) GetCodecDescriptor(_ context.Context, _ *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error) {
+	return &GetCodecDescriptorResponse{Codec: r.desc.Codec}, nil
+}
+
+func (r reflectionServiceServer) GetConfigurationDescriptor(_ context.Context, _ *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
+	return &GetConfigurationDescriptorResponse{Config: r.desc.Configuration}, nil
+}
+
+func (r reflectionServiceServer) GetQueryServicesDescriptor(_ context.Context, _ *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
+	return &GetQueryServicesDescriptorResponse{Queries: r.desc.QueryServices}, nil
+}
+
+func (r reflectionServiceServer) GetTxDescriptor(_ context.Context, _ *GetTxDescriptorRequest) (*GetTxDescriptorResponse, error) {
+	return &GetTxDescriptorResponse{Tx: r.desc.Tx}, nil
+}
+
 func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionServiceServer, error) {
 	// set chain descriptor
 	chainDescriptor := &ChainDescriptor{Id: conf.ChainID}
@@ -54,17 +78,20 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 	// set query service descriptor
 	queryServiceDescriptor := newQueryServiceDescriptor(grpcSrv)
 	// set deliver descriptor
-	txDescriptor, err := newTxDescriptor(conf.InterfaceRegistry, conf.SigningModes)
+	txDescriptor, err := newTxDescriptor(conf.InterfaceRegistry)
 	if err != nil {
 		return reflectionServiceServer{}, fmt.Errorf("unable to create deliver descriptor: %w", err)
 	}
+	authnDescriptor := newAuthnDescriptor(conf.SigningModes)
 	desc := &AppDescriptor{
+		Authn:         authnDescriptor,
 		Chain:         chainDescriptor,
 		Codec:         codecDescriptor,
 		Configuration: configurationDescriptor,
 		QueryServices: queryServiceDescriptor,
 		Tx:            txDescriptor,
 	}
+
 	ifaceList := make([]string, len(desc.Codec.Interfaces))
 	ifaceImplementers := make(map[string][]string, len(desc.Codec.Interfaces))
 	for i, iface := range desc.Codec.Interfaces {
@@ -80,10 +107,6 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		interfacesList:        ifaceList,
 		interfaceImplementers: ifaceImplementers,
 	}, nil
-}
-
-func (r reflectionServiceServer) GetAppDescriptor(_ context.Context, _ *GetAppDescriptorRequest) (*GetAppDescriptorResponse, error) {
-	return &GetAppDescriptorResponse{App: r.desc}, nil
 }
 
 func (r reflectionServiceServer) ListAllInterfaces(_ context.Context, _ *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
@@ -159,7 +182,7 @@ func newQueryServiceDescriptor(srv *grpc.Server) *QueryServicesDescriptor {
 	return &QueryServicesDescriptor{QueryServices: queryServices}
 }
 
-func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes map[string]int32) (*TxDescriptor, error) {
+func newTxDescriptor(ir codectypes.InterfaceRegistry) (*TxDescriptor, error) {
 	// get base tx type name
 	txPbName := proto.MessageName(&tx.Tx{})
 	if txPbName == "" {
@@ -194,6 +217,13 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes map[string]in
 			},
 		}})
 	}
+	return &TxDescriptor{
+		Fullname: txPbName,
+		Msgs:     msgsDesc,
+	}, nil
+}
+
+func newAuthnDescriptor(signingModes map[string]int32) *AuthnDescriptor {
 	signModesDesc := make([]*SigningModeDescriptor, 0, len(signingModes))
 	for i, m := range signingModes {
 		signModesDesc = append(signModesDesc, &SigningModeDescriptor{
@@ -204,11 +234,5 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry, signingModes map[string]in
 			AuthnInfoProviderMethodFullname: "",
 		})
 	}
-	return &TxDescriptor{
-		Fullname: txPbName,
-		Authn: &AuthnDescriptor{
-			SignModes: signModesDesc,
-		},
-		Msgs: msgsDesc,
-	}, nil
+	return &AuthnDescriptor{SignModes: signModesDesc}
 }

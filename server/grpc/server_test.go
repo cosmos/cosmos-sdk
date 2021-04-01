@@ -122,19 +122,19 @@ func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestAppReflection() {
+func (s *IntegrationTestSuite) TestGRPCServer_AppReflection() {
 	// this tests the application reflection capabilities
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	c := appreflection.NewReflectionServiceClient(s.conn)
-	appDesc, err := c.GetAppDescriptor(ctx, nil)
+	codecDesc, err := c.GetCodecDescriptor(ctx, nil)
 	s.Require().NoError(err)
 
 	interfaces, err := c.ListAllInterfaces(ctx, nil)
 	s.Require().NoError(err)
-	s.Require().Equal(len(appDesc.App.Codec.Interfaces), len(interfaces.InterfaceNames))
-	s.Require().Equal(len(s.cfg.InterfaceRegistry.ListAllInterfaces()), len(appDesc.App.Codec.Interfaces))
+	s.Require().Equal(len(codecDesc.Codec.Interfaces), len(interfaces.InterfaceNames))
+	s.Require().Equal(len(s.cfg.InterfaceRegistry.ListAllInterfaces()), len(codecDesc.Codec.Interfaces))
 
 	for _, iface := range interfaces.InterfaceNames {
 		impls, err := c.ListImplementations(ctx, &appreflection.ListImplementationsRequest{InterfaceName: iface})

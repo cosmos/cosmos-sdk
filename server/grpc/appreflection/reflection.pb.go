@@ -30,6 +30,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AppDescriptor describes a cosmos-sdk based application
 type AppDescriptor struct {
+	// AuthnDescriptor provides information on how to authenticate transactions on the application
+	// NOTE: experimental and subject to change in future releases.
+	Authn *AuthnDescriptor `protobuf:"bytes,1,opt,name=authn,proto3" json:"authn,omitempty"`
 	// chain provides the chain descriptor
 	Chain *ChainDescriptor `protobuf:"bytes,2,opt,name=chain,proto3" json:"chain,omitempty"`
 	// codec provides metadata information regarding codec related types
@@ -75,6 +78,13 @@ func (m *AppDescriptor) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AppDescriptor proto.InternalMessageInfo
 
+func (m *AppDescriptor) GetAuthn() *AuthnDescriptor {
+	if m != nil {
+		return m.Authn
+	}
+	return nil
+}
+
 func (m *AppDescriptor) GetChain() *ChainDescriptor {
 	if m != nil {
 		return m.Chain
@@ -116,11 +126,9 @@ type TxDescriptor struct {
 	// it is not meant to support polymorphism of transaction types, it is supposed to be used by
 	// reflection clients to understand if they can handle a specific transaction type in an application.
 	Fullname string `protobuf:"bytes,1,opt,name=fullname,proto3" json:"fullname,omitempty"`
-	// authn provides information on how to authenticate a transaction in offline mode
-	Authn *AuthnDescriptor `protobuf:"bytes,2,opt,name=authn,proto3" json:"authn,omitempty"`
 	// msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg)
 	// NOTE: not to be confused with proto.Message types
-	Msgs []*MsgDescriptor `protobuf:"bytes,3,rep,name=msgs,proto3" json:"msgs,omitempty"`
+	Msgs []*MsgDescriptor `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
 }
 
 func (m *TxDescriptor) Reset()         { *m = TxDescriptor{} }
@@ -161,13 +169,6 @@ func (m *TxDescriptor) GetFullname() string {
 		return m.Fullname
 	}
 	return ""
-}
-
-func (m *TxDescriptor) GetAuthn() *AuthnDescriptor {
-	if m != nil {
-		return m.Authn
-	}
-	return nil
 }
 
 func (m *TxDescriptor) GetMsgs() []*MsgDescriptor {
@@ -763,22 +764,22 @@ func (m *ServiceMsgDescriptor) GetResponseFullname() string {
 	return ""
 }
 
-// GetAppDescriptorRequest is the request type of the GetAppDescriptor RPC.
-type GetAppDescriptorRequest struct {
+// GetAuthnDescriptorRequest is the request used for the GetAuthnDescriptor RPC
+type GetAuthnDescriptorRequest struct {
 }
 
-func (m *GetAppDescriptorRequest) Reset()         { *m = GetAppDescriptorRequest{} }
-func (m *GetAppDescriptorRequest) String() string { return proto.CompactTextString(m) }
-func (*GetAppDescriptorRequest) ProtoMessage()    {}
-func (*GetAppDescriptorRequest) Descriptor() ([]byte, []int) {
+func (m *GetAuthnDescriptorRequest) Reset()         { *m = GetAuthnDescriptorRequest{} }
+func (m *GetAuthnDescriptorRequest) String() string { return proto.CompactTextString(m) }
+func (*GetAuthnDescriptorRequest) ProtoMessage()    {}
+func (*GetAuthnDescriptorRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d48c054165687f5c, []int{12}
 }
-func (m *GetAppDescriptorRequest) XXX_Unmarshal(b []byte) error {
+func (m *GetAuthnDescriptorRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetAppDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GetAuthnDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetAppDescriptorRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GetAuthnDescriptorRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -788,36 +789,36 @@ func (m *GetAppDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *GetAppDescriptorRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetAppDescriptorRequest.Merge(m, src)
+func (m *GetAuthnDescriptorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuthnDescriptorRequest.Merge(m, src)
 }
-func (m *GetAppDescriptorRequest) XXX_Size() int {
+func (m *GetAuthnDescriptorRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetAppDescriptorRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetAppDescriptorRequest.DiscardUnknown(m)
+func (m *GetAuthnDescriptorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuthnDescriptorRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetAppDescriptorRequest proto.InternalMessageInfo
+var xxx_messageInfo_GetAuthnDescriptorRequest proto.InternalMessageInfo
 
-// GetAppDescriptorResponse is the response type of the GetAppDescriptor RPC.
-type GetAppDescriptorResponse struct {
-	// app contains the cosmos-sdk application descriptor
-	App *AppDescriptor `protobuf:"bytes,1,opt,name=app,proto3" json:"app,omitempty"`
+// GetAuthnDescriptorResponse is the response returned by the GetAuthnDescriptor RPC
+type GetAuthnDescriptorResponse struct {
+	// authn describes how to authenticate to the application when sending transactions
+	Authn *AuthnDescriptor `protobuf:"bytes,1,opt,name=authn,proto3" json:"authn,omitempty"`
 }
 
-func (m *GetAppDescriptorResponse) Reset()         { *m = GetAppDescriptorResponse{} }
-func (m *GetAppDescriptorResponse) String() string { return proto.CompactTextString(m) }
-func (*GetAppDescriptorResponse) ProtoMessage()    {}
-func (*GetAppDescriptorResponse) Descriptor() ([]byte, []int) {
+func (m *GetAuthnDescriptorResponse) Reset()         { *m = GetAuthnDescriptorResponse{} }
+func (m *GetAuthnDescriptorResponse) String() string { return proto.CompactTextString(m) }
+func (*GetAuthnDescriptorResponse) ProtoMessage()    {}
+func (*GetAuthnDescriptorResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d48c054165687f5c, []int{13}
 }
-func (m *GetAppDescriptorResponse) XXX_Unmarshal(b []byte) error {
+func (m *GetAuthnDescriptorResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetAppDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GetAuthnDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetAppDescriptorResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GetAuthnDescriptorResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -827,21 +828,437 @@ func (m *GetAppDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *GetAppDescriptorResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetAppDescriptorResponse.Merge(m, src)
+func (m *GetAuthnDescriptorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuthnDescriptorResponse.Merge(m, src)
 }
-func (m *GetAppDescriptorResponse) XXX_Size() int {
+func (m *GetAuthnDescriptorResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetAppDescriptorResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetAppDescriptorResponse.DiscardUnknown(m)
+func (m *GetAuthnDescriptorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuthnDescriptorResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetAppDescriptorResponse proto.InternalMessageInfo
+var xxx_messageInfo_GetAuthnDescriptorResponse proto.InternalMessageInfo
 
-func (m *GetAppDescriptorResponse) GetApp() *AppDescriptor {
+func (m *GetAuthnDescriptorResponse) GetAuthn() *AuthnDescriptor {
 	if m != nil {
-		return m.App
+		return m.Authn
+	}
+	return nil
+}
+
+// GetChainDescriptorRequest is the request used for the GetChainDescriptor RPC
+type GetChainDescriptorRequest struct {
+}
+
+func (m *GetChainDescriptorRequest) Reset()         { *m = GetChainDescriptorRequest{} }
+func (m *GetChainDescriptorRequest) String() string { return proto.CompactTextString(m) }
+func (*GetChainDescriptorRequest) ProtoMessage()    {}
+func (*GetChainDescriptorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{14}
+}
+func (m *GetChainDescriptorRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetChainDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetChainDescriptorRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetChainDescriptorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetChainDescriptorRequest.Merge(m, src)
+}
+func (m *GetChainDescriptorRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetChainDescriptorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetChainDescriptorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetChainDescriptorRequest proto.InternalMessageInfo
+
+// GetChainDescriptorResponse is the response returned by the GetChainDescriptor RPC
+type GetChainDescriptorResponse struct {
+	// chain describes application chain information
+	Chain *ChainDescriptor `protobuf:"bytes,1,opt,name=chain,proto3" json:"chain,omitempty"`
+}
+
+func (m *GetChainDescriptorResponse) Reset()         { *m = GetChainDescriptorResponse{} }
+func (m *GetChainDescriptorResponse) String() string { return proto.CompactTextString(m) }
+func (*GetChainDescriptorResponse) ProtoMessage()    {}
+func (*GetChainDescriptorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{15}
+}
+func (m *GetChainDescriptorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetChainDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetChainDescriptorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetChainDescriptorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetChainDescriptorResponse.Merge(m, src)
+}
+func (m *GetChainDescriptorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetChainDescriptorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetChainDescriptorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetChainDescriptorResponse proto.InternalMessageInfo
+
+func (m *GetChainDescriptorResponse) GetChain() *ChainDescriptor {
+	if m != nil {
+		return m.Chain
+	}
+	return nil
+}
+
+// GetCodecDescriptorRequest is the request used for the GetCodecDescriptor RPC
+type GetCodecDescriptorRequest struct {
+}
+
+func (m *GetCodecDescriptorRequest) Reset()         { *m = GetCodecDescriptorRequest{} }
+func (m *GetCodecDescriptorRequest) String() string { return proto.CompactTextString(m) }
+func (*GetCodecDescriptorRequest) ProtoMessage()    {}
+func (*GetCodecDescriptorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{16}
+}
+func (m *GetCodecDescriptorRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetCodecDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetCodecDescriptorRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetCodecDescriptorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetCodecDescriptorRequest.Merge(m, src)
+}
+func (m *GetCodecDescriptorRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetCodecDescriptorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetCodecDescriptorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetCodecDescriptorRequest proto.InternalMessageInfo
+
+// GetCodecDescriptorResponse is the response returned by the GetCodecDescriptor RPC
+type GetCodecDescriptorResponse struct {
+	// codec describes the application codec such as registered interfaces and implementations
+	Codec *CodecDescriptor `protobuf:"bytes,1,opt,name=codec,proto3" json:"codec,omitempty"`
+}
+
+func (m *GetCodecDescriptorResponse) Reset()         { *m = GetCodecDescriptorResponse{} }
+func (m *GetCodecDescriptorResponse) String() string { return proto.CompactTextString(m) }
+func (*GetCodecDescriptorResponse) ProtoMessage()    {}
+func (*GetCodecDescriptorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{17}
+}
+func (m *GetCodecDescriptorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetCodecDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetCodecDescriptorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetCodecDescriptorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetCodecDescriptorResponse.Merge(m, src)
+}
+func (m *GetCodecDescriptorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetCodecDescriptorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetCodecDescriptorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetCodecDescriptorResponse proto.InternalMessageInfo
+
+func (m *GetCodecDescriptorResponse) GetCodec() *CodecDescriptor {
+	if m != nil {
+		return m.Codec
+	}
+	return nil
+}
+
+// GetConfigurationDescriptorRequest is the request used for the GetConfigurationDescriptor RPC
+type GetConfigurationDescriptorRequest struct {
+}
+
+func (m *GetConfigurationDescriptorRequest) Reset()         { *m = GetConfigurationDescriptorRequest{} }
+func (m *GetConfigurationDescriptorRequest) String() string { return proto.CompactTextString(m) }
+func (*GetConfigurationDescriptorRequest) ProtoMessage()    {}
+func (*GetConfigurationDescriptorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{18}
+}
+func (m *GetConfigurationDescriptorRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetConfigurationDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetConfigurationDescriptorRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetConfigurationDescriptorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetConfigurationDescriptorRequest.Merge(m, src)
+}
+func (m *GetConfigurationDescriptorRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetConfigurationDescriptorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetConfigurationDescriptorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetConfigurationDescriptorRequest proto.InternalMessageInfo
+
+// GetConfigurationDescriptorResponse is the response returned by the GetConfigurationDescriptor RPC
+type GetConfigurationDescriptorResponse struct {
+	// config describes the application's sdk.Config
+	Config *ConfigurationDescriptor `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+}
+
+func (m *GetConfigurationDescriptorResponse) Reset()         { *m = GetConfigurationDescriptorResponse{} }
+func (m *GetConfigurationDescriptorResponse) String() string { return proto.CompactTextString(m) }
+func (*GetConfigurationDescriptorResponse) ProtoMessage()    {}
+func (*GetConfigurationDescriptorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{19}
+}
+func (m *GetConfigurationDescriptorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetConfigurationDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetConfigurationDescriptorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetConfigurationDescriptorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetConfigurationDescriptorResponse.Merge(m, src)
+}
+func (m *GetConfigurationDescriptorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetConfigurationDescriptorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetConfigurationDescriptorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetConfigurationDescriptorResponse proto.InternalMessageInfo
+
+func (m *GetConfigurationDescriptorResponse) GetConfig() *ConfigurationDescriptor {
+	if m != nil {
+		return m.Config
+	}
+	return nil
+}
+
+// GetQueryServicesDescriptorRequest is the request used for the GetQueryServicesDescriptor RPC
+type GetQueryServicesDescriptorRequest struct {
+}
+
+func (m *GetQueryServicesDescriptorRequest) Reset()         { *m = GetQueryServicesDescriptorRequest{} }
+func (m *GetQueryServicesDescriptorRequest) String() string { return proto.CompactTextString(m) }
+func (*GetQueryServicesDescriptorRequest) ProtoMessage()    {}
+func (*GetQueryServicesDescriptorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{20}
+}
+func (m *GetQueryServicesDescriptorRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetQueryServicesDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetQueryServicesDescriptorRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetQueryServicesDescriptorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetQueryServicesDescriptorRequest.Merge(m, src)
+}
+func (m *GetQueryServicesDescriptorRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetQueryServicesDescriptorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetQueryServicesDescriptorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetQueryServicesDescriptorRequest proto.InternalMessageInfo
+
+// GetQueryServicesDescriptorResponse is the response returned by the GetQueryServicesDescriptor RPC
+type GetQueryServicesDescriptorResponse struct {
+	// queries provides information on the available queryable services
+	Queries *QueryServicesDescriptor `protobuf:"bytes,1,opt,name=queries,proto3" json:"queries,omitempty"`
+}
+
+func (m *GetQueryServicesDescriptorResponse) Reset()         { *m = GetQueryServicesDescriptorResponse{} }
+func (m *GetQueryServicesDescriptorResponse) String() string { return proto.CompactTextString(m) }
+func (*GetQueryServicesDescriptorResponse) ProtoMessage()    {}
+func (*GetQueryServicesDescriptorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{21}
+}
+func (m *GetQueryServicesDescriptorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetQueryServicesDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetQueryServicesDescriptorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetQueryServicesDescriptorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetQueryServicesDescriptorResponse.Merge(m, src)
+}
+func (m *GetQueryServicesDescriptorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetQueryServicesDescriptorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetQueryServicesDescriptorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetQueryServicesDescriptorResponse proto.InternalMessageInfo
+
+func (m *GetQueryServicesDescriptorResponse) GetQueries() *QueryServicesDescriptor {
+	if m != nil {
+		return m.Queries
+	}
+	return nil
+}
+
+// GetTxDescriptorRequest is the request used for the GetTxDescriptor RPC
+type GetTxDescriptorRequest struct {
+}
+
+func (m *GetTxDescriptorRequest) Reset()         { *m = GetTxDescriptorRequest{} }
+func (m *GetTxDescriptorRequest) String() string { return proto.CompactTextString(m) }
+func (*GetTxDescriptorRequest) ProtoMessage()    {}
+func (*GetTxDescriptorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{22}
+}
+func (m *GetTxDescriptorRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetTxDescriptorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetTxDescriptorRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetTxDescriptorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetTxDescriptorRequest.Merge(m, src)
+}
+func (m *GetTxDescriptorRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetTxDescriptorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetTxDescriptorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetTxDescriptorRequest proto.InternalMessageInfo
+
+// GetTxDescriptorResponse is the response returned by the GetTxDescriptor RPC
+type GetTxDescriptorResponse struct {
+	// tx provides information on msgs that can be forwarded to the application
+	// alongside the accepted transaction protobuf type
+	Tx *TxDescriptor `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+}
+
+func (m *GetTxDescriptorResponse) Reset()         { *m = GetTxDescriptorResponse{} }
+func (m *GetTxDescriptorResponse) String() string { return proto.CompactTextString(m) }
+func (*GetTxDescriptorResponse) ProtoMessage()    {}
+func (*GetTxDescriptorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d48c054165687f5c, []int{23}
+}
+func (m *GetTxDescriptorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetTxDescriptorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetTxDescriptorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetTxDescriptorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetTxDescriptorResponse.Merge(m, src)
+}
+func (m *GetTxDescriptorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetTxDescriptorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetTxDescriptorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetTxDescriptorResponse proto.InternalMessageInfo
+
+func (m *GetTxDescriptorResponse) GetTx() *TxDescriptor {
+	if m != nil {
+		return m.Tx
 	}
 	return nil
 }
@@ -856,7 +1273,7 @@ func (m *QueryServicesDescriptor) Reset()         { *m = QueryServicesDescriptor
 func (m *QueryServicesDescriptor) String() string { return proto.CompactTextString(m) }
 func (*QueryServicesDescriptor) ProtoMessage()    {}
 func (*QueryServicesDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d48c054165687f5c, []int{14}
+	return fileDescriptor_d48c054165687f5c, []int{24}
 }
 func (m *QueryServicesDescriptor) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -904,7 +1321,7 @@ func (m *QueryServiceDescriptor) Reset()         { *m = QueryServiceDescriptor{}
 func (m *QueryServiceDescriptor) String() string { return proto.CompactTextString(m) }
 func (*QueryServiceDescriptor) ProtoMessage()    {}
 func (*QueryServiceDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d48c054165687f5c, []int{15}
+	return fileDescriptor_d48c054165687f5c, []int{25}
 }
 func (m *QueryServiceDescriptor) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -962,7 +1379,7 @@ func (m *QueryMethodDescriptor) Reset()         { *m = QueryMethodDescriptor{} }
 func (m *QueryMethodDescriptor) String() string { return proto.CompactTextString(m) }
 func (*QueryMethodDescriptor) ProtoMessage()    {}
 func (*QueryMethodDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d48c054165687f5c, []int{16}
+	return fileDescriptor_d48c054165687f5c, []int{26}
 }
 func (m *QueryMethodDescriptor) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1013,7 +1430,7 @@ func (m *ListAllInterfacesRequest) Reset()         { *m = ListAllInterfacesReque
 func (m *ListAllInterfacesRequest) String() string { return proto.CompactTextString(m) }
 func (*ListAllInterfacesRequest) ProtoMessage()    {}
 func (*ListAllInterfacesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d48c054165687f5c, []int{17}
+	return fileDescriptor_d48c054165687f5c, []int{27}
 }
 func (m *ListAllInterfacesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1052,7 +1469,7 @@ func (m *ListAllInterfacesResponse) Reset()         { *m = ListAllInterfacesResp
 func (m *ListAllInterfacesResponse) String() string { return proto.CompactTextString(m) }
 func (*ListAllInterfacesResponse) ProtoMessage()    {}
 func (*ListAllInterfacesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d48c054165687f5c, []int{18}
+	return fileDescriptor_d48c054165687f5c, []int{28}
 }
 func (m *ListAllInterfacesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1099,7 +1516,7 @@ func (m *ListImplementationsRequest) Reset()         { *m = ListImplementationsR
 func (m *ListImplementationsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListImplementationsRequest) ProtoMessage()    {}
 func (*ListImplementationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d48c054165687f5c, []int{19}
+	return fileDescriptor_d48c054165687f5c, []int{29}
 }
 func (m *ListImplementationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1145,7 +1562,7 @@ func (m *ListImplementationsResponse) Reset()         { *m = ListImplementations
 func (m *ListImplementationsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListImplementationsResponse) ProtoMessage()    {}
 func (*ListImplementationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_d48c054165687f5c, []int{20}
+	return fileDescriptor_d48c054165687f5c, []int{30}
 }
 func (m *ListImplementationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1194,8 +1611,18 @@ func init() {
 	proto.RegisterType((*ConfigurationDescriptor)(nil), "cosmos.base.reflection.v1beta1.ConfigurationDescriptor")
 	proto.RegisterType((*MsgDescriptor)(nil), "cosmos.base.reflection.v1beta1.MsgDescriptor")
 	proto.RegisterType((*ServiceMsgDescriptor)(nil), "cosmos.base.reflection.v1beta1.ServiceMsgDescriptor")
-	proto.RegisterType((*GetAppDescriptorRequest)(nil), "cosmos.base.reflection.v1beta1.GetAppDescriptorRequest")
-	proto.RegisterType((*GetAppDescriptorResponse)(nil), "cosmos.base.reflection.v1beta1.GetAppDescriptorResponse")
+	proto.RegisterType((*GetAuthnDescriptorRequest)(nil), "cosmos.base.reflection.v1beta1.GetAuthnDescriptorRequest")
+	proto.RegisterType((*GetAuthnDescriptorResponse)(nil), "cosmos.base.reflection.v1beta1.GetAuthnDescriptorResponse")
+	proto.RegisterType((*GetChainDescriptorRequest)(nil), "cosmos.base.reflection.v1beta1.GetChainDescriptorRequest")
+	proto.RegisterType((*GetChainDescriptorResponse)(nil), "cosmos.base.reflection.v1beta1.GetChainDescriptorResponse")
+	proto.RegisterType((*GetCodecDescriptorRequest)(nil), "cosmos.base.reflection.v1beta1.GetCodecDescriptorRequest")
+	proto.RegisterType((*GetCodecDescriptorResponse)(nil), "cosmos.base.reflection.v1beta1.GetCodecDescriptorResponse")
+	proto.RegisterType((*GetConfigurationDescriptorRequest)(nil), "cosmos.base.reflection.v1beta1.GetConfigurationDescriptorRequest")
+	proto.RegisterType((*GetConfigurationDescriptorResponse)(nil), "cosmos.base.reflection.v1beta1.GetConfigurationDescriptorResponse")
+	proto.RegisterType((*GetQueryServicesDescriptorRequest)(nil), "cosmos.base.reflection.v1beta1.GetQueryServicesDescriptorRequest")
+	proto.RegisterType((*GetQueryServicesDescriptorResponse)(nil), "cosmos.base.reflection.v1beta1.GetQueryServicesDescriptorResponse")
+	proto.RegisterType((*GetTxDescriptorRequest)(nil), "cosmos.base.reflection.v1beta1.GetTxDescriptorRequest")
+	proto.RegisterType((*GetTxDescriptorResponse)(nil), "cosmos.base.reflection.v1beta1.GetTxDescriptorResponse")
 	proto.RegisterType((*QueryServicesDescriptor)(nil), "cosmos.base.reflection.v1beta1.QueryServicesDescriptor")
 	proto.RegisterType((*QueryServiceDescriptor)(nil), "cosmos.base.reflection.v1beta1.QueryServiceDescriptor")
 	proto.RegisterType((*QueryMethodDescriptor)(nil), "cosmos.base.reflection.v1beta1.QueryMethodDescriptor")
@@ -1210,78 +1637,93 @@ func init() {
 }
 
 var fileDescriptor_d48c054165687f5c = []byte{
-	// 1135 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x57, 0x4b, 0x73, 0xdb, 0x54,
-	0x14, 0x8e, 0xec, 0xa4, 0x6d, 0x4e, 0xea, 0xb8, 0xbd, 0x6d, 0x12, 0xc7, 0x04, 0x13, 0x94, 0x01,
-	0x02, 0xb4, 0x36, 0x75, 0xda, 0xf0, 0x1c, 0xc0, 0x4d, 0x79, 0x64, 0x68, 0x20, 0x38, 0x61, 0x3a,
-	0x03, 0x14, 0x8d, 0x2c, 0x5d, 0xcb, 0x77, 0xb0, 0x74, 0x15, 0x5d, 0x39, 0xa4, 0xc3, 0xb0, 0x61,
-	0xa6, 0x7b, 0x18, 0x76, 0xfc, 0x0a, 0x16, 0x2c, 0xe9, 0x9e, 0x65, 0x67, 0xd8, 0xb0, 0x64, 0x12,
-	0x7e, 0x04, 0x4b, 0xe6, 0x3e, 0x24, 0x4b, 0x89, 0x6c, 0xb9, 0x5d, 0x25, 0x3a, 0xe7, 0xfb, 0x3e,
-	0x9d, 0xd7, 0x3d, 0x57, 0x86, 0x86, 0x45, 0x99, 0x4b, 0x59, 0xa3, 0x63, 0x32, 0xdc, 0x08, 0x70,
-	0xb7, 0x8f, 0xad, 0x90, 0x50, 0xaf, 0x71, 0x78, 0xa3, 0x83, 0x43, 0xf3, 0x46, 0xc2, 0x54, 0xf7,
-	0x03, 0x1a, 0x52, 0x54, 0x93, 0x84, 0x3a, 0x27, 0xd4, 0x13, 0x5e, 0x45, 0xa8, 0xae, 0x38, 0x94,
-	0x3a, 0x7d, 0xdc, 0x30, 0x7d, 0xd2, 0x30, 0x3d, 0x8f, 0x86, 0x26, 0x77, 0x33, 0xc9, 0xd6, 0x7f,
-	0x2d, 0x42, 0xa9, 0xe5, 0xfb, 0x77, 0x30, 0xb3, 0x02, 0xe2, 0x87, 0x34, 0x40, 0x1f, 0xc0, 0x8c,
-	0xd5, 0x33, 0x89, 0x57, 0x29, 0xac, 0x6a, 0xeb, 0x73, 0xcd, 0x46, 0x7d, 0xbc, 0x7e, 0x7d, 0x8b,
-	0x83, 0x87, 0xfc, 0xb6, 0x64, 0x0b, 0x19, 0x6a, 0x63, 0xab, 0x52, 0x9c, 0x50, 0x86, 0x83, 0x53,
-	0x32, 0xdc, 0x80, 0xee, 0x43, 0xc9, 0xa2, 0x5e, 0x97, 0x38, 0x83, 0x40, 0xc4, 0x5d, 0x99, 0x16,
-	0x72, 0xaf, 0xe7, 0xcb, 0x25, 0x48, 0x09, 0xd9, 0xb4, 0x1a, 0xfa, 0x06, 0xe6, 0x0f, 0x06, 0x38,
-	0x78, 0x60, 0x30, 0x1c, 0x1c, 0x12, 0x0b, 0xb3, 0xca, 0xcc, 0x64, 0xfa, 0x9f, 0x73, 0xd6, 0x9e,
-	0x22, 0x25, 0xf5, 0x0f, 0x92, 0x0e, 0xf4, 0x0e, 0x14, 0xc2, 0xa3, 0xca, 0x39, 0xa1, 0x79, 0x2d,
-	0x4f, 0x73, 0xff, 0x28, 0x21, 0x54, 0x08, 0x8f, 0xf4, 0xdf, 0x35, 0xb8, 0x98, 0x34, 0xa2, 0x2a,
-	0x5c, 0xe8, 0x0e, 0xfa, 0x7d, 0xcf, 0x74, 0x71, 0x45, 0x5b, 0xd5, 0xd6, 0x67, 0xdb, 0xf1, 0x33,
-	0x2f, 0xb8, 0x39, 0x08, 0x7b, 0x13, 0xf7, 0xad, 0xc5, 0xc1, 0xc9, 0x82, 0x0b, 0x36, 0x6a, 0xc1,
-	0xb4, 0xcb, 0x1c, 0x56, 0x29, 0xae, 0x16, 0xd7, 0xe7, 0x9a, 0xd7, 0xf3, 0x54, 0x76, 0x98, 0x93,
-	0xd0, 0x10, 0x54, 0xdd, 0x81, 0xf2, 0x29, 0x71, 0xb4, 0x0f, 0xc0, 0x88, 0xe3, 0x19, 0x2e, 0xb5,
-	0x31, 0xab, 0x68, 0x42, 0xfb, 0x56, 0x9e, 0xf6, 0x1e, 0x71, 0x3c, 0xe2, 0x39, 0x3b, 0xd4, 0xc6,
-	0x89, 0x77, 0xcc, 0x72, 0x21, 0x6e, 0x63, 0xfa, 0xcf, 0x1a, 0x2c, 0x64, 0x82, 0x10, 0x82, 0xe9,
-	0x44, 0x91, 0xc4, 0xff, 0x68, 0x11, 0xce, 0x79, 0x03, 0xb7, 0x83, 0x03, 0x51, 0xa1, 0x99, 0xb6,
-	0x7a, 0x42, 0x77, 0x61, 0x4d, 0xa4, 0x6e, 0x10, 0xaf, 0x4b, 0x0d, 0x3f, 0xa0, 0x87, 0xc4, 0xc6,
-	0x81, 0xe1, 0xe2, 0xb0, 0x47, 0x6d, 0x23, 0xae, 0x77, 0x51, 0x48, 0x3d, 0x27, 0xa0, 0xdb, 0x5e,
-	0x97, 0xee, 0x2a, 0xe0, 0x8e, 0xc0, 0x7d, 0xa8, 0x60, 0xfa, 0xf3, 0x50, 0x3e, 0x75, 0x22, 0xd0,
-	0x3c, 0x14, 0x88, 0xad, 0x42, 0x29, 0x10, 0x5b, 0xef, 0x42, 0xf9, 0xd4, 0xb4, 0xa3, 0x3d, 0x00,
-	0xe2, 0x85, 0x38, 0xe8, 0x9a, 0x56, 0x5c, 0x9f, 0x8d, 0xbc, 0xfa, 0x6c, 0x47, 0x8c, 0x44, 0x75,
-	0x12, 0x32, 0xfa, 0x6f, 0x05, 0xb8, 0x92, 0x81, 0x19, 0x3b, 0x45, 0x0f, 0x35, 0x58, 0x89, 0x25,
-	0x0c, 0xd3, 0xb2, 0xb0, 0x1f, 0x12, 0xcf, 0x31, 0x5c, 0xcc, 0x98, 0xe9, 0x60, 0x56, 0x29, 0x88,
-	0xd8, 0xb6, 0x26, 0x8e, 0xad, 0x15, 0x49, 0xec, 0x48, 0x85, 0x44, 0xac, 0x55, 0x32, 0x0a, 0xc4,
-	0xd0, 0x00, 0x16, 0x87, 0x61, 0x10, 0xd7, 0xef, 0x63, 0x17, 0xf3, 0xe7, 0x68, 0x30, 0xdf, 0x9d,
-	0x38, 0x80, 0xed, 0x21, 0x39, 0xf1, 0xee, 0x05, 0x92, 0xe1, 0x67, 0xfa, 0x3d, 0xa8, 0x8d, 0x27,
-	0x8e, 0x2d, 0xde, 0x32, 0x5c, 0x08, 0x1f, 0xf8, 0xd8, 0x18, 0x04, 0x7d, 0x31, 0x63, 0xb3, 0xed,
-	0xf3, 0xfc, 0xf9, 0x8b, 0xa0, 0xaf, 0x7f, 0x07, 0x6b, 0x13, 0x94, 0x64, 0xac, 0xfa, 0x4d, 0x58,
-	0xec, 0x12, 0xdc, 0xb7, 0x0d, 0x3b, 0xc6, 0x1b, 0xdc, 0x21, 0x7b, 0x32, 0xdb, 0xbe, 0x2a, 0xbc,
-	0x43, 0xb1, 0x4f, 0xb9, 0x4f, 0xff, 0x1a, 0x96, 0x46, 0xec, 0x42, 0xd4, 0x82, 0x67, 0x3b, 0xd8,
-	0xea, 0x6d, 0x34, 0x79, 0x9f, 0xe9, 0xc0, 0x0b, 0x0d, 0xd3, 0xb6, 0x03, 0xcc, 0x98, 0xe1, 0x07,
-	0xb8, 0x4b, 0x8e, 0x54, 0x04, 0x55, 0x09, 0x6a, 0x49, 0x4c, 0x4b, 0x42, 0x76, 0x05, 0x42, 0xa7,
-	0x50, 0x4a, 0x6d, 0x00, 0x74, 0x0f, 0xe6, 0xd4, 0x2a, 0x35, 0x5c, 0xe6, 0x08, 0x85, 0xb9, 0xe6,
-	0xcd, 0xdc, 0x93, 0x2e, 0x29, 0x29, 0xa9, 0x8f, 0xa7, 0xda, 0xc0, 0x62, 0xfb, 0xed, 0x19, 0x28,
-	0xba, 0xcc, 0xd1, 0x1f, 0x69, 0x70, 0x35, 0x0b, 0x8d, 0x5e, 0x86, 0x4b, 0x01, 0x3e, 0x18, 0x60,
-	0x16, 0x1a, 0xa7, 0x2a, 0x58, 0x56, 0xf6, 0xe8, 0x88, 0xa2, 0x35, 0x28, 0x45, 0xd0, 0x80, 0x0e,
-	0x42, 0xac, 0x7a, 0x75, 0x51, 0x19, 0xdb, 0xdc, 0x86, 0xd6, 0x87, 0x7a, 0x71, 0x4f, 0xe5, 0x0a,
-	0x98, 0x57, 0xf6, 0x7d, 0xd9, 0x5a, 0xf4, 0x2a, 0x5c, 0x0e, 0x30, 0xf3, 0xa9, 0xc7, 0xf0, 0xf0,
-	0xd5, 0xd3, 0x02, 0x7a, 0x29, 0x72, 0xc4, 0xeb, 0x61, 0x19, 0x96, 0x3e, 0xc2, 0x61, 0xea, 0xc6,
-	0x6d, 0x4b, 0x39, 0xfd, 0x2b, 0xa8, 0x9c, 0x75, 0x49, 0x3a, 0x7a, 0x0f, 0x8a, 0xa6, 0xef, 0xab,
-	0x72, 0xe6, 0x2e, 0xe5, 0xb4, 0x06, 0x67, 0xea, 0x47, 0xb0, 0x34, 0xe2, 0xca, 0x42, 0xf7, 0xcf,
-	0xdc, 0x81, 0x72, 0xff, 0x6c, 0x3e, 0xc9, 0x1d, 0x38, 0xf2, 0x0a, 0xd4, 0x1f, 0x6a, 0xb0, 0x98,
-	0x8d, 0x1c, 0x3b, 0xed, 0x9f, 0xc1, 0x79, 0xb9, 0x81, 0xa3, 0x95, 0x73, 0x6b, 0xa2, 0x70, 0xe4,
-	0x36, 0x4e, 0x44, 0x13, 0xa9, 0xe8, 0x7b, 0xb0, 0x90, 0x89, 0xc8, 0xbc, 0x2b, 0x5e, 0x84, 0x32,
-	0x8f, 0xc4, 0x90, 0x85, 0xf1, 0xcd, 0xb0, 0xa7, 0x86, 0xa4, 0xc4, 0xcd, 0x42, 0x67, 0xd7, 0x0c,
-	0x7b, 0x7a, 0x15, 0x2a, 0x77, 0x09, 0x0b, 0x5b, 0xfd, 0x7e, 0x7c, 0xba, 0x59, 0xd4, 0xcf, 0x3b,
-	0xb0, 0x9c, 0xe1, 0x53, 0x0d, 0x7d, 0x09, 0xca, 0xc3, 0xfd, 0x26, 0x4f, 0xb1, 0x26, 0x4e, 0xf1,
-	0x7c, 0x6c, 0x96, 0xe7, 0x77, 0x0b, 0xaa, 0x5c, 0x25, 0x5e, 0x46, 0xf2, 0xeb, 0x4d, 0xbd, 0x03,
-	0xbd, 0x00, 0xf3, 0x69, 0x19, 0x95, 0x45, 0x29, 0xa5, 0xa2, 0x1b, 0xf0, 0x4c, 0xa6, 0x88, 0x0a,
-	0xe6, 0x7d, 0x58, 0x21, 0x29, 0x57, 0xb4, 0xee, 0x53, 0x91, 0x55, 0xd3, 0x18, 0xb5, 0xbc, 0x44,
-	0x94, 0xcd, 0xff, 0xa6, 0xe1, 0x72, 0x3b, 0x6e, 0x89, 0xea, 0x34, 0x7a, 0xa4, 0xc1, 0xa5, 0xd3,
-	0x23, 0x8d, 0x72, 0x3f, 0xad, 0x46, 0x9c, 0x8f, 0xea, 0x1b, 0x4f, 0x4e, 0x94, 0xf9, 0xe9, 0x9b,
-	0x3f, 0xfe, 0xf5, 0xef, 0x2f, 0x85, 0xd7, 0x50, 0x3d, 0xef, 0xe3, 0xda, 0xf4, 0xfd, 0xc4, 0x76,
-	0x45, 0x7f, 0x68, 0x70, 0xf9, 0x4c, 0x0b, 0x51, 0x6e, 0x1c, 0xa3, 0x26, 0xa2, 0xfa, 0xe6, 0x53,
-	0x30, 0x55, 0x0a, 0x4d, 0x91, 0xc2, 0x35, 0xf4, 0x4a, 0x5e, 0x0a, 0xc3, 0xfb, 0x1f, 0x9d, 0x68,
-	0x70, 0x25, 0xa3, 0xed, 0xe8, 0xad, 0x49, 0xc2, 0xc8, 0x1e, 0xb8, 0xea, 0xdb, 0x4f, 0xc5, 0x55,
-	0x49, 0xec, 0x89, 0x24, 0x76, 0xd0, 0x27, 0x93, 0x27, 0xd1, 0xf8, 0x3e, 0x3d, 0xdf, 0x3f, 0x34,
-	0xd2, 0x53, 0xc8, 0x6e, 0xef, 0xfe, 0x79, 0x5c, 0xd3, 0x1e, 0x1f, 0xd7, 0xb4, 0x7f, 0x8e, 0x6b,
-	0xda, 0x4f, 0x27, 0xb5, 0xa9, 0xc7, 0x27, 0xb5, 0xa9, 0xbf, 0x4f, 0x6a, 0x53, 0x5f, 0x6e, 0x3a,
-	0x24, 0xec, 0x0d, 0x3a, 0x75, 0x8b, 0xba, 0xd1, 0x0b, 0xe5, 0x9f, 0xeb, 0xcc, 0xfe, 0xb6, 0xc1,
-	0xb7, 0x1d, 0x0e, 0x1a, 0x4e, 0xe0, 0x5b, 0xbc, 0xef, 0xc3, 0x28, 0x3a, 0xe7, 0xc4, 0x4f, 0xa3,
-	0x8d, 0xff, 0x03, 0x00, 0x00, 0xff, 0xff, 0x43, 0x25, 0x78, 0x65, 0x8b, 0x0d, 0x00, 0x00,
+	// 1363 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x58, 0x5d, 0x93, 0x13, 0x45,
+	0x14, 0xdd, 0x49, 0x76, 0x17, 0xf6, 0x42, 0x36, 0xd0, 0xc0, 0x12, 0x06, 0x8c, 0x30, 0x5b, 0x2a,
+	0x2a, 0x64, 0x8a, 0x05, 0x16, 0x41, 0x44, 0xc3, 0x87, 0x48, 0xc9, 0xca, 0x92, 0xc5, 0xa2, 0xca,
+	0x12, 0xa7, 0x26, 0x33, 0x9d, 0x49, 0x97, 0x99, 0x0f, 0xa6, 0x67, 0x96, 0x50, 0x96, 0x2f, 0x56,
+	0xf1, 0xae, 0xe5, 0x1f, 0xf1, 0x07, 0x68, 0x95, 0x8f, 0xf8, 0x46, 0x95, 0x2f, 0x3e, 0xea, 0xae,
+	0x2f, 0xfa, 0x2b, 0xac, 0xe9, 0xee, 0x99, 0xcc, 0x64, 0x27, 0xc9, 0x6c, 0xd6, 0x27, 0x98, 0xbe,
+	0xf7, 0x9e, 0x3e, 0xa7, 0xbb, 0xd3, 0xe7, 0xf6, 0x82, 0x6a, 0xb8, 0xd4, 0x76, 0xa9, 0xda, 0xd6,
+	0x29, 0x56, 0x7d, 0xdc, 0xe9, 0x61, 0x23, 0x20, 0xae, 0xa3, 0x6e, 0x5e, 0x68, 0xe3, 0x40, 0xbf,
+	0x90, 0x1a, 0x6a, 0x78, 0xbe, 0x1b, 0xb8, 0xa8, 0xce, 0x0b, 0x1a, 0x51, 0x41, 0x23, 0x15, 0x15,
+	0x05, 0xf2, 0x29, 0xcb, 0x75, 0xad, 0x1e, 0x56, 0x75, 0x8f, 0xa8, 0xba, 0xe3, 0xb8, 0x81, 0x1e,
+	0x85, 0x29, 0xaf, 0x56, 0xfe, 0x2a, 0x43, 0xa5, 0xe9, 0x79, 0xb7, 0x31, 0x35, 0x7c, 0xe2, 0x05,
+	0xae, 0x8f, 0xee, 0xc0, 0x9c, 0x1e, 0x06, 0x5d, 0xa7, 0x26, 0x9d, 0x96, 0xce, 0x1e, 0x58, 0x51,
+	0x1b, 0xe3, 0xf1, 0x1b, 0xcd, 0x28, 0x79, 0x50, 0xdf, 0xe2, 0xd5, 0x11, 0x8c, 0xd1, 0xd5, 0x89,
+	0x53, 0x2b, 0x15, 0x83, 0xb9, 0x15, 0x25, 0xa7, 0x61, 0x58, 0x35, 0x83, 0x71, 0x4d, 0x6c, 0xd4,
+	0xca, 0x05, 0x61, 0xa2, 0xe4, 0x0c, 0x4c, 0x34, 0x80, 0x9e, 0x40, 0xc5, 0x70, 0x9d, 0x0e, 0xb1,
+	0x42, 0x9f, 0xc9, 0xaf, 0xcd, 0x32, 0xb8, 0x2b, 0x93, 0xe1, 0x52, 0x45, 0x29, 0xd8, 0x2c, 0x1a,
+	0xfa, 0x0a, 0x16, 0x9f, 0x86, 0xd8, 0x7f, 0xae, 0x51, 0xec, 0x6f, 0x12, 0x03, 0xd3, 0xda, 0x5c,
+	0x31, 0xfc, 0x87, 0x51, 0xd5, 0x86, 0x28, 0x4a, 0xe3, 0x3f, 0x4d, 0x07, 0xd0, 0x75, 0x28, 0x05,
+	0xfd, 0xda, 0x3c, 0xc3, 0x3c, 0x37, 0x09, 0xf3, 0x51, 0x3f, 0x05, 0x54, 0x0a, 0xfa, 0x8a, 0x0d,
+	0x07, 0xd3, 0x63, 0x48, 0x86, 0xfd, 0x9d, 0xb0, 0xd7, 0x73, 0x74, 0x1b, 0xb3, 0x4d, 0x5e, 0x68,
+	0x25, 0xdf, 0xa8, 0x09, 0xb3, 0x36, 0xb5, 0x68, 0xad, 0x74, 0xba, 0x7c, 0xf6, 0xc0, 0xca, 0xf9,
+	0x49, 0x73, 0xad, 0x51, 0x2b, 0x35, 0x19, 0x2b, 0x55, 0x2c, 0xa8, 0x0e, 0x9d, 0x09, 0xf4, 0x08,
+	0x80, 0x12, 0xcb, 0xd1, 0x6c, 0xd7, 0xc4, 0xb4, 0x26, 0x31, 0xec, 0xcb, 0x93, 0xb0, 0x37, 0x88,
+	0xe5, 0x10, 0xc7, 0x5a, 0x73, 0x4d, 0x9c, 0x9a, 0x63, 0x21, 0x02, 0x8a, 0xc6, 0xa8, 0xf2, 0x83,
+	0x04, 0xc7, 0x72, 0x93, 0x10, 0x82, 0xd9, 0x94, 0x3a, 0xf6, 0x7f, 0xb4, 0x04, 0xf3, 0x4e, 0x68,
+	0xb7, 0xb1, 0xcf, 0x4e, 0xe4, 0x5c, 0x4b, 0x7c, 0xa1, 0xfb, 0xb0, 0xcc, 0x4e, 0xac, 0x46, 0x9c,
+	0x8e, 0xab, 0x79, 0xbe, 0xbb, 0x49, 0x4c, 0xec, 0x6b, 0x36, 0x0e, 0xba, 0xae, 0xa9, 0x25, 0x0b,
+	0x55, 0x66, 0x50, 0xaf, 0xb3, 0xd4, 0x7b, 0x4e, 0xc7, 0x5d, 0x17, 0x89, 0x6b, 0x2c, 0xef, 0x63,
+	0x91, 0xa6, 0x9c, 0x81, 0xea, 0xd0, 0x49, 0x46, 0x8b, 0x50, 0x22, 0xa6, 0xa0, 0x52, 0x22, 0xa6,
+	0xd2, 0x81, 0xea, 0xd0, 0x29, 0x45, 0x1b, 0x00, 0xc4, 0x09, 0xb0, 0xdf, 0xd1, 0x8d, 0x64, 0x7d,
+	0x2e, 0x4e, 0x5a, 0x9f, 0x7b, 0x71, 0x45, 0x6a, 0x75, 0x52, 0x30, 0xca, 0x4f, 0x25, 0x38, 0x92,
+	0x93, 0x33, 0x76, 0xfb, 0x5f, 0x48, 0x70, 0x2a, 0x81, 0xd0, 0x74, 0xc3, 0xc0, 0x5e, 0x40, 0x1c,
+	0x4b, 0xb3, 0x31, 0xa5, 0xba, 0x85, 0xe3, 0x73, 0x71, 0xab, 0x30, 0xb7, 0x66, 0x0c, 0xb1, 0xc6,
+	0x11, 0x52, 0x5c, 0x65, 0x32, 0x2a, 0x89, 0xa2, 0x10, 0x96, 0x06, 0x34, 0x88, 0xed, 0xf5, 0xb0,
+	0x8d, 0xa3, 0x6f, 0x5a, 0x2b, 0x33, 0x02, 0x37, 0x0a, 0x13, 0xb8, 0x37, 0x28, 0x4e, 0xcd, 0x7d,
+	0x8c, 0xe4, 0xc4, 0xa9, 0xf2, 0x18, 0xea, 0xe3, 0x0b, 0xc7, 0x2e, 0xde, 0x09, 0xd8, 0x1f, 0x3c,
+	0xf7, 0xb0, 0x16, 0xfa, 0x3d, 0x76, 0xc6, 0x16, 0x5a, 0xfb, 0xa2, 0xef, 0xcf, 0xfd, 0x9e, 0xf2,
+	0x0c, 0x96, 0x0b, 0x2c, 0xc9, 0x58, 0xf4, 0x4b, 0xb0, 0xd4, 0x21, 0xb8, 0x67, 0x6a, 0x66, 0x92,
+	0xaf, 0x45, 0x01, 0xbe, 0x27, 0x0b, 0xad, 0xa3, 0x2c, 0x3a, 0x00, 0xfb, 0x2c, 0x8a, 0x29, 0x5f,
+	0xc2, 0xf1, 0x11, 0x77, 0x18, 0x6a, 0xc2, 0x6b, 0x6d, 0x6c, 0x74, 0x2f, 0xae, 0x44, 0xfb, 0xec,
+	0x86, 0x4e, 0xa0, 0xe9, 0xa6, 0xe9, 0x63, 0x4a, 0x35, 0xcf, 0xc7, 0x1d, 0xd2, 0x17, 0x0c, 0x64,
+	0x9e, 0xd4, 0xe4, 0x39, 0x4d, 0x9e, 0xb2, 0xce, 0x32, 0x14, 0x17, 0x2a, 0x99, 0x1b, 0x00, 0x3d,
+	0x86, 0x03, 0xe2, 0x0a, 0xd4, 0x6c, 0x6a, 0x09, 0x0b, 0xb9, 0x34, 0xf1, 0x97, 0xce, 0x4b, 0x32,
+	0x50, 0x9f, 0xcc, 0xb4, 0x80, 0x26, 0xe3, 0x37, 0xe7, 0xa0, 0x6c, 0x53, 0x4b, 0xf9, 0x45, 0x82,
+	0xa3, 0x79, 0xd9, 0xe8, 0x6d, 0x38, 0xe4, 0xe3, 0xa7, 0x21, 0xa6, 0x81, 0x36, 0xb4, 0x82, 0x55,
+	0x31, 0x1e, 0xff, 0x44, 0xd1, 0x32, 0x54, 0xe2, 0x54, 0xdf, 0x0d, 0x03, 0x2c, 0xf6, 0xea, 0xa0,
+	0x18, 0x6c, 0x45, 0x63, 0xe8, 0xec, 0x00, 0x2f, 0xd9, 0x53, 0x7e, 0x05, 0x2c, 0x8a, 0xf1, 0x47,
+	0x7c, 0x6b, 0xd1, 0xbb, 0x70, 0xd8, 0xc7, 0xd4, 0x73, 0x1d, 0x8a, 0x07, 0x53, 0xcf, 0xb2, 0xd4,
+	0x43, 0x71, 0x20, 0xb9, 0x1e, 0x4e, 0xc2, 0x89, 0xbb, 0x38, 0x18, 0xb6, 0x4c, 0x0e, 0xa8, 0x18,
+	0x20, 0xe7, 0x05, 0x39, 0xc4, 0xff, 0xe4, 0xcb, 0x82, 0xc1, 0xb0, 0xdb, 0x66, 0x18, 0xec, 0x08,
+	0x0e, 0x18, 0x70, 0x4b, 0x97, 0xf6, 0x62, 0xe9, 0x31, 0x83, 0x21, 0xa3, 0xce, 0x32, 0x18, 0x0e,
+	0xa6, 0x18, 0xb0, 0x6e, 0x40, 0xda, 0x4b, 0x37, 0xa0, 0x2c, 0xc3, 0x19, 0x36, 0x49, 0xbe, 0xb7,
+	0x0b, 0x26, 0x21, 0x28, 0xe3, 0x92, 0x04, 0xa3, 0x07, 0x30, 0xcf, 0x5b, 0x01, 0x41, 0x69, 0xea,
+	0x8e, 0x42, 0xc0, 0x08, 0x6e, 0xa3, 0xfa, 0x02, 0xc1, 0xed, 0x19, 0xe3, 0x36, 0x32, 0x49, 0x70,
+	0x7b, 0x08, 0xfb, 0xa2, 0x36, 0x82, 0x30, 0x4b, 0xd9, 0x53, 0x3b, 0x12, 0xe3, 0x28, 0x35, 0x58,
+	0xba, 0x8b, 0x83, 0x4c, 0x87, 0x21, 0x28, 0x3d, 0x86, 0xe3, 0x3b, 0x22, 0x82, 0x07, 0xef, 0x5e,
+	0xa4, 0x29, 0xbb, 0x97, 0x3e, 0x1c, 0x1f, 0x41, 0x0b, 0x3d, 0xd9, 0xd1, 0x76, 0x71, 0xeb, 0x5c,
+	0xdd, 0x8d, 0xce, 0x91, 0x5d, 0x97, 0xf2, 0x42, 0x82, 0xa5, 0xfc, 0xcc, 0xb1, 0x17, 0xf5, 0x03,
+	0xd8, 0xc7, 0x9b, 0x87, 0xd8, 0x2d, 0x2f, 0x17, 0xa2, 0xc3, 0x1b, 0x89, 0xf4, 0xa2, 0x0b, 0x14,
+	0x65, 0x03, 0x8e, 0xe5, 0x66, 0xe4, 0xb6, 0x39, 0x6f, 0x42, 0x35, 0x62, 0xa2, 0xf1, 0x85, 0xf1,
+	0xf4, 0xa0, 0x2b, 0xee, 0xb7, 0x4a, 0x34, 0xcc, 0x70, 0xd6, 0xf5, 0xa0, 0xab, 0xc8, 0x50, 0xbb,
+	0x4f, 0x68, 0xd0, 0xec, 0xf5, 0x12, 0x63, 0xa2, 0xf1, 0x5e, 0xde, 0x86, 0x13, 0x39, 0x31, 0xb1,
+	0x9b, 0x6f, 0x41, 0x75, 0x60, 0xcd, 0xdc, 0x80, 0x24, 0x66, 0x40, 0x8b, 0xc9, 0x30, 0xb7, 0x9e,
+	0x5b, 0x20, 0x47, 0x28, 0x89, 0x8f, 0xf2, 0x77, 0x87, 0x98, 0x03, 0xbd, 0x01, 0x8b, 0x59, 0x18,
+	0xa1, 0xa2, 0x92, 0x41, 0x51, 0x34, 0x38, 0x99, 0x0b, 0x22, 0xc8, 0x7c, 0x04, 0xa7, 0x48, 0x26,
+	0x14, 0x77, 0x2a, 0x19, 0x66, 0x72, 0x36, 0x47, 0xf8, 0x2e, 0x63, 0xb9, 0xf2, 0x6b, 0x05, 0x0e,
+	0xb7, 0x92, 0x2d, 0x11, 0x3b, 0x8d, 0x7e, 0x93, 0x00, 0xed, 0xbc, 0x8b, 0xd1, 0xd5, 0x49, 0x3b,
+	0x39, 0xf2, 0x72, 0x97, 0xaf, 0x4d, 0x53, 0xca, 0x55, 0x2a, 0xd7, 0xbf, 0xfb, 0xfd, 0xef, 0x1f,
+	0x4b, 0xab, 0xe8, 0xd2, 0xa4, 0xc7, 0xa1, 0xee, 0x79, 0xa9, 0xf6, 0x40, 0xe5, 0x2f, 0x31, 0xa1,
+	0x65, 0xb8, 0x2d, 0x2d, 0xa2, 0x25, 0xdf, 0x26, 0x0a, 0x69, 0x19, 0x61, 0x22, 0x53, 0x6b, 0xe1,
+	0xcf, 0xc1, 0x58, 0xcb, 0x50, 0xff, 0x5c, 0x48, 0x4b, 0xae, 0xe1, 0x14, 0xd3, 0x92, 0x6f, 0x47,
+	0xd3, 0x6b, 0x61, 0x6f, 0xd2, 0x7f, 0x24, 0xe1, 0x75, 0x23, 0xda, 0xb3, 0x42, 0xc4, 0xc6, 0x59,
+	0x98, 0x7c, 0x73, 0x2f, 0x10, 0x42, 0xe3, 0x6d, 0xa6, 0xf1, 0x06, 0xba, 0xbe, 0x6b, 0x8d, 0xe9,
+	0x07, 0xf2, 0xbf, 0x5c, 0xeb, 0xa8, 0x8b, 0xbc, 0x88, 0xd6, 0xf1, 0x96, 0x58, 0x48, 0xeb, 0x04,
+	0xc3, 0x54, 0xee, 0x30, 0xad, 0x1f, 0xa2, 0x0f, 0x76, 0xa9, 0x35, 0x6b, 0x42, 0xe8, 0xa5, 0x04,
+	0xd5, 0x21, 0x2f, 0x44, 0xab, 0x05, 0xe8, 0xe5, 0xd8, 0xaa, 0x7c, 0x65, 0xd7, 0x75, 0x7b, 0xdc,
+	0xb7, 0xa0, 0x9f, 0xfa, 0x42, 0x3f, 0x4b, 0x70, 0x78, 0x87, 0x15, 0xa0, 0xf7, 0x26, 0x91, 0x1a,
+	0xe5, 0x2c, 0xf2, 0xd5, 0x29, 0x2a, 0x85, 0xa0, 0x15, 0x26, 0xe8, 0x1c, 0x7a, 0x67, 0x92, 0xa0,
+	0xc1, 0x13, 0x18, 0x6d, 0x4b, 0x70, 0x24, 0xc7, 0x3e, 0xd0, 0xb5, 0x22, 0x34, 0xf2, 0x8d, 0x4b,
+	0x7e, 0x7f, 0xaa, 0x5a, 0x21, 0x62, 0x83, 0x89, 0x58, 0x43, 0x9f, 0x16, 0x17, 0xa1, 0x7e, 0x93,
+	0xf5, 0xc9, 0x6f, 0xd5, 0xac, 0x9b, 0xd1, 0x9b, 0xeb, 0x2f, 0xb7, 0xea, 0xd2, 0xab, 0xad, 0xba,
+	0xf4, 0xe7, 0x56, 0x5d, 0xfa, 0x7e, 0xbb, 0x3e, 0xf3, 0x6a, 0xbb, 0x3e, 0xf3, 0xc7, 0x76, 0x7d,
+	0xe6, 0x8b, 0x55, 0x8b, 0x04, 0xdd, 0xb0, 0xdd, 0x30, 0x5c, 0x3b, 0x9e, 0x90, 0xff, 0x73, 0x9e,
+	0x9a, 0x5f, 0xab, 0xd1, 0x81, 0xc5, 0xbe, 0x6a, 0xf9, 0x9e, 0x11, 0x9d, 0x82, 0x01, 0x8b, 0xf6,
+	0x3c, 0xfb, 0xe3, 0xe0, 0xc5, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x8e, 0xa2, 0x5d, 0x41, 0x8d,
+	0x14, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1296,8 +1738,20 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ReflectionServiceClient interface {
-	// GetAppDescriptor returns the full cosmos application descriptor
-	GetAppDescriptor(ctx context.Context, in *GetAppDescriptorRequest, opts ...grpc.CallOption) (*GetAppDescriptorResponse, error)
+	// GetAuthnDescriptor returns information on how to authenticate transactions in the application
+	// NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
+	// future releases of the cosmos-sdk.
+	GetAuthnDescriptor(ctx context.Context, in *GetAuthnDescriptorRequest, opts ...grpc.CallOption) (*GetAuthnDescriptorResponse, error)
+	// GetChainDescriptor returns the description of the chain
+	GetChainDescriptor(ctx context.Context, in *GetChainDescriptorRequest, opts ...grpc.CallOption) (*GetChainDescriptorResponse, error)
+	// GetCodecDescriptor returns the descriptor of the codec of the application
+	GetCodecDescriptor(ctx context.Context, in *GetCodecDescriptorRequest, opts ...grpc.CallOption) (*GetCodecDescriptorResponse, error)
+	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
+	GetConfigurationDescriptor(ctx context.Context, in *GetConfigurationDescriptorRequest, opts ...grpc.CallOption) (*GetConfigurationDescriptorResponse, error)
+	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
+	GetQueryServicesDescriptor(ctx context.Context, in *GetQueryServicesDescriptorRequest, opts ...grpc.CallOption) (*GetQueryServicesDescriptorResponse, error)
+	// GetTxDescriptor returns information on the used transaction object and available msgs that can be used
+	GetTxDescriptor(ctx context.Context, in *GetTxDescriptorRequest, opts ...grpc.CallOption) (*GetTxDescriptorResponse, error)
 	// ListAllInterfaces lists all the interfaces registered in the interface
 	// registry.
 	ListAllInterfaces(ctx context.Context, in *ListAllInterfacesRequest, opts ...grpc.CallOption) (*ListAllInterfacesResponse, error)
@@ -1314,9 +1768,54 @@ func NewReflectionServiceClient(cc grpc1.ClientConn) ReflectionServiceClient {
 	return &reflectionServiceClient{cc}
 }
 
-func (c *reflectionServiceClient) GetAppDescriptor(ctx context.Context, in *GetAppDescriptorRequest, opts ...grpc.CallOption) (*GetAppDescriptorResponse, error) {
-	out := new(GetAppDescriptorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/GetAppDescriptor", in, out, opts...)
+func (c *reflectionServiceClient) GetAuthnDescriptor(ctx context.Context, in *GetAuthnDescriptorRequest, opts ...grpc.CallOption) (*GetAuthnDescriptorResponse, error) {
+	out := new(GetAuthnDescriptorResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/GetAuthnDescriptor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reflectionServiceClient) GetChainDescriptor(ctx context.Context, in *GetChainDescriptorRequest, opts ...grpc.CallOption) (*GetChainDescriptorResponse, error) {
+	out := new(GetChainDescriptorResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/GetChainDescriptor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reflectionServiceClient) GetCodecDescriptor(ctx context.Context, in *GetCodecDescriptorRequest, opts ...grpc.CallOption) (*GetCodecDescriptorResponse, error) {
+	out := new(GetCodecDescriptorResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/GetCodecDescriptor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reflectionServiceClient) GetConfigurationDescriptor(ctx context.Context, in *GetConfigurationDescriptorRequest, opts ...grpc.CallOption) (*GetConfigurationDescriptorResponse, error) {
+	out := new(GetConfigurationDescriptorResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/GetConfigurationDescriptor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reflectionServiceClient) GetQueryServicesDescriptor(ctx context.Context, in *GetQueryServicesDescriptorRequest, opts ...grpc.CallOption) (*GetQueryServicesDescriptorResponse, error) {
+	out := new(GetQueryServicesDescriptorResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/GetQueryServicesDescriptor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reflectionServiceClient) GetTxDescriptor(ctx context.Context, in *GetTxDescriptorRequest, opts ...grpc.CallOption) (*GetTxDescriptorResponse, error) {
+	out := new(GetTxDescriptorResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/GetTxDescriptor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1343,8 +1842,20 @@ func (c *reflectionServiceClient) ListImplementations(ctx context.Context, in *L
 
 // ReflectionServiceServer is the server API for ReflectionService service.
 type ReflectionServiceServer interface {
-	// GetAppDescriptor returns the full cosmos application descriptor
-	GetAppDescriptor(context.Context, *GetAppDescriptorRequest) (*GetAppDescriptorResponse, error)
+	// GetAuthnDescriptor returns information on how to authenticate transactions in the application
+	// NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
+	// future releases of the cosmos-sdk.
+	GetAuthnDescriptor(context.Context, *GetAuthnDescriptorRequest) (*GetAuthnDescriptorResponse, error)
+	// GetChainDescriptor returns the description of the chain
+	GetChainDescriptor(context.Context, *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error)
+	// GetCodecDescriptor returns the descriptor of the codec of the application
+	GetCodecDescriptor(context.Context, *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error)
+	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
+	GetConfigurationDescriptor(context.Context, *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error)
+	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
+	GetQueryServicesDescriptor(context.Context, *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error)
+	// GetTxDescriptor returns information on the used transaction object and available msgs that can be used
+	GetTxDescriptor(context.Context, *GetTxDescriptorRequest) (*GetTxDescriptorResponse, error)
 	// ListAllInterfaces lists all the interfaces registered in the interface
 	// registry.
 	ListAllInterfaces(context.Context, *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error)
@@ -1357,8 +1868,23 @@ type ReflectionServiceServer interface {
 type UnimplementedReflectionServiceServer struct {
 }
 
-func (*UnimplementedReflectionServiceServer) GetAppDescriptor(ctx context.Context, req *GetAppDescriptorRequest) (*GetAppDescriptorResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAppDescriptor not implemented")
+func (*UnimplementedReflectionServiceServer) GetAuthnDescriptor(ctx context.Context, req *GetAuthnDescriptorRequest) (*GetAuthnDescriptorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthnDescriptor not implemented")
+}
+func (*UnimplementedReflectionServiceServer) GetChainDescriptor(ctx context.Context, req *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetChainDescriptor not implemented")
+}
+func (*UnimplementedReflectionServiceServer) GetCodecDescriptor(ctx context.Context, req *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCodecDescriptor not implemented")
+}
+func (*UnimplementedReflectionServiceServer) GetConfigurationDescriptor(ctx context.Context, req *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConfigurationDescriptor not implemented")
+}
+func (*UnimplementedReflectionServiceServer) GetQueryServicesDescriptor(ctx context.Context, req *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetQueryServicesDescriptor not implemented")
+}
+func (*UnimplementedReflectionServiceServer) GetTxDescriptor(ctx context.Context, req *GetTxDescriptorRequest) (*GetTxDescriptorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTxDescriptor not implemented")
 }
 func (*UnimplementedReflectionServiceServer) ListAllInterfaces(ctx context.Context, req *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAllInterfaces not implemented")
@@ -1371,20 +1897,110 @@ func RegisterReflectionServiceServer(s grpc1.Server, srv ReflectionServiceServer
 	s.RegisterService(&_ReflectionService_serviceDesc, srv)
 }
 
-func _ReflectionService_GetAppDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAppDescriptorRequest)
+func _ReflectionService_GetAuthnDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuthnDescriptorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ReflectionServiceServer).GetAppDescriptor(ctx, in)
+		return srv.(ReflectionServiceServer).GetAuthnDescriptor(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/GetAppDescriptor",
+		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/GetAuthnDescriptor",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReflectionServiceServer).GetAppDescriptor(ctx, req.(*GetAppDescriptorRequest))
+		return srv.(ReflectionServiceServer).GetAuthnDescriptor(ctx, req.(*GetAuthnDescriptorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReflectionService_GetChainDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetChainDescriptorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReflectionServiceServer).GetChainDescriptor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/GetChainDescriptor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReflectionServiceServer).GetChainDescriptor(ctx, req.(*GetChainDescriptorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReflectionService_GetCodecDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCodecDescriptorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReflectionServiceServer).GetCodecDescriptor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/GetCodecDescriptor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReflectionServiceServer).GetCodecDescriptor(ctx, req.(*GetCodecDescriptorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReflectionService_GetConfigurationDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConfigurationDescriptorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReflectionServiceServer).GetConfigurationDescriptor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/GetConfigurationDescriptor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReflectionServiceServer).GetConfigurationDescriptor(ctx, req.(*GetConfigurationDescriptorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReflectionService_GetQueryServicesDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetQueryServicesDescriptorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReflectionServiceServer).GetQueryServicesDescriptor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/GetQueryServicesDescriptor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReflectionServiceServer).GetQueryServicesDescriptor(ctx, req.(*GetQueryServicesDescriptorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReflectionService_GetTxDescriptor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTxDescriptorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReflectionServiceServer).GetTxDescriptor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/GetTxDescriptor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReflectionServiceServer).GetTxDescriptor(ctx, req.(*GetTxDescriptorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1430,8 +2046,28 @@ var _ReflectionService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*ReflectionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetAppDescriptor",
-			Handler:    _ReflectionService_GetAppDescriptor_Handler,
+			MethodName: "GetAuthnDescriptor",
+			Handler:    _ReflectionService_GetAuthnDescriptor_Handler,
+		},
+		{
+			MethodName: "GetChainDescriptor",
+			Handler:    _ReflectionService_GetChainDescriptor_Handler,
+		},
+		{
+			MethodName: "GetCodecDescriptor",
+			Handler:    _ReflectionService_GetCodecDescriptor_Handler,
+		},
+		{
+			MethodName: "GetConfigurationDescriptor",
+			Handler:    _ReflectionService_GetConfigurationDescriptor_Handler,
+		},
+		{
+			MethodName: "GetQueryServicesDescriptor",
+			Handler:    _ReflectionService_GetQueryServicesDescriptor_Handler,
+		},
+		{
+			MethodName: "GetTxDescriptor",
+			Handler:    _ReflectionService_GetTxDescriptor_Handler,
 		},
 		{
 			MethodName: "ListAllInterfaces",
@@ -1526,6 +2162,18 @@ func (m *AppDescriptor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
+	if m.Authn != nil {
+		{
+			size, err := m.Authn.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintReflection(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1560,20 +2208,8 @@ func (m *TxDescriptor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintReflection(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x12
 		}
-	}
-	if m.Authn != nil {
-		{
-			size, err := m.Authn.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintReflection(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
 	}
 	if len(m.Fullname) > 0 {
 		i -= len(m.Fullname)
@@ -1999,7 +2635,7 @@ func (m *ServiceMsgDescriptor) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GetAppDescriptorRequest) Marshal() (dAtA []byte, err error) {
+func (m *GetAuthnDescriptorRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2009,12 +2645,12 @@ func (m *GetAppDescriptorRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetAppDescriptorRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetAuthnDescriptorRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetAppDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GetAuthnDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2022,7 +2658,7 @@ func (m *GetAppDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *GetAppDescriptorResponse) Marshal() (dAtA []byte, err error) {
+func (m *GetAuthnDescriptorResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2032,19 +2668,309 @@ func (m *GetAppDescriptorResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetAppDescriptorResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetAuthnDescriptorResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetAppDescriptorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GetAuthnDescriptorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.App != nil {
+	if m.Authn != nil {
 		{
-			size, err := m.App.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Authn.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintReflection(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetChainDescriptorRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetChainDescriptorRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetChainDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *GetChainDescriptorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetChainDescriptorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetChainDescriptorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Chain != nil {
+		{
+			size, err := m.Chain.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintReflection(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetCodecDescriptorRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetCodecDescriptorRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetCodecDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *GetCodecDescriptorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetCodecDescriptorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetCodecDescriptorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Codec != nil {
+		{
+			size, err := m.Codec.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintReflection(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetConfigurationDescriptorRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetConfigurationDescriptorRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetConfigurationDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *GetConfigurationDescriptorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetConfigurationDescriptorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetConfigurationDescriptorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Config != nil {
+		{
+			size, err := m.Config.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintReflection(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetQueryServicesDescriptorRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetQueryServicesDescriptorRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetQueryServicesDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *GetQueryServicesDescriptorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetQueryServicesDescriptorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetQueryServicesDescriptorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Queries != nil {
+		{
+			size, err := m.Queries.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintReflection(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetTxDescriptorRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetTxDescriptorRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetTxDescriptorRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *GetTxDescriptorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetTxDescriptorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetTxDescriptorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Tx != nil {
+		{
+			size, err := m.Tx.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -2309,6 +3235,10 @@ func (m *AppDescriptor) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Authn != nil {
+		l = m.Authn.Size()
+		n += 1 + l + sovReflection(uint64(l))
+	}
 	if m.Chain != nil {
 		l = m.Chain.Size()
 		n += 1 + l + sovReflection(uint64(l))
@@ -2340,10 +3270,6 @@ func (m *TxDescriptor) Size() (n int) {
 	_ = l
 	l = len(m.Fullname)
 	if l > 0 {
-		n += 1 + l + sovReflection(uint64(l))
-	}
-	if m.Authn != nil {
-		l = m.Authn.Size()
 		n += 1 + l + sovReflection(uint64(l))
 	}
 	if len(m.Msgs) > 0 {
@@ -2541,7 +3467,7 @@ func (m *ServiceMsgDescriptor) Size() (n int) {
 	return n
 }
 
-func (m *GetAppDescriptorRequest) Size() (n int) {
+func (m *GetAuthnDescriptorRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2550,14 +3476,124 @@ func (m *GetAppDescriptorRequest) Size() (n int) {
 	return n
 }
 
-func (m *GetAppDescriptorResponse) Size() (n int) {
+func (m *GetAuthnDescriptorResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.App != nil {
-		l = m.App.Size()
+	if m.Authn != nil {
+		l = m.Authn.Size()
+		n += 1 + l + sovReflection(uint64(l))
+	}
+	return n
+}
+
+func (m *GetChainDescriptorRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *GetChainDescriptorResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Chain != nil {
+		l = m.Chain.Size()
+		n += 1 + l + sovReflection(uint64(l))
+	}
+	return n
+}
+
+func (m *GetCodecDescriptorRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *GetCodecDescriptorResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Codec != nil {
+		l = m.Codec.Size()
+		n += 1 + l + sovReflection(uint64(l))
+	}
+	return n
+}
+
+func (m *GetConfigurationDescriptorRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *GetConfigurationDescriptorResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Config != nil {
+		l = m.Config.Size()
+		n += 1 + l + sovReflection(uint64(l))
+	}
+	return n
+}
+
+func (m *GetQueryServicesDescriptorRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *GetQueryServicesDescriptorResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Queries != nil {
+		l = m.Queries.Size()
+		n += 1 + l + sovReflection(uint64(l))
+	}
+	return n
+}
+
+func (m *GetTxDescriptorRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *GetTxDescriptorResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tx != nil {
+		l = m.Tx.Size()
 		n += 1 + l + sovReflection(uint64(l))
 	}
 	return n
@@ -2701,6 +3737,42 @@ func (m *AppDescriptor) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: AppDescriptor: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authn", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowReflection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthReflection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Authn == nil {
+				m.Authn = &AuthnDescriptor{}
+			}
+			if err := m.Authn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Chain", wireType)
@@ -2964,42 +4036,6 @@ func (m *TxDescriptor) Unmarshal(dAtA []byte) error {
 			m.Fullname = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Authn", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowReflection
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthReflection
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthReflection
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Authn == nil {
-				m.Authn = &AuthnDescriptor{}
-			}
-			if err := m.Authn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Msgs", wireType)
 			}
@@ -4160,7 +5196,7 @@ func (m *ServiceMsgDescriptor) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetAppDescriptorRequest) Unmarshal(dAtA []byte) error {
+func (m *GetAuthnDescriptorRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4183,10 +5219,10 @@ func (m *GetAppDescriptorRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetAppDescriptorRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetAuthnDescriptorRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetAppDescriptorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetAuthnDescriptorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -4210,7 +5246,7 @@ func (m *GetAppDescriptorRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetAppDescriptorResponse) Unmarshal(dAtA []byte) error {
+func (m *GetAuthnDescriptorResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4233,15 +5269,15 @@ func (m *GetAppDescriptorResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetAppDescriptorResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetAuthnDescriptorResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetAppDescriptorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetAuthnDescriptorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field App", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authn", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4268,10 +5304,690 @@ func (m *GetAppDescriptorResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.App == nil {
-				m.App = &AppDescriptor{}
+			if m.Authn == nil {
+				m.Authn = &AuthnDescriptor{}
 			}
-			if err := m.App.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Authn.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetChainDescriptorRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetChainDescriptorRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetChainDescriptorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetChainDescriptorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetChainDescriptorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetChainDescriptorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Chain", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowReflection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthReflection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Chain == nil {
+				m.Chain = &ChainDescriptor{}
+			}
+			if err := m.Chain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetCodecDescriptorRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetCodecDescriptorRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetCodecDescriptorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetCodecDescriptorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetCodecDescriptorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetCodecDescriptorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Codec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowReflection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthReflection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Codec == nil {
+				m.Codec = &CodecDescriptor{}
+			}
+			if err := m.Codec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetConfigurationDescriptorRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetConfigurationDescriptorRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetConfigurationDescriptorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetConfigurationDescriptorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetConfigurationDescriptorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetConfigurationDescriptorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowReflection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthReflection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Config == nil {
+				m.Config = &ConfigurationDescriptor{}
+			}
+			if err := m.Config.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetQueryServicesDescriptorRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetQueryServicesDescriptorRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetQueryServicesDescriptorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetQueryServicesDescriptorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetQueryServicesDescriptorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetQueryServicesDescriptorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Queries", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowReflection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthReflection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Queries == nil {
+				m.Queries = &QueryServicesDescriptor{}
+			}
+			if err := m.Queries.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetTxDescriptorRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetTxDescriptorRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetTxDescriptorRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipReflection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetTxDescriptorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowReflection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetTxDescriptorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetTxDescriptorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowReflection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthReflection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthReflection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tx == nil {
+				m.Tx = &TxDescriptor{}
+			}
+			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

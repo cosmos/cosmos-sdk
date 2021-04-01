@@ -83,8 +83,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 var typeMsgSend = bank.SendAuthorization{}.MethodName()
 var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
 
-var commonFlags = []string{}
-
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee

@@ -347,7 +347,7 @@ type VersionMap map[string]uint64
 //
 // Example:
 //   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) {
+//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //       return app.mm.RunMigrations(ctx, cfg, fromVM)
 //   })
 //

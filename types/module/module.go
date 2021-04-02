@@ -361,6 +361,26 @@ type VersionMap map[string]uint64
 //      `InitGenesis` on that module.
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
 //
+// As an app developer, if you wish to skip running InitGenesis for your new
+// module "foo", you need to manually pass a `fromVM` argument to this function
+// foo's module version set to its latest ConsensusVersion. That way, the diff
+// between the function's `fromVM` and `udpatedVM` will be empty, hence not
+// running anything for foo.
+//
+// Example:
+//   cfg := module.NewConfigurator(...)
+//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) {
+//       // Assume "foo" is a new module.
+//       // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
+//       // before this upgrade, `fromVM["foo"] == 0`, and RunMigration will by default
+//       // run InitGenesis on foo.
+//       // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
+//       // consensus version:
+//       fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
+//
+//       return app.mm.RunMigrations(ctx, cfg, fromVM)
+//   })
+//
 // Please also refer to docs/core/upgrade.md for more information.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(configurator)

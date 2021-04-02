@@ -13,8 +13,14 @@ import (
 // target version being the module's latest version in the return VersionMap,
 // let's call it `toVM`.
 //
-// fromVM is retrieved from x/upgrade's store, whereas `toVM` is chosen
+// `fromVM` is retrieved from x/upgrade's store, whereas `toVM` is chosen
 // arbitrarily by the app developer (and persisted to x/upgrade's store right
-// after the upgrade handler runs). In general, `toVM` should map module names
-// to their latest ConsensusVersion.
+// after the upgrade handler runs). In general, `toVM` should map all modules
+// to their latest ConsensusVersion so that x/upgrade can track each module's
+// latest ConsensusVersion; `fromVM` can be left as-is, but can also be
+// modified inside the upgrade handler, e.g. to skip running InitGenesis or
+// migrations for certain modules when calling the `module.Manager#RunMigrations`
+// function.
+//
+// Please also refer to docs/core/upgrade.md for more information.
 type UpgradeHandler func(ctx sdk.Context, plan Plan, fromVM module.VersionMap) (module.VersionMap, error)

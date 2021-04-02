@@ -7546,6 +7546,11 @@ QueryVersionMap is the request type for the Query/VersionMap
 RPC method.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module_name` | [string](#string) |  |  |
+
+
 
 
 
@@ -7553,8 +7558,8 @@ RPC method.
 <a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse"></a>
 
 ### QueryVersionMapResponse
-QueryVersionMapResponse is the response type for the Query/VersionMap RPC
-method.
+QueryVersionMapResponse is the response type for the Query/VersionMap
+RPC method.
 
 
 | Field | Type | Label | Description |

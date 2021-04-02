@@ -115,10 +115,10 @@ func GetAppliedPlanCmd() *cobra.Command {
 // GetVersionMapCmd returns the version map from state
 func GetVersionMapCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "versionmap",
+		Use:   "versionmap [optional module_name]",
 		Short: "get module version map",
 		Long:  "Gets the map of module names and their respective consensus versions.",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -126,7 +126,14 @@ func GetVersionMapCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.VersionMap(cmd.Context(), &types.QueryVersionMap{})
+			var params types.QueryVersionMap
+			if len(args) == 1 {
+				params = types.QueryVersionMap{ModuleName: args[0]}
+			} else {
+				params = types.QueryVersionMap{}
+			}
+
+			res, err := queryClient.VersionMap(cmd.Context(), &params)
 			if err != nil {
 				return err
 			}

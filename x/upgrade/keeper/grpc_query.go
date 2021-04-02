@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -50,6 +51,11 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMap) (*types.QueryVersionMapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	vm := k.GetModuleVersionMap(ctx)
+	if len(req.ModuleName) != 0 {
+		singleVM := make(module.VersionMap)
+		singleVM[req.GetModuleName()] = vm[req.GetModuleName()]
+		vm = singleVM
+	}
 
 	return &types.QueryVersionMapResponse{
 		VersionMap: vm,

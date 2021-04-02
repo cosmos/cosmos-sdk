@@ -1,3 +1,5 @@
+// build +norace
+
 package tx_test
 
 import (
@@ -5,14 +7,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -20,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -79,9 +79,13 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
+	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+	// Encode the txBuilder to txBytes.
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -91,8 +95,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
-		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
+		{"valid request with proto tx (deprecated)", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"valid request with tx_bytes", &tx.SimulateRequest{TxBytes: txBytes}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -120,6 +125,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
+	// Encode the txBuilder to txBytes.
+	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -127,8 +135,9 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 		expErr    bool
 		expErrMsg string
 	}{
-		{"empty request", &tx.SimulateRequest{}, true, "invalid empty tx"},
-		{"valid request", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"empty request", &tx.SimulateRequest{}, true, "empty txBytes is not allowed"},
+		{"valid request with proto tx (deprecated)", &tx.SimulateRequest{Tx: protoTx}, false, ""},
+		{"valid request with tx_bytes", &tx.SimulateRequest{TxBytes: txBytes}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -493,9 +502,19 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	return txBuilder
 }
 
+// protoTxProvider is a type which can provide a proto transaction. It is a
+// workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field.
+type protoTxProvider interface {
+	GetProtoTx() *tx.Tx
+}
+
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
-	protoProvider, ok := txBuilder.(authtx.ProtoTxProvider)
+	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}

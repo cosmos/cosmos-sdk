@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
@@ -135,6 +137,12 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 // also register the interface reflection gRPC service.
 func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	qrt.interfaceRegistry = interfaceRegistry
+	// Once we have an interface registry, we can register the interface
+	// registry reflection gRPC service.
+	reflection.RegisterReflectionServiceServer(
+		qrt,
+		reflection.NewReflectionServiceServer(interfaceRegistry),
+	)
 }
 
 // returnTypeOf returns the return type of a gRPC method handler. With the way the

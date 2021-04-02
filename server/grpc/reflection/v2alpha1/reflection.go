@@ -1,4 +1,4 @@
-package appreflection
+package v2alpha1
 
 import (
 	"context"
@@ -6,8 +6,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,9 +32,7 @@ func Register(srv *grpc.Server, conf Config) error {
 }
 
 type reflectionServiceServer struct {
-	desc                  *AppDescriptor
-	interfacesList        []string
-	interfaceImplementers map[string][]string
+	desc *AppDescriptor
 }
 
 func (r reflectionServiceServer) GetAuthnDescriptor(_ context.Context, _ *GetAuthnDescriptorRequest) (*GetAuthnDescriptorResponse, error) {
@@ -103,23 +99,8 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 		ifaceImplementers[iface.Fullname] = impls
 	}
 	return reflectionServiceServer{
-		desc:                  desc,
-		interfacesList:        ifaceList,
-		interfaceImplementers: ifaceImplementers,
+		desc: desc,
 	}, nil
-}
-
-func (r reflectionServiceServer) ListAllInterfaces(_ context.Context, _ *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
-	return &ListAllInterfacesResponse{InterfaceNames: r.interfacesList}, nil
-}
-
-func (r reflectionServiceServer) ListImplementations(_ context.Context, request *ListImplementationsRequest) (*ListImplementationsResponse, error) {
-	implementers, ok := r.interfaceImplementers[request.InterfaceName]
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "interface name %s does not exist", request.InterfaceName)
-	}
-
-	return &ListImplementationsResponse{ImplementationMessageNames: implementers}, nil
 }
 
 // newCodecDescriptor describes the codec given the codectypes.InterfaceRegistry

@@ -5,23 +5,22 @@ import (
 	"net"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/server/grpc/appreflection"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/grpc/gogoreflection"
+	reflection "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // StartGRPCServer starts a gRPC server on the given address.
 func StartGRPCServer(clientCtx client.Context, app types.Application, address string) (*grpc.Server, error) {
 	grpcSrv := grpc.NewServer()
 	app.RegisterGRPCServer(clientCtx, grpcSrv)
-	// cosmosreflection allows consumers to build dynamic clients that can write
+	// reflection allows consumers to build dynamic clients that can write
 	// to any cosmos-sdk application without relying on application packages at compile time
-	err := appreflection.Register(grpcSrv, appreflection.Config{
+	err := reflection.Register(grpcSrv, reflection.Config{
 		SigningModes: func() map[string]int32 {
 			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().Modes()))
 			for _, m := range clientCtx.TxConfig.SignModeHandler().Modes() {

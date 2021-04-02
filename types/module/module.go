@@ -341,7 +341,7 @@ type VersionMap map[string]uint64
 // function MUST be called insde an x/upgrade UpgradeHandler.
 //
 // Recall that in an upgrade handler, the `fromVM` VersionMap is retrieved from
-// x/upgrade's store, and the function needs to return to target VersionMap
+// x/upgrade's store, and the function needs to return the target VersionMap
 // that will in turn be persisted to the x/upgrade's store. In general,
 // returning RunMigrations should be enough:
 //

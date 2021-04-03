@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -12,11 +13,13 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -80,7 +83,7 @@ func TestRunMigrations(t *testing.T) {
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	app.BaseApp = bApp
-	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
@@ -160,8 +163,8 @@ func TestRunMigrations(t *testing.T) {
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
-			_, err = app.RunMigrations(
-				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}),
+			_, err = app.mm.RunMigrations(
+				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), app.configurator,
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -185,10 +188,56 @@ func TestRunMigrations(t *testing.T) {
 				require.EqualError(t, err, tc.expRunErrMsg)
 			} else {
 				require.NoError(t, err)
+				// Make sure bank's migration is called.
 				require.Equal(t, tc.expCalled, called)
 			}
 		})
 	}
+}
+
+func TestInitGenesisOnMigration(t *testing.T) {
+	db := dbm.NewMemDB()
+	encCfg := MakeTestEncodingConfig()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+
+	// Create a mock module. This module will serve as the new module we're
+	// adding during a migration.
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+	mockModule := mocks.NewMockAppModule(mockCtrl)
+	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
+	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
+
+	app.mm.Modules["mock"] = mockModule
+
+	// Run migrations only for "mock" module. That's why we put the initial
+	// version for bank as 0 (to run its InitGenesis), and for all other
+	// modules, we put their latest ConsensusVersion to skip migrations.
+	_, err := app.mm.RunMigrations(ctx, app.configurator,
+		module.VersionMap{
+			"mock":         0,
+			"bank":         bank.AppModule{}.ConsensusVersion(),
+			"auth":         auth.AppModule{}.ConsensusVersion(),
+			"authz":        authz.AppModule{}.ConsensusVersion(),
+			"staking":      staking.AppModule{}.ConsensusVersion(),
+			"mint":         mint.AppModule{}.ConsensusVersion(),
+			"distribution": distribution.AppModule{}.ConsensusVersion(),
+			"slashing":     slashing.AppModule{}.ConsensusVersion(),
+			"gov":          gov.AppModule{}.ConsensusVersion(),
+			"params":       params.AppModule{}.ConsensusVersion(),
+			"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
+			"vesting":      vesting.AppModule{}.ConsensusVersion(),
+			"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
+			"evidence":     evidence.AppModule{}.ConsensusVersion(),
+			"crisis":       crisis.AppModule{}.ConsensusVersion(),
+			"genutil":      genutil.AppModule{}.ConsensusVersion(),
+			"capability":   capability.AppModule{}.ConsensusVersion(),
+		},
+	)
+	require.NoError(t, err)
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {

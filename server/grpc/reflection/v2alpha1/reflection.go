@@ -22,7 +22,6 @@ type Config struct {
 // Register registers the cosmos sdk reflection service
 // to the provided *grpc.Server given a Config
 func Register(srv *grpc.Server, conf Config) error {
-
 	reflectionServer, err := newReflectionServiceServer(srv, conf)
 	if err != nil {
 		return err
@@ -170,10 +169,9 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry) (*TxDescriptor, error) {
 		return nil, fmt.Errorf("unable to get *tx.Tx protobuf name")
 	}
 	// get msgs
-	msgImplementers := ir.ListImplementations(sdk.MsgInterfaceProtoName)
 	svcMsgImplementers := ir.ListImplementations(sdk.ServiceMsgInterfaceProtoName)
 
-	msgsDesc := make([]*MsgDescriptor, 0, len(msgImplementers)+len(svcMsgImplementers))
+	msgsDesc := make([]*MsgDescriptor, 0, len(svcMsgImplementers))
 
 	// process sdk.ServiceMsg
 	for _, svcMsg := range svcMsgImplementers {

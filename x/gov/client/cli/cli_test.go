@@ -431,6 +431,14 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 			},
 			false,
 		},
+		{
+			"get proposals with invalid status",
+			[]string{
+				"--status=unknown",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {

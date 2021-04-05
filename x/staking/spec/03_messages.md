@@ -62,7 +62,6 @@ assigned to `Delegation.Shares`.
 This service message is expected to fail if:
 
 - the validator is does not exist
-- the validator is jailed
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
 - the exchange rate is invalid, meaning the validator has no tokens (due to slashing) but there are outstanding shares
 - the amount delegated is less than the minimum allowed delegation
@@ -74,6 +73,12 @@ exist then it is created as part of this message otherwise the existing
 The delegator receives newly minted shares at the current exchange rate.
 The exchange rate is the number of existing shares in the validator divided by
 the number of currently delegated tokens.
+
+The validator is updated in the `ValidatorByPower` index, and the delegation is
+tracked in validator object in the `Validators` index.
+
+It is possible to delegate to a jailed validator, the only difference being it
+will not be added to the power index until it is unjailed.
 
 ![](docs/uml/delegation_sequence.svg)
 

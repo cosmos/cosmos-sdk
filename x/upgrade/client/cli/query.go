@@ -127,6 +127,7 @@ func GetVersionMapCmd() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 			var params types.QueryVersionMap
+
 			if len(args) == 1 {
 				params = types.QueryVersionMap{ModuleName: args[0]}
 			} else {

@@ -15,7 +15,7 @@ import (
 // if the `limit` is not supplied, paginate will use `DefaultLimit`
 const DefaultLimit = 100
 
-// MaxLimit is the maximum limit the paginate function can handles
+// MaxLimit is the maximum limit the paginate function can handle
 // which equals the maximum value that can be stored in uint64
 const MaxLimit = math.MaxUint64
 

@@ -1,3 +1,5 @@
+What happens after a transaction is unmarshalled and is processed by the SDK?
+
 @startuml
 'https://plantuml.com/sequence-diagram
 

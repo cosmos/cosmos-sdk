@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -44,7 +42,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 // ExportGenesis returns the bank module's genesis state.
 func (k BaseKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	totalSupply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: math.MaxUint64})
+	totalSupply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: query.MaxLimit})
 	if err != nil {
 		panic(fmt.Errorf("unable to fetch total supply %v", err))
 	}

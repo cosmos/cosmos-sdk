@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -109,7 +107,7 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 				suite.PanicsWithError(tc.expPanicMsg, func() { suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis) })
 			} else {
 				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
-				totalSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: math.MaxUint64})
+				totalSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.expSupply, totalSupply)
 			}

@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -52,7 +50,7 @@ func NonnegativeBalanceInvariant(k ViewKeeper) sdk.Invariant {
 func TotalSupply(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		expectedTotal := sdk.Coins{}
-		supply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: math.MaxUint64})
+		supply, _, err := k.GetPaginatedTotalSupply(ctx, &query.PageRequest{Limit: query.MaxLimit})
 
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "query supply",

@@ -150,12 +150,12 @@ func (s *IntegrationTestSuite) TestCLISign() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
-	var defaultTokens = sdk.NewCoins(
+	var sendTokens = sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 	)
 	txBz, err := s.createBankMsg(val1, val1.Address,
-		defaultTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+		sendTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
 	require.NoError(err)
 	fileUnsigned := testutil.WriteToNewTempFile(s.T(), txBz.String())
 	chainFlag := fmt.Sprintf("--%s=%s", flags.FlagChainID, val1.ClientCtx.ChainID)

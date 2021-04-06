@@ -9,14 +9,29 @@ parent:
 
 ## Abstract
 
-This section specifies how epoching should work.
+The epoching module allows modules to queue messages for execution at a certain certain block height. Each module will have its own instance of the epoching module, this allows each module to have its own message queue and own duration for epochs.
 
-- The main target of epoching is `staking` module.
-- Other targets are `slashing`, `distribution`, `evidence` module.
+## Example
 
-## Contents
+In this example, we are creating an epochkeeper for a module that will be used by the module to queue messages to be executed at a later point in time.
 
-1. **[Concepts](01_concepts.md)**
-2. **[Current Implementation](02_current_implementation.md)**
-3. **[To Improve](03_to_improve.md)**
-4. **[Parameters](04_params.md)**
+```go
+type Keeper struct {
+  storeKey           sdk.StoreKey
+  cdc                codec.BinaryMarshaler
+  epochKeeper        epochkeeper.Keeper
+}
+
+// NewKeeper creates a new staking Keeper instance
+func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey) Keeper {
+ return Keeper{
+  storeKey:           key,
+  cdc:                cdc,
+  epochKeeper:        epochkeeper.NewKeeper(cdc, key),
+ }
+}
+```
+
+### Contents
+
+1. **[State](01_state.md)**

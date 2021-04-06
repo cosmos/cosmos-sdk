@@ -781,3 +781,67 @@ func (k Querier) QueuedMsgBeginRedelegate(c context.Context, req *types.QueryQue
 
 	return &types.QueryQueuedMsgBeginRedelegateResponse{MsgBeginRedelegates: msgDelegates, Pagination: pageRes}, nil
 }
+
+func (k Querier) QueuedMsgUndelegates(c context.Context, req *types.QueryQueuedMsgUndelegatesRequest) (*types.QueryQueuedMsgUndelegatesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	var MsgUndelegates []types.MsgUndelegate
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	epochKey := k.GetEpochActionKey(ctx)
+	epochStore := prefix.NewStore(store, epochKey)
+
+	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var mbr types.MsgUndelegate
+		if err := k.cdc.UnmarshalBinaryBare(value, &mbr); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			MsgUndelegates = append(MsgUndelegates, mbr)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryQueuedMsgUndelegatesResponse{MsgUndelegates: MsgUndelegates, Pagination: pageRes}, nil
+}
+
+func (k Querier) QueuedMsgUndelegate(c context.Context, req *types.QueryQueuedMsgUndelegateRequest) (*types.QueryQueuedMsgUndelegateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	var msgDelegates []types.MsgUndelegate
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	epochKey := k.GetEpochActionKey(ctx)
+	epochStore := prefix.NewStore(store, epochKey)
+
+	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var md types.MsgUndelegate
+		if err := k.cdc.UnmarshalBinaryBare(value, &md); err != nil {
+			return false, err
+		}
+
+		if accumulate && md.DelegatorAddress == req.DelegatorAddr {
+			msgDelegates = append(msgDelegates, md)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryQueuedMsgUndelegateResponse{MsgUndelegates: msgDelegates, Pagination: pageRes}, nil
+}

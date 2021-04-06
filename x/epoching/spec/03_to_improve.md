@@ -7,6 +7,7 @@ order: 3
 ## Validator self-unbonding (which exceed minimum self delegation) could be required to start instantly
 
 Cases that trigger unbonding process
+
 - Validator undelegate can unbond more tokens than his minimum_self_delegation and it will automatically turn the validator into unbonding
 In this case, unbonding should start instantly.
 - Validator miss blocks and get slashed
@@ -16,7 +17,8 @@ In this case, unbonding should start instantly.
   This is different than a specific delegator beginning to unbond. A validator beginning to unbond means that it's not in the set any more.
   A delegator unbonding from a validator removes their delegation from the validator.
 
-# Pending development
+## Pending development
+
 ```go
 // Changes to make
 // — Implement correct next epoch time calculation

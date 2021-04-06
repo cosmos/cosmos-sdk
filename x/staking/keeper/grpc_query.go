@@ -588,3 +588,127 @@ func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedeleg
 
 	return redels, res, err
 }
+
+func (k Querier) MsgCreateValidators(c context.Context, req *types.QueryMsgCreateValidatorsRequest) (*types.QueryMsgCreateValidatorsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	var msgCreateValidators []types.MsgCreateValidator
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.MsgCreateValidatorKey)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var mcv types.MsgCreateValidator
+		if err := k.cdc.UnmarshalBinaryBare(value, &mcv); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			msgCreateValidators = append(msgCreateValidators, mcv)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryMsgCreateValidatorsResponse{MsgCreateValidators: msgCreateValidators, Pagination: pageRes}, nil
+}
+
+func (k Querier) MsgEditValidators(c context.Context, req *types.QueryMsgEditValidatorsRequest) (*types.QueryMsgEditValidatorsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	var msgEditValidators []types.MsgEditValidator
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.MsgEditValidatorKey)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var mev types.MsgEditValidator
+		if err := k.cdc.UnmarshalBinaryBare(value, &mev); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			msgEditValidators = append(msgEditValidators, mev)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryMsgEditValidatorsResponse{MsgEditValidators: msgEditValidators, Pagination: pageRes}, nil
+}
+
+func (k Querier) MsgDelegates(c context.Context, req *types.QueryMsgDelegatesRequest) (*types.QueryMsgDelegatesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	var msgDelegates []types.MsgDelegate
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.MsgDelegateKey)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var md types.MsgDelegate
+		if err := k.cdc.UnmarshalBinaryBare(value, &md); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			msgDelegates = append(msgDelegates, md)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryMsgDelegatesResponse{MsgDelegates: msgDelegates, Pagination: pageRes}, nil
+}
+
+func (k Querier) MsgBeginRedelegates(c context.Context, req *types.QueryMsgBeginRedelegatesRequest) (*types.QueryMsgBeginRedelegatesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	var msgBeginRedelegates []types.MsgBeginRedelegate
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.MsgBeginRedelegateKey)
+
+	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var mbr types.MsgBeginRedelegate
+		if err := k.cdc.UnmarshalBinaryBare(value, &mbr); err != nil {
+			return false, err
+		}
+
+		if accumulate {
+			msgBeginRedelegates = append(msgBeginRedelegates, mbr)
+		}
+
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryMsgBeginRedelegatesResponse{MsgBeginRedelegates: msgBeginRedelegates, Pagination: pageRes}, nil
+}

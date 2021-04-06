@@ -5,6 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/staking/v1beta1/staking.proto";
+import "cosmos/staking/v1beta1/tx.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
@@ -95,6 +96,86 @@ service Query {
   rpc BufferedValidators(QueryBufferedValidatorsRequest) returns (QueryBufferedValidatorsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/validators";
   }
+
+  // Queued create validator messages
+  rpc MsgCreateValidators(QueryMsgCreateValidatorsRequest) returns (QueryMsgCreateValidatorsResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/msg_create_validators";
+  }
+
+  // Queued edit validator messages
+  rpc MsgEditValidators(QueryMsgEditValidatorsRequest) returns (QueryMsgEditValidatorsResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/msg_edit_validators";
+  }
+
+  // Queued delegate messages
+  rpc MsgDelegates(QueryMsgDelegatesRequest) returns (QueryMsgDelegatesResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/msg_delegates";
+  }
+
+  // Queued being redelegate messages
+  rpc MsgBeginRedelegates(QueryMsgBeginRedelegatesRequest) returns (QueryMsgBeginRedelegatesResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/msg_begin_redelegates";
+  }
+}
+
+// QueryMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
+message QueryMsgCreateValidatorsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryMsgCreateValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+message QueryMsgCreateValidatorsResponse {
+  // msg_create_validators contains all of the queued messages
+  repeated MsgCreateValidator msg_create_validators = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
+message QueryMsgEditValidatorsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+message QueryMsgEditValidatorsResponse {
+  // msg_edit_validators contains all of the queued messages
+  repeated MsgEditValidator msg_edit_validators = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryMsgDelegateRequest is request type for Query/MsgDelegates RPC method.
+message QueryMsgDelegatesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+message QueryMsgDelegatesResponse {
+  // msg_delegates contains all of the queued messages
+  repeated MsgDelegate msg_delegates = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+message QueryMsgBeginRedelegatesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
+message QueryMsgBeginRedelegatesResponse {
+  // msg_begin_redelegates contains all of the queued messages
+  repeated MsgBeginRedelegate msg_begin_redelegates = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method.

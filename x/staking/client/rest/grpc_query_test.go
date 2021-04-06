@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -68,6 +69,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	//Wait for height 12 for the epoch queued messages to be executed
+	_, err = s.network.WaitForHeightWithTimeout(12, 30*time.Second)
 	s.Require().NoError(err)
 }
 

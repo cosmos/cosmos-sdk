@@ -340,21 +340,21 @@ func TestSetLoader(t *testing.T) {
 	}
 }
 
-func TestAppVersionSetterGetter(t *testing.T) {
+func TestVersionSetterGetter(t *testing.T) {
 	logger := defaultLogger()
 	pruningOpt := SetPruning(store.PruneDefault)
 	db := dbm.NewMemDB()
 	name := t.Name()
 	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
-	require.Equal(t, "", app.AppVersion())
+	require.Equal(t, "", app.Version())
 	res := app.Query(abci.RequestQuery{Path: "app/version"})
 	require.True(t, res.IsOK())
 	require.Equal(t, "", string(res.Value))
 
 	versionString := "1.0.0"
-	app.SetAppVersion(versionString)
-	require.Equal(t, versionString, app.AppVersion())
+	app.SetVersion(versionString)
+	require.Equal(t, versionString, app.Version())
 	res = app.Query(abci.RequestQuery{Path: "app/version"})
 	require.True(t, res.IsOK())
 	require.Equal(t, versionString, string(res.Value))
@@ -498,7 +498,7 @@ func TestInfo(t *testing.T) {
 	assert.Equal(t, t.Name(), res.GetData())
 	assert.Equal(t, int64(0), res.LastBlockHeight)
 	require.Equal(t, []uint8(nil), res.LastBlockAppHash)
-
+	require.Equal(t, app.AppVersion(), res.AppVersion)
 	// ----- test a proper response -------
 	// TODO
 }
@@ -510,7 +510,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		app.SetName("")
 	})
 	require.Panics(t, func() {
-		app.SetAppVersion("")
+		app.SetVersion("")
 	})
 	require.Panics(t, func() {
 		app.SetDB(nil)

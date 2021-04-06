@@ -159,6 +159,8 @@ func (s *intTestSuite) TestArithInt() {
 			{sdk.MinInt(i1, i2), minint(n1, n2)},
 			{sdk.MaxInt(i1, i2), maxint(n1, n2)},
 			{i1.Neg(), -n1},
+			{i1.Abs(), n1},
+			{i1.Neg().Abs(), n1},
 		}
 
 		for tcnum, tc := range cases {
@@ -206,6 +208,7 @@ func (s *intTestSuite) TestImmutabilityAllInt() {
 		func(i *sdk.Int) { _ = i.MulRaw(rand.Int63()) },
 		func(i *sdk.Int) { _ = i.QuoRaw(rand.Int63()) },
 		func(i *sdk.Int) { _ = i.Neg() },
+		func(i *sdk.Int) { _ = i.Abs() },
 		func(i *sdk.Int) { _ = i.IsZero() },
 		func(i *sdk.Int) { _ = i.Sign() },
 		func(i *sdk.Int) { _ = i.Equal(randint()) },

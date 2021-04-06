@@ -24,8 +24,8 @@ func Test_multiSigKey_Properties(t *testing.T) {
 		1,
 		[]cryptotypes.PubKey{tmpKey1.PubKey()},
 	)
-	tmp := keyring.NewMultiInfo("myMultisig", pk)
-
+	tmp, err := keyring.NewMultiInfo("myMultisig", pk)
+	require.NoError(t, err)
 	require.Equal(t, "myMultisig", tmp.GetName())
 	require.Equal(t, keyring.TypeMulti, tmp.GetType())
 	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", tmp.GetPubKey().Address().String())
@@ -48,7 +48,9 @@ func Test_runShowCmd(t *testing.T) {
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 
-	clientCtx := client.Context{}.WithKeyring(kb)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{"invalid"})
@@ -194,28 +196,20 @@ func Test_getBechKeyOut(t *testing.T) {
 	}{
 		{"empty", args{""}, nil, true},
 		{"wrong", args{"???"}, nil, true},
-		{"acc", args{sdk.PrefixAccount}, keyring.Bech32KeyOutput, false},
-		{"val", args{sdk.PrefixValidator}, keyring.Bech32ValKeyOutput, false},
-		{"cons", args{sdk.PrefixConsensus}, keyring.Bech32ConsKeyOutput, false},
+		{"acc", args{sdk.PrefixAccount}, keyring.MkAccKeyOutput, false},
+		{"val", args{sdk.PrefixValidator}, keyring.MkValKeyOutput, false},
+		{"cons", args{sdk.PrefixConsensus}, keyring.MkConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := getBechKeyOut(tt.args.bechPrefix)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getBechKeyOut() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !tt.wantErr {
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 				require.NotNil(t, got)
 			}
-
-			// TODO: Still not possible to compare functions
-			// Maybe in next release: https://github.com/stretchr/testify/issues/182
-			//if &got != &tt.want {
-			//	t.Errorf("getBechKeyOut() = %v, want %v", got, tt.want)
-			//}
 		})
 	}
 }

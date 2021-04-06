@@ -77,11 +77,14 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
-func (k BaseKeeper) TotalSupply(ctx context.Context, _ *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
+func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	totalSupply := k.GetTotalSupply(sdkCtx)
+	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
-	return &types.QueryTotalSupplyResponse{Supply: totalSupply}, nil
+	return &types.QueryTotalSupplyResponse{Supply: totalSupply, Pagination: pageRes}, nil
 }
 
 // SupplyOf implements the Query/SupplyOf gRPC method

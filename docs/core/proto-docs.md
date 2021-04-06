@@ -133,6 +133,9 @@
     - [CommitInfo](#cosmos.base.store.v1beta1.CommitInfo)
     - [StoreInfo](#cosmos.base.store.v1beta1.StoreInfo)
   
+- [cosmos/base/store/v1beta1/listening.proto](#cosmos/base/store/v1beta1/listening.proto)
+    - [StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair)
+  
 - [cosmos/base/store/v1beta1/snapshot.proto](#cosmos/base/store/v1beta1/snapshot.proto)
     - [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem)
     - [SnapshotItem](#cosmos.base.store.v1beta1.SnapshotItem)
@@ -680,6 +683,7 @@ pagination. Ex:
 | `offset` | [uint64](#uint64) |  | offset is a numeric offset that can be used when key is unavailable. It is less efficient than using key. Only one of offset or key should be set. |
 | `limit` | [uint64](#uint64) |  | limit is the total number of results to be returned in the result page. If left empty it will default to a value to be set by each app. |
 | `count_total` | [bool](#bool) |  | count_total is set to true to indicate that the result set should include a count of the total number of items available for pagination in UIs. count_total is only respected when offset is used. It is ignored when key is set. |
+| `reverse` | [bool](#bool) |  | reverse is set to true indicates that, results to be returned in the descending order. |
 
 
 
@@ -1623,7 +1627,7 @@ GenesisState defines the bank module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
 | `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. If it is left empty, then supply will be calculated based on the provided balances. Otherwise, it will be used to validate that the sum of the balances equals this amount. |
 | `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
 
 
@@ -1836,6 +1840,11 @@ QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 method.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
 
 
 
@@ -1850,6 +1859,7 @@ method
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -2194,6 +2204,41 @@ between a store name and the commit ID.
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
 | `commit_id` | [CommitID](#cosmos.base.store.v1beta1.CommitID) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/store/v1beta1/listening.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/store/v1beta1/listening.proto
+
+
+
+<a name="cosmos.base.store.v1beta1.StoreKVPair"></a>
+
+### StoreKVPair
+StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and Deletes
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `store_key` | [string](#string) |  | the store key for the KVStore this pair originates from |
+| `delete` | [bool](#bool) |  | true indicates a delete operation, false indicates a set operation |
+| `key` | [bytes](#bytes) |  |  |
+| `value` | [bytes](#bytes) |  |  |
 
 
 
@@ -7257,7 +7302,8 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | tx is the transaction to simulate. |
+| `tx` | [Tx](#cosmos.tx.v1beta1.Tx) |  | **Deprecated.** tx is the transaction to simulate. Deprecated. Send raw tx bytes instead. |
+| `tx_bytes` | [bytes](#bytes) |  | tx_bytes is the raw transaction. |
 
 
 

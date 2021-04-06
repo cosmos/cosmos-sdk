@@ -56,7 +56,6 @@ import (
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantante "github.com/cosmos/cosmos-sdk/x/feegrant/ante"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -201,7 +200,7 @@ func NewSimApp(
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetAppVersion(version.Version)
+	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
@@ -258,7 +257,7 @@ func NewSimApp(
 	)
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegranttypes.StoreKey], app.AccountKeeper)
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
+	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -340,7 +339,7 @@ func NewSimApp(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.configurator = module.NewConfigurator(app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
@@ -375,12 +374,22 @@ func NewSimApp(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(
-		feegrantante.NewAnteHandler(
-			app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, ante.DefaultSigVerificationGasConsumer,
-			encodingConfig.TxConfig.SignModeHandler(),
-		),
+
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		},
 	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -525,22 +534,6 @@ func (app *SimApp) RegisterTxService(clientCtx client.Context) {
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
-}
-
-// RunMigrations performs in-place store migrations for all modules. This
-// function MUST be only called by x/upgrade UpgradeHandler.
-//
-// `migrateFromVersions` is a map of moduleName to fromVersion (unit64), where
-// fromVersion denotes the version from which we should migrate the module, the
-// target version being the module's latest ConsensusVersion.
-//
-// Example:
-//   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("store-migration", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) {
-//       return app.RunMigrations(ctx, vm)
-//   })
-func (app *SimApp) RunMigrations(ctx sdk.Context, migrateFromVersions module.VersionMap) (module.VersionMap, error) {
-	return app.mm.RunMigrations(ctx, app.configurator, migrateFromVersions)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

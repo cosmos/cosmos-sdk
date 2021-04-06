@@ -11,7 +11,6 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -78,11 +77,11 @@ const (
 var (
 	// AccAddress.String() is expensive and if unoptimized dominantly showed up in profiles,
 	// yet has no mechanisms to trivially cache the result given that AccAddress is a []byte type.
-	accAddrMu     sync.RWMutex
+	accAddrMu     sync.Mutex
 	accAddrCache  *simplelru.LRU
-	consAddrMu    sync.RWMutex
+	consAddrMu    sync.Mutex
 	consAddrCache *simplelru.LRU
-	valAddrMu     sync.RWMutex
+	valAddrMu     sync.Mutex
 	valAddrCache  *simplelru.LRU
 )
 
@@ -268,13 +267,13 @@ func (aa AccAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(aa)
-	accAddrMu.RLock()
+	accAddrMu.Lock()
+	defer accAddrMu.Unlock()
 	addr, ok := accAddrCache.Get(key)
-	accAddrMu.RUnlock()
 	if ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key, &accAddrMu)
+	return cacheBech32Addr(GetConfig().GetBech32AccountAddrPrefix(), aa, accAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -418,13 +417,13 @@ func (va ValAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(va)
-	valAddrMu.RLock()
+	valAddrMu.Lock()
+	defer valAddrMu.Unlock()
 	addr, ok := valAddrCache.Get(key)
-	valAddrMu.RUnlock()
 	if ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key, &valAddrMu)
+	return cacheBech32Addr(GetConfig().GetBech32ValidatorAddrPrefix(), va, valAddrCache, key)
 }
 
 // Format implements the fmt.Formatter interface.
@@ -573,13 +572,13 @@ func (ca ConsAddress) String() string {
 	}
 
 	var key = conv.UnsafeBytesToStr(ca)
-	consAddrMu.RLock()
+	consAddrMu.Lock()
+	defer consAddrMu.Unlock()
 	addr, ok := consAddrCache.Get(key)
-	consAddrMu.RUnlock()
 	if ok {
 		return addr.(string)
 	}
-	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key, &consAddrMu)
+	return cacheBech32Addr(GetConfig().GetBech32ConsensusAddrPrefix(), ca, consAddrCache, key)
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
@@ -623,86 +622,12 @@ func (ca ConsAddress) Format(s fmt.State, verb rune) {
 // auxiliary
 // ----------------------------------------------------------------------------
 
-// Bech32PubKeyType defines a string type alias for a Bech32 public key type.
-type Bech32PubKeyType string
-
-// Bech32 conversion constants
-const (
-	Bech32PubKeyTypeAccPub  Bech32PubKeyType = "accpub"
-	Bech32PubKeyTypeValPub  Bech32PubKeyType = "valpub"
-	Bech32PubKeyTypeConsPub Bech32PubKeyType = "conspub"
-)
-
-// Bech32ifyPubKey returns a Bech32 encoded string containing the appropriate
-// prefix based on the key type provided for a given PublicKey.
-// TODO: Remove Bech32ifyPubKey and all usages (cosmos/cosmos-sdk/issues/#7357)
-func Bech32ifyPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) (string, error) {
-	var bech32Prefix string
-
-	switch pkt {
-	case Bech32PubKeyTypeAccPub:
-		bech32Prefix = GetConfig().GetBech32AccountPubPrefix()
-
-	case Bech32PubKeyTypeValPub:
-		bech32Prefix = GetConfig().GetBech32ValidatorPubPrefix()
-
-	case Bech32PubKeyTypeConsPub:
-		bech32Prefix = GetConfig().GetBech32ConsensusPubPrefix()
-
-	}
-
-	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pubkey))
-}
-
-// MustBech32ifyPubKey calls Bech32ifyPubKey except it panics on error.
-func MustBech32ifyPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) string {
-	res, err := Bech32ifyPubKey(pkt, pubkey)
-	if err != nil {
-		panic(err)
-	}
-
-	return res
-}
-
-// GetPubKeyFromBech32 returns a PublicKey from a bech32-encoded PublicKey with
-// a given key type.
-func GetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) (cryptotypes.PubKey, error) {
-	var bech32Prefix string
-
-	switch pkt {
-	case Bech32PubKeyTypeAccPub:
-		bech32Prefix = GetConfig().GetBech32AccountPubPrefix()
-
-	case Bech32PubKeyTypeValPub:
-		bech32Prefix = GetConfig().GetBech32ValidatorPubPrefix()
-
-	case Bech32PubKeyTypeConsPub:
-		bech32Prefix = GetConfig().GetBech32ConsensusPubPrefix()
-
-	}
-
-	bz, err := GetFromBech32(pubkeyStr, bech32Prefix)
-	if err != nil {
-		return nil, err
-	}
-
-	return legacy.PubKeyFromBytes(bz)
-}
-
-// MustGetPubKeyFromBech32 calls GetPubKeyFromBech32 except it panics on error.
-func MustGetPubKeyFromBech32(pkt Bech32PubKeyType, pubkeyStr string) cryptotypes.PubKey {
-	res, err := GetPubKeyFromBech32(pkt, pubkeyStr)
-	if err != nil {
-		panic(err)
-	}
-
-	return res
-}
+var errBech32EmptyAddress = errors.New("decoding Bech32 address failed: must provide a non empty address")
 
 // GetFromBech32 decodes a bytestring from a Bech32 encoded string.
 func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 	if len(bech32str) == 0 {
-		return nil, errors.New("decoding Bech32 address failed: must provide an address")
+		return nil, errBech32EmptyAddress
 	}
 
 	hrp, bz, err := bech32.DecodeAndConvert(bech32str)
@@ -725,13 +650,12 @@ func addressBytesFromHexString(address string) ([]byte, error) {
 	return hex.DecodeString(address)
 }
 
-func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey string, m sync.Locker) string {
+// cacheBech32Addr is not concurrency safe. Concurrent access to cache causes race condition.
+func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey string) string {
 	bech32Addr, err := bech32.ConvertAndEncode(prefix, addr)
 	if err != nil {
 		panic(err)
 	}
-	m.Lock()
 	cache.Add(cacheKey, bech32Addr)
-	m.Unlock()
 	return bech32Addr
 }

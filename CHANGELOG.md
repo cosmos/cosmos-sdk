@@ -35,19 +35,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
-
-### Improvements
-
-* (store/cachekv) [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) Algorithmically fix pathologically slow code
-
 ## [v0.39.3]
 
 This release fixes security vulnerability identified in the simapp.
 
 ### Improvements
 
+* (store/cachekv) [\#8719](https://github.com/cosmos/cosmos-sdk/pull/8719) Algorithmically fix pathologically slow code
+
+### Improvements
+
 * (deps) Bump IAVL to v0.14.3.
+* (x/simulation [\#6784](https://github.com/cosmos/cosmos-sdk/issues/6784) Close opened files and check for error while creating files.
 
 ## [v0.39.2]
 

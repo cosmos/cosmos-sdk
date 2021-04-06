@@ -74,7 +74,7 @@ To learn more about configuring migration scripts for your modules, refer to thi
 
 ## Adding New Modules In Upgrades
 
-Entirely new modules can be introduced to the application during an upgrade. The SDK recognizes new modules during upgrades and will call the corresponding module's `InitGenesis` function to setup its initial state. This can be skipped if the module does not require any inital state. Otherwise, it is important to implement `InitGenesis` for new modules to successfully upgrade your application without error.
+Entirely new modules can be introduced to the application during an upgrade. The SDK recognizes new modules during upgrades because their consensus version in the `fromVM` `VersionMap` is 0. In this case, `RunMigrations` will call the corresponding module's `InitGenesis` function to setup its initial state. This can be skipped if the module does not require any inital state. Otherwise, it is important to implement `InitGenesis` for new modules to successfully upgrade your application without error.
 
 In the scenario where your application does not need any inital state via `InitGenesis`, you must take extra steps to ensure `InitGenesis` is skipped to avoid errors. To do so, you simply need to update the value of the module version in the `VersionMap` in the `UpgradeHandler`. 
 

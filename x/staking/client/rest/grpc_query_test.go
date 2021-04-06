@@ -840,6 +840,71 @@ func (s *IntegrationTestSuite) TestQueryPoolGRPC() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestQueuedQueryRedelegationsGRPC() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+	baseURL := val.APIAddress
+
+	testCases := []struct {
+		name  string
+		url   string
+		error bool
+	}{
+		{
+			"wrong validator address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, "wrongValAddress"),
+			true,
+		},
+		{
+			"with no validator address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, ""),
+			true,
+		},
+		{
+			"valid request",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations", baseURL, val.Address.String()),
+			false,
+		},
+		{
+			"valid request with src address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String()),
+			false,
+		},
+		{
+			"valid request with dst address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?dst_validator_addr=%s", baseURL, val.Address.String(), val2.ValAddress.String()),
+			false,
+		},
+		{
+			"valid request with dst address",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String(), val2.ValAddress.String()),
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			resp, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			var redelegations types.QueryRedelegationsResponse
+
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &redelegations)
+
+			if tc.error {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().Len(redelegations.RedelegationResponses, 1)
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
+			}
+		})
+	}
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -16,7 +16,7 @@ Usage
 simd keys migrate <old_home_dir>
 ```
 
-This command migrates key information from the legacy (db-based) Keybase to the new [keyring](https://github.com/99designs/keyring)-based Keyring. The legacy Keybase used to persist keys in a LevelDB database stored in a 'keys' sub-directory of the old client application home directory **old_home_dir**, e.g. `$HOME/.gaiacli/keys/` for [Gaia](https://github.com/cosmos/gaia).
+The migration process moves key information from the legacy db-based Keybase to the [keyring](https://github.com/99designs/keyring)-based Keyring. The legacy Keybase persists keys in a LevelDB database in a 'keys' sub-directory of the client application home directory (`old_home_dir`). For example, `$HOME/.gaiacli/keys/` for [Gaia](https://github.com/cosmos/gaia).
 
 For each key material entry, the command will prompt if the key should be skipped or not. If the key is not to be skipped, the passphrase must be entered. The key will only be migrated if the passphrase is correct. Otherwise, the command will exit and migration must be repeated.
 

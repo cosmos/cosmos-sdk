@@ -28,6 +28,10 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	for i, any := range anys {
 		var msg sdk.Msg
 		if isServiceMsg(any.TypeUrl) {
+			req := any.GetCachedValue()
+			if req == nil {
+				panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
+			}
 			msg = sdk.ServiceMsg{
 				MethodName: any.TypeUrl,
 				Request:    any.GetCachedValue().(sdk.MsgRequest),
@@ -126,6 +130,37 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 	}
 
 	return signers
+}
+
+func (t *Tx) GetGas() uint64 {
+	return t.AuthInfo.Fee.GasLimit
+}
+func (t *Tx) GetFee() sdk.Coins {
+	return t.AuthInfo.Fee.Amount
+}
+func (t *Tx) FeePayer() sdk.AccAddress {
+	feePayer := t.AuthInfo.Fee.Payer
+	if feePayer != "" {
+		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return payerAddr
+	}
+	// use first signer as default if no payer specified
+	return t.GetSigners()[0]
+}
+
+func (t *Tx) FeeGranter() sdk.AccAddress {
+	feePayer := t.AuthInfo.Fee.Granter
+	if feePayer != "" {
+		granterAddr, err := sdk.AccAddressFromBech32(feePayer)
+		if err != nil {
+			panic(err)
+		}
+		return granterAddr
+	}
+	return nil
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method

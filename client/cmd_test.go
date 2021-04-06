@@ -64,13 +64,8 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 				return client.SetCmdClientContextHandler(initClientCtx, cmd)
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {
-				clientCtx := client.GetClientContextFromCmd(cmd)
-				_, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
-				if err != nil {
-					return err
-				}
-
-				return nil
+				_, err := client.GetClientTxContext(cmd)
+				return err
 			},
 		}
 
@@ -102,8 +97,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, client.ClientContextKey, &client.Context{})
+			ctx := context.WithValue(context.Background(), client.ClientContextKey, &client.Context{})
 
 			cmd := newCmd()
 			_ = testutil.ApplyMockIODiscardOutErr(cmd)

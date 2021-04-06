@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 )
 
@@ -47,18 +48,16 @@ set by the committed block's time. The end_time must be provided as a UNIX epoch
 timestamp.`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			toAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			amount, err := sdk.ParseCoins(args[1])
+			amount, err := sdk.ParseCoinsNormalized(args[1])
 			if err != nil {
 				return err
 			}
@@ -71,11 +70,14 @@ timestamp.`,
 			delayed, _ := cmd.Flags().GetBool(FlagDelayed)
 
 			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, endTime, delayed)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.CreateVestingAccount(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 

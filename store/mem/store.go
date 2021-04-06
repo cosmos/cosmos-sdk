@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -35,7 +36,7 @@ func (s Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMemory
 }
 
-// CacheWrap cache wraps the underlying store.
+// CacheWrap branches the underlying store.
 func (s Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(s)
 }
@@ -43,6 +44,11 @@ func (s Store) CacheWrap() types.CacheWrap {
 // CacheWrapWithTrace implements KVStore.
 func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
+}
+
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (s Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(s, storeKey, listeners))
 }
 
 // Commit performs a no-op as entries are persistent between commitments.

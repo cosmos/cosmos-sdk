@@ -24,7 +24,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, 100, true)
+	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, sdk.NewInt(100), true)
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 
 	// allocate tokens
@@ -53,11 +53,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// create second validator with 0% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[1], valConsPk2, 100, true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -82,8 +82,9 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err := app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
-	require.NoError(t, err)
+	// fund fee collector
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, feeCollector.GetName(), fees))
+
 	app.AccountKeeper.SetAccount(ctx, feeCollector)
 
 	votes := []abci.VoteInfo{
@@ -123,15 +124,15 @@ func TestAllocateTokensTruncation(t *testing.T) {
 
 	// create validator with 10% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, 110, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(110), true)
 
 	// create second validator with 10% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[1], valConsPk2, 100, true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), true)
 
 	// create third validator with 10% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[2], valConsPk3, 100, true)
+	tstaking.CreateValidator(valAddrs[2], valConsPk3, sdk.NewInt(100), true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -162,8 +163,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	err := app.BankKeeper.SetBalances(ctx, feeCollector.GetAddress(), fees)
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, feeCollector.GetName(), fees))
 
 	app.AccountKeeper.SetAccount(ctx, feeCollector)
 

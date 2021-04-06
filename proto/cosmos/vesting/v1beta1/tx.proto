@@ -6,14 +6,12 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/vesting/types";
 
-
 // Msg defines the bank Msg service.
 service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
 }
-
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
 // account.
@@ -30,4 +28,4 @@ message MsgCreateVestingAccount {
 }
 
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
-message MsgCreateVestingAccountResponse { }
+message MsgCreateVestingAccountResponse {}

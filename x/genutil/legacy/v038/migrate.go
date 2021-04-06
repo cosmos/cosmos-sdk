@@ -3,6 +3,7 @@ package v038
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	v036auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v036"
 	v038auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v038"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
@@ -10,20 +11,26 @@ import (
 	v036genaccounts "github.com/cosmos/cosmos-sdk/x/genaccounts/legacy/v036"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
+	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
+	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 )
 
 // Migrate migrates exported state from v0.36/v0.37 to a v0.38 genesis state.
 func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	v036Codec := codec.NewLegacyAmino()
+	cryptocodec.RegisterCrypto(v036Codec)
 	v036gov.RegisterLegacyAminoCodec(v036Codec)
 	v036distr.RegisterLegacyAminoCodec(v036Codec)
+	v036params.RegisterLegacyAminoCodec(v036Codec)
 
 	v038Codec := codec.NewLegacyAmino()
 	v038auth.RegisterLegacyAminoCodec(v038Codec)
 	v036gov.RegisterLegacyAminoCodec(v038Codec)
 	v036distr.RegisterLegacyAminoCodec(v038Codec)
+	v036params.RegisterLegacyAminoCodec(v038Codec)
+	v038upgrade.RegisterLegacyAminoCodec(v038Codec)
 
 	if appState[v036genaccounts.ModuleName] != nil {
 		// unmarshal relative source genesis application state

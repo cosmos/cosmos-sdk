@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -36,52 +37,66 @@ func NewParams(purpose, coinType, account uint32, change bool, addressIdx uint32
 	}
 }
 
-// Parse the BIP44 path and unmarshal into the struct.
+// NewParamsFromPath parses the BIP44 path and unmarshals it into a Bip44Params. It supports both
+// absolute and relative paths.
 func NewParamsFromPath(path string) (*BIP44Params, error) {
 	spl := strings.Split(path, "/")
+
+	// Handle absolute or relative paths
+	switch {
+	case spl[0] == path:
+		return nil, fmt.Errorf("path %s doesn't contain '/' separators", path)
+
+	case strings.TrimSpace(spl[0]) == "":
+		return nil, fmt.Errorf("ambiguous path %s: use 'm/' prefix for absolute paths, or no leading '/' for relative ones", path)
+
+	case strings.TrimSpace(spl[0]) == "m":
+		spl = spl[1:]
+	}
+
 	if len(spl) != 5 {
-		return nil, fmt.Errorf("path length is wrong. Expected 5, got %d", len(spl))
+		return nil, fmt.Errorf("invalid path length %s", path)
 	}
 
 	// Check items can be parsed
 	purpose, err := hardenedInt(spl[0])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path purpose %s: %w", spl[0], err)
 	}
 
 	coinType, err := hardenedInt(spl[1])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path coin type %s: %w", spl[1], err)
 	}
 
 	account, err := hardenedInt(spl[2])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path account %s: %w", spl[2], err)
 	}
 
 	change, err := hardenedInt(spl[3])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path change %s: %w", spl[3], err)
 	}
 
 	addressIdx, err := hardenedInt(spl[4])
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid HD path address index %s: %w", spl[4], err)
 	}
 
 	// Confirm valid values
 	if spl[0] != "44'" {
-		return nil, fmt.Errorf("first field in path must be 44', got %v", spl[0])
+		return nil, fmt.Errorf("first field in path must be 44', got %s", spl[0])
 	}
 
 	if !isHardened(spl[1]) || !isHardened(spl[2]) {
 		return nil,
-			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %v and %v", spl[1], spl[2])
+			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %s and %s", spl[1], spl[2])
 	}
 
 	if isHardened(spl[3]) || isHardened(spl[4]) {
 		return nil,
-			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %v and %v", spl[3], spl[4])
+			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %s and %s", spl[3], spl[4])
 	}
 
 	if !(change == 0 || change == 1) {
@@ -135,6 +150,8 @@ func (p BIP44Params) DerivationPath() []uint32 {
 	}
 }
 
+// String returns the full absolute HD path of the BIP44 (https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) params:
+// m / purpose' / coin_type' / account' / change / address_index
 func (p BIP44Params) String() string {
 	var changeStr string
 	if p.Change {
@@ -142,8 +159,7 @@ func (p BIP44Params) String() string {
 	} else {
 		changeStr = "0"
 	}
-	// m / Purpose' / coin_type' / Account' / Change / address_index
-	return fmt.Sprintf("%d'/%d'/%d'/%s/%d",
+	return fmt.Sprintf("m/%d'/%d'/%d'/%s/%d",
 		p.Purpose,
 		p.CoinType,
 		p.Account,
@@ -162,10 +178,23 @@ func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {
 // DerivePrivateKeyForPath derives the private key by following the BIP 32/44 path from privKeyBytes,
 // using the given chainCode.
 func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]byte, error) {
+	// First step is to trim the right end path separator lest we panic.
+	// See issue https://github.com/cosmos/cosmos-sdk/issues/8557
+	path = strings.TrimRightFunc(path, func(r rune) bool { return r == filepath.Separator })
 	data := privKeyBytes
 	parts := strings.Split(path, "/")
 
-	for _, part := range parts {
+	switch {
+	case parts[0] == path:
+		return nil, fmt.Errorf("path '%s' doesn't contain '/' separators", path)
+	case strings.TrimSpace(parts[0]) == "m":
+		parts = parts[1:]
+	}
+
+	for i, part := range parts {
+		if part == "" {
+			return nil, fmt.Errorf("path %q with split element #%d is an empty string", part, i)
+		}
 		// do we have an apostrophe?
 		harden := part[len(part)-1:] == "'"
 		// harden == private derivation, else public derivation:
@@ -178,7 +207,7 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 		// index values are in the range [0, 1<<31-1] aka [0, max(int32)]
 		idx, err := strconv.ParseUint(part, 10, 31)
 		if err != nil {
-			return []byte{}, fmt.Errorf("invalid BIP 32 path: %s", err)
+			return []byte{}, fmt.Errorf("invalid BIP 32 path %s: %w", path, err)
 		}
 
 		data, chainCode = derivePrivateKey(data, chainCode, uint32(idx), harden)
@@ -188,7 +217,7 @@ func DerivePrivateKeyForPath(privKeyBytes, chainCode [32]byte, path string) ([]b
 	n := copy(derivedKey, data[:])
 
 	if n != 32 || len(data) != 32 {
-		return []byte{}, fmt.Errorf("expected a (secp256k1) key of length 32, got length: %v", len(data))
+		return []byte{}, fmt.Errorf("expected a key of length 32, got length: %d", len(data))
 	}
 
 	return derivedKey, nil

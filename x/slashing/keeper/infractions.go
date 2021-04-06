@@ -48,6 +48,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 		// Array value at this index has not changed, no need to update counter
 	}
 
+	minSignedPerWindow := k.MinSignedPerWindow(ctx)
+
 	if missed {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -58,22 +60,23 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			),
 		)
 
-		logger.Info(
-			fmt.Sprintf("Absent validator %s at height %d, %d missed, threshold %d", consAddr, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
+		logger.Debug(
+			"absent validator",
+			"height", height,
+			"validator", consAddr.String(),
+			"missed", signInfo.MissedBlocksCounter,
+			"threshold", minSignedPerWindow,
+		)
 	}
 
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
-	maxMissed := k.SignedBlocksWindow(ctx) - k.MinSignedPerWindow(ctx)
+	maxMissed := k.SignedBlocksWindow(ctx) - minSignedPerWindow
 
 	// if we are past the minimum height and the validator has missed too many blocks, punish them
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.IsJailed() {
-
 			// Downtime confirmed: slash and jail the validator
-			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
-				consAddr, minHeight, k.MinSignedPerWindow(ctx)))
-
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
 			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
@@ -99,10 +102,21 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0
 			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
-		} else {
-			// Validator was (a) not found or (b) already jailed, don't slash
+
 			logger.Info(
-				fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed", consAddr),
+				"slashing and jailing validator due to liveness fault",
+				"height", height,
+				"validator", consAddr.String(),
+				"min_height", minHeight,
+				"threshold", minSignedPerWindow,
+				"slashed", k.SlashFractionDowntime(ctx).String(),
+				"jailed_until", signInfo.JailedUntil,
+			)
+		} else {
+			// validator was (a) not found or (b) already jailed so we do not slash
+			logger.Info(
+				"validator would have been slashed for downtime, but was either not found in store or already jailed",
+				"validator", consAddr.String(),
 			)
 		}
 	}

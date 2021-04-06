@@ -36,6 +36,34 @@ func TestNewBitArrayNeverCrashesOnNegatives(t *testing.T) {
 	}
 }
 
+func TestBitArrayEqual(t *testing.T) {
+	empty := new(CompactBitArray)
+	big1, _ := randCompactBitArray(1000)
+	big1Cpy := *big1
+	big2, _ := randCompactBitArray(1000)
+	big2.SetIndex(500, !big1.GetIndex(500)) // ensure they are different
+	cases := []struct {
+		name string
+		b1   *CompactBitArray
+		b2   *CompactBitArray
+		eq   bool
+	}{
+		{name: "both nil are equal", b1: nil, b2: nil, eq: true},
+		{name: "if one is nil then not equal", b1: nil, b2: empty, eq: false},
+		{name: "nil and empty not equal", b1: empty, b2: nil, eq: false},
+		{name: "empty and empty equal", b1: empty, b2: new(CompactBitArray), eq: true},
+		{name: "same bits should be equal", b1: big1, b2: &big1Cpy, eq: true},
+		{name: "different should not be equal", b1: big1, b2: big2, eq: false},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			eq := tc.b1.Equal(tc.b2)
+			require.Equal(t, tc.eq, eq)
+		})
+	}
+}
+
 func TestJSONMarshalUnmarshal(t *testing.T) {
 
 	bA1 := NewCompactBitArray(0)
@@ -199,4 +227,15 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 			require.Equal(t, val, bA.GetIndex(index), "bA.SetIndex(%d, %v) failed on bit array: %s", index, val, copy)
 		}
 	}
+}
+
+func BenchmarkNumTrueBitsBefore(b *testing.B) {
+	ba, _ := randCompactBitArray(100)
+
+	b.Run("new", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			ba.NumTrueBitsBefore(90)
+		}
+	})
 }

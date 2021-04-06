@@ -1,3 +1,5 @@
+version: v1beta1
+
 build:
   roots:
     - proto
@@ -24,6 +26,8 @@ lint:
 breaking:
   use:
     - FILE
+  except:
+    - FIELD_NO_DELETE
   ignore:
     - tendermint
     - gogoproto

@@ -50,19 +50,19 @@ func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 // Implements Proposal Interface
 var _ gov.Content = &CancelSoftwareUpgradeProposal{}
 
-func (sup *CancelSoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
-func (sup *CancelSoftwareUpgradeProposal) GetDescription() string { return sup.Description }
-func (sup *CancelSoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
-func (sup *CancelSoftwareUpgradeProposal) ProposalType() string {
+func (csup *CancelSoftwareUpgradeProposal) GetTitle() string       { return csup.Title }
+func (csup *CancelSoftwareUpgradeProposal) GetDescription() string { return csup.Description }
+func (csup *CancelSoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
+func (csup *CancelSoftwareUpgradeProposal) ProposalType() string {
 	return ProposalTypeCancelSoftwareUpgrade
 }
-func (sup *CancelSoftwareUpgradeProposal) ValidateBasic() error {
-	return gov.ValidateAbstract(sup)
+func (csup *CancelSoftwareUpgradeProposal) ValidateBasic() error {
+	return gov.ValidateAbstract(csup)
 }
 
-func (sup CancelSoftwareUpgradeProposal) String() string {
+func (csup CancelSoftwareUpgradeProposal) String() string {
 	return fmt.Sprintf(`Cancel Software Upgrade Proposal:
   Title:       %s
   Description: %s
-`, sup.Title, sup.Description)
+`, csup.Title, csup.Description)
 }

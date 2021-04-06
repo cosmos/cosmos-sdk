@@ -35,18 +35,17 @@ func GenTxCmd(mbm module.BasicManager, txEncCfg client.TxEncodingConfig, genBalI
 	fsCreateValidator, defaultsDesc := cli.CreateValidatorMsgFlagSet(ipDefault)
 
 	cmd := &cobra.Command{
-		Use:   "gentx [key_name]",
+		Use:   "gentx [key_name] [amount]",
 		Short: "Generate a genesis tx carrying a self delegation",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		Long: fmt.Sprintf(`Generate a genesis transaction that creates a validator with a self-delegation,
 that is signed by the key in the Keyring referenced by a given name. A node ID and Bech32 consensus
 pubkey may optionally be provided. If they are omitted, they will be retrieved from the priv_validator.json
-file. The following default parameters are included: 
+file. The following default parameters are included:
     %s
-				
+
 Example:
-$ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=test-chain-1 \
-    --amount=1000000stake \
+$ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=os --chain-id=test-chain-1 \
     --moniker="myvalidator" \
     --commission-max-change-rate=0.01 \
     --commission-max-rate=1.0 \
@@ -58,7 +57,10 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 			cdc := clientCtx.JSONMarshaler
 
 			config := serverCtx.Config
@@ -75,10 +77,10 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			// read --pubkey, if empty take it from priv_validator.json
-			if valPubKeyString, _ := cmd.Flags().GetString(cli.FlagPubKey); valPubKeyString != "" {
-				valPubKey, err = sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, valPubKeyString)
+			if val, _ := cmd.Flags().GetString(cli.FlagPubKey); val != "" {
+				err = clientCtx.JSONMarshaler.UnmarshalJSON([]byte(val), valPubKey)
 				if err != nil {
-					return errors.Wrap(err, "failed to get consensus node public key")
+					return errors.Wrap(err, "failed to unmarshal consensus node public key")
 				}
 			}
 
@@ -115,8 +117,8 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return errors.Wrap(err, "error creating configuration to create validator msg")
 			}
 
-			amount, _ := cmd.Flags().GetString(cli.FlagAmount)
-			coins, err := sdk.ParseCoins(amount)
+			amount := args[1]
+			coins, err := sdk.ParseCoinsNormalized(amount)
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
 			}
@@ -132,6 +134,19 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 			}
 
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(key.GetAddress())
+
+			// The following line comes from a discrepancy between the `gentx`
+			// and `create-validator` commands:
+			// - `gentx` expects amount as an arg,
+			// - `create-validator` expects amount as a required flag.
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/8251
+			// Since gentx doesn't set the amount flag (which `create-validator`
+			// reads from), we copy the amount arg into the valCfg directly.
+			//
+			// Ideally, the `create-validator` command should take a validator
+			// config file instead of so many flags.
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/8177
+			createValCfg.Amount = amount
 
 			// create a 'create-validator' message
 			txBldr, msg, err := cli.BuildCreateValidatorMsg(clientCtx, createValCfg, txFactory, true)
@@ -164,7 +179,7 @@ $ %s gentx my-key-name --home=/path/to/home/dir --keyring-backend=os --chain-id=
 				return fmt.Errorf("error creating tx builder: %w", err)
 			}
 
-			err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true)
+			err = authclient.SignTx(txFactory, clientCtx, name, txBuilder, true, true)
 			if err != nil {
 				return errors.Wrap(err, "failed to sign std tx")
 			}

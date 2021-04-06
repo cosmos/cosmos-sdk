@@ -2,7 +2,6 @@ package cachekv
 
 import (
 	"bytes"
-	"container/list"
 	"io"
 	"sort"
 	"sync"
@@ -10,6 +9,8 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/internal/conv"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -29,27 +30,28 @@ type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]*cValue
 	unsortedCache map[string]struct{}
-	sortedCache   *list.List // always ascending sorted
+	sortedCache   *kv.List // always ascending sorted
 	parent        types.KVStore
 }
 
 var _ types.CacheKVStore = (*Store)(nil)
 
+// NewStore creates a new Store object
 func NewStore(parent types.KVStore) *Store {
 	return &Store{
 		cache:         make(map[string]*cValue),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   list.New(),
+		sortedCache:   kv.NewList(),
 		parent:        parent,
 	}
 }
 
-// Implements Store.
+// GetStoreType implements Store.
 func (store *Store) GetStoreType() types.StoreType {
 	return store.parent.GetStoreType()
 }
 
-// Implements types.KVStore.
+// Get implements types.KVStore.
 func (store *Store) Get(key []byte) (value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -68,7 +70,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 	return value
 }
 
-// Implements types.KVStore.
+// Set implements types.KVStore.
 func (store *Store) Set(key []byte, value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -80,13 +82,13 @@ func (store *Store) Set(key []byte, value []byte) {
 	store.setCacheValue(key, value, false, true)
 }
 
-// Implements types.KVStore.
+// Has implements types.KVStore.
 func (store *Store) Has(key []byte) bool {
 	value := store.Get(key)
 	return value != nil
 }
 
-// Implements types.KVStore.
+// Delete implements types.KVStore.
 func (store *Store) Delete(key []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -132,13 +134,10 @@ func (store *Store) Write() {
 	// Clear the cache
 	store.cache = make(map[string]*cValue)
 	store.unsortedCache = make(map[string]struct{})
-	store.sortedCache = list.New()
+	store.sortedCache = kv.NewList()
 }
 
-//----------------------------------------
-// To cache-wrap this Store further.
-
-// Implements CacheWrapper.
+// CacheWrap implements CacheWrapper.
 func (store *Store) CacheWrap() types.CacheWrap {
 	return NewStore(store)
 }
@@ -148,15 +147,20 @@ func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types
 	return NewStore(tracekv.NewStore(store, w, tc))
 }
 
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (store *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
+	return NewStore(listenkv.NewStore(store, storeKey, listeners))
+}
+
 //----------------------------------------
 // Iteration
 
-// Implements types.KVStore.
+// Iterator implements types.KVStore.
 func (store *Store) Iterator(start, end []byte) types.Iterator {
 	return store.iterator(start, end, true)
 }
 
-// Implements types.KVStore.
+// ReverseIterator implements types.KVStore.
 func (store *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return store.iterator(start, end, false)
 }
@@ -183,13 +187,21 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 func (store *Store) dirtyItems(start, end []byte) {
 	unsorted := make([]*kv.Pair, 0)
 
+	n := len(store.unsortedCache)
 	for key := range store.unsortedCache {
-		cacheValue := store.cache[key]
-
-		if dbm.IsKeyInDomain([]byte(key), start, end) {
+		if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
+			cacheValue := store.cache[key]
 			unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+		}
+	}
 
+	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
+		for key := range store.unsortedCache {
 			delete(store.unsortedCache, key)
+		}
+	} else { // Otherwise, normally delete the unsorted keys from the map.
+		for _, kv := range unsorted {
+			delete(store.unsortedCache, conv.UnsafeBytesToStr(kv.Key))
 		}
 	}
 
@@ -199,7 +211,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 	for e := store.sortedCache.Front(); e != nil && len(unsorted) != 0; {
 		uitem := unsorted[0]
-		sitem := e.Value.(*kv.Pair)
+		sitem := e.Value
 		comp := bytes.Compare(uitem.Key, sitem.Key)
 
 		switch comp {

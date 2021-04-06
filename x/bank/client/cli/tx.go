@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -34,29 +35,29 @@ ignored as it is implied from [from_key_or_address].`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.Flags().Set(flags.FlagFrom, args[0])
-
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			toAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			coins, err := sdk.ParseCoins(args[2])
+			coins, err := sdk.ParseCoinsNormalized(args[2])
 			if err != nil {
 				return err
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.Send(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 

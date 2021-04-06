@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -158,6 +159,8 @@ func (s *intTestSuite) TestArithInt() {
 			{sdk.MinInt(i1, i2), minint(n1, n2)},
 			{sdk.MaxInt(i1, i2), maxint(n1, n2)},
 			{i1.Neg(), -n1},
+			{i1.Abs(), n1},
+			{i1.Neg().Abs(), n1},
 		}
 
 		for tcnum, tc := range cases {
@@ -205,6 +208,7 @@ func (s *intTestSuite) TestImmutabilityAllInt() {
 		func(i *sdk.Int) { _ = i.MulRaw(rand.Int63()) },
 		func(i *sdk.Int) { _ = i.QuoRaw(rand.Int63()) },
 		func(i *sdk.Int) { _ = i.Neg() },
+		func(i *sdk.Int) { _ = i.Abs() },
 		func(i *sdk.Int) { _ = i.IsZero() },
 		func(i *sdk.Int) { _ = i.Sign() },
 		func(i *sdk.Int) { _ = i.Equal(randint()) },
@@ -384,4 +388,37 @@ func (s *intTestSuite) TestIntEq() {
 	s.Require().True(resp)
 	_, resp, _, _, _ = sdk.IntEq(s.T(), sdk.OneInt(), sdk.ZeroInt())
 	s.Require().False(resp)
+}
+
+func TestRoundTripMarshalToInt(t *testing.T) {
+	var values = []int64{
+		0,
+		1,
+		1 << 10,
+		1<<10 - 3,
+		1<<63 - 1,
+		1<<32 - 7,
+		1<<22 - 8,
+	}
+
+	for _, value := range values {
+		value := value
+		t.Run(fmt.Sprintf("%d", value), func(t *testing.T) {
+			t.Parallel()
+
+			var scratch [20]byte
+			iv := sdk.NewInt(value)
+			n, err := iv.MarshalTo(scratch[:])
+			if err != nil {
+				t.Fatal(err)
+			}
+			rt := new(sdk.Int)
+			if err := rt.Unmarshal(scratch[:n]); err != nil {
+				t.Fatal(err)
+			}
+			if !rt.Equal(iv) {
+				t.Fatalf("roundtrip=%q != original=%q", rt, iv)
+			}
+		})
+	}
 }

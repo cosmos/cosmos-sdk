@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -93,9 +93,9 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
-	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
-		homeDir, _ := flagSet.GetString(flags.FlagHome)
-		clientCtx = clientCtx.WithHomeDir(homeDir)
+	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
+		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
+		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
 	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
@@ -119,7 +119,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
 		if keyringBackend != "" {
-			kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+			kr, err := NewKeyringFromBackend(clientCtx, keyringBackend)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -133,7 +133,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		if rpcURI != "" {
 			clientCtx = clientCtx.WithNodeURI(rpcURI)
 
-			client, err := rpchttp.New(rpcURI, "/websocket")
+			client, err := NewClientFromNode(rpcURI)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -145,7 +145,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 	return clientCtx, nil
 }
 
-// ReadQueryCommandFlags returns an updated Context with fields set based on flags
+// readQueryCommandFlags returns an updated Context with fields set based on flags
 // defined in AddQueryFlagsToCmd. An error is returned if any flag query fails.
 //
 // Note, the provided clientCtx may have field pre-populated. The following order
@@ -155,7 +155,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 // - client.Context field not pre-populated & flag set: uses set flag value
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
-func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+func readQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
 	if clientCtx.Height == 0 || flagSet.Changed(flags.FlagHeight) {
 		height, _ := flagSet.GetInt64(flags.FlagHeight)
 		clientCtx = clientCtx.WithHeight(height)
@@ -169,7 +169,7 @@ func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, 
 	return ReadPersistentCommandFlags(clientCtx, flagSet)
 }
 
-// ReadTxCommandFlags returns an updated Context with fields set based on flags
+// readTxCommandFlags returns an updated Context with fields set based on flags
 // defined in AddTxFlagsToCmd. An error is returned if any flag query fails.
 //
 // Note, the provided clientCtx may have field pre-populated. The following order
@@ -179,7 +179,7 @@ func ReadQueryCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, 
 // - client.Context field not pre-populated & flag set: uses set flag value
 // - client.Context field pre-populated & flag not set: uses pre-populated value
 // - client.Context field pre-populated & flag set: uses set flag value
-func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
+func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, error) {
 	clientCtx, err := ReadPersistentCommandFlags(clientCtx, flagSet)
 	if err != nil {
 		return clientCtx, err
@@ -188,11 +188,6 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	if !clientCtx.GenerateOnly || flagSet.Changed(flags.FlagGenerateOnly) {
 		genOnly, _ := flagSet.GetBool(flags.FlagGenerateOnly)
 		clientCtx = clientCtx.WithGenerateOnly(genOnly)
-	}
-
-	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
-		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
-		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
 	if !clientCtx.Offline || flagSet.Changed(flags.FlagOffline) {
@@ -215,17 +210,82 @@ func ReadTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		clientCtx = clientCtx.WithSkipConfirmation(skipConfirm)
 	}
 
+	if clientCtx.SignModeStr == "" || flagSet.Changed(flags.FlagSignMode) {
+		signModeStr, _ := flagSet.GetString(flags.FlagSignMode)
+		clientCtx = clientCtx.WithSignModeStr(signModeStr)
+	}
+
+	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeAccount) {
+		granter, _ := flagSet.GetString(flags.FlagFeeAccount)
+
+		if granter != "" {
+			granterAcc, err := sdk.AccAddressFromBech32(granter)
+			if err != nil {
+				return clientCtx, err
+			}
+
+			clientCtx = clientCtx.WithFeeGranterAddress(granterAcc)
+		}
+	}
+
 	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
-		fromAddr, fromName, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
+		fromAddr, fromName, keyType, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
 		if err != nil {
 			return clientCtx, err
 		}
 
 		clientCtx = clientCtx.WithFrom(from).WithFromAddress(fromAddr).WithFromName(fromName)
+
+		// If the `from` signer account is a ledger key, we need to use
+		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/8109
+		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON {
+			fmt.Println("Default sign-mode 'direct' not supported by Ledger, using sign-mode 'amino-json'.")
+			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
+		}
 	}
 
 	return clientCtx, nil
+}
+
+// ReadHomeFlag checks if home flag is changed.
+// If this is a case, we update HomeDir field of Client Context
+/* Discovered a bug with Cory
+./build/simd init andrei --home ./test
+cd test/config there is no client.toml configuration file
+*/
+func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
+	if cmd.Flags().Changed(flags.FlagHome) {
+		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+		clientCtx = clientCtx.WithHomeDir(rootDir)
+	}
+
+	return clientCtx
+}
+
+// GetClientQueryContext returns a Context from a command with fields set based on flags
+// defined in AddQueryFlagsToCmd. An error is returned if any flag query fails.
+//
+// - client.Context field not pre-populated & flag not set: uses default flag value
+// - client.Context field not pre-populated & flag set: uses set flag value
+// - client.Context field pre-populated & flag not set: uses pre-populated value
+// - client.Context field pre-populated & flag set: uses set flag value
+func GetClientQueryContext(cmd *cobra.Command) (Context, error) {
+	ctx := GetClientContextFromCmd(cmd)
+	return readQueryCommandFlags(ctx, cmd.Flags())
+}
+
+// GetClientTxContext returns a Context from a command with fields set based on flags
+// defined in AddTxFlagsToCmd. An error is returned if any flag query fails.
+//
+// - client.Context field not pre-populated & flag not set: uses default flag value
+// - client.Context field not pre-populated & flag set: uses set flag value
+// - client.Context field pre-populated & flag not set: uses pre-populated value
+// - client.Context field pre-populated & flag set: uses set flag value
+func GetClientTxContext(cmd *cobra.Command) (Context, error) {
+	ctx := GetClientContextFromCmd(cmd)
+	return readTxCommandFlags(ctx, cmd.Flags())
 }
 
 // GetClientContextFromCmd returns a Context from a command or an empty Context

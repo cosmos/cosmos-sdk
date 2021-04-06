@@ -15,7 +15,7 @@ for fractions of coins to be received from operations like inflation.
 When coins are distributed from the pool they are truncated back to
 `sdk.Coins` which are non-decimal.
 
-- FeePool:  `0x00 -> amino(FeePool)`
+- FeePool: `0x00 -> ProtocolBuffer(FeePool)`
 
 ```go
 // coins with decimal
@@ -25,34 +25,26 @@ type DecCoin struct {
     Amount sdk.Dec
     Denom  string
 }
-
-type FeePool struct {
-    TotalValAccumUpdateHeight  int64    // last height which the total validator accum was updated
-    TotalValAccum              sdk.Dec  // total valdator accum held by validators
-    Pool                       DecCoins // funds for all validators which have yet to be withdrawn
-    CommunityPool              DecCoins // pool for community funds yet to be spent
-}
 ```
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/distribution/v1beta1/distribution.proto#L94-L101
 
 ## Validator Distribution
 
 Validator distribution information for the relevant validator is updated each time:
 
- 1. delegation amount to a validator is updated,
- 2. a validator successfully proposes a block and receives a reward,
- 3. any delegator withdraws from a validator, or
- 4. the validator withdraws it's commission.
+1. delegation amount to a validator is updated,
+2. a validator successfully proposes a block and receives a reward,
+3. any delegator withdraws from a validator, or
+4. the validator withdraws it's commission.
 
-- ValidatorDistInfo:  `0x02 | ValOperatorAddr -> amino(validatorDistribution)`
+- ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
 
 ```go
 type ValidatorDistInfo struct {
-    FeePoolWithdrawalHeight     int64    // last height this validator withdrew from the global fee pool
-    Pool                       DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
-    PoolCommission             DecCoins // commission collected by this validator (pending withdrawal) 
-
-    TotalDelAccumUpdateHeight  int64    // last height which the total delegator accum was updated
-    TotalDelAccum              sdk.Dec  // total proposer pool accumulation factor held by delegators
+    OperatorAddress     sdk.AccAddress
+    SelfBondRewards     sdk.DecCoins
+    ValidatorCommission types.ValidatorAccumulatedCommission
 }
 ```
 
@@ -64,7 +56,7 @@ properties change (aka bonded tokens etc.) its properties will remain constant
 and the delegator's _accumulation_ factor can be calculated passively knowing
 only the height of the last withdrawal and its current properties.
 
-- DelegationDistInfo: `0x02 | DelegatorAddr | ValOperatorAddr -> amino(delegatorDist)`
+- DelegationDistInfo: `0x02 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(delegatorDist)`
 
 ```go
 type DelegationDistInfo struct {

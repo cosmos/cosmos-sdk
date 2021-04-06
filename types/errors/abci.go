@@ -151,12 +151,14 @@ func errIsNil(err error) bool {
 	return false
 }
 
+var errPanicWithMsg = Wrapf(ErrPanic, "panic message redacted to hide potentially sensitive system info")
+
 // Redact replaces an error that is not initialized as an ABCI Error with a
 // generic internal error instance. If the error is an ABCI Error, that error is
 // simply returned.
 func Redact(err error) error {
 	if ErrPanic.Is(err) {
-		return ErrPanic
+		return errPanicWithMsg
 	}
 	if abciCode(err) == internalABCICode {
 		return errInternal

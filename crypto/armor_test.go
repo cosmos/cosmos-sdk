@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
-	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -74,12 +73,12 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	cstore := keyring.NewInMemory()
 
 	// Add keys and see they return in alphabetical order
-	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 	armored := crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "")
 	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
-	pub, err := cryptoAmino.PubKeyFromBytes(pubBytes)
+	pub, err := legacy.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
 	require.Equal(t, string(hd.Secp256k1Type), algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
@@ -87,7 +86,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 	armored = crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(info.GetPubKey()), "unknown")
 	pubBytes, algo, err = crypto.UnarmorPubKeyBytes(armored)
 	require.NoError(t, err)
-	pub, err = cryptoAmino.PubKeyFromBytes(pubBytes)
+	pub, err = legacy.PubKeyFromBytes(pubBytes)
 	require.NoError(t, err)
 	require.Equal(t, "unknown", algo)
 	require.True(t, pub.Equals(info.GetPubKey()))
@@ -163,6 +162,7 @@ func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
 	for securityParam := 9; securityParam < 16; securityParam++ {
 		param := securityParam
 		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
+			b.ReportAllocs()
 			saltBytes := tmcrypto.CRandBytes(16)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {

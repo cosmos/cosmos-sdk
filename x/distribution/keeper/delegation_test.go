@@ -23,7 +23,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// end block to bond validator and start new block
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -215,7 +215,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -234,7 +234,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// second delegation
 	tstaking.Ctx = ctx
-	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], 100)
+	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewInt(100))
 	del2 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[1]), valAddrs[0])
 
 	// fetch updated validator
@@ -280,7 +280,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// create validator with 50% commission
@@ -492,15 +492,14 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	err := app.BankKeeper.SetBalances(ctx, distrAcc.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000))))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -519,7 +518,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// second delegation
-	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], 100)
+	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewInt(100))
 
 	// historical count should be 3 (second delegation init)
 	require.Equal(t, uint64(3), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
@@ -538,7 +537,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// first delegator withdraws
-	_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	_, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	require.NoError(t, err)
 
 	// second delegator withdraws

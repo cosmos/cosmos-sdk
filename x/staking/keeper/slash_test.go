@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -26,8 +25,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), totalSupply)
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, notBondedPool.GetName(), totalSupply))
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -35,11 +33,9 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	bondedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(numVals)))
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 
-	err = app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedCoins)
-	require.NoError(t, err)
-
+	// set bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(totalSupply))
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, bondedPool.GetName(), bondedCoins))
 
 	for i := int64(0); i < numVals; i++ {
 		validator := teststaking.NewValidator(t, addrVals[i], PKs[i])
@@ -90,13 +86,13 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 	// unbonding started prior to the infraction height, stakw didn't contribute
 	slashAmount := app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 1, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
@@ -104,7 +100,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 	slashAmount = app.StakingKeeper.SlashUnbondingDelegation(ctx, ubd, 0, fraction)
-	require.Equal(t, int64(5), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
 	ubd, found := app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
@@ -116,7 +112,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
 	newUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
 	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances)
-	require.Equal(t, int64(5), diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Int64())
+	require.True(t, diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Equal(sdk.NewInt(5)))
 }
 
 // tests slashRedelegation
@@ -129,7 +125,7 @@ func TestSlashRedelegation(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(startCoins...)))
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, bondedPool.GetName(), startCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// set a redelegation with an expiration timestamp beyond which the
@@ -147,7 +143,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount := app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 1, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	// after the expiration time, no longer eligible for slashing
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(10, 0)})
@@ -155,7 +151,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
-	require.Equal(t, int64(0), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
 	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
@@ -165,7 +161,7 @@ func TestSlashRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[1])
 	require.True(t, found)
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
-	require.Equal(t, int64(5), slashAmount.Int64())
+	require.True(t, slashAmount.Equal(sdk.NewInt(5)))
 	rd, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
@@ -268,8 +264,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
 	ubdTokens := sdk.TokensFromConsensusPower(4)
-	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), ubdTokens)
+	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11, time.Unix(0, 0), ubdTokens)
 	app.StakingKeeper.SetUnbondingDelegation(ctx, ubd)
 
 	// slash validator for the first time
@@ -385,7 +380,6 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Equal(t, validator.GetStatus(), types.Unbonding)
 }
 
-//_________________________________________________________________________________
 // tests Slash at a previous height with a redelegation
 func TestSlashWithRedelegation(t *testing.T) {
 	app, ctx, addrDels, addrVals := bootstrapSlashTest(t, 10)
@@ -408,10 +402,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	rdCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdTokens.MulRaw(2)))
 
-	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-
-	err := app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), balances.Add(rdCoins...))
-	require.NoError(t, err)
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, bondedPool.GetName(), rdCoins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -574,11 +565,8 @@ func TestSlashBoth(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	bondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, bondedPool.GetAddress(), bondedPoolBalances.Add(bondedCoins...)))
-
-	notBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	require.NoError(t, app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), notBondedPoolBalances.Add(notBondedCoins...)))
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, bondedPool.GetName(), bondedCoins))
+	require.NoError(t, simapp.FundModuleAccount(app, ctx, notBondedPool.GetName(), notBondedCoins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)

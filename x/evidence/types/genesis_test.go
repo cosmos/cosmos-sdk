@@ -32,11 +32,11 @@ func TestNewGenesisState(t *testing.T) {
 		expPass  bool
 	}{
 		{
-			"cannot proto marshal",
+			"can proto marshal",
 			func() {
 				evidence = []exported.Evidence{&TestEvidence{}}
 			},
-			false,
+			true,
 		},
 	}
 
@@ -174,6 +174,9 @@ func (*TestEvidence) Type() string {
 func (*TestEvidence) String() string {
 	return "test-string"
 }
+
+func (*TestEvidence) ProtoMessage() {}
+func (*TestEvidence) Reset()        {}
 
 func (*TestEvidence) Hash() tmbytes.HexBytes {
 	return tmbytes.HexBytes([]byte("test-hash"))

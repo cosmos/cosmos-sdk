@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -49,6 +50,8 @@ type (
 	}
 )
 
+// NewKeeper constructs a new CapabilityKeeper instance and initializes maps
+// for capability map and scopedModules map.
 func NewKeeper(cdc codec.BinaryMarshaler, storeKey, memKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
@@ -66,6 +69,9 @@ func NewKeeper(cdc codec.BinaryMarshaler, storeKey, memKey sdk.StoreKey) *Keeper
 func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	if k.sealed {
 		panic("cannot scope to module via a sealed capability keeper")
+	}
+	if strings.TrimSpace(moduleName) == "" {
+		panic("cannot scope to an empty module name")
 	}
 
 	if _, ok := k.scopedModules[moduleName]; ok {
@@ -117,10 +123,10 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	k.sealed = true
 }
 
-// SetIndex sets the index to one (or greater) in InitChain according
+// InitializeIndex sets the index to one (or greater) in InitChain according
 // to the GenesisState. It must only be called once.
 // It will panic if the provided index is 0, or if the index is already set.
-func (k Keeper) SetIndex(ctx sdk.Context, index uint64) error {
+func (k Keeper) InitializeIndex(ctx sdk.Context, index uint64) error {
 	if index == 0 {
 		panic("SetIndex requires index > 0")
 	}
@@ -200,6 +206,9 @@ func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types
 // Note, namespacing is completely local, which is safe since records are prefixed
 // with the module name and no two ScopedKeeper can have the same module name.
 func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capability, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
+	}
 	store := ctx.KVStore(sk.storeKey)
 
 	if _, ok := sk.GetCapability(ctx, name); ok {
@@ -247,6 +256,9 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 // Note, the capability's forward mapping is indexed by a string which should
 // contain its unique memory reference.
 func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap *types.Capability, name string) bool {
+	if strings.TrimSpace(name) == "" || cap == nil {
+		return false
+	}
 	return sk.GetCapabilityName(ctx, cap) == name
 }
 
@@ -256,6 +268,12 @@ func (sk ScopedKeeper) AuthenticateCapability(ctx sdk.Context, cap *types.Capabi
 // index. If the owner already exists, it will return an error. Otherwise, it will
 // also set a forward and reverse index for the capability and capability name.
 func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, name string) error {
+	if cap == nil {
+		return sdkerrors.Wrap(types.ErrNilCapability, "cannot claim nil capability")
+	}
+	if strings.TrimSpace(name) == "" {
+		return sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
+	}
 	// update capability owner set
 	if err := sk.addOwner(ctx, cap, name); err != nil {
 		return err
@@ -282,6 +300,9 @@ func (sk ScopedKeeper) ClaimCapability(ctx sdk.Context, cap *types.Capability, n
 // previously claimed or created. After releasing the capability, if no more
 // owners exist, the capability will be globally removed.
 func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability) error {
+	if cap == nil {
+		return sdkerrors.Wrap(types.ErrNilCapability, "cannot release nil capability")
+	}
 	name := sk.GetCapabilityName(ctx, cap)
 	if len(name) == 0 {
 		return sdkerrors.Wrap(types.ErrCapabilityNotOwned, sk.module)
@@ -321,6 +342,9 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
 func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capability, bool) {
+	if strings.TrimSpace(name) == "" {
+		return nil, false
+	}
 	memStore := ctx.KVStore(sk.memKey)
 
 	key := types.RevCapabilityKey(sk.module, name)
@@ -332,15 +356,14 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 		// to still have the capability in the go map since changes to
 		// go map do not automatically get reverted on tx failure,
 		// so we delete here to remove unnecessary values in map
-		delete(sk.capMap, index)
+		// TODO: Delete index correctly from capMap by storing some reverse lookup
+		// in-memory map. Issue: https://github.com/cosmos/cosmos-sdk/issues/7805
 		return nil, false
 	}
 
 	cap := sk.capMap[index]
 	if cap == nil {
-		// delete key from store to remove unnecessary mapping
-		memStore.Delete(key)
-		return nil, false
+		panic("capability found in memstore is missing from map")
 	}
 
 	return cap, true
@@ -349,14 +372,20 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 // GetCapabilityName allows a module to retrieve the name under which it stored a given
 // capability given the capability
 func (sk ScopedKeeper) GetCapabilityName(ctx sdk.Context, cap *types.Capability) string {
+	if cap == nil {
+		return ""
+	}
 	memStore := ctx.KVStore(sk.memKey)
 
 	return string(memStore.Get(types.FwdCapabilityKey(sk.module, cap)))
 }
 
-// Get all the Owners that own the capability associated with the name this ScopedKeeper uses
+// GetOwners all the Owners that own the capability associated with the name this ScopedKeeper uses
 // to refer to the capability
 func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.CapabilityOwners, bool) {
+	if strings.TrimSpace(name) == "" {
+		return nil, false
+	}
 	cap, ok := sk.GetCapability(ctx, name)
 	if !ok {
 		return nil, false
@@ -382,6 +411,9 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 // The method returns an error if either the capability or the owners cannot be
 // retreived from the memstore.
 func (sk ScopedKeeper) LookupModules(ctx sdk.Context, name string) ([]string, *types.Capability, error) {
+	if strings.TrimSpace(name) == "" {
+		return nil, nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "cannot lookup modules with empty capability name")
+	}
 	cap, ok := sk.GetCapability(ctx, name)
 	if !ok {
 		return nil, nil, sdkerrors.Wrap(types.ErrCapabilityNotFound, name)

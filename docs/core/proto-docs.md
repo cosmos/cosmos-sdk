@@ -470,18 +470,22 @@
     - [QueryDelegatorValidatorsResponse](#cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse)
     - [QueryHistoricalInfoRequest](#cosmos.staking.v1beta1.QueryHistoricalInfoRequest)
     - [QueryHistoricalInfoResponse](#cosmos.staking.v1beta1.QueryHistoricalInfoResponse)
-    - [QueryMsgBeginRedelegatesRequest](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesRequest)
-    - [QueryMsgBeginRedelegatesResponse](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesResponse)
-    - [QueryMsgCreateValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsRequest)
-    - [QueryMsgCreateValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsResponse)
-    - [QueryMsgDelegatesRequest](#cosmos.staking.v1beta1.QueryMsgDelegatesRequest)
-    - [QueryMsgDelegatesResponse](#cosmos.staking.v1beta1.QueryMsgDelegatesResponse)
-    - [QueryMsgEditValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgEditValidatorsRequest)
-    - [QueryMsgEditValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgEditValidatorsResponse)
     - [QueryParamsRequest](#cosmos.staking.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.staking.v1beta1.QueryParamsResponse)
     - [QueryPoolRequest](#cosmos.staking.v1beta1.QueryPoolRequest)
     - [QueryPoolResponse](#cosmos.staking.v1beta1.QueryPoolResponse)
+    - [QueryQueuedMsgBeginRedelegateRequest](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateRequest)
+    - [QueryQueuedMsgBeginRedelegateResponse](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateResponse)
+    - [QueryQueuedMsgBeginRedelegatesRequest](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesRequest)
+    - [QueryQueuedMsgBeginRedelegatesResponse](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesResponse)
+    - [QueryQueuedMsgCreateValidatorsRequest](#cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsRequest)
+    - [QueryQueuedMsgCreateValidatorsResponse](#cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsResponse)
+    - [QueryQueuedMsgDelegateRequest](#cosmos.staking.v1beta1.QueryQueuedMsgDelegateRequest)
+    - [QueryQueuedMsgDelegateResponse](#cosmos.staking.v1beta1.QueryQueuedMsgDelegateResponse)
+    - [QueryQueuedMsgDelegatesRequest](#cosmos.staking.v1beta1.QueryQueuedMsgDelegatesRequest)
+    - [QueryQueuedMsgDelegatesResponse](#cosmos.staking.v1beta1.QueryQueuedMsgDelegatesResponse)
+    - [QueryQueuedMsgEditValidatorsRequest](#cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsRequest)
+    - [QueryQueuedMsgEditValidatorsResponse](#cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsResponse)
     - [QueryRedelegationsRequest](#cosmos.staking.v1beta1.QueryRedelegationsRequest)
     - [QueryRedelegationsResponse](#cosmos.staking.v1beta1.QueryRedelegationsResponse)
     - [QueryUnbondingDelegationRequest](#cosmos.staking.v1beta1.QueryUnbondingDelegationRequest)
@@ -6657,130 +6661,6 @@ method.
 
 
 
-<a name="cosmos.staking.v1beta1.QueryMsgBeginRedelegatesRequest"></a>
-
-### QueryMsgBeginRedelegatesRequest
-QueryMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.QueryMsgBeginRedelegatesResponse"></a>
-
-### QueryMsgBeginRedelegatesResponse
-QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_begin_redelegates` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | repeated | msg_begin_redelegates contains all of the queued messages |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.QueryMsgCreateValidatorsRequest"></a>
-
-### QueryMsgCreateValidatorsRequest
-QueryMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.QueryMsgCreateValidatorsResponse"></a>
-
-### QueryMsgCreateValidatorsResponse
-QueryMsgCreateValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_create_validators` | [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator) | repeated | msg_create_validators contains all of the queued messages |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.QueryMsgDelegatesRequest"></a>
-
-### QueryMsgDelegatesRequest
-QueryMsgDelegateRequest is request type for Query/MsgDelegates RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.QueryMsgDelegatesResponse"></a>
-
-### QueryMsgDelegatesResponse
-QueryMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_delegates` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | repeated | msg_delegates contains all of the queued messages |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.QueryMsgEditValidatorsRequest"></a>
-
-### QueryMsgEditValidatorsRequest
-QueryMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.QueryMsgEditValidatorsResponse"></a>
-
-### QueryMsgEditValidatorsResponse
-QueryMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `msg_edit_validators` | [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator) | repeated | msg_edit_validators contains all of the queued messages |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
-
-
-
-
-
-
 <a name="cosmos.staking.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -6825,6 +6705,197 @@ QueryPoolResponse is response type for the Query/Pool RPC method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pool` | [Pool](#cosmos.staking.v1beta1.Pool) |  | pool defines the pool info. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateRequest"></a>
+
+### QueryQueuedMsgBeginRedelegateRequest
+QueryQueuedMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_addr` | [string](#string) |  | Return only messages associated with this address |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateResponse"></a>
+
+### QueryQueuedMsgBeginRedelegateResponse
+QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_begin_redelegates` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | repeated | msg_begin_redelegates contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesRequest"></a>
+
+### QueryQueuedMsgBeginRedelegatesRequest
+QueryQueuedMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesResponse"></a>
+
+### QueryQueuedMsgBeginRedelegatesResponse
+QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_begin_redelegates` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | repeated | msg_begin_redelegates contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsRequest"></a>
+
+### QueryQueuedMsgCreateValidatorsRequest
+QueryQueuedMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
+This is used to query all MsgCreateValidators transactions queued to be executed at the end of an epoch
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsResponse"></a>
+
+### QueryQueuedMsgCreateValidatorsResponse
+QueryMsgCreateValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_create_validators` | [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator) | repeated | msg_create_validators contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgDelegateRequest"></a>
+
+### QueryQueuedMsgDelegateRequest
+QueryMsgDelegateRequest is request type for Query/MsgDelegates RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_addr` | [string](#string) |  | Return only messages associated with this address |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgDelegateResponse"></a>
+
+### QueryQueuedMsgDelegateResponse
+QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_delegates` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | repeated | msg_delegates contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgDelegatesRequest"></a>
+
+### QueryQueuedMsgDelegatesRequest
+QueryMsgDelegatesRequest is request type for Query/MsgDelegates RPC method.
+Queries all MsgDelegate transactions queued to be executed at the end of an epoch
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgDelegatesResponse"></a>
+
+### QueryQueuedMsgDelegatesResponse
+QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_delegates` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | repeated | msg_delegates contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsRequest"></a>
+
+### QueryQueuedMsgEditValidatorsRequest
+QueryQueuedMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
+This is used to query all MsgEditValidators transactions queued to be executed at the end of an epoch
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsResponse"></a>
+
+### QueryQueuedMsgEditValidatorsResponse
+QueryQueuedMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_edit_validators` | [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator) | repeated | msg_edit_validators contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -7058,10 +7129,12 @@ Query defines the gRPC querier service.
 | `Pool` | [QueryPoolRequest](#cosmos.staking.v1beta1.QueryPoolRequest) | [QueryPoolResponse](#cosmos.staking.v1beta1.QueryPoolResponse) | Pool queries the pool info. | GET|/cosmos/staking/v1beta1/pool|
 | `Params` | [QueryParamsRequest](#cosmos.staking.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.staking.v1beta1.QueryParamsResponse) | Parameters queries the staking parameters. | GET|/cosmos/staking/v1beta1/params|
 | `BufferedValidators` | [QueryBufferedValidatorsRequest](#cosmos.staking.v1beta1.QueryBufferedValidatorsRequest) | [QueryBufferedValidatorsResponse](#cosmos.staking.v1beta1.QueryBufferedValidatorsResponse) | this could return current estimation of next validator set | GET|/cosmos/staking/v1beta1/validators|
-| `MsgCreateValidators` | [QueryMsgCreateValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsRequest) | [QueryMsgCreateValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsResponse) | Queued create validator messages | GET|/cosmos/staking/v1beta1/msg_create_validators|
-| `MsgEditValidators` | [QueryMsgEditValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgEditValidatorsRequest) | [QueryMsgEditValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgEditValidatorsResponse) | Queued edit validator messages | GET|/cosmos/staking/v1beta1/msg_edit_validators|
-| `MsgDelegates` | [QueryMsgDelegatesRequest](#cosmos.staking.v1beta1.QueryMsgDelegatesRequest) | [QueryMsgDelegatesResponse](#cosmos.staking.v1beta1.QueryMsgDelegatesResponse) | Queued delegate messages | GET|/cosmos/staking/v1beta1/msg_delegates|
-| `MsgBeginRedelegates` | [QueryMsgBeginRedelegatesRequest](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesRequest) | [QueryMsgBeginRedelegatesResponse](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesResponse) | Queued being redelegate messages | GET|/cosmos/staking/v1beta1/msg_begin_redelegates|
+| `QueuedMsgCreateValidators` | [QueryQueuedMsgCreateValidatorsRequest](#cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsRequest) | [QueryQueuedMsgCreateValidatorsResponse](#cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsResponse) | Queued create validator messages | GET|/cosmos/staking/v1beta1/msg_create_validators|
+| `QueuedMsgEditValidators` | [QueryQueuedMsgEditValidatorsRequest](#cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsRequest) | [QueryQueuedMsgEditValidatorsResponse](#cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsResponse) | Queued edit validator messages | GET|/cosmos/staking/v1beta1/msg_edit_validators|
+| `QueuedMsgDelegates` | [QueryQueuedMsgDelegatesRequest](#cosmos.staking.v1beta1.QueryQueuedMsgDelegatesRequest) | [QueryQueuedMsgDelegatesResponse](#cosmos.staking.v1beta1.QueryQueuedMsgDelegatesResponse) | Queued delegate messages | GET|/cosmos/staking/v1beta1/msg_delegates|
+| `QueuedMsgDelegate` | [QueryQueuedMsgDelegateRequest](#cosmos.staking.v1beta1.QueryQueuedMsgDelegateRequest) | [QueryQueuedMsgDelegateResponse](#cosmos.staking.v1beta1.QueryQueuedMsgDelegateResponse) | Queued delegate specific messages | GET|/cosmos/staking/v1beta1/msg_delegate/{delegator_addr}|
+| `QueuedMsgBeginRedelegates` | [QueryQueuedMsgBeginRedelegatesRequest](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesRequest) | [QueryQueuedMsgBeginRedelegatesResponse](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesResponse) | Queued being redelegate messages | GET|/cosmos/staking/v1beta1/msg_begin_redelegates|
+| `QueuedMsgBeginRedelegate` | [QueryQueuedMsgBeginRedelegateRequest](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateRequest) | [QueryQueuedMsgBeginRedelegateResponse](#cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateResponse) | Queued being redelegate messages | GET|/cosmos/staking/v1beta1/msg_begin_redelegates/{delegator_addr}|
 
  <!-- end services -->
 

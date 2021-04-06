@@ -30,24 +30,25 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
-type QueryMsgCreateValidatorsRequest struct {
+// QueryQueuedMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
+// This is used to query all MsgCreateValidators transactions queued to be executed at the end of an epoch
+type QueryQueuedMsgCreateValidatorsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgCreateValidatorsRequest) Reset()         { *m = QueryMsgCreateValidatorsRequest{} }
-func (m *QueryMsgCreateValidatorsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgCreateValidatorsRequest) ProtoMessage()    {}
-func (*QueryMsgCreateValidatorsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryQueuedMsgCreateValidatorsRequest) Reset()         { *m = QueryQueuedMsgCreateValidatorsRequest{} }
+func (m *QueryQueuedMsgCreateValidatorsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgCreateValidatorsRequest) ProtoMessage()    {}
+func (*QueryQueuedMsgCreateValidatorsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f270127f442bbcd8, []int{0}
 }
-func (m *QueryMsgCreateValidatorsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgCreateValidatorsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgCreateValidatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgCreateValidatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgCreateValidatorsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgCreateValidatorsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -57,19 +58,19 @@ func (m *QueryMsgCreateValidatorsRequest) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgCreateValidatorsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgCreateValidatorsRequest.Merge(m, src)
+func (m *QueryQueuedMsgCreateValidatorsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgCreateValidatorsRequest.Merge(m, src)
 }
-func (m *QueryMsgCreateValidatorsRequest) XXX_Size() int {
+func (m *QueryQueuedMsgCreateValidatorsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgCreateValidatorsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgCreateValidatorsRequest.DiscardUnknown(m)
+func (m *QueryQueuedMsgCreateValidatorsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgCreateValidatorsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgCreateValidatorsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgCreateValidatorsRequest proto.InternalMessageInfo
 
-func (m *QueryMsgCreateValidatorsRequest) GetPagination() *query.PageRequest {
+func (m *QueryQueuedMsgCreateValidatorsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
@@ -77,25 +78,27 @@ func (m *QueryMsgCreateValidatorsRequest) GetPagination() *query.PageRequest {
 }
 
 // QueryMsgCreateValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
-type QueryMsgCreateValidatorsResponse struct {
+type QueryQueuedMsgCreateValidatorsResponse struct {
 	// msg_create_validators contains all of the queued messages
 	MsgCreateValidators []MsgCreateValidator `protobuf:"bytes,1,rep,name=msg_create_validators,json=msgCreateValidators,proto3" json:"msg_create_validators"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgCreateValidatorsResponse) Reset()         { *m = QueryMsgCreateValidatorsResponse{} }
-func (m *QueryMsgCreateValidatorsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgCreateValidatorsResponse) ProtoMessage()    {}
-func (*QueryMsgCreateValidatorsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryQueuedMsgCreateValidatorsResponse) Reset() {
+	*m = QueryQueuedMsgCreateValidatorsResponse{}
+}
+func (m *QueryQueuedMsgCreateValidatorsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgCreateValidatorsResponse) ProtoMessage()    {}
+func (*QueryQueuedMsgCreateValidatorsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f270127f442bbcd8, []int{1}
 }
-func (m *QueryMsgCreateValidatorsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgCreateValidatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgCreateValidatorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgCreateValidatorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgCreateValidatorsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgCreateValidatorsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -105,50 +108,51 @@ func (m *QueryMsgCreateValidatorsResponse) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgCreateValidatorsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgCreateValidatorsResponse.Merge(m, src)
+func (m *QueryQueuedMsgCreateValidatorsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgCreateValidatorsResponse.Merge(m, src)
 }
-func (m *QueryMsgCreateValidatorsResponse) XXX_Size() int {
+func (m *QueryQueuedMsgCreateValidatorsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgCreateValidatorsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgCreateValidatorsResponse.DiscardUnknown(m)
+func (m *QueryQueuedMsgCreateValidatorsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgCreateValidatorsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgCreateValidatorsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgCreateValidatorsResponse proto.InternalMessageInfo
 
-func (m *QueryMsgCreateValidatorsResponse) GetMsgCreateValidators() []MsgCreateValidator {
+func (m *QueryQueuedMsgCreateValidatorsResponse) GetMsgCreateValidators() []MsgCreateValidator {
 	if m != nil {
 		return m.MsgCreateValidators
 	}
 	return nil
 }
 
-func (m *QueryMsgCreateValidatorsResponse) GetPagination() *query.PageResponse {
+func (m *QueryQueuedMsgCreateValidatorsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
-type QueryMsgEditValidatorsRequest struct {
+// QueryQueuedMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
+// This is used to query all MsgEditValidators transactions queued to be executed at the end of an epoch
+type QueryQueuedMsgEditValidatorsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgEditValidatorsRequest) Reset()         { *m = QueryMsgEditValidatorsRequest{} }
-func (m *QueryMsgEditValidatorsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgEditValidatorsRequest) ProtoMessage()    {}
-func (*QueryMsgEditValidatorsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryQueuedMsgEditValidatorsRequest) Reset()         { *m = QueryQueuedMsgEditValidatorsRequest{} }
+func (m *QueryQueuedMsgEditValidatorsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgEditValidatorsRequest) ProtoMessage()    {}
+func (*QueryQueuedMsgEditValidatorsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f270127f442bbcd8, []int{2}
 }
-func (m *QueryMsgEditValidatorsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgEditValidatorsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgEditValidatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgEditValidatorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgEditValidatorsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgEditValidatorsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -158,45 +162,45 @@ func (m *QueryMsgEditValidatorsRequest) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgEditValidatorsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgEditValidatorsRequest.Merge(m, src)
+func (m *QueryQueuedMsgEditValidatorsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgEditValidatorsRequest.Merge(m, src)
 }
-func (m *QueryMsgEditValidatorsRequest) XXX_Size() int {
+func (m *QueryQueuedMsgEditValidatorsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgEditValidatorsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgEditValidatorsRequest.DiscardUnknown(m)
+func (m *QueryQueuedMsgEditValidatorsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgEditValidatorsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgEditValidatorsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgEditValidatorsRequest proto.InternalMessageInfo
 
-func (m *QueryMsgEditValidatorsRequest) GetPagination() *query.PageRequest {
+func (m *QueryQueuedMsgEditValidatorsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
-type QueryMsgEditValidatorsResponse struct {
+// QueryQueuedMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+type QueryQueuedMsgEditValidatorsResponse struct {
 	// msg_edit_validators contains all of the queued messages
 	MsgEditValidators []MsgEditValidator `protobuf:"bytes,1,rep,name=msg_edit_validators,json=msgEditValidators,proto3" json:"msg_edit_validators"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgEditValidatorsResponse) Reset()         { *m = QueryMsgEditValidatorsResponse{} }
-func (m *QueryMsgEditValidatorsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgEditValidatorsResponse) ProtoMessage()    {}
-func (*QueryMsgEditValidatorsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryQueuedMsgEditValidatorsResponse) Reset()         { *m = QueryQueuedMsgEditValidatorsResponse{} }
+func (m *QueryQueuedMsgEditValidatorsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgEditValidatorsResponse) ProtoMessage()    {}
+func (*QueryQueuedMsgEditValidatorsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f270127f442bbcd8, []int{3}
 }
-func (m *QueryMsgEditValidatorsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgEditValidatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgEditValidatorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgEditValidatorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgEditValidatorsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgEditValidatorsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -206,26 +210,128 @@ func (m *QueryMsgEditValidatorsResponse) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgEditValidatorsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgEditValidatorsResponse.Merge(m, src)
+func (m *QueryQueuedMsgEditValidatorsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgEditValidatorsResponse.Merge(m, src)
 }
-func (m *QueryMsgEditValidatorsResponse) XXX_Size() int {
+func (m *QueryQueuedMsgEditValidatorsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgEditValidatorsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgEditValidatorsResponse.DiscardUnknown(m)
+func (m *QueryQueuedMsgEditValidatorsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgEditValidatorsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgEditValidatorsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgEditValidatorsResponse proto.InternalMessageInfo
 
-func (m *QueryMsgEditValidatorsResponse) GetMsgEditValidators() []MsgEditValidator {
+func (m *QueryQueuedMsgEditValidatorsResponse) GetMsgEditValidators() []MsgEditValidator {
 	if m != nil {
 		return m.MsgEditValidators
 	}
 	return nil
 }
 
-func (m *QueryMsgEditValidatorsResponse) GetPagination() *query.PageResponse {
+func (m *QueryQueuedMsgEditValidatorsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryMsgDelegatesRequest is request type for Query/MsgDelegates RPC method.
+// Queries all MsgDelegate transactions queued to be executed at the end of an epoch
+type QueryQueuedMsgDelegatesRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryQueuedMsgDelegatesRequest) Reset()         { *m = QueryQueuedMsgDelegatesRequest{} }
+func (m *QueryQueuedMsgDelegatesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgDelegatesRequest) ProtoMessage()    {}
+func (*QueryQueuedMsgDelegatesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{4}
+}
+func (m *QueryQueuedMsgDelegatesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryQueuedMsgDelegatesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryQueuedMsgDelegatesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryQueuedMsgDelegatesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgDelegatesRequest.Merge(m, src)
+}
+func (m *QueryQueuedMsgDelegatesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryQueuedMsgDelegatesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgDelegatesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryQueuedMsgDelegatesRequest proto.InternalMessageInfo
+
+func (m *QueryQueuedMsgDelegatesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+type QueryQueuedMsgDelegatesResponse struct {
+	// msg_delegates contains all of the queued messages
+	MsgDelegates []MsgDelegate `protobuf:"bytes,1,rep,name=msg_delegates,json=msgDelegates,proto3" json:"msg_delegates"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryQueuedMsgDelegatesResponse) Reset()         { *m = QueryQueuedMsgDelegatesResponse{} }
+func (m *QueryQueuedMsgDelegatesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgDelegatesResponse) ProtoMessage()    {}
+func (*QueryQueuedMsgDelegatesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{5}
+}
+func (m *QueryQueuedMsgDelegatesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryQueuedMsgDelegatesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryQueuedMsgDelegatesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryQueuedMsgDelegatesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgDelegatesResponse.Merge(m, src)
+}
+func (m *QueryQueuedMsgDelegatesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryQueuedMsgDelegatesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgDelegatesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryQueuedMsgDelegatesResponse proto.InternalMessageInfo
+
+func (m *QueryQueuedMsgDelegatesResponse) GetMsgDelegates() []MsgDelegate {
+	if m != nil {
+		return m.MsgDelegates
+	}
+	return nil
+}
+
+func (m *QueryQueuedMsgDelegatesResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
@@ -233,23 +339,25 @@ func (m *QueryMsgEditValidatorsResponse) GetPagination() *query.PageResponse {
 }
 
 // QueryMsgDelegateRequest is request type for Query/MsgDelegates RPC method.
-type QueryMsgDelegatesRequest struct {
+type QueryQueuedMsgDelegateRequest struct {
+	// Return only messages associated with this address
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
 	// pagination defines an optional pagination for the request.
-	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgDelegatesRequest) Reset()         { *m = QueryMsgDelegatesRequest{} }
-func (m *QueryMsgDelegatesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgDelegatesRequest) ProtoMessage()    {}
-func (*QueryMsgDelegatesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{4}
+func (m *QueryQueuedMsgDelegateRequest) Reset()         { *m = QueryQueuedMsgDelegateRequest{} }
+func (m *QueryQueuedMsgDelegateRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgDelegateRequest) ProtoMessage()    {}
+func (*QueryQueuedMsgDelegateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{6}
 }
-func (m *QueryMsgDelegatesRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgDelegateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgDelegatesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgDelegateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgDelegatesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgDelegateRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -259,45 +367,52 @@ func (m *QueryMsgDelegatesRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgDelegatesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgDelegatesRequest.Merge(m, src)
+func (m *QueryQueuedMsgDelegateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgDelegateRequest.Merge(m, src)
 }
-func (m *QueryMsgDelegatesRequest) XXX_Size() int {
+func (m *QueryQueuedMsgDelegateRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgDelegatesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgDelegatesRequest.DiscardUnknown(m)
+func (m *QueryQueuedMsgDelegateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgDelegateRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgDelegatesRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgDelegateRequest proto.InternalMessageInfo
 
-func (m *QueryMsgDelegatesRequest) GetPagination() *query.PageRequest {
+func (m *QueryQueuedMsgDelegateRequest) GetDelegatorAddr() string {
+	if m != nil {
+		return m.DelegatorAddr
+	}
+	return ""
+}
+
+func (m *QueryQueuedMsgDelegateRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
-type QueryMsgDelegatesResponse struct {
+// QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+type QueryQueuedMsgDelegateResponse struct {
 	// msg_delegates contains all of the queued messages
 	MsgDelegates []MsgDelegate `protobuf:"bytes,1,rep,name=msg_delegates,json=msgDelegates,proto3" json:"msg_delegates"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgDelegatesResponse) Reset()         { *m = QueryMsgDelegatesResponse{} }
-func (m *QueryMsgDelegatesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgDelegatesResponse) ProtoMessage()    {}
-func (*QueryMsgDelegatesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{5}
+func (m *QueryQueuedMsgDelegateResponse) Reset()         { *m = QueryQueuedMsgDelegateResponse{} }
+func (m *QueryQueuedMsgDelegateResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgDelegateResponse) ProtoMessage()    {}
+func (*QueryQueuedMsgDelegateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{7}
 }
-func (m *QueryMsgDelegatesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgDelegateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgDelegatesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgDelegateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgDelegatesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgDelegateResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -307,50 +422,50 @@ func (m *QueryMsgDelegatesResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgDelegatesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgDelegatesResponse.Merge(m, src)
+func (m *QueryQueuedMsgDelegateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgDelegateResponse.Merge(m, src)
 }
-func (m *QueryMsgDelegatesResponse) XXX_Size() int {
+func (m *QueryQueuedMsgDelegateResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgDelegatesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgDelegatesResponse.DiscardUnknown(m)
+func (m *QueryQueuedMsgDelegateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgDelegateResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgDelegatesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgDelegateResponse proto.InternalMessageInfo
 
-func (m *QueryMsgDelegatesResponse) GetMsgDelegates() []MsgDelegate {
+func (m *QueryQueuedMsgDelegateResponse) GetMsgDelegates() []MsgDelegate {
 	if m != nil {
 		return m.MsgDelegates
 	}
 	return nil
 }
 
-func (m *QueryMsgDelegatesResponse) GetPagination() *query.PageResponse {
+func (m *QueryQueuedMsgDelegateResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
-type QueryMsgBeginRedelegatesRequest struct {
+// QueryQueuedMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+type QueryQueuedMsgBeginRedelegatesRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgBeginRedelegatesRequest) Reset()         { *m = QueryMsgBeginRedelegatesRequest{} }
-func (m *QueryMsgBeginRedelegatesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgBeginRedelegatesRequest) ProtoMessage()    {}
-func (*QueryMsgBeginRedelegatesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{6}
+func (m *QueryQueuedMsgBeginRedelegatesRequest) Reset()         { *m = QueryQueuedMsgBeginRedelegatesRequest{} }
+func (m *QueryQueuedMsgBeginRedelegatesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgBeginRedelegatesRequest) ProtoMessage()    {}
+func (*QueryQueuedMsgBeginRedelegatesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{8}
 }
-func (m *QueryMsgBeginRedelegatesRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgBeginRedelegatesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgBeginRedelegatesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgBeginRedelegatesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgBeginRedelegatesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgBeginRedelegatesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -360,19 +475,19 @@ func (m *QueryMsgBeginRedelegatesRequest) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgBeginRedelegatesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgBeginRedelegatesRequest.Merge(m, src)
+func (m *QueryQueuedMsgBeginRedelegatesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegatesRequest.Merge(m, src)
 }
-func (m *QueryMsgBeginRedelegatesRequest) XXX_Size() int {
+func (m *QueryQueuedMsgBeginRedelegatesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgBeginRedelegatesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgBeginRedelegatesRequest.DiscardUnknown(m)
+func (m *QueryQueuedMsgBeginRedelegatesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegatesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgBeginRedelegatesRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgBeginRedelegatesRequest proto.InternalMessageInfo
 
-func (m *QueryMsgBeginRedelegatesRequest) GetPagination() *query.PageRequest {
+func (m *QueryQueuedMsgBeginRedelegatesRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
@@ -380,25 +495,27 @@ func (m *QueryMsgBeginRedelegatesRequest) GetPagination() *query.PageRequest {
 }
 
 // QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
-type QueryMsgBeginRedelegatesResponse struct {
+type QueryQueuedMsgBeginRedelegatesResponse struct {
 	// msg_begin_redelegates contains all of the queued messages
 	MsgBeginRedelegates []MsgBeginRedelegate `protobuf:"bytes,1,rep,name=msg_begin_redelegates,json=msgBeginRedelegates,proto3" json:"msg_begin_redelegates"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryMsgBeginRedelegatesResponse) Reset()         { *m = QueryMsgBeginRedelegatesResponse{} }
-func (m *QueryMsgBeginRedelegatesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryMsgBeginRedelegatesResponse) ProtoMessage()    {}
-func (*QueryMsgBeginRedelegatesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{7}
+func (m *QueryQueuedMsgBeginRedelegatesResponse) Reset() {
+	*m = QueryQueuedMsgBeginRedelegatesResponse{}
 }
-func (m *QueryMsgBeginRedelegatesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgBeginRedelegatesResponse) ProtoMessage()    {}
+func (*QueryQueuedMsgBeginRedelegatesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{9}
+}
+func (m *QueryQueuedMsgBeginRedelegatesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryMsgBeginRedelegatesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryMsgBeginRedelegatesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryQueuedMsgBeginRedelegatesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -408,26 +525,136 @@ func (m *QueryMsgBeginRedelegatesResponse) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-func (m *QueryMsgBeginRedelegatesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMsgBeginRedelegatesResponse.Merge(m, src)
+func (m *QueryQueuedMsgBeginRedelegatesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegatesResponse.Merge(m, src)
 }
-func (m *QueryMsgBeginRedelegatesResponse) XXX_Size() int {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryMsgBeginRedelegatesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMsgBeginRedelegatesResponse.DiscardUnknown(m)
+func (m *QueryQueuedMsgBeginRedelegatesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegatesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryMsgBeginRedelegatesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryQueuedMsgBeginRedelegatesResponse proto.InternalMessageInfo
 
-func (m *QueryMsgBeginRedelegatesResponse) GetMsgBeginRedelegates() []MsgBeginRedelegate {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) GetMsgBeginRedelegates() []MsgBeginRedelegate {
 	if m != nil {
 		return m.MsgBeginRedelegates
 	}
 	return nil
 }
 
-func (m *QueryMsgBeginRedelegatesResponse) GetPagination() *query.PageResponse {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryQueuedMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+type QueryQueuedMsgBeginRedelegateRequest struct {
+	// Return only messages associated with this address
+	DelegatorAddr string `protobuf:"bytes,1,opt,name=delegator_addr,json=delegatorAddr,proto3" json:"delegator_addr,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryQueuedMsgBeginRedelegateRequest) Reset()         { *m = QueryQueuedMsgBeginRedelegateRequest{} }
+func (m *QueryQueuedMsgBeginRedelegateRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgBeginRedelegateRequest) ProtoMessage()    {}
+func (*QueryQueuedMsgBeginRedelegateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{10}
+}
+func (m *QueryQueuedMsgBeginRedelegateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryQueuedMsgBeginRedelegateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryQueuedMsgBeginRedelegateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryQueuedMsgBeginRedelegateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegateRequest.Merge(m, src)
+}
+func (m *QueryQueuedMsgBeginRedelegateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryQueuedMsgBeginRedelegateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryQueuedMsgBeginRedelegateRequest proto.InternalMessageInfo
+
+func (m *QueryQueuedMsgBeginRedelegateRequest) GetDelegatorAddr() string {
+	if m != nil {
+		return m.DelegatorAddr
+	}
+	return ""
+}
+
+func (m *QueryQueuedMsgBeginRedelegateRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
+type QueryQueuedMsgBeginRedelegateResponse struct {
+	// msg_begin_redelegates contains all of the queued messages
+	MsgBeginRedelegates []MsgBeginRedelegate `protobuf:"bytes,1,rep,name=msg_begin_redelegates,json=msgBeginRedelegates,proto3" json:"msg_begin_redelegates"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryQueuedMsgBeginRedelegateResponse) Reset()         { *m = QueryQueuedMsgBeginRedelegateResponse{} }
+func (m *QueryQueuedMsgBeginRedelegateResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryQueuedMsgBeginRedelegateResponse) ProtoMessage()    {}
+func (*QueryQueuedMsgBeginRedelegateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f270127f442bbcd8, []int{11}
+}
+func (m *QueryQueuedMsgBeginRedelegateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryQueuedMsgBeginRedelegateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryQueuedMsgBeginRedelegateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryQueuedMsgBeginRedelegateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegateResponse.Merge(m, src)
+}
+func (m *QueryQueuedMsgBeginRedelegateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryQueuedMsgBeginRedelegateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQueuedMsgBeginRedelegateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryQueuedMsgBeginRedelegateResponse proto.InternalMessageInfo
+
+func (m *QueryQueuedMsgBeginRedelegateResponse) GetMsgBeginRedelegates() []MsgBeginRedelegate {
+	if m != nil {
+		return m.MsgBeginRedelegates
+	}
+	return nil
+}
+
+func (m *QueryQueuedMsgBeginRedelegateResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
@@ -446,7 +673,7 @@ func (m *QueryValidatorsRequest) Reset()         { *m = QueryValidatorsRequest{}
 func (m *QueryValidatorsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryValidatorsRequest) ProtoMessage()    {}
 func (*QueryValidatorsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{8}
+	return fileDescriptor_f270127f442bbcd8, []int{12}
 }
 func (m *QueryValidatorsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -501,7 +728,7 @@ func (m *QueryValidatorsResponse) Reset()         { *m = QueryValidatorsResponse
 func (m *QueryValidatorsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryValidatorsResponse) ProtoMessage()    {}
 func (*QueryValidatorsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{9}
+	return fileDescriptor_f270127f442bbcd8, []int{13}
 }
 func (m *QueryValidatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -554,7 +781,7 @@ func (m *QueryValidatorRequest) Reset()         { *m = QueryValidatorRequest{} }
 func (m *QueryValidatorRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryValidatorRequest) ProtoMessage()    {}
 func (*QueryValidatorRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{10}
+	return fileDescriptor_f270127f442bbcd8, []int{14}
 }
 func (m *QueryValidatorRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -600,7 +827,7 @@ func (m *QueryValidatorResponse) Reset()         { *m = QueryValidatorResponse{}
 func (m *QueryValidatorResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryValidatorResponse) ProtoMessage()    {}
 func (*QueryValidatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{11}
+	return fileDescriptor_f270127f442bbcd8, []int{15}
 }
 func (m *QueryValidatorResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -649,7 +876,7 @@ func (m *QueryValidatorDelegationsRequest) Reset()         { *m = QueryValidator
 func (m *QueryValidatorDelegationsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryValidatorDelegationsRequest) ProtoMessage()    {}
 func (*QueryValidatorDelegationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{12}
+	return fileDescriptor_f270127f442bbcd8, []int{16}
 }
 func (m *QueryValidatorDelegationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -704,7 +931,7 @@ func (m *QueryValidatorDelegationsResponse) Reset()         { *m = QueryValidato
 func (m *QueryValidatorDelegationsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryValidatorDelegationsResponse) ProtoMessage()    {}
 func (*QueryValidatorDelegationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{13}
+	return fileDescriptor_f270127f442bbcd8, []int{17}
 }
 func (m *QueryValidatorDelegationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -764,7 +991,7 @@ func (m *QueryValidatorUnbondingDelegationsRequest) String() string {
 }
 func (*QueryValidatorUnbondingDelegationsRequest) ProtoMessage() {}
 func (*QueryValidatorUnbondingDelegationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{14}
+	return fileDescriptor_f270127f442bbcd8, []int{18}
 }
 func (m *QueryValidatorUnbondingDelegationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -823,7 +1050,7 @@ func (m *QueryValidatorUnbondingDelegationsResponse) String() string {
 }
 func (*QueryValidatorUnbondingDelegationsResponse) ProtoMessage() {}
 func (*QueryValidatorUnbondingDelegationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{15}
+	return fileDescriptor_f270127f442bbcd8, []int{19}
 }
 func (m *QueryValidatorUnbondingDelegationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -878,7 +1105,7 @@ func (m *QueryDelegationRequest) Reset()         { *m = QueryDelegationRequest{}
 func (m *QueryDelegationRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegationRequest) ProtoMessage()    {}
 func (*QueryDelegationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{16}
+	return fileDescriptor_f270127f442bbcd8, []int{20}
 }
 func (m *QueryDelegationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -917,7 +1144,7 @@ func (m *QueryDelegationResponse) Reset()         { *m = QueryDelegationResponse
 func (m *QueryDelegationResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegationResponse) ProtoMessage()    {}
 func (*QueryDelegationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{17}
+	return fileDescriptor_f270127f442bbcd8, []int{21}
 }
 func (m *QueryDelegationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -966,7 +1193,7 @@ func (m *QueryUnbondingDelegationRequest) Reset()         { *m = QueryUnbondingD
 func (m *QueryUnbondingDelegationRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryUnbondingDelegationRequest) ProtoMessage()    {}
 func (*QueryUnbondingDelegationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{18}
+	return fileDescriptor_f270127f442bbcd8, []int{22}
 }
 func (m *QueryUnbondingDelegationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1006,7 +1233,7 @@ func (m *QueryUnbondingDelegationResponse) Reset()         { *m = QueryUnbonding
 func (m *QueryUnbondingDelegationResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryUnbondingDelegationResponse) ProtoMessage()    {}
 func (*QueryUnbondingDelegationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{19}
+	return fileDescriptor_f270127f442bbcd8, []int{23}
 }
 func (m *QueryUnbondingDelegationResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1055,7 +1282,7 @@ func (m *QueryDelegatorDelegationsRequest) Reset()         { *m = QueryDelegator
 func (m *QueryDelegatorDelegationsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorDelegationsRequest) ProtoMessage()    {}
 func (*QueryDelegatorDelegationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{20}
+	return fileDescriptor_f270127f442bbcd8, []int{24}
 }
 func (m *QueryDelegatorDelegationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1097,7 +1324,7 @@ func (m *QueryDelegatorDelegationsResponse) Reset()         { *m = QueryDelegato
 func (m *QueryDelegatorDelegationsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorDelegationsResponse) ProtoMessage()    {}
 func (*QueryDelegatorDelegationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{21}
+	return fileDescriptor_f270127f442bbcd8, []int{25}
 }
 func (m *QueryDelegatorDelegationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1157,7 +1384,7 @@ func (m *QueryDelegatorUnbondingDelegationsRequest) String() string {
 }
 func (*QueryDelegatorUnbondingDelegationsRequest) ProtoMessage() {}
 func (*QueryDelegatorUnbondingDelegationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{22}
+	return fileDescriptor_f270127f442bbcd8, []int{26}
 }
 func (m *QueryDelegatorUnbondingDelegationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1202,7 +1429,7 @@ func (m *QueryDelegatorUnbondingDelegationsResponse) String() string {
 }
 func (*QueryDelegatorUnbondingDelegationsResponse) ProtoMessage() {}
 func (*QueryDelegatorUnbondingDelegationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{23}
+	return fileDescriptor_f270127f442bbcd8, []int{27}
 }
 func (m *QueryDelegatorUnbondingDelegationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1262,7 +1489,7 @@ func (m *QueryRedelegationsRequest) Reset()         { *m = QueryRedelegationsReq
 func (m *QueryRedelegationsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryRedelegationsRequest) ProtoMessage()    {}
 func (*QueryRedelegationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{24}
+	return fileDescriptor_f270127f442bbcd8, []int{28}
 }
 func (m *QueryRedelegationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1303,7 +1530,7 @@ func (m *QueryRedelegationsResponse) Reset()         { *m = QueryRedelegationsRe
 func (m *QueryRedelegationsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryRedelegationsResponse) ProtoMessage()    {}
 func (*QueryRedelegationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{25}
+	return fileDescriptor_f270127f442bbcd8, []int{29}
 }
 func (m *QueryRedelegationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1359,7 +1586,7 @@ func (m *QueryDelegatorValidatorsRequest) Reset()         { *m = QueryDelegatorV
 func (m *QueryDelegatorValidatorsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorValidatorsRequest) ProtoMessage()    {}
 func (*QueryDelegatorValidatorsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{26}
+	return fileDescriptor_f270127f442bbcd8, []int{30}
 }
 func (m *QueryDelegatorValidatorsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1401,7 +1628,7 @@ func (m *QueryDelegatorValidatorsResponse) Reset()         { *m = QueryDelegator
 func (m *QueryDelegatorValidatorsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorValidatorsResponse) ProtoMessage()    {}
 func (*QueryDelegatorValidatorsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{27}
+	return fileDescriptor_f270127f442bbcd8, []int{31}
 }
 func (m *QueryDelegatorValidatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1457,7 +1684,7 @@ func (m *QueryDelegatorValidatorRequest) Reset()         { *m = QueryDelegatorVa
 func (m *QueryDelegatorValidatorRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorValidatorRequest) ProtoMessage()    {}
 func (*QueryDelegatorValidatorRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{28}
+	return fileDescriptor_f270127f442bbcd8, []int{32}
 }
 func (m *QueryDelegatorValidatorRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1497,7 +1724,7 @@ func (m *QueryDelegatorValidatorResponse) Reset()         { *m = QueryDelegatorV
 func (m *QueryDelegatorValidatorResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDelegatorValidatorResponse) ProtoMessage()    {}
 func (*QueryDelegatorValidatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{29}
+	return fileDescriptor_f270127f442bbcd8, []int{33}
 }
 func (m *QueryDelegatorValidatorResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1544,7 +1771,7 @@ func (m *QueryHistoricalInfoRequest) Reset()         { *m = QueryHistoricalInfoR
 func (m *QueryHistoricalInfoRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryHistoricalInfoRequest) ProtoMessage()    {}
 func (*QueryHistoricalInfoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{30}
+	return fileDescriptor_f270127f442bbcd8, []int{34}
 }
 func (m *QueryHistoricalInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1591,7 +1818,7 @@ func (m *QueryHistoricalInfoResponse) Reset()         { *m = QueryHistoricalInfo
 func (m *QueryHistoricalInfoResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryHistoricalInfoResponse) ProtoMessage()    {}
 func (*QueryHistoricalInfoResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{31}
+	return fileDescriptor_f270127f442bbcd8, []int{35}
 }
 func (m *QueryHistoricalInfoResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1635,7 +1862,7 @@ func (m *QueryPoolRequest) Reset()         { *m = QueryPoolRequest{} }
 func (m *QueryPoolRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryPoolRequest) ProtoMessage()    {}
 func (*QueryPoolRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{32}
+	return fileDescriptor_f270127f442bbcd8, []int{36}
 }
 func (m *QueryPoolRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1674,7 +1901,7 @@ func (m *QueryPoolResponse) Reset()         { *m = QueryPoolResponse{} }
 func (m *QueryPoolResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryPoolResponse) ProtoMessage()    {}
 func (*QueryPoolResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{33}
+	return fileDescriptor_f270127f442bbcd8, []int{37}
 }
 func (m *QueryPoolResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1718,7 +1945,7 @@ func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
 func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsRequest) ProtoMessage()    {}
 func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{34}
+	return fileDescriptor_f270127f442bbcd8, []int{38}
 }
 func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1757,7 +1984,7 @@ func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
 func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryParamsResponse) ProtoMessage()    {}
 func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{35}
+	return fileDescriptor_f270127f442bbcd8, []int{39}
 }
 func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1805,7 +2032,7 @@ func (m *QueryBufferedValidatorsRequest) Reset()         { *m = QueryBufferedVal
 func (m *QueryBufferedValidatorsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryBufferedValidatorsRequest) ProtoMessage()    {}
 func (*QueryBufferedValidatorsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{36}
+	return fileDescriptor_f270127f442bbcd8, []int{40}
 }
 func (m *QueryBufferedValidatorsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1860,7 +2087,7 @@ func (m *QueryBufferedValidatorsResponse) Reset()         { *m = QueryBufferedVa
 func (m *QueryBufferedValidatorsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryBufferedValidatorsResponse) ProtoMessage()    {}
 func (*QueryBufferedValidatorsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f270127f442bbcd8, []int{37}
+	return fileDescriptor_f270127f442bbcd8, []int{41}
 }
 func (m *QueryBufferedValidatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1904,14 +2131,18 @@ func (m *QueryBufferedValidatorsResponse) GetPagination() *query.PageResponse {
 }
 
 func init() {
-	proto.RegisterType((*QueryMsgCreateValidatorsRequest)(nil), "cosmos.staking.v1beta1.QueryMsgCreateValidatorsRequest")
-	proto.RegisterType((*QueryMsgCreateValidatorsResponse)(nil), "cosmos.staking.v1beta1.QueryMsgCreateValidatorsResponse")
-	proto.RegisterType((*QueryMsgEditValidatorsRequest)(nil), "cosmos.staking.v1beta1.QueryMsgEditValidatorsRequest")
-	proto.RegisterType((*QueryMsgEditValidatorsResponse)(nil), "cosmos.staking.v1beta1.QueryMsgEditValidatorsResponse")
-	proto.RegisterType((*QueryMsgDelegatesRequest)(nil), "cosmos.staking.v1beta1.QueryMsgDelegatesRequest")
-	proto.RegisterType((*QueryMsgDelegatesResponse)(nil), "cosmos.staking.v1beta1.QueryMsgDelegatesResponse")
-	proto.RegisterType((*QueryMsgBeginRedelegatesRequest)(nil), "cosmos.staking.v1beta1.QueryMsgBeginRedelegatesRequest")
-	proto.RegisterType((*QueryMsgBeginRedelegatesResponse)(nil), "cosmos.staking.v1beta1.QueryMsgBeginRedelegatesResponse")
+	proto.RegisterType((*QueryQueuedMsgCreateValidatorsRequest)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsRequest")
+	proto.RegisterType((*QueryQueuedMsgCreateValidatorsResponse)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgCreateValidatorsResponse")
+	proto.RegisterType((*QueryQueuedMsgEditValidatorsRequest)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsRequest")
+	proto.RegisterType((*QueryQueuedMsgEditValidatorsResponse)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgEditValidatorsResponse")
+	proto.RegisterType((*QueryQueuedMsgDelegatesRequest)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgDelegatesRequest")
+	proto.RegisterType((*QueryQueuedMsgDelegatesResponse)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgDelegatesResponse")
+	proto.RegisterType((*QueryQueuedMsgDelegateRequest)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgDelegateRequest")
+	proto.RegisterType((*QueryQueuedMsgDelegateResponse)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgDelegateResponse")
+	proto.RegisterType((*QueryQueuedMsgBeginRedelegatesRequest)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesRequest")
+	proto.RegisterType((*QueryQueuedMsgBeginRedelegatesResponse)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegatesResponse")
+	proto.RegisterType((*QueryQueuedMsgBeginRedelegateRequest)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateRequest")
+	proto.RegisterType((*QueryQueuedMsgBeginRedelegateResponse)(nil), "cosmos.staking.v1beta1.QueryQueuedMsgBeginRedelegateResponse")
 	proto.RegisterType((*QueryValidatorsRequest)(nil), "cosmos.staking.v1beta1.QueryValidatorsRequest")
 	proto.RegisterType((*QueryValidatorsResponse)(nil), "cosmos.staking.v1beta1.QueryValidatorsResponse")
 	proto.RegisterType((*QueryValidatorRequest)(nil), "cosmos.staking.v1beta1.QueryValidatorRequest")
@@ -1949,110 +2180,117 @@ func init() {
 }
 
 var fileDescriptor_f270127f442bbcd8 = []byte{
-	// 1646 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0x4b, 0x6c, 0xdc, 0x54,
-	0x17, 0xce, 0x4d, 0xf3, 0x47, 0x7f, 0x4f, 0x1f, 0x6a, 0xef, 0xa4, 0xa1, 0xb8, 0xed, 0x4c, 0x6a,
-	0xfa, 0x48, 0xd3, 0x64, 0xdc, 0x24, 0x6d, 0x1a, 0x4a, 0x55, 0x48, 0xfa, 0x22, 0xaa, 0x80, 0x76,
-	0x10, 0xe5, 0x25, 0x31, 0xf2, 0x8c, 0x1d, 0xc7, 0x6a, 0x66, 0x3c, 0xb5, 0x9d, 0x2a, 0xa5, 0xaa,
-	0x44, 0x59, 0xc1, 0x0e, 0xc4, 0x0a, 0xd8, 0x54, 0x08, 0x09, 0x09, 0x56, 0xa8, 0x95, 0x58, 0x22,
-	0x56, 0xb4, 0xbb, 0x54, 0xb0, 0x80, 0x4d, 0x41, 0x2d, 0x8b, 0x2e, 0xd9, 0x21, 0x76, 0x68, 0xae,
-	0x8f, 0x1d, 0xdb, 0xd7, 0xaf, 0x99, 0xce, 0x10, 0xba, 0x6a, 0x63, 0xdf, 0x73, 0xce, 0xf7, 0x7d,
-	0xe7, 0x9e, 0xeb, 0x73, 0xc6, 0x06, 0xb1, 0x6a, 0x58, 0x35, 0xc3, 0x92, 0x2c, 0x5b, 0xbe, 0xa4,
-	0xd7, 0x35, 0xe9, 0xca, 0x78, 0x45, 0xb5, 0xe5, 0x71, 0xe9, 0xf2, 0x92, 0x6a, 0x5e, 0x2d, 0x36,
-	0x4c, 0xc3, 0x36, 0xe8, 0xa0, 0xb3, 0xa6, 0x88, 0x6b, 0x8a, 0xb8, 0x46, 0x18, 0x41, 0xdb, 0x8a,
-	0x6c, 0xa9, 0x8e, 0x81, 0x67, 0xde, 0x90, 0x35, 0xbd, 0x2e, 0xdb, 0xba, 0x51, 0x77, 0x7c, 0x08,
-	0x03, 0x9a, 0xa1, 0x19, 0xec, 0xbf, 0x52, 0xf3, 0x7f, 0x78, 0x75, 0xa7, 0x66, 0x18, 0xda, 0xa2,
-	0x2a, 0xc9, 0x0d, 0x5d, 0x92, 0xeb, 0x75, 0xc3, 0x66, 0x26, 0x16, 0xde, 0xdd, 0x13, 0x83, 0xcd,
-	0xc5, 0xe1, 0xac, 0x2a, 0xc4, 0xac, 0xb2, 0x97, 0x9d, 0x05, 0xa2, 0x0e, 0x85, 0x0b, 0x4d, 0x70,
-	0x2f, 0x59, 0xda, 0x49, 0x53, 0x95, 0x6d, 0xf5, 0xa2, 0xbc, 0xa8, 0x2b, 0xb2, 0x6d, 0x98, 0x56,
-	0x49, 0xbd, 0xbc, 0xa4, 0x5a, 0x36, 0x3d, 0x03, 0xb0, 0x8a, 0x78, 0x3b, 0x19, 0x22, 0xc3, 0x1b,
-	0x26, 0xf6, 0x15, 0x91, 0x76, 0x93, 0x5e, 0xd1, 0xd1, 0x03, 0x7d, 0x17, 0xcf, 0xcb, 0x9a, 0x8a,
-	0xb6, 0x25, 0x9f, 0xa5, 0x78, 0x8f, 0xc0, 0x50, 0x7c, 0x2c, 0xab, 0x61, 0xd4, 0x2d, 0x95, 0x2a,
-	0xb0, 0xad, 0x66, 0x69, 0xe5, 0x2a, 0xbb, 0x5f, 0xbe, 0xe2, 0x2d, 0xd8, 0x4e, 0x86, 0xd6, 0x0d,
-	0x6f, 0x98, 0x18, 0x29, 0x46, 0xcb, 0x5d, 0xe4, 0x7d, 0xce, 0xf6, 0xdd, 0xb9, 0x5f, 0xe8, 0x29,
-	0xe5, 0x6a, 0x7c, 0x34, 0x7a, 0x36, 0x40, 0xa9, 0x97, 0x51, 0xda, 0x9f, 0x4a, 0xc9, 0x81, 0x18,
-	0xe0, 0xa4, 0xc1, 0x2e, 0x97, 0xd2, 0x69, 0x45, 0xb7, 0xbb, 0x27, 0xde, 0x5d, 0x02, 0xf9, 0xb8,
-	0x48, 0x28, 0xdd, 0x3b, 0xd0, 0xe4, 0x5a, 0x56, 0x15, 0xdd, 0xe6, 0x85, 0x1b, 0x4e, 0x10, 0x2e,
-	0xe0, 0x0f, 0x65, 0xdb, 0x5a, 0x0b, 0xc7, 0xe9, 0x9c, 0x68, 0x15, 0xd8, 0xee, 0x52, 0x39, 0xa5,
-	0x2e, 0xaa, 0x9a, 0x6c, 0xab, 0x1d, 0xd7, 0xeb, 0x36, 0x81, 0xa7, 0x23, 0x82, 0xa0, 0x54, 0x2f,
-	0xc3, 0xa6, 0xa6, 0x54, 0x8a, 0x7b, 0x03, 0x45, 0x7a, 0x26, 0x41, 0x24, 0xd7, 0x09, 0xea, 0xb3,
-	0xb1, 0xe6, 0xf3, 0xdb, 0x39, 0x69, 0x7c, 0xe5, 0x38, 0xab, 0x6a, 0x7a, 0xbd, 0xa4, 0x2a, 0xdd,
-	0x52, 0xc8, 0x5f, 0x8e, 0x7c, 0xac, 0x60, 0x39, 0x56, 0x9a, 0xf7, 0xcb, 0xa6, 0x1a, 0x16, 0x2c,
-	0xa9, 0x1c, 0x43, 0x3e, 0x7d, 0xe5, 0x18, 0x8e, 0xd6, 0x39, 0xf9, 0x96, 0x61, 0x90, 0x51, 0xe2,
-	0xeb, 0x70, 0x10, 0xfa, 0x2d, 0x5b, 0xb6, 0x97, 0x2c, 0xa6, 0xd8, 0xfa, 0x12, 0xfe, 0x15, 0x52,
-	0xb3, 0xb7, 0x6d, 0x35, 0xbf, 0x21, 0xf0, 0x14, 0x17, 0x1a, 0x45, 0x3c, 0x0b, 0xc0, 0xd5, 0xe3,
-	0xee, 0x38, 0xe5, 0xc2, 0x85, 0xe8, 0x33, 0xed, 0x9c, 0x4e, 0x27, 0x60, 0x5b, 0x10, 0xac, 0x2b,
-	0xd3, 0x5e, 0xd8, 0xec, 0xc5, 0x2b, 0xcb, 0x8a, 0x62, 0xa2, 0x5c, 0x9b, 0xbc, 0xab, 0x33, 0x8a,
-	0x62, 0x8a, 0xe5, 0xb0, 0xce, 0x1e, 0xd7, 0xd3, 0xb0, 0xde, 0x5b, 0x8a, 0x9b, 0x33, 0x33, 0xd5,
-	0x55, 0x4b, 0xf1, 0x63, 0x77, 0x73, 0x7a, 0x6b, 0xb0, 0xd8, 0x9a, 0x4f, 0xc0, 0xd6, 0xc0, 0x76,
-	0x2c, 0xc5, 0x8f, 0x08, 0xec, 0x4e, 0xc0, 0x84, 0x02, 0xbc, 0x0b, 0x03, 0x8a, 0x77, 0xb9, 0x6c,
-	0xe2, 0xe5, 0xd4, 0x82, 0x59, 0x75, 0xe5, 0x7a, 0x9a, 0xdd, 0xd1, 0x14, 0xe5, 0xeb, 0xdf, 0x0a,
-	0x39, 0xfe, 0x9e, 0x55, 0xca, 0x29, 0xfc, 0xc5, 0xce, 0xed, 0x8f, 0xcf, 0x08, 0x1c, 0x08, 0x52,
-	0x7d, 0xad, 0x5e, 0x31, 0xea, 0x8a, 0x5e, 0xd7, 0xd6, 0x3e, 0x0f, 0xbf, 0x12, 0x18, 0xc9, 0x02,
-	0x0e, 0x13, 0x52, 0x81, 0xdc, 0x92, 0x7b, 0x9f, 0xcb, 0xc7, 0xc1, 0xb8, 0x7c, 0x44, 0xb8, 0xc4,
-	0x5d, 0x4a, 0x3d, 0x6f, 0x5d, 0x10, 0xbe, 0x81, 0x85, 0xe5, 0x4f, 0xb9, 0x27, 0x32, 0xa6, 0x3c,
-	0x24, 0xb2, 0x77, 0x95, 0x89, 0xcc, 0xe7, 0xa2, 0x37, 0x22, 0x17, 0xc7, 0xfe, 0xff, 0xc1, 0xcd,
-	0x42, 0xcf, 0xa3, 0x9b, 0x85, 0x1e, 0xf1, 0x0a, 0x9e, 0x5b, 0xfc, 0x26, 0xa3, 0x6f, 0x43, 0x2e,
-	0x62, 0x2b, 0x63, 0x55, 0xb7, 0xb0, 0x93, 0x4b, 0x94, 0xdf, 0xac, 0xe2, 0x55, 0x7c, 0xd2, 0x45,
-	0x08, 0xdd, 0x6d, 0xca, 0x35, 0x3c, 0x5b, 0x22, 0x43, 0x23, 0xf7, 0x39, 0xe8, 0x77, 0xf2, 0x8c,
-	0x74, 0xdb, 0xd8, 0x28, 0xe8, 0x40, 0xfc, 0xdc, 0x3d, 0xcb, 0x4e, 0xb9, 0xb0, 0xa3, 0x6b, 0x28,
-	0x0b, 0xd7, 0x0e, 0xd5, 0x90, 0x4f, 0x8c, 0x7b, 0xee, 0xa9, 0x16, 0x8d, 0x0e, 0xe5, 0xa8, 0x76,
-	0xec, 0x54, 0xc3, 0x36, 0xa0, 0xab, 0xc7, 0xd7, 0x97, 0xee, 0xf1, 0xe5, 0x71, 0x4a, 0x39, 0xbe,
-	0xd6, 0x46, 0x7a, 0xef, 0x20, 0x4b, 0x81, 0xf9, 0x24, 0x1e, 0x64, 0x7f, 0xba, 0xfd, 0xb7, 0xd7,
-	0xe7, 0xb5, 0x21, 0xf9, 0x28, 0x50, 0xcb, 0xac, 0x96, 0x23, 0xab, 0x7b, 0x8b, 0x65, 0x56, 0x2f,
-	0x06, 0x9e, 0x2f, 0xa3, 0x40, 0x15, 0xcb, 0x0e, 0xaf, 0x5e, 0xe7, 0xac, 0x56, 0x2c, 0xfb, 0x62,
-	0xc2, 0xd3, 0xa8, 0xaf, 0x03, 0xe9, 0x5c, 0x21, 0x20, 0x44, 0x51, 0xc6, 0xf4, 0xe9, 0x30, 0x68,
-	0xaa, 0x09, 0x45, 0x34, 0x1a, 0x97, 0x41, 0xbf, 0xbb, 0x50, 0x19, 0x6d, 0x33, 0xd5, 0x6e, 0xf7,
-	0x01, 0x85, 0xe0, 0x0e, 0xe5, 0x3b, 0xeb, 0x35, 0x2b, 0x9f, 0xdb, 0xdc, 0xb9, 0xfa, 0x44, 0xf4,
-	0xde, 0xcb, 0x38, 0xc8, 0xf3, 0xa8, 0xbb, 0xfd, 0xdc, 0x5b, 0x88, 0x4d, 0x66, 0xa7, 0xdb, 0xf7,
-	0xc3, 0x58, 0x09, 0x2f, 0xea, 0x96, 0x6d, 0x98, 0x7a, 0x55, 0x5e, 0x9c, 0xab, 0xcf, 0x1b, 0xbe,
-	0x59, 0x6c, 0x41, 0xd5, 0xb5, 0x05, 0x9b, 0x45, 0x58, 0x57, 0xc2, 0xbf, 0xc4, 0x37, 0x61, 0x47,
-	0xa4, 0x15, 0x62, 0x3b, 0x06, 0x7d, 0x0b, 0xba, 0x65, 0x87, 0x47, 0xde, 0x30, 0xac, 0x90, 0x35,
-	0xb3, 0x11, 0x29, 0x6c, 0x61, 0xae, 0xcf, 0x1b, 0xc6, 0x22, 0xc2, 0x10, 0xcf, 0xc1, 0x56, 0xdf,
-	0x35, 0x0c, 0x32, 0x05, 0x7d, 0x0d, 0xc3, 0x58, 0xc4, 0x20, 0x3b, 0xe3, 0x82, 0x34, 0x6d, 0x90,
-	0x36, 0x5b, 0x2f, 0x0e, 0x00, 0x75, 0x9c, 0xc9, 0xa6, 0x5c, 0x73, 0x6b, 0x43, 0x7c, 0x15, 0x72,
-	0x81, 0xab, 0x18, 0xe4, 0x38, 0xf4, 0x37, 0xd8, 0x15, 0x0c, 0x93, 0x8f, 0x0d, 0xc3, 0x56, 0xb9,
-	0xfd, 0x84, 0x63, 0x23, 0xbe, 0xe7, 0xfe, 0x14, 0x34, 0xbb, 0x34, 0x3f, 0xaf, 0x9a, 0xaa, 0xf2,
-	0xef, 0x4f, 0xbb, 0xb7, 0xdc, 0x73, 0x21, 0x0a, 0xc2, 0x7f, 0xb5, 0xf2, 0x26, 0x6e, 0xec, 0x82,
-	0xff, 0x31, 0xd4, 0xf4, 0x53, 0x02, 0xe0, 0xfb, 0x65, 0xab, 0x18, 0x07, 0x2b, 0xfa, 0xc7, 0x04,
-	0x41, 0xca, 0xbc, 0x1e, 0x9b, 0xdd, 0x91, 0xf7, 0x7f, 0xfa, 0xe3, 0x93, 0xde, 0x3d, 0x54, 0x94,
-	0x62, 0x7e, 0x8f, 0xf5, 0xd1, 0xfd, 0x8a, 0xc0, 0x7a, 0xcf, 0x05, 0x1d, 0xcb, 0x16, 0xca, 0x45,
-	0x56, 0xcc, 0xba, 0x1c, 0x81, 0x3d, 0xc7, 0x80, 0x1d, 0xa1, 0x93, 0xe9, 0xc0, 0xa4, 0x6b, 0xc1,
-	0xd3, 0xe6, 0x3a, 0xfd, 0x99, 0xc0, 0x40, 0xd4, 0x2c, 0x4c, 0xa7, 0xb3, 0xa1, 0xe0, 0x7b, 0x31,
-	0xe1, 0xd9, 0x36, 0x2c, 0x91, 0xca, 0x59, 0x46, 0x65, 0x86, 0x3e, 0xdf, 0x06, 0x15, 0xc9, 0xf7,
-	0xc0, 0xa6, 0x7f, 0x13, 0xd8, 0x95, 0x38, 0x5a, 0xd2, 0x99, 0x6c, 0x28, 0x13, 0x9a, 0x4e, 0x61,
-	0xf6, 0x71, 0x5c, 0x20, 0xe3, 0x0b, 0x8c, 0xf1, 0x39, 0x3a, 0xd7, 0x0e, 0xe3, 0xd5, 0x56, 0xd2,
-	0xcf, 0xfd, 0x47, 0x02, 0xb0, 0x1a, 0x2a, 0xa5, 0x30, 0xb8, 0x89, 0x2d, 0xa5, 0x30, 0xf8, 0x69,
-	0x40, 0x7c, 0x83, 0x51, 0x28, 0xd1, 0xf3, 0x8f, 0x99, 0x34, 0xe9, 0x5a, 0xf0, 0x89, 0x79, 0x9d,
-	0xfe, 0x45, 0x20, 0x17, 0xa1, 0x1e, 0x3d, 0x9a, 0x08, 0x31, 0x7e, 0x1a, 0x15, 0xa6, 0x5b, 0x37,
-	0x44, 0x92, 0x35, 0x46, 0x52, 0xa3, 0x6a, 0xa7, 0x49, 0x46, 0x26, 0x91, 0xde, 0x25, 0x30, 0x10,
-	0x35, 0xcc, 0xa5, 0x94, 0x65, 0xc2, 0x74, 0x9a, 0x52, 0x96, 0x49, 0x93, 0xa3, 0x78, 0x9c, 0x91,
-	0x9f, 0xa2, 0x87, 0xe3, 0xc8, 0x27, 0x66, 0xb1, 0x59, 0x8b, 0x89, 0xd3, 0x51, 0x4a, 0x2d, 0x66,
-	0x19, 0x00, 0x53, 0x6a, 0x31, 0xd3, 0x70, 0x96, 0x5e, 0x8b, 0x1e, 0xb3, 0x8c, 0x69, 0xb4, 0xe8,
-	0x0f, 0x04, 0x36, 0x05, 0x46, 0x09, 0x3a, 0x9e, 0x08, 0x34, 0x6a, 0xd2, 0x12, 0x26, 0x5a, 0x31,
-	0x41, 0x2e, 0x73, 0x8c, 0xcb, 0x49, 0x3a, 0xd3, 0x0e, 0x17, 0x33, 0x80, 0x78, 0x85, 0x40, 0x2e,
-	0xa2, 0x3d, 0x4f, 0xa9, 0xc2, 0xf8, 0x69, 0x43, 0x98, 0x6e, 0xdd, 0x10, 0x59, 0x9d, 0x61, 0xac,
-	0x5e, 0xa0, 0x27, 0xda, 0x61, 0xe5, 0x7b, 0x3e, 0xdf, 0x27, 0x40, 0xf9, 0x38, 0x74, 0xaa, 0x45,
-	0x60, 0x2e, 0xa1, 0xa3, 0x2d, 0xdb, 0x21, 0x9f, 0xd7, 0x19, 0x9f, 0x0b, 0xf4, 0x95, 0xc7, 0xe3,
-	0xc3, 0x3f, 0xd6, 0x6f, 0x11, 0xd8, 0x1c, 0x6c, 0xa2, 0x69, 0xf2, 0x2e, 0x8a, 0xec, 0xf2, 0x85,
-	0xc9, 0x96, 0x6c, 0x90, 0xd4, 0x34, 0x23, 0x35, 0x41, 0x0f, 0xc5, 0x91, 0x5a, 0xf0, 0xec, 0xca,
-	0x7a, 0x7d, 0xde, 0x90, 0xae, 0x39, 0xb3, 0xc3, 0x75, 0x7a, 0x83, 0x40, 0x5f, 0xb3, 0x2b, 0xa7,
-	0xc3, 0x89, 0x71, 0x7d, 0x03, 0x80, 0x70, 0x20, 0xc3, 0x4a, 0xc4, 0xb5, 0x87, 0xe1, 0xca, 0xd3,
-	0x9d, 0x71, 0xb8, 0x9a, 0x43, 0x00, 0xfd, 0x90, 0x40, 0xbf, 0xd3, 0xb2, 0xd3, 0x91, 0x64, 0xdf,
-	0xfe, 0x29, 0x41, 0x38, 0x98, 0x69, 0x2d, 0x22, 0xd9, 0xc7, 0x90, 0x0c, 0xd1, 0x7c, 0x2c, 0x12,
-	0x07, 0xc0, 0xb7, 0x04, 0x28, 0xdf, 0x9d, 0xa7, 0x6c, 0xd3, 0xd8, 0x89, 0x22, 0x65, 0x9b, 0xc6,
-	0x8f, 0x01, 0x2d, 0xb5, 0xbe, 0xdf, 0x13, 0xc8, 0x45, 0x7c, 0x1c, 0x90, 0x72, 0x5a, 0xc4, 0x7f,
-	0xba, 0x90, 0x72, 0x5a, 0x24, 0x7c, 0x87, 0x20, 0x1e, 0x61, 0xb0, 0x25, 0x3a, 0x16, 0x07, 0x3b,
-	0xf2, 0x2b, 0x05, 0xfa, 0x1d, 0x81, 0xad, 0xdc, 0x1b, 0x7a, 0x7a, 0x24, 0x0d, 0x46, 0xe4, 0xb7,
-	0x03, 0xc2, 0x54, 0xab, 0x66, 0x88, 0x7d, 0x92, 0x61, 0x1f, 0xa3, 0x07, 0x93, 0xb0, 0x87, 0x3e,
-	0x13, 0xa0, 0x5f, 0x10, 0xd8, 0xe8, 0x7f, 0x57, 0x4e, 0x0f, 0xa5, 0x45, 0x0f, 0xbf, 0xbb, 0x17,
-	0xc6, 0x5b, 0xb0, 0x40, 0xa8, 0x63, 0x0c, 0xea, 0x7e, 0xba, 0x37, 0x09, 0xea, 0xea, 0x8b, 0x62,
-	0xdc, 0x20, 0xdc, 0x0b, 0xe4, 0xd4, 0x0d, 0x12, 0xf3, 0x32, 0x3d, 0x7d, 0x83, 0xc4, 0xbd, 0x19,
-	0xcf, 0xb6, 0x41, 0xb8, 0xf7, 0xe6, 0xb3, 0x67, 0xee, 0x3c, 0xc8, 0x93, 0x95, 0x07, 0x79, 0xf2,
-	0xfb, 0x83, 0x3c, 0xf9, 0xe8, 0x61, 0xbe, 0x67, 0xe5, 0x61, 0xbe, 0xe7, 0x97, 0x87, 0xf9, 0x9e,
-	0xb7, 0x46, 0x35, 0xdd, 0x5e, 0x58, 0xaa, 0x14, 0xab, 0x46, 0xcd, 0x75, 0xe9, 0xfc, 0x33, 0x66,
-	0x29, 0x97, 0xa4, 0x65, 0xcf, 0xbf, 0x7d, 0xb5, 0xa1, 0x5a, 0x95, 0x7e, 0xf6, 0xf9, 0xce, 0xe4,
-	0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x26, 0x2b, 0xd6, 0x69, 0xa3, 0x24, 0x00, 0x00,
+	// 1747 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0x4d, 0x70, 0x14, 0xd5,
+	0x13, 0xcf, 0x0b, 0xf9, 0xa7, 0xfe, 0x34, 0x42, 0xc1, 0xdb, 0x10, 0x70, 0x81, 0x4d, 0x18, 0x02,
+	0x84, 0x90, 0xec, 0x4a, 0x42, 0x42, 0x84, 0x80, 0x26, 0x7c, 0x99, 0xa2, 0x54, 0xb2, 0x96, 0xf8,
+	0x55, 0xe5, 0xd6, 0x24, 0x33, 0x99, 0x4c, 0x91, 0xdd, 0x59, 0x66, 0x66, 0xa9, 0x20, 0x45, 0x95,
+	0x7a, 0xd2, 0x8b, 0xa5, 0x65, 0x79, 0x50, 0x2f, 0x1c, 0xac, 0xb2, 0x4a, 0x4f, 0x16, 0x5c, 0xf4,
+	0xc6, 0x49, 0x3c, 0x19, 0x4a, 0xcb, 0x8f, 0x0b, 0x58, 0xe0, 0x81, 0x9b, 0xde, 0x2c, 0x6f, 0xd6,
+	0xbc, 0xe9, 0x99, 0xcc, 0xcc, 0x9b, 0xaf, 0x5d, 0x76, 0x09, 0x9c, 0x20, 0x33, 0xaf, 0xbb, 0x7f,
+	0xbf, 0xee, 0xd7, 0xfd, 0xba, 0x67, 0x1f, 0x08, 0x73, 0x9a, 0x51, 0xd6, 0x8c, 0x82, 0x61, 0x8a,
+	0xe7, 0xd5, 0x8a, 0x52, 0xb8, 0x78, 0x60, 0x56, 0x36, 0xc5, 0x03, 0x85, 0x0b, 0x35, 0x59, 0xbf,
+	0x94, 0xaf, 0xea, 0x9a, 0xa9, 0xd1, 0x6e, 0x7b, 0x4d, 0x1e, 0xd7, 0xe4, 0x71, 0x4d, 0x76, 0x00,
+	0x65, 0x67, 0x45, 0x43, 0xb6, 0x05, 0x5c, 0xf1, 0xaa, 0xa8, 0xa8, 0x15, 0xd1, 0x54, 0xb5, 0x8a,
+	0xad, 0x23, 0xdb, 0xa5, 0x68, 0x8a, 0xc6, 0xfe, 0x5b, 0xb0, 0xfe, 0x87, 0x4f, 0xb7, 0x2b, 0x9a,
+	0xa6, 0x2c, 0xca, 0x05, 0xb1, 0xaa, 0x16, 0xc4, 0x4a, 0x45, 0x33, 0x99, 0x88, 0x81, 0x6f, 0xfb,
+	0x22, 0xb0, 0x39, 0x38, 0xec, 0x55, 0x3d, 0x11, 0xab, 0xcc, 0x25, 0x7b, 0x81, 0xa0, 0xc1, 0xee,
+	0x19, 0x0b, 0xdc, 0x4c, 0x4d, 0xae, 0xc9, 0xd2, 0xf3, 0x86, 0x72, 0x5c, 0x97, 0x45, 0x53, 0x3e,
+	0x27, 0x2e, 0xaa, 0x92, 0x68, 0x6a, 0xba, 0x51, 0x94, 0x2f, 0xd4, 0x64, 0xc3, 0xa4, 0xa7, 0x00,
+	0x56, 0x70, 0x6f, 0x25, 0xbd, 0xa4, 0x7f, 0xdd, 0xf0, 0x9e, 0x3c, 0x92, 0xb7, 0x48, 0xe6, 0x6d,
+	0xaf, 0xa0, 0x85, 0xfc, 0x59, 0x51, 0x91, 0x51, 0xb6, 0xe8, 0x91, 0x14, 0x7e, 0x25, 0xb0, 0x27,
+	0xc9, 0xa2, 0x51, 0xd5, 0x2a, 0x86, 0x4c, 0x25, 0xd8, 0x5c, 0x36, 0x94, 0xd2, 0x1c, 0x7b, 0x5f,
+	0xba, 0xe8, 0x2e, 0xd8, 0x4a, 0x7a, 0xd7, 0xf4, 0xaf, 0x1b, 0x1e, 0xc8, 0x87, 0xbb, 0x3e, 0xcf,
+	0xeb, 0x9c, 0xea, 0xb8, 0x79, 0xbb, 0xa7, 0xad, 0x98, 0x29, 0xf3, 0xd6, 0xe8, 0x69, 0x1f, 0xb1,
+	0x76, 0x46, 0x6c, 0x6f, 0x22, 0x31, 0x1b, 0xa2, 0x8f, 0x59, 0x19, 0x76, 0xf9, 0x89, 0x9d, 0x94,
+	0x54, 0xb3, 0x75, 0x8e, 0xfc, 0x91, 0x40, 0x5f, 0xbc, 0x3d, 0x74, 0xe3, 0x9b, 0x60, 0xf1, 0x2e,
+	0xc9, 0x92, 0x6a, 0xf2, 0x4e, 0xec, 0x8f, 0x71, 0xa2, 0x4f, 0x1f, 0xba, 0x70, 0x53, 0x39, 0x68,
+	0xa7, 0x79, 0x0e, 0x5c, 0x80, 0x9c, 0x9f, 0xd0, 0x09, 0x79, 0x51, 0x56, 0x44, 0x53, 0x6e, 0xba,
+	0xef, 0xbe, 0x23, 0xd0, 0x13, 0x69, 0x0a, 0xdd, 0xf6, 0x02, 0xac, 0xb7, 0xdc, 0x26, 0x39, 0x2f,
+	0xd0, 0x61, 0xbb, 0x62, 0x1c, 0xe6, 0x28, 0x41, 0x5f, 0x3d, 0x51, 0xf6, 0xe8, 0x6d, 0x9e, 0x9b,
+	0x3e, 0x20, 0xb0, 0x23, 0x1c, 0xbc, 0xe3, 0xa6, 0xdd, 0xb0, 0x01, 0x61, 0x6b, 0x7a, 0x49, 0x94,
+	0x24, 0x9d, 0xb9, 0x6a, 0x6d, 0x71, 0xbd, 0xfb, 0x74, 0x52, 0x92, 0xf4, 0x80, 0x37, 0xdb, 0x1b,
+	0xf6, 0xe6, 0xb7, 0x24, 0x2a, 0x70, 0x8f, 0xbe, 0x33, 0xb9, 0xfa, 0x37, 0x25, 0x2b, 0x6a, 0xa5,
+	0x28, 0x4b, 0xad, 0xda, 0x7a, 0x7c, 0xfd, 0xe3, 0x2d, 0xfa, 0xeb, 0xdf, 0xac, 0xf5, 0xbe, 0xa4,
+	0xcb, 0x41, 0xe7, 0xc5, 0xd5, 0xbf, 0x80, 0x4e, 0x4f, 0xfd, 0x0b, 0x5a, 0x6b, 0x9e, 0x2b, 0x3f,
+	0xe1, 0x0a, 0x52, 0xc0, 0xd6, 0x2a, 0x6d, 0xcf, 0x5f, 0x48, 0x42, 0x8c, 0x1f, 0x57, 0x87, 0x2f,
+	0x41, 0x37, 0xe3, 0xc5, 0x9f, 0x31, 0xdd, 0xd0, 0x69, 0x98, 0xa2, 0x59, 0x33, 0xd0, 0xb3, 0xf8,
+	0x57, 0xd3, 0x5c, 0xfa, 0x35, 0x81, 0x2d, 0x9c, 0x69, 0x74, 0xe2, 0x69, 0x00, 0xee, 0x94, 0xd9,
+	0x19, 0xe5, 0xb9, 0xe0, 0xf1, 0xe2, 0x11, 0x6d, 0x9e, 0x9f, 0x8e, 0xc1, 0x66, 0x3f, 0x58, 0xcf,
+	0x46, 0x74, 0xed, 0xf9, 0x36, 0xa2, 0xfb, 0xd4, 0xda, 0x88, 0x42, 0x29, 0xe8, 0x67, 0x97, 0xeb,
+	0x49, 0x58, 0xeb, 0x2e, 0xc5, 0x9a, 0x90, 0x9a, 0xea, 0x8a, 0xa4, 0xf0, 0x11, 0x81, 0x5e, 0xbf,
+	0x05, 0xac, 0x74, 0x56, 0xbf, 0x57, 0x1f, 0xd8, 0xa6, 0x85, 0xf8, 0x3e, 0x81, 0x9d, 0x31, 0x98,
+	0xd0, 0x01, 0x6f, 0x41, 0x97, 0xe4, 0x3e, 0x2e, 0xe9, 0xf8, 0x38, 0x31, 0x61, 0x56, 0x54, 0x39,
+	0x9a, 0xa6, 0xb6, 0x59, 0x4e, 0xf9, 0xea, 0x4e, 0x4f, 0x86, 0x7f, 0x67, 0x14, 0x33, 0x12, 0xff,
+	0xb0, 0x79, 0xfb, 0xe3, 0x33, 0x02, 0xfb, 0xfc, 0x54, 0x5f, 0xae, 0xcc, 0x6a, 0x15, 0x49, 0xad,
+	0x28, 0xab, 0x1f, 0x87, 0xdf, 0x09, 0x0c, 0xa4, 0x01, 0x87, 0x01, 0x99, 0x85, 0x4c, 0xcd, 0x79,
+	0xcf, 0xc5, 0x63, 0x7f, 0x54, 0x3c, 0x42, 0x54, 0xe2, 0x2e, 0xa5, 0xae, 0xb6, 0x16, 0x38, 0xbe,
+	0x8a, 0x89, 0xe5, 0x0d, 0x79, 0x5d, 0x47, 0x04, 0x1f, 0x8b, 0xf6, 0x90, 0x58, 0x1c, 0xfe, 0xff,
+	0x7b, 0x57, 0x7b, 0xda, 0xee, 0x5f, 0xed, 0x69, 0x13, 0x2e, 0x62, 0xdd, 0xe2, 0x37, 0x19, 0x7d,
+	0x03, 0x32, 0x21, 0x5b, 0x19, 0xb3, 0xba, 0x8e, 0x9d, 0x5c, 0xa4, 0xfc, 0x66, 0x15, 0x2e, 0x61,
+	0xbf, 0x19, 0xe2, 0xe8, 0x56, 0x53, 0x2e, 0x63, 0x6d, 0x09, 0x35, 0x8d, 0xdc, 0xa7, 0xa1, 0xd3,
+	0x8e, 0x33, 0xd2, 0x6d, 0x60, 0xa3, 0xa0, 0x02, 0xe1, 0x73, 0xa7, 0x96, 0x9d, 0x70, 0x60, 0x87,
+	0xe7, 0xd0, 0x43, 0xec, 0x00, 0x3c, 0xce, 0xb8, 0xe5, 0x54, 0xb5, 0x70, 0x74, 0xe8, 0x8e, 0xb9,
+	0xa6, 0x55, 0x35, 0x6c, 0x03, 0x5a, 0x5a, 0xbe, 0xbe, 0x70, 0xca, 0x97, 0xcb, 0x29, 0xa1, 0x7c,
+	0xad, 0x8e, 0xeb, 0xdd, 0x42, 0x96, 0x00, 0xf3, 0x71, 0x2c, 0x64, 0x7f, 0x13, 0x78, 0x92, 0x71,
+	0x73, 0xfb, 0xbc, 0x06, 0x5c, 0x3e, 0x08, 0xd4, 0xd0, 0xe7, 0x4a, 0xa1, 0xd9, 0xbd, 0xd1, 0xd0,
+	0xe7, 0xce, 0xf9, 0xce, 0x97, 0x41, 0xa0, 0x92, 0x61, 0x06, 0x57, 0xaf, 0xb1, 0x57, 0x4b, 0x86,
+	0x79, 0x2e, 0xe6, 0x34, 0xea, 0x68, 0x42, 0x38, 0x97, 0x09, 0x64, 0xc3, 0x28, 0x63, 0xf8, 0x54,
+	0xe8, 0xd6, 0xe5, 0x98, 0x24, 0x1a, 0x8c, 0x8a, 0xa0, 0x57, 0x5d, 0x20, 0x8d, 0x36, 0xeb, 0x72,
+	0xab, 0xfb, 0x80, 0x1e, 0xff, 0x0e, 0xe5, 0x3b, 0xeb, 0x55, 0x4b, 0x9f, 0xeb, 0x5c, 0x5d, 0x7d,
+	0x2c, 0x7a, 0xef, 0x25, 0xfc, 0x34, 0xc0, 0xa3, 0x6e, 0xf5, 0xb9, 0xb7, 0x10, 0x19, 0xcc, 0x66,
+	0xb7, 0xef, 0x07, 0x31, 0x13, 0x9e, 0x53, 0x0d, 0x53, 0xd3, 0xd5, 0x39, 0x71, 0x71, 0xba, 0x32,
+	0xaf, 0x79, 0x66, 0xb1, 0x05, 0x59, 0x55, 0x16, 0x4c, 0x66, 0x61, 0x4d, 0x11, 0xff, 0x12, 0x5e,
+	0x83, 0x6d, 0xa1, 0x52, 0x88, 0xed, 0x30, 0x74, 0x2c, 0xa8, 0x86, 0x19, 0xfc, 0xd2, 0x10, 0x84,
+	0x15, 0x90, 0x66, 0x32, 0x02, 0x85, 0x8d, 0x4c, 0xf5, 0x59, 0x4d, 0x5b, 0x44, 0x18, 0xc2, 0x19,
+	0xd8, 0xe4, 0x79, 0x86, 0x46, 0xc6, 0xa0, 0xa3, 0xaa, 0x69, 0x8b, 0x68, 0x64, 0x7b, 0x94, 0x11,
+	0x4b, 0x06, 0x69, 0xb3, 0xf5, 0x42, 0x17, 0x50, 0x5b, 0x99, 0xa8, 0x8b, 0x65, 0x27, 0x37, 0x84,
+	0x97, 0x20, 0xe3, 0x7b, 0x8a, 0x46, 0x26, 0xa0, 0xb3, 0xca, 0x9e, 0xa0, 0x99, 0x5c, 0xa4, 0x19,
+	0xb6, 0xca, 0xe9, 0x27, 0x6c, 0x19, 0xe1, 0x6d, 0xe7, 0xe3, 0xd2, 0x54, 0x6d, 0x7e, 0x5e, 0xd6,
+	0x65, 0xe9, 0xe1, 0x4f, 0xbb, 0xd7, 0x9c, 0xba, 0x10, 0x06, 0xe1, 0x51, 0xcd, 0xbc, 0xe1, 0xbf,
+	0x7a, 0xe1, 0x7f, 0x0c, 0x35, 0xfd, 0x94, 0x00, 0x78, 0xbe, 0xd7, 0xe6, 0xa3, 0x60, 0x85, 0x7f,
+	0x4c, 0xc8, 0x16, 0x52, 0xaf, 0xc7, 0x66, 0x77, 0xe0, 0xdd, 0x9f, 0xfe, 0xfc, 0xb8, 0xbd, 0x8f,
+	0x0a, 0x85, 0x88, 0x5f, 0x1f, 0x3c, 0x74, 0xbf, 0x24, 0xb0, 0xd6, 0x55, 0x41, 0x87, 0xd2, 0x99,
+	0x72, 0x90, 0xe5, 0xd3, 0x2e, 0x47, 0x60, 0x47, 0x18, 0xb0, 0x51, 0x3a, 0x92, 0x0c, 0xac, 0x70,
+	0xd9, 0x5f, 0x6d, 0xae, 0xd0, 0x9f, 0x09, 0x74, 0x85, 0xcd, 0xc2, 0x74, 0x3c, 0x1d, 0x0a, 0xbe,
+	0x17, 0xcb, 0x3e, 0xdd, 0x80, 0x24, 0x52, 0x39, 0xcd, 0xa8, 0x4c, 0xd2, 0x67, 0x1a, 0xa0, 0x52,
+	0xf0, 0x1c, 0xd8, 0xf4, 0x5f, 0x02, 0x3b, 0x62, 0x47, 0x4b, 0x3a, 0x99, 0x0e, 0x65, 0x4c, 0xd3,
+	0x99, 0x9d, 0x7a, 0x10, 0x15, 0xc8, 0x78, 0x86, 0x31, 0x3e, 0x43, 0xa7, 0x1b, 0x61, 0xbc, 0xd2,
+	0x4a, 0x7a, 0xb9, 0x7f, 0x4f, 0x00, 0x56, 0x4c, 0x25, 0x24, 0x06, 0x37, 0xb1, 0x25, 0x24, 0x06,
+	0x3f, 0x0d, 0x08, 0xaf, 0x32, 0x0a, 0x45, 0x7a, 0xf6, 0x01, 0x83, 0x56, 0xb8, 0xec, 0x3f, 0x31,
+	0xaf, 0xd0, 0x7f, 0x08, 0x64, 0x42, 0xbc, 0x47, 0x0f, 0xc5, 0x42, 0x8c, 0x9e, 0x46, 0xb3, 0xe3,
+	0xf5, 0x0b, 0x22, 0xc9, 0x32, 0x23, 0xa9, 0x50, 0xb9, 0xd9, 0x24, 0x43, 0x83, 0x48, 0x7f, 0x20,
+	0xd0, 0x15, 0x36, 0xcc, 0x25, 0xa4, 0x65, 0xcc, 0x74, 0x9a, 0x90, 0x96, 0x71, 0x93, 0xa3, 0x30,
+	0xc1, 0xc8, 0x8f, 0xd1, 0x83, 0x51, 0xe4, 0x63, 0xa3, 0x68, 0xe5, 0x62, 0xec, 0x74, 0x94, 0x90,
+	0x8b, 0x69, 0x06, 0xc0, 0x84, 0x5c, 0x4c, 0x35, 0x9c, 0x25, 0xe7, 0xa2, 0xcb, 0x2c, 0x65, 0x18,
+	0x0d, 0x7a, 0x83, 0xc0, 0x7a, 0xdf, 0x28, 0x41, 0x0f, 0xc4, 0x02, 0x0d, 0x9b, 0xb4, 0xb2, 0xc3,
+	0xf5, 0x88, 0x20, 0x97, 0x69, 0xc6, 0xe5, 0x38, 0x9d, 0x6c, 0x84, 0x8b, 0xee, 0x43, 0xbc, 0x4c,
+	0x20, 0x13, 0xd2, 0x9e, 0x27, 0x64, 0x61, 0xf4, 0xb4, 0x91, 0x1d, 0xaf, 0x5f, 0x10, 0x59, 0x9d,
+	0x62, 0xac, 0x9e, 0xa5, 0xc7, 0x1a, 0x61, 0xe5, 0x39, 0x9f, 0x6f, 0x13, 0xa0, 0xbc, 0x1d, 0x3a,
+	0x56, 0x27, 0x30, 0x87, 0xd0, 0xa1, 0xba, 0xe5, 0x90, 0xcf, 0x2b, 0x8c, 0xcf, 0x0c, 0x7d, 0xf1,
+	0xc1, 0xf8, 0xf0, 0xc7, 0xfa, 0x35, 0x02, 0x1b, 0xfc, 0x4d, 0x34, 0x8d, 0xdf, 0x45, 0xa1, 0x5d,
+	0x7e, 0x76, 0xa4, 0x2e, 0x19, 0x24, 0x35, 0xce, 0x48, 0x0d, 0xd3, 0xa7, 0xa2, 0x48, 0x2d, 0xb8,
+	0x72, 0x25, 0xb5, 0x32, 0xaf, 0x15, 0x2e, 0xdb, 0xb3, 0xc3, 0x15, 0xfa, 0x0e, 0x81, 0x0e, 0xab,
+	0x2b, 0xa7, 0xfd, 0xb1, 0x76, 0x3d, 0x03, 0x40, 0x76, 0x5f, 0x8a, 0x95, 0x88, 0xab, 0x8f, 0xe1,
+	0xca, 0xd1, 0xed, 0x51, 0xb8, 0xac, 0x21, 0x80, 0xbe, 0x4f, 0xa0, 0xd3, 0x6e, 0xd9, 0xe9, 0x40,
+	0xbc, 0x6e, 0xef, 0x94, 0x90, 0xdd, 0x9f, 0x6a, 0x2d, 0x22, 0xd9, 0xc3, 0x90, 0xf4, 0xd2, 0x5c,
+	0x24, 0x12, 0x1b, 0xc0, 0x37, 0x04, 0x28, 0xdf, 0x9d, 0x27, 0x6c, 0xd3, 0xc8, 0x89, 0x22, 0x61,
+	0x9b, 0x46, 0x8f, 0x01, 0x75, 0xb5, 0xbe, 0xb7, 0xec, 0x8f, 0x46, 0xe1, 0x97, 0x60, 0xe8, 0xd1,
+	0x58, 0x08, 0x49, 0xd7, 0x75, 0xb2, 0xc7, 0x1a, 0x15, 0x47, 0x22, 0xa3, 0x8c, 0x48, 0x81, 0x0e,
+	0x45, 0x11, 0x09, 0xbd, 0x99, 0x63, 0x9d, 0xc6, 0x5b, 0x22, 0xee, 0xa3, 0xd0, 0x23, 0xe9, 0x20,
+	0x85, 0xde, 0x9a, 0xc9, 0x4e, 0x34, 0x26, 0x8c, 0x6c, 0x46, 0x18, 0x9b, 0x21, 0xba, 0x3f, 0x8e,
+	0x4d, 0xe0, 0x82, 0x0c, 0xbd, 0x4e, 0xd8, 0x94, 0x1b, 0xb8, 0x1f, 0x92, 0xb0, 0xa7, 0x22, 0xef,
+	0xae, 0x24, 0xec, 0xa9, 0xe8, 0x8b, 0x28, 0xc2, 0x10, 0x03, 0xbf, 0x97, 0xee, 0x8e, 0x03, 0xbf,
+	0xf2, 0xf3, 0xf2, 0x0d, 0xc2, 0x26, 0x7d, 0xbf, 0x36, 0x3a, 0x5a, 0x9f, 0x75, 0x07, 0xf4, 0x58,
+	0xbd, 0x62, 0x88, 0xf9, 0x28, 0xc3, 0x7c, 0x88, 0x8e, 0xa6, 0xc1, 0xcc, 0x37, 0x42, 0xbe, 0xd4,
+	0xe0, 0x7e, 0x40, 0x4f, 0x99, 0x1a, 0x11, 0x37, 0x39, 0xd2, 0xa6, 0x46, 0xd4, 0xb5, 0x8c, 0x74,
+	0xa9, 0xc1, 0xdd, 0x21, 0xa0, 0x77, 0x08, 0x6c, 0x8d, 0x52, 0x4e, 0x27, 0x1a, 0xc2, 0xe4, 0x30,
+	0x3a, 0xda, 0xa0, 0x74, 0xda, 0x5e, 0x21, 0x94, 0x10, 0x17, 0xb5, 0xa9, 0x53, 0x37, 0xef, 0xe6,
+	0xc8, 0xf2, 0xdd, 0x1c, 0xf9, 0xe3, 0x6e, 0x8e, 0x7c, 0x78, 0x2f, 0xd7, 0xb6, 0x7c, 0x2f, 0xd7,
+	0xf6, 0xdb, 0xbd, 0x5c, 0xdb, 0xeb, 0x83, 0x8a, 0x6a, 0x2e, 0xd4, 0x66, 0xf3, 0x73, 0x5a, 0xd9,
+	0xb1, 0x61, 0xff, 0x33, 0x64, 0x48, 0xe7, 0x0b, 0x4b, 0xae, 0x41, 0xf3, 0x52, 0x55, 0x36, 0x66,
+	0x3b, 0xd9, 0xd5, 0xc4, 0x91, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0xcc, 0xca, 0xa6, 0xef, 0x7f,
+	0x29, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2102,13 +2340,17 @@ type QueryClient interface {
 	// this could return current estimation of next validator set
 	BufferedValidators(ctx context.Context, in *QueryBufferedValidatorsRequest, opts ...grpc.CallOption) (*QueryBufferedValidatorsResponse, error)
 	// Queued create validator messages
-	MsgCreateValidators(ctx context.Context, in *QueryMsgCreateValidatorsRequest, opts ...grpc.CallOption) (*QueryMsgCreateValidatorsResponse, error)
+	QueuedMsgCreateValidators(ctx context.Context, in *QueryQueuedMsgCreateValidatorsRequest, opts ...grpc.CallOption) (*QueryQueuedMsgCreateValidatorsResponse, error)
 	// Queued edit validator messages
-	MsgEditValidators(ctx context.Context, in *QueryMsgEditValidatorsRequest, opts ...grpc.CallOption) (*QueryMsgEditValidatorsResponse, error)
+	QueuedMsgEditValidators(ctx context.Context, in *QueryQueuedMsgEditValidatorsRequest, opts ...grpc.CallOption) (*QueryQueuedMsgEditValidatorsResponse, error)
 	// Queued delegate messages
-	MsgDelegates(ctx context.Context, in *QueryMsgDelegatesRequest, opts ...grpc.CallOption) (*QueryMsgDelegatesResponse, error)
+	QueuedMsgDelegates(ctx context.Context, in *QueryQueuedMsgDelegatesRequest, opts ...grpc.CallOption) (*QueryQueuedMsgDelegatesResponse, error)
+	// Queued delegate specific messages
+	QueuedMsgDelegate(ctx context.Context, in *QueryQueuedMsgDelegateRequest, opts ...grpc.CallOption) (*QueryQueuedMsgDelegateResponse, error)
 	// Queued being redelegate messages
-	MsgBeginRedelegates(ctx context.Context, in *QueryMsgBeginRedelegatesRequest, opts ...grpc.CallOption) (*QueryMsgBeginRedelegatesResponse, error)
+	QueuedMsgBeginRedelegates(ctx context.Context, in *QueryQueuedMsgBeginRedelegatesRequest, opts ...grpc.CallOption) (*QueryQueuedMsgBeginRedelegatesResponse, error)
+	// Queued being redelegate messages
+	QueuedMsgBeginRedelegate(ctx context.Context, in *QueryQueuedMsgBeginRedelegateRequest, opts ...grpc.CallOption) (*QueryQueuedMsgBeginRedelegateResponse, error)
 }
 
 type queryClient struct {
@@ -2254,36 +2496,54 @@ func (c *queryClient) BufferedValidators(ctx context.Context, in *QueryBufferedV
 	return out, nil
 }
 
-func (c *queryClient) MsgCreateValidators(ctx context.Context, in *QueryMsgCreateValidatorsRequest, opts ...grpc.CallOption) (*QueryMsgCreateValidatorsResponse, error) {
-	out := new(QueryMsgCreateValidatorsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/MsgCreateValidators", in, out, opts...)
+func (c *queryClient) QueuedMsgCreateValidators(ctx context.Context, in *QueryQueuedMsgCreateValidatorsRequest, opts ...grpc.CallOption) (*QueryQueuedMsgCreateValidatorsResponse, error) {
+	out := new(QueryQueuedMsgCreateValidatorsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/QueuedMsgCreateValidators", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) MsgEditValidators(ctx context.Context, in *QueryMsgEditValidatorsRequest, opts ...grpc.CallOption) (*QueryMsgEditValidatorsResponse, error) {
-	out := new(QueryMsgEditValidatorsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/MsgEditValidators", in, out, opts...)
+func (c *queryClient) QueuedMsgEditValidators(ctx context.Context, in *QueryQueuedMsgEditValidatorsRequest, opts ...grpc.CallOption) (*QueryQueuedMsgEditValidatorsResponse, error) {
+	out := new(QueryQueuedMsgEditValidatorsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/QueuedMsgEditValidators", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) MsgDelegates(ctx context.Context, in *QueryMsgDelegatesRequest, opts ...grpc.CallOption) (*QueryMsgDelegatesResponse, error) {
-	out := new(QueryMsgDelegatesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/MsgDelegates", in, out, opts...)
+func (c *queryClient) QueuedMsgDelegates(ctx context.Context, in *QueryQueuedMsgDelegatesRequest, opts ...grpc.CallOption) (*QueryQueuedMsgDelegatesResponse, error) {
+	out := new(QueryQueuedMsgDelegatesResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/QueuedMsgDelegates", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) MsgBeginRedelegates(ctx context.Context, in *QueryMsgBeginRedelegatesRequest, opts ...grpc.CallOption) (*QueryMsgBeginRedelegatesResponse, error) {
-	out := new(QueryMsgBeginRedelegatesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/MsgBeginRedelegates", in, out, opts...)
+func (c *queryClient) QueuedMsgDelegate(ctx context.Context, in *QueryQueuedMsgDelegateRequest, opts ...grpc.CallOption) (*QueryQueuedMsgDelegateResponse, error) {
+	out := new(QueryQueuedMsgDelegateResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/QueuedMsgDelegate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) QueuedMsgBeginRedelegates(ctx context.Context, in *QueryQueuedMsgBeginRedelegatesRequest, opts ...grpc.CallOption) (*QueryQueuedMsgBeginRedelegatesResponse, error) {
+	out := new(QueryQueuedMsgBeginRedelegatesResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/QueuedMsgBeginRedelegates", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) QueuedMsgBeginRedelegate(ctx context.Context, in *QueryQueuedMsgBeginRedelegateRequest, opts ...grpc.CallOption) (*QueryQueuedMsgBeginRedelegateResponse, error) {
+	out := new(QueryQueuedMsgBeginRedelegateResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/QueuedMsgBeginRedelegate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2327,13 +2587,17 @@ type QueryServer interface {
 	// this could return current estimation of next validator set
 	BufferedValidators(context.Context, *QueryBufferedValidatorsRequest) (*QueryBufferedValidatorsResponse, error)
 	// Queued create validator messages
-	MsgCreateValidators(context.Context, *QueryMsgCreateValidatorsRequest) (*QueryMsgCreateValidatorsResponse, error)
+	QueuedMsgCreateValidators(context.Context, *QueryQueuedMsgCreateValidatorsRequest) (*QueryQueuedMsgCreateValidatorsResponse, error)
 	// Queued edit validator messages
-	MsgEditValidators(context.Context, *QueryMsgEditValidatorsRequest) (*QueryMsgEditValidatorsResponse, error)
+	QueuedMsgEditValidators(context.Context, *QueryQueuedMsgEditValidatorsRequest) (*QueryQueuedMsgEditValidatorsResponse, error)
 	// Queued delegate messages
-	MsgDelegates(context.Context, *QueryMsgDelegatesRequest) (*QueryMsgDelegatesResponse, error)
+	QueuedMsgDelegates(context.Context, *QueryQueuedMsgDelegatesRequest) (*QueryQueuedMsgDelegatesResponse, error)
+	// Queued delegate specific messages
+	QueuedMsgDelegate(context.Context, *QueryQueuedMsgDelegateRequest) (*QueryQueuedMsgDelegateResponse, error)
 	// Queued being redelegate messages
-	MsgBeginRedelegates(context.Context, *QueryMsgBeginRedelegatesRequest) (*QueryMsgBeginRedelegatesResponse, error)
+	QueuedMsgBeginRedelegates(context.Context, *QueryQueuedMsgBeginRedelegatesRequest) (*QueryQueuedMsgBeginRedelegatesResponse, error)
+	// Queued being redelegate messages
+	QueuedMsgBeginRedelegate(context.Context, *QueryQueuedMsgBeginRedelegateRequest) (*QueryQueuedMsgBeginRedelegateResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -2385,17 +2649,23 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 func (*UnimplementedQueryServer) BufferedValidators(ctx context.Context, req *QueryBufferedValidatorsRequest) (*QueryBufferedValidatorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BufferedValidators not implemented")
 }
-func (*UnimplementedQueryServer) MsgCreateValidators(ctx context.Context, req *QueryMsgCreateValidatorsRequest) (*QueryMsgCreateValidatorsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MsgCreateValidators not implemented")
+func (*UnimplementedQueryServer) QueuedMsgCreateValidators(ctx context.Context, req *QueryQueuedMsgCreateValidatorsRequest) (*QueryQueuedMsgCreateValidatorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueuedMsgCreateValidators not implemented")
 }
-func (*UnimplementedQueryServer) MsgEditValidators(ctx context.Context, req *QueryMsgEditValidatorsRequest) (*QueryMsgEditValidatorsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MsgEditValidators not implemented")
+func (*UnimplementedQueryServer) QueuedMsgEditValidators(ctx context.Context, req *QueryQueuedMsgEditValidatorsRequest) (*QueryQueuedMsgEditValidatorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueuedMsgEditValidators not implemented")
 }
-func (*UnimplementedQueryServer) MsgDelegates(ctx context.Context, req *QueryMsgDelegatesRequest) (*QueryMsgDelegatesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MsgDelegates not implemented")
+func (*UnimplementedQueryServer) QueuedMsgDelegates(ctx context.Context, req *QueryQueuedMsgDelegatesRequest) (*QueryQueuedMsgDelegatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueuedMsgDelegates not implemented")
 }
-func (*UnimplementedQueryServer) MsgBeginRedelegates(ctx context.Context, req *QueryMsgBeginRedelegatesRequest) (*QueryMsgBeginRedelegatesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MsgBeginRedelegates not implemented")
+func (*UnimplementedQueryServer) QueuedMsgDelegate(ctx context.Context, req *QueryQueuedMsgDelegateRequest) (*QueryQueuedMsgDelegateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueuedMsgDelegate not implemented")
+}
+func (*UnimplementedQueryServer) QueuedMsgBeginRedelegates(ctx context.Context, req *QueryQueuedMsgBeginRedelegatesRequest) (*QueryQueuedMsgBeginRedelegatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueuedMsgBeginRedelegates not implemented")
+}
+func (*UnimplementedQueryServer) QueuedMsgBeginRedelegate(ctx context.Context, req *QueryQueuedMsgBeginRedelegateRequest) (*QueryQueuedMsgBeginRedelegateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueuedMsgBeginRedelegate not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -2672,74 +2942,110 @@ func _Query_BufferedValidators_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_MsgCreateValidators_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryMsgCreateValidatorsRequest)
+func _Query_QueuedMsgCreateValidators_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryQueuedMsgCreateValidatorsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).MsgCreateValidators(ctx, in)
+		return srv.(QueryServer).QueuedMsgCreateValidators(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.staking.v1beta1.Query/MsgCreateValidators",
+		FullMethod: "/cosmos.staking.v1beta1.Query/QueuedMsgCreateValidators",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).MsgCreateValidators(ctx, req.(*QueryMsgCreateValidatorsRequest))
+		return srv.(QueryServer).QueuedMsgCreateValidators(ctx, req.(*QueryQueuedMsgCreateValidatorsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_MsgEditValidators_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryMsgEditValidatorsRequest)
+func _Query_QueuedMsgEditValidators_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryQueuedMsgEditValidatorsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).MsgEditValidators(ctx, in)
+		return srv.(QueryServer).QueuedMsgEditValidators(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.staking.v1beta1.Query/MsgEditValidators",
+		FullMethod: "/cosmos.staking.v1beta1.Query/QueuedMsgEditValidators",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).MsgEditValidators(ctx, req.(*QueryMsgEditValidatorsRequest))
+		return srv.(QueryServer).QueuedMsgEditValidators(ctx, req.(*QueryQueuedMsgEditValidatorsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_MsgDelegates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryMsgDelegatesRequest)
+func _Query_QueuedMsgDelegates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryQueuedMsgDelegatesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).MsgDelegates(ctx, in)
+		return srv.(QueryServer).QueuedMsgDelegates(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.staking.v1beta1.Query/MsgDelegates",
+		FullMethod: "/cosmos.staking.v1beta1.Query/QueuedMsgDelegates",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).MsgDelegates(ctx, req.(*QueryMsgDelegatesRequest))
+		return srv.(QueryServer).QueuedMsgDelegates(ctx, req.(*QueryQueuedMsgDelegatesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_MsgBeginRedelegates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryMsgBeginRedelegatesRequest)
+func _Query_QueuedMsgDelegate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryQueuedMsgDelegateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).MsgBeginRedelegates(ctx, in)
+		return srv.(QueryServer).QueuedMsgDelegate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.staking.v1beta1.Query/MsgBeginRedelegates",
+		FullMethod: "/cosmos.staking.v1beta1.Query/QueuedMsgDelegate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).MsgBeginRedelegates(ctx, req.(*QueryMsgBeginRedelegatesRequest))
+		return srv.(QueryServer).QueuedMsgDelegate(ctx, req.(*QueryQueuedMsgDelegateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_QueuedMsgBeginRedelegates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryQueuedMsgBeginRedelegatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).QueuedMsgBeginRedelegates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/QueuedMsgBeginRedelegates",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).QueuedMsgBeginRedelegates(ctx, req.(*QueryQueuedMsgBeginRedelegatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_QueuedMsgBeginRedelegate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryQueuedMsgBeginRedelegateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).QueuedMsgBeginRedelegate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.staking.v1beta1.Query/QueuedMsgBeginRedelegate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).QueuedMsgBeginRedelegate(ctx, req.(*QueryQueuedMsgBeginRedelegateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2809,27 +3115,35 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_BufferedValidators_Handler,
 		},
 		{
-			MethodName: "MsgCreateValidators",
-			Handler:    _Query_MsgCreateValidators_Handler,
+			MethodName: "QueuedMsgCreateValidators",
+			Handler:    _Query_QueuedMsgCreateValidators_Handler,
 		},
 		{
-			MethodName: "MsgEditValidators",
-			Handler:    _Query_MsgEditValidators_Handler,
+			MethodName: "QueuedMsgEditValidators",
+			Handler:    _Query_QueuedMsgEditValidators_Handler,
 		},
 		{
-			MethodName: "MsgDelegates",
-			Handler:    _Query_MsgDelegates_Handler,
+			MethodName: "QueuedMsgDelegates",
+			Handler:    _Query_QueuedMsgDelegates_Handler,
 		},
 		{
-			MethodName: "MsgBeginRedelegates",
-			Handler:    _Query_MsgBeginRedelegates_Handler,
+			MethodName: "QueuedMsgDelegate",
+			Handler:    _Query_QueuedMsgDelegate_Handler,
+		},
+		{
+			MethodName: "QueuedMsgBeginRedelegates",
+			Handler:    _Query_QueuedMsgBeginRedelegates_Handler,
+		},
+		{
+			MethodName: "QueuedMsgBeginRedelegate",
+			Handler:    _Query_QueuedMsgBeginRedelegate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "cosmos/staking/v1beta1/query.proto",
 }
 
-func (m *QueryMsgCreateValidatorsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgCreateValidatorsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2839,12 +3153,12 @@ func (m *QueryMsgCreateValidatorsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgCreateValidatorsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgCreateValidatorsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgCreateValidatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgCreateValidatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2864,7 +3178,7 @@ func (m *QueryMsgCreateValidatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMsgCreateValidatorsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgCreateValidatorsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2874,12 +3188,12 @@ func (m *QueryMsgCreateValidatorsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgCreateValidatorsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgCreateValidatorsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgCreateValidatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgCreateValidatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2913,7 +3227,7 @@ func (m *QueryMsgCreateValidatorsResponse) MarshalToSizedBuffer(dAtA []byte) (in
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMsgEditValidatorsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgEditValidatorsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2923,12 +3237,12 @@ func (m *QueryMsgEditValidatorsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgEditValidatorsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgEditValidatorsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgEditValidatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgEditValidatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2948,7 +3262,7 @@ func (m *QueryMsgEditValidatorsRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMsgEditValidatorsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgEditValidatorsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -2958,12 +3272,12 @@ func (m *QueryMsgEditValidatorsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgEditValidatorsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgEditValidatorsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgEditValidatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgEditValidatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2997,7 +3311,7 @@ func (m *QueryMsgEditValidatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMsgDelegatesRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgDelegatesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3007,12 +3321,12 @@ func (m *QueryMsgDelegatesRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgDelegatesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgDelegatesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgDelegatesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgDelegatesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3032,7 +3346,7 @@ func (m *QueryMsgDelegatesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMsgDelegatesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgDelegatesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3042,12 +3356,12 @@ func (m *QueryMsgDelegatesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgDelegatesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgDelegatesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgDelegatesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgDelegatesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3081,7 +3395,7 @@ func (m *QueryMsgDelegatesResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMsgBeginRedelegatesRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgDelegateRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3091,12 +3405,103 @@ func (m *QueryMsgBeginRedelegatesRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgBeginRedelegatesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgDelegateRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgBeginRedelegatesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgDelegateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.DelegatorAddr) > 0 {
+		i -= len(m.DelegatorAddr)
+		copy(dAtA[i:], m.DelegatorAddr)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DelegatorAddr)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryQueuedMsgDelegateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryQueuedMsgDelegateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryQueuedMsgDelegateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.MsgDelegates) > 0 {
+		for iNdEx := len(m.MsgDelegates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MsgDelegates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryQueuedMsgBeginRedelegatesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryQueuedMsgBeginRedelegatesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryQueuedMsgBeginRedelegatesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -3116,7 +3521,7 @@ func (m *QueryMsgBeginRedelegatesRequest) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryMsgBeginRedelegatesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -3126,12 +3531,103 @@ func (m *QueryMsgBeginRedelegatesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryMsgBeginRedelegatesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryMsgBeginRedelegatesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.MsgBeginRedelegates) > 0 {
+		for iNdEx := len(m.MsgBeginRedelegates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MsgBeginRedelegates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryQueuedMsgBeginRedelegateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryQueuedMsgBeginRedelegateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryQueuedMsgBeginRedelegateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.DelegatorAddr) > 0 {
+		i -= len(m.DelegatorAddr)
+		copy(dAtA[i:], m.DelegatorAddr)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DelegatorAddr)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryQueuedMsgBeginRedelegateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryQueuedMsgBeginRedelegateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryQueuedMsgBeginRedelegateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -4368,7 +4864,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryMsgCreateValidatorsRequest) Size() (n int) {
+func (m *QueryQueuedMsgCreateValidatorsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4381,7 +4877,7 @@ func (m *QueryMsgCreateValidatorsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryMsgCreateValidatorsResponse) Size() (n int) {
+func (m *QueryQueuedMsgCreateValidatorsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4400,7 +4896,7 @@ func (m *QueryMsgCreateValidatorsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryMsgEditValidatorsRequest) Size() (n int) {
+func (m *QueryQueuedMsgEditValidatorsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4413,7 +4909,7 @@ func (m *QueryMsgEditValidatorsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryMsgEditValidatorsResponse) Size() (n int) {
+func (m *QueryQueuedMsgEditValidatorsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4432,7 +4928,7 @@ func (m *QueryMsgEditValidatorsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryMsgDelegatesRequest) Size() (n int) {
+func (m *QueryQueuedMsgDelegatesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4445,7 +4941,7 @@ func (m *QueryMsgDelegatesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryMsgDelegatesResponse) Size() (n int) {
+func (m *QueryQueuedMsgDelegatesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4464,7 +4960,43 @@ func (m *QueryMsgDelegatesResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryMsgBeginRedelegatesRequest) Size() (n int) {
+func (m *QueryQueuedMsgDelegateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DelegatorAddr)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryQueuedMsgDelegateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MsgDelegates) > 0 {
+		for _, e := range m.MsgDelegates {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryQueuedMsgBeginRedelegatesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4477,7 +5009,43 @@ func (m *QueryMsgBeginRedelegatesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryMsgBeginRedelegatesResponse) Size() (n int) {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MsgBeginRedelegates) > 0 {
+		for _, e := range m.MsgBeginRedelegates {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryQueuedMsgBeginRedelegateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DelegatorAddr)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryQueuedMsgBeginRedelegateResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4973,7 +5541,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryMsgCreateValidatorsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgCreateValidatorsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4996,10 +5564,10 @@ func (m *QueryMsgCreateValidatorsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgCreateValidatorsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgCreateValidatorsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgCreateValidatorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgCreateValidatorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5059,7 +5627,7 @@ func (m *QueryMsgCreateValidatorsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMsgCreateValidatorsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgCreateValidatorsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5082,10 +5650,10 @@ func (m *QueryMsgCreateValidatorsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgCreateValidatorsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgCreateValidatorsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgCreateValidatorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgCreateValidatorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5179,7 +5747,7 @@ func (m *QueryMsgCreateValidatorsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMsgEditValidatorsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgEditValidatorsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5202,10 +5770,10 @@ func (m *QueryMsgEditValidatorsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgEditValidatorsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgEditValidatorsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgEditValidatorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgEditValidatorsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5265,7 +5833,7 @@ func (m *QueryMsgEditValidatorsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMsgEditValidatorsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgEditValidatorsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5288,10 +5856,10 @@ func (m *QueryMsgEditValidatorsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgEditValidatorsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgEditValidatorsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgEditValidatorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgEditValidatorsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5385,7 +5953,7 @@ func (m *QueryMsgEditValidatorsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMsgDelegatesRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgDelegatesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5408,10 +5976,10 @@ func (m *QueryMsgDelegatesRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgDelegatesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgDelegatesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgDelegatesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgDelegatesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5471,7 +6039,7 @@ func (m *QueryMsgDelegatesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMsgDelegatesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgDelegatesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5494,10 +6062,10 @@ func (m *QueryMsgDelegatesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgDelegatesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgDelegatesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgDelegatesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgDelegatesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5591,7 +6159,7 @@ func (m *QueryMsgDelegatesResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMsgBeginRedelegatesRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgDelegateRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5614,10 +6182,248 @@ func (m *QueryMsgBeginRedelegatesRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgBeginRedelegatesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgDelegateRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgBeginRedelegatesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgDelegateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryQueuedMsgDelegateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryQueuedMsgDelegateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryQueuedMsgDelegateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgDelegates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgDelegates = append(m.MsgDelegates, MsgDelegate{})
+			if err := m.MsgDelegates[len(m.MsgDelegates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryQueuedMsgBeginRedelegatesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegatesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegatesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -5677,7 +6483,7 @@ func (m *QueryMsgBeginRedelegatesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMsgBeginRedelegatesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryQueuedMsgBeginRedelegatesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -5700,10 +6506,248 @@ func (m *QueryMsgBeginRedelegatesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMsgBeginRedelegatesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegatesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMsgBeginRedelegatesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegatesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgBeginRedelegates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgBeginRedelegates = append(m.MsgBeginRedelegates, MsgBeginRedelegate{})
+			if err := m.MsgBeginRedelegates[len(m.MsgBeginRedelegates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryQueuedMsgBeginRedelegateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DelegatorAddr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryQueuedMsgBeginRedelegateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryQueuedMsgBeginRedelegateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

@@ -98,34 +98,45 @@ service Query {
   }
 
   // Queued create validator messages
-  rpc MsgCreateValidators(QueryMsgCreateValidatorsRequest) returns (QueryMsgCreateValidatorsResponse) {
+  rpc QueuedMsgCreateValidators(QueryQueuedMsgCreateValidatorsRequest) returns (QueryQueuedMsgCreateValidatorsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/msg_create_validators";
   }
 
   // Queued edit validator messages
-  rpc MsgEditValidators(QueryMsgEditValidatorsRequest) returns (QueryMsgEditValidatorsResponse) {
+  rpc QueuedMsgEditValidators(QueryQueuedMsgEditValidatorsRequest) returns (QueryQueuedMsgEditValidatorsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/msg_edit_validators";
   }
 
   // Queued delegate messages
-  rpc MsgDelegates(QueryMsgDelegatesRequest) returns (QueryMsgDelegatesResponse) {
+  rpc QueuedMsgDelegates(QueryQueuedMsgDelegatesRequest) returns (QueryQueuedMsgDelegatesResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/msg_delegates";
   }
 
+  // Queued delegate specific messages
+  rpc QueuedMsgDelegate(QueryQueuedMsgDelegateRequest) returns (QueryQueuedMsgDelegateResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/msg_delegate/{delegator_addr}";
+  }
+
   // Queued being redelegate messages
-  rpc MsgBeginRedelegates(QueryMsgBeginRedelegatesRequest) returns (QueryMsgBeginRedelegatesResponse) {
+  rpc QueuedMsgBeginRedelegates(QueryQueuedMsgBeginRedelegatesRequest) returns (QueryQueuedMsgBeginRedelegatesResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/msg_begin_redelegates";
+  }
+
+  // Queued being redelegate messages
+  rpc QueuedMsgBeginRedelegate(QueryQueuedMsgBeginRedelegateRequest) returns (QueryQueuedMsgBeginRedelegateResponse) {
+    option (google.api.http).get = "/cosmos/staking/v1beta1/msg_begin_redelegates/{delegator_addr}";
   }
 }
 
-// QueryMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
-message QueryMsgCreateValidatorsRequest {
+// QueryQueuedMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
+// This is used to query all MsgCreateValidators transactions queued to be executed at the end of an epoch
+message QueryQueuedMsgCreateValidatorsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryMsgCreateValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
-message QueryMsgCreateValidatorsResponse {
+message QueryQueuedMsgCreateValidatorsResponse {
   // msg_create_validators contains all of the queued messages
   repeated MsgCreateValidator msg_create_validators = 1 [(gogoproto.nullable) = false];
 
@@ -133,14 +144,15 @@ message QueryMsgCreateValidatorsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
-message QueryMsgEditValidatorsRequest {
+// QueryQueuedMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
+// This is used to query all MsgEditValidators transactions queued to be executed at the end of an epoch
+message QueryQueuedMsgEditValidatorsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
-message QueryMsgEditValidatorsResponse {
+// QueryQueuedMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+message QueryQueuedMsgEditValidatorsResponse {
   // msg_edit_validators contains all of the queued messages
   repeated MsgEditValidator msg_edit_validators = 1 [(gogoproto.nullable) = false];
 
@@ -148,14 +160,15 @@ message QueryMsgEditValidatorsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryMsgDelegateRequest is request type for Query/MsgDelegates RPC method.
-message QueryMsgDelegatesRequest {
+// QueryMsgDelegatesRequest is request type for Query/MsgDelegates RPC method.
+// Queries all MsgDelegate transactions queued to be executed at the end of an epoch
+message QueryQueuedMsgDelegatesRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
-message QueryMsgDelegatesResponse {
+// QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+message QueryQueuedMsgDelegatesResponse {
   // msg_delegates contains all of the queued messages
   repeated MsgDelegate msg_delegates = 1 [(gogoproto.nullable) = false];
 
@@ -163,14 +176,48 @@ message QueryMsgDelegatesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
-message QueryMsgBeginRedelegatesRequest {
+// QueryMsgDelegateRequest is request type for Query/MsgDelegates RPC method.
+message QueryQueuedMsgDelegateRequest {
+  // Return only messages associated with this address
+  string delegator_addr = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+message QueryQueuedMsgDelegateResponse {
+  // msg_delegates contains all of the queued messages
+  repeated MsgDelegate msg_delegates = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryQueuedMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+message QueryQueuedMsgBeginRedelegatesRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
-message QueryMsgBeginRedelegatesResponse {
+message QueryQueuedMsgBeginRedelegatesResponse {
+  // msg_begin_redelegates contains all of the queued messages
+  repeated MsgBeginRedelegate msg_begin_redelegates = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryQueuedMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+message QueryQueuedMsgBeginRedelegateRequest {
+  // Return only messages associated with this address
+  string delegator_addr = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
+message QueryQueuedMsgBeginRedelegateResponse {
   // msg_begin_redelegates contains all of the queued messages
   repeated MsgBeginRedelegate msg_begin_redelegates = 1 [(gogoproto.nullable) = false];
 

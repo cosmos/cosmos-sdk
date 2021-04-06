@@ -12,6 +12,12 @@ Upgrade your app modules smoothly with custom in-place migration logic. {synopsi
 
 The Cosmos SDK currently has two methods to perform upgrades. The first method is by exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. More details on this method can be found in the [chain upgrade guide](../migrations/chain-upgrade-guide-040.md#upgrade-procedure). The second method, introduced in v0.43, works by performing upgrades in place, significantly decreasing the time needed to perform upgrades for chains with a larger state. The following guide will provide you with the necessary information in order to setup your application to take advantage of in-place upgrades.
 
+## Tracking Module Versions
+
+Each module gets assigned a consensus version by the module developer, which serves as the breaking change version of the module. The SDK keeps track of all modules' consensus versions in the x/upgrade's `VersionMap` store. During an upgrade, the SDK calculates the difference between the old `VersionMap` stored in state and the new `VersionMap`. For each difference found, the SDK will run module-specific migrations and increment the respective consensus version of each upgraded module.
+
+The next paragraphs detail each component of the in-place store migration process, and gives instructions on how to update your app to take advantage of this functionality.
+
 ## Genesis State
 
 Each app module's consensus version must be saved to state on the application's genesis. This can be done by adding the following line to the `InitChainer` method in `app.go`

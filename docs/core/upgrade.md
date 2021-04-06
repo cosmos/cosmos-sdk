@@ -33,7 +33,7 @@ func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.R
 Using this information, the SDK will be able to detect when modules with newer versions are introduced to the app. 
 
 ### Consensus Version
-The consensus version is defined on each app module by the module developer. It serves as the breaking change version of the module. This number is how the SDK identifies which modules to upgrade. For example, if the bank module was version 2, and an upgrade introduces bank module 3, the SDK will know to upgrade the bank module.
+The consensus version is defined on each app module by the module developer. It serves as the breaking change version of the module. The consensus version helps to inform the SDK on which modules need to be upgraded. For example, if the bank module was version 2 and an upgrade introduces bank module 3, the SDK will know to upgrade the bank module and run its "version 2 to 3" migration script.
 
 ### Version Map
 The version map is a mapping of module names to consensus versions. The map is persisted to state for use during in-place migrations. When migrations finish, the updated version map is persisted to state. 

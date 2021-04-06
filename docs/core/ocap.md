@@ -70,6 +70,10 @@ gaia app.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.4/simapp/app.go#L249-L273
 
+The following diagram shows the current dependencies between keepers.
+
+![](../uml/keeper_dependencies.svg)
+
 ## Next {hide}
 
 Learn about the [`runTx` middleware](./runtx_middleware.md) {hide}

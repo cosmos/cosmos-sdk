@@ -7,7 +7,7 @@ order: 4
 
 To upgrade your chain from v0.39 and earlier (Launchpad) to Stargate, you must migrate your keys inside the keyring to the latest version. For details on configuring and using the keyring, see [Setting up the keyring](../run-node/keyring.md).
 
-This guide describes how to perform the keyring migration process.
+This guide describes how to migrate your keyrings.
 
 The migration process is handled by the following CLI command:
 

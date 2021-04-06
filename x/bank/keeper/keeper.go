@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -416,7 +417,7 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 
 	intBytes, err := coin.Amount.Marshal()
 	if err != nil {
-		panic("unexpected supply amount")
+		panic(fmt.Errorf("unable to marshal amount value %v", err))
 	}
 	supplyStore.Set([]byte(coin.GetDenom()), intBytes)
 }
@@ -462,7 +463,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 		var amount sdk.Int
 		err := amount.Unmarshal(iterator.Value())
 		if err != nil {
-			panic("unexpected supply")
+			panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 		}
 
 		balance := sdk.Coin{

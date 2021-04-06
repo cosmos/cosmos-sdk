@@ -64,7 +64,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 })
 ```
 
-To learn more about configuring migration scripts, refer to this (guide)[../building-modules/upgrade.md].
+To learn more about configuring migration scripts for your modules, refer to this [guide](../building-modules/upgrade.md).
 
 ## Adding New Modules In Upgrades
 

@@ -7,14 +7,6 @@ on:
     branches:
       - master
 jobs:
-  cleanup-runs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: rokroskar/workflow-run-cleanup-action@master
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-    if: "!startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/master'"
-
   install-tparse:
     runs-on: ubuntu-latest
     steps:
@@ -172,7 +164,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: env.GIT_DIFF
-      - uses: codecov/codecov-action@v1.3.1
+      - uses: codecov/codecov-action@v1.3.2
         with:
           file: ./coverage.txt
         if: env.GIT_DIFF

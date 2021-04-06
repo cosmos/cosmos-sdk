@@ -4,6 +4,10 @@ order: 15
 
 # In-Place Store Migrations
 
+::: warning
+Please make sure you read this whole document and fully understand in-place store migrations before running them on a live chain.
+:::
+
 Upgrade your app modules smoothly with custom in-place migration logic. {synopsis}
 
 The Cosmos SDK currently has two ways to perform upgrades. The first way is by exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. The second way is by performing upgrades in place, significantly decreasing the time needed to perform upgrades for chains with a larger state. The following guide will provide you with the necessary information in order to setup your application to take advantage of in-place upgrades.

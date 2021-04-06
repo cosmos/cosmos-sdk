@@ -92,7 +92,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 })
 ```
 
-Using a similar method, you can also run InitGenesis on your new module with a custom genesis state:
+Using a similar method, you can also run `InitGenesis` on your new module with a custom genesis state:
 
 ```go
 import foo "github.com/my/module/foo"

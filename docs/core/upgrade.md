@@ -66,7 +66,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 
     // RunMigrations returns the VersionMap
     // with the updated module ConsensusVersions
-    return app.RunMigrations(ctx, vm)
+    return app.mm.RunMigrations(ctx, vm)
 })
 ```
 

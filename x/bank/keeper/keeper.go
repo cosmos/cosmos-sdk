@@ -189,7 +189,7 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	var amount sdk.Int
 	err := amount.Unmarshal(bz)
 	if err != nil {
-		panic("unexpected supply")
+		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 	}
 
 	return sdk.Coin{

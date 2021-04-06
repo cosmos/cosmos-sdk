@@ -171,8 +171,8 @@ message QueryMsgBeginRedelegatesRequest {
 
 // QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
 message QueryMsgBeginRedelegatesResponse {
-  // msg_begin_delegates contains all of the queued messages
-  repeated MsgBeginRedelegate msg_begin_delegates = 1 [(gogoproto.nullable) = false];
+  // msg_begin_redelegates contains all of the queued messages
+  repeated MsgBeginRedelegate msg_begin_redelegates = 1 [(gogoproto.nullable) = false];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

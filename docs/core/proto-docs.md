@@ -80,6 +80,7 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
+    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -440,6 +441,20 @@
     - [GenesisState](#cosmos.staking.v1beta1.GenesisState)
     - [LastValidatorPower](#cosmos.staking.v1beta1.LastValidatorPower)
   
+- [cosmos/staking/v1beta1/tx.proto](#cosmos/staking/v1beta1/tx.proto)
+    - [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate)
+    - [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse)
+    - [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator)
+    - [MsgCreateValidatorResponse](#cosmos.staking.v1beta1.MsgCreateValidatorResponse)
+    - [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate)
+    - [MsgDelegateResponse](#cosmos.staking.v1beta1.MsgDelegateResponse)
+    - [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator)
+    - [MsgEditValidatorResponse](#cosmos.staking.v1beta1.MsgEditValidatorResponse)
+    - [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate)
+    - [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse)
+  
+    - [Msg](#cosmos.staking.v1beta1.Msg)
+  
 - [cosmos/staking/v1beta1/query.proto](#cosmos/staking/v1beta1/query.proto)
     - [QueryBufferedValidatorsRequest](#cosmos.staking.v1beta1.QueryBufferedValidatorsRequest)
     - [QueryBufferedValidatorsResponse](#cosmos.staking.v1beta1.QueryBufferedValidatorsResponse)
@@ -455,6 +470,14 @@
     - [QueryDelegatorValidatorsResponse](#cosmos.staking.v1beta1.QueryDelegatorValidatorsResponse)
     - [QueryHistoricalInfoRequest](#cosmos.staking.v1beta1.QueryHistoricalInfoRequest)
     - [QueryHistoricalInfoResponse](#cosmos.staking.v1beta1.QueryHistoricalInfoResponse)
+    - [QueryMsgBeginRedelegatesRequest](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesRequest)
+    - [QueryMsgBeginRedelegatesResponse](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesResponse)
+    - [QueryMsgCreateValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsRequest)
+    - [QueryMsgCreateValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsResponse)
+    - [QueryMsgDelegatesRequest](#cosmos.staking.v1beta1.QueryMsgDelegatesRequest)
+    - [QueryMsgDelegatesResponse](#cosmos.staking.v1beta1.QueryMsgDelegatesResponse)
+    - [QueryMsgEditValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgEditValidatorsRequest)
+    - [QueryMsgEditValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgEditValidatorsResponse)
     - [QueryParamsRequest](#cosmos.staking.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.staking.v1beta1.QueryParamsResponse)
     - [QueryPoolRequest](#cosmos.staking.v1beta1.QueryPoolRequest)
@@ -473,20 +496,6 @@
     - [QueryValidatorsResponse](#cosmos.staking.v1beta1.QueryValidatorsResponse)
   
     - [Query](#cosmos.staking.v1beta1.Query)
-  
-- [cosmos/staking/v1beta1/tx.proto](#cosmos/staking/v1beta1/tx.proto)
-    - [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate)
-    - [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse)
-    - [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator)
-    - [MsgCreateValidatorResponse](#cosmos.staking.v1beta1.MsgCreateValidatorResponse)
-    - [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate)
-    - [MsgDelegateResponse](#cosmos.staking.v1beta1.MsgDelegateResponse)
-    - [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator)
-    - [MsgEditValidatorResponse](#cosmos.staking.v1beta1.MsgEditValidatorResponse)
-    - [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate)
-    - [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse)
-  
-    - [Msg](#cosmos.staking.v1beta1.Msg)
   
 - [cosmos/tx/signing/v1beta1/signing.proto](#cosmos/tx/signing/v1beta1/signing.proto)
     - [SignatureDescriptor](#cosmos.tx.signing.v1beta1.SignatureDescriptor)
@@ -1568,6 +1577,23 @@ sendable).
 
 
 
+
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+This message is deprecated now that supply is indexed by denom.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1612,7 +1638,7 @@ GenesisState defines the bank module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
 | `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. If it is left empty, then supply will be calculated based on the provided balances. Otherwise, it will be used to validate that the sum of the balances equals this amount. |
 | `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
 
 
@@ -2209,7 +2235,8 @@ between a store name and the commit ID.
 
 ### StoreKVPair
 StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
-It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and Deletes
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
+Deletes
 
 
 | Field | Type | Label | Description |
@@ -6209,6 +6236,190 @@ LastValidatorPower required for validator set update logic.
 
 
 
+<a name="cosmos/staking/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/staking/v1beta1/tx.proto
+
+
+
+<a name="cosmos.staking.v1beta1.MsgBeginRedelegate"></a>
+
+### MsgBeginRedelegate
+MsgBeginRedelegate defines a SDK message for performing a redelegation
+of coins from a delegator and source validator to a destination validator.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  |  |
+| `validator_src_address` | [string](#string) |  |  |
+| `validator_dst_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgBeginRedelegateResponse"></a>
+
+### MsgBeginRedelegateResponse
+MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgCreateValidator"></a>
+
+### MsgCreateValidator
+MsgCreateValidator defines a SDK message for creating a new validator.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
+| `commission` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
+| `min_self_delegation` | [string](#string) |  |  |
+| `delegator_address` | [string](#string) |  |  |
+| `validator_address` | [string](#string) |  |  |
+| `pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgCreateValidatorResponse"></a>
+
+### MsgCreateValidatorResponse
+MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgDelegate"></a>
+
+### MsgDelegate
+MsgDelegate defines a SDK message for performing a delegation of coins
+from a delegator to a validator.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  |  |
+| `validator_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgDelegateResponse"></a>
+
+### MsgDelegateResponse
+MsgDelegateResponse defines the Msg/Delegate response type.
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgEditValidator"></a>
+
+### MsgEditValidator
+MsgEditValidator defines a SDK message for editing an existing validator.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
+| `validator_address` | [string](#string) |  |  |
+| `commission_rate` | [string](#string) |  | We pass a reference to the new commission rate and min self delegation as it's not mandatory to update. If not updated, the deserialized rate will be zero with no way to distinguish if an update was intended. REF: #2373 |
+| `min_self_delegation` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgEditValidatorResponse"></a>
+
+### MsgEditValidatorResponse
+MsgEditValidatorResponse defines the Msg/EditValidator response type.
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgUndelegate"></a>
+
+### MsgUndelegate
+MsgUndelegate defines a SDK message for performing an undelegation from a
+delegate and a validator.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  |  |
+| `validator_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.MsgUndelegateResponse"></a>
+
+### MsgUndelegateResponse
+MsgUndelegateResponse defines the Msg/Undelegate response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.staking.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the staking Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateValidator` | [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator) | [MsgCreateValidatorResponse](#cosmos.staking.v1beta1.MsgCreateValidatorResponse) | CreateValidator defines a method for creating a new validator. | |
+| `EditValidator` | [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator) | [MsgEditValidatorResponse](#cosmos.staking.v1beta1.MsgEditValidatorResponse) | EditValidator defines a method for editing an existing validator. | |
+| `Delegate` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | [MsgDelegateResponse](#cosmos.staking.v1beta1.MsgDelegateResponse) | Delegate defines a method for performing a delegation of coins from a delegator to a validator. | |
+| `BeginRedelegate` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse) | BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator. | |
+| `Undelegate` | [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate) | [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse) | Undelegate defines a method for performing an undelegation from a delegate and a validator. | |
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/staking/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6440,6 +6651,130 @@ method.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `hist` | [HistoricalInfo](#cosmos.staking.v1beta1.HistoricalInfo) |  | hist defines the historical info at the given height. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgBeginRedelegatesRequest"></a>
+
+### QueryMsgBeginRedelegatesRequest
+QueryMsgBeginRedelegatesRequest is request type for Query/MsgBeginRedelegates RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgBeginRedelegatesResponse"></a>
+
+### QueryMsgBeginRedelegatesResponse
+QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_begin_redelegates` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | repeated | msg_begin_redelegates contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgCreateValidatorsRequest"></a>
+
+### QueryMsgCreateValidatorsRequest
+QueryMsgCreateValidatorsRequest is request type for Query/MsgCreateValidators RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgCreateValidatorsResponse"></a>
+
+### QueryMsgCreateValidatorsResponse
+QueryMsgCreateValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_create_validators` | [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator) | repeated | msg_create_validators contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgDelegatesRequest"></a>
+
+### QueryMsgDelegatesRequest
+QueryMsgDelegateRequest is request type for Query/MsgDelegates RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgDelegatesResponse"></a>
+
+### QueryMsgDelegatesResponse
+QueryMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_delegates` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | repeated | msg_delegates contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgEditValidatorsRequest"></a>
+
+### QueryMsgEditValidatorsRequest
+QueryMsgEditValidatorsRequest is request type for Query/MsgEditValidators RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.staking.v1beta1.QueryMsgEditValidatorsResponse"></a>
+
+### QueryMsgEditValidatorsResponse
+QueryMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `msg_edit_validators` | [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator) | repeated | msg_edit_validators contains all of the queued messages |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -6723,190 +7058,10 @@ Query defines the gRPC querier service.
 | `Pool` | [QueryPoolRequest](#cosmos.staking.v1beta1.QueryPoolRequest) | [QueryPoolResponse](#cosmos.staking.v1beta1.QueryPoolResponse) | Pool queries the pool info. | GET|/cosmos/staking/v1beta1/pool|
 | `Params` | [QueryParamsRequest](#cosmos.staking.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.staking.v1beta1.QueryParamsResponse) | Parameters queries the staking parameters. | GET|/cosmos/staking/v1beta1/params|
 | `BufferedValidators` | [QueryBufferedValidatorsRequest](#cosmos.staking.v1beta1.QueryBufferedValidatorsRequest) | [QueryBufferedValidatorsResponse](#cosmos.staking.v1beta1.QueryBufferedValidatorsResponse) | this could return current estimation of next validator set | GET|/cosmos/staking/v1beta1/validators|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/staking/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/staking/v1beta1/tx.proto
-
-
-
-<a name="cosmos.staking.v1beta1.MsgBeginRedelegate"></a>
-
-### MsgBeginRedelegate
-MsgBeginRedelegate defines a SDK message for performing a redelegation
-of coins from a delegator and source validator to a destination validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_src_address` | [string](#string) |  |  |
-| `validator_dst_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgBeginRedelegateResponse"></a>
-
-### MsgBeginRedelegateResponse
-MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgCreateValidator"></a>
-
-### MsgCreateValidator
-MsgCreateValidator defines a SDK message for creating a new validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `commission` | [CommissionRates](#cosmos.staking.v1beta1.CommissionRates) |  |  |
-| `min_self_delegation` | [string](#string) |  |  |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `pubkey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgCreateValidatorResponse"></a>
-
-### MsgCreateValidatorResponse
-MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgDelegate"></a>
-
-### MsgDelegate
-MsgDelegate defines a SDK message for performing a delegation of coins
-from a delegator to a validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgDelegateResponse"></a>
-
-### MsgDelegateResponse
-MsgDelegateResponse defines the Msg/Delegate response type.
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgEditValidator"></a>
-
-### MsgEditValidator
-MsgEditValidator defines a SDK message for editing an existing validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `description` | [Description](#cosmos.staking.v1beta1.Description) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `commission_rate` | [string](#string) |  | We pass a reference to the new commission rate and min self delegation as it's not mandatory to update. If not updated, the deserialized rate will be zero with no way to distinguish if an update was intended. REF: #2373 |
-| `min_self_delegation` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgEditValidatorResponse"></a>
-
-### MsgEditValidatorResponse
-MsgEditValidatorResponse defines the Msg/EditValidator response type.
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgUndelegate"></a>
-
-### MsgUndelegate
-MsgUndelegate defines a SDK message for performing an undelegation from a
-delegate and a validator.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `validator_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
-
-
-<a name="cosmos.staking.v1beta1.MsgUndelegateResponse"></a>
-
-### MsgUndelegateResponse
-MsgUndelegateResponse defines the Msg/Undelegate response type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.staking.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the staking Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateValidator` | [MsgCreateValidator](#cosmos.staking.v1beta1.MsgCreateValidator) | [MsgCreateValidatorResponse](#cosmos.staking.v1beta1.MsgCreateValidatorResponse) | CreateValidator defines a method for creating a new validator. | |
-| `EditValidator` | [MsgEditValidator](#cosmos.staking.v1beta1.MsgEditValidator) | [MsgEditValidatorResponse](#cosmos.staking.v1beta1.MsgEditValidatorResponse) | EditValidator defines a method for editing an existing validator. | |
-| `Delegate` | [MsgDelegate](#cosmos.staking.v1beta1.MsgDelegate) | [MsgDelegateResponse](#cosmos.staking.v1beta1.MsgDelegateResponse) | Delegate defines a method for performing a delegation of coins from a delegator to a validator. | |
-| `BeginRedelegate` | [MsgBeginRedelegate](#cosmos.staking.v1beta1.MsgBeginRedelegate) | [MsgBeginRedelegateResponse](#cosmos.staking.v1beta1.MsgBeginRedelegateResponse) | BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator. | |
-| `Undelegate` | [MsgUndelegate](#cosmos.staking.v1beta1.MsgUndelegate) | [MsgUndelegateResponse](#cosmos.staking.v1beta1.MsgUndelegateResponse) | Undelegate defines a method for performing an undelegation from a delegate and a validator. | |
+| `MsgCreateValidators` | [QueryMsgCreateValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsRequest) | [QueryMsgCreateValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgCreateValidatorsResponse) | Queued create validator messages | GET|/cosmos/staking/v1beta1/msg_create_validators|
+| `MsgEditValidators` | [QueryMsgEditValidatorsRequest](#cosmos.staking.v1beta1.QueryMsgEditValidatorsRequest) | [QueryMsgEditValidatorsResponse](#cosmos.staking.v1beta1.QueryMsgEditValidatorsResponse) | Queued edit validator messages | GET|/cosmos/staking/v1beta1/msg_edit_validators|
+| `MsgDelegates` | [QueryMsgDelegatesRequest](#cosmos.staking.v1beta1.QueryMsgDelegatesRequest) | [QueryMsgDelegatesResponse](#cosmos.staking.v1beta1.QueryMsgDelegatesResponse) | Queued delegate messages | GET|/cosmos/staking/v1beta1/msg_delegates|
+| `MsgBeginRedelegates` | [QueryMsgBeginRedelegatesRequest](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesRequest) | [QueryMsgBeginRedelegatesResponse](#cosmos.staking.v1beta1.QueryMsgBeginRedelegatesResponse) | Queued being redelegate messages | GET|/cosmos/staking/v1beta1/msg_begin_redelegates|
 
  <!-- end services -->
 

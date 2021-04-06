@@ -36,12 +36,26 @@ func TestSupplyMigration(t *testing.T) {
 	require.NoError(t, err)
 
 	// New supply is indexed by denom.
-	var newFooCoin, newBarCoin sdk.Coin
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
-	encCfg.Marshaler.MustUnmarshalBinaryBare(supplyStore.Get([]byte("foo")), &newFooCoin)
-	encCfg.Marshaler.MustUnmarshalBinaryBare(supplyStore.Get([]byte("bar")), &newBarCoin)
+	bz := supplyStore.Get([]byte("foo"))
+	var amount sdk.Int
+	err = amount.Unmarshal(bz)
+	require.NoError(t, err)
 
+	newFooCoin := sdk.Coin{
+		Denom:  "foo",
+		Amount: amount,
+	}
 	require.Equal(t, oldFooCoin, newFooCoin)
+
+	bz = supplyStore.Get([]byte("bar"))
+	err = amount.Unmarshal(bz)
+	require.NoError(t, err)
+
+	newBarCoin := sdk.Coin{
+		Denom:  "bar",
+		Amount: amount,
+	}
 	require.Equal(t, oldBarCoin, newBarCoin)
 }
 

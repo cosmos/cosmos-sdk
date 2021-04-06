@@ -35,7 +35,7 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
 	oldSupply := oldSupplyI.(*types.Supply)
 	for i := range oldSupply.Total {
 		coin := oldSupply.Total[i]
-		coinBz, err := cdc.MarshalBinaryBare(&coin)
+		coinBz, err := coin.Amount.Marshal()
 		if err != nil {
 			return err
 		}

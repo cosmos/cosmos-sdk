@@ -54,7 +54,7 @@ Inside these functions, you should perform any upgrade logic you wish to include
 
 ## Running Migrations
 
-Migrations are run inside of an `UpgradeHandler` via `app.RunMigrations(ctx, cfg, vm)`. As described above, `UpgradeHandler`s are functions which describe the functionality to occur during an upgrade. The `RunMigration` function will loop through the `VersionMap` argument, and run the migration scripts for any versions that are less than the new binary's app module versions. Once the migrations are finished, a new `VersionMap` will be returned to persist the upgraded module versions to state.
+Migrations are run inside of an `UpgradeHandler` via `app.mm.RunMigrations(ctx, cfg, vm)`. As described above, `UpgradeHandler`s are functions which describe the functionality to occur during an upgrade. The `RunMigration` function will loop through the `VersionMap` argument, and run the migration scripts for any versions that are less than the new binary's app module versions. Once the migrations are finished, a new `VersionMap` will be returned to persist the upgraded module versions to state.
 
 ```golang
 cfg := module.NewConfigurator(...)

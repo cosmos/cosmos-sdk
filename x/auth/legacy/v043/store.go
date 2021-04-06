@@ -260,9 +260,9 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 	return params.Params.BondDenom, nil
 }
 
-// MigrateStore migrates vesting account to make the DelegatedVesting and DelegatedFree fields correctly
+// MigrateAccount migrates vesting account to make the DelegatedVesting and DelegatedFree fields correctly
 // track delegations.
 // References: https://github.com/cosmos/cosmos-sdk/issues/8601, https://github.com/cosmos/cosmos-sdk/issues/8812
-func MigrateStore(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
+func MigrateAccount(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
 	return migrateVestingAccounts(ctx, account, queryServer)
 }

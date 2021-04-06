@@ -24,7 +24,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	var iterErr error
 
 	m.keeper.IterateAccounts(ctx, func(account types.AccountI) (stop bool) {
-		wb, err := v043.MigrateStore(ctx, account, m.queryServer)
+		wb, err := v043.MigrateAccount(ctx, account, m.queryServer)
 		if err != nil {
 			iterErr = err
 			return true

@@ -9,7 +9,7 @@ To upgrade your chain from v0.39 and earlier (Launchpad) to Stargate, you must m
 
 This guide describes how to migrate your keyrings.
 
-The migration process is handled by the following CLI command:
+The following command migrates your keyrings:
 
 ```bash
 Usage

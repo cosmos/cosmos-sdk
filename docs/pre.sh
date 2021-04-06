@@ -10,3 +10,5 @@ for D in ../x/*; do
 done
 
 cat ../x/README.md | sed 's/\.\/x/\/modules/g' | sed 's/spec\/README.md//g' | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./modules/README.md
+
+plantuml -tsvg uml/*.puml

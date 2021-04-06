@@ -40,7 +40,7 @@ The version map is a mapping of module names to consensus versions. The map is p
 
 ## Upgrade Handlers
 
-Upgrades utilize an `UpgradeHandler` to facilitate migrations. `UpgradeHandler`s are functions implemented by the app developer that conform to the following function signature. These functions utiltize a `VersionMap` containing all the module versions to determine which modules need upgrading.
+Upgrades utilize an `UpgradeHandler` to facilitate migrations. `UpgradeHandler`s are functions implemented by the app developer that conform to the following function signature. These functions retrieve the `VersionMap` from x/upgrade's state, and return the new `VersionMap` to be stored in x/upgrade after the upgrade. The diff between the two `VersionMap`s determines which modules need upgrading.
 
 ```golang
 type UpgradeHandler func(ctx sdk.Context, plan Plan, fromVM VersionMap) (VersionMap, error)

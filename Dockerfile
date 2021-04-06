@@ -13,7 +13,7 @@
 FROM golang:alpine AS build-env
 
 # Install minimum necessary dependencies,
-ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3 plantuml
+ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
 RUN apk add --no-cache $PACKAGES
 
 # Set working directory for the build

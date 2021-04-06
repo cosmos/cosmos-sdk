@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -106,7 +107,9 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 				suite.PanicsWithError(tc.expPanicMsg, func() { suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis) })
 			} else {
 				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
-				suite.Require().Equal(tc.expSupply, suite.app.BankKeeper.GetTotalSupply(suite.ctx))
+				totalSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expSupply, totalSupply)
 			}
 		})
 	}

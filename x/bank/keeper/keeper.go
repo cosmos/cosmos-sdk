@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -184,9 +186,10 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 		}
 	}
 
-	amount, ok := sdk.NewIntFromString(string(bz))
-	if !ok {
-		panic("unexpected supply")
+	var amount sdk.Int
+	err := amount.Unmarshal(bz)
+	if err != nil {
+		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 	}
 
 	return sdk.Coin{
@@ -413,7 +416,11 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	supplyStore.Set([]byte(coin.GetDenom()), []byte(coin.Amount.String()))
+	intBytes, err := coin.Amount.Marshal()
+	if err != nil {
+		panic(fmt.Errorf("unable to marshal amount value %v", err))
+	}
+	supplyStore.Set([]byte(coin.GetDenom()), intBytes)
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
@@ -454,9 +461,10 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		amount, ok := sdk.NewIntFromString(string(iterator.Value()))
-		if !ok {
-			panic("unexpected supply")
+		var amount sdk.Int
+		err := amount.Unmarshal(iterator.Value())
+		if err != nil {
+			panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 		}
 
 		balance := sdk.Coin{

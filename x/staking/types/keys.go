@@ -49,8 +49,8 @@ var (
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 
 	MsgCreateValidatorKey = []byte{0x61} // prefix for create validator messages
-	MsgEditValidatorKey = []byte{0x62} // prefix for create validator messages
-	MsgDelegateKey = []byte{0x63} // prefix for create validator messages
+	MsgEditValidatorKey   = []byte{0x62} // prefix for create validator messages
+	MsgDelegateKey        = []byte{0x63} // prefix for create validator messages
 	MsgBeginRedelegateKey = []byte{0x64} // prefix for create validator messages
 )
 

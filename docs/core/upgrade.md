@@ -20,7 +20,7 @@ The next paragraphs detail each component of the in-place store migration proces
 
 ## Genesis State
 
-Each app module's consensus version must be saved to state on the application's genesis. This can be done by adding the following line to the `InitChainer` method in `app.go`
+When starting a new chain, each module's consensus version must be saved to state during the application's genesis. This can be done by adding the following line to the `InitChainer` method in `app.go`
 
 ```diff
 func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {

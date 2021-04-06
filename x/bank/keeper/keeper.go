@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -24,9 +25,8 @@ type Keeper interface {
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
-	GetTotalSupply(ctx sdk.Context) sdk.Coins
+	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
-
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
@@ -55,14 +55,27 @@ type BaseKeeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
-	balances := sdk.NewCoins()
-	k.IterateTotalSupply(ctx, func(balance sdk.Coin) bool {
-		balances = balances.Add(balance)
-		return false
+func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	supply := sdk.NewCoins()
+
+	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert amount string to Int %v", err)
+		}
+		supply = append(supply, sdk.NewCoin(string(key), amount))
+		return nil
 	})
 
-	return balances.Sort()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return supply, pageRes, nil
 }
 
 // NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated

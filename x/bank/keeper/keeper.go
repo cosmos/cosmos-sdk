@@ -62,9 +62,10 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 	supply := sdk.NewCoins()
 
 	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
-		amount, ok := sdk.NewIntFromString(string(value))
-		if !ok {
-			return fmt.Errorf("unable to convert amount string to Int")
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert amount string to Int %v", err)
 		}
 		supply = append(supply, sdk.NewCoin(string(key), amount))
 		return nil

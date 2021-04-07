@@ -68,7 +68,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
-		paramtypes.NewParamSetPair(KeyPowerReduction, &p.PowerReduction, validatePowerReduction),
+		paramtypes.NewParamSetPair(KeyPowerReduction, &p.PowerReduction, ValidatePowerReduction),
 	}
 }
 
@@ -196,7 +196,7 @@ func validateBondDenom(i interface{}) error {
 	return nil
 }
 
-func validatePowerReduction(i interface{}) error {
+func ValidatePowerReduction(i interface{}) error {
 	v, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

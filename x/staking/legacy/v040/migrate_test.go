@@ -55,7 +55,6 @@ func TestMigrate(t *testing.T) {
     "historical_entries": 0,
     "max_entries": 0,
     "max_validators": 0,
-    "power_reduction": "1000000",
     "unbonding_time": "0s"
   },
   "redelegations": [],

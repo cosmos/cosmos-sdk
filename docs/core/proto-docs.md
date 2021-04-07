@@ -1871,6 +1871,11 @@ QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 method.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
 
 
 
@@ -1885,6 +1890,7 @@ method
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 

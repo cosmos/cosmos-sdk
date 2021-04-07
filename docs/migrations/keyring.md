@@ -5,7 +5,7 @@ order: 4
 
 `keyring` is the Cosmos SDK mechanism to manage the public/private keypair. Cosmos SDK v0.42 (Stargate) introduced breaking changes in the keyring. 
 
-To upgrade your chain from v0.39 and earlier (Launchpad) to Stargate, you must migrate your keys inside the keyring to the latest version. For details on configuring and using the keyring, see [Setting up the keyring](../run-node/keyring.md).
+To upgrade your chain from v0.39 (Launchpad) and earlier to Stargate, you must migrate your keys inside the keyring to the latest version. For details on configuring and using the keyring, see [Setting up the keyring](../run-node/keyring.md).
 
 This guide describes how to migrate your keyrings.
 

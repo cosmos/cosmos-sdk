@@ -48,7 +48,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 	// Ledger and Multisigs only support LEGACY_AMINO_JSON signing.
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED &&
 		(info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeMulti) {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON) //nolint:staticcheck
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	addr := sdk.AccAddress(info.GetPubKey().Address())
@@ -74,7 +74,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	name string, txBuilder client.TxBuilder, offline, overwrite bool) (err error) {
 	// Multisigs only support LEGACY_AMINO_JSON signing.
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON) //nolint:staticcheck
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
 	// check whether the address is a signer

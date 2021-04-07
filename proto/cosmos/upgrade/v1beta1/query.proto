@@ -77,11 +77,15 @@ message QueryUpgradedConsensusStateResponse {
 // QueryVersionMap is the request type for the Query/VersionMap
 // RPC method.
 message QueryVersionMap {
+  // module_name is a field to query a specific module
+  // consensus version from state. Leaving this empty will
+  // fetch the full version map from state
   string module_name = 1;
 }
 
 // QueryVersionMapResponse is the response type for the Query/VersionMap
 // RPC method.
 message QueryVersionMapResponse {
+  // version_map is a map of module name to consensus version.
   map<string, uint64> version_map = 1;
 }

@@ -117,8 +117,10 @@ func GetVersionMapCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "versionmap [optional module_name]",
 		Short: "get module version map",
-		Long:  "Gets the map of module names and their respective consensus versions.",
-		Args:  cobra.ExactArgs(1),
+		Long: "Gets a map of module names and their respective consensus versions.\n" +
+			"Following versionmap with a specific module name will return only the\n" +
+			"version of that module.",
+		Args: cobra.MinimumNArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -140,7 +142,7 @@ func GetVersionMapCmd() *cobra.Command {
 			}
 
 			if res.VersionMap == nil {
-				return fmt.Errorf("no version map in state")
+				return fmt.Errorf("module(s) not found in x/upgrade store")
 			}
 
 			return clientCtx.PrintProto(res)

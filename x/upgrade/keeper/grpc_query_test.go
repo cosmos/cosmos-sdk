@@ -141,7 +141,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 	}
 }
 
-func (suite *UpgradeTestSuite) TestVersionMap() {
+func (suite *UpgradeTestSuite) TestFullVersionMap() {
 	req := &types.QueryVersionMap{}
 	res, err := suite.queryClient.VersionMap(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -157,7 +157,8 @@ func (suite *UpgradeTestSuite) TestVersionMap() {
 }
 
 func (suite *UpgradeTestSuite) TestSingleVersionMap() {
-	req := &types.QueryVersionMap{ModuleName: "bank"}
+	testModule := "bank"
+	req := &types.QueryVersionMap{ModuleName: testModule}
 	res, err := suite.queryClient.VersionMap(gocontext.Background(), req)
 	suite.Require().NoError(err)
 
@@ -166,10 +167,8 @@ func (suite *UpgradeTestSuite) TestSingleVersionMap() {
 	testVM := make(module.VersionMap)
 	testVM["bank"] = appVM["bank"]
 
-	suite.Require().Greater(len(resVM), 0)
-	for module := range resVM {
-		suite.Require().Equal(testVM[module], resVM[module])
-	}
+	suite.Require().Equal(len(resVM), 1)
+	suite.Require().Equal(testVM[testModule], resVM[testModule])
 }
 
 func TestUpgradeTestSuite(t *testing.T) {

@@ -305,6 +305,8 @@ func (m *QueryUpgradedConsensusStateResponse) GetUpgradedConsensusState() []byte
 // QueryVersionMap is the request type for the Query/VersionMap
 // RPC method.
 type QueryVersionMap struct {
+	// module_name is an optional field to query a specific module
+	// consensus version from state.
 	ModuleName string `protobuf:"bytes,1,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
 }
 
@@ -351,6 +353,7 @@ func (m *QueryVersionMap) GetModuleName() string {
 // QueryVersionMapResponse is the response type for the Query/VersionMap
 // RPC method.
 type QueryVersionMapResponse struct {
+	// version_map is a map of module_name to consensus version.
 	VersionMap map[string]uint64 `protobuf:"bytes,1,rep,name=version_map,json=versionMap,proto3" json:"version_map,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 }
 

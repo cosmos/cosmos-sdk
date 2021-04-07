@@ -14,8 +14,8 @@ import (
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7092
 func migrateSupply(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
 	// Old supply was stored as a single blob under the SupplyKey.
-	var oldSupply types.Supply // nolint:staticcheck
-	err := cdc.UnmarshalBinaryBare(store.Get(v040bank.SupplyKey), &oldSupply)
+	var oldSupplyI v040bank.SupplyI
+	err := cdc.UnmarshalInterface(store.Get(v040bank.SupplyKey), &oldSupplyI)
 	if err != nil {
 		return err
 	}
@@ -23,11 +23,19 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
 	// We delete the single key holding the whole blob.
 	store.Delete(v040bank.SupplyKey)
 
+	if oldSupplyI == nil {
+		return nil
+	}
+
 	// We add a new key for each denom
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	// We're sure that SupplyI is a Supply struct, there's no other
+	// implementation.
+	oldSupply := oldSupplyI.(*types.Supply)
 	for i := range oldSupply.Total {
 		coin := oldSupply.Total[i]
-		coinBz, err := cdc.MarshalBinaryBare(&coin)
+		coinBz, err := coin.Amount.Marshal()
 		if err != nil {
 			return err
 		}

@@ -62,7 +62,6 @@ assigned to `Delegation.Shares`.
 This service message is expected to fail if:
 
 - the validator is does not exist
-- the validator is jailed
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
 - the exchange rate is invalid, meaning the validator has no tokens (due to slashing) but there are outstanding shares
 - the amount delegated is less than the minimum allowed delegation
@@ -74,6 +73,14 @@ exist then it is created as part of this message otherwise the existing
 The delegator receives newly minted shares at the current exchange rate.
 The exchange rate is the number of existing shares in the validator divided by
 the number of currently delegated tokens.
+
+The validator is updated in the `ValidatorByPower` index, and the delegation is
+tracked in validator object in the `Validators` index.
+
+It is possible to delegate to a jailed validator, the only difference being it
+will not be added to the power index until it is unjailed.
+
+![](docs/uml/delegation_sequence.svg)
 
 ## Msg/Undelegate
 
@@ -106,6 +113,8 @@ When this service message is processed the following actions occur:
   - `Unbonded` - then send the coins the message `DelegatorAddr`
 - if there are no more `Shares` in the delegation, then the delegation object is removed from the store
   - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+
+![](docs/uml/unbond_sequence.svg)
 
 ## Msg/BeginRedelegate
 
@@ -141,3 +150,5 @@ When this service message is processed the following actions occur:
 - Delegate the token worth to the destination validator, possibly moving tokens back to the bonded state.
 - if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
   - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+
+![](docs/uml/begin_redelegation_sequence.svg)

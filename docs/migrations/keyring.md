@@ -23,8 +23,8 @@ You can migrate or skip the migration for each key entry found in the specified 
 The `migrate` command takes the following flags:
 - `--dry-run` boolean
 
-     - false - run the migration but do not persist changes to the new Keybase. 
-     - true - run the migration and persist keys to the new Keybase. 
+     - true - run the migration but do not persist changes to the new Keybase. 
+     - false - run the migration and persist keys to the new Keybase. 
  
 Recommended: Use `--dry-run true` to test the migration without persisting changes before you migrate and persist keys. 
  

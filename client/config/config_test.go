@@ -2,18 +2,17 @@ package config_test
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
 
 const (
@@ -21,35 +20,36 @@ const (
 	testNode1 = "http://localhost:1"
 	testNode2 = "http://localhost:2"
 )
-
-func initContext(t *testing.T) (context.Context, func()) {
+// initClientContext initiates client Context for tests
+func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
-
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
 		WithViper()
 
 	clientCtx.Viper.BindEnv(nodeEnv)
+	if envVar != "" {
+		os.Setenv(nodeEnv, testNode1)
+	}
 
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)
 	require.NoError(t, err)
 
-	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
-	return ctx, func() { _ = os.RemoveAll(home) }
+	return clientCtx, func() { _ = os.RemoveAll(home) }
 }
 
 func TestConfigCmd(t *testing.T) {
-	os.Setenv(nodeEnv, testNode1)
-	ctx, cleanup := initContext(t)
+	clientCtx, cleanup := initClientContext(t, testNode1)
 	defer func() {
 		os.Unsetenv(nodeEnv)
 		cleanup()
 	}()
 
-	cmd := config.Cmd()
 	// NODE=http://localhost:1 ./build/simd config node http://localhost:2
-	cmd.SetArgs([]string{"node", testNode2})
-	require.NoError(t, cmd.ExecuteContext(ctx))
+	cmd := config.Cmd()
+	args := []string{"node", testNode2}
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	require.NoError(t, err)
 
 	//./build/simd config node //http://localhost:1
 	b := bytes.NewBufferString("")
@@ -62,7 +62,6 @@ func TestConfigCmd(t *testing.T) {
 }
 
 func TestConfigCmdEnvFlag(t *testing.T) {
-
 	const (
 		defaultNode = "http://localhost:26657"
 	)
@@ -82,23 +81,25 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.envVar != "" {
-				os.Setenv(nodeEnv, tc.envVar)
-				defer func() {
+			clientCtx, cleanup := initClientContext(t, tc.envVar)	
+			defer func() {
+				if tc.envVar != "" {
 					os.Unsetenv(nodeEnv)
-				}()
-			}
+				}
+				cleanup()
+			}()
+			/*
+			env var is set with a flag
 
-			ctx, cleanup := initContext(t)
-			defer cleanup()
-
+			NODE=http://localhost:1 ./build/simd q staking validators --node http://localhost:2
+			Error: post failed: Post "http://localhost:2": dial tcp 127.0.0.1:2: connect: connection refused
+			
+			We dial http://localhost:2 cause a flag has the higher priority than env variable.
+			*/
 			cmd := cli.GetQueryCmd()
-			cmd.SetArgs(tc.args)
-			err := cmd.ExecuteContext(ctx)
-
+			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expNode)
+			require.Contains(t, err.Error(), tc.expNode, "Output does not contain expected Node") 
 		})
 	}
-
 }

@@ -66,6 +66,7 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 	if err != nil {
 		panic(err)
 	}
+
 	actionID := k.GetNewActionID(ctx)
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 	k.SetNewActionID(ctx, actionID+1)

@@ -6,6 +6,14 @@ order: 3
 
 In this section we describe the processing of messages for the `slashing` module.
 
+## Queued messages
+
+- **MsgUnjail**: Validate message and if valid queue the message for execution at the end of the Epoch.
+
+All `slashing` module messages are queued.
+
+Note: `SlashEvent` execution is also put on slashing message queue and executed at the end of the current epoch.
+
 ## Unjail
 
 If a validator was automatically unbonded due to downtime and wishes to come back online &
@@ -49,3 +57,12 @@ unjail(tx MsgUnjail)
 If the validator has enough stake to be in the top `n = MaximumBondedValidators`, it will be automatically rebonded,
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.
+
+## Slash and Jail Actions
+
+Jail action is automatically executed at the end of current block.
+Slash action is queued and executed at the end of current epoch.
+
+Currently validator set update is only done on staking module's endblocker and slashing/evidence module Endblockers are being executed before staking module.
+
+No changes were made on `evidence` module since it's related to `Jail` which requires instant action.

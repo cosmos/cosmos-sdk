@@ -226,7 +226,7 @@ func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	sig := signingtypes.SignatureV2{
 		PubKey: pubkey,
 		Data: &signingtypes.SingleSignatureData{
-			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, //nolint:staticcheck
+			SignMode:  signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 			Signature: dummySig,
 		},
 	}

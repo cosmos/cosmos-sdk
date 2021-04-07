@@ -1,0 +1,40 @@
+panic: runtime error: slice bounds out of range [1:0]
+
+goroutine 1 [running]:
+github.com/cosmos/cosmos-sdk/x/bank/types.AddressFromBalancesStore(0x7fef1f41f000, 0x100, 0x100, 0xc000d2fea0, 0x494e86, 0x6076d01a, 0x11b93f71, 0xf0b0a49ccf9d)
+	/home/cuonglm/go/src/github.com/orijtech/cosmos-sdk/x/bank/types/key.go:50 +0x1af
+github.com/cosmos/cosmos-sdk/fuzz/x/bank/types/AddressFromBalancesStore.Fuzz(0x7fef1f41f000, 0x100, 0x100, 0x4)
+	/home/cuonglm/go/src/github.com/orijtech/cosmos-sdk/fuzz/x/bank/types/AddressFromBalancesStore/fuzz.go:8 +0x5b
+go-fuzz-dep.Main(0xc000d2ff70, 0x1, 0x1)
+	go-fuzz-dep/main.go:36 +0x1b8
+main.main()
+	github.com/cosmos/cosmos-sdk/fuzz/x/bank/types/AddressFromBalancesStore/go.fuzz.main/main.go:15 +0x52
+
+goroutine 50 [IO wait]:
+internal/poll.runtime_pollWait(0x7fef260ae058, 0x72, 0x1000)
+	runtime/netpoll.go:222 +0x55
+internal/poll.(*pollDesc).wait(0xc000626118, 0x72, 0x0, 0x10, 0xc000d68020)
+	/home/cuonglm/sources/go/src/internal/poll/fd_poll_runtime.go:87 +0xe5
+internal/poll.(*pollDesc).waitRead(...)
+	/home/cuonglm/sources/go/src/internal/poll/fd_poll_runtime.go:92
+internal/poll.(*FD).ReadMsg(0xc000626100, 0xc00011d8f0, 0x10, 0x10, 0xc000d68020, 0x1000, 0x1000, 0x0, 0x0, 0x0, ...)
+	/home/cuonglm/sources/go/src/internal/poll/fd_unix.go:249 +0x3c6
+net.(*netFD).readMsg(0xc000626100, 0xc00011d8f0, 0x10, 0x10, 0xc000d68020, 0x1000, 0x1000, 0x12f3e10, 0xc000d73e08, 0xe96645, ...)
+	/home/cuonglm/sources/go/src/net/fd_posix.go:67 +0xa6
+net.(*UnixConn).readMsg(0xc00060e320, 0xc00011d8f0, 0x10, 0x10, 0xc000d68020, 0x1000, 0x1000, 0xc00011d8c4, 0xc00011d77c, 0xc00011d77e, ...)
+	/home/cuonglm/sources/go/src/net/unixsock_posix.go:115 +0xa9
+net.(*UnixConn).ReadMsgUnix(0xc00060e320, 0xc00011d8f0, 0x10, 0x10, 0xc000d68020, 0x1000, 0x1000, 0x40f6bb, 0xc000116b40, 0x18, ...)
+	/home/cuonglm/sources/go/src/net/unixsock.go:143 +0xf5
+github.com/godbus/dbus.(*oobReader).Read(0xc000d68000, 0xc00011d8f0, 0x10, 0x10, 0x18, 0x1035e00, 0xc00062d301)
+	/home/cuonglm/go/pkg/mod/github.com/godbus/dbus@v0.0.0-20190726142602-4481cbc300e2/transport_unix.go:21 +0xa5
+io.ReadAtLeast(0x13a3f40, 0xc000d68000, 0xc00011d8f0, 0x10, 0x10, 0x10, 0xc, 0x0, 0x0)
+	/home/cuonglm/sources/go/src/io/io.go:328 +0xd4
+io.ReadFull(...)
+	/home/cuonglm/sources/go/src/io/io.go:347
+github.com/godbus/dbus.(*unixTransport).ReadMessage(0xc000116360, 0xc0005ce6f0, 0x12f3cd8, 0xc00059b270)
+	/home/cuonglm/go/pkg/mod/github.com/godbus/dbus@v0.0.0-20190726142602-4481cbc300e2/transport_unix.go:91 +0x17f
+github.com/godbus/dbus.(*Conn).inWorker(0xc0005ea750)
+	/home/cuonglm/go/pkg/mod/github.com/godbus/dbus@v0.0.0-20190726142602-4481cbc300e2/conn.go:294 +0x70
+created by github.com/godbus/dbus.(*Conn).Auth
+	/home/cuonglm/go/pkg/mod/github.com/godbus/dbus@v0.0.0-20190726142602-4481cbc300e2/auth.go:118 +0x9de
+exit status 2

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -55,12 +56,16 @@ func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMap) (*type
 	vm := k.GetModuleVersionMap(ctx)
 
 	// check if a specific module was requested and if
-	// that module exists in the version map
-	if len(req.ModuleName) != 0 && vm[req.GetModuleName()] > 0 {
-		// make a versionmap containing only the requested module
-		singleVM := make(module.VersionMap)
-		singleVM[req.GetModuleName()] = vm[req.GetModuleName()]
-		vm = singleVM
+	if len(req.ModuleName) > 0 {
+		// that module exists in the version map
+		if vm[req.GetModuleName()] > 0 {
+			// make a versionmap containing only the requested module
+			singleVM := make(module.VersionMap)
+			singleVM[req.GetModuleName()] = vm[req.GetModuleName()]
+			vm = singleVM
+		} else { // the requested module was not found
+			return &types.QueryVersionMapResponse{}, errors.ErrNotFound
+		}
 	}
 
 	return &types.QueryVersionMapResponse{

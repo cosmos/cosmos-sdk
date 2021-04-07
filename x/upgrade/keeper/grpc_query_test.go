@@ -142,33 +142,60 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 }
 
 func (suite *UpgradeTestSuite) TestFullVersionMap() {
-	req := &types.QueryVersionMap{}
-	res, err := suite.queryClient.VersionMap(gocontext.Background(), req)
-	suite.Require().NoError(err)
-
-	resVM := res.VersionMap
-	appVM := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
-
-	suite.Require().Greater(len(resVM), 0)
-	suite.Require().Equal(len(appVM), len(resVM))
-	for module := range resVM {
-		suite.Require().Equal(appVM[module], resVM[module])
+	testCases := []struct {
+		msg     string
+		req     types.QueryVersionMap
+		single  bool
+		expPass bool
+	}{
+		{
+			msg:     "test full query",
+			req:     types.QueryVersionMap{},
+			single:  false,
+			expPass: true,
+		},
+		{
+			msg:     "test single module",
+			req:     types.QueryVersionMap{ModuleName: "bank"},
+			single:  true,
+			expPass: true,
+		},
+		{
+			msg:     "test non-existent module",
+			req:     types.QueryVersionMap{ModuleName: "abcdefg"},
+			single:  true,
+			expPass: false,
+		},
 	}
-}
 
-func (suite *UpgradeTestSuite) TestSingleVersionMap() {
-	testModule := "bank"
-	req := &types.QueryVersionMap{ModuleName: testModule}
-	res, err := suite.queryClient.VersionMap(gocontext.Background(), req)
-	suite.Require().NoError(err)
+	actualVM := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
 
-	resVM := res.VersionMap
-	appVM := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
-	testVM := make(module.VersionMap)
-	testVM["bank"] = appVM["bank"]
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
 
-	suite.Require().Equal(len(resVM), 1)
-	suite.Require().Equal(testVM[testModule], resVM[testModule])
+			res, err := suite.queryClient.VersionMap(gocontext.Background(), &tc.req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+
+				if tc.single {
+					// test that the single module response is valid
+					suite.Require().Len(res.VersionMap, 1)
+					suite.Require().Equal(res.VersionMap[tc.req.ModuleName], actualVM[tc.req.ModuleName])
+				} else {
+					// check that the full response is valid
+					suite.Require().NotEmpty(res.VersionMap)
+					for m, v := range res.VersionMap {
+						suite.Require().Equal(actualVM[m], v)
+					}
+				}
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
 }
 
 func TestUpgradeTestSuite(t *testing.T) {

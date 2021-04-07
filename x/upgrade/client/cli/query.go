@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -142,7 +143,7 @@ func GetVersionMapCmd() *cobra.Command {
 			}
 
 			if res.VersionMap == nil {
-				return fmt.Errorf("module(s) not found in x/upgrade store")
+				return errors.ErrNotFound
 			}
 
 			return clientCtx.PrintProto(res)

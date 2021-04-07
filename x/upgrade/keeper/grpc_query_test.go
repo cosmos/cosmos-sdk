@@ -141,7 +141,7 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 	}
 }
 
-func (suite *UpgradeTestSuite) TestFullVersionMap() {
+func (suite *UpgradeTestSuite) TestVersionMap() {
 	testCases := []struct {
 		msg     string
 		req     types.QueryVersionMap

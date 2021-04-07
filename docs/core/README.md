@@ -25,4 +25,4 @@ This repository contains reference documentation on the core concepts of the Cos
 15. [In-Place Store Migrations](./upgrade.md)
 
 After reading about the core concepts, check the [IBC documentation](../ibc/README.md) to learn more
-about the IBC core concepts and how to integrate it to you application.
+about the IBC core concepts and how to integrate IBC in your application.

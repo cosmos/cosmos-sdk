@@ -5,22 +5,25 @@ order: 15
 # In-Place Store Migrations
 
 ::: warning
-Please make sure you read this whole document and fully understand in-place store migrations before running them on a live chain.
+Read and understand all of the in-place store migration documentation before you run a migration on a live chain.
 :::
 
 Upgrade your app modules smoothly with custom in-place migration logic. {synopsis}
 
-The Cosmos SDK currently has two methods to perform upgrades. The first method is by exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. More details on this method can be found in the [chain upgrade guide](../migrations/chain-upgrade-guide-040.md#upgrade-procedure). The second method, introduced in v0.43, works by performing upgrades in place, significantly decreasing the time needed to perform upgrades for chains with a larger state. The following guide will provide you with the necessary information in order to setup your application to take advantage of in-place upgrades.
+The Cosmos SDK uses two methods to perform upgrades. 
+
+- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See the [Chain Upgrade Guide](../migrations/chain-upgrade-guide-040.md#upgrade-procedure). 
+
+- Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [In-Place Store Migrations](./upgrade.md) guide to set up your application to take advantage of in-place upgrades.
 
 ## Tracking Module Versions
 
-Each module gets assigned a consensus version by the module developer, which serves as the breaking change version of the module. The SDK keeps track of all modules' consensus versions in the x/upgrade's `VersionMap` store. During an upgrade, the SDK calculates the difference between the old `VersionMap` stored in state and the new `VersionMap`. For each difference found, the SDK will run module-specific migrations and increment the respective consensus version of each upgraded module.
+Each module gets assigned a consensus version by the module developer. The consensus version serves as the breaking change version of the module. The SDK keeps track of all module consensus versions in the x/upgrade `VersionMap` store. During an upgrade, the difference between the old `VersionMap` stored in state and the new `VersionMap` is calculated by the Cosmos SDK. For each identified difference, the module-specific migrations are run and the respective consensus version of each upgraded module is incremented.
 
-The next paragraphs detail each component of the in-place store migration process, and gives instructions on how to update your app to take advantage of this functionality.
 
 ## Genesis State
 
-When starting a new chain, each module's consensus version must be saved to state during the application's genesis. This can be done by adding the following line to the `InitChainer` method in `app.go`
+When starting a new chain, the consensus version of each module must be saved to state during the application's genesis. To save the consensus version, add the following line to the `InitChainer` method in `app.go`:
 
 ```diff
 func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
@@ -30,23 +33,23 @@ func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.R
 }
 ```
 
-Using this information, the SDK will be able to detect when modules with newer versions are introduced to the app. 
+This information is used by the Cosmos SDK to detect when modules with newer versions are introduced to the app. 
 
 ### Consensus Version
-The consensus version is defined on each app module by the module developer. It serves as the breaking change version of the module. The consensus version helps to inform the SDK on which modules need to be upgraded. For example, if the bank module was version 2 and an upgrade introduces bank module 3, the SDK will know to upgrade the bank module and run its "version 2 to 3" migration script.
+The consensus version is defined on each app module by the module developer and serves as the breaking change version of the module. The consensus version informs the SDK on which modules need to be upgraded. For example, if the bank module was version 2 and an upgrade introduces bank module 3, the SDK upgrades the bank module and runs the "version 2 to 3" migration script.
 
 ### Version Map
 The version map is a mapping of module names to consensus versions. The map is persisted to x/upgrade's state for use during in-place migrations. When migrations finish, the updated version map is persisted to state. 
 
 ## Upgrade Handlers
 
-Upgrades utilize an `UpgradeHandler` to facilitate migrations. `UpgradeHandler`s are functions implemented by the app developer that conform to the following function signature. These functions retrieve the `VersionMap` from x/upgrade's state, and return the new `VersionMap` to be stored in x/upgrade after the upgrade. The diff between the two `VersionMap`s determines which modules need upgrading.
+Upgrades use an `UpgradeHandler` to facilitate migrations. The `UpgradeHandler` functions implemented by the app developer must conform to the following function signature. These functions retrieve the `VersionMap` from x/upgrade's state and return the new `VersionMap` to be stored in x/upgrade after the upgrade. The diff between the two `VersionMap`s determines which modules need upgrading.
 
 ```golang
 type UpgradeHandler func(ctx sdk.Context, plan Plan, fromVM VersionMap) (VersionMap, error)
 ```
 
-Inside these functions, you should perform any upgrade logic you wish to include in the provided `plan`. All upgrade handler functions should end with the following line of code:
+Inside these functions, you must perform any upgrade logic to include in the provided `plan`. All upgrade handler functions must end with the following line of code:
 
 ```golang
   return app.mm.RunMigrations(ctx, cfg, fromVM)
@@ -54,7 +57,7 @@ Inside these functions, you should perform any upgrade logic you wish to include
 
 ## Running Migrations
 
-Migrations are run inside of an `UpgradeHandler` via `app.mm.RunMigrations(ctx, cfg, vm)`. As described above, `UpgradeHandler`s are functions which describe the functionality to occur during an upgrade. The `RunMigration` function will loop through the `VersionMap` argument, and run the migration scripts for any versions that are less than the new binary's app module versions. Once the migrations are finished, a new `VersionMap` will be returned to persist the upgraded module versions to state.
+Migrations are run inside of an `UpgradeHandler` using  `app.mm.RunMigrations(ctx, cfg, vm)`. The `UpgradeHandler` functions describe the functionality to occur during an upgrade. The `RunMigration` function loops through the `VersionMap` argument and runs the migration scripts for all versions that are less than the versions of the new binary app module. After the migrations are finished, a new `VersionMap` is returned to persist the upgraded module versions to state.
 
 ```golang
 cfg := module.NewConfigurator(...)
@@ -70,13 +73,13 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 })
 ```
 
-To learn more about configuring migration scripts for your modules, refer to this [guide](../building-modules/upgrade.md).
+To learn more about configuring migration scripts for your modules, see the [Migration Upgrade Guide](../building-modules/upgrade.md).
 
-## Adding New Modules In Upgrades
+## Adding New Modules During Upgrades
 
-Entirely new modules can be introduced to the application during an upgrade. The SDK recognizes new modules during upgrades because their consensus version in the `fromVM` `VersionMap` is 0. In this case, `RunMigrations` will call the corresponding module's `InitGenesis` function to setup its initial state. This can be skipped if the module does not require any inital state. Otherwise, it is important to implement `InitGenesis` for new modules to successfully upgrade your application without error.
+You can introduce entirely new modules to the application during an upgrade. New modules are recognized because their consensus version in the `fromVM` `VersionMap` is 0. In this case, `RunMigrations` calls the  `InitGenesis` function from the corresponding module to set up its initial state. If the module requires an initial state, run `InitGenesis` to ensure new modules can successfully upgrade your application without error. 
 
-In the scenario where your application does not need any inital state via `InitGenesis`, you must take extra steps to ensure `InitGenesis` is skipped to avoid errors. To do so, you simply need to update the value of the module version in the `VersionMap` in the `UpgradeHandler`. 
+If the new module does not require an initial state, you can skip running `InitGenesis`. Instead, manually update the value of the module version in the `VersionMap` in `UpgradeHandler`. 
 
 ```go
 // Foo is a new module being introduced

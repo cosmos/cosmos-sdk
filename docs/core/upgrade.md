@@ -14,7 +14,7 @@ The Cosmos SDK uses two methods to perform upgrades.
 
 - Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See the [Chain Upgrade Guide](../migrations/chain-upgrade-guide-040.md#upgrade-procedure). 
 
-- Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [In-Place Store Migrations](./upgrade.md) guide to set up your application to take advantage of in-place upgrades.
+- Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Migration Upgrade Guide](../building-modules/upgrade.md) guide to set up your application modules to take advantage of in-place upgrades.
 
 ## Tracking Module Versions
 

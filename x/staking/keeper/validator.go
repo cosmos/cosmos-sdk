@@ -234,6 +234,28 @@ func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 	return validators[:i] // trim
 }
 
+// get the current group of pending validators sorted by power-rank
+func (k Keeper) GetPendingValidatorsByPower(ctx sdk.Context) []types.Validator {
+	maxValidators := k.MaxValidators(ctx)
+	validators := make([]types.Validator, maxValidators)
+
+	iterator := k.ValidatorsPowerStoreIterator(ctx)
+	defer iterator.Close()
+
+	i := 0
+	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
+		address := iterator.Value()
+		validator := k.mustGetValidator(ctx, address)
+
+		if validator.IsPending() {
+			validators[i] = validator
+			i++
+		}
+	}
+
+	return validators[:i] // trim
+}
+
 // returns an iterator for the current validator power store
 func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
@@ -445,3 +467,4 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 		}
 	}
 }
+

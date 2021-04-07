@@ -3,9 +3,9 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	gogotypes "github.com/gogo/protobuf/types"
 	"sort"
 
-	gogotypes "github.com/gogo/protobuf/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -126,7 +126,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	iterator := k.ValidatorsPowerStoreIterator(ctx)
 	defer iterator.Close()
 
-	for count := 0; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+	for count := 0; iterator.Valid(); iterator.Next() {
 		// everything that is iterated in this loop is becoming or already a
 		// part of the bonded validator set
 		valAddr := sdk.ValAddress(iterator.Value())
@@ -142,62 +142,89 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			break
 		}
 
-		// apply the appropriate state change if necessary
-		switch {
-		case validator.IsUnbonded():
-			validator, err = k.unbondedToBonded(ctx, validator)
-			if err != nil {
-				return
+		if count < int(maxValidators) {
+			switch {
+			case validator.IsUnbonded():
+				validator, err = k.unbondedToBonded(ctx, validator)
+				if err != nil {
+					return
+				}
+				amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+			case validator.IsUnbonding():
+				validator, err = k.unbondingToBonded(ctx, validator)
+				if err != nil {
+					return
+				}
+				amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+			case validator.IsPending():
+				_, err := k.pendingToBonded(ctx, validator)
+				if err != nil {
+					return
+				}
+			case validator.IsBonded():
+				// no state change
+			default:
+				panic("unexpected validator status")
 			}
-			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
-		case validator.IsUnbonding():
-			validator, err = k.unbondingToBonded(ctx, validator)
+
+			// fetch the old power bytes
+			valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixValAddr, valAddr)
 			if err != nil {
-				return
+				return nil, err
 			}
-			amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
-		case validator.IsBonded():
-			// no state change
-		default:
-			panic("unexpected validator status")
+			oldPowerBytes, found := last[valAddrStr]
+			newPower := validator.ConsensusPower()
+			newPowerBytes := k.cdc.MustMarshalBinaryBare(&gogotypes.Int64Value{Value: newPower})
+
+			// update the validator set if power has changed
+			if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+				updates = append(updates, validator.ABCIValidatorUpdate())
+
+				k.SetLastValidatorPower(ctx, valAddr, newPower)
+			}
+
+			delete(last, valAddrStr)
+			count++
+
+			totalPower = totalPower.Add(sdk.NewInt(newPower))
+		} else {
+			switch {
+			case validator.IsUnbonded():
+				validator, err = k.unbondedToPending(ctx, validator)
+				if err != nil {
+					return
+				}
+				amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+			case validator.IsUnbonding():
+				validator, err = k.unbondingToPending(ctx, validator)
+				if err != nil {
+					return
+				}
+				amtFromNotBondedToBonded = amtFromNotBondedToBonded.Add(validator.GetTokens())
+			case validator.IsPending():
+				// no state change
+			case validator.IsBonded():
+				_, err := k.bondedToPending(ctx, validator)
+				if err != nil {
+					return
+				}
+			default:
+				panic("unexpected validator status")
+			}
 		}
-
-		// fetch the old power bytes
-		valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixValAddr, valAddr)
-		if err != nil {
-			return nil, err
-		}
-		oldPowerBytes, found := last[valAddrStr]
-		newPower := validator.ConsensusPower()
-		newPowerBytes := k.cdc.MustMarshalBinaryBare(&gogotypes.Int64Value{Value: newPower})
-
-		// update the validator set if power has changed
-		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
-			updates = append(updates, validator.ABCIValidatorUpdate())
-
-			k.SetLastValidatorPower(ctx, valAddr, newPower)
-		}
-
-		delete(last, valAddrStr)
-		count++
-
-		totalPower = totalPower.Add(sdk.NewInt(newPower))
 	}
 
-	noLongerBonded, err := sortNoLongerBonded(last)
+	noLongerActive, err := sortNoLongerActive(last)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, valAddrBytes := range noLongerBonded {
-		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
-		validator, err = k.bondedToUnbonding(ctx, validator)
+	for _, valAddrBytes := range noLongerActive {
+		validator := k.mustGetValidator(ctx, valAddrBytes)
+		validator, err = k.bondedToPending(ctx, validator)
 		if err != nil {
 			return
 		}
-		amtFromBondedToNotBonded = amtFromBondedToNotBonded.Add(validator.GetTokens())
-		k.DeleteLastValidatorPower(ctx, validator.GetOperator())
-		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
 
 	// Update the pools based on the recent updates in the validator set:
@@ -241,12 +268,44 @@ func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (t
 	return k.bondValidator(ctx, validator)
 }
 
+func (k Keeper) unbondingToPending(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+	if !validator.IsUnbonding() {
+		panic(fmt.Sprintf("bad state transition unbondingToPending, validator: %v\n", validator))
+	}
+
+	return k.pendValidator(ctx, validator)
+}
+
+func (k Keeper) pendingToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+	if !validator.IsPending() {
+		panic(fmt.Sprintf("bad state transition pendingToBonded, validator: %v\n", validator))
+	}
+
+	return k.bondValidator(ctx, validator)
+}
+
+func (k Keeper) bondedToPending(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+	if !validator.IsBonded() {
+		panic(fmt.Sprintf("bad state transition bondedToPending, validator: %v\n", validator))
+	}
+
+	return k.pendValidator(ctx, validator)
+}
+
 func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonded() {
 		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
 	}
 
 	return k.bondValidator(ctx, validator)
+}
+
+func (k Keeper) unbondedToPending(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+	if !validator.IsUnbonded() {
+		panic(fmt.Sprintf("bad state transition unbondedToPending, validator: %v\n", validator))
+	}
+
+	return k.pendValidator(ctx, validator)
 }
 
 // UnbondingToUnbonded switches a validator from unbonding state to unbonded state
@@ -278,6 +337,29 @@ func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 	validator.Jailed = false
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator)
+}
+
+func (k Keeper) pendValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+	// delete the validator by power index, as the key will change
+	k.DeleteValidatorByPowerIndex(ctx, validator)
+
+	validator = validator.UpdateStatus(types.Pending)
+
+	// save the now bonded validator record to the two referenced stores
+	k.SetValidator(ctx, validator)
+	k.SetValidatorByPowerIndex(ctx, validator)
+
+	// delete from queue if present
+	k.DeleteValidatorQueue(ctx, validator)
+
+	// trigger hook
+	consAddr, err := validator.GetConsAddr()
+	if err != nil {
+		return validator, err
+	}
+	k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
+
+	return validator, err
 }
 
 // perform all the store operations for when a validator status becomes bonded
@@ -375,8 +457,8 @@ func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) (validatorsByAddr, erro
 }
 
 // given a map of remaining validators to previous bonded power
-// returns the list of validators to be unbonded, sorted by operator address
-func sortNoLongerBonded(last validatorsByAddr) ([][]byte, error) {
+// returns the list of validators to be made pending, sorted by operator address
+func sortNoLongerActive(last validatorsByAddr) ([][]byte, error) {
 	// sort the map keys for determinism
 	noLongerBonded := make([][]byte, len(last))
 	index := 0

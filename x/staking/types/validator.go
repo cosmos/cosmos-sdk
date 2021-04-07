@@ -33,6 +33,7 @@ var (
 	BondStatusUnbonded    = BondStatus_name[int32(Unbonded)]
 	BondStatusUnbonding   = BondStatus_name[int32(Unbonding)]
 	BondStatusBonded      = BondStatus_name[int32(Bonded)]
+	BondStatusPending     = BondStatus_name[int32(Pending)]
 )
 
 var _ ValidatorI = Validator{}
@@ -160,6 +161,11 @@ func MustUnmarshalValidator(cdc codec.BinaryMarshaler, value []byte) Validator {
 func UnmarshalValidator(cdc codec.BinaryMarshaler, value []byte) (v Validator, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &v)
 	return v, err
+}
+
+// IsPending checks if the validator status equals Pending
+func (v Validator) IsPending() bool {
+	return v.GetStatus() == Pending
 }
 
 // IsBonded checks if the validator status equals Bonded

@@ -37,14 +37,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ## Features
-
+* [\#8965](https://github.com/cosmos/cosmos-sdk/pull/8965) cosmos reflection now provides more information on the application such as: deliverable msgs, sdk.Config info etc (still in alpha stage).
 * [\#8559](https://github.com/cosmos/cosmos-sdk/pull/8559) Added Protobuf compatible secp256r1 ECDSA signatures.
 * [\#8786](https://github.com/cosmos/cosmos-sdk/pull/8786) Enabled secp256r1 in x/auth.
 * (rosetta) [\#8729](https://github.com/cosmos/cosmos-sdk/pull/8729) Data API fully supports balance tracking. Construction API can now construct any message supported by the application.
 * [\#8754](https://github.com/cosmos/cosmos-sdk/pull/8875) Added support for reverse iteration to pagination.
 
 ### Client Breaking Changes
-
 * [\#8363](https://github.com/cosmos/cosmos-sdk/pull/8363) Addresses no longer have a fixed 20-byte length. From the SDK modules' point of view, any 1-255 bytes-long byte array is a valid address.
 * [\#8346](https://github.com/cosmos/cosmos-sdk/pull/8346) All CLI `tx` commands generate ServiceMsgs by default. Graceful Amino support has been added to ServiceMsgs to support signing legacy Msgs.
 * (crypto/ed25519) [\#8690] Adopt zip1215 ed2559 verification rules.
@@ -81,6 +80,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) `client/tx.PrepareFactory` has been converted to a private function, as it's only used internally.
 * (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 * (x/bank) [\#8798](https://github.com/cosmos/cosmos-sdk/pull/8798) `GetTotalSupply` is removed in favour of `GetPaginatedTotalSupply`
+* (x/bank/types) [\#9061](https://github.com/cosmos/cosmos-sdk/pull/9061) `AddressFromBalancesStore` now returns an error for invalid key instead of panic.
 
 ### State Machine Breaking
 
@@ -101,6 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [\#8962](https://github.com/cosmos/cosmos-sdk/issues/8962) Add `Abs()` method to `sdk.Int`.
 * (x/bank) [\#8950](https://github.com/cosmos/cosmos-sdk/pull/8950) Improve efficiency on supply updates.
 * (store) [\#8012](https://github.com/cosmos/cosmos-sdk/pull/8012) Implementation of ADR-038 WriteListener and listen.KVStore
+* (makefile) [\#7933](https://github.com/cosmos/cosmos-sdk/issues/7933) Use Docker to generate swagger files.
 
 ### Bug Fixes
 

@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
+	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -91,10 +92,11 @@ func (s *IntegrationTestSuite) TestVersionMapCLI() {
 				}
 
 				// setup expected response
-				req := make([]*types.ModuleConsensusVersion, len(vm))
+				req := make([]*types.ModuleConsensusVersion, 0)
 				for m, v := range reqVM {
 					req = append(req, &types.ModuleConsensusVersion{Module: m, Version: v})
 				}
+				req = xp.Sort(req)
 				pm := types.QueryVersionMapResponse{
 					VersionMap: req,
 				}

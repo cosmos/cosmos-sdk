@@ -389,7 +389,8 @@ func (m *CodecDescriptor) GetInterfaces() []*InterfaceDescriptor {
 type InterfaceDescriptor struct {
 	// fullname is the name of the interface
 	Fullname string `protobuf:"bytes,1,opt,name=fullname,proto3" json:"fullname,omitempty"`
-	// interface_accepting_messages contains information regarding the proto messages which contain the interface as google.protobuf.Any field
+	// interface_accepting_messages contains information regarding the proto messages which contain the interface as
+	// google.protobuf.Any field
 	InterfaceAcceptingMessages []*InterfaceAcceptingMessageDescriptor `protobuf:"bytes,2,rep,name=interface_accepting_messages,json=interfaceAcceptingMessages,proto3" json:"interface_accepting_messages,omitempty"`
 	// interface_implementers is a list of the descriptors of the interface implementers
 	InterfaceImplementers []*InterfaceImplementerDescriptor `protobuf:"bytes,3,rep,name=interface_implementers,json=interfaceImplementers,proto3" json:"interface_implementers,omitempty"`

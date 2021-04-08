@@ -26,7 +26,6 @@ type UpgradeTestSuite struct {
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.app = simapp.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
-
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.UpgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
@@ -195,6 +194,7 @@ func (suite *UpgradeTestSuite) TestVersionMap() {
 				} else {
 					// check that the full response is valid
 					suite.Require().NotEmpty(res.VersionMap)
+					suite.Require().Equal(len(res.VersionMap), len(actualVM))
 					for _, v := range res.VersionMap {
 						suite.Require().Equal(v.Version, actualVM[v.Module])
 					}

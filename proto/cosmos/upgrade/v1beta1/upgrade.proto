@@ -5,12 +5,12 @@ import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package                       = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
-option (gogoproto.goproto_getters_all)  = false;
+option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
+option (gogoproto.goproto_getters_all) = false;
 
 // Plan specifies information about a planned upgrade and when it should occur.
 message Plan {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   // Sets the name for the upgrade. This name will be used by the upgraded
@@ -44,7 +44,7 @@ message Plan {
 // SoftwareUpgradeProposal is a gov Content type for initiating a software
 // upgrade.
 message SoftwareUpgradeProposal {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   string title       = 1;
@@ -52,10 +52,10 @@ message SoftwareUpgradeProposal {
   Plan   plan        = 3 [(gogoproto.nullable) = false];
 }
 
-// CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
+// CancelSoftwareUpgradeProposalx is a gov Content type for cancelling a software
 // upgrade.
 message CancelSoftwareUpgradeProposal {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   string title       = 1;
@@ -64,7 +64,8 @@ message CancelSoftwareUpgradeProposal {
 
 // ModuleConsensusVersion specifies a module and its consensus version.
 message ModuleConsensusVersion {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
 
   string module  = 1;
   uint64 version = 2;

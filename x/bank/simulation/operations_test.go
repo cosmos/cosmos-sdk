@@ -12,7 +12,6 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -123,16 +122,22 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 }
 
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
-	// setup 3 accounts
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getModuleAccounts(3)
+
+	addr := suite.app.AccountKeeper.GetModuleAddress(types.ModuleName)
+	acc := suite.app.AccountKeeper.GetAccount(suite.ctx, addr) // types.AccountI
+	sacc, ok := acc.(simtypes.Account)
+	suite.Require().True(ok)
+
+	accounts := make([]simtypes.Account, 1)
+	accounts = append(accounts, sacc)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgSend(suite.app.AccountKeeper, suite.app.BankKeeper)
+	s := rand.NewSource(1)
+	r := rand.New(s)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)
 
@@ -192,23 +197,6 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins))
-	}
-
-	return accounts
-}
-
-func (suite *SimTestSuite) getModuleAccounts(n int) []authtypes.ModuleAccountI {
-	accounts := make([]authtypes.ModuleAccountI, n)
-	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)))
-
-	for i := 0; i < n; i++ {
-
-		// what method  is appropriate to use here? maybe NewEmptyModuleAccount
-		macc := suite.app.DistrKeeper.GetDistributionAccount(suite.ctx)
-		// should I use fund  Module Account?
-		suite.Require().NoError(simapp.FundModuleAccount(suite.app, suite.ctx, macc.GetName(), amount))
-		suite.app.AccountKeeper.SetModuleAccount(suite.ctx, macc)
-		accounts = append(accounts, macc)
 	}
 
 	return accounts

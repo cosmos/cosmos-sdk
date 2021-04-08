@@ -87,5 +87,5 @@ message QueryVersionMap {
 // RPC method.
 message QueryVersionMapResponse {
   // version_map is a map of module name to consensus version.
-  map<string, uint64> version_map = 1;
+  repeated ModuleConsensusVersion version_map = 1;
 }

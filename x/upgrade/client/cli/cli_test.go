@@ -45,25 +45,25 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) TestVersionMapCLI() {
 	testCases := []struct {
 		msg     string
-		req     types.QueryVersionMap
+		req     types.QueryVersionMapRequest
 		single  bool
 		expPass bool
 	}{
 		{
 			msg:     "test full query",
-			req:     types.QueryVersionMap{ModuleName: ""},
+			req:     types.QueryVersionMapRequest{ModuleName: ""},
 			single:  false,
 			expPass: true,
 		},
 		{
 			msg:     "test single module",
-			req:     types.QueryVersionMap{ModuleName: "bank"},
+			req:     types.QueryVersionMapRequest{ModuleName: "bank"},
 			single:  true,
 			expPass: true,
 		},
 		{
 			msg:     "test non-existent module",
-			req:     types.QueryVersionMap{ModuleName: "abcdefg"},
+			req:     types.QueryVersionMapRequest{ModuleName: "abcdefg"},
 			single:  true,
 			expPass: false,
 		},
@@ -91,8 +91,12 @@ func (s *IntegrationTestSuite) TestVersionMapCLI() {
 				}
 
 				// setup expected response
+				req := make([]*types.ModuleConsensusVersion, len(vm))
+				for m, v := range reqVM {
+					req = append(req, &types.ModuleConsensusVersion{Module: m, Version: v})
+				}
 				pm := types.QueryVersionMapResponse{
-					VersionMap: reqVM,
+					VersionMap: req,
 				}
 				jsonVM, _ := clientCtx.JSONMarshaler.MarshalJSON(&pm)
 				expectedVM := string(jsonVM)

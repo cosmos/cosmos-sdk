@@ -50,7 +50,7 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 }
 
 // VersionMap implements the Query/VersionMap gRPC method
-func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMap) (*types.QueryVersionMapResponse, error) {
+func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMapRequest) (*types.QueryVersionMapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	// get the version map from the upgrade store
 	vm := k.GetModuleVersionMap(ctx)
@@ -64,11 +64,18 @@ func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMap) (*type
 			singleVM[req.GetModuleName()] = vm[req.GetModuleName()]
 			vm = singleVM
 		} else { // the requested module was not found
-			return &types.QueryVersionMapResponse{}, errors.ErrNotFound
+
+			return &types.QueryVersionMapResponse{}, errors.Wrapf(errors.ErrNotFound, "x/upgrade QueryVersionMap")
 		}
 	}
 
+	vma := make([]*types.ModuleConsensusVersion, len(vm))
+
+	for m, v := range vm {
+		vma = append(vma, &types.ModuleConsensusVersion{Module: m, Version: v})
+	}
+
 	return &types.QueryVersionMapResponse{
-		VersionMap: vm,
+		VersionMap: vma,
 	}, nil
 }

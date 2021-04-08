@@ -144,25 +144,25 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 func (suite *UpgradeTestSuite) TestVersionMap() {
 	testCases := []struct {
 		msg     string
-		req     types.QueryVersionMap
+		req     types.QueryVersionMapRequest
 		single  bool
 		expPass bool
 	}{
 		{
 			msg:     "test full query",
-			req:     types.QueryVersionMap{},
+			req:     types.QueryVersionMapRequest{},
 			single:  false,
 			expPass: true,
 		},
 		{
 			msg:     "test single module",
-			req:     types.QueryVersionMap{ModuleName: "bank"},
+			req:     types.QueryVersionMapRequest{ModuleName: "bank"},
 			single:  true,
 			expPass: true,
 		},
 		{
 			msg:     "test non-existent module",
-			req:     types.QueryVersionMap{ModuleName: "abcdefg"},
+			req:     types.QueryVersionMapRequest{ModuleName: "abcdefg"},
 			single:  true,
 			expPass: false,
 		},
@@ -183,12 +183,20 @@ func (suite *UpgradeTestSuite) TestVersionMap() {
 				if tc.single {
 					// test that the single module response is valid
 					suite.Require().Len(res.VersionMap, 1)
-					suite.Require().Equal(res.VersionMap[tc.req.ModuleName], actualVM[tc.req.ModuleName])
+					// find the expected module version
+					var expectedVersion uint64
+					for _, v := range res.VersionMap {
+						if v.Module == tc.req.ModuleName {
+							expectedVersion = v.Version
+							break
+						}
+					}
+					suite.Require().Equal(actualVM[tc.req.ModuleName], expectedVersion)
 				} else {
 					// check that the full response is valid
 					suite.Require().NotEmpty(res.VersionMap)
-					for m, v := range res.VersionMap {
-						suite.Require().Equal(actualVM[m], v)
+					for _, v := range res.VersionMap {
+						suite.Require().Equal(v.Version, actualVM[v.Module])
 					}
 				}
 			} else {

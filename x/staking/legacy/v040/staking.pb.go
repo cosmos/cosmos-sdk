@@ -1,7 +1,6 @@
 // Package v040 is taken from:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.40.1/x/staking/types/staking.pb.go
-//nolint
-
+// nolint
 package v040
 
 import (

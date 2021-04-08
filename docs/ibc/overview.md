@@ -46,7 +46,7 @@ In IBC, blockchains do not directly pass messages to each other over the network
 
 - A relayer process monitors for updates to these paths and relays messages by submitting the data stored under the path along with a proof of that data to the counterparty chain.
 
-- The paths that all IBC implementations must support for committing IBC messages are defined in [ICS-24 host requirements](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements).
+- The paths that all IBC implementations must support for committing IBC messages are defined in [ICS-24 host requirements](https://github.com/cosmos/ics/tree/master/spec/core/ics-024-host-requirements).
 
 - The proof format that all implementations must produce and verify is defined in [ICS-23 implementation](https://github.com/confio/ics23).
 

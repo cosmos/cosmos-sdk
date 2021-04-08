@@ -47,7 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [\#9081](https://github.com/cosmos/cosmos-sdk/pull/9081) Upgrade tendermint to v0.34.9, which includes a fix of a security issue with Tendermint light clients
+* [\#9081](https://github.com/cosmos/cosmos-sdk/pull/9081) Upgrade Tendermint to v0.34.9 that includes a security issue fix for Tendermint light clients.
 
 ## [v0.42.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.3) - 2021-03-24
 

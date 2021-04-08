@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client Breaking Changes
 
-* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) The `tx sign` and `tx sign-batch` CLI commands use SIGN_MODE_DIRECT by default for local pubkeys. For multisigs and ledger keys, the default LEGACY_AMINO_JSON is kept.
+* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) By default, the `tx sign` and `tx sign-batch` CLI commands use SIGN_MODE_DIRECT to sign transactions for local pubkeys. For multisigs and ledger keys, the default LEGACY_AMINO_JSON is used.
 
 ### Bug Fixes
 

@@ -9,8 +9,10 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 )
 
+// TODO: Revisit this once we have propoer gas fee framework.
+// Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const (
-	AllowedMsgGas = 1000
+	gasCostPerIteration = 10
 )
 
 var _ FeeAllowanceI = (*AllowedMsgFeeAllowance)(nil)
@@ -66,7 +68,7 @@ func (a *AllowedMsgFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, msgs []s
 func (a *AllowedMsgFeeAllowance) allowedMsgsToMap(ctx sdk.Context) map[string]bool {
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
 	for _, msg := range a.AllowedMessages {
-		ctx.GasMeter().ConsumeGas(AllowedMsgGas, "check msg")
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
 		msgsMap[msg] = true
 	}
 
@@ -77,7 +79,7 @@ func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.
 	msgsMap := a.allowedMsgsToMap(ctx)
 
 	for _, msg := range msgs {
-		ctx.GasMeter().ConsumeGas(AllowedMsgGas, "check msg")
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
 		if !msgsMap[msg.Type()] {
 			return false
 		}

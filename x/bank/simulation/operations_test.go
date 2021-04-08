@@ -12,6 +12,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -121,6 +122,65 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	suite.Require().Len(futureOperations, 0)
 }
 
+func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getModuleAccounts(3)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgSend(suite.app.AccountKeeper, suite.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().Error(err)
+
+	/*
+		var msg types.MsgSend
+		types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+		suite.Require().True(operationMsg.OK)
+		suite.Require().Equal("65337742stake", msg.Amount.String())
+		suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.FromAddress)
+		suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.ToAddress)
+		suite.Require().Equal(types.TypeMsgSend, msg.Type())
+		suite.Require().Equal(types.ModuleName, msg.Route())
+		suite.Require().Len(futureOperations, 0)
+	*/
+}
+
+/*
+func (suite *SimTestSuite) TestSimulateModuleAccountMsgMultiSend() {
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
+
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+
+	// execute operation
+	op := simulation.SimulateMsgMultiSend(suite.app.AccountKeeper, suite.app.BankKeeper)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
+
+	var msg types.MsgMultiSend
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Len(msg.Inputs, 3)
+	suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Inputs[1].Address)
+	suite.Require().Equal("185121068stake", msg.Inputs[1].Coins.String())
+	suite.Require().Len(msg.Outputs, 2)
+	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Outputs[1].Address)
+	suite.Require().Equal("260469617stake", msg.Outputs[1].Coins.String())
+	suite.Require().Equal(types.TypeMsgMultiSend, msg.Type())
+	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Len(futureOperations, 0)
+}
+*/
+
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
@@ -132,6 +192,23 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins))
+	}
+
+	return accounts
+}
+
+func (suite *SimTestSuite) getModuleAccounts(n int) []authtypes.ModuleAccountI {
+	accounts := make([]authtypes.ModuleAccountI, n)
+	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)))
+
+	for i := 0; i < n; i++ {
+
+		// what method  is appropriate to use here? maybe NewEmptyModuleAccount
+		macc := suite.app.DistrKeeper.GetDistributionAccount(suite.ctx)
+		// should I use fund  Module Account?
+		suite.Require().NoError(simapp.FundModuleAccount(suite.app, suite.ctx, macc.GetName(), amount))
+		suite.app.AccountKeeper.SetModuleAccount(suite.ctx, macc)
+		accounts = append(accounts, macc)
 	}
 
 	return accounts

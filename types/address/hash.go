@@ -32,8 +32,8 @@ func Hash(typ string, key []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-// NewComposed creates a new address based on sub addresses.
-func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
+// Compose creates a new address based on sub addresses.
+func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 	as := make([][]byte, len(subAddresses))
 	totalLen := 0
 	var err error
@@ -61,4 +61,25 @@ func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
 func Module(moduleName string, key []byte) []byte {
 	mKey := append([]byte(moduleName), 0)
 	return Hash("module", append(mKey, key...))
+}
+
+// Derive derives a new address from the main `address` and a derivation `key`.
+func Derive(address []byte, key []byte) []byte {
+	return Hash(conv.UnsafeBytesToStr(address), key)
+}
+
+// DeriveMulti generalizes `Derive` function for multiple keys - `path`. The keys are order
+// sensitive. Changing an order of the elements in the path will create a different key.
+// NOTE: DeriveMulti(addr, [k1, k2]) != Derive(Derive(addr, k1), k2)
+//                                   != Derive(Derive(addr, k2), k1)
+func DeriveMulti(address []byte, path [][]byte) ([]byte, error) {
+	key := []byte{}
+	for i, p := range path {
+		a, err := LengthPrefix(p)
+		if err != nil {
+			return nil, fmt.Errorf("a path key=%v at index=%d is not compatible [%w]", p, i, err)
+		}
+		key = append(key, a...)
+	}
+	return Hash(conv.UnsafeBytesToStr(address), key), nil
 }

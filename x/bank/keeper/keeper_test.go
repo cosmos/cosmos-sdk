@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"

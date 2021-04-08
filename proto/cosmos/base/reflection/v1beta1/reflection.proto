@@ -17,7 +17,7 @@ service ReflectionService {
   // interface.
   rpc ListImplementations(ListImplementationsRequest) returns (ListImplementationsResponse) {
     option (google.api.http).get = "/cosmos/base/reflection/v1beta1/interfaces/"
-                                   "{interface_name}/implementations";
+        "{interface_name}/implementations";
   };
 }
 

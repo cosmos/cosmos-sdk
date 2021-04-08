@@ -118,7 +118,7 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		txDecode:        cfg.TxDecoder(),
 		txEncode:        cfg.TxEncoder(),
 		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
-			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx) //nolint:staticcheck
+			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
 			if err != nil {
 				return nil, err
 			}
@@ -312,8 +312,8 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	}
 	// get operations from msgs
 	msgs := tx.GetMsgs()
-
 	var rawTxOps []*rosettatypes.Operation
+
 	for _, msg := range msgs {
 		ops, err := c.Ops(status, msg)
 		if err != nil {
@@ -662,7 +662,7 @@ func (c converter) SignedTx(txBytes []byte, signatures []*rosettatypes.Signature
 		signedSigs[i] = signing.SignatureV2{
 			PubKey: notSignedSigs[i].PubKey,
 			Data: &signing.SingleSignatureData{
-				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, //nolint:staticcheck
+				SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 				Signature: signature.Bytes,
 			},
 			Sequence: notSignedSigs[i].Sequence,

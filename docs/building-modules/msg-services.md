@@ -54,6 +54,10 @@ This method takes care of marshaling the `res` parameter to protobuf and attachi
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
 
+This diagram shows a typical structure of an `Msg` Service, and how the message propagates through the module.
+
+![](../uml/transaction_flow.svg)
+
 ## Legacy Amino `Msg`s
 
 ### `handler` type

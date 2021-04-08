@@ -38,6 +38,9 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
 					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 				),
+				Pagination: &query.PageResponse{
+					Total: 2,
+				},
 			},
 		},
 		{

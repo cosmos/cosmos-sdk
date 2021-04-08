@@ -28,7 +28,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
-		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir,
+		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp,
 	)
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -192,6 +192,22 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		}
 	}
 
+}
+
+// Test that the protocol version successfully increments after an
+// upgrade and is succesfully set on BaseApp's appVersion.
+func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
+	oldProtocolVersion := s.app.BaseApp.AppVersion()
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
+	dummyPlan := types.Plan{
+		Name:   "dummy",
+		Info:   "some text here",
+		Height: 100,
+	}
+	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	upgradedProtocolVersion := s.app.BaseApp.AppVersion()
+
+	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
 }
 
 // Tests that the underlying state of x/upgrade is set correctly after

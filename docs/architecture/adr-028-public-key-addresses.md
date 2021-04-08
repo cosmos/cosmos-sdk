@@ -185,14 +185,14 @@ NOTE: this section is not finalize and it's in active discussion.
 
 In Basic Address section we defined a module account address as:
 
-```
+```go
 address.Hash("module", moduleName)
 ```
 
 We use `"module"` as a schema type for all module derived addresses. Module accounts can have sub accounts. The derivation process has a defined order: module name, submodule key, subsubmodule key.
 Module account addresses are heavily used in the SDK so it makes sense to optimize the derivation process: instead of using of using `LengthPrefix` for the module name, we use a null byte (`'\x00'`) as a separator. This works, because null byte is not a part of a valid module name.
 
-```
+```go
 func Module(moduleName string, key []byte) []byte{
 	return Hash("module", []byte(moduleName) + 0 + key)
 }
@@ -208,20 +208,29 @@ If we want to create an address for a module account depending on more than one 
 btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
 ```
 
-We can continue the derivation process and can create an address for a submodule account.
+#### Derived Addresses
 
-```
-func Submodule(address []byte, derivationKey []byte) {
-    return Hash("module", address + derivationKey)
+Module address is a special case of more general _derived_ address defined by the `Derive` function:
+
+```go
+func Derive(address []byte, derivationKey []byte) {
+    return Hash(addres, derivationKey)
 }
 ```
-
-NOTE: if `address` is not a hash based address (with `LEN` length) then we should use `LengthPrefix`. An alternative would be to use one `Module` function, which takes a slice of keys and mapped with `LengthPrefix`. For final version we need to validate what's the most common use.
 
 
 **Example**  For a cosmwasm smart-contract address we could use the following construction:
 ```
-smartContractAddr := Submodule(Module("cosmwasm", smartContractsNamespace), smartContractKey)
+smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
+```
+
+We can also define a function which will derive an address based on multiple keys (path). The function is similar to the `NewComposed`, however it doesn't sort the derivation keys:
+
+```go
+func DeriveMulti(address []byte, derivationKeys [][]byte) {
+    keys = map(derivationKeys, \k -> LengthPrefix(k))
+    return Hash(LengthPrefix(address), keys[0] + ... + keys[n])
+}
 ```
 
 

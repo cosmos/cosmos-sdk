@@ -34,11 +34,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.42.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.4) - 2021-04-08
+
+### Client Breaking Changes
+
+* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) The `tx sign` and `tx sign-batch` CLI commands use SIGN_MODE_DIRECT by default for local pubkeys. For multisigs and ledger keys, the default LEGACY_AMINO_JSON is kept.
 
 ### Bug Fixes
 
 * (gRPC) [\#9015](https://github.com/cosmos/cosmos-sdk/pull/9015) Fix invalid status code when accessing gRPC endpoints.
+* [\#9026](https://github.com/cosmos/cosmos-sdk/pull/9026) Fix bug of `gentx` command not working with ledger keys.
+
+### Improvements
+
+* [\#9081](https://github.com/cosmos/cosmos-sdk/pull/9081) Upgrade tendermint to v0.34.9, which includes a fix of a security issue with Tendermint light clients
 
 ## [v0.42.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.3) - 2021-03-24
 

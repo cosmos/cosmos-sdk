@@ -213,7 +213,7 @@ btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
 Module address is a special case of more general _derived_ address defined by the `Derive` function:
 
 ```go
-func Derive(address []byte, derivationKey []byte) {
+func Derive(address []byte, derivationKey []byte) []byte {
     return Hash(addres, derivationKey)
 }
 ```
@@ -227,7 +227,7 @@ smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{sma
 We can also define a function which will derive an address based on multiple keys (path). The function is similar to the `NewComposed`, however it doesn't sort the derivation keys:
 
 ```go
-func DeriveMulti(address []byte, derivationKeys [][]byte) {
+func DeriveMulti(address []byte, derivationKeys [][]byte) []byte {
     keys = map(derivationKeys, \k -> LengthPrefix(k))
     return Hash(LengthPrefix(address), keys[0] + ... + keys[n])
 }

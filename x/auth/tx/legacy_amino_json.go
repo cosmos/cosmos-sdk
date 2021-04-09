@@ -46,9 +46,19 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "SIGN_MODE_LEGACY_AMINO_JSON does not support protobuf extension options.")
 	}
 
+	// get legacy msgs
+	legacyMsgs := make([]sdk.LegacyMsg, len(tx.GetMsgs()))
+	for i, msg := range tx.GetMsgs() {
+		legacyMsg, ok := msg.(sdk.LegacyMsg)
+		if !ok {
+			return nil, fmt.Errorf("message %T cannot be signed via %s", msg, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+		}
+		legacyMsgs[i] = legacyMsg
+	}
+
 	return legacytx.StdSignBytes(
 		data.ChainID, data.AccountNumber, data.Sequence, protoTx.GetTimeoutHeight(),
 		legacytx.StdFee{Amount: protoTx.GetFee(), Gas: protoTx.GetGas()},
-		tx.GetMsgs(), protoTx.GetMemo(),
+		legacyMsgs, protoTx.GetMemo(),
 	), nil
 }

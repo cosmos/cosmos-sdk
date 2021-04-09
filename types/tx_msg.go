@@ -7,8 +7,9 @@ import (
 )
 
 type (
-	// Msg defines the interface a transaction message must fulfill.
-	Msg interface {
+	// LegacyMsg defines the interface a transaction message must fulfill.
+	// Deprecated: use Msg
+	LegacyMsg interface {
 		proto.Message
 
 		// Return the message type.

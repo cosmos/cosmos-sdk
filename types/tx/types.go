@@ -34,7 +34,7 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 			}
 			msg = sdk.ServiceMsg{
 				MethodName: any.TypeUrl,
-				Request:    any.GetCachedValue().(sdk.MsgRequest),
+				Request:    any.GetCachedValue().(sdk.Msg),
 			}
 		} else {
 			msg = any.GetCachedValue().(sdk.Msg)
@@ -184,7 +184,7 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		// If the any's typeUrl contains 2 slashes, then we unpack the any into
 		// a ServiceMsg struct as per ADR-031.
 		if isServiceMsg(any.TypeUrl) {
-			var req sdk.MsgRequest
+			var req sdk.Msg
 			err := unpacker.UnpackAny(any, &req)
 			if err != nil {
 				return err

@@ -20,8 +20,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the sdk message type.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterInterface(MsgInterfaceProtoName, (*Msg)(nil))
+	registry.RegisterInterface(MsgInterfaceProtoName, (*LegacyMsg)(nil))
 	// the interface name for MsgRequest is ServiceMsg because this is most useful for clients
 	// to understand - it will be the way for clients to introspect on available Msg service methods
-	registry.RegisterInterface(ServiceMsgInterfaceProtoName, (*MsgRequest)(nil))
+	registry.RegisterInterface(ServiceMsgInterfaceProtoName, (*Msg)(nil))
 }

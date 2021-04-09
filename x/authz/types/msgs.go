@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	_ sdk.MsgRequest = &MsgGrantAuthorizationRequest{}
-	_ sdk.MsgRequest = &MsgRevokeAuthorizationRequest{}
-	_ sdk.MsgRequest = &MsgExecAuthorizedRequest{}
+	_ sdk.Msg = &MsgGrantAuthorizationRequest{}
+	_ sdk.Msg = &MsgRevokeAuthorizationRequest{}
+	_ sdk.Msg = &MsgExecAuthorizedRequest{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAuthorizationRequest{}
 	_ types.UnpackInterfacesMessage = &MsgExecAuthorizedRequest{}
@@ -92,7 +92,7 @@ func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization exported
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgExecAuthorizedRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
-		var msgExecAuthorized sdk.MsgRequest
+		var msgExecAuthorized sdk.Msg
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
 		if err != nil {
 			return err
@@ -177,7 +177,7 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 func (msg MsgExecAuthorizedRequest) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
 	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		msgReq, ok := msgAny.GetCachedValue().(sdk.MsgRequest)
+		msgReq, ok := msgAny.GetCachedValue().(sdk.Msg)
 		if !ok {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.MsgRequest", msgAny)
 		}

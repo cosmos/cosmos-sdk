@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -87,7 +89,9 @@ func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec
 
 		return NewOperationMsgBasic(srvMsg.MethodName, srvMsg.MethodName, comment, ok, bz)
 	}
-	return NewOperationMsgBasic(msg.Route(), msg.Type(), comment, ok, msg.GetSignBytes())
+	route := fmt.Sprintf("/%s", proto.MessageName(msg))
+	typ := fmt.Sprintf("%s", proto.MessageName(msg))
+	return NewOperationMsgBasic(route, typ, comment, ok, cdc.MustMarshalJSON(msg))
 }
 
 // NoOpMsg - create a no-operation message

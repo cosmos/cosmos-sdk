@@ -31,7 +31,7 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
 
-			registry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
+			registry.RegisterCustomTypeURL((*sdk.Msg)(nil), fqMethod, msg)
 			return nil
 		}, noopInterceptor)
 

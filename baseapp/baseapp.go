@@ -717,15 +717,17 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			}
 			msgResult, err = handler(ctx, svcMsg.Request)
 		} else {
-			// legacy sdk.Msg routing
-			msgRoute := msg.Route()
-			msgFqName = msg.Type()
-			handler := app.router.Route(ctx, msgRoute)
-			if handler == nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
-			}
+			/*
+				// legacy sdk.Msg routing
+				msgRoute := msg.Route()
+				msgFqName = msg.Type()
+				handler := app.router.Route(ctx, msgRoute)
+				if handler == nil {
+					return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+				}
 
-			msgResult, err = handler(ctx, msg)
+				msgResult, err = handler(ctx, msg)
+			*/
 		}
 
 		if err != nil {
@@ -743,7 +745,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
+		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: "msg.Type()", Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 

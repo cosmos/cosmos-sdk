@@ -61,7 +61,7 @@ func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMapRequest)
 	// check if a specific module was requested
 	if len(req.ModuleName) > 0 {
 		// check if the requested module exists
-		if version := vm[req.ModuleName]; version > 0 {
+		if version, found := vm[req.ModuleName]; found {
 			// add the requested module
 			res = append(res, &types.ModuleConsensusVersion{Module: req.ModuleName, Version: version})
 		} else { // module was requested, but not found

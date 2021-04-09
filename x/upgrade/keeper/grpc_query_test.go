@@ -182,15 +182,9 @@ func (suite *UpgradeTestSuite) TestVersionMap() {
 				if tc.single {
 					// test that the single module response is valid
 					suite.Require().Len(res.VersionMap, 1)
-					// find the expected module version
-					var expectedVersion uint64
-					for _, v := range res.VersionMap {
-						if v.Module == tc.req.ModuleName {
-							expectedVersion = v.Version
-							break
-						}
-					}
-					suite.Require().Equal(actualVM[tc.req.ModuleName], expectedVersion)
+					// make sure we got the right values
+					suite.Require().Equal(actualVM[tc.req.ModuleName], res.VersionMap[0].Version)
+					suite.Require().Equal(tc.req.ModuleName, res.VersionMap[0].Module)
 				} else {
 					// check that the full response is valid
 					suite.Require().NotEmpty(res.VersionMap)

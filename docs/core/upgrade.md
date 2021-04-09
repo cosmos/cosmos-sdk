@@ -120,3 +120,11 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
     return app.mm.RunMigrations(ctx, cfg, vm)
 })
 ```
+
+## Syncing a Full Node to an Upgraded Blockchain
+
+You can sync a full node to an existing blockchain that has been upgraded using Cosmovisor 
+
+In order to successfully sync, you must start with the initial binary that the blockchain started with at genesis. Cosmovisor will handle downloading downloading and switching to the binaries associated with each sequential upgrade. 
+
+To learn more about Cosmovisor, see the [Cosmovisor Quick Start](../run-node/cosmovisor.md).

@@ -206,7 +206,7 @@ func (ak AccountKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) typ
 }
 
 // SetModuleAccount sets the module account to the auth account store
-func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) { //nolint:interfacer
+func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) {
 	ak.SetAccount(ctx, macc)
 }
 

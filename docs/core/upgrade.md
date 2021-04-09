@@ -77,34 +77,45 @@ To learn more about configuring migration scripts for your modules, see the [Mig
 
 ## Adding New Modules During Upgrades
 
-You can introduce entirely new modules to the application during an upgrade. New modules are recognized because their consensus version in the `fromVM` `VersionMap` is 0. In this case, `RunMigrations` calls the  `InitGenesis` function from the corresponding module to set up its initial state. If the module requires an initial state, run `InitGenesis` to ensure new modules can successfully upgrade your application without error. 
+You can introduce entirely new modules to the application during an upgrade. New modules are recognized because their consensus version in the `fromVM` `VersionMap` is 0. In this case, `RunMigrations` calls the `InitGenesis` function from the corresponding module to set up its initial state.
 
-If the new module does not require an initial state, you can skip running `InitGenesis`. Instead, manually update the value of the module version in the `VersionMap` in `UpgradeHandler`. 
+## Overwriting Genesis Functions
+
+The Cosmos SDK offers modules that the application developer can import in their app. These modules often have an `InitGenesis` function already defined.
+
+You can write your own `InitGenesis` function for an imported module. To do this, manually trigger your custom genesis function in the upgrade handler.
+
+::: warning
+You MUST manually set the consensus version in the version map passed to the `UpgradeHandler` function. Without this, the SDK will run the Module's existing `InitGenesis` code even if you triggered your custom function in the `UpgradeHandler`. 
+:::
 
 ```go
-// Foo is a new module being introduced
-// in this upgrade plan
 import foo "github.com/my/module/foo"
 
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
-    // We make sure to set foo's version to the latest ConsensusVersion in the VersionMap.
-    // This will skip running InitGenesis on Foo
+  
+    // Register the consensus version in the version map
+    // to avoid the SDK from triggering the default 
+    // InitGenesis function. 
     vm["foo"] = foo.AppModule{}.ConsensusVersion()
+
+    // Run custom InitGenesis for foo
+    app.mm["foo"].InitGenesis(ctx, app.appCodec, myCustomGenesisState)
 
     return app.mm.RunMigrations(ctx, cfg, vm)
 })
 ```
 
-Using a similar method, you can also run `InitGenesis` on your new module with a custom genesis state:
+If you do not have a custom genesis function and want to skip the module's default genesis function, you can simply register the module with the version map in the `UpgradeHandler` as shown in the example:
 
 ```go
 import foo "github.com/my/module/foo"
 
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
+  
+    // Set foo's version to the latest ConsensusVersion in the VersionMap.
+    // This will skip running InitGenesis on Foo
     vm["foo"] = foo.AppModule{}.ConsensusVersion()
-
-    // Run custom InitGenesis for foo
-    app.mm["foo"].InitGenesis(ctx, app.appCodec, myCustomGenesisState)
 
     return app.mm.RunMigrations(ctx, cfg, vm)
 })

@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#8786](https://github.com/cosmos/cosmos-sdk/pull/8786) Enabled secp256r1 in x/auth.
 * (rosetta) [\#8729](https://github.com/cosmos/cosmos-sdk/pull/8729) Data API fully supports balance tracking. Construction API can now construct any message supported by the application.
 * [\#8754](https://github.com/cosmos/cosmos-sdk/pull/8875) Added support for reverse iteration to pagination.
+* [#9088](https://github.com/cosmos/cosmos-sdk/pull/9088) Added implementation to ADR-28 Derived Addresses.
 
 ### Client Breaking Changes
 
@@ -78,6 +79,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `MsgCreateValidator.Pubkey` type changed from `string` to `codectypes.Any`.
 * (client) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) `client/tx.PrepareFactory` has been converted to a private function, as it's only used internally.
 * (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
+* [#9088](https://github.com/cosmos/cosmos-sdk/pull/9088) Unify naming of the ADR-28 related functions: Renames: `address.NewCompose` -> `address.Compose`, `address.NewCompose`
+
+
 
 ### State Machine Breaking
 

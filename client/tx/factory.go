@@ -38,7 +38,7 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 	case flags.SignModeDirect:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
 	case flags.SignModeLegacyAminoJSON:
-		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON //nolint:staticcheck
+		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
 
 	accNum, _ := flagSet.GetUint64(flags.FlagAccountNumber)

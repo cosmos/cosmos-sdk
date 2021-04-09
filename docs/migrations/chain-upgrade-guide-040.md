@@ -67,7 +67,7 @@ software and restore to their latest snapshot before restarting their nodes.
    simd migrate v0.42 v039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v042_genesis.json
    ```
 
-   **Note:** The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` is usually mentioned in the governance proposal, and should be passed as flag argument. If the flag is omitted, then the genesis time of the new genesis file is the same as the old one, which may cause confusion.
+   **Note:** The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` is usually mentioned in the governance proposal, and should be passed as flag argument. If the flag is omitted, then the genesis time of the upgraded chain will be the same as the old one, which may cause confusion.
 
 1. All the necessary state changes are handled in the `simd migrate v0.42` migration command. However, Tendermint parameters are **not** handled in this command. You might need to update these parameters manually.
 

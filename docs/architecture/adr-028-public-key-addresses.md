@@ -135,7 +135,7 @@ type Addressable interface {
     Address() []byte
 }
 
-func NewComposed(typ string, subaccounts []Addressable) []byte {
+func Composed(typ string, subaccounts []Addressable) []byte {
     addresses = map(subaccounts, \a -> LengthPrefix(a.Address()))
     addresses = sort(addresses)
     return address.Hash(typ, addresses[0] + ... + addresses[n])
@@ -175,7 +175,7 @@ func (multisig PubKey) Address() {
   prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
 
   // use the Composed function defined above
-  return address.NewComposed(prefix, keys)
+  return address.Composed(prefix, keys)
 }
 ```
 
@@ -210,7 +210,7 @@ btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
 
 #### Derived Addresses
 
-Module address is a special case of more general _derived_ address defined by the `Derive` function:
+We must be able to cryptographically derive one address from another one. The derivation process must guarantee hash properties, hence we use the already defined `Hash` function:
 
 ```go
 func Derive(address []byte, derivationKey []byte) []byte {
@@ -218,13 +218,14 @@ func Derive(address []byte, derivationKey []byte) []byte {
 }
 ```
 
+Note: `Module` is a special case of the more general _derived_ address, where we set the `"module"` string for the _from address_.
 
 **Example**  For a cosmwasm smart-contract address we could use the following construction:
 ```
 smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
 ```
 
-We can also define a function which will derive an address based on multiple keys (path). The function is similar to the `NewComposed`, however it doesn't sort the derivation keys:
+We can also define a function which will derive an address based on multiple keys (path). The function is similar to the `Composed`, however it doesn't sort the derivation keys:
 
 ```go
 func DeriveMulti(address []byte, derivationKeys [][]byte) []byte {

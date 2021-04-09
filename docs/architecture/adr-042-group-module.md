@@ -371,5 +371,5 @@ In the current implementation, updating a group or a group account after submitt
 
 - Initial specification:
   - https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
-  - #5236
+  - [#5236](https://github.com/cosmos/cosmos-sdk/pull/5236)
 - Proposal to add `x/group` into the SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)

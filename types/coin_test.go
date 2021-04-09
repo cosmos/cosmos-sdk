@@ -145,6 +145,21 @@ func (s *coinTestSuite) TestAddCoin() {
 	}
 }
 
+func (s *coinTestSuite) TestAddCoinAmount() {
+	cases := []struct {
+		coin     sdk.Coin
+		amount   sdk.Int
+		expected sdk.Coin
+	}{
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 2)},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(0), sdk.NewInt64Coin(testDenom1, 1)},
+	}
+	for i, tc := range cases {
+		res := tc.coin.AddAmount(tc.amount)
+		s.Require().Equal(tc.expected, res, "result of addition is incorrect, tc #%d", i)
+	}
+}
+
 func (s *coinTestSuite) TestSubCoin() {
 	cases := []struct {
 		inputOne    sdk.Coin
@@ -176,6 +191,30 @@ func (s *coinTestSuite) TestSubCoin() {
 	}{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), 0}
 	res := tc.inputOne.Sub(tc.inputTwo)
 	s.Require().Equal(tc.expected, res.Amount.Int64())
+}
+
+func (s *coinTestSuite) TestSubCoinAmount() {
+	cases := []struct {
+		coin        sdk.Coin
+		amount      sdk.Int
+		expected    sdk.Coin
+		shouldPanic bool
+	}{
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 1), false},
+		{sdk.NewInt64Coin(testDenom1, 10), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 9), false},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt(3), sdk.NewInt64Coin(testDenom1, 2), false},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt(0), sdk.NewInt64Coin(testDenom1, 5), false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(5), sdk.Coin{}, true},
+	}
+
+	for i, tc := range cases {
+		if tc.shouldPanic {
+			s.Require().Panics(func() { tc.coin.SubAmount(tc.amount) })
+		} else {
+			res := tc.coin.SubAmount(tc.amount)
+			s.Require().Equal(tc.expected, res, "result of subtraction is incorrect, tc #%d", i)
+		}
+	}
 }
 
 func (s *coinTestSuite) TestIsGTECoin() {

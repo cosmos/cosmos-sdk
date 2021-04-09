@@ -710,6 +710,384 @@ $ %s query staking pool
 	return cmd
 }
 
+// GetCmdQueryPool implements the pool query command.
+func GetCmdQueryMsgCreateValidators() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-create-validators",
+		Args:  cobra.NoArgs,
+		Short: "Query the queued MsgCreateValidator",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued CreateValidators messages.
+
+Example:
+$ %s query staking buffered-create-validators
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgCreateValidators(cmd.Context(), &types.QueryQueuedMsgCreateValidatorsRequest{
+				Pagination: pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "msgCreateValidators")
+
+	return cmd
+}
+
+// GetCmdQueryMsgEditValidators implements the msgEditValidators query command.
+func GetCmdQueryMsgEditValidators() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-edit-validators",
+		Args:  cobra.NoArgs,
+		Short: "Query the queued MsgEditValidator",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued editValidator messages.
+
+Example:
+$ %s query staking buffered-edit-validators
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgEditValidators(cmd.Context(), &types.QueryQueuedMsgEditValidatorsRequest{
+				Pagination: pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "msgEditValidators")
+
+	return cmd
+}
+
+// GetCmdQueryMsgDelegate implements the delegate msg query command.
+func GetCmdQueryMsgDelegate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-delegation-message [address]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query for specific queued delegate messages",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued delegation messages.
+
+Example:
+$ %s query staking buffered-delegation-messages [delegator_address]
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			delAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgDelegate(cmd.Context(), &types.QueryQueuedMsgDelegateRequest{
+				DelegatorAddr: delAddr.String(),
+				Pagination:    pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "delegation")
+
+	return cmd
+}
+
+// GetCmdQueryMsgDelegates implements the delegate msg query command.
+func GetCmdQueryMsgDelegates() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-delegation-messages",
+		Args:  cobra.NoArgs,
+		Short: "Query all queued delegation messages",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued delegation messages.
+
+Example:
+$ %s query staking buffered-delegation-messages
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgDelegates(cmd.Context(), &types.QueryQueuedMsgDelegatesRequest{
+				Pagination: pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "delegations")
+
+	return cmd
+}
+
+// GetCmdQueryMsgDelegates implements the delegate msg query command.
+func GetCmdQueryMsgUndelegates() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-undelegation-messages",
+		Args:  cobra.NoArgs,
+		Short: "Query all queued undelegation messages",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued undelegation messages.
+
+Example:
+$ %s query staking buffered-undelegation-messages
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgUndelegates(cmd.Context(), &types.QueryQueuedMsgUndelegatesRequest{
+				Pagination: pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "undelegations")
+
+	return cmd
+}
+
+// GetCmdQueryMsgDelegate implements the delegate msg query command.
+func GetCmdQueryMsgUndelegate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-undelegation-messages [delegator_addr]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query all queued undelegation messages",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued undelegation messages.
+
+Example:
+$ %s query staking buffered-undelegation-messages
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			delAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgUndelegate(cmd.Context(), &types.QueryQueuedMsgUndelegateRequest{
+				DelegatorAddr: delAddr.String(),
+				Pagination:    pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "undelegations")
+
+	return cmd
+}
+
+// GetCmdQueryMsgDelegates implements the delegate msg query command.
+func GetCmdQueryMsgBeginRedelegates() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-begin-redelegate-messages",
+		Args:  cobra.NoArgs,
+		Short: "Query all queued being redelegation messages",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued begin redelegation messages.
+
+Example:
+$ %s query staking buffered-begin-redelegate-messages
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgBeginRedelegates(cmd.Context(), &types.QueryQueuedMsgBeginRedelegatesRequest{
+				Pagination: pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "begin redelegations")
+
+	return cmd
+}
+
+// GetCmdQueryMsgDelegates implements the delegate msg query command.
+func GetCmdQueryMsgBeginRedelegate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buffered-begin-redelegate-messages [delegator_addr]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query specific queued begin redelegation messages",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query queued begin redelegation messages.
+
+Example:
+$ %s query staking buffered-undelegation-messages
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			delAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.QueuedMsgBeginRedelegate(cmd.Context(), &types.QueryQueuedMsgBeginRedelegateRequest{
+				DelegatorAddr: delAddr.String(),
+				Pagination:    pageReq,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "redelegations")
+
+	return cmd
+}
+
 // GetCmdQueryParams implements the params query command.
 func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{

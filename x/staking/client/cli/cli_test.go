@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -68,11 +66,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-	// unbonding
-	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	// // unbonding
+	// _, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
+	// s.Require().NoError(err)
+	// _, err = s.network.WaitForHeight(1)
+	// s.Require().NoError(err)
 
 	h, err := s.network.LatestHeight()
 	s.Require().NoError(err)
@@ -354,6 +352,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
+			fmt.Println(s.network.LatestHeight())
 			cmd := cli.GetCmdQueryDelegation()
 			clientCtx := val.ClientCtx
 
@@ -667,11 +666,6 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			h, err := s.network.LatestHeight()
-			s.Require().NoError(err)
-
-			//Wait for height latestHeight + 11 for the epoch queued messages to be executed
-			_, err = s.network.WaitForHeightWithTimeout(h+12, 30*time.Second)
 			cmd := cli.GetCmdQueryRedelegations()
 			clientCtx := val.ClientCtx
 

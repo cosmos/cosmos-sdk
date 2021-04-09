@@ -17,8 +17,8 @@ This ADR defines the `x/group` module which allows the creation and management o
 The current multi-signature mechanism of the Cosmos SDK has certain limitations:
 - Key rotation is not possible, although this can be solved with [account rekeying](adr-034-account-rekeying.md).
 - Thresholds can't be changed.
-- UX is not straightforward for non-technical users (#5661).
-- It requires `legacy_amino` sign mode (#8141).
+- UX is not straightforward for non-technical users ([#5661](https://github.com/cosmos/cosmos-sdk/issues/5661)).
+- It requires `legacy_amino` sign mode ([#8141](https://github.com/cosmos/cosmos-sdk/issues/8141)).
 
 While the group module is not meant to be a total replacement for the current multi-signature accounts, it provides a solution to the limitations described above, with a more flexible key management system where keys can be added, updated or removed, as well as configurable thresholds.
 It's meant to be used with other key management modules such as [`x/feegrant`](./adr-029-fee-grant-module.md) ans [`x/authz`](adr-030-authz-module.md) to simplify key management for individuals and organizations.
@@ -27,7 +27,7 @@ The current implementation of the group module can be found in https://github.co
 
 ## Decision
 
-We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/regen-network/regen-ledger/tree/master/orm) (#7098) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
+We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/regen-network/regen-ledger/tree/master/orm) ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
 
 ### Group
 
@@ -340,7 +340,7 @@ but rather a user must submit a `Msg/Exec` transaction to attempt to execute the
 proposal based on the current votes and decision policy. A future upgrade could
 automate this and have the group account (or a fee granter) pay.
 
-Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module-comm.md) will be used to route a proposal's messages using the `DerivedModuleKey` corresponding to the proposal's group account. It can also temporarily support routing of non `ServiceMsg`s through the `sdk.Router` (see #8864).
+Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module-comm.md) will be used to route a proposal's messages using the `DerivedModuleKey` corresponding to the proposal's group account. It can also temporarily support routing of non `ServiceMsg`s through the `sdk.Router` (see [#8864](https://github.com/cosmos/cosmos-sdk/issues/8864)).
 For these messages to execute successfully, their signer should be set as the group account.
 
 #### Changing Group Membership

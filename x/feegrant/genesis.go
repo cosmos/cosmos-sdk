@@ -12,7 +12,11 @@ type GenesisState []types.FeeAllowanceGrant
 // ValidateBasic ensures all grants in the genesis state are valid
 func (g GenesisState) ValidateBasic() error {
 	for _, f := range g {
-		err := f.GetFeeGrant().ValidateBasic()
+		grant, err := f.GetFeeGrant()
+		if err != nil {
+			return err
+		}
+		err = grant.ValidateBasic()
 		if err != nil {
 			return err
 		}
@@ -32,7 +36,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
 			panic(err)
 		}
 
-		err = k.GrantFeeAllowance(ctx, granter, grantee, f.GetFeeGrant())
+		grant, err := f.GetFeeGrant()
+		if err != nil {
+			panic(err)
+		}
+
+		err = k.GrantFeeAllowance(ctx, granter, grantee, grant)
 		if err != nil {
 			panic(err)
 		}

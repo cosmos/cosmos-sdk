@@ -23,7 +23,7 @@ The current multi-signature mechanism of the Cosmos SDK has certain limitations:
 While the group module is not meant to be a total replacement for the current multi-signature accounts, it provides a solution to the limitations described above, with a more flexible key management system where keys can be added, updated or removed, as well as configurable thresholds.
 It's meant to be used with other key management modules such as [`x/feegrant`](./adr-029-fee-grant-module.md) ans [`x/authz`](adr-030-authz-module.md) to simplify key management for individuals and organizations.
 
-The current implementation of the group module can be found in https://github.com/regen-network/regen-ledger/tree/master/proto/regen/group/v1alpha1 and https://github.com/regen-network/regen-ledger/tree/master/x/group
+The current implementation of the group module can be found in https://github.com/regen-network/regen-ledger/tree/master/proto/regen/group/v1alpha1 and https://github.com/regen-network/regen-ledger/tree/master/x/group.
 
 ## Decision
 
@@ -127,7 +127,7 @@ message GroupAccountInfo {
 }
 ```
 
-The group account address is generated based on an auto-increment integer which is used to derive the group `RootModuleKey` into a `DerivedModuleKey`, as stated in [ADR-033](adr-033-protobuf-inter-module-comm.md#modulekeys-and-moduleids). The group account is added as a new `ModuleAccount` through `x/auth`.
+The group account address is generated based on an auto-increment integer which is used to derive the group module `RootModuleKey` into a `DerivedModuleKey`, as stated in [ADR-033](adr-033-protobuf-inter-module-comm.md#modulekeys-and-moduleids). The group account is added as a new `ModuleAccount` through `x/auth`.
 
 ### Decision Policy
 
@@ -331,7 +331,7 @@ message Vote {
 }
 ```
 
-Voting internally updates the proposal `Status` and `Result`.
+Voting internally updates the proposal `Status` and `Result` if needed.
 
 ### Executing Proposals
 
@@ -372,4 +372,4 @@ In the current implementation, updating a group or a group account after submitt
 - Initial specification:
   - https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#group-module
   - #5236
-- Proposal to add `x/group` into the SDK: #7633
+- Proposal to add `x/group` into the SDK: [#7633](https://github.com/cosmos/cosmos-sdk/issues/7633)

@@ -35,7 +35,8 @@ var (
 		sdk.ValAddress(pubkeys[2].Address()),
 	}
 
-	initAmt   = sdk.TokensFromConsensusPower(200)
+	// The default power validators are initialized to have within tests
+	initAmt   = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 )
 

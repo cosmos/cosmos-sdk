@@ -580,3 +580,37 @@ func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_Empty() {
+	tests := []struct {
+		coins       sdk.DecCoins
+		expectEmpty bool
+		msg         string
+	}{
+		{
+			sdk.NewDecCoins(),
+			true,
+			"a new coin set should be empty",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("mytoken", sdk.NewInt(10)),
+			),
+			false,
+			"coin set with one coin should not be empty",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			false,
+			"coin set with two coin should not be empty",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Require().Equal(tc.expectEmpty, tc.coins.Empty(), tc.msg)
+	}
+}

@@ -14,7 +14,11 @@ func NewGenesisState(entries []FeeAllowanceGrant) *GenesisState {
 // ValidateGenesis ensures all grants in the genesis state are valid
 func ValidateGenesis(data GenesisState) error {
 	for _, f := range data.FeeAllowances {
-		err := f.GetFeeGrant().ValidateBasic()
+		grant, err := f.GetFeeGrant()
+		if err != nil {
+			return err
+		}
+		err = grant.ValidateBasic()
 		if err != nil {
 			return err
 		}

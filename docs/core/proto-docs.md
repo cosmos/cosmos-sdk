@@ -307,6 +307,7 @@
     - [Msg](#cosmos.evidence.v1beta1.Msg)
   
 - [cosmos/feegrant/v1beta1/feegrant.proto](#cosmos/feegrant/v1beta1/feegrant.proto)
+    - [AllowedMsgFeeAllowance](#cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance)
     - [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance)
     - [Duration](#cosmos.feegrant.v1beta1.Duration)
     - [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt)
@@ -4540,6 +4541,22 @@ Msg defines the evidence Msg service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/feegrant/v1beta1/feegrant.proto
+
+
+
+<a name="cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance"></a>
+
+### AllowedMsgFeeAllowance
+AllowedMsgFeeAllowance creates allowance only for specified message types.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance. |
+| `allowed_messages` | [string](#string) | repeated | allowed_messages are the messages for which the grantee has the access. |
+
+
+
 
 
 

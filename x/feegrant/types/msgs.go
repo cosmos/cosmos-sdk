@@ -50,7 +50,12 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
-	return msg.GetFeeAllowanceI().ValidateBasic()
+	allowance, err := msg.GetFeeAllowanceI()
+	if err != nil {
+		return err
+	}
+
+	return allowance.ValidateBasic()
 }
 
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
@@ -62,13 +67,13 @@ func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
-func (msg MsgGrantFeeAllowance) GetFeeAllowanceI() FeeAllowanceI {
+func (msg MsgGrantFeeAllowance) GetFeeAllowanceI() (FeeAllowanceI, error) {
 	allowance, ok := msg.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
-		return nil
+		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
 	}
 
-	return allowance
+	return allowance, nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

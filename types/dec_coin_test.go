@@ -583,9 +583,9 @@ func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 
 func (s *decCoinTestSuite) TestDecCoins_Empty() {
 	tests := []struct {
-		coins       sdk.DecCoins
-		expectEmpty bool
-		msg         string
+		coins    sdk.DecCoins
+		expected bool
+		msg      string
 	}{
 		{
 			sdk.NewDecCoins(),
@@ -610,7 +610,41 @@ func (s *decCoinTestSuite) TestDecCoins_Empty() {
 	}
 
 	for _, tc := range tests {
-		tc := tc
-		s.Require().Equal(tc.expectEmpty, tc.coins.Empty(), tc.msg)
+		observed := tc.coins.Empty()
+		s.Require().Equal(tc.expected, observed, tc.msg)
+	}
+}
+
+func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
+	tests := []struct {
+		coins    sdk.DecCoins
+		expected bool
+		msg      string
+	}{
+		{
+			sdk.NewDecCoins(),
+			false,
+			"an empty set is not all positive",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("mytoken", sdk.NewInt(1)),
+			),
+			true,
+			"a set with one positive should be all positive",
+		},
+		{
+			append(
+				sdk.NewDecCoins(),
+				sdk.DecCoin{"mytoken", sdk.NewDec(-1)}, // NOTE this avoids the factory method panics when given a negative value
+			),
+			false,
+			"a set with one negative should not be all positive",
+		},
+	}
+
+	for _, tc := range tests {
+		observed := tc.coins.IsAllPositive()
+		s.Require().Equal(tc.expected, observed, tc.msg)
 	}
 }

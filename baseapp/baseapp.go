@@ -17,6 +17,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -703,4 +704,18 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		Log:    strings.TrimSpace(msgLogs.String()),
 		Events: events,
 	}, nil
+}
+
+func (app *BaseApp) Export(toApp *BaseApp, version int64) error {
+	fromCms, ok := app.cms.(*rootmulti.Store)
+	if !ok {
+		return fmt.Errorf("cms of from app is not rootmulti store")
+	}
+
+	toCms, ok := toApp.cms.(*rootmulti.Store)
+	if !ok {
+		return fmt.Errorf("cms of to app is not rootmulti store")
+	}
+
+	return fromCms.Export(toCms, version)
 }

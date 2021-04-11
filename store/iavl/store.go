@@ -3,6 +3,8 @@ package iavl
 import (
 	"io"
 	"sync"
+	"fmt"
+	"errors"
 
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -466,4 +468,32 @@ func (iter *iavlIterator) assertIsValid(unlockMutex bool) {
 		}
 		panic("invalid iterator")
 	}
+}
+
+// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+// starting a new chain at an arbitrary height.
+func (st *Store) SetInitialVersion(version int64) {
+	st.tree.SetInitialVersion(uint64(version))
+}
+
+// Exports the IAVL store at the given version, returning an iavl.Exporter for the tree.
+func (st *Store) Export(version int64) (*iavl.Exporter, error) {
+	istore, err := st.GetImmutable(version)
+	if err != nil {
+		return nil, fmt.Errorf("iavl export failed for version %v: %w", version, err)
+	}
+	tree, ok := istore.tree.(*immutableTree)
+	if !ok || tree == nil {
+		return nil, fmt.Errorf("iavl export failed: unable to fetch tree for version %v", version)
+	}
+	return tree.Export(), nil
+}
+
+// Import imports an IAVL tree at the given version, returning an iavl.Importer for importing.
+func (st *Store) Import(version int64) (*iavl.Importer, error) {
+	tree, ok := st.tree.(*iavl.MutableTree)
+	if !ok {
+		return nil, errors.New("iavl import failed: unable to find mutable tree")
+	}
+	return tree.Import(version)
 }

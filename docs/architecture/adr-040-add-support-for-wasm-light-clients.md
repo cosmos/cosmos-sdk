@@ -35,9 +35,9 @@ want support for light client X, they may not be able to convince governance to 
 3. Validator upgrade: After governance voting succeeds, validators need to upgrade their nodes in order to enable new
 IBC light client implementation. This is both time consuming and error prone.
    
-Another problem stemming from the above process is that if a chain want to upgrade its own consensus, it will need to convince every chain
+Another problem stemming from the above process is that if a chain wants to upgrade its own consensus, it will need to convince every chain
 or hub connected to it to upgrade its light client in order to stay connected. Due to time consuming process required
-to upgrade light client, a chain with lots of connections need to be disconnected for quite some time after upgrading 
+to upgrade light client, a chain with lots of connections needs to be disconnected for quite some time after upgrading 
 its consensus, which can be very expensive.
 
 We are proposing simplifying this workflow by integrating a WASM light client module which makes adding support for
@@ -59,12 +59,17 @@ has prefix of `wasm/`.
 ```go
 // IsAllowedClient checks if the given client type is registered on the allowlist.
 func (p Params) IsAllowedClient(clientType string) bool {
+	if p.AreWASMClientsAllowed && isWASMClient(clientType) {
+		return true
+	}
+	
 	for _, allowedClient := range p.AllowedClients {
 		if allowedClient == clientType {
 			return true
 		}
 	}
-	return false || (p.AreWASMClientsAllowed && isWASMClient(clientType))
+
+	return false
 }
 ```
 

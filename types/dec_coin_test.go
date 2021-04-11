@@ -648,3 +648,119 @@ func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
 		s.Require().Equal(tc.expected, observed, tc.msg)
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_MulDec() {
+	tests := []struct {
+		input      sdk.DecCoins
+		multiplier sdk.Dec
+		expected   sdk.DecCoins
+		msg        string
+	}{
+		{
+			sdk.NewDecCoins(),
+			sdk.NewDec(0),
+			nil,
+			"multiplying an empty set should return nil",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			sdk.NewDec(0),
+			nil,
+			"multiplying by zero should return nil",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			sdk.NewDec(1),
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			"multiplying by one should return an identical set",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			sdk.NewDec(2),
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(20)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(20)),
+			),
+			"multiplying by two should return an doubled set",
+		},
+	}
+
+	for _, tc := range tests {
+		observed := tc.input.MulDec(tc.multiplier)
+		s.Require().Equal(tc.expected, observed, tc.msg)
+	}
+}
+
+func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
+	tests := []struct {
+		input      sdk.DecCoins
+		multiplier sdk.Dec
+		expected   sdk.DecCoins
+		msg        string
+	}{
+		{
+			sdk.NewDecCoins(),
+			sdk.NewDec(0),
+			nil,
+			"multiplying an empty set should return nil",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			sdk.NewDec(0),
+			nil,
+			"multiplying by zero should return nil",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			sdk.NewDec(1),
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			"multiplying by one should return an identical set",
+		},
+		{
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(10)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(10)),
+			),
+			sdk.NewDec(2),
+			sdk.NewDecCoins(
+				sdk.NewDecCoin("TokenA", sdk.NewInt(20)),
+				sdk.NewDecCoin("TokenB", sdk.NewInt(20)),
+			),
+			"multiplying by two should return an doubled set",
+		},
+	}
+
+	for _, tc := range tests {
+		observed := tc.input.MulDecTruncate(tc.multiplier)
+		s.Require().Equal(tc.expected, observed, tc.msg)
+	}
+}
+
+// TODO(levi) func (s *decCoinTestSuite) TestDecCoin_GetDenomByIndex() { }
+
+// TODO(levi) func (s *decCoinTestSuite) TestDecCoin_IsGTE() { }
+
+// TODO(levi) func (s *decCoinTestSuite) TestDecCoin_IsLT() { }
+
+// TODO(levi) func (s *decCoinTestSuite) TestDecCoin_IsZero() { }

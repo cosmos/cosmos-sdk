@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	_ sdk.MsgRequest = &MsgGrantAuthorizationRequest{}
-	_ sdk.MsgRequest = &MsgRevokeAuthorizationRequest{}
-	_ sdk.MsgRequest = &MsgExecAuthorizedRequest{}
+	_ sdk.Msg = &MsgGrantAuthorizationRequest{}
+	_ sdk.Msg = &MsgRevokeAuthorizationRequest{}
+	_ sdk.Msg = &MsgExecAuthorizedRequest{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAuthorizationRequest{}
 	_ types.UnpackInterfacesMessage = &MsgExecAuthorizedRequest{}
@@ -96,7 +96,7 @@ func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization exported
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgExecAuthorizedRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
-		var msgExecAuthorized sdk.MsgRequest
+		var msgExecAuthorized sdk.Msg
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
 		if err != nil {
 			return err
@@ -155,20 +155,15 @@ func (msg MsgRevokeAuthorizationRequest) ValidateBasic() error {
 
 // NewMsgExecAuthorized creates a new MsgExecAuthorized
 //nolint:interfacer
-func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExecAuthorizedRequest {
+func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthorizedRequest {
 	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
-		bz, err := proto.Marshal(msg.Request)
+		any, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
 
-		anyMsg := &types.Any{
-			TypeUrl: msg.MethodName,
-			Value:   bz,
-		}
-
-		msgsAny[i] = anyMsg
+		msgsAny[i] = any
 	}
 
 	return MsgExecAuthorizedRequest{
@@ -177,20 +172,15 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 	}
 }
 
-// GetServiceMsgs returns the cache values from the MsgExecAuthorized.Msgs if present.
-func (msg MsgExecAuthorizedRequest) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
-	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
+// GetMessages returns the cache values from the MsgExecAuthorized.Msgs if present.
+func (msg MsgExecAuthorizedRequest) GetMessages() ([]sdk.Msg, error) {
+	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		msgReq, ok := msgAny.GetCachedValue().(sdk.MsgRequest)
+		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
 		if !ok {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.MsgRequest", msgAny)
 		}
-		srvMsg := sdk.ServiceMsg{
-			MethodName: msgAny.TypeUrl,
-			Request:    msgReq,
-		}
-
-		msgs[i] = srvMsg
+		msgs[i] = msg
 	}
 
 	return msgs, nil

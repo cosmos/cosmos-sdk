@@ -242,30 +242,6 @@ func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
 // as metadata
 func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
 	opName := proto.MessageName(msg)
-	// in case proto does not recognize the message name
-	// then we should try to cast it to service msg, to
-	// check if it was wrapped or not, in case the cast
-	// from sdk.ServiceMsg to sdk.Msg fails, then a
-	// codec error is returned
-	if opName == "" {
-		unwrappedMsg, ok := msg.(sdk.ServiceMsg)
-		if !ok {
-			return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("unrecognized message type: %T", msg))
-		}
-
-		msg, ok = unwrappedMsg.Request.(sdk.Msg)
-		if !ok {
-			return nil, crgerrs.WrapError(
-				crgerrs.ErrCodec,
-				fmt.Sprintf("unable to cast %T to sdk.Msg, method: %s", unwrappedMsg.Request, unwrappedMsg.MethodName),
-			)
-		}
-
-		opName = proto.MessageName(msg)
-		if opName == "" {
-			return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("unrecognized message type: %T", msg))
-		}
-	}
 
 	meta, err := c.Meta(msg)
 	if err != nil {

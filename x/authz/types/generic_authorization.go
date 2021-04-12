@@ -24,7 +24,7 @@ func (authorization GenericAuthorization) MethodName() string {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization GenericAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (updated exported.Authorization, delete bool, err error) {
+func (authorization GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (updated exported.Authorization, delete bool, err error) {
 	return &authorization, false, nil
 }
 

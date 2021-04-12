@@ -77,14 +77,7 @@ func (msg *TestMsg) GetSigners() []sdk.AccAddress {
 }
 func (msg *TestMsg) ValidateBasic() error { return nil }
 
-var _ sdk.MsgRequest = &MsgCreateDog{}
+var _ sdk.Msg = &MsgCreateDog{}
 
 func (msg *MsgCreateDog) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{} }
 func (msg *MsgCreateDog) ValidateBasic() error         { return nil }
-
-func NewServiceMsgCreateDog(msg *MsgCreateDog) sdk.Msg {
-	return sdk.ServiceMsg{
-		MethodName: "/testdata.Msg/CreateDog",
-		Request:    msg,
-	}
-}

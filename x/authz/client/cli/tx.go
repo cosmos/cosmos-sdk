@@ -254,17 +254,7 @@ Example:
 			if err != nil {
 				return err
 			}
-			msgs := theTx.GetMsgs()
-			serviceMsgs := make([]sdk.ServiceMsg, len(msgs))
-			for i, msg := range msgs {
-				srvMsg, ok := msg.(sdk.ServiceMsg)
-				if !ok {
-					return fmt.Errorf("tx contains %T which is not a sdk.ServiceMsg", msg)
-				}
-				serviceMsgs[i] = srvMsg
-			}
-
-			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
+			msg := types.NewMsgExecAuthorized(grantee, theTx.GetMsgs())
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.ExecAuthorized(context.Background(), &msg)

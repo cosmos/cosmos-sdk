@@ -26,19 +26,7 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	anys := t.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
-		var msg sdk.Msg
-		if msgservice.IsServiceMsg(any.TypeUrl) {
-			req := any.GetCachedValue()
-			if req == nil {
-				panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
-			}
-			msg = sdk.ServiceMsg{
-				Request: any.GetCachedValue().(sdk.MsgRequest),
-			}
-		} else {
-			msg = any.GetCachedValue().(sdk.Msg)
-		}
-		res[i] = msg
+		res[i] = any.GetCachedValue().(sdk.Msg)
 	}
 	return res
 }
@@ -183,7 +171,7 @@ func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		// If the any's typeUrl contains 2 slashes, then we unpack the any into
 		// a ServiceMsg struct as per ADR-031.
 		if msgservice.IsServiceMsg(any.TypeUrl) {
-			var req sdk.MsgRequest
+			var req sdk.Msg
 			err := unpacker.UnpackAny(any, &req)
 			if err != nil {
 				return err

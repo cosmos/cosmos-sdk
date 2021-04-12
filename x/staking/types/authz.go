@@ -61,11 +61,11 @@ func (authorization StakeAuthorization) ValidateBasic() error {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (updated authz.Authorization, delete bool, err error) {
+func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (updated authz.Authorization, delete bool, err error) {
 	var validatorAddress string
 	var amount sdk.Coin
 
-	switch msg := msg.Request.(type) {
+	switch msg := msg.(type) {
 	case *MsgDelegate:
 		validatorAddress = msg.ValidatorAddress
 		amount = msg.Amount

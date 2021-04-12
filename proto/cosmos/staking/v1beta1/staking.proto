@@ -205,7 +205,7 @@ message UnbondingDelegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // entries are the unbonding delegation entries.
-  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
+  repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false];  // unbonding delegation entries
 }
 
 // UnbondingDelegationEntry defines an unbonding object with relevant metadata.
@@ -263,7 +263,7 @@ message Redelegation {
   // validator_dst_address is the validator redelegation destination operator address.
   string validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
   // entries are the redelegation entries.
-  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
+  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false];  // redelegation entries
 }
 
 // Params defines the parameters for the staking module.
@@ -283,7 +283,13 @@ message Params {
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
   // epoch_interval defines the length of a staking epoch in blocks
-  int64 epoch_interval = 6 [(gogoproto.moretags) = "yaml:\"epoch_interval\""];
+  // power_reduction is the amount of staking tokens required for 1 unit of consensus-engine power
+  string power_reduction = 6 [
+    (gogoproto.moretags)   = "yaml:\"power_reduction\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  int64 epoch_interval = 7 [(gogoproto.moretags) = "yaml:\"epoch_interval\""];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
@@ -304,7 +310,7 @@ message RedelegationEntryResponse {
   option (gogoproto.equal) = true;
 
   RedelegationEntry redelegation_entry = 1 [(gogoproto.nullable) = false];
-  string balance = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string            balance            = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // RedelegationResponse is equivalent to a Redelegation except that its entries

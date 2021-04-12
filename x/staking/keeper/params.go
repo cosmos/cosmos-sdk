@@ -45,6 +45,13 @@ func (k Keeper) EpochInterval(ctx sdk.Context) (res int64) {
 	return
 }
 
+// PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power
+// governance can update it on a running chain
+func (k Keeper) PowerReduction(ctx sdk.Context) (res sdk.Int) {
+	k.paramstore.Get(ctx, types.KeyPowerReduction, &res)
+	return
+}
+
 // Get all parameteras as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
@@ -53,6 +60,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MaxEntries(ctx),
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
+		k.PowerReduction(ctx),
 		k.EpochInterval(ctx),
 	)
 }

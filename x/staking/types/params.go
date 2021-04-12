@@ -41,6 +41,7 @@ var (
 	KeyMaxEntries        = []byte("MaxEntries")
 	KeyBondDenom         = []byte("BondDenom")
 	KeyHistoricalEntries = []byte("HistoricalEntries")
+	KeyPowerReduction    = []byte("PowerReduction")
 	KeyEpochInterval     = []byte("EpochInterval")
 )
 
@@ -52,7 +53,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, epochInterval int64) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, powerReduction sdk.Int, epochInterval int64) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
@@ -60,6 +61,7 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historica
 		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
 		EpochInterval:     epochInterval,
+		PowerReduction:    powerReduction,
 	}
 }
 
@@ -72,6 +74,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
 		paramtypes.NewParamSetPair(KeyEpochInterval, &p.EpochInterval, validateEpochInterval),
+		paramtypes.NewParamSetPair(KeyPowerReduction, &p.PowerReduction, ValidatePowerReduction),
 	}
 }
 
@@ -83,6 +86,7 @@ func DefaultParams() Params {
 		DefaultMaxEntries,
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
+		sdk.DefaultPowerReduction,
 		DefaultEpochInterval,
 	)
 }
@@ -207,6 +211,18 @@ func validateEpochInterval(i interface{}) error {
 
 	if v < 1 {
 		return fmt.Errorf("epoch interval should be positive integer")
+	}
+	return nil
+}
+
+func ValidatePowerReduction(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.LT(sdk.NewInt(1)) {
+		return fmt.Errorf("power reduction cannot be lower than 1")
 	}
 
 	return nil

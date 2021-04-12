@@ -13,6 +13,7 @@ The staking module contains the following parameters:
 | KeyMaxEntries     | uint16           | 7                 |
 | HistoricalEntries | uint16           | 3                 |
 | BondDenom         | string           | "stake"           |
+| PowerReduction    | string           | "1000000"         |
 | EpochInterval     | int64            | 10                |
 
 > Note: If the `EpochInterval` is set to 1, the messages will be executed at the end of each block.

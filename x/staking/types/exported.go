@@ -28,7 +28,7 @@ type ValidatorI interface {
 	GetConsAddr() (sdk.ConsAddress, error)                  // validation consensus address
 	GetTokens() sdk.Int                                     // validation tokens
 	GetBondedTokens() sdk.Int                               // validator bonded tokens
-	GetConsensusPower() int64                               // validation power in tendermint
+	GetConsensusPower(sdk.Int) int64                        // validation power in tendermint
 	GetCommission() sdk.Dec                                 // validator commission rate
 	GetMinSelfDelegation() sdk.Int                          // validator minimum self delegation
 	GetDelegatorShares() sdk.Dec                            // total outstanding delegator shares

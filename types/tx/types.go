@@ -33,8 +33,7 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 				panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
 			}
 			msg = sdk.ServiceMsg{
-				MethodName: any.TypeUrl,
-				Request:    any.GetCachedValue().(sdk.MsgRequest),
+				Request: any.GetCachedValue().(sdk.MsgRequest),
 			}
 		} else {
 			msg = any.GetCachedValue().(sdk.Msg)

@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	grpc "google.golang.org/grpc"
 
@@ -34,8 +32,7 @@ func (t *ServiceMsgClientConn) Invoke(_ context.Context, _ string, args, _ inter
 	}
 
 	t.msgs = append(t.msgs, sdk.ServiceMsg{
-		MethodName: proto.MessageName(req),
-		Request:    req,
+		Request: req,
 	})
 
 	return nil

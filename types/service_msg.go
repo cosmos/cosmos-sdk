@@ -22,8 +22,6 @@ type MsgRequest interface {
 // ServiceMsg is the struct into which an Any whose typeUrl matches a service
 // method format (ex. `/cosmos.gov.v1beta1.Msg/SubmitProposal`) unpacks.
 type ServiceMsg struct {
-	// MethodName is the fully-qualified service method name.
-	MethodName string
 	// Request is the request payload.
 	Request MsgRequest
 }
@@ -36,7 +34,7 @@ func (msg ServiceMsg) String() string { return "ServiceMsg" }
 
 // Route implements Msg.Route method.
 func (msg ServiceMsg) Route() string {
-	return msg.MethodName
+	return proto.MessageName(msg.Request)
 }
 
 // ValidateBasic implements Msg.ValidateBasic method.
@@ -66,5 +64,5 @@ func (msg ServiceMsg) GetSigners() []AccAddress {
 
 // Type implements Msg.Type method.
 func (msg ServiceMsg) Type() string {
-	return msg.MethodName
+	return proto.MessageName(msg.Request)
 }

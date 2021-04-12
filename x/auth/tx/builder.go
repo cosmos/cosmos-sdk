@@ -206,7 +206,7 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 		var err error
 		switch msg := msg.(type) {
 		case sdk.ServiceMsg:
-			anys[i], err = codectypes.NewAnyWithCustomTypeURL(msg.Request, msg.MethodName)
+			anys[i], err = codectypes.NewAnyWithValue(msg.Request)
 		default:
 			anys[i], err = codectypes.NewAnyWithValue(msg)
 		}

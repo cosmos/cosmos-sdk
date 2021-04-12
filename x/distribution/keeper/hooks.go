@@ -22,7 +22,7 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.k.initializeValidator(ctx, val)
 }
 
-// Cleanup for after validator is removed
+// AfterValidatorRemoved performs clean up after a validator is removed
 // It will only be removed after it has no more delegations.
 // All delegations must have ended, and all outstanding rewards withdrawn.
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {

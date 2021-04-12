@@ -128,7 +128,6 @@ func Migrate(stakingState v038staking.GenesisState) *GenesisState {
 			MaxEntries:        uint32(stakingState.Params.MaxEntries),
 			HistoricalEntries: uint32(stakingState.Params.HistoricalEntries),
 			BondDenom:         stakingState.Params.BondDenom,
-			EpochInterval:     v040staking.DefaultEpochInterval,
 		},
 		LastTotalPower:       stakingState.LastTotalPower,
 		LastValidatorPowers:  newLastValidatorPowers,

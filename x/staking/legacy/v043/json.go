@@ -31,6 +31,7 @@ func migrateParams(oldParams v040staking.Params) v043staking.Params {
 		oldParams.HistoricalEntries,
 		oldParams.BondDenom,
 		sdk.DefaultPowerReduction,
+		v043staking.DefaultGenesisState().Params.EpochInterval,
 	)
 }
 

@@ -10,7 +10,7 @@ func (suite *KeeperTestSuite) TestEpochSaveLoad() {
 	delAddr := suite.addrs[0]
 	valAddr := vals[0].GetOperator()
 
-	valTokens := sdk.TokensFromConsensusPower(100)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
 	validCoin := sdk.NewCoin(sdk.DefaultBondDenom, valTokens)
 
 	originMsg := types.NewMsgDelegate(delAddr, valAddr, validCoin)

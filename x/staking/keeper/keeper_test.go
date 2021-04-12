@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// have its order changed
 	sortedVals := make([]types.Validator, len(validators))
 	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals)
+	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators

@@ -90,6 +90,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8656](https://github.com/cosmos/cosmos-sdk/pull/8656) balance and supply are now correctly tracked via `coin_spent`, `coin_received`, `coinbase` and `burn` events.
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) Supply is now stored and tracked as `sdk.Coins`
 * (store) [\#8790](https://github.com/cosmos/cosmos-sdk/pull/8790) Reduce gas costs by 10x for transient store operations.
+* (x/staking) [\#8505](https://github.com/cosmos/cosmos-sdk/pull/8505) Convert staking power reduction into an on-chain parameter rather than a hardcoded in-code variable.
 * (x/bank) [\#9051](https://github.com/cosmos/cosmos-sdk/pull/9051) Supply value is stored as `sdk.Int` rather than `string`.
 
 ### Improvements

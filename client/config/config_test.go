@@ -8,11 +8,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
 const (
@@ -20,12 +21,13 @@ const (
 	testNode1 = "http://localhost:1"
 	testNode2 = "http://localhost:2"
 )
+
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
-		WithViper()
+		WithViper("")
 
 	clientCtx.Viper.BindEnv(nodeEnv)
 	if envVar != "" {
@@ -81,7 +83,7 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			clientCtx, cleanup := initClientContext(t, tc.envVar)	
+			clientCtx, cleanup := initClientContext(t, tc.envVar)
 			defer func() {
 				if tc.envVar != "" {
 					os.Unsetenv(nodeEnv)
@@ -89,17 +91,17 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 				cleanup()
 			}()
 			/*
-			env var is set with a flag
+				env var is set with a flag
 
-			NODE=http://localhost:1 ./build/simd q staking validators --node http://localhost:2
-			Error: post failed: Post "http://localhost:2": dial tcp 127.0.0.1:2: connect: connection refused
-			
-			We dial http://localhost:2 cause a flag has the higher priority than env variable.
+				NODE=http://localhost:1 ./build/simd q staking validators --node http://localhost:2
+				Error: post failed: Post "http://localhost:2": dial tcp 127.0.0.1:2: connect: connection refused
+
+				We dial http://localhost:2 cause a flag has the higher priority than env variable.
 			*/
 			cmd := cli.GetQueryCmd()
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.expNode, "Output does not contain expected Node") 
+			require.Contains(t, err.Error(), tc.expNode, "Output does not contain expected Node")
 		})
 	}
 }

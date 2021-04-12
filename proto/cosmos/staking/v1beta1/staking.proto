@@ -282,6 +282,12 @@ message Params {
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  // power_reduction is the amount of staking tokens required for 1 unit of consensus-engine power
+  string power_reduction = 6 [
+    (gogoproto.moretags) = "yaml:\"power_reduction\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

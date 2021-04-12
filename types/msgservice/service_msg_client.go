@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	grpc "google.golang.org/grpc"
 
@@ -21,9 +23,9 @@ type ServiceMsgClientConn struct {
 
 // Invoke implements the grpc ClientConn.Invoke method
 func (t *ServiceMsgClientConn) Invoke(_ context.Context, _ string, args, _ interface{}, _ ...grpc.CallOption) error {
-	req, ok := args.(sdk.Msg)
+	req, ok := args.(sdk.MsgRequest)
 	if !ok {
-		return fmt.Errorf("%T should implement %T", args, (*sdk.Msg)(nil))
+		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
 	}
 
 	err := req.ValidateBasic()
@@ -31,7 +33,10 @@ func (t *ServiceMsgClientConn) Invoke(_ context.Context, _ string, args, _ inter
 		return err
 	}
 
-	t.msgs = append(t.msgs, req)
+	t.msgs = append(t.msgs, sdk.ServiceMsg{
+		MethodName: proto.MessageName(req),
+		Request:    req,
+	})
 
 	return nil
 }

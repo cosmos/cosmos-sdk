@@ -2,11 +2,22 @@ package types
 
 import (
 	"fmt"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 // MsgRequest is the interface a transaction message, defined as a proto
 // service method, must fulfill.
-type MsgRequest = Msg
+type MsgRequest interface {
+	proto.Message
+	// ValidateBasic does a simple validation check that
+	// doesn't require access to any other information.
+	ValidateBasic() error
+	// Signers returns the addrs of signers that must sign.
+	// CONTRACT: All signatures must be present to be valid.
+	// CONTRACT: Returns addrs in some deterministic order.
+	GetSigners() []AccAddress
+}
 
 // ServiceMsg is the struct into which an Any whose typeUrl matches a service
 // method format (ex. `/cosmos.gov.v1beta1.Msg/SubmitProposal`) unpacks.
@@ -40,7 +51,7 @@ func (msg ServiceMsg) GetSignBytes() []byte {
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/8346
 	// If `msg` is a service Msg, then we cast its `Request` to a sdk.Msg
 	// and call GetSignBytes on the `Request`.
-	msgRequest, ok := msg.Request.(LegacyMsg)
+	msgRequest, ok := msg.Request.(Msg)
 	if !ok {
 		panic(fmt.Errorf("cannot convert ServiceMsg request to sdk.Msg, got %T", msgRequest))
 	}

@@ -709,31 +709,23 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			err       error
 		)
 
-		msgType := proto.MessageName(msg)
-
-		if handler := app.msgServiceRouter.Handler(msgType); handler != nil {
-			// ADR 031 request type routing
-			msgResult, err = handler(ctx, msg)
-		} else if svcMsg, ok := msg.(sdk.ServiceMsg); ok {
-			// deprecated ADR 031 method name routing
+		if svcMsg, ok := msg.(sdk.ServiceMsg); ok {
 			msgFqName = svcMsg.MethodName
 			handler := app.msgServiceRouter.Handler(msgFqName)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message service method: %s; message index: %d", msgFqName, i)
 			}
 			msgResult, err = handler(ctx, svcMsg.Request)
-		} else if legacyMsg, ok := msg.(sdk.LegacyMsg); ok {
+		} else {
 			// legacy sdk.Msg routing
-			msgRoute := legacyMsg.Route()
-			msgFqName = legacyMsg.Type()
+			msgRoute := msg.Route()
+			msgFqName = msg.Type()
 			handler := app.router.Route(ctx, msgRoute)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 			}
 
 			msgResult, err = handler(ctx, msg)
-		} else {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
 
 		if err != nil {
@@ -751,7 +743,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: msgType, Data: msgResult.Data})
+		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: msg.Type(), Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 

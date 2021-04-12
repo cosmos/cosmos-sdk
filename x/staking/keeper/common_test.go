@@ -55,5 +55,6 @@ func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccA
 	coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
 	app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, types.EpochDelegationPoolName, coins)
 	_, err := app.StakingKeeper.Delegate(ctx, addr, amount, types.Unbonded, val, true)
+
 	return err
 }

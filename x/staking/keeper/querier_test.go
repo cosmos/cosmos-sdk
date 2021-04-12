@@ -225,7 +225,7 @@ func TestQueryDelegation(t *testing.T) {
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
 
 	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delTokens, types.Unbonded, val1, true)
+	err := delegateCoinsFromAccount(ctx, app, addrAcc2, delTokens, val1)
 	require.NoError(t, err)
 
 	// apply TM updates
@@ -473,7 +473,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 		}
 
 		delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
-		_, err := app.StakingKeeper.Delegate(ctx, addr, delTokens, types.Unbonded, validator, true)
+		err := delegateCoinsFromAccount(ctx, app, addr, delTokens, validator)
 		require.NoError(t, err)
 	}
 
@@ -552,7 +552,7 @@ func TestQueryRedelegations(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 
 	delAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc2, delAmount, types.Unbonded, val1, true)
+	err := delegateCoinsFromAccount(ctx, app, addrAcc2, delAmount, val1)
 	require.NoError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
@@ -623,7 +623,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 
 	// delegate
 	delAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
-	_, err := app.StakingKeeper.Delegate(ctx, addrAcc1, delAmount, types.Unbonded, val1, true)
+	err := delegateCoinsFromAccount(ctx, app, addrAcc1, delAmount, val1)
 	require.NoError(t, err)
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 

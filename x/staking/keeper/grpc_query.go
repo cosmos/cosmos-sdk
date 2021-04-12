@@ -153,6 +153,7 @@ func (k Querier) ValidatorUnbondingDelegations(c context.Context, req *types.Que
 
 	srcValPrefix := types.GetUBDsByValIndexKey(valAddr)
 	ubdStore := prefix.NewStore(store, srcValPrefix)
+
 	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key []byte, value []byte) error {
 		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
 		storeValue := store.Get(storeKey)
@@ -183,6 +184,7 @@ func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest
 	if req.DelegatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
+
 	if req.ValidatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
@@ -691,6 +693,10 @@ func (k Querier) QueuedMsgDelegate(c context.Context, req *types.QueryQueuedMsgD
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.DelegatorAddr == "" {
+		return nil, status.Error(codes.InvalidArgument, "account address cannot be empty")
+	}
+
 	var msgDelegates []types.MsgDelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -753,6 +759,10 @@ func (k Querier) QueuedMsgBeginRedelegates(c context.Context, req *types.QueryQu
 func (k Querier) QueuedMsgBeginRedelegate(c context.Context, req *types.QueryQueuedMsgBeginRedelegateRequest) (*types.QueryQueuedMsgBeginRedelegateResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.DelegatorAddr == "" {
+		return nil, status.Error(codes.InvalidArgument, "account address cannot be empty")
 	}
 
 	var msgDelegates []types.MsgBeginRedelegate

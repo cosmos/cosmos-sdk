@@ -40,6 +40,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 2
 
 	s.cfg = cfg
+	s.cfg.TimeoutCommit = 600 * time.Millisecond
 	s.network = network.New(s.T(), cfg)
 
 	_, err := s.network.WaitForHeight(1)

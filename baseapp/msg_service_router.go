@@ -50,13 +50,35 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
 
+		var requestTypeName string
+
+		// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
+		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
+		// We use a no-op interceptor to avoid actually calling into the handler itself.
+		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
+			msg, ok := i.(proto.Message)
+			if !ok {
+				// We panic here because there is no other alternative and the app cannot be initialized correctly
+				// this should only happen if there is a problem with code generation in which case the app won't
+				// work correctly anyway.
+				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
+			}
+
+			msgName := proto.MessageName(msg)
+			requestTypeName = fmt.Sprintf("/%s", msgName)
+			return nil
+		}, func(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
+			return nil, nil
+		},
+		)
+
 		// Check that the service Msg fully-qualified method name has already
 		// been registered (via RegisterInterfaces). If the user registers a
 		// service without registering according service Msg type, there might be
 		// some unexpected behavior down the road. Since we can't return an error
 		// (`Server.RegisterService` interface restriction) we panic (at startup).
-		serviceMsg, err := msr.interfaceRegistry.Resolve(fqMethod)
-		if err != nil || serviceMsg == nil {
+		reqType, err := msr.interfaceRegistry.Resolve(requestTypeName)
+		if err != nil || reqType == nil {
 			panic(
 				fmt.Errorf(
 					"type_url %s has not been registered yet. "+
@@ -83,7 +105,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			)
 		}
 
-		msr.routes[fqMethod] = func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error) {
+		handler := func(ctx sdk.Context, req sdk.MsgRequest) (*sdk.Result, error) {
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
 			interceptor := func(goCtx context.Context, _ interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 				goCtx = context.WithValue(goCtx, sdk.SdkContextKey, ctx)
@@ -103,6 +125,10 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 
 			return sdk.WrapServiceResult(ctx, resMsg, err)
 		}
+
+		msr.routes[requestTypeName] = handler
+		// we register a handler for the fully-qualified type URL for cases where
+		msr.routes[fqMethod] = handler
 	}
 }
 

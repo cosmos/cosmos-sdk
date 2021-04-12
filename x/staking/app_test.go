@@ -40,8 +40,8 @@ func checkDelegation(
 }
 
 func TestStakingMsgs(t *testing.T) {
-	genTokens := sdk.TokensFromConsensusPower(42)
-	bondTokens := sdk.TokensFromConsensusPower(10)
+	genTokens := sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
+	bondTokens := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
 

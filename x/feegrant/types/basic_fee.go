@@ -19,7 +19,10 @@ var _ FeeAllowanceI = (*BasicFeeAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
-func (a *BasicFeeAllowance) Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (bool, error) {
+func (a *BasicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+	blockTime := ctx.BlockTime()
+	blockHeight := ctx.BlockHeight()
+
 	if a.Expiration.IsExpired(&blockTime, blockHeight) {
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}

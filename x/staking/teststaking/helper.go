@@ -40,7 +40,7 @@ func (sh *Helper) CreateValidator(addr sdk.ValAddress, pk cryptotypes.PubKey, st
 // CreateValidatorWithValPower calls handler to create a new staking validator with zero
 // commission
 func (sh *Helper) CreateValidatorWithValPower(addr sdk.ValAddress, pk cryptotypes.PubKey, valPower int64, ok bool) sdk.Int {
-	amount := sdk.TokensFromConsensusPower(valPower)
+	amount := sh.k.TokensFromConsensusPower(sh.Ctx, valPower)
 	coin := sdk.NewCoin(sh.Denom, amount)
 	sh.createValidator(addr, pk, coin, ok)
 	return amount
@@ -69,7 +69,7 @@ func (sh *Helper) Delegate(delegator sdk.AccAddress, val sdk.ValAddress, amount 
 
 // DelegateWithPower calls handler to delegate stake for a validator
 func (sh *Helper) DelegateWithPower(delegator sdk.AccAddress, val sdk.ValAddress, power int64) {
-	coin := sdk.NewCoin(sh.Denom, sdk.TokensFromConsensusPower(power))
+	coin := sdk.NewCoin(sh.Denom, sh.k.TokensFromConsensusPower(sh.Ctx, power))
 	msg := stakingtypes.NewMsgDelegate(delegator, val, coin)
 	sh.Handle(msg, true)
 }

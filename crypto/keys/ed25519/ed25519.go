@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/hdevalence/ed25519consensus"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 
@@ -175,9 +176,11 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 		return false
 	}
 
-	return ed25519.Verify(pubKey.Key, msg, sig)
+	// uses https://github.com/hdevalence/ed25519consensus.Verify to comply with zip215 verification rules
+	return ed25519consensus.Verify(pubKey.Key, msg, sig)
 }
 
+// String returns Hex representation of a pubkey with it's type
 func (pubKey *PubKey) String() string {
 	return fmt.Sprintf("PubKeyEd25519{%X}", pubKey.Key)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -21,12 +22,13 @@ import (
 
 func (suite *AnteTestSuite) TestSetPubKey() {
 	suite.SetupTest(true) // setup
+	require := suite.Require()
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	// keys and addresses
 	priv1, pub1, addr1 := testdata.KeyTestPubAddr()
 	priv2, pub2, addr2 := testdata.KeyTestPubAddr()
-	priv3, pub3, addr3 := testdata.KeyTestPubAddr()
+	priv3, pub3, addr3 := testdata.KeyTestPubAddrSecp256R1(require)
 
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 	pubs := []cryptotypes.PubKey{pub1, pub2, pub3}
@@ -35,32 +37,30 @@ func (suite *AnteTestSuite) TestSetPubKey() {
 	// set accounts and create msg for each address
 	for i, addr := range addrs {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		suite.Require().NoError(acc.SetAccountNumber(uint64(i)))
+		require.NoError(acc.SetAccountNumber(uint64(i)))
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 		msgs[i] = testdata.NewTestMsg(addr)
 	}
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msgs...))
-
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
+	require.NoError(suite.txBuilder.SetMsgs(msgs...))
+	suite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
 	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
+	require.NoError(err)
 
 	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
 	antehandler := sdk.ChainAnteDecorators(spkd)
 
 	ctx, err := antehandler(suite.ctx, tx, false)
-	suite.Require().Nil(err)
+	require.NoError(err)
 
 	// Require that all accounts have pubkey set after Decorator runs
 	for i, addr := range addrs {
 		pk, err := suite.app.AccountKeeper.GetPubKey(ctx, addr)
-		suite.Require().Nil(err, "Error on retrieving pubkey from account")
-		suite.Require().Equal(pubs[i], pk, "Pubkey retrieved from account is unexpected")
+		require.NoError(err, "Error on retrieving pubkey from account")
+		require.True(pubs[i].Equals(pk),
+			"Wrong Pubkey retrieved from AccountKeeper, idx=%d\nexpected=%s\n     got=%s", i, pubs[i], pk)
 	}
 }
 
@@ -69,6 +69,8 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	msg := []byte{1, 2, 3, 4}
 	cdc := simapp.MakeTestEncodingConfig().Amino
 
+	p := types.DefaultParams()
+	skR1, _ := secp256r1.GenPrivKey()
 	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
 	multisigKey1 := kmultisig.NewLegacyAminoPubKey(2, pkSet1)
 	multisignature1 := multisig.NewMultisig(len(pkSet1))
@@ -93,8 +95,9 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 		gasConsumed uint64
 		shouldErr   bool
 	}{
-		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, types.DefaultSigVerifyCostSecp256k1, false},
+		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
+		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
+		{"PubKeySecp256r1", args{sdk.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
 		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
 		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
@@ -200,7 +203,18 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(txConfig)
 
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, ante.DefaultSigVerificationGasConsumer, txConfig.SignModeHandler())
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   suite.app.AccountKeeper,
+			BankKeeper:      suite.app.BankKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			SignModeHandler: txConfig.SignModeHandler(),
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.anteHandler = anteHandler
 
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

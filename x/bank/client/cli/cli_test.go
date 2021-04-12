@@ -40,6 +40,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	bankGenesis.DenomMetadata = []types.Metadata{
 		{
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
 			Description: "The native staking token of the Cosmos Hub.",
 			DenomUnits: []*types.DenomUnit{
 				{
@@ -57,6 +59,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			Display: "atom",
 		},
 		{
+			Name:        "Ethereum",
+			Symbol:      "ETH",
 			Description: "Ethereum mainnet token",
 			DenomUnits: []*types.DenomUnit{
 				{
@@ -183,7 +187,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				Supply: sdk.NewCoins(
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
 					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
-				)},
+				),
+				Pagination: &query.PageResponse{Total: 2},
+			},
 		},
 		{
 			name: "total supply of a specific denomination",
@@ -246,6 +252,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 			expected: &types.QueryDenomsMetadataResponse{
 				Metadatas: []types.Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*types.DenomUnit{
 							{
@@ -263,6 +271,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 						Display: "atom",
 					},
 					{
+						Name:        "Ethereum",
+						Symbol:      "ETH",
 						Description: "Ethereum mainnet token",
 						DenomUnits: []*types.DenomUnit{
 							{
@@ -293,6 +303,8 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDenomsMetadata() {
 			respType: &types.QueryDenomMetadataResponse{},
 			expected: &types.QueryDenomMetadataResponse{
 				Metadata: types.Metadata{
+					Name:        "Cosmos Hub Atom",
+					Symbol:      "ATOM",
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{

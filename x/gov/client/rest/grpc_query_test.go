@@ -119,10 +119,11 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		expErr  bool
+		name             string
+		url              string
+		headers          map[string]string
+		wantNumProposals int
+		expErr           bool
 	}{
 		{
 			"get proposals with height 1",
@@ -130,12 +131,21 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
+			0,
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals", val.APIAddress),
 			map[string]string{},
+			3,
+			false,
+		},
+		{
+			"valid request with filter by status",
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals?proposal_status=1", val.APIAddress),
+			map[string]string{},
+			1,
 			false,
 		},
 	}
@@ -153,7 +163,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 				s.Require().Empty(proposals.Proposals)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(proposals.Proposals, 3)
+				s.Require().Len(proposals.Proposals, tc.wantNumProposals)
 			}
 		})
 	}

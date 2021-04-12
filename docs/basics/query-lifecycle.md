@@ -38,6 +38,18 @@ The CLI understands a specific set of commands, defined in a hierarchical struct
 
 ### gRPC
 
+::: warning
+A patch introduced in `go-grpc v1.34.0` made gRPC incompatible with the `gogoproto` library, making some [gRPC queries](https://github.com/cosmos/cosmos-sdk/issues/8426) panic. As such, the SDK requires that `go-grpc <=v1.33.2` is installed in your `go.mod`.
+
+To make sure that gRPC is working properly, it is **highly recommended** to add the following line in your application's `go.mod`:
+
+```
+replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
+```
+
+Please see [issue #8392](https://github.com/cosmos/cosmos-sdk/issues/8392) for more info.
+:::
+
 Another interface through which users can make queries, introduced in Cosmos SDK v0.40, is [gRPC](https://grpc.io) requests to a [gRPC server](../core/grpc_rest.md#grpc-server). The endpoints are defined as [Protocol Buffers](https://developers.google.com/protocol-buffers) service methods inside `.proto` files, written in Protobuf's own language-agnostic interface definition language (IDL). The Protobuf ecosystem developed tools for code-generation from `*.proto` files into various languages. These tools allow to build gRPC clients easily.
 
 One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC request for `MyQuery` using this client looks like:

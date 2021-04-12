@@ -1,10 +1,12 @@
 package types_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -29,7 +31,7 @@ func TestBalanceValidate(t *testing.T) {
 			bank.Balance{
 				Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
 			},
-			true,
+			false,
 		},
 		{
 			"dup coins",
@@ -100,4 +102,80 @@ func TestBalance_GetAddress(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSanitizeBalances(t *testing.T) {
+	// 1. Generate balances
+	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
+	coin := sdk.NewCoin("benchcoin", tokens)
+	coins := sdk.Coins{coin}
+	addrs, _ := makeRandomAddressesAndPublicKeys(20)
+
+	var balances []bank.Balance
+	for _, addr := range addrs {
+		balances = append(balances, bank.Balance{
+			Address: addr.String(),
+			Coins:   coins,
+		})
+	}
+	// 2. Sort the values.
+	sorted := bank.SanitizeGenesisBalances(balances)
+
+	// 3. Compare and ensure that all the values are sorted in ascending order.
+	// Invariant after sorting:
+	//    a[i] <= a[i+1...n]
+	for i := 0; i < len(sorted); i++ {
+		ai := sorted[i]
+		// Ensure that every single value that comes after i is less than it.
+		for j := i + 1; j < len(sorted); j++ {
+			aj := sorted[j]
+
+			if got := bytes.Compare(ai.GetAddress(), aj.GetAddress()); got > 0 {
+				t.Errorf("Balance(%d) > Balance(%d)", i, j)
+			}
+		}
+	}
+}
+
+func makeRandomAddressesAndPublicKeys(n int) (accL []sdk.AccAddress, pkL []*ed25519.PubKey) {
+	for i := 0; i < n; i++ {
+		pk := ed25519.GenPrivKey().PubKey().(*ed25519.PubKey)
+		pkL = append(pkL, pk)
+		accL = append(accL, sdk.AccAddress(pk.Address()))
+	}
+	return accL, pkL
+}
+
+var sink, revert interface{}
+
+func BenchmarkSanitizeBalances500(b *testing.B) {
+	benchmarkSanitizeBalances(b, 500)
+}
+
+func BenchmarkSanitizeBalances1000(b *testing.B) {
+	benchmarkSanitizeBalances(b, 1000)
+}
+
+func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
+	b.ReportAllocs()
+	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
+	coin := sdk.NewCoin("benchcoin", tokens)
+	coins := sdk.Coins{coin}
+	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var balances []bank.Balance
+		for _, addr := range addrs {
+			balances = append(balances, bank.Balance{
+				Address: addr.String(),
+				Coins:   coins,
+			})
+		}
+		sink = bank.SanitizeGenesisBalances(balances)
+	}
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = revert
 }

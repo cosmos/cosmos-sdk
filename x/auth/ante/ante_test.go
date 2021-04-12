@@ -482,7 +482,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 		{
 			"signer as enough funds, should pass",
 			func() {
-				accNums = []uint64{7}
+				accNums = []uint64{acc1.GetAccountNumber()}
+
 				modAcc := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 
 				suite.Require().True(suite.app.BankKeeper.GetAllBalances(suite.ctx, modAcc.GetAddress()).Empty())
@@ -511,6 +512,7 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
@@ -901,8 +903,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 	pubkeys = make([]cryptotypes.PubKey, n)
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
-		var privkey cryptotypes.PrivKey
-		privkey = secp256k1.GenPrivKey()
+		var privkey cryptotypes.PrivKey = secp256k1.GenPrivKey()
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
@@ -1009,15 +1010,26 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	suite.SetupTest(false) // setup
 
 	// setup an ante handler that only accepts PubKeyEd25519
-	suite.anteHandler = ante.NewAnteHandler(suite.app.AccountKeeper, suite.app.BankKeeper, func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
-		switch pubkey := sig.PubKey.(type) {
-		case *ed25519.PubKey:
-			meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
-			return nil
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
-		}
-	}, suite.clientCtx.TxConfig.SignModeHandler())
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   suite.app.AccountKeeper,
+			BankKeeper:      suite.app.BankKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
+			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
+				switch pubkey := sig.PubKey.(type) {
+				case *ed25519.PubKey:
+					meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+					return nil
+				default:
+					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+				}
+			},
+		},
+	)
+
+	suite.Require().NoError(err)
+	suite.anteHandler = anteHandler
 
 	// Same data for every test cases
 	accounts := suite.CreateTestAccounts(1)

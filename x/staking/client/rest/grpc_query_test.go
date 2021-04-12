@@ -4,11 +4,16 @@ package rest_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +51,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = stakingtestutil.MsgRedelegateExec(val.ClientCtx, val.Address, val.ValAddress, val2.ValAddress, unbond)
+	_, err = stakingtestutil.MsgRedelegateExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		val2.ValAddress,
+		unbond,
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 254000),
+	) // expected gas is 202987
+
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -330,7 +343,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
-
+			s.T().Logf("%s", resp)
 			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
 
 			if tc.error {
@@ -399,6 +412,35 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestQueryDelegationsResponseCode() {
+	val := s.network.Validators[0]
+
+	// Create new account in the keyring.
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+
+	s.T().Log("expect 404 error for address without delegations")
+	res, statusCode, err := getRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", val.APIAddress, newAddr.String()))
+	s.Require().NoError(err)
+	s.Require().Contains(string(res), "\"code\": 5")
+	s.Require().Equal(404, statusCode)
+}
+
+func getRequest(url string) ([]byte, int, error) {
+	res, err := http.Get(url) // nolint:gosec
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, res.StatusCode, err
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, res.StatusCode, err
+	}
+
+	return body, res.StatusCode, nil
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {

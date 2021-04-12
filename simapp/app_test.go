@@ -218,7 +218,6 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	// modules, we put their latest ConsensusVersion to skip migrations.
 	_, err := app.mm.RunMigrations(ctx, app.configurator,
 		module.VersionMap{
-			"mock":         0,
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
 			"authz":        authz.AppModule{}.ConsensusVersion(),

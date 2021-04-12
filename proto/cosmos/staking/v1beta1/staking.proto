@@ -117,6 +117,8 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+  // active is true if the validator is in the validator set
+  bool active = 12;
 }
 
 // BondStatus is the status of a validator.
@@ -131,8 +133,6 @@ enum BondStatus {
   BOND_STATUS_UNBONDING = 2 [(gogoproto.enumvalue_customname) = "Unbonding"];
   // BONDED defines a validator that is bonded.
   BOND_STATUS_BONDED = 3 [(gogoproto.enumvalue_customname) = "Bonded"];
-  // PENDING defines a validator that is waiting to enter the validator pool.
-  BOND_STATUS_PENDING = 4 [(gogoproto.enumvalue_customname) = "Pending"];
 }
 
 // ValAddresses defines a repeated set of validator addresses.

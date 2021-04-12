@@ -163,11 +163,6 @@ func UnmarshalValidator(cdc codec.BinaryMarshaler, value []byte) (v Validator, e
 	return v, err
 }
 
-// IsPending checks if the validator status equals Pending
-func (v Validator) IsPending() bool {
-	return v.GetStatus() == Pending
-}
-
 // IsBonded checks if the validator status equals Bonded
 func (v Validator) IsBonded() bool {
 	return v.GetStatus() == Bonded
@@ -370,6 +365,12 @@ func (v Validator) PotentialConsensusPower() int64 {
 // to reflect the new status
 func (v Validator) UpdateStatus(newStatus BondStatus) Validator {
 	v.Status = newStatus
+	return v
+}
+
+// SetActive updates the "active" value on a validator
+func (v Validator) SetActive(active bool) Validator {
+	v.Active = active
 	return v
 }
 

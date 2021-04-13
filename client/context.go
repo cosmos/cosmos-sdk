@@ -205,6 +205,19 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
+<<<<<<< HEAD
+=======
+// WithViper returns the context with Viper field. This Viper instance is used to read
+// client-side config from the config file.
+func (ctx Context) WithViper(prefix string) Context {
+	v := viper.New()
+	v.SetEnvPrefix(prefix)
+	v.AutomaticEnv()
+	ctx.Viper = v
+	return ctx
+}
+
+>>>>>>> a465ae182... Add env variable to cmd flags (#9040)
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))

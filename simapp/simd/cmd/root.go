@@ -46,7 +46,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
+<<<<<<< HEAD
 		WithHomeDir(simapp.DefaultNodeHome)
+=======
+		WithHomeDir(simapp.DefaultNodeHome).
+		WithViper("") // In simapp, we don't use any prefix for env variables.
+>>>>>>> a465ae182... Add env variable to cmd flags (#9040)
 
 	rootCmd := &cobra.Command{
 		Use:   "simd",

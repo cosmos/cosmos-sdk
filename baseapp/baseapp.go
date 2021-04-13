@@ -591,7 +591,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
 			err, result = processRecovery(r, recoveryMW), nil
 		}
-
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
 	}()
 
@@ -717,17 +716,19 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			}
 			msgResult, err = handler(ctx, svcMsg.Request)
 		} else {
-			/*
-				// legacy sdk.Msg routing
-				msgRoute := msg.Route()
-				msgFqName = msg.Type()
-				handler := app.router.Route(ctx, msgRoute)
-				if handler == nil {
-					return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
-				}
+			// legacy sdk.Msg routing
+			legacyMsg, ok := msg.(sdk.LegacyMsg)
+			if !ok {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message type: %T", msg)
+			}
+			msgRoute := legacyMsg.Route()
+			msgFqName = legacyMsg.Type()
+			handler := app.router.Route(ctx, msgRoute)
+			if handler == nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+			}
 
-				msgResult, err = handler(ctx, msg)
-			*/
+			msgResult, err = handler(ctx, msg)
 		}
 
 		if err != nil {

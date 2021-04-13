@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -59,7 +61,7 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			var depMsg *types.MsgDeposit
-			if msg.Type() == types.TypeSvcMsgDeposit {
+			if proto.MessageName(msg) == types.TypeSvcMsgDeposit {
 				depMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
 			} else if protoDepMsg, ok := msg.(*types.MsgDeposit); ok {
 				depMsg = protoDepMsg
@@ -126,7 +128,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 		for _, info := range searchResult.Txs {
 			for _, msg := range info.GetTx().GetMsgs() {
 				var voteMsg *types.MsgVote
-				if msg.Type() == types.TypeSvcMsgVote {
+				if proto.MessageName(msg) == types.TypeSvcMsgVote {
 					voteMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
 				} else if protoVoteMsg, ok := msg.(*types.MsgVote); ok {
 					voteMsg = protoVoteMsg
@@ -141,7 +143,7 @@ func QueryVotesByTxQuery(clientCtx client.Context, params types.QueryProposalVot
 				}
 
 				var voteWeightedMsg *types.MsgVoteWeighted
-				if msg.Type() == types.TypeSvcMsgVoteWeighted {
+				if proto.MessageName(msg) == types.TypeSvcMsgVoteWeighted {
 					voteWeightedMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVoteWeighted)
 				} else if protoVoteWeightedMsg, ok := msg.(*types.MsgVoteWeighted); ok {
 					voteWeightedMsg = protoVoteWeightedMsg
@@ -214,7 +216,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 		for _, msg := range info.GetTx().GetMsgs() {
 			var voteMsg *types.MsgVote
 			// there should only be a single vote under the given conditions
-			if msg.Type() == types.TypeSvcMsgVote {
+			if proto.MessageName(msg) == types.TypeSvcMsgVote {
 				voteMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgVote)
 			} else if protoVoteMsg, ok := msg.(*types.MsgVote); ok {
 				voteMsg = protoVoteMsg
@@ -233,7 +235,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 				}
 
 				return bz, nil
-			} else if msg.Type() == types.TypeMsgVoteWeighted {
+			} else if proto.MessageName(msg) == types.TypeMsgVoteWeighted {
 				voteMsg := msg.(*types.MsgVoteWeighted)
 
 				vote := types.Vote{
@@ -281,7 +283,7 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 		for _, msg := range info.GetTx().GetMsgs() {
 			var depMsg *types.MsgDeposit
 			// there should only be a single deposit under the given conditions
-			if msg.Type() == types.TypeSvcMsgDeposit {
+			if proto.MessageName(msg) == types.TypeSvcMsgDeposit {
 				depMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgDeposit)
 			} else if protoDepMsg, ok := msg.(*types.MsgDeposit); ok {
 				depMsg = protoDepMsg
@@ -331,7 +333,7 @@ func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Propos
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
-			if msg.Type() == types.TypeSvcMsgSubmitProposal {
+			if proto.MessageName(msg) == types.TypeSvcMsgSubmitProposal {
 				subMsg := msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
 
 				return NewProposer(proposalID, subMsg.Proposer), nil

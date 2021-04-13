@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -157,6 +158,7 @@ var errPanicWithMsg = Wrapf(ErrPanic, "panic message redacted to hide potentiall
 // generic internal error instance. If the error is an ABCI Error, that error is
 // simply returned.
 func Redact(err error) error {
+	log.Printf("PANICKING CAUSE: %s", err)
 	if ErrPanic.Is(err) {
 		return errPanicWithMsg
 	}

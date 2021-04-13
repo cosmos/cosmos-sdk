@@ -584,7 +584,7 @@ func NewPermanentLockedVestingAccountRaw(bva *BaseVestingAccount) *PermanentLock
 }
 
 // NewPermanentLockedVestingAccount returns a PermanentLockedVestingAccount
-func NewPermanentLockedVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins) *PermanentLockedVestingAccount {
+func NewPermanentLockedVestingAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) *PermanentLockedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: originalVesting,

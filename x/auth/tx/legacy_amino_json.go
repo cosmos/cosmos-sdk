@@ -47,13 +47,9 @@ func (s signModeLegacyAminoJSONHandler) GetSignBytes(mode signingtypes.SignMode,
 	}
 
 	// get legacy msgs
-	legacyMsgs := make([]sdk.LegacyMsg, len(tx.GetMsgs()))
-	for i, msg := range tx.GetMsgs() {
-		legacyMsg, ok := msg.(sdk.LegacyMsg)
-		if !ok {
-			return nil, fmt.Errorf("message %T cannot be signed via %s", msg, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-		}
-		legacyMsgs[i] = legacyMsg
+	legacyMsgs, err := legacytx.MsgToLegacyMsg(tx.GetMsgs())
+	if err != nil {
+
 	}
 
 	return legacytx.StdSignBytes(

@@ -1,6 +1,8 @@
 package legacytx
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -19,6 +21,19 @@ var (
 
 	_ codectypes.UnpackInterfacesMessage = (*StdSignature)(nil)
 )
+
+// MsgToLegacyMsg attempts to convert the given array of messages to legacy msgs
+func MsgToLegacyMsg(msgs []sdk.Msg) ([]sdk.LegacyMsg, error) {
+	legacyMsgs := make([]sdk.LegacyMsg, len(msgs))
+	for i, msg := range msgs {
+		legacyMsg, ok := msg.(sdk.LegacyMsg)
+		if !ok {
+			return nil, fmt.Errorf("unable to convert sdk.Msg of type %T at index %d to LegacyMsg", msg, i)
+		}
+		legacyMsgs[i] = legacyMsg
+	}
+	return legacyMsgs, nil
+}
 
 // StdFee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",

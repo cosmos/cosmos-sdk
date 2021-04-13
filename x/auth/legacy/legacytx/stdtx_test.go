@@ -40,8 +40,13 @@ func NewTestStdFee() StdFee {
 // Deprecated, use TxBuilder.
 func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []cryptotypes.PrivKey, accNums []uint64, seqs []uint64, timeout uint64, fee StdFee) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
+	// if invalid we set this to an empty list of msgs
+	legacyMsgs, err := MsgToLegacyMsg(msgs)
+	if err != nil {
+		legacyMsgs = []sdk.LegacyMsg{}
+	}
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], timeout, fee, msgs, "")
+		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], timeout, fee, legacyMsgs, "")
 
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
@@ -96,7 +101,9 @@ func TestStdSignBytes(t *testing.T) {
 		},
 	}
 	for i, tc := range tests {
-		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.timeoutHeight, tc.args.fee, tc.args.msgs, tc.args.memo))
+		legacyMsgs, err := MsgToLegacyMsg(tc.args.msgs)
+		require.NoError(t, err)
+		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.timeoutHeight, tc.args.fee, legacyMsgs, tc.args.memo))
 		require.Equal(t, tc.want, got, "Got unexpected result on test case i: %d", i)
 	}
 }

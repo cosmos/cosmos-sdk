@@ -44,13 +44,9 @@ func (stdTxSignModeHandler) GetSignBytes(mode signingtypes.SignMode, data signin
 
 	// we try to convert each message to sdk.LegacyMsg, if it's not possible
 	// then we refuse the tx as it cannot be verified by SIGN_MODE_LEGACY_AMINO_JSON
-	legacyMsgs := make([]sdk.LegacyMsg, len(tx.GetMsgs()))
-	for i, msg := range tx.GetMsgs() {
-		legacyMsg, ok := msg.(sdk.LegacyMsg)
-		if !ok {
-			return nil, fmt.Errorf("message %T cannot be signed via %s", msg, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-		}
-		legacyMsgs[i] = legacyMsg
+	legacyMsgs, err := MsgToLegacyMsg(tx.GetMsgs())
+	if err != nil {
+		return nil, fmt.Errorf("tx is not signable via %s: %w", mode, err)
 	}
 
 	return StdSignBytes(

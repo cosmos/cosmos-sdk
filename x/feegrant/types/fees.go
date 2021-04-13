@@ -19,7 +19,7 @@ type FeeAllowanceI interface {
 	//
 	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 	// (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
-	Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (remove bool, err error)
+	Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
 
 	// If we export fee allowances the timing info will be quite off (eg. go from height 100000 to 0)
 	// This callback allows the fee-allowance to change it's state and return a copy that is adjusted

@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/pkg/protohelpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -104,43 +106,42 @@ func (msr *MsgServiceRouter) registerMethods(sd *grpc.ServiceDesc, handler inter
 // registerInputs registers the requests of a MsgServer service descriptor
 // in the interface registry to allow BaseApp to get the correct requests
 // from the Deliver/CheckTx implementation.
-func (msr *MsgServiceRouter) registerInputs(sd *grpc.ServiceDesc) error {
+func (msr *MsgServiceRouter) registerInputs(gsd *grpc.ServiceDesc) error {
 	if msr.interfaceRegistry == nil {
 		return fmt.Errorf("nil interface registry")
 	}
-	// Adds a top-level type_url based on the Msg service name.
-	for _, method := range sd.Methods {
-		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
-		methodHandler := method.Handler
-
-		// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
-		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
-		// We use a no-op interceptor to avoid actually calling into the handler itself.
-		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
-			msg, ok := i.(proto.Message)
-			if !ok {
-				// We panic here because there is no other alternative and the app cannot be initialized correctly
-				// this should only happen if there is a problem with code generation in which case the app won't
-				// work correctly anyway.
-				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
-			}
-
-			msr.interfaceRegistry.RegisterCustomTypeURL((*sdk.Msg)(nil), fqMethod, msg)
-			return nil
-		}, noopInterceptor)
-
+	// ok, so we've got a service desc, it does not allow us to know the
+	// inputs, but we can parse the raw descriptor and get it from there.
+	sd, err := protohelpers.ServiceDescriptorFromGRPCServiceDesc(gsd)
+	if err != nil {
+		return err
 	}
-
+	// we iterate methods, get the inputs, fetch the concrete types and register them
+	for i := 0; i < sd.Methods().Len(); i++ {
+		md := sd.Methods().Get(i)
+		if md.IsStreamingServer() || md.IsStreamingClient() {
+			return fmt.Errorf("streaming RPC are not supported, found in %s", md.FullName())
+		}
+		// get the concrete type
+		typ := proto.MessageType((string)(md.Input().FullName()))
+		if typ == nil {
+			return fmt.Errorf("concrete type for %s not found", md.Input().FullName())
+		}
+		v := reflect.New(typ).Elem()
+		msg, ok := v.Interface().(sdk.Msg)
+		if !ok {
+			return fmt.Errorf("type %T is not an sdk.Msg", v.Interface())
+		}
+		msr.interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), msg)
+		// TODO(fdymylja): remove this once ServiceMsgs are no longer supported.
+		svcMsgTypeURL := fmt.Sprintf("/%s/%s", sd.FullName(), md.Name())
+		msr.interfaceRegistry.RegisterCustomTypeURL((*sdk.Msg)(nil), svcMsgTypeURL, msg)
+	}
 	return nil
 }
 
 func (msr *MsgServiceRouter) SetInterfaceRegistry(ir codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = ir
-}
-
-// gRPC NOOP interceptor
-func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
-	return nil, nil
 }
 
 // IsServiceMsg checks if a type URL corresponds to a service method name,

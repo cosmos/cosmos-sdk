@@ -20,7 +20,8 @@ type ServiceMsgClientConn struct {
 }
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (t *ServiceMsgClientConn) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc.CallOption) error {
+// the method is ignored as the application will know where to route the message given its type URL
+func (t *ServiceMsgClientConn) Invoke(_ context.Context, _ string, args, _ interface{}, _ ...grpc.CallOption) error {
 	req, ok := args.(sdk.Msg)
 	if !ok {
 		return fmt.Errorf("%T should implement %T", args, (*sdk.Msg)(nil))
@@ -31,10 +32,7 @@ func (t *ServiceMsgClientConn) Invoke(_ context.Context, method string, args, _ 
 		return err
 	}
 
-	t.msgs = append(t.msgs, sdk.ServiceMsg{
-		MethodName: method,
-		Request:    req,
-	})
+	t.msgs = append(t.msgs, req)
 
 	return nil
 }

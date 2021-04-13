@@ -1,5 +1,4 @@
 // DONTCOVER
-// nolint
 package v034
 
 import (
@@ -8,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
 const (
@@ -139,7 +139,7 @@ type (
 )
 
 func (v Validator) MarshalJSON() ([]byte, error) {
-	bechConsPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, v.ConsPubKey)
+	bechConsPubKey, err := legacybech32.MarshalPubKey(legacybech32.ConsPK, v.ConsPubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	if err := legacy.Cdc.UnmarshalJSON(data, bv); err != nil {
 		return err
 	}
-	consPubKey, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, bv.ConsPubKey)
+	consPubKey, err := legacybech32.UnmarshalPubKey(legacybech32.ConsPK, bv.ConsPubKey)
 	if err != nil {
 		return err
 	}

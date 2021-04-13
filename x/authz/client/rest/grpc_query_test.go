@@ -5,6 +5,7 @@ package rest_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -14,9 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	types "github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -26,7 +29,8 @@ type IntegrationTestSuite struct {
 	grantee sdk.AccAddress
 }
 
-var typeMsgSend = types.SendAuthorization{}.MethodName()
+var typeMsgSend = banktypes.SendAuthorization{}.MethodName()
+var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
@@ -39,7 +43,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val := s.network.Validators[0]
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
@@ -55,7 +59,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// grant authorization
-	_, err = authztestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), newAddr.String(), typeMsgSend, "100stake")
+	_, err = authztestutil.ExecGrantAuthorization(val, []string{
+		newAddr.String(),
+		"send",
+		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
+	})
 	s.Require().NoError(err)
 
 	s.grantee = newAddr
@@ -79,37 +92,37 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 	}{
 		{
 			"fail invalid granter address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 		},
 		{
 			"fail invalid grantee address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 		},
 		{
 			"fail with empty granter",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, "", s.grantee.String(), typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, "", s.grantee.String(), typeMsgSend),
 			true,
 			"Not Implemented",
 		},
 		{
 			"fail with empty grantee",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), "", typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), "", typeMsgSend),
 			true,
 			"Not Implemented",
 		},
 		{
 			"fail invalid msg-type",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
 			true,
 			"rpc error: code = NotFound desc = no authorization found for invalidMsg type: key not found",
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?msg_type=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
+			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
 			false,
 			"",
 		},
@@ -126,7 +139,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 				s.Require().NoError(err)
 				authorization.Authorization.UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
 				auth := authorization.Authorization.GetAuthorizationGrant()
-				s.Require().Equal(auth.MethodName(), types.SendAuthorization{}.MethodName())
+				s.Require().Equal(auth.MethodName(), banktypes.SendAuthorization{}.MethodName())
 			}
 		})
 	}
@@ -184,7 +197,16 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := authztestutil.MsgGrantAuthorizationExec(val.ClientCtx, val.Address.String(), s.grantee.String(), "/cosmos.gov.v1beta1.Msg/Vote", "")
+				_, err := authztestutil.ExecGrantAuthorization(val, []string{
+					s.grantee.String(),
+					"generic",
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+					fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
+					fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+					fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
+				})
 				s.Require().NoError(err)
 			},
 			func(authorizations *types.QueryAuthorizationsResponse) {

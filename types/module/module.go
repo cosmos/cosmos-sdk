@@ -43,8 +43,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-//__________________________________________________________________________________________
-
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
 	Name() string
@@ -146,8 +144,6 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-//_________________________________________________________
-
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
@@ -186,8 +182,6 @@ type AppModule interface {
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
-//___________________________
-
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
 	AppModuleGenesis
@@ -225,8 +219,6 @@ func (gam GenesisOnlyAppModule) BeginBlock(ctx sdk.Context, req abci.RequestBegi
 func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
-
-//____________________________________________________________________________
 
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
@@ -339,27 +331,102 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) map[st
 }
 
 // MigrationHandler is the migration function that each module registers.
-type MigrationHandler func(store sdk.Context) error
+type MigrationHandler func(sdk.Context) error
 
-// MigrationMap is a map of moduleName -> version, where version denotes the
+// VersionMap is a map of moduleName -> version, where version denotes the
 // version from which we should perform the migration for each module.
-type MigrationMap map[string]uint64
+type VersionMap map[string]uint64
 
-// RunMigrations performs in-place store migrations for all modules.
-func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, migrateFromVersions MigrationMap) error {
+// RunMigrations performs in-place store migrations for all modules. This
+// function MUST be called insde an x/upgrade UpgradeHandler.
+//
+// Recall that in an upgrade handler, the `fromVM` VersionMap is retrieved from
+// x/upgrade's store, and the function needs to return the target VersionMap
+// that will in turn be persisted to the x/upgrade's store. In general,
+// returning RunMigrations should be enough:
+//
+// Example:
+//   cfg := module.NewConfigurator(...)
+//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//       return app.mm.RunMigrations(ctx, cfg, fromVM)
+//   })
+//
+// Internally, RunMigrations will perform the following steps:
+// - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
+// - make a diff of `fromVM` and `udpatedVM`, and for each module:
+//    - if the module's `fromVM` version is less than its `updatedVM` version,
+//      then run in-place store migrations for that module between those versions.
+//    - if the module's `fromVM` is 0 (which means that it's a new module,
+//      because it was not in the previous x/upgrade's store), then run
+//      `InitGenesis` on that module.
+// - return the `updatedVM` to be persisted in the x/upgrade's store.
+//
+// As an app developer, if you wish to skip running InitGenesis for your new
+// module "foo", you need to manually pass a `fromVM` argument to this function
+// foo's module version set to its latest ConsensusVersion. That way, the diff
+// between the function's `fromVM` and `udpatedVM` will be empty, hence not
+// running anything for foo.
+//
+// Example:
+//   cfg := module.NewConfigurator(...)
+//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//       // Assume "foo" is a new module.
+//       // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
+//       // before this upgrade, `fromVM["foo"] == 0`, and RunMigration will by default
+//       // run InitGenesis on foo.
+//       // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
+//       // consensus version:
+//       fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
+//
+//       return app.mm.RunMigrations(ctx, cfg, fromVM)
+//   })
+//
+// Please also refer to docs/core/upgrade.md for more information.
+func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
 	c, ok := cfg.(configurator)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
 	}
 
+	updatedVM := make(VersionMap)
 	for moduleName, module := range m.Modules {
-		err := c.runModuleMigrations(ctx, moduleName, migrateFromVersions[moduleName], module.ConsensusVersion())
-		if err != nil {
-			return err
+		fromVersion := fromVM[moduleName]
+		toVersion := module.ConsensusVersion()
+
+		// Only run migrations when the fromVersion is > 0, or run InitGenesis
+		// if fromVersion == 0.
+		//
+		// fromVersion will be 0 in two cases:
+		// 1. If a new module is added. In this case we run InitGenesis with an
+		// empty genesis state.
+		// 2. If the app developer is running in-place store migrations for the
+		// first time. In this case, it is the app developer's responsibility
+		// to set their module's fromVersions to a version that suits them.
+		if fromVersion > 0 {
+			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			cfgtor, ok := cfg.(configurator)
+			if !ok {
+				// Currently, the only implementator of Configurator (the interface)
+				// is configurator (the struct).
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", configurator{}, cfg)
+			}
+
+			moduleValUpdates := module.InitGenesis(ctx, cfgtor.cdc, module.DefaultGenesis(cfgtor.cdc))
+			// The module manager assumes only one module will update the
+			// validator set, and that it will not be by a new module.
+			if len(moduleValUpdates) > 0 {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "validator InitGenesis updates already set by a previous module")
+			}
 		}
+
+		updatedVM[moduleName] = toVersion
 	}
 
-	return nil
+	return updatedVM, nil
 }
 
 // BeginBlock performs begin block functionality for all modules. It creates a
@@ -402,4 +469,16 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}
+}
+
+// GetVersionMap gets consensus version from all modules
+func (m *Manager) GetVersionMap() VersionMap {
+	vermap := make(VersionMap)
+	for _, v := range m.Modules {
+		version := v.ConsensusVersion()
+		name := v.Name()
+		vermap[name] = version
+	}
+
+	return vermap
 }

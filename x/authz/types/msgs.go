@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization
 //nolint:interfacer
-func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) (*MsgGrantAuthorizationRequest, error) {
+func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization exported.Authorization, expiration time.Time) (*MsgGrantAuthorizationRequest, error) {
 	m := &MsgGrantAuthorizationRequest{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
@@ -62,12 +63,16 @@ func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
 	}
 
-	return nil
+	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
+	if !ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (exported.Authorization)(nil), msg.Authorization.GetCachedValue())
+	}
+	return authorization.ValidateBasic()
 }
 
 // GetGrantAuthorization returns the cache value from the MsgGrantAuthorization.Authorization if present.
-func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() Authorization {
-	authorization, ok := msg.Authorization.GetCachedValue().(Authorization)
+func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() exported.Authorization {
+	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
 	if !ok {
 		return nil
 	}
@@ -75,7 +80,7 @@ func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() Authorization {
 }
 
 // SetAuthorization converts Authorization to any and adds it to MsgGrantAuthorization.Authorization.
-func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization Authorization) error {
+func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization exported.Authorization) error {
 	m, ok := authorization.(proto.Message)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "can't proto marshal %T", m)
@@ -103,7 +108,7 @@ func (msg MsgExecAuthorizedRequest) UnpackInterfaces(unpacker types.AnyUnpacker)
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgGrantAuthorizationRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var authorization Authorization
+	var authorization exported.Authorization
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }
 

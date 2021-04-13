@@ -40,7 +40,7 @@ func NormalizeWeightedVoteOptions(options string) string {
 	return strings.Join(newOptions, ",")
 }
 
-//NormalizeProposalType - normalize user specified proposal type
+// NormalizeProposalType - normalize user specified proposal type.
 func NormalizeProposalType(proposalType string) string {
 	switch proposalType {
 	case "Text", "text":
@@ -51,17 +51,17 @@ func NormalizeProposalType(proposalType string) string {
 	}
 }
 
-//NormalizeProposalStatus - normalize user specified proposal status
+// NormalizeProposalStatus - normalize user specified proposal status.
 func NormalizeProposalStatus(status string) string {
 	switch status {
 	case "DepositPeriod", "deposit_period":
-		return "DepositPeriod"
+		return types.StatusDepositPeriod.String()
 	case "VotingPeriod", "voting_period":
-		return "VotingPeriod"
+		return types.StatusVotingPeriod.String()
 	case "Passed", "passed":
-		return "Passed"
+		return types.StatusPassed.String()
 	case "Rejected", "rejected":
-		return "Rejected"
+		return types.StatusRejected.String()
 	default:
 		return status
 	}

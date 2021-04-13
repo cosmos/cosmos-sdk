@@ -14,15 +14,15 @@ var (
 	// PruneDefault defines a pruning strategy where the last 100 heights are kept
 	// in addition to every 100th and where to-be pruned heights are pruned at
 	// every 10th height.
-	PruneDefault = NewPruningOptions(100, 100, 10)
+	PruneDefault = NewPruningOptions(100, 100, 10, 200)
 
 	// PruneEverything defines a pruning strategy where all committed heights are
 	// deleted, storing only the current height and where to-be pruned heights are
 	// pruned at every 10th height.
-	PruneEverything = NewPruningOptions(0, 0, 10)
+	PruneEverything = NewPruningOptions(0, 0, 10, 0)
 
 	// PruneNothing defines a pruning strategy where all heights are kept on disk.
-	PruneNothing = NewPruningOptions(0, 1, 0)
+	PruneNothing = NewPruningOptions(0, 1, 0, 1<<64-1)
 )
 
 // PruningOptions defines the pruning strategy used when determining which
@@ -36,13 +36,17 @@ type PruningOptions struct {
 
 	// Interval defines when the pruned heights are removed from disk.
 	Interval uint64
+
+	// MaxRetainNum defines how many historic states to keep on disk.
+	MaxRetainNum uint64
 }
 
-func NewPruningOptions(keepRecent, keepEvery, interval uint64) PruningOptions {
+func NewPruningOptions(keepRecent, keepEvery, interval, maxRetainNum uint64) PruningOptions {
 	return PruningOptions{
-		KeepRecent: keepRecent,
-		KeepEvery:  keepEvery,
-		Interval:   interval,
+		KeepRecent:   keepRecent,
+		KeepEvery:    keepEvery,
+		Interval:     interval,
+		MaxRetainNum: maxRetainNum,
 	}
 }
 
@@ -55,6 +59,12 @@ func (po PruningOptions) Validate() error {
 	}
 	if po.KeepEvery > 1 && po.Interval == 0 {
 		return fmt.Errorf("invalid 'Interval' when pruning: %d", po.Interval)
+	}
+	if po.KeepRecent > po.MaxRetainNum {
+		return fmt.Errorf("invalid 'KeepRecent' when pruning MaxRetainNum: %d", po.MaxRetainNum)
+	}
+	if po.KeepEvery > 0 && po.MaxRetainNum == 0 {
+		return fmt.Errorf("invalid 'KeepEvery' when pruning MaxRetainNum: %d", po.MaxRetainNum)
 	}
 
 	return nil

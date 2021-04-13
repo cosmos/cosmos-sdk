@@ -3,9 +3,9 @@ package rootmulti
 import (
 	"fmt"
 	"io"
-	"strings"
-	"sort"
 	"log"
+	"sort"
+	"strings"
 
 	"github.com/pkg/errors"
 	iavltree "github.com/tendermint/iavl"
@@ -27,6 +27,7 @@ import (
 const (
 	latestVersionKey = "s/latest"
 	pruneHeightsKey  = "s/pruneheights"
+	versionsKey      = "s/versions"
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
@@ -42,6 +43,7 @@ type Store struct {
 	keysByName     map[string]types.StoreKey
 	lazyLoading    bool
 	pruneHeights   []int64
+	versions       []int64
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -66,6 +68,7 @@ func NewStore(db dbm.DB) *Store {
 		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
 		pruneHeights: make([]int64, 0),
+		versions:     make([]int64, 0),
 	}
 }
 
@@ -218,6 +221,11 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		rs.pruneHeights = ph
 	}
 
+	vs, err := getVersions(rs.db)
+	if err == nil && len(vs) > 0 {
+		rs.versions = vs
+	}
+
 	return nil
 }
 
@@ -319,7 +327,18 @@ func (rs *Store) Commit() types.CommitID {
 		// a 'snapshot' height.
 		if rs.pruningOpts.KeepEvery == 0 || pruneHeight%int64(rs.pruningOpts.KeepEvery) != 0 {
 			rs.pruneHeights = append(rs.pruneHeights, pruneHeight)
+			for k, v := range rs.versions {
+				if v == pruneHeight {
+					rs.versions = append(rs.versions[:k], rs.versions[k+1:]...)
+					break
+				}
+			}
 		}
+	}
+
+	if len(rs.versions) > int(rs.pruningOpts.MaxRetainNum) {
+		rs.pruneHeights = append(rs.pruneHeights, rs.versions[:len(rs.versions)-int(rs.pruningOpts.MaxRetainNum)]...)
+		rs.versions = rs.versions[len(rs.versions)-int(rs.pruningOpts.MaxRetainNum):]
 	}
 
 	// batch prune if the current height is a pruning interval height
@@ -327,7 +346,9 @@ func (rs *Store) Commit() types.CommitID {
 		rs.pruneStores()
 	}
 
-	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights)
+	rs.versions = append(rs.versions, version)
+
+	flushMetadata(rs.db, version, rs.lastCommitInfo, rs.pruneHeights, rs.versions)
 
 	return types.CommitID{
 		Version: version,
@@ -759,17 +780,40 @@ func getPruningHeights(db dbm.DB) ([]int64, error) {
 	return prunedHeights, nil
 }
 
-func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []int64) {
+func flushMetadata(db dbm.DB, version int64, cInfo commitInfo, pruneHeights []int64, versions []int64) {
 	batch := db.NewBatch()
 	defer batch.Close()
 
 	setCommitInfo(batch, version, cInfo)
 	setLatestVersion(batch, version)
 	setPruningHeights(batch, pruneHeights)
+	setVersions(batch, versions)
 
 	if err := batch.Write(); err != nil {
 		panic(fmt.Errorf("error on batch write %w", err))
 	}
+}
+
+func setVersions(batch dbm.Batch, versions []int64) {
+	bz := cdc.MustMarshalBinaryBare(versions)
+	batch.Set([]byte(versionsKey), bz)
+}
+
+func getVersions(db dbm.DB) ([]int64, error) {
+	bz, err := db.Get([]byte(versionsKey))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get versions: %w", err)
+	}
+	if len(bz) == 0 {
+		return nil, errors.New("no versions found")
+	}
+
+	var versions []int64
+	if err := cdc.UnmarshalBinaryBare(bz, &versions); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal pruned heights: %w", err)
+	}
+
+	return versions, nil
 }
 
 // Snapshot implements snapshottypes.Snapshotter. The snapshot output for a given format must be
@@ -813,7 +857,7 @@ func (rs *Store) Export(to *Store, initVersion int64) error {
 	// and the following messages contain a SnapshotNode (i.e. an ExportNode). Store changes
 	// are demarcated by new SnapshotStore items.
 	for _, store := range stores {
-		log.Println("--------- export ", store.name,  " start ---------")
+		log.Println("--------- export ", store.name, " start ---------")
 		exporter, err := store.fromStore.Export(curVersion)
 		if err != nil {
 			panic(err)
@@ -841,9 +885,9 @@ func (rs *Store) Export(to *Store, initVersion int64) error {
 			nodeSize := len(node.Key) + len(node.Value)
 			totalCnt++
 			totalSize += uint64(nodeSize)
-			if totalCnt % 10000 == 0 {
-				log.Println("--------- total node count ", totalCnt,  " ---------")
-				log.Println("--------- total node size ", totalSize,  " ---------")
+			if totalCnt%10000 == 0 {
+				log.Println("--------- total node count ", totalCnt, " ---------")
+				log.Println("--------- total node size ", totalSize, " ---------")
 			}
 		}
 
@@ -853,10 +897,10 @@ func (rs *Store) Export(to *Store, initVersion int64) error {
 			panic(err)
 		}
 		importer.Close()
-		log.Println("--------- export ", store.name,  " end ---------")
+		log.Println("--------- export ", store.name, " end ---------")
 	}
 
-	flushMetadata(to.db, initVersion, rs.buildCommitInfo(initVersion), []int64{})
+	flushMetadata(to.db, initVersion, rs.buildCommitInfo(initVersion), []int64{}, []int64{})
 
 	return nil
 }
@@ -868,7 +912,7 @@ func (rs *Store) buildCommitInfo(version int64) commitInfo {
 			continue
 		}
 		storeInfos = append(storeInfos, storeInfo{
-			Name:     key.Name(),
+			Name: key.Name(),
 			Core: storeCore{
 				store.LastCommitID(),
 			},

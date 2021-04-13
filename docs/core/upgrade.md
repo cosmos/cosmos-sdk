@@ -17,7 +17,7 @@ The Cosmos SDK uses two methods to perform upgrades.
 - Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Migration Upgrade Guide](../building-modules/upgrade.md) guide to set up your application modules to take advantage of in-place upgrades.
   
 
-This document outlines the second method described above. 
+This document provides steps to use the In-Place Store Migrations upgrade method.
 
 ## Tracking Module Versions
 

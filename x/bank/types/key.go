@@ -37,11 +37,19 @@ func DenomMetadataKey(denom string) []byte {
 // AddressFromBalancesStore returns an account address from a balances prefix
 // store. The key must not contain the perfix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
-func AddressFromBalancesStore(key []byte) sdk.AccAddress {
+//
+// If invalid key is passed, AddressFromBalancesStore returns ErrInvalidKey.
+func AddressFromBalancesStore(key []byte) (sdk.AccAddress, error) {
+	if len(key) == 0 {
+		return nil, ErrInvalidKey
+	}
 	addrLen := key[0]
+	if len(key[1:]) < int(addrLen) {
+		return nil, ErrInvalidKey
+	}
 	addr := key[1 : addrLen+1]
 
-	return sdk.AccAddress(addr)
+	return sdk.AccAddress(addr), nil
 }
 
 // CreateAccountBalancesPrefix creates the prefix for an account's balances.

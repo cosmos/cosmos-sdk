@@ -529,22 +529,12 @@ func (dva DelayedVestingAccount) String() string {
 var _ vestexported.VestingAccount = (*PermanentLockedVestingAccount)(nil)
 var _ authtypes.GenesisAccount = (*PermanentLockedVestingAccount)(nil)
 
-// NewPermanentLockedVestingAccountRaw creates a new PermanentLockedVestingAccount object from BaseVestingAccount
-func NewPermanentLockedVestingAccountRaw(bva *BaseVestingAccount) *PermanentLockedVestingAccount {
-	// ensure EndTime is set to -1, as PermanentLockedVestingAccount's do not have an EndTime
-	bva.EndTime = -1
-
-	return &PermanentLockedVestingAccount{
-		BaseVestingAccount: bva,
-	}
-}
-
 // NewPermanentLockedVestingAccount returns a PermanentLockedVestingAccount
 func NewPermanentLockedVestingAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) *PermanentLockedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		OriginalVesting: originalVesting,
-		EndTime:         -1,
+		OriginalVesting: coins,
+		EndTime:         -1, // ensure EndTime is set to -1, as PermanentLockedVestingAccount's do not have an EndTime
 	}
 
 	return &PermanentLockedVestingAccount{baseVestingAcc}
@@ -552,19 +542,19 @@ func NewPermanentLockedVestingAccount(baseAcc *authtypes.BaseAccount, coins sdk.
 
 // GetVestedCoins returns the total amount of vested coins for a permanent locked vesting
 // account. All coins are only vested once the schedule has elapsed.
-func (plva PermanentLockedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
+func (plva PermanentLockedVestingAccount) GetVestedCoins(_ time.Time) sdk.Coins {
 	return nil
 }
 
 // GetVestingCoins returns the total number of vesting coins for a permanent locked
 // vesting account.
-func (plva PermanentLockedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
+func (plva PermanentLockedVestingAccount) GetVestingCoins(_ time.Time) sdk.Coins {
 	return plva.OriginalVesting
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked).
-func (plva PermanentLockedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return nil
+func (plva PermanentLockedVestingAccount) LockedCoins(_ time.Time) sdk.Coins {
+	return plva.BaseVestingAccount.LockedCoinsFromVesting(plva.OriginalVesting)
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -579,8 +569,18 @@ func (plva PermanentLockedVestingAccount) GetStartTime() int64 {
 	return 0
 }
 
+// GetEndTime returns a vesting account's end time, we return -1 to denote that
+// a permanently locked vesting account has no end time.
+func (plva PermanentLockedVestingAccount) GetEndTime() int64 {
+	return -1
+}
+
 // Validate checks for errors on the account fields
 func (plva PermanentLockedVestingAccount) Validate() error {
+	if plva.EndTime > 0 {
+		return errors.New("permanently vested accounts cannot have an end-time")
+	}
+
 	return plva.BaseVestingAccount.Validate()
 }
 

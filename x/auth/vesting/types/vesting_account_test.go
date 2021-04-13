@@ -670,7 +670,7 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 	require.Nil(t, plva.DelegatedFree)
 	require.Nil(t, plva.DelegatedVesting)
 
-	// require the ability to undelegate all vested coins at endTime
+	// require the ability to undelegate all vesting coins at endTime
 	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
 	plva.TrackDelegation(endTime, origCoins, origCoins)
 	plva.TrackUndelegation(origCoins)
@@ -679,17 +679,16 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 
 	// require no modifications when the undelegation amount is zero
 	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
-
 	require.Panics(t, func() {
 		plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
 	})
 	require.Nil(t, plva.DelegatedFree)
 	require.Nil(t, plva.DelegatedVesting)
 
-	// vest 50% and delegate to two validators
+	// delegate to two validators
 	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
-	plva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	plva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
 
 	// undelegate from one validator that got slashed 50%
 	plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
@@ -762,6 +761,11 @@ func TestGenesisAccountValidate(t *testing.T) {
 			"valid permanent locked vesting account",
 			types.NewPermanentLockedVestingAccount(baseAcc, initialVesting),
 			false,
+		},
+		{
+			"invalid positive end time for permanently locked vest account",
+			&types.PermanentLockedVestingAccount{BaseVestingAccount: baseVestingWithCoins},
+			true,
 		},
 	}
 

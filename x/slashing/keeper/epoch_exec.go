@@ -53,23 +53,22 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	for iterator := k.ek.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.ek.GetEpochActionByIterator(iterator)
 		cacheCtx, writeCache := ctx.CacheContext()
-
+		logger := k.Logger(ctx)
 		switch msg := msg.(type) {
 		case *types.MsgUnjail:
 			err := k.executeQueuedUnjailMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {
-				// TODO: report somewhere for logging edit not success or panic
-				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+				logger.Error("unjail message validator failed to execute", "msg", msg)
 			}
 		case *types.SlashEvent:
 			err := k.executeQueuedSlashEvent(ctx, msg)
 			if err == nil {
 				writeCache()
 			} else {
-				// TODO: report somewhere for logging edit not success or panic
-				panic(fmt.Sprintf("not be able to execute, %T, %s", msg, err.Error()))
+				// Todo: if we get here a validator could avoid slashing staked tokens but still be jailed
+				logger.Error("slash message validator failed to execute", "msg", msg)
 			}
 		default:
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))

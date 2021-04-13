@@ -328,12 +328,16 @@ func (k Keeper) executeQueuedUndelegateMsg(ctx sdk.Context, msg *types.MsgUndele
 }
 
 // ExecuteEpoch execute epoch actions
+// If a message fails to execute, the message will be reverted if the tokens were taken from an account,
+// otherwise an error log will be produced.
+// Unfortunately, the user will need to check if all there messages were executed.
 func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	// execute all epoch actions
 
 	for iterator := k.epochKeeper.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
 		cacheCtx, writeCache := ctx.CacheContext()
+		logger := k.Logger(ctx)
 
 		switch msg := msg.(type) {
 		case *types.MsgCreateValidator:
@@ -341,7 +345,8 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 			if err == nil {
 				writeCache()
 			} else if err = k.revertCreateValidatorMsg(ctx, msg); err != nil {
-				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
+				// avoid panicking
+				logger.Error("create validator failed to execute", "msg", msg)
 			}
 		case *types.MsgEditValidator:
 			err := k.executeQueuedEditValidatorMsg(cacheCtx, msg)
@@ -349,6 +354,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				writeCache()
 			} else {
 				// TODO: report somewhere for logging edit not success or panic
+				logger.Error("edit validator failed to execute", "msg", msg)
 				// panic(fmt.Sprintf("not be able to execute, %T", msg))
 			}
 		case *types.MsgDelegate:
@@ -363,16 +369,14 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 			if err == nil {
 				writeCache()
 			} else {
-				// TODO: report somewhere for logging edit not success or panic
-				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+				logger.Error("edit begin redelegation failed to execute", "msg", msg)
 			}
 		case *types.MsgUndelegate:
 			_, err := k.executeQueuedUndelegateMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {
-				// TODO: report somewhere for logging edit not success or panic
-				// panic(fmt.Sprintf("not be able to execute, %T", msg))
+				logger.Error("edit undelegation failed to execute", "msg", msg)
 			}
 		default:
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))

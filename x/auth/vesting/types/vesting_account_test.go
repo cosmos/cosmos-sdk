@@ -571,7 +571,7 @@ func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
-	// require no coins are vested until schedule maturation
+	// require no coins are vested
 	plva := types.NewPermanentLockedVestingAccount(bacc, origCoins)
 	vestedCoins := plva.GetVestedCoins(now)
 	require.Nil(t, vestedCoins)

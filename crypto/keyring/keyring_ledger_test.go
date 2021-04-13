@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
@@ -28,9 +27,8 @@ func TestInMemoryCreateLedger(t *testing.T) {
 
 	// The mock is available, check that the address is correct
 	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"
+	require.Equal(t, expectedPkStr, pubKey.String())
 
 	// Check that restoring the key gets the same results
 	restoredKey, err := kb.Key("some_account")
@@ -39,9 +37,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	require.Equal(t, "some_account", restoredKey.GetName())
 	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.Equal(t, expectedPkStr, pubKey.String())
 
 	path, err := restoredKey.GetPath()
 	require.NoError(t, err)
@@ -106,9 +102,8 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	// The mock is available, check that the address is correct
 	require.Equal(t, "some_account", ledger.GetName())
 	pubKey := ledger.GetPubKey()
-	pk, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"
+	require.Equal(t, expectedPkStr, pubKey.String())
 
 	// Check that restoring the key gets the same results
 	restoredKey, err := keyring.Key("some_account")
@@ -117,9 +112,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.Equal(t, "some_account", restoredKey.GetName())
 	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
-	pk, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pubKey)
-	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+	require.Equal(t, expectedPkStr, pubKey.String())
 
 	path, err := restoredKey.GetPath()
 	require.NoError(t, err)

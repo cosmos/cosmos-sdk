@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
+	"github.com/golang/protobuf/proto" // nolint: staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -92,17 +93,25 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 
 // Simulate implements the ServiceServer.Simulate RPC method.
 func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
-	if req == nil || req.Tx == nil {
+	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	err := req.Tx.UnpackInterfaces(s.interfaceRegistry)
-	if err != nil {
-		return nil, err
+	txBytes := req.TxBytes
+	if txBytes == nil && req.Tx != nil {
+		// This block is for backwards-compatibility.
+		// We used to support passing a `Tx` in req. But if we do that, sig
+		// verification might not pass, because the .Marshal() below might not
+		// be the same marshaling done by the client.
+		var err error
+		txBytes, err = proto.Marshal(req.Tx)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid tx; %v", err)
+		}
 	}
-	txBytes, err := req.Tx.Marshal()
-	if err != nil {
-		return nil, err
+
+	if txBytes == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
 	gasInfo, result, err := s.simulate(txBytes)

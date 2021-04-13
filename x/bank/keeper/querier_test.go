@@ -3,16 +3,15 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryBalance() {
@@ -107,14 +106,16 @@ func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupply() {
 	suite.Require().NotNil(err)
 	suite.Require().Nil(res)
 
-	req.Data = legacyAmino.MustMarshalJSON(types.NewQueryTotalSupplyParams(1, 100))
+	req.Data = legacyAmino.MustMarshalJSON(types.QueryTotalSupplyRequest{Pagination: &query.PageRequest{
+		Limit: 100,
+	}})
 	res, err = querier(ctx, []string{types.QueryTotalSupply}, req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	var resp sdk.Coins
+	var resp types.QueryTotalSupplyResponse
 	suite.Require().NoError(legacyAmino.UnmarshalJSON(res, &resp))
-	suite.Require().Equal(expectedTotalSupply, resp)
+	suite.Require().Equal(expectedTotalSupply, resp.Supply)
 }
 
 func (suite *IntegrationTestSuite) TestQuerier_QueryTotalSupplyOf() {

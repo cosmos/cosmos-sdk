@@ -24,7 +24,7 @@ func GetPruningOptionsFromFlags() (types.PruningOptions, error) {
 		opts := types.NewPruningOptions(
 			viper.GetUint64(FlagPruningKeepRecent),
 			viper.GetUint64(FlagPruningKeepEvery), viper.GetUint64(FlagPruningInterval),
-			viper.GetUint64(FlagPruningMaxRetainNum),
+			viper.GetUint64(FlagPruningMaxWsNum),
 		)
 
 		if err := opts.Validate(); err != nil {

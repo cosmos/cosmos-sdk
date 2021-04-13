@@ -45,7 +45,7 @@ const (
 	FlagEvmImportMode     = "evm-import-mode"
 	FlagGoroutineNum      = "goroutine-num"
 
-	FlagPruningMaxRetainNum = "pruning-max-retain-num"
+	FlagPruningMaxWsNum = "pruning-max-worldstate-num"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -119,7 +119,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().Uint64(FlagPruningKeepRecent, 0, "Number of recent heights to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningKeepEvery, 0, "Offset heights to keep on disk after 'keep-every' (ignored if pruning is not 'custom')")
 	cmd.Flags().Uint64(FlagPruningInterval, 0, "Height interval at which pruned heights are removed from disk (ignored if pruning is not 'custom')")
-	cmd.Flags().Uint64(FlagPruningMaxRetainNum, 0, "Max number of historic states to keep on disk (ignored if pruning is not 'custom')")
+	cmd.Flags().Uint64(FlagPruningMaxWsNum, 0, "Max number of historic states to keep on disk (ignored if pruning is not 'custom')")
 	cmd.Flags().String(FlagLocalRpcPort, "", "Local rpc port for mempool and block monitor on cosmos layer(ignored if mempool/block monitoring is not required)")
 	cmd.Flags().String(FlagPortMonitor, "", "Local target ports for connecting number monitoring(ignored if connecting number monitoring is not required)")
 	cmd.Flags().String(FlagEvmImportMode, "default", "Select import mode for evm state (default|files|db)")
@@ -130,7 +130,7 @@ which accepts a path for the resulting pprof file.
 	viper.BindPFlag(FlagPruningKeepRecent, cmd.Flags().Lookup(FlagPruningKeepRecent))
 	viper.BindPFlag(FlagPruningKeepEvery, cmd.Flags().Lookup(FlagPruningKeepEvery))
 	viper.BindPFlag(FlagPruningInterval, cmd.Flags().Lookup(FlagPruningInterval))
-	viper.BindPFlag(FlagPruningMaxRetainNum, cmd.Flags().Lookup(FlagPruningMaxRetainNum))
+	viper.BindPFlag(FlagPruningMaxWsNum, cmd.Flags().Lookup(FlagPruningMaxWsNum))
 	viper.BindPFlag(FlagLocalRpcPort, cmd.Flags().Lookup(FlagLocalRpcPort))
 	viper.BindPFlag(FlagPortMonitor, cmd.Flags().Lookup(FlagPortMonitor))
 	viper.BindPFlag(FlagEvmImportMode, cmd.Flags().Lookup(FlagEvmImportMode))

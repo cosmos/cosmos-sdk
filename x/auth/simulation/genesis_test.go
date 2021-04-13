@@ -2,9 +2,10 @@ package simulation_test
 
 import (
 	"encoding/json"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"math/rand"
 	"testing"
+
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 
 	"github.com/stretchr/testify/require"
 

@@ -77,7 +77,7 @@ To learn more about configuring migration scripts for your modules, see the [Mig
 
 ## Adding New Modules During Upgrades
 
-You can introduce entirely new modules to the application during an upgrade. New modules are recognized because their consensus version in the `fromVM` `VersionMap` is 0. In this case, `RunMigrations` calls the `InitGenesis` function from the corresponding module to set up its initial state.
+You can introduce entirely new modules to the application during an upgrade. New modules are recognized because they have not yet been registered in `x/upgrade`'s `VersionMap` store. In this case, `RunMigrations` calls the `InitGenesis` function from the corresponding module to set up its initial state.
 
 ## Overwriting Genesis Functions
 

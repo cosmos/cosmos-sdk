@@ -3,7 +3,6 @@ package types
 import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -24,6 +23,4 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&GenericAuthorization{},
 		&staking.StakeAuthorization{},
 	)
-
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

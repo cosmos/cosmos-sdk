@@ -615,7 +615,7 @@ func (plva PermanentLockedVestingAccount) LockedCoins(blockTime time.Time) sdk.C
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
 func (plva *PermanentLockedVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	plva.BaseVestingAccount.TrackDelegation(balance, plva.GetVestingCoins(blockTime), amount)
+	plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
 }
 
 // GetStartTime returns zero since a permanent locked vesting account has no start time.

@@ -31,7 +31,7 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 
 	clientCtx.Viper.BindEnv(nodeEnv)
 	if envVar != "" {
-		os.Setenv(nodeEnv, testNode1)
+		os.Setenv(nodeEnv, envVar)
 	}
 
 	clientCtx, err := config.ReadFromClientConfig(clientCtx)

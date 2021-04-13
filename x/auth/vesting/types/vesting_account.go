@@ -608,7 +608,7 @@ func (plva PermanentLockedVestingAccount) GetVestingCoins(blockTime time.Time) s
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked).
 func (plva PermanentLockedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return plva.BaseVestingAccount.LockedCoinsFromVesting(plva.GetVestingCoins(blockTime))
+	return nil
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate

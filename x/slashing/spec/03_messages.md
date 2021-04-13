@@ -40,12 +40,12 @@ unjail(tx MsgUnjail)
     if block time < info.JailedUntil
       fail with "Validator still jailed, cannot unjail until period has expired"
 
-    validator.Jailed = false
-    setValidator(validator)
+    stakingKeeper.Unjail(validator)
 
     return
 ```
 
+When unjailing a validator, it is entered into the power store, which orders the validators in order of power.
 If the validator has enough stake to be in the top `n = MaximumBondedValidators`, it will be automatically rebonded,
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.

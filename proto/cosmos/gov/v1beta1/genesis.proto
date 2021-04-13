@@ -17,10 +17,10 @@ message GenesisState {
   repeated Vote votes = 3 [(gogoproto.castrepeated) = "Votes", (gogoproto.nullable) = false];
   // proposals defines all the proposals present at genesis.
   repeated Proposal proposals = 4 [(gogoproto.castrepeated) = "Proposals", (gogoproto.nullable) = false];
-  // params defines all the paramaters of related to deposit.
+  // params defines all the parameters of related to deposit.
   DepositParams deposit_params = 5 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"deposit_params\""];
-  // params defines all the paramaters of related to voting.
+  // params defines all the parameters of related to voting.
   VotingParams voting_params = 6 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_params\""];
-  // params defines all the paramaters of related to tally.
+  // params defines all the parameters of related to tally.
   TallyParams tally_params = 7 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"tally_params\""];
 }

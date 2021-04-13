@@ -9,7 +9,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // GenesisState defines the bank module's genesis state.
 message GenesisState {
-  // params defines all the paramaters of the module.
+  // params defines all the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
 
   // balances is an array containing the balances of all the accounts.

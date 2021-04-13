@@ -673,7 +673,7 @@ GenesisState defines the auth module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.auth.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `params` | [Params](#cosmos.auth.v1beta1.Params) |  | params defines all the parameters of the module. |
 | `accounts` | [google.protobuf.Any](#google.protobuf.Any) | repeated | accounts are the accounts present at genesis. |
 
 
@@ -1657,7 +1657,7 @@ GenesisState defines the bank module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the parameters of the module. |
 | `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. If it is left empty, then supply will be calculated based on the provided balances. Otherwise, it will be used to validate that the sum of the balances equals this amount. |
 | `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
@@ -3761,7 +3761,7 @@ GenesisState defines the distribution module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.distribution.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `params` | [Params](#cosmos.distribution.v1beta1.Params) |  | params defines all the parameters of the module. |
 | `fee_pool` | [FeePool](#cosmos.distribution.v1beta1.FeePool) |  | fee_pool defines the fee pool at genesis. |
 | `delegator_withdraw_infos` | [DelegatorWithdrawInfo](#cosmos.distribution.v1beta1.DelegatorWithdrawInfo) | repeated | fee_pool defines the delegator withdraw infos at genesis. |
 | `previous_proposer` | [string](#string) |  | fee_pool defines the previous proposer at genesis. |
@@ -5114,9 +5114,9 @@ GenesisState defines the gov module's genesis state.
 | `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
 | `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defines all the votes present at genesis. |
 | `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated | proposals defines all the proposals present at genesis. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the paramaters of related to deposit. |
-| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the paramaters of related to voting. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the paramaters of related to tally. |
+| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the parameters of related to deposit. |
+| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the parameters of related to voting. |
+| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the parameters of related to tally. |
 
 
 
@@ -5629,7 +5629,7 @@ GenesisState defines the mint module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `minter` | [Minter](#cosmos.mint.v1beta1.Minter) |  | minter is a space for holding current inflation information. |
-| `params` | [Params](#cosmos.mint.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `params` | [Params](#cosmos.mint.v1beta1.Params) |  | params defines all the parameters of the module. |
 
 
 
@@ -5930,7 +5930,7 @@ GenesisState defines the slashing module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.slashing.v1beta1.Params) |  | params defines all the paramaters of related to deposit. |
+| `params` | [Params](#cosmos.slashing.v1beta1.Params) |  | params defines all the parameters of related to deposit. |
 | `signing_infos` | [SigningInfo](#cosmos.slashing.v1beta1.SigningInfo) | repeated | signing_infos represents a map between validator addresses and their signing infos. |
 | `missed_blocks` | [ValidatorMissedBlocks](#cosmos.slashing.v1beta1.ValidatorMissedBlocks) | repeated | signing_infos represents a map between validator addresses and their missed blocks. |
 
@@ -6647,7 +6647,7 @@ GenesisState defines the staking module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#cosmos.staking.v1beta1.Params) |  | params defines all the paramaters of related to deposit. |
+| `params` | [Params](#cosmos.staking.v1beta1.Params) |  | params defines all the parameters of related to deposit. |
 | `last_total_power` | [bytes](#bytes) |  | last_total_power tracks the total amounts of bonded tokens recorded during the previous end block. |
 | `last_validator_powers` | [LastValidatorPower](#cosmos.staking.v1beta1.LastValidatorPower) | repeated | last_validator_powers is a special index that provides a historical list of the last-block's bonded validators. |
 | `validators` | [Validator](#cosmos.staking.v1beta1.Validator) | repeated | delegations defines the validator set at genesis. |

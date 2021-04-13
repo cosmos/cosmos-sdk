@@ -540,7 +540,7 @@ func NewPermanentLockedVestingAccountRaw(bva *BaseVestingAccount) *PermanentLock
 }
 
 // NewPermanentLockedVestingAccount returns a PermanentLockedVestingAccount
-func NewPermanentLockedVestingAccount(baseAcc *authtypes.BaseAccount, originalVesting sdk.Coins) *PermanentLockedVestingAccount {
+func NewPermanentLockedVestingAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) *PermanentLockedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: originalVesting,
@@ -564,14 +564,14 @@ func (plva PermanentLockedVestingAccount) GetVestingCoins(blockTime time.Time) s
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked).
 func (plva PermanentLockedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return plva.BaseVestingAccount.LockedCoinsFromVesting(plva.GetVestingCoins(blockTime))
+	return nil
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
 func (plva *PermanentLockedVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	plva.BaseVestingAccount.TrackDelegation(balance, plva.GetVestingCoins(blockTime), amount)
+	plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
 }
 
 // GetStartTime returns zero since a permanent locked vesting account has no start time.

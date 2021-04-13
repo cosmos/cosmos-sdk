@@ -63,7 +63,11 @@ func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
 	}
 
-	return nil
+	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
+	if !ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (exported.Authorization)(nil), msg.Authorization.GetCachedValue())
+	}
+	return authorization.ValidateBasic()
 }
 
 // GetGrantAuthorization returns the cache value from the MsgGrantAuthorization.Authorization if present.

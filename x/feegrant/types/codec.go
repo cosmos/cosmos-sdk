@@ -18,6 +18,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*FeeAllowanceI)(nil),
 		&BasicFeeAllowance{},
 		&PeriodicFeeAllowance{},
+		&AllowedMsgFeeAllowance{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

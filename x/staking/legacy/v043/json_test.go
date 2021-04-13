@@ -2,7 +2,6 @@ package v043_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -44,12 +43,15 @@ func TestMigrateJSON(t *testing.T) {
 	// Make sure about:
 	// - Votes are all ADR-037 weighted votes with weight 1.
 	expected := `{
+	"buffered_msgs": [],
 	"delegations": [],
+	"epoch_number": "0",
 	"exported": false,
 	"last_total_power": "0",
 	"last_validator_powers": [],
 	"params": {
 		"bond_denom": "stake",
+		"epoch_interval": "10",
 		"historical_entries": 10000,
 		"max_entries": 7,
 		"max_validators": 100,
@@ -60,8 +62,6 @@ func TestMigrateJSON(t *testing.T) {
 	"unbonding_delegations": [],
 	"validators": []
 }`
-
-	fmt.Println(string(indentedBz))
 
 	require.Equal(t, expected, string(indentedBz))
 }

@@ -7,7 +7,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	epochkeeper "github.com/cosmos/cosmos-sdk/x/epoching/keeper"
 )
 
 // GetNewActionID returns ID to be used for next message queue item
@@ -58,12 +57,4 @@ func (k Keeper) GetNextEpochHeight(ctx sdk.Context) int64 {
 // GetNextEpochTime returns estimated next epoch time
 func (k Keeper) GetNextEpochTime(ctx sdk.Context) time.Time {
 	return k.epochKeeper.GetNextEpochTime(ctx, k.EpochInterval(ctx))
-}
-
-// GetEpochActionKey returns the epoch action key
-func (k Keeper) GetEpochActionKey(ctx sdk.Context) []byte {
-	epochNumber := k.GetEpochNumber(ctx)
-	actionID := k.GetNewActionID(ctx)
-
-	return epochkeeper.ActionStoreKey(epochNumber, actionID)
 }

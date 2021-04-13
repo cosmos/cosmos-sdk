@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	epochkeeper "github.com/cosmos/cosmos-sdk/x/epoching/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -596,22 +597,24 @@ func (k Querier) QueuedMsgCreateValidators(c context.Context, req *types.QueryQu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var msgCreateValidators []types.MsgCreateValidator
+	var msgCreateValidators []*types.MsgCreateValidator
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
-
-	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var mcv types.MsgCreateValidator
-		if err := k.cdc.UnmarshalBinaryBare(value, &mcv); err != nil {
+	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var md sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
 			return false, err
 		}
 
+		msg, ok := md.(*types.MsgCreateValidator)
+		if !ok {
+			return false, status.Error(codes.NotFound, "message was not found")
+		}
+
 		if accumulate {
-			msgCreateValidators = append(msgCreateValidators, mcv)
+			msgCreateValidators = append(msgCreateValidators, msg)
 		}
 
 		return true, nil
@@ -629,21 +632,24 @@ func (k Querier) QueuedMsgEditValidators(c context.Context, req *types.QueryQueu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var msgEditValidators []types.MsgEditValidator
+	var msgEditValidators []*types.MsgEditValidator
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
 
-	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var mev types.MsgEditValidator
-		if err := k.cdc.UnmarshalBinaryBare(value, &mev); err != nil {
+	pageRes, err := query.FilteredPaginate(store, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		var md sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
 			return false, err
 		}
 
+		msg, ok := md.(*types.MsgEditValidator)
+		if !ok {
+			return false, status.Error(codes.NotFound, "message was not found")
+		}
+
 		if accumulate {
-			msgEditValidators = append(msgEditValidators, mev)
+			msgEditValidators = append(msgEditValidators, msg)
 		}
 
 		return true, nil
@@ -661,21 +667,25 @@ func (k Querier) QueuedMsgDelegates(c context.Context, req *types.QueryQueuedMsg
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var msgDelegates []types.MsgDelegate
+	var msgDelegates []*types.MsgDelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var md types.MsgDelegate
-		if err := k.cdc.UnmarshalBinaryBare(value, &md); err != nil {
+		var md sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
 			return false, err
 		}
 
-		if accumulate {
-			msgDelegates = append(msgDelegates, md)
+		msg, ok := md.(*types.MsgDelegate)
+		if ok {
+			if accumulate {
+				msgDelegates = append(msgDelegates, msg)
+			}
+		} else {
+			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -697,21 +707,28 @@ func (k Querier) QueuedMsgDelegate(c context.Context, req *types.QueryQueuedMsgD
 		return nil, status.Error(codes.InvalidArgument, "account address cannot be empty")
 	}
 
-	var msgDelegates []types.MsgDelegate
+	var msgDelegates []*types.MsgDelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
-
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var md types.MsgDelegate
-		if err := k.cdc.UnmarshalBinaryBare(value, &md); err != nil {
+		var md sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
 			return false, err
 		}
 
-		if accumulate && md.DelegatorAddress == req.DelegatorAddr {
-			msgDelegates = append(msgDelegates, md)
+		msg, ok := md.(*types.MsgDelegate)
+		if !ok {
+			return false, status.Error(codes.NotFound, "message was not found")
+		}
+
+		if msg.DelegatorAddress == req.DelegatorAddr {
+			if accumulate {
+				msgDelegates = append(msgDelegates, msg)
+			}
+		} else {
+			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -729,21 +746,27 @@ func (k Querier) QueuedMsgBeginRedelegates(c context.Context, req *types.QueryQu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var msgBeginRedelegates []types.MsgBeginRedelegate
+	var msgBeginRedelegates []*types.MsgBeginRedelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var mbr types.MsgBeginRedelegate
-		if err := k.cdc.UnmarshalBinaryBare(value, &mbr); err != nil {
+		var md sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
 			return false, err
 		}
 
+		msg, ok := md.(*types.MsgBeginRedelegate)
+		if !ok {
+			return false, status.Error(codes.NotFound, "message was not found")
+		}
+
 		if accumulate {
-			msgBeginRedelegates = append(msgBeginRedelegates, mbr)
+			msgBeginRedelegates = append(msgBeginRedelegates, msg)
+		} else {
+			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -765,21 +788,29 @@ func (k Querier) QueuedMsgBeginRedelegate(c context.Context, req *types.QueryQue
 		return nil, status.Error(codes.InvalidArgument, "account address cannot be empty")
 	}
 
-	var msgDelegates []types.MsgBeginRedelegate
+	var msgDelegates []*types.MsgBeginRedelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var md types.MsgBeginRedelegate
-		if err := k.cdc.UnmarshalBinaryBare(value, &md); err != nil {
+		var md sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
 			return false, err
 		}
 
-		if accumulate && md.DelegatorAddress == req.DelegatorAddr {
-			msgDelegates = append(msgDelegates, md)
+		msg, ok := md.(*types.MsgBeginRedelegate)
+		if !ok {
+			return false, status.Error(codes.NotFound, "message was not found")
+		}
+
+		if msg.DelegatorAddress == req.DelegatorAddr {
+			if accumulate {
+				msgDelegates = append(msgDelegates, msg)
+			}
+		} else {
+			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -797,21 +828,25 @@ func (k Querier) QueuedMsgUndelegates(c context.Context, req *types.QueryQueuedM
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var MsgUndelegates []types.MsgUndelegate
+	var MsgUndelegates []*types.MsgUndelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var mbr types.MsgUndelegate
-		if err := k.cdc.UnmarshalBinaryBare(value, &mbr); err != nil {
+		var mbr sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &mbr); err != nil {
 			return false, err
 		}
 
+		msg, ok := mbr.(*types.MsgUndelegate)
+		if !ok {
+			return false, status.Error(codes.NotFound, "message was not found")
+		}
+
 		if accumulate {
-			MsgUndelegates = append(MsgUndelegates, mbr)
+			MsgUndelegates = append(MsgUndelegates, msg)
 		}
 
 		return true, nil
@@ -829,21 +864,29 @@ func (k Querier) QueuedMsgUndelegate(c context.Context, req *types.QueryQueuedMs
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var msgDelegates []types.MsgUndelegate
+	var msgDelegates []*types.MsgUndelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	epochKey := k.GetEpochActionKey(ctx)
-	epochStore := prefix.NewStore(store, epochKey)
+	epochStore := prefix.NewStore(store, []byte(epochkeeper.EpochActionQueuePrefix))
 
 	pageRes, err := query.FilteredPaginate(epochStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		var md types.MsgUndelegate
-		if err := k.cdc.UnmarshalBinaryBare(value, &md); err != nil {
+		var md sdk.Msg
+		if err := k.cdc.UnmarshalInterface(value, &md); err != nil {
 			return false, err
 		}
 
-		if accumulate && md.DelegatorAddress == req.DelegatorAddr {
-			msgDelegates = append(msgDelegates, md)
+		msg, ok := md.(*types.MsgUndelegate)
+		if !ok {
+			return false, status.Error(codes.NotFound, "message was not found")
+		}
+
+		if msg.DelegatorAddress == req.DelegatorAddr {
+			if accumulate {
+				msgDelegates = append(msgDelegates, msg)
+			}
+		} else {
+			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil

@@ -421,7 +421,7 @@ message QueryQueuedMsgCreateValidatorsRequest {
 // QueryMsgCreateValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
 message QueryQueuedMsgCreateValidatorsResponse {
   // msg_create_validators contains all of the queued messages
-  repeated MsgCreateValidator msg_create_validators = 1 [(gogoproto.nullable) = false];
+  repeated MsgCreateValidator msg_create_validators = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -437,7 +437,7 @@ message QueryQueuedMsgEditValidatorsRequest {
 // QueryQueuedMsgEditValidatorsResponse is response type for the Query/MsgCreateValidators RPC method
 message QueryQueuedMsgEditValidatorsResponse {
   // msg_edit_validators contains all of the queued messages
-  repeated MsgEditValidator msg_edit_validators = 1 [(gogoproto.nullable) = false];
+  repeated MsgEditValidator msg_edit_validators = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -453,7 +453,7 @@ message QueryQueuedMsgDelegatesRequest {
 // QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
 message QueryQueuedMsgDelegatesResponse {
   // msg_delegates contains all of the queued messages
-  repeated MsgDelegate msg_delegates = 1 [(gogoproto.nullable) = false];
+  repeated MsgDelegate msg_delegates = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -470,7 +470,7 @@ message QueryQueuedMsgDelegateRequest {
 // QueryQueuedMsgDelegatesResponse is response type for the Query/MsgDelegates RPC method
 message QueryQueuedMsgDelegateResponse {
   // msg_delegates contains all of the queued messages
-  repeated MsgDelegate msg_delegates = 1 [(gogoproto.nullable) = false];
+  repeated MsgDelegate msg_delegates = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -486,7 +486,7 @@ message QueryQueuedMsgUndelegatesRequest {
 // QueryQueuedMsgUndelegatesResponse is response type for the Query/MsgUndelegates RPC method
 message QueryQueuedMsgUndelegatesResponse {
   // msg_delegates contains all of the queued messages
-  repeated MsgUndelegate msg_undelegates = 1 [(gogoproto.nullable) = false];
+  repeated MsgUndelegate msg_undelegates = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -503,7 +503,7 @@ message QueryQueuedMsgUndelegateRequest {
 // QueryQueuedMsgUndelegatesResponse is response type for the Query/MsgUndelegates RPC method
 message QueryQueuedMsgUndelegateResponse {
   // msg_delegates contains all of the queued messages
-  repeated MsgUndelegate msg_undelegates = 1 [(gogoproto.nullable) = false];
+  repeated MsgUndelegate msg_undelegates = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -518,7 +518,7 @@ message QueryQueuedMsgBeginRedelegatesRequest {
 // QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
 message QueryQueuedMsgBeginRedelegatesResponse {
   // msg_begin_redelegates contains all of the queued messages
-  repeated MsgBeginRedelegate msg_begin_redelegates = 1 [(gogoproto.nullable) = false];
+  repeated MsgBeginRedelegate msg_begin_redelegates = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -535,7 +535,7 @@ message QueryQueuedMsgBeginRedelegateRequest {
 // QueryMsgBeginRedelegatesResponse is response type for the Query/MsgBeginRedelegates RPC method
 message QueryQueuedMsgBeginRedelegateResponse {
   // msg_begin_redelegates contains all of the queued messages
-  repeated MsgBeginRedelegate msg_begin_redelegates = 1 [(gogoproto.nullable) = false];
+  repeated MsgBeginRedelegate msg_begin_redelegates = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

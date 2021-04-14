@@ -225,16 +225,6 @@ Note: `Module` is a special case of the more general _derived_ address, where we
 smartContractAddr := Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
 ```
 
-We can also define a function which will derive an address based on multiple keys (path). The function is similar to the `Composed`, however it doesn't sort the derivation keys:
-
-```go
-func DeriveMulti(address []byte, derivationKeys [][]byte) []byte {
-    keys = map(derivationKeys, \k -> LengthPrefix(k))
-    return Hash(LengthPrefix(address), keys[0] + ... + keys[n])
-}
-```
-
-
 
 ### Schema Types
 

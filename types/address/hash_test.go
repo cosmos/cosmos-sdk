@@ -90,21 +90,6 @@ func (suite *AddressSuite) TestDerive() {
 	assert.NotEqual(d2, d3)
 }
 
-func (suite *AddressSuite) TestDeriveMulti() {
-	assert := suite.Assert()
-	var addr, key1, key2 = []byte{1, 2}, []byte{3, 4}, []byte{1, 2}
-	d1, err := DeriveMulti(addr, [][]byte{key1, key2})
-	assert.NoError(err)
-	d2, err := DeriveMulti(addr, [][]byte{key2, key1})
-	assert.NoError(err)
-
-	assert.NotEqual(d1, d2)
-	d3 := Derive(Derive(addr, key1), key2)
-	assert.NotEqual(d1, d3)
-	d3 = Derive(Derive(addr, key2), key1)
-	assert.NotEqual(d1, d3)
-}
-
 type addrMock struct {
 	Addr []byte
 }

@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
@@ -54,9 +53,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, simulation.TypeMsgGrantAuthorization},
-		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, simulation.TypeMsgRevokeAuthorization},
-		{simappparams.DefaultWeightMsgSend, types.ModuleName, simulation.TypeMsgExecAuthorization},
+		{simulation.WeightGrantAuthorization, types.ModuleName, simulation.TypeMsgGrantAuthorization},
+		{simulation.WeightRevokeAuthorization, types.ModuleName, simulation.TypeMsgRevokeAuthorization},
+		{simulation.WeightExecAuthorization, types.ModuleName, simulation.TypeMsgExecAuthorization},
 	}
 
 	for i, w := range weightesOps {
@@ -74,7 +73,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
-	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
+	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
@@ -133,7 +132,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 		}})
 
 	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
-	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
+	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
 	granter := accounts[0]
 	grantee := accounts[1]
@@ -168,7 +167,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
-	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
+	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
 	granter := accounts[0]
 	grantee := accounts[1]

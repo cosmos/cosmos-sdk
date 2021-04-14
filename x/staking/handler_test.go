@@ -50,6 +50,7 @@ func TestPowerReductionChangeValidatorSetUpdates(t *testing.T) {
 
 	// create validator
 	tstaking.CreateValidatorWithValPower(validatorAddr, PKs[0], initPower, true)
+	app.StakingKeeper.ExecuteEpoch(ctx)
 
 	// must end-block
 	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -58,6 +59,7 @@ func TestPowerReductionChangeValidatorSetUpdates(t *testing.T) {
 
 	// create a second validator keep it bonded
 	tstaking.CreateValidatorWithValPower(validatorAddr3, PKs[2], initPower, true)
+	app.StakingKeeper.ExecuteEpoch(ctx)
 
 	// must end-block
 	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)

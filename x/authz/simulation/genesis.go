@@ -13,8 +13,8 @@ import (
 // Simulation parameter constant.
 const authz = "authz"
 
-// GenAuthorizationGrant returns an empty slice of authorization grants.
-func GenAuthorizationGrant(_ *rand.Rand, _ []simtypes.Account) []types.GrantAuthorization {
+// genAuthorizationGrant returns an empty slice of authorization grants.
+func genAuthorizationGrant(_ *rand.Rand, _ []simtypes.Account) []types.GrantAuthorization {
 	return []types.GrantAuthorization{}
 }
 
@@ -24,7 +24,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, authz, &grants, simState.Rand,
-		func(r *rand.Rand) { grants = GenAuthorizationGrant(r, simState.Accounts) },
+		func(r *rand.Rand) { grants = genAuthorizationGrant(r, simState.Accounts) },
 	)
 	authzGrantsGenesis := types.NewGenesisState(grants)
 

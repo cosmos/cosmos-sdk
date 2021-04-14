@@ -77,9 +77,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	h, _ := s.network.LatestHeight()
-	h2, err := s.network.WaitForHeightWithTimeout(h+11, 20*time.Second)
+	_, err := s.network.WaitForHeightWithTimeout(h+11, 20*time.Second)
 	s.Require().NoError(err)
-	fmt.Println(h, h2)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -331,24 +330,24 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 			},
 			true, nil, nil,
 		},
-		// {
-		// 	"with json output",
-		// 	[]string{
-		// 		val.Address.String(),
-		// 		val2.ValAddress.String(),
-		// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-		// 	},
-		// 	false,
-		// 	&types.DelegationResponse{},
-		// 	&types.DelegationResponse{
-		// 		Delegation: types.Delegation{
-		// 			DelegatorAddress: val.Address.String(),
-		// 			ValidatorAddress: val2.ValAddress.String(),
-		// 			Shares:           sdk.NewDec(10),
-		// 		},
-		// 		Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
-		// 	},
-		// },
+		{
+			"with json output",
+			[]string{
+				val.Address.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&types.DelegationResponse{},
+			&types.DelegationResponse{
+				Delegation: types.Delegation{
+					DelegatorAddress: val.Address.String(),
+					ValidatorAddress: val2.ValAddress.String(),
+					Shares:           sdk.NewDec(10),
+				},
+				Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
+			},
+		},
 	}
 
 	for _, tc := range testCases {

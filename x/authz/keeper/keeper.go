@@ -164,20 +164,6 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	return nil
 }
 
-// GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
-func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) (authorizations []exported.Authorization) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetAuthorizationStoreKey(grantee, granter, "")
-	iter := sdk.KVStorePrefixIterator(store, key)
-	defer iter.Close()
-	var authorization types.AuthorizationGrant
-	for ; iter.Valid(); iter.Next() {
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &authorization)
-		authorizations = append(authorizations, authorization.GetAuthorizationGrant())
-	}
-	return authorizations
-}
-
 // GetOrRevokeAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
 // If the Authorization is expired already, it will revoke the authorization and return nil

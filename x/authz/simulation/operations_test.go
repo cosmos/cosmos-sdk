@@ -56,7 +56,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, simulation.TypeMsgGrantAuthorization},
 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, simulation.TypeMsgRevokeAuthorization},
-		{simappparams.DefaultWeightMsgSend, types.ModuleName, simulation.TypeMsgExecDelegated},
+		{simappparams.DefaultWeightMsgSend, types.ModuleName, simulation.TypeMsgExecAuthorization},
 	}
 
 	for i, w := range weightesOps {
@@ -178,7 +178,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgExecuteAuthorized(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
+	op := simulation.SimulateMsgExecAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

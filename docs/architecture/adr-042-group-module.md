@@ -14,7 +14,7 @@ This ADR defines the `x/group` module which allows the creation and management o
 
 ## Context
 
-The current multi-signature mechanism of the Cosmos SDK has certain limitations:
+The legacy amino multi-signature mechanism of the Cosmos SDK has certain limitations:
 - Key rotation is not possible, although this can be solved with [account rekeying](adr-034-account-rekeying.md).
 - Thresholds can't be changed.
 - UX is not straightforward for non-technical users ([#5661](https://github.com/cosmos/cosmos-sdk/issues/5661)).

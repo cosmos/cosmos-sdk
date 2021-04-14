@@ -844,11 +844,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryQueuedDelegation() {
 			},
 			false,
 		},
-		{"invalid request",
+		{"empty response",
 			func() {
 				req = &types.QueryQueuedMsgDelegateRequest{DelegatorAddr: addrs[1].String()}
 			},
-			false,
+			true,
 		},
 		{"valid request",
 			func() {
@@ -864,9 +864,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryQueuedDelegation() {
 			res, err := queryClient.QueuedMsgDelegate(gocontext.Background(), req)
 			if tc.expPass {
 				suite.Equal(uint64(1), res.Pagination.Total)
-				suite.Len(res.MsgDelegates, 1)
-				suite.Equal(1, len(res.MsgDelegates))
-				suite.Equal(coin, res.MsgDelegates[0].Amount)
+				if res.MsgDelegates != nil {
+					suite.Len(res.MsgDelegates, 1)
+					suite.Equal(1, len(res.MsgDelegates))
+					suite.Equal(coin, res.MsgDelegates[0].Amount)
+				}
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -906,11 +908,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryQueuedRedelegation() {
 			},
 			false,
 		},
-		{"invalid request",
+		{"empty response",
 			func() {
 				req = &types.QueryQueuedMsgBeginRedelegateRequest{DelegatorAddr: addrs[1].String()}
 			},
-			false,
+			true,
 		},
 		{"valid request",
 			func() {
@@ -926,9 +928,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryQueuedRedelegation() {
 			res, err := queryClient.QueuedMsgBeginRedelegate(gocontext.Background(), req)
 			if tc.expPass {
 				suite.Equal(uint64(1), res.Pagination.Total)
-				suite.Len(res.MsgBeginRedelegates, 1)
-				suite.Equal(1, len(res.MsgBeginRedelegates))
-				suite.Equal(coin, res.MsgBeginRedelegates[0].Amount)
+				if res.MsgBeginRedelegates != nil {
+					suite.Len(res.MsgBeginRedelegates, 1)
+					suite.Equal(1, len(res.MsgBeginRedelegates))
+					suite.Equal(coin, res.MsgBeginRedelegates[0].Amount)
+				}
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -982,9 +986,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryQueuedRedelegations() {
 			res, err := queryClient.QueuedMsgBeginRedelegates(gocontext.Background(), req)
 			if tc.expPass {
 				suite.Equal(uint64(1), res.Pagination.Total)
-				suite.Len(res.MsgBeginRedelegates, 1)
-				suite.Equal(1, len(res.MsgBeginRedelegates))
-				suite.Equal(coin, res.MsgBeginRedelegates[0].Amount)
+				if res.MsgBeginRedelegates != nil {
+					suite.Len(res.MsgBeginRedelegates, 1)
+					suite.Equal(1, len(res.MsgBeginRedelegates))
+					suite.Equal(coin, res.MsgBeginRedelegates[0].Amount)
+				}
 			} else {
 				suite.Error(err)
 				suite.Nil(res)
@@ -1074,11 +1080,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryQueuedUndelegation() {
 			},
 			false,
 		},
-		{"invalid request",
+		{"empty response",
 			func() {
 				req = &types.QueryQueuedMsgUndelegateRequest{DelegatorAddr: addrs[1].String()}
 			},
-			false,
+			true,
 		},
 		{"valid request",
 			func() {
@@ -1094,9 +1100,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryQueuedUndelegation() {
 			res, err := queryClient.QueuedMsgUndelegate(gocontext.Background(), req)
 			if tc.expPass {
 				suite.Equal(uint64(1), res.Pagination.Total)
-				suite.Len(res.MsgUndelegates, 1)
-				suite.Equal(1, len(res.MsgUndelegates))
-				suite.Equal(coin, res.MsgUndelegates[0].Amount)
+				if res.MsgUndelegates != nil {
+					suite.Len(res.MsgUndelegates, 1)
+					suite.Equal(1, len(res.MsgUndelegates))
+					suite.Equal(coin, res.MsgUndelegates[0].Amount)
+				}
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

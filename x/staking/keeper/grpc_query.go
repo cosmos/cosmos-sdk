@@ -610,7 +610,7 @@ func (k Querier) QueuedMsgCreateValidators(c context.Context, req *types.QueryQu
 
 		msg, ok := md.(*types.MsgCreateValidator)
 		if !ok {
-			return false, status.Error(codes.NotFound, "message was not found")
+			return false, nil
 		}
 
 		if accumulate {
@@ -645,7 +645,7 @@ func (k Querier) QueuedMsgEditValidators(c context.Context, req *types.QueryQueu
 
 		msg, ok := md.(*types.MsgEditValidator)
 		if !ok {
-			return false, status.Error(codes.NotFound, "message was not found")
+			return false, nil
 		}
 
 		if accumulate {
@@ -684,8 +684,6 @@ func (k Querier) QueuedMsgDelegates(c context.Context, req *types.QueryQueuedMsg
 			if accumulate {
 				msgDelegates = append(msgDelegates, msg)
 			}
-		} else {
-			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -720,15 +718,13 @@ func (k Querier) QueuedMsgDelegate(c context.Context, req *types.QueryQueuedMsgD
 
 		msg, ok := md.(*types.MsgDelegate)
 		if !ok {
-			return false, status.Error(codes.NotFound, "message was not found")
+			return false, nil
 		}
 
 		if msg.DelegatorAddress == req.DelegatorAddr {
 			if accumulate {
 				msgDelegates = append(msgDelegates, msg)
 			}
-		} else {
-			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -760,13 +756,11 @@ func (k Querier) QueuedMsgBeginRedelegates(c context.Context, req *types.QueryQu
 
 		msg, ok := md.(*types.MsgBeginRedelegate)
 		if !ok {
-			return false, status.Error(codes.NotFound, "message was not found")
+			return false, nil
 		}
 
 		if accumulate {
 			msgBeginRedelegates = append(msgBeginRedelegates, msg)
-		} else {
-			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -802,15 +796,13 @@ func (k Querier) QueuedMsgBeginRedelegate(c context.Context, req *types.QueryQue
 
 		msg, ok := md.(*types.MsgBeginRedelegate)
 		if !ok {
-			return false, status.Error(codes.NotFound, "message was not found")
+			return false, nil
 		}
 
 		if msg.DelegatorAddress == req.DelegatorAddr {
 			if accumulate {
 				msgDelegates = append(msgDelegates, msg)
 			}
-		} else {
-			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil
@@ -842,7 +834,7 @@ func (k Querier) QueuedMsgUndelegates(c context.Context, req *types.QueryQueuedM
 
 		msg, ok := mbr.(*types.MsgUndelegate)
 		if !ok {
-			return false, status.Error(codes.NotFound, "message was not found")
+			return false, nil
 		}
 
 		if accumulate {
@@ -864,6 +856,10 @@ func (k Querier) QueuedMsgUndelegate(c context.Context, req *types.QueryQueuedMs
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.DelegatorAddr == "" {
+		return nil, status.Error(codes.InvalidArgument, "account address cannot be empty")
+	}
+
 	var msgDelegates []*types.MsgUndelegate
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -878,15 +874,13 @@ func (k Querier) QueuedMsgUndelegate(c context.Context, req *types.QueryQueuedMs
 
 		msg, ok := md.(*types.MsgUndelegate)
 		if !ok {
-			return false, status.Error(codes.NotFound, "message was not found")
+			return false, nil
 		}
 
 		if msg.DelegatorAddress == req.DelegatorAddr {
 			if accumulate {
 				msgDelegates = append(msgDelegates, msg)
 			}
-		} else {
-			return false, status.Error(codes.NotFound, "message was not found")
 		}
 
 		return true, nil

@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	h, _ := s.network.LatestHeight()
-	_, err := s.network.WaitForHeightWithTimeout(h+11, 20*time.Second)
+	_, err = s.network.WaitForHeightWithTimeout(h+11, 20*time.Second)
 	s.Require().NoError(err)
 }
 

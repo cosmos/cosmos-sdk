@@ -48,9 +48,9 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val2)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val3)
 
-	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], sdk.TokensFromConsensusPower(powers[0]), stakingtypes.Unbonded, val1, true)
-	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], sdk.TokensFromConsensusPower(powers[1]), stakingtypes.Unbonded, val2, true)
-	_, _ = app.StakingKeeper.Delegate(ctx, addrs[2], sdk.TokensFromConsensusPower(powers[2]), stakingtypes.Unbonded, val3, true)
+	_, _ = app.StakingKeeper.Delegate(ctx, addrs[0], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[0]), stakingtypes.Unbonded, val1, true)
+	_, _ = app.StakingKeeper.Delegate(ctx, addrs[1], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[1]), stakingtypes.Unbonded, val2, true)
+	_, _ = app.StakingKeeper.Delegate(ctx, addrs[2], app.StakingKeeper.TokensFromConsensusPower(ctx, powers[2]), stakingtypes.Unbonded, val3, true)
 
 	_ = staking.EndBlocker(ctx, app.StakingKeeper)
 

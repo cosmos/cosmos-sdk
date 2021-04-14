@@ -80,6 +80,8 @@ tracked in validator object in the `Validators` index.
 It is possible to delegate to a jailed validator, the only difference being it
 will not be added to the power index until it is unjailed.
 
+![](docs/uml/delegation_sequence.svg)
+
 ## Msg/Undelegate
 
 The `Msg/Undelegate` service message allows delegators to undelegate their tokens from
@@ -111,6 +113,8 @@ When this service message is processed the following actions occur:
   - `Unbonded` - then send the coins the message `DelegatorAddr`
 - if there are no more `Shares` in the delegation, then the delegation object is removed from the store
   - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+
+![](docs/uml/unbond_sequence.svg)
 
 ## Msg/BeginRedelegate
 
@@ -146,3 +150,5 @@ When this service message is processed the following actions occur:
 - Delegate the token worth to the destination validator, possibly moving tokens back to the bonded state.
 - if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
   - under this situation if the delegation is the validator's self-delegation then also jail the validator.
+
+![](docs/uml/begin_redelegation_sequence.svg)

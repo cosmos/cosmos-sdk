@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -22,9 +25,8 @@ type Keeper interface {
 	ExportGenesis(sdk.Context) *types.GenesisState
 
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
-	GetTotalSupply(ctx sdk.Context) sdk.Coins
+	GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
 	IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
-
 	GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
@@ -53,14 +55,27 @@ type BaseKeeper struct {
 	paramSpace paramtypes.Subspace
 }
 
-func (k BaseKeeper) GetTotalSupply(ctx sdk.Context) sdk.Coins {
-	balances := sdk.NewCoins()
-	k.IterateTotalSupply(ctx, func(balance sdk.Coin) bool {
-		balances = balances.Add(balance)
-		return false
+func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	supply := sdk.NewCoins()
+
+	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert amount string to Int %v", err)
+		}
+		supply = append(supply, sdk.NewCoin(string(key), amount))
+		return nil
 	})
 
-	return balances.Sort()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return supply, pageRes, nil
 }
 
 // NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated
@@ -184,9 +199,10 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 		}
 	}
 
-	amount, ok := sdk.NewIntFromString(string(bz))
-	if !ok {
-		panic("unexpected supply")
+	var amount sdk.Int
+	err := amount.Unmarshal(bz)
+	if err != nil {
+		panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 	}
 
 	return sdk.Coin{
@@ -413,7 +429,11 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
-	supplyStore.Set([]byte(coin.GetDenom()), []byte(coin.Amount.String()))
+	intBytes, err := coin.Amount.Marshal()
+	if err != nil {
+		panic(fmt.Errorf("unable to marshal amount value %v", err))
+	}
+	supplyStore.Set([]byte(coin.GetDenom()), intBytes)
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
@@ -426,6 +446,7 @@ func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balanc
 	if ok {
 		// TODO: return error on account.TrackDelegation
 		vacc.TrackDelegation(ctx.BlockHeader().Time, balance, amt)
+		k.ak.SetAccount(ctx, acc)
 	}
 
 	return nil
@@ -441,6 +462,7 @@ func (k BaseKeeper) trackUndelegation(ctx sdk.Context, addr sdk.AccAddress, amt 
 	if ok {
 		// TODO: return error on account.TrackUndelegation
 		vacc.TrackUndelegation(amt)
+		k.ak.SetAccount(ctx, acc)
 	}
 
 	return nil
@@ -454,9 +476,10 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		amount, ok := sdk.NewIntFromString(string(iterator.Value()))
-		if !ok {
-			panic("unexpected supply")
+		var amount sdk.Int
+		err := amount.Unmarshal(iterator.Value())
+		if err != nil {
+			panic(fmt.Errorf("unable to unmarshal supply value %v", err))
 		}
 
 		balance := sdk.Coin{

@@ -183,7 +183,7 @@ func TestUnbondDelegation(t *testing.T) {
 	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(delAddrs)
 
-	startTokens := sdk.TokensFromConsensusPower(10)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
 	require.NoError(t, simapp.FundModuleAccount(app, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))))
@@ -201,7 +201,7 @@ func TestUnbondDelegation(t *testing.T) {
 	delegation := types.NewDelegation(delAddrs[0], valAddrs[0], issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
-	bondTokens := sdk.TokensFromConsensusPower(6)
+	bondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	amount, err := app.StakingKeeper.Unbond(ctx, delAddrs[0], valAddrs[0], bondTokens.ToDec())
 	require.NoError(t, err)
 	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
@@ -222,7 +222,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	startTokens := sdk.TokensFromConsensusPower(10)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
@@ -303,7 +303,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
 	//create a validator with a self-delegation
@@ -345,7 +345,7 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.TokensFromConsensusPower(6).ToDec())
+	_, err := app.StakingKeeper.Undelegate(ctx, val0AccAddr, addrVals[0], app.StakingKeeper.TokensFromConsensusPower(ctx, 6).ToDec())
 	require.NoError(t, err)
 
 	// end block
@@ -353,14 +353,14 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, sdk.TokensFromConsensusPower(14), validator.Tokens)
+	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 14), validator.Tokens)
 	require.Equal(t, types.Unbonding, validator.Status)
 	require.True(t, validator.Jailed)
 }
 
 func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	_, app, ctx := createTestInput()
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
@@ -445,7 +445,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	_, app, ctx := createTestInput()
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
@@ -460,7 +460,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := sdk.TokensFromConsensusPower(10)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -509,7 +509,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	require.Equal(t, validator.Status, types.Unbonded)
 
 	// unbond some of the other delegation's shares
-	unbondTokens := sdk.TokensFromConsensusPower(6)
+	unbondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], unbondTokens.ToDec())
 	require.NoError(t, err)
 
@@ -525,7 +525,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	_, app, ctx := createTestInput()
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
@@ -540,7 +540,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := sdk.TokensFromConsensusPower(10)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 
@@ -691,7 +691,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	valTokens := sdk.TokensFromConsensusPower(10)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	startCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), valTokens))
 
 	// add bonded tokens to pool for delegations
@@ -720,7 +720,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	startTokens := sdk.TokensFromConsensusPower(20)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
 	startCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
 
 	// add bonded tokens to pool for delegations
@@ -730,7 +730,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 
 	// create a validator with a self-delegation
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
-	valTokens := sdk.TokensFromConsensusPower(10)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -776,7 +776,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	startTokens := sdk.TokensFromConsensusPower(30)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
 	startCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
 
 	// add bonded tokens to pool for delegations
@@ -788,7 +788,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := sdk.TokensFromConsensusPower(10)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 
@@ -806,7 +806,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	require.Equal(t, types.Bonded, validator2.Status)
 
 	// create a second delegation to validator 1
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(t, delTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -832,7 +832,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	startTokens := sdk.TokensFromConsensusPower(30)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
 	startCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
 
 	// add bonded tokens to pool for delegations
@@ -844,7 +844,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := sdk.TokensFromConsensusPower(10)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -854,7 +854,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 
 	// create a second delegation to this validator
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validator)
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(t, delTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -896,7 +896,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond some of the other delegation's shares
-	redelegateTokens := sdk.TokensFromConsensusPower(6)
+	redelegateTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], redelegateTokens.ToDec())
 	require.NoError(t, err)
 
@@ -914,7 +914,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	startTokens := sdk.TokensFromConsensusPower(30)
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
 	startCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), startTokens))
 
 	// add bonded tokens to pool for delegations
@@ -926,7 +926,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
-	valTokens := sdk.TokensFromConsensusPower(10)
+	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -936,7 +936,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 
 	// create a second delegation to this validator
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, validator)
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(t, delTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -970,7 +970,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	app.StakingKeeper.UnbondingToUnbonded(ctx, validator)
 
 	// redelegate some of the delegation's shares
-	redelegationTokens := sdk.TokensFromConsensusPower(6)
+	redelegationTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, addrDels[1], addrVals[0], addrVals[1], redelegationTokens.ToDec())
 	require.NoError(t, err)
 

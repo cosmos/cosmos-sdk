@@ -80,6 +80,7 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
+    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -122,6 +123,37 @@
     - [ListImplementationsResponse](#cosmos.base.reflection.v1beta1.ListImplementationsResponse)
   
     - [ReflectionService](#cosmos.base.reflection.v1beta1.ReflectionService)
+  
+- [cosmos/base/reflection/v2alpha1/reflection.proto](#cosmos/base/reflection/v2alpha1/reflection.proto)
+    - [AppDescriptor](#cosmos.base.reflection.v2alpha1.AppDescriptor)
+    - [AuthnDescriptor](#cosmos.base.reflection.v2alpha1.AuthnDescriptor)
+    - [ChainDescriptor](#cosmos.base.reflection.v2alpha1.ChainDescriptor)
+    - [CodecDescriptor](#cosmos.base.reflection.v2alpha1.CodecDescriptor)
+    - [ConfigurationDescriptor](#cosmos.base.reflection.v2alpha1.ConfigurationDescriptor)
+    - [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest)
+    - [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse)
+    - [GetChainDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetChainDescriptorRequest)
+    - [GetChainDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetChainDescriptorResponse)
+    - [GetCodecDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorRequest)
+    - [GetCodecDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorResponse)
+    - [GetConfigurationDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorRequest)
+    - [GetConfigurationDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse)
+    - [GetQueryServicesDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetQueryServicesDescriptorRequest)
+    - [GetQueryServicesDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetQueryServicesDescriptorResponse)
+    - [GetTxDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetTxDescriptorRequest)
+    - [GetTxDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetTxDescriptorResponse)
+    - [InterfaceAcceptingMessageDescriptor](#cosmos.base.reflection.v2alpha1.InterfaceAcceptingMessageDescriptor)
+    - [InterfaceDescriptor](#cosmos.base.reflection.v2alpha1.InterfaceDescriptor)
+    - [InterfaceImplementerDescriptor](#cosmos.base.reflection.v2alpha1.InterfaceImplementerDescriptor)
+    - [MsgDescriptor](#cosmos.base.reflection.v2alpha1.MsgDescriptor)
+    - [QueryMethodDescriptor](#cosmos.base.reflection.v2alpha1.QueryMethodDescriptor)
+    - [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor)
+    - [QueryServicesDescriptor](#cosmos.base.reflection.v2alpha1.QueryServicesDescriptor)
+    - [ServiceMsgDescriptor](#cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor)
+    - [SigningModeDescriptor](#cosmos.base.reflection.v2alpha1.SigningModeDescriptor)
+    - [TxDescriptor](#cosmos.base.reflection.v2alpha1.TxDescriptor)
+  
+    - [ReflectionService](#cosmos.base.reflection.v2alpha1.ReflectionService)
   
 - [cosmos/base/snapshots/v1beta1/snapshot.proto](#cosmos/base/snapshots/v1beta1/snapshot.proto)
     - [Metadata](#cosmos.base.snapshots.v1beta1.Metadata)
@@ -275,6 +307,7 @@
     - [Msg](#cosmos.evidence.v1beta1.Msg)
   
 - [cosmos/feegrant/v1beta1/feegrant.proto](#cosmos/feegrant/v1beta1/feegrant.proto)
+    - [AllowedMsgFeeAllowance](#cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance)
     - [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance)
     - [Duration](#cosmos.feegrant.v1beta1.Duration)
     - [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt)
@@ -1565,6 +1598,23 @@ sendable).
 
 
 
+
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+This message is deprecated now that supply is indexed by denom.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1609,7 +1659,7 @@ GenesisState defines the bank module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#cosmos.bank.v1beta1.Params) |  | params defines all the paramaters of the module. |
 | `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
-| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. |
+| `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. If it is left empty, then supply will be calculated based on the provided balances. Otherwise, it will be used to validate that the sum of the balances equals this amount. |
 | `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
 
 
@@ -1822,6 +1872,11 @@ QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 method.
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
 
 
 
@@ -1836,6 +1891,7 @@ method
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply is the supply of the coins |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -2073,6 +2129,437 @@ ReflectionService defines a service for interface reflection.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `ListAllInterfaces` | [ListAllInterfacesRequest](#cosmos.base.reflection.v1beta1.ListAllInterfacesRequest) | [ListAllInterfacesResponse](#cosmos.base.reflection.v1beta1.ListAllInterfacesResponse) | ListAllInterfaces lists all the interfaces registered in the interface registry. | GET|/cosmos/base/reflection/v1beta1/interfaces|
 | `ListImplementations` | [ListImplementationsRequest](#cosmos.base.reflection.v1beta1.ListImplementationsRequest) | [ListImplementationsResponse](#cosmos.base.reflection.v1beta1.ListImplementationsResponse) | ListImplementations list all the concrete types that implement a given interface. | GET|/cosmos/base/reflection/v1beta1/interfaces/{interface_name}/implementations|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/reflection/v2alpha1/reflection.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/reflection/v2alpha1/reflection.proto
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.AppDescriptor"></a>
+
+### AppDescriptor
+AppDescriptor describes a cosmos-sdk based application
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authn` | [AuthnDescriptor](#cosmos.base.reflection.v2alpha1.AuthnDescriptor) |  | AuthnDescriptor provides information on how to authenticate transactions on the application NOTE: experimental and subject to change in future releases. |
+| `chain` | [ChainDescriptor](#cosmos.base.reflection.v2alpha1.ChainDescriptor) |  | chain provides the chain descriptor |
+| `codec` | [CodecDescriptor](#cosmos.base.reflection.v2alpha1.CodecDescriptor) |  | codec provides metadata information regarding codec related types |
+| `configuration` | [ConfigurationDescriptor](#cosmos.base.reflection.v2alpha1.ConfigurationDescriptor) |  | configuration provides metadata information regarding the sdk.Config type |
+| `query_services` | [QueryServicesDescriptor](#cosmos.base.reflection.v2alpha1.QueryServicesDescriptor) |  | query_services provides metadata information regarding the available queriable endpoints |
+| `tx` | [TxDescriptor](#cosmos.base.reflection.v2alpha1.TxDescriptor) |  | tx provides metadata information regarding how to send transactions to the given application |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.AuthnDescriptor"></a>
+
+### AuthnDescriptor
+AuthnDescriptor provides information on how to sign transactions without relying
+on the online RPCs GetTxMetadata and CombineUnsignedTxAndSignatures
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sign_modes` | [SigningModeDescriptor](#cosmos.base.reflection.v2alpha1.SigningModeDescriptor) | repeated | sign_modes defines the supported signature algorithm |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.ChainDescriptor"></a>
+
+### ChainDescriptor
+ChainDescriptor describes chain information of the application
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  | id is the chain id |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.CodecDescriptor"></a>
+
+### CodecDescriptor
+CodecDescriptor describes the registered interfaces and provides metadata information on the types
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `interfaces` | [InterfaceDescriptor](#cosmos.base.reflection.v2alpha1.InterfaceDescriptor) | repeated | interfaces is a list of the registerted interfaces descriptors |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.ConfigurationDescriptor"></a>
+
+### ConfigurationDescriptor
+ConfigurationDescriptor contains metadata information on the sdk.Config
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bech32_account_address_prefix` | [string](#string) |  | bech32_account_address_prefix is the account address prefix |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest"></a>
+
+### GetAuthnDescriptorRequest
+GetAuthnDescriptorRequest is the request used for the GetAuthnDescriptor RPC
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse"></a>
+
+### GetAuthnDescriptorResponse
+GetAuthnDescriptorResponse is the response returned by the GetAuthnDescriptor RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authn` | [AuthnDescriptor](#cosmos.base.reflection.v2alpha1.AuthnDescriptor) |  | authn describes how to authenticate to the application when sending transactions |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetChainDescriptorRequest"></a>
+
+### GetChainDescriptorRequest
+GetChainDescriptorRequest is the request used for the GetChainDescriptor RPC
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetChainDescriptorResponse"></a>
+
+### GetChainDescriptorResponse
+GetChainDescriptorResponse is the response returned by the GetChainDescriptor RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain` | [ChainDescriptor](#cosmos.base.reflection.v2alpha1.ChainDescriptor) |  | chain describes application chain information |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetCodecDescriptorRequest"></a>
+
+### GetCodecDescriptorRequest
+GetCodecDescriptorRequest is the request used for the GetCodecDescriptor RPC
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetCodecDescriptorResponse"></a>
+
+### GetCodecDescriptorResponse
+GetCodecDescriptorResponse is the response returned by the GetCodecDescriptor RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `codec` | [CodecDescriptor](#cosmos.base.reflection.v2alpha1.CodecDescriptor) |  | codec describes the application codec such as registered interfaces and implementations |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorRequest"></a>
+
+### GetConfigurationDescriptorRequest
+GetConfigurationDescriptorRequest is the request used for the GetConfigurationDescriptor RPC
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse"></a>
+
+### GetConfigurationDescriptorResponse
+GetConfigurationDescriptorResponse is the response returned by the GetConfigurationDescriptor RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `config` | [ConfigurationDescriptor](#cosmos.base.reflection.v2alpha1.ConfigurationDescriptor) |  | config describes the application's sdk.Config |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetQueryServicesDescriptorRequest"></a>
+
+### GetQueryServicesDescriptorRequest
+GetQueryServicesDescriptorRequest is the request used for the GetQueryServicesDescriptor RPC
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetQueryServicesDescriptorResponse"></a>
+
+### GetQueryServicesDescriptorResponse
+GetQueryServicesDescriptorResponse is the response returned by the GetQueryServicesDescriptor RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `queries` | [QueryServicesDescriptor](#cosmos.base.reflection.v2alpha1.QueryServicesDescriptor) |  | queries provides information on the available queryable services |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetTxDescriptorRequest"></a>
+
+### GetTxDescriptorRequest
+GetTxDescriptorRequest is the request used for the GetTxDescriptor RPC
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.GetTxDescriptorResponse"></a>
+
+### GetTxDescriptorResponse
+GetTxDescriptorResponse is the response returned by the GetTxDescriptor RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx` | [TxDescriptor](#cosmos.base.reflection.v2alpha1.TxDescriptor) |  | tx provides information on msgs that can be forwarded to the application alongside the accepted transaction protobuf type |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.InterfaceAcceptingMessageDescriptor"></a>
+
+### InterfaceAcceptingMessageDescriptor
+InterfaceAcceptingMessageDescriptor describes a protobuf message which contains
+an interface represented as a google.protobuf.Any
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fullname` | [string](#string) |  | fullname is the protobuf fullname of the type containing the interface |
+| `field_descriptor_names` | [string](#string) | repeated | field_descriptor_names is a list of the protobuf name (not fullname) of the field which contains the interface as google.protobuf.Any (the interface is the same, but it can be in multiple fields of the same proto message) |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.InterfaceDescriptor"></a>
+
+### InterfaceDescriptor
+InterfaceDescriptor describes the implementation of an interface
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fullname` | [string](#string) |  | fullname is the name of the interface |
+| `interface_accepting_messages` | [InterfaceAcceptingMessageDescriptor](#cosmos.base.reflection.v2alpha1.InterfaceAcceptingMessageDescriptor) | repeated | interface_accepting_messages contains information regarding the proto messages which contain the interface as google.protobuf.Any field |
+| `interface_implementers` | [InterfaceImplementerDescriptor](#cosmos.base.reflection.v2alpha1.InterfaceImplementerDescriptor) | repeated | interface_implementers is a list of the descriptors of the interface implementers |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.InterfaceImplementerDescriptor"></a>
+
+### InterfaceImplementerDescriptor
+InterfaceImplementerDescriptor describes an interface implementer
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fullname` | [string](#string) |  | fullname is the protobuf queryable name of the interface implementer |
+| `type_url` | [string](#string) |  | type_url defines the type URL used when marshalling the type as any this is required so we can provide type safe google.protobuf.Any marshalling and unmarshalling, making sure that we don't accept just 'any' type in our interface fields |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.MsgDescriptor"></a>
+
+### MsgDescriptor
+MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `service_msg` | [ServiceMsgDescriptor](#cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor) |  | service_msg is used when the message is an sdk.ServiceMsg type |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.QueryMethodDescriptor"></a>
+
+### QueryMethodDescriptor
+QueryMethodDescriptor describes a queryable method of a query service
+no other info is provided beside method name and tendermint queryable path
+because it would be redundant with the grpc reflection service
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | name is the protobuf name (not fullname) of the method |
+| `full_query_path` | [string](#string) |  | full_query_path is the path that can be used to query this method via tendermint abci.Query |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.QueryServiceDescriptor"></a>
+
+### QueryServiceDescriptor
+QueryServiceDescriptor describes a cosmos-sdk queryable service
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fullname` | [string](#string) |  | fullname is the protobuf fullname of the service descriptor |
+| `is_module` | [bool](#bool) |  | is_module describes if this service is actually exposed by an application's module |
+| `methods` | [QueryMethodDescriptor](#cosmos.base.reflection.v2alpha1.QueryMethodDescriptor) | repeated | methods provides a list of query service methods |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.QueryServicesDescriptor"></a>
+
+### QueryServicesDescriptor
+QueryServicesDescriptor contains the list of cosmos-sdk queriable services
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `query_services` | [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor) | repeated | query_services is a list of cosmos-sdk QueryServiceDescriptor |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor"></a>
+
+### ServiceMsgDescriptor
+ServiceMsgDescriptor describes an sdk.ServiceMsg type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `request_fullname` | [string](#string) |  | request_fullname is the protobuf fullname of the given sdk.ServiceMsg request this is the protobuf message type which should be used as google.protobuf.Any.value when delivering the msg to the DeliverTx endpoint |
+| `request_route` | [string](#string) |  | request_route is the sdk.ServiceMsg route, it is equal to type_url |
+| `request_type_url` | [string](#string) |  | request_type_url is the identifier that should be used as google.protobuf.Any.type_url when delivering the msg to the DeliverTx endpoint |
+| `response_fullname` | [string](#string) |  | response_fullname is the protobuf fullname of the given sdk.ServiceMsg response |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.SigningModeDescriptor"></a>
+
+### SigningModeDescriptor
+SigningModeDescriptor provides information on a signing flow of the application
+NOTE(fdymylja): here we could go as far as providing an entire flow on how
+to sign a message given a SigningModeDescriptor, but it's better to think about
+this another time
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | name defines the unique name of the signing mode |
+| `number` | [int32](#int32) |  | number is the unique int32 identifier for the sign_mode enum |
+| `authn_info_provider_method_fullname` | [string](#string) |  | authn_info_provider_method_fullname defines the fullname of the method to call to get the metadata required to authenticate using the provided sign_modes |
+
+
+
+
+
+
+<a name="cosmos.base.reflection.v2alpha1.TxDescriptor"></a>
+
+### TxDescriptor
+TxDescriptor describes the accepted transaction type
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `fullname` | [string](#string) |  | fullname is the protobuf fullname of the raw transaction type (for instance the tx.Tx type) it is not meant to support polymorphism of transaction types, it is supposed to be used by reflection clients to understand if they can handle a specific transaction type in an application. |
+| `msgs` | [MsgDescriptor](#cosmos.base.reflection.v2alpha1.MsgDescriptor) | repeated | msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg) NOTE: not to be confused with proto.Message types |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.base.reflection.v2alpha1.ReflectionService"></a>
+
+### ReflectionService
+ReflectionService defines a service for application reflection.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GetAuthnDescriptor` | [GetAuthnDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorRequest) | [GetAuthnDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetAuthnDescriptorResponse) | GetAuthnDescriptor returns information on how to authenticate transactions in the application NOTE: this RPC is still experimental and might be subject to breaking changes or removal in future releases of the cosmos-sdk. | GET|/cosmos/base/reflection/v1beta1/app_descriptor/authn|
+| `GetChainDescriptor` | [GetChainDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetChainDescriptorRequest) | [GetChainDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetChainDescriptorResponse) | GetChainDescriptor returns the description of the chain | GET|/cosmos/base/reflection/v1beta1/app_descriptor/chain|
+| `GetCodecDescriptor` | [GetCodecDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorRequest) | [GetCodecDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetCodecDescriptorResponse) | GetCodecDescriptor returns the descriptor of the codec of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/codec|
+| `GetConfigurationDescriptor` | [GetConfigurationDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorRequest) | [GetConfigurationDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetConfigurationDescriptorResponse) | GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/configuration|
+| `GetQueryServicesDescriptor` | [GetQueryServicesDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetQueryServicesDescriptorRequest) | [GetQueryServicesDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetQueryServicesDescriptorResponse) | GetQueryServicesDescriptor returns the available gRPC queryable services of the application | GET|/cosmos/base/reflection/v1beta1/app_descriptor/query_services|
+| `GetTxDescriptor` | [GetTxDescriptorRequest](#cosmos.base.reflection.v2alpha1.GetTxDescriptorRequest) | [GetTxDescriptorResponse](#cosmos.base.reflection.v2alpha1.GetTxDescriptorResponse) | GetTxDescriptor returns information on the used transaction object and available msgs that can be used | GET|/cosmos/base/reflection/v1beta1/app_descriptor/tx_descriptor|
 
  <!-- end services -->
 
@@ -4057,6 +4544,22 @@ Msg defines the evidence Msg service.
 
 
 
+<a name="cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance"></a>
+
+### AllowedMsgFeeAllowance
+AllowedMsgFeeAllowance creates allowance only for specified message types.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance. |
+| `allowed_messages` | [string](#string) | repeated | allowed_messages are the messages for which the grantee has the access. |
+
+
+
+
+
+
 <a name="cosmos.feegrant.v1beta1.BasicFeeAllowance"></a>
 
 ### BasicFeeAllowance
@@ -5922,6 +6425,7 @@ Params defines the parameters for the staking module.
 | `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
 | `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
 | `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
+| `power_reduction` | [string](#string) |  | power_reduction is the amount of staking tokens required for 1 unit of consensus-engine power |
 
 
 

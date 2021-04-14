@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		val.ClientCtx,
 		val.Address,
 		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10000000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
@@ -130,7 +130,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing pubkey)",
 			[]string{
-				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, sdk.PowerReduction.Int64()),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
 				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
@@ -150,7 +150,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing moniker)",
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
-				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, sdk.PowerReduction.Int64()),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
 				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
@@ -170,7 +170,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 			"valid transaction",
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
-				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, sdk.PowerReduction.Int64()),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
 				fmt.Sprintf("--%s=NewValidator", cli.FlagMoniker),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
@@ -868,12 +868,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
+power_reduction: "1000000"
 unbonding_time: 1814400s`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","power_reduction":"1000000"}`,
 		},
 	}
 	for _, tc := range testCases {

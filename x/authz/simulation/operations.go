@@ -23,7 +23,7 @@ import (
 const (
 	TypeMsgGrantAuthorization  = "/cosmos.authz.v1beta1.Msg/GrantAuthorization"
 	TypeMsgRevokeAuthorization = "/cosmos.authz.v1beta1.Msg/RevokeAuthorization"
-	TypeMsgExecAuthorization   = "/cosmos.authz.v1beta1.Msg/ExecAuthorization"
+	TypeMsgExecAuthorization   = "/cosmos.authz.v1beta1.Msg/ExecAuthorized"
 )
 
 // Simulation operation weights constants

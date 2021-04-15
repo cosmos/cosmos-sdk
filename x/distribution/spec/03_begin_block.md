@@ -30,7 +30,7 @@ integer value.
 The proposer will receive a base reward of `fees * baseproposerreward`. In
 addition, they will receive a bonus of `fees * bonusproposerreward * P`, where
 `P = (precommits included / total bonded validator power)`. The more precommits
-the propser includes, the larger `P` will be. It can never be larger than `1.00`
+the proposer includes, the larger `P` is. `P` can never be larger than `1.00`
 , and will always be larger than `2/3`.
 
 Any remaining fees are distributed among all the bonded validators, including

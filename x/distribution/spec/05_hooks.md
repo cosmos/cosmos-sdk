@@ -33,8 +33,8 @@ The period is set to `1`.
 
 - triggered-by: `staking.RemoveValidator`
 
-Any outstanding commission is sent to the validator's self-delegation's withdrawal address.
-Any remaining rewards still stored in the validator gets sent to the community fee pool.
+Outstanding commission is sent to the validator's self-delegation withdrawal address.
+Remaining delegator rewards get sent to the community fee pool.
 
 Note: the validator only gets removed when it has no remaining delegations.
 At that time, all outstanding delegator rewards will have been withdrawn.

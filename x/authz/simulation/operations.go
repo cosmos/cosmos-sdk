@@ -13,9 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
+	feegranttype "github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	govtype "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -113,7 +116,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		}
 
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			banktype.NewSendAuthorization(spendLimit), expiration)
+			generateRandomAuthorization(r, spendLimit), expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
@@ -149,6 +152,24 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 	}
 }
 
+func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) exported.Authorization {
+	authorizations := make([]exported.Authorization, 3)
+	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
+	authorizations[1] = types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal")
+	authorizations[2] = types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance")
+
+	return authorizations[r.Intn(len(authorizations))]
+}
+
+func generateRandomAuthorizationType(r *rand.Rand) string {
+	authorizationTypes := make([]string, 3)
+	authorizationTypes[0] = banktype.SendAuthorization{}.MethodName()
+	authorizationTypes[1] = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
+	authorizationTypes[2] = "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"
+
+	return authorizationTypes[r.Intn(len(authorizationTypes))]
+}
+
 // SimulateMsgRevokeAuthorization generates a MsgRevokeAuthorization with random values.
 // nolint: funlen
 func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
@@ -158,7 +179,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		granter := accs[0]
 		grantee := accs[1]
 
-		authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee.Address, granter.Address, banktype.SendAuthorization{}.MethodName())
+		authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee.Address, granter.Address, generateRandomAuthorizationType(r))
 		if authorization == nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRevokeAuthorization, "no authorizations exists"), nil, nil
 		}
@@ -212,7 +233,7 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 		granter := accs[0]
 		grantee := accs[1]
 
-		authorization, expiration := k.GetOrRevokeAuthorization(ctx, grantee.Address, granter.Address, banktype.SendAuthorization{}.MethodName())
+		authorization, expiration := k.GetOrRevokeAuthorization(ctx, grantee.Address, granter.Address, generateRandomAuthorizationType(r))
 		if authorization == nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "no authorizations exists"), nil, nil
 		}
@@ -225,21 +246,42 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "grant expired"), nil, nil
 		}
 
+		execMsg := sdk.ServiceMsg{
+			MethodName: authorization.MethodName(),
+		}
+		switch authorization.MethodName() {
+		case banktype.SendAuthorization{}.MethodName():
+			execMsg.Request = banktype.NewMsgSend(
+				grantee.Address,
+				granter.Address,
+				sendLimit,
+			)
+		case "/cosmos.gov.v1beta1.Msg/SubmitProposal":
+			proposal, err := govtype.NewMsgSubmitProposal(govtype.NewTextProposal(simtypes.RandStringOfLength(r, 10), simtypes.RandStringOfLength(r, 50)), sendLimit, grantee.Address)
+			if err != nil {
+				panic(err)
+			}
+			execMsg.Request = proposal
+		case "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance":
+			feeAllowance := feegranttype.BasicFeeAllowance{
+				SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000))),
+				Expiration: feegranttype.ExpiresAtTime(ctx.BlockTime().AddDate(1, 0, 0)),
+			}
+			allowance, err := feegranttype.NewMsgGrantFeeAllowance(&feeAllowance, granter.Address, grantee.Address)
+			if err != nil {
+				panic(err)
+			}
+			execMsg.Request = allowance
+		default:
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee error"), nil, nil
+		}
+
 		granteeAcc := ak.GetAccount(ctx, grantee.Address)
 
 		granteespendableCoins := bk.SpendableCoins(ctx, grantee.Address)
 		fees, err := simtypes.RandomFees(r, ctx, granteespendableCoins)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee error"), nil, err
-		}
-
-		execMsg := sdk.ServiceMsg{
-			MethodName: banktype.SendAuthorization{}.MethodName(),
-			Request: banktype.NewMsgSend(
-				granter.Address,
-				grantee.Address,
-				sendLimit,
-			),
 		}
 
 		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
@@ -272,8 +314,8 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			if strings.Contains(err.Error(), "insufficient fee") {
-				return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "insufficient fee"), nil, nil
+			if strings.Contains(err.Error(), "fee allowance already exists") {
+				return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee allowance exists"), nil, nil
 			}
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, err.Error()), nil, err
 		}

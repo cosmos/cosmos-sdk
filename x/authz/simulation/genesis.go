@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -36,8 +35,8 @@ func genAuthorizationGrant(r *rand.Rand, accounts []simtypes.Account) []types.Gr
 func generateRandomGrant(r *rand.Rand) *codectypes.Any {
 	authorizations := make([]*codectypes.Any, 3)
 	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
-	authorizations[1] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/Vote"))
-	authorizations[2] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.staking.v1beta1.Msg/Delegate"))
+	authorizations[1] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal"))
+	authorizations[2] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"))
 
 	return authorizations[r.Intn(len(authorizations))]
 }
@@ -60,11 +59,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	authzGrantsGenesis := types.NewGenesisState(grants)
 
-	bz, err := simState.Cdc.MarshalJSON(authzGrantsGenesis)
-	if err != nil {
-		panic(err)
-	}
+	// bz, err := simState.Cdc.MarshalJSON(authzGrantsGenesis)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, bz)
+	// fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(authzGrantsGenesis)
 }

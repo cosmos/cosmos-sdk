@@ -346,7 +346,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				writeCache()
 			} else if err = k.revertCreateValidatorMsg(ctx, msg); err != nil {
 				// avoid panicking
-				logger.Error("create validator failed to execute", "msg", msg)
+				logger.Error("create validator failed to execute", "msg", msg, "err", err)
 			}
 		case *types.MsgEditValidator:
 			err := k.executeQueuedEditValidatorMsg(cacheCtx, msg)
@@ -354,7 +354,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 				writeCache()
 			} else {
 				// TODO: report somewhere for logging edit not success or panic
-				logger.Error("edit validator failed to execute", "msg", msg)
+				logger.Error("edit validator failed to execute", "msg", msg, "err", err)
 				// panic(fmt.Sprintf("not be able to execute, %T", msg))
 			}
 		case *types.MsgDelegate:
@@ -362,21 +362,21 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 			if err == nil {
 				writeCache()
 			} else if err = k.revertDelegationMsg(ctx, msg); err != nil {
-				panic(fmt.Sprintf("not be able to execute nor revert, %T", msg))
+				logger.Error("not be able to execute nor revert MsgDelegate", "msg", msg, "err", err)
 			}
 		case *types.MsgBeginRedelegate:
 			_, err := k.executeQueuedBeginRedelegateMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {
-				logger.Error("edit begin redelegation failed to execute", "msg", msg)
+				logger.Error("edit begin redelegation failed to execute", "msg", msg, "err", err)
 			}
 		case *types.MsgUndelegate:
 			_, err := k.executeQueuedUndelegateMsg(cacheCtx, msg)
 			if err == nil {
 				writeCache()
 			} else {
-				logger.Error("edit undelegation failed to execute", "msg", msg)
+				logger.Error("edit undelegation failed to execute", "msg", msg, "err", err)
 			}
 		default:
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))

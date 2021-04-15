@@ -30,8 +30,8 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 
 ## MsgWithdrawDelegatorReward
 
-A delegator can withdraw its rewards for a specific delegation.
-Internally in the distribution module, this is treated exactly as if the delegator simply started a new delegation of the same value, simultaneously removing the previous delegation.
+A delegator can withdraw its rewards.
+Internally in the distribution module, this is treated exactly as if the delegator simply started a new delegation of the same value, simultaneously removing the previous delegation with associated rewards.
 The rewards are sent immediately from the distribution `ModuleAccount` to the withdraw address.
 Any remainder (truncated decimals) are sent to the community pool.
 The starting height of the delegation is set to the current validator period, and the reference count for the previous period is decremented.

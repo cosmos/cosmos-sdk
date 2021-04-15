@@ -1,0 +1,5 @@
+panic: runtime error: slice bounds out of range [1:0]
+github.com/cosmos/cosmos-sdk/x/bank/types.AddressFromBalancesStore
+github.com/cosmos/cosmos-sdk/fuzz/x/bank/types/AddressFromBalancesStore.Fuzz
+go-fuzz-dep.Main
+main.main

@@ -167,7 +167,7 @@ this decision policy, abstain and veto are simply treated as no's.
 ```proto
 message ThresholdDecisionPolicy {
 
-    // threshold is the minimum weighted sum of yes votes that must be met or exceeded for a proposal to succeed.
+    // threshold is the minimum weighted sum of support votes for a proposal to succeed.
     string threshold = 1;
     
     // timeout is the duration from submission of a proposal to the end of voting period

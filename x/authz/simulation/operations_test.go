@@ -120,7 +120,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 
 func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	// setup 3 accounts
-	s := rand.NewSource(1)
+	s := rand.NewSource(2)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
@@ -159,7 +159,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 
 func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	// setup 3 accounts
-	s := rand.NewSource(1)
+	s := rand.NewSource(2)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 

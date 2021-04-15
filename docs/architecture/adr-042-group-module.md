@@ -23,7 +23,7 @@ The legacy amino multi-signature mechanism of the Cosmos SDK has certain limitat
 While the group module is not meant to be a total replacement for the current multi-signature accounts, it provides a solution to the limitations described above, with a more flexible key management system where keys can be added, updated or removed, as well as configurable thresholds.
 It's meant to be used with other key management modules such as [`x/feegrant`](./adr-029-fee-grant-module.md) ans [`x/authz`](adr-030-authz-module.md) to simplify key management for individuals and organizations.
 
-The current implementation of the group module can be found in https://github.com/regen-network/regen-ledger/tree/master/proto/regen/group/v1alpha1 and https://github.com/regen-network/regen-ledger/tree/master/x/group.
+The proof of concept of the group module can be found in https://github.com/regen-network/regen-ledger/tree/master/proto/regen/group/v1alpha1 and https://github.com/regen-network/regen-ledger/tree/master/x/group.
 
 ## Decision
 

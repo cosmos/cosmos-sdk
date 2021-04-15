@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -201,6 +199,8 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
+			h, _ := s.network.LatestHeight()
+			fmt.Println(h, 0)
 			cmd := cli.NewCreateValidatorCmd()
 			clientCtx := val.ClientCtx
 
@@ -355,7 +355,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryDelegation()
 			clientCtx := val.ClientCtx
-
+			if !tc.expErr {
+				h, _ := s.network.LatestHeight()
+				fmt.Println(h)
+				h2, err := s.network.WaitForHeightWithTimeout(h+11, 20*time.Second)
+				fmt.Println(h2)
+				s.Require().NoError(err)
+			}
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expErr {
 				s.Require().Error(err)

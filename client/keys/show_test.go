@@ -3,6 +3,7 @@ package keys
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
@@ -37,6 +40,67 @@ func Test_showKeysCmd(t *testing.T) {
 	require.NotNil(t, cmd)
 	require.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
 	require.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
+}
+
+func TestShowCmdWithMultisigAccount(t *testing.T) {
+	cmd := ShowKeysCmd()
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+
+	kbHome := t.TempDir()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	require.NoError(t, err)
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+
+	fakeKeyName1 := "runShowCmd_Key1"
+	fakeKeyName2 := "runShowCmd_Key2"
+	myMultiSig := "mymulti"
+	threshold := 2
+
+	t.Cleanup(func() {
+		kb.Delete(fakeKeyName1)
+		kb.Delete(fakeKeyName2)
+		kb.Delete(myMultiSig)
+	})
+
+	path := hd.NewFundraiserParams(1, sdk.CoinType, 0).String()
+	acc1, err := kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
+	require.NoError(t, err)
+
+	path2 := hd.NewFundraiserParams(1, sdk.CoinType, 1).String()
+	acc2, err := kb.NewAccount(fakeKeyName2, testutil.TestMnemonic, "", path2, hd.Secp256k1)
+	require.NoError(t, err)
+
+	var pks []cryptotypes.PubKey
+	pks = append(pks, acc1.GetPubKey(), acc2.GetPubKey())
+
+	pk := multisig.NewLegacyAminoPubKey(threshold, pks)
+	multiSig, err := kb.SaveMultisig(myMultiSig, pk)
+	require.NoError(t, err)
+
+	multiSigInfo, err := keyring.Bech32KeyOutput(multiSig)
+	require.NoError(t, err)
+
+	multiSigInfoBytes, err := KeysCdc.Amino.MarshalJSON(multiSigInfo)
+	require.NoError(t, err)
+
+	args := []string{
+		myMultiSig,
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	}
+
+	var res keyring.KeyOutput
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	require.NoError(t, err)
+
+	KeysCdc.Amino.UnmarshalJSON(out.Bytes(), &res)
+	require.Equal(t, res.Threshold, uint(threshold))
+	require.Len(t, res.PubKeys, 2)
+	require.Equal(t, strings.TrimSpace(out.String()), string(multiSigInfoBytes))
 }
 
 func Test_runShowCmd(t *testing.T) {

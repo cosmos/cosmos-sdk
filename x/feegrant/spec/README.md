@@ -20,12 +20,13 @@ This module allows accounts to grant fee allowances and to use fees from their a
     - [PeriodicFeeAllowance](01_concepts.md#periodicfeeallowance)
     - [FeeAccount flag](01_concepts.md#feeaccount-flag)
     - [DeductGrantedFeeDecorator](01_concepts.md#deductgrantedfeedecorator)
+    - [Gas](01_concepts.md#gas)
 2. **[State](02_state.md)**
     - [FeeAllowance](02_state.md#feeallowance)
 3. **[Messages](03_messages.md)**
     - [Msg/GrantFeeAllowance](03_messages.md#msggrantfeeallowance)
     - [Msg/RevokeFeeAllowance](03_messages.md#msgrevokefeeallowance)
-3. **[Events](04_events.md)**
+4. **[Events](04_events.md)**
     - [MsgGrantFeeAllowance](04_events.md#msggrantfeeallowance)
     - [MsgrevokeFeeAllowance](04_events.md#msgrevokefeeallowance)
     - [Exec fee allowance](04_events.md#exec-fee-allowance)

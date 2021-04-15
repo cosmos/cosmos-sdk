@@ -254,9 +254,7 @@ message Proposal {
     // vote_state contains the sums of all weighted votes for this proposal.
     Tally vote_state = 10 [(gogoproto.nullable) = false];
 
-    // timeout is the timestamp of the block where the proposal execution times out. Header times of the votes and execution messages
-    // must be before this end time to be included in the election. After the timeout timestamp the proposal can not be
-    // executed anymore and should be considered pending delete.
+    // timeout is the block timestamp deadline for the proposal. All votes and execution messages must be processed before the timeout. After the timeout, the proposal can not be executed anymore and should be considered pending delete.
     google.protobuf.Timestamp timeout = 11 [(gogoproto.nullable) = false];
 
     // ExecutorResult defines types of proposal executor results.

@@ -1,3 +1,5 @@
+// +build norace
+
 package cli_test
 
 import (
@@ -62,7 +64,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		val.ValAddress,
 		val2.ValAddress,
 		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 202954), //  202954 is the required
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 254000), //  202954 is the required
 	)
 
 	s.Require().NoError(err)
@@ -74,8 +76,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	h, _ := s.network.LatestHeight()
-	_, err = s.network.WaitForHeightWithTimeout(h+11, 20*time.Second)
+	_, err = s.network.WaitForHeightWithTimeout(12, 30*time.Second)
 	s.Require().NoError(err)
 }
 
@@ -658,14 +659,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
 			},
 			true,
 		},
-		// {
-		// 	"valid request",
-		// 	[]string{
-		// 		val.Address.String(),
-		// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-		// 	},
-		// 	false,
-		// },
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -732,16 +733,16 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 			},
 			true,
 		},
-		// {
-		// 	"valid request",
-		// 	[]string{
-		// 		val.Address.String(),
-		// 		val.ValAddress.String(),
-		// 		val2.ValAddress.String(),
-		// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-		// 	},
-		// 	false,
-		// },
+		{
+			"valid request",
+			[]string{
+				val.Address.String(),
+				val.ValAddress.String(),
+				val2.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -786,14 +787,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
 			},
 			true,
 		},
-		// {
-		// 	"valid request",
-		// 	[]string{
-		// 		val.ValAddress.String(),
-		// 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-		// 	},
-		// 	false,
-		// },
+		{
+			"valid request",
+			[]string{
+				val.ValAddress.String(),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
 	}
 
 	for _, tc := range testCases {

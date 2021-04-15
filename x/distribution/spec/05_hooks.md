@@ -11,15 +11,15 @@ order: 5
 ### Before
 
 The delegation rewards are withdrawn to the delegator's withdraw address.
-The rewards include the current period, but excludes the starting period.
-Then increment the validator period, which is used for calculating rewards.
-The latter is necessary because, due to the nature of the triggers, the validator's power and share distribution can have changed.
+The rewards include the current period and exclude the starting period.
+The validator period is incremented.
+The validator period is incremented because the validator's power and share distribution might have changed.
 The reference count for the delegator's starting period is decremented.
 
 ### After
 
 The starting height of the delegation is set to the previous period.
-Because of the `Before`-hook, this is the last period for which the delegator was rewarded.
+Because of the `Before`-hook, this period is the last period for which the delegator was rewarded.
 
 ## Validator created
 

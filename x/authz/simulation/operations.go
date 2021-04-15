@@ -245,6 +245,9 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 		if expiration.Before(ctx.BlockHeader().Time) {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "grant expired"), nil, nil
 		}
+		if spendableCoins := bk.SpendableCoins(ctx, granter.Address); spendableCoins.IsAllLT(sendLimit) {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "no more funds"), nil, nil
+		}
 
 		execMsg := sdk.ServiceMsg{
 			MethodName: authorization.MethodName(),
@@ -252,12 +255,12 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 		switch authorization.MethodName() {
 		case banktype.SendAuthorization{}.MethodName():
 			execMsg.Request = banktype.NewMsgSend(
-				grantee.Address,
 				granter.Address,
+				grantee.Address,
 				sendLimit,
 			)
 		case "/cosmos.gov.v1beta1.Msg/SubmitProposal":
-			proposal, err := govtype.NewMsgSubmitProposal(govtype.NewTextProposal(simtypes.RandStringOfLength(r, 10), simtypes.RandStringOfLength(r, 50)), sendLimit, grantee.Address)
+			proposal, err := govtype.NewMsgSubmitProposal(govtype.NewTextProposal(simtypes.RandStringOfLength(r, 10), simtypes.RandStringOfLength(r, 50)), sendLimit, granter.Address)
 			if err != nil {
 				panic(err)
 			}

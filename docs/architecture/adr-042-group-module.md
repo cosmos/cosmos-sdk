@@ -50,9 +50,9 @@ message GroupInfo {
     bytes metadata = 3;
 
     // version is used to track changes to a group's membership structure that
-    // would break existing proposals. Whenever any members weight is changed,
-    // or any member is added or removed this version is incremented and will
-    // cause proposals based on older versions of this group to fail
+    // would break existing proposals. Whenever a member weight has changed,
+    // or any member is added or removed, the version is incremented and will
+    // invalidate all proposals from older versions.
     uint64 version = 4;
 
     // total_weight is the sum of the group members' weights.

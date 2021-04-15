@@ -336,9 +336,9 @@ func (rs *Store) Commit() types.CommitID {
 		}
 	}
 
-	if len(rs.versions) > int(rs.pruningOpts.MaxRetainNum) {
-		rs.pruneHeights = append(rs.pruneHeights, rs.versions[:len(rs.versions)-int(rs.pruningOpts.MaxRetainNum)]...)
-		rs.versions = rs.versions[len(rs.versions)-int(rs.pruningOpts.MaxRetainNum):]
+	if uint64(len(rs.versions)) > rs.pruningOpts.MaxRetainNum {
+		rs.pruneHeights = append(rs.pruneHeights, rs.versions[:uint64(len(rs.versions))-rs.pruningOpts.MaxRetainNum]...)
+		rs.versions = rs.versions[uint64(len(rs.versions))-rs.pruningOpts.MaxRetainNum:]
 	}
 
 	// batch prune if the current height is a pruning interval height

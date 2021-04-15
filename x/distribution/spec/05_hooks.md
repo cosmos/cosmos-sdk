@@ -25,9 +25,15 @@ Because of the `Before`-hook, this is the last period for which the delegator wa
 
 - triggered-by: `staking.MsgCreateValidator`
 
-Initialized the validator variables: Historical rewards, current accumulated rewards, accumulated commission, and total outstanding rewards.
-All are set to a `0` by default.
-The period is set to `1`.
+When a validator is created, the following validator variables are initialized:
+
+- Historical rewards
+- Current accumulated rewards
+- Accumulated commission
+- Total outstanding rewards
+- Period
+
+By default, all values are set to a `0`, except period, which is set to `1`.
 
 ## Validator removed
 

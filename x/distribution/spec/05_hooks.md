@@ -37,7 +37,8 @@ Any outstanding commission is sent to the validator's self-delegation's withdraw
 Any remaining rewards still stored in the validator gets sent to the community fee pool.
 
 Note: the validator only gets removed when it has no remaining delegations.
-All outstanding rewards have been withdrawn.
+At that time, all outstanding delegator rewards will have been withdrawn.
+Any remaining rewards are dust amounts.
 
 ## Validator is slashed
 

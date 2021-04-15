@@ -3,7 +3,7 @@ order: 1
 -->
 
 # Concepts
-
+In Proof of Stake (PoS) blockchains, rewards gained from transaction fees are paid to validators. Use the fee distribution module to fairly distribute the rewards to the validator's constituent delegators. 
 Rewards are calculated per period, and the period is updated each time a validator's delegation changes, for example when it receives a new delegation.
 The rewards for a single validator can then be calculated by taking the total rewards for the period before the delegation started, minus the current total rewards.
 Further details can be found in [this document](/docs/spec/fee_distribution/f1_fee_distr.pdf).

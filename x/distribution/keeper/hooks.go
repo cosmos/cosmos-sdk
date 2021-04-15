@@ -23,8 +23,6 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 }
 
 // AfterValidatorRemoved performs clean up after a validator is removed
-// The validator will only be removed after it has no more delegations.
-// All delegations must have ended, and all outstanding rewards withdrawn.
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	// fetch outstanding
 	outstanding := h.k.GetValidatorOutstandingRewardsCoins(ctx, valAddr)
@@ -54,7 +52,9 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 		}
 	}
 
-	// add outstanding to community pool
+	// Add outstanding to community pool
+	// The validator will only be removed after it has no more delegations.
+	// So this operation only sends remaining dust to the community pool.
 	feePool := h.k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(outstanding...)
 	h.k.SetFeePool(ctx, feePool)

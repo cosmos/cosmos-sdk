@@ -847,7 +847,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	for _, signedTx := range signedTxs {
 		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
 		val.ClientCtx.BroadcastMode = flags.BroadcastBlock
-		res, err = TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
+		_, err = TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
 		s.Require().NoError(err)
 		s.Require().NoError(s.network.WaitForNextBlock())
 	}

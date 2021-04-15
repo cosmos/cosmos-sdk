@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -26,7 +27,7 @@ func createValidators(t *testing.T) []types.Validator {
 
 func TestHistoricalInfo(t *testing.T) {
 	validators := createValidators(t)
-	hi := types.NewHistoricalInfo(header, validators)
+	hi := types.NewHistoricalInfo(header, validators, sdk.DefaultPowerReduction)
 	require.True(t, sort.IsSorted(types.Validators(hi.Valset)), "Validators are not sorted")
 
 	var value []byte
@@ -67,7 +68,7 @@ func TestValidateBasic(t *testing.T) {
 	err = types.ValidateBasic(hi)
 	require.Error(t, err, "ValidateBasic passed on unsorted ValSet")
 
-	hi = types.NewHistoricalInfo(header, validators)
+	hi = types.NewHistoricalInfo(header, validators, sdk.DefaultPowerReduction)
 	err = types.ValidateBasic(hi)
 	require.NoError(t, err, "ValidateBasic failed on valid HistoricalInfo")
 }

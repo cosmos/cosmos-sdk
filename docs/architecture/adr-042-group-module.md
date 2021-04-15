@@ -31,7 +31,7 @@ We propose merging the `x/group` module with its supporting [ORM/Table Store pac
 
 ### Group
 
-A group is an aggregation of accounts with associated weights. It is not
+A group is a composition of accounts with associated weights. It is not
 an account and doesn't have a balance. It doesn't in and of itself have any
 sort of voting or decision weight. It has an `admin` account which can manage members in the group.
 

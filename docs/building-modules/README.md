@@ -20,3 +20,4 @@ This repository contains documentation on concepts developers need to know in or
 10. [Module Interfaces](./module-interfaces.md)
 11. [Standard Module Structure](./structure.md)
 12. [Errors](./errors.md)
+13. [In-Place Store Migrations](./upgrade.md)

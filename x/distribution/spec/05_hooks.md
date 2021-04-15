@@ -10,7 +10,7 @@ order: 5
 
 ### Before
 
-The delegation rewards are withdrawn to the delegator's withdraw address.
+The delegation rewards are withdrawn to the withdraw address of the delegator.
 The rewards include the current period and exclude the starting period.
 The validator period is incremented.
 The validator period is incremented because the validator's power and share distribution might have changed.

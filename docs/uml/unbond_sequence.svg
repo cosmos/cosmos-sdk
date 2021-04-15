@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="989px" preserveAspectRatio="none" style="width:1420px;height:989px;" version="1.1" viewBox="0 0 1420 989" width="1420px" zoomAndPan="magnify"><defs><filter height="300%" id="f1tb6bgmuuh428" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacing" textLength="102" x="657" y="28.708">Undelegate</text><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="632.5" x="20" y="190.5156"/><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="551.3438" style="stroke:#000000;stroke-width:2.0;" width="1396" x="10" y="250.7813"/><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="632.5" x="20" y="317.0469"/><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="632.5" x="20" y="377.3125"/><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="82.6797" style="stroke:#000000;stroke-width:2.0;" width="614" x="300" y="437.5781"/><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="132.3359" style="stroke:#000000;stroke-width:2.0;" width="451.5" x="565.5" y="534.2578"/><rect fill="#FFFFFF" height="86.0703" style="stroke:none;stroke-width:1.0;" width="451.5" x="565.5" y="580.5234"/><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="56.2656" style="stroke:#000000;stroke-width:2.0;" width="830.5" x="565.5" y="738.8594"/><rect fill="#FFFFFF" filter="url(#f1tb6bgmuuh428)" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="563.5" x="565.5" y="816.125"/><line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="76" x2="76" y1="102.25" y2="921.5234"/><line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="608.5" x2="608.5" y1="102.25" y2="921.5234"/><line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="986" x2="986" y1="102.25" y2="921.5234"/><line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:5.0,5.0;" x1="1068" x2="1068" y1="102.25" y2="921.5234"/><rect fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" height="30.2969" style="stroke:#A80036;stroke-width:1.5;" width="88" x="30" y="66.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="37" y="86.9482">msgServer</text><rect fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" height="30.2969" style="stroke:#A80036;stroke-width:1.5;" width="88" x="30" y="920.5234"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="37" y="940.5186">msgServer</text><rect fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" height="30.2969" style="stroke:#A80036;stroke-width:1.5;" width="63" x="575.5" y="66.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="49" x="582.5" y="86.9482">keeper</text><rect fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" height="30.2969" style="stroke:#A80036;stroke-width:1.5;" width="63" x="575.5" y="920.5234"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="49" x="582.5" y="940.5186">keeper</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="36" x="965" y="98.9482">store</text><path d="M968,49.9531 C968,39.9531 986,39.9531 986,39.9531 C986,39.9531 1004,39.9531 1004,49.9531 L1004,75.9531 C1004,85.9531 986,85.9531 986,85.9531 C986,85.9531 968,85.9531 968,75.9531 L968,49.9531 " fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" style="stroke:#000000;stroke-width:1.5;"/><path d="M968,49.9531 C968,59.9531 986,59.9531 986,59.9531 C986,59.9531 1004,59.9531 1004,49.9531 " fill="none" style="stroke:#000000;stroke-width:1.5;"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="36" x="965" y="933.5186">store</text><path d="M968,946.8203 C968,936.8203 986,936.8203 986,936.8203 C986,936.8203 1004,936.8203 1004,946.8203 L1004,972.8203 C1004,982.8203 986,982.8203 986,982.8203 C986,982.8203 968,982.8203 968,972.8203 L968,946.8203 " fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" style="stroke:#000000;stroke-width:1.5;"/><path d="M968,946.8203 C968,956.8203 986,956.8203 986,956.8203 C986,956.8203 1004,956.8203 1004,946.8203 " fill="none" style="stroke:#000000;stroke-width:1.5;"/><rect fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" height="30.2969" style="stroke:#A80036;stroke-width:1.5;" width="98" x="1017" y="66.9531"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="84" x="1024" y="86.9482">bankKeeper</text><rect fill="#FEFECE" filter="url(#f1tb6bgmuuh428)" height="30.2969" style="stroke:#A80036;stroke-width:1.5;" width="98" x="1017" y="920.5234"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="84" x="1024" y="940.5186">bankKeeper</text><polygon fill="#A80036" points="597,129.3828,607,133.3828,597,137.3828,601,133.3828" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;" x1="76" x2="603" y1="133.3828" y2="133.3828"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="284" x="83" y="128.3169">Undelegate(delAddr, valAddr, tokenAmount)</text><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="651" y1="162.5156" y2="162.5156"/><line style="stroke:#A80036;stroke-width:1.0;" x1="651" x2="651" y1="162.5156" y2="175.5156"/><line style="stroke:#A80036;stroke-width:1.0;" x1="610" x2="651" y1="175.5156" y2="175.5156"/><polygon fill="#A80036" points="620,171.5156,610,175.5156,620,179.5156,616,175.5156" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="363" x="616" y="157.4497">calculate number of shares the tokenAmount represents</text><path d="M20,190.5156 L84,190.5156 L84,197.5156 L74,207.5156 L20,207.5156 L20,190.5156 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="632.5" x="20" y="190.5156"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="19" x="35" y="203.5825">alt</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="97" x="99" y="202.7261">[wrong denom]</text><polygon fill="#A80036" points="87,224.7813,77,228.7813,87,232.7813,83,228.7813" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="81" x2="608" y1="228.7813" y2="228.7813"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="31" x="93" y="223.7153">error</text><path d="M10,250.7813 L309,250.7813 L309,257.7813 L299,267.7813 L10,267.7813 L10,250.7813 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="551.3438" style="stroke:#000000;stroke-width:2.0;" width="1396" x="10" y="250.7813"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="254" x="25" y="263.8481">Unbond(delAddr, valAddr, shares)</text><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="651" y1="289.0469" y2="289.0469"/><line style="stroke:#A80036;stroke-width:1.0;" x1="651" x2="651" y1="289.0469" y2="302.0469"/><line style="stroke:#A80036;stroke-width:1.0;" x1="610" x2="651" y1="302.0469" y2="302.0469"/><polygon fill="#A80036" points="620,298.0469,610,302.0469,620,306.0469,616,302.0469" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="244" x="616" y="283.981">BeforeDelegationSharesModified hook</text><path d="M20,317.0469 L84,317.0469 L84,324.0469 L74,334.0469 L20,334.0469 L20,317.0469 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="632.5" x="20" y="317.0469"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="19" x="35" y="330.1138">alt</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="133" x="99" y="329.2573">[no such delegation]</text><polygon fill="#A80036" points="87,351.3125,77,355.3125,87,359.3125,83,355.3125" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="81" x2="608" y1="355.3125" y2="355.3125"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="31" x="93" y="350.2466">error</text><path d="M20,377.3125 L84,377.3125 L84,384.3125 L74,394.3125 L20,394.3125 L20,377.3125 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="632.5" x="20" y="377.3125"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="19" x="35" y="390.3794">alt</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="130" x="99" y="389.5229">[not enough shares]</text><polygon fill="#A80036" points="87,411.5781,77,415.5781,87,419.5781,83,415.5781" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="81" x2="608" y1="415.5781" y2="415.5781"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="31" x="93" y="410.5122">error</text><path d="M300,437.5781 L364,437.5781 L364,444.5781 L354,454.5781 L300,454.5781 L300,437.5781 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="82.6797" style="stroke:#000000;stroke-width:2.0;" width="614" x="300" y="437.5781"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="19" x="315" y="450.645">alt</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="269" x="379" y="449.7886">[delegator is the operator of the validator</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="217" x="379" y="462.5933">and validator is not already jailed</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="404" x="379" y="475.3979">and unbonding would put self-delegation under min threshold]</text><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="651" y1="499.2578" y2="499.2578"/><line style="stroke:#A80036;stroke-width:1.0;" x1="651" x2="651" y1="499.2578" y2="512.2578"/><line style="stroke:#A80036;stroke-width:1.0;" x1="610" x2="651" y1="512.2578" y2="512.2578"/><polygon fill="#A80036" points="620,508.2578,610,512.2578,620,516.2578,616,512.2578" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="286" x="616" y="494.1919">jail the validator, but proceed with unbonding</text><path d="M310,484.625 L310,509.625 L600,509.625 L600,494.625 L590,484.625 L310,484.625 " fill="#FBFB77" filter="url(#f1tb6bgmuuh428)" style="stroke:#A80036;stroke-width:1.0;"/><path d="M590,484.625 L590,494.625 L600,494.625 L590,484.625 " fill="#FBFB77" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="269" x="316" y="501.6919">Default min delegation threshold : 1 share</text><path d="M565.5,534.2578 L629.5,534.2578 L629.5,541.2578 L619.5,551.2578 L565.5,551.2578 L565.5,534.2578 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="132.3359" style="stroke:#000000;stroke-width:2.0;" width="451.5" x="565.5" y="534.2578"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="19" x="580.5" y="547.3247">alt</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="271" x="644.5" y="546.4683">[complete unbonding, all shares removed]</text><polygon fill="#A80036" points="974,568.5234,984,572.5234,974,576.5234,978,572.5234" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="980" y1="572.5234" y2="572.5234"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="163" x="616" y="567.4575">remove delegation object</text><line style="stroke:#000000;stroke-width:1.0;stroke-dasharray:2.0,2.0;" x1="565.5" x2="1017" y1="581.5234" y2="581.5234"/><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="403" x="570.5" y="591.7339">[there are still shares delegated (not a complete undbonding)]</text><polygon fill="#A80036" points="974,612.4609,984,616.4609,974,620.4609,978,616.4609" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="980" y1="616.4609" y2="616.4609"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="159" x="616" y="611.395">update delegation object</text><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="651" y1="645.5938" y2="645.5938"/><line style="stroke:#A80036;stroke-width:1.0;" x1="651" x2="651" y1="645.5938" y2="658.5938"/><line style="stroke:#A80036;stroke-width:1.0;" x1="610" x2="651" y1="658.5938" y2="658.5938"/><polygon fill="#A80036" points="620,654.5938,610,658.5938,620,662.5938,616,658.5938" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="188" x="616" y="640.5278">AfterDelegationModified hook</text><polygon fill="#A80036" points="974,690.7266,984,694.7266,974,698.7266,978,694.7266" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="980" y1="694.7266" y2="694.7266"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="184" x="616" y="689.6606">update validator power index</text><polygon fill="#A80036" points="974,719.8594,984,723.8594,974,727.8594,978,723.8594" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="980" y1="723.8594" y2="723.8594"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="345" x="616" y="718.7935">update validator information (including token amount)</text><path d="M565.5,738.8594 L629.5,738.8594 L629.5,745.8594 L619.5,755.8594 L565.5,755.8594 L565.5,738.8594 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="56.2656" style="stroke:#000000;stroke-width:2.0;" width="830.5" x="565.5" y="738.8594"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="19" x="580.5" y="751.9263">alt</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="377" x="644.5" y="751.0698">[validator status is "unbonded" and it has no more tokens]</text><polygon fill="#A80036" points="974,778.125,984,782.125,974,786.125,978,782.125" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="980" y1="782.125" y2="782.125"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="124" x="616" y="777.0591">delete the validator</text><path d="M991,760.9922 L991,785.9922 L1377,785.9922 L1377,770.9922 L1367,760.9922 L991,760.9922 " fill="#FBFB77" filter="url(#f1tb6bgmuuh428)" style="stroke:#A80036;stroke-width:1.0;"/><path d="M1367,760.9922 L1367,770.9922 L1377,770.9922 L1367,760.9922 " fill="#FBFB77" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="365" x="997" y="778.0591">otherwise, do this in EndBlock once validator is unbonded</text><path d="M565.5,816.125 L629.5,816.125 L629.5,823.125 L619.5,833.125 L565.5,833.125 L565.5,816.125 " fill="#EEEEEE" style="stroke:#000000;stroke-width:1.0;"/><rect fill="none" height="46.2656" style="stroke:#000000;stroke-width:2.0;" width="563.5" x="565.5" y="816.125"/><text fill="#000000" font-family="sans-serif" font-size="13" font-weight="bold" lengthAdjust="spacing" textLength="19" x="580.5" y="829.1919">alt</text><text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" lengthAdjust="spacing" textLength="134" x="644.5" y="828.3354">[validator is bonded]</text><polygon fill="#A80036" points="1056,850.3906,1066,854.3906,1056,858.3906,1060,854.3906" style="stroke:#A80036;stroke-width:1.0;"/><line style="stroke:#A80036;stroke-width:1.0;" x1="609" x2="1062" y1="854.3906" y2="854.3906"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="320" x="616" y="849.3247">send tokens from bonded pool to not bonded pool</text><line style="stroke:#A80036;stroke-width:1.0;" x1="76" x2="118" y1="890.5234" y2="890.5234"/><line style="stroke:#A80036;stroke-width:1.0;" x1="118" x2="118" y1="890.5234" y2="903.5234"/><line style="stroke:#A80036;stroke-width:1.0;" x1="77" x2="118" y1="903.5234" y2="903.5234"/><polygon fill="#A80036" points="87,899.5234,77,903.5234,87,907.5234,83,903.5234" style="stroke:#A80036;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="519" x="83" y="885.4575">emit event : EventTypeUnbond(delAddr, valAddr, tokenAmount, completion time)</text><!--MD5=[d2cf3aefcf047ffe262d2977f20273aa]
+@startuml
+'https://plantuml.com/sequence-diagram
+
+title: Undelegate
+
+msgServer -> keeper : Undelegate(delAddr, valAddr, tokenAmount)
+
+keeper -> keeper : calculate number of shares the tokenAmount represents
+
+alt wrong denom
+    msgServer <- - keeper : error
+end
+
+group Unbond(delAddr, valAddr, shares)
+    keeper -> keeper: BeforeDelegationSharesModified hook
+    alt no such delegation
+        keeper - -> msgServer : error
+    end
+    alt not enough shares
+        keeper - -> msgServer : error
+    end
+    alt delegator is the operator of the validator\nand validator is not already jailed\nand unbonding would put self-delegation under min threshold
+                keeper -> keeper : jail the validator, but proceed with unbonding
+                note left : Default min delegation threshold : 1 share
+    end
+
+    database store
+
+    alt complete unbonding, all shares removed
+        keeper -> store : remove delegation object
+    else there are still shares delegated (not a complete undbonding)
+        keeper -> store : update delegation object
+        keeper -> keeper : AfterDelegationModified hook
+    end
+
+    keeper -> store : update validator power index
+    keeper -> store : update validator information (including token amount)
+
+    alt validator status is "unbonded" and it has no more tokens
+       keeper -> store : delete the validator
+       note right : otherwise, do this in EndBlock once validator is unbonded
+    end
+end
+
+alt validator is bonded
+    keeper -> bankKeeper : send tokens from bonded pool to not bonded pool
+end
+
+msgServer -> msgServer : emit event : EventTypeUnbond(delAddr, valAddr, tokenAmount, completion time)
+
+@enduml
+
+@startuml
+
+title: Undelegate
+
+msgServer -> keeper : Undelegate(delAddr, valAddr, tokenAmount)
+
+keeper -> keeper : calculate number of shares the tokenAmount represents
+
+alt wrong denom
+    msgServer <- - keeper : error
+end
+
+group Unbond(delAddr, valAddr, shares)
+    keeper -> keeper: BeforeDelegationSharesModified hook
+    alt no such delegation
+        keeper - -> msgServer : error
+    end
+    alt not enough shares
+        keeper - -> msgServer : error
+    end
+    alt delegator is the operator of the validator\nand validator is not already jailed\nand unbonding would put self-delegation under min threshold
+                keeper -> keeper : jail the validator, but proceed with unbonding
+                note left : Default min delegation threshold : 1 share
+    end
+
+    database store
+
+    alt complete unbonding, all shares removed
+        keeper -> store : remove delegation object
+    else there are still shares delegated (not a complete undbonding)
+        keeper -> store : update delegation object
+        keeper -> keeper : AfterDelegationModified hook
+    end
+
+    keeper -> store : update validator power index
+    keeper -> store : update validator information (including token amount)
+
+    alt validator status is "unbonded" and it has no more tokens
+       keeper -> store : delete the validator
+       note right : otherwise, do this in EndBlock once validator is unbonded
+    end
+end
+
+alt validator is bonded
+    keeper -> bankKeeper : send tokens from bonded pool to not bonded pool
+end
+
+msgServer -> msgServer : emit event : EventTypeUnbond(delAddr, valAddr, tokenAmount, completion time)
+
+@enduml
+
+PlantUML version 1.2021.4(Sun Apr 04 10:49:39 CEST 2021)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="521px" preserveAspectRatio="none" style="width:498px;height:521px;" version="1.1" viewBox="0 0 498 521" width="498px" zoomAndPan="magnify"><defs><filter height="300%" id="fulwjrjdjoogj" width="300%" x="-1" y="-1"><feGaussianBlur result="blurOut" stdDeviation="2.0"/><feColorMatrix in="blurOut" result="blurOut2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/><feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/><feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/></filter></defs><g><text fill="#000000" font-family="sans-serif" font-size="18" lengthAdjust="spacing" textLength="425" x="30" y="16.708">The dependencies between Keepers (Feb 2021)</text><!--MD5=[19fc8c754692a6796621efa1ca3e8ab0]
+class Staking--><rect codeLine="5" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Staking" style="stroke:#A80036;stroke-width:1.5;" width="79" x="232" y="243.9531"/><ellipse cx="247" cy="259.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M247.1094,255.2969 L245.9531,260.375 L248.2813,260.375 L247.1094,255.2969 Z M245.625,253.0625 L248.6094,253.0625 L251.9688,265.4531 L249.5156,265.4531 L248.75,262.3906 L245.4688,262.3906 L244.7188,265.4531 L242.2813,265.4531 L245.625,253.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="47" x="261" y="264.1074">Staking</text><line style="stroke:#A80036;stroke-width:1.5;" x1="233" x2="310" y1="275.9531" y2="275.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="233" x2="310" y1="283.9531" y2="283.9531"/><!--MD5=[5730f87057d6fa3697549629e6cf1ab5]
+class Distribution--><rect codeLine="6" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Distribution" style="stroke:#A80036;stroke-width:1.5;" width="103" x="7" y="351.9531"/><ellipse cx="22" cy="367.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M22.1094,363.2969 L20.9531,368.375 L23.2813,368.375 L22.1094,363.2969 Z M20.625,361.0625 L23.6094,361.0625 L26.9688,373.4531 L24.5156,373.4531 L23.75,370.3906 L20.4688,370.3906 L19.7188,373.4531 L17.2813,373.4531 L20.625,361.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="71" x="36" y="372.1074">Distribution</text><line style="stroke:#A80036;stroke-width:1.5;" x1="8" x2="109" y1="383.9531" y2="383.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="8" x2="109" y1="391.9531" y2="391.9531"/><!--MD5=[33a04ff1a4c1955daafc53b1debb31c2]
+class Slashing--><rect codeLine="7" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Slashing" style="stroke:#A80036;stroke-width:1.5;" width="84" x="309.5" y="351.9531"/><ellipse cx="324.5" cy="367.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M324.6094,363.2969 L323.4531,368.375 L325.7813,368.375 L324.6094,363.2969 Z M323.125,361.0625 L326.1094,361.0625 L329.4688,373.4531 L327.0156,373.4531 L326.25,370.3906 L322.9688,370.3906 L322.2188,373.4531 L319.7813,373.4531 L323.125,361.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="52" x="338.5" y="372.1074">Slashing</text><line style="stroke:#A80036;stroke-width:1.5;" x1="310.5" x2="392.5" y1="383.9531" y2="383.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="310.5" x2="392.5" y1="391.9531" y2="391.9531"/><!--MD5=[13f56afd7aace6dccdfaaac41cf97a6a]
+class Evidence--><rect codeLine="8" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Evidence" style="stroke:#A80036;stroke-width:1.5;" width="88" x="259.5" y="459.9531"/><ellipse cx="274.5" cy="475.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M274.6094,471.2969 L273.4531,476.375 L275.7813,476.375 L274.6094,471.2969 Z M273.125,469.0625 L276.1094,469.0625 L279.4688,481.4531 L277.0156,481.4531 L276.25,478.3906 L272.9688,478.3906 L272.2188,481.4531 L269.7813,481.4531 L273.125,469.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="56" x="288.5" y="480.1074">Evidence</text><line style="stroke:#A80036;stroke-width:1.5;" x1="260.5" x2="346.5" y1="491.9531" y2="491.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="260.5" x2="346.5" y1="499.9531" y2="499.9531"/><!--MD5=[f55d592c5130daf0ceebcd2d990036d6]
+class Bank--><rect codeLine="9" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Bank" style="stroke:#A80036;stroke-width:1.5;" width="63" x="155" y="135.9531"/><ellipse cx="170" cy="151.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M170.1094,147.2969 L168.9531,152.375 L171.2813,152.375 L170.1094,147.2969 Z M168.625,145.0625 L171.6094,145.0625 L174.9688,157.4531 L172.5156,157.4531 L171.75,154.3906 L168.4688,154.3906 L167.7188,157.4531 L165.2813,157.4531 L168.625,145.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="31" x="184" y="156.1074">Bank</text><line style="stroke:#A80036;stroke-width:1.5;" x1="156" x2="217" y1="167.9531" y2="167.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="156" x2="217" y1="175.9531" y2="175.9531"/><!--MD5=[2b8367ee8a196632b51868e08daef08d]
+class Auth--><rect codeLine="10" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Auth" style="stroke:#A80036;stroke-width:1.5;" width="116" x="170.5" y="27.9531"/><ellipse cx="185.5" cy="43.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M185.6094,39.2969 L184.4531,44.375 L186.7813,44.375 L185.6094,39.2969 Z M184.125,37.0625 L187.1094,37.0625 L190.4688,49.4531 L188.0156,49.4531 L187.25,46.3906 L183.9688,46.3906 L183.2188,49.4531 L180.7813,49.4531 L184.125,37.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="84" x="199.5" y="48.1074">Auth/Account</text><line style="stroke:#A80036;stroke-width:1.5;" x1="171.5" x2="285.5" y1="59.9531" y2="59.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="171.5" x2="285.5" y1="67.9531" y2="67.9531"/><!--MD5=[e01564ea403d12ccb6a29063cb9f7cdd]
+class Gov--><rect codeLine="11" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Gov" style="stroke:#A80036;stroke-width:1.5;" width="55" x="429" y="351.9531"/><ellipse cx="444" cy="367.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M444.1094,363.2969 L442.9531,368.375 L445.2813,368.375 L444.1094,363.2969 Z M442.625,361.0625 L445.6094,361.0625 L448.9688,373.4531 L446.5156,373.4531 L445.75,370.3906 L442.4688,370.3906 L441.7188,373.4531 L439.2813,373.4531 L442.625,361.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="23" x="458" y="372.1074">Gov</text><line style="stroke:#A80036;stroke-width:1.5;" x1="430" x2="483" y1="383.9531" y2="383.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="430" x2="483" y1="391.9531" y2="391.9531"/><!--MD5=[0327d3d2aba8dab3351179522443842f]
+class Mint--><rect codeLine="12" fill="#FEFECE" filter="url(#fulwjrjdjoogj)" height="48" id="Mint" style="stroke:#A80036;stroke-width:1.5;" width="58" x="145.5" y="351.9531"/><ellipse cx="160.5" cy="367.9531" fill="#A9DCDF" rx="11" ry="11" style="stroke:#A80036;stroke-width:1.0;"/><path d="M160.6094,363.2969 L159.4531,368.375 L161.7813,368.375 L160.6094,363.2969 Z M159.125,361.0625 L162.1094,361.0625 L165.4688,373.4531 L163.0156,373.4531 L162.25,370.3906 L158.9688,370.3906 L158.2188,373.4531 L155.7813,373.4531 L159.125,361.0625 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="12" font-style="italic" lengthAdjust="spacing" textLength="26" x="174.5" y="372.1074">Mint</text><line style="stroke:#A80036;stroke-width:1.5;" x1="146.5" x2="202.5" y1="383.9531" y2="383.9531"/><line style="stroke:#A80036;stroke-width:1.5;" x1="146.5" x2="202.5" y1="391.9531" y2="391.9531"/><!--MD5=[146b124087f7cda400be61fadf8b2f59]
+reverse link Staking to Mint--><path codeLine="14" d="M236.52,307.1831 C222.91,322.0531 207.76,338.6031 195.84,351.6331 " fill="none" id="Staking-backto-Mint" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="231.79,301.9831,250.45,291.9531,242.11,311.4331,231.79,301.9831" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[409236c7d731ab1c807743c3c106b9ab]
+reverse link Bank to Mint--><path codeLine="15" d="M184.07,204.2931 C181.57,248.8031 177.78,316.3931 175.81,351.6731 " fill="none" id="Bank-backto-Mint" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="177.08,203.8431,185.19,184.2631,191.06,204.6231,177.08,203.8431" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[0af54bbc215190942eb2327f8c17f6b6]
+reverse link Staking to Gov--><path codeLine="17" d="M328.81,301.7931 C362.11,320.8731 402.56,344.0431 428.88,359.1231 " fill="none" id="Staking-backto-Gov" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="325.06,307.7131,311.19,291.6931,332.02,295.5631,325.06,307.7131" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[236c15e9c97a0fbb00c9da686286c845]
+reverse link Bank to Gov--><path codeLine="18" d="M236.05,185.6631 C264.32,200.7831 299.74,221.5031 328.5,243.9531 C371.11,277.2231 413.57,324.0731 437.29,351.7931 " fill="none" id="Bank-backto-Gov" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="232.71,191.8131,218.22,176.3531,239.19,179.4031,232.71,191.8131" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[5f669cfffa161156ee83ace163fa28a9]
+reverse link Auth to Gov--><path codeLine="19" d="M261.88,91.4231 C293.9,129.1031 342.83,188.7631 380.5,243.9531 C405.25,280.2231 430.05,324.9131 444.31,351.6131 " fill="none" id="Auth-backto-Gov" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="256.55,95.9631,248.86,76.2131,267.18,86.8531,256.55,95.9631" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[6e30fcbbefe36bb0345f83abae0423a7]
+reverse link Auth to Bank--><path codeLine="21" d="M211.84,95.0131 C206.36,108.8431 200.46,123.7131 195.74,135.6331 " fill="none" id="Auth-backto-Bank" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="205.51,91.9731,219.39,75.9531,218.53,97.1231,205.51,91.9731" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[31ae2dfa3029879e68d1cbef9b0f88bd]
+reverse link Bank to Distribution--><path codeLine="23" d="M162.2,201.5831 C135.62,246.0131 93.96,315.6731 72.42,351.6731 " fill="none" id="Bank-backto-Distribution" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="156.28,197.8331,172.56,184.2631,168.3,205.0231,156.28,197.8331" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[0c369fc77fc90b3eb86d89852151f118]
+reverse link Auth to Distribution--><path codeLine="24" d="M179.96,89.0031 C164.66,102.3431 148.81,118.5131 137.5,135.9531 C91.49,206.9031 69.9,307.1431 62.1,351.8631 " fill="none" id="Auth-backto-Distribution" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="175.62,83.5131,195.5,76.1831,184.53,94.3131,175.62,83.5131" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[db07519914ef58c64cf9dd13033675af]
+reverse link Staking to Distribution--><path codeLine="25" d="M213.94,297.5931 C179.74,314.6231 136.93,335.9231 104.9,351.8631 " fill="none" id="Staking-backto-Distribution" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="210.91,291.2831,231.94,288.6431,217.15,303.8231,210.91,291.2831" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[5f2f11dbf3d59244d7ce6bb8ddc0eccc]
+reverse link Staking to Evidence--><path codeLine="27" d="M277.98,312.2931 C284.64,356.8031 294.74,424.3931 300.02,459.6731 " fill="none" id="Staking-backto-Evidence" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="271.02,313.0731,274.99,292.2631,284.87,311.0031,271.02,313.0731" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[43ae5d52742d759cb1581af10e2c4991]
+reverse link Slashing to Evidence--><path codeLine="28" d="M332.67,418.5231 C326.35,432.4931 319.52,447.5731 314.06,459.6331 " fill="none" id="Slashing-backto-Evidence" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="326.46,415.2831,341.08,399.9531,339.21,421.0631,326.46,415.2831" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[402f4cd8dbd2c5a2c70ab5dbf16f5354]
+reverse link Staking to Slashing--><path codeLine="30" d="M301.07,308.1331 C312.1,322.7531 324.28,338.8831 333.9,351.6331 " fill="none" id="Staking-backto-Slashing" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="295.32,312.1331,288.86,291.9531,306.49,303.7031,295.32,312.1331" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[3ed672bfd9e9e949e8ccefacf5571992]
+reverse link Auth to Staking--><path codeLine="32" d="M237.15,95.9931 C246.09,140.4931 259.72,208.3131 266.82,243.6731 " fill="none" id="Auth-backto-Staking" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="230.26,97.2531,233.18,76.2631,243.99,94.4931,230.26,97.2531" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[8e55c5ab326de1db8fc263dbb8e67c03]
+reverse link Bank to Staking--><path codeLine="33" d="M217.53,199.6531 C229.36,214.4031 242.46,230.7431 252.8,243.6331 " fill="none" id="Bank-backto-Staking" style="stroke:#A80036;stroke-width:1.0;"/><polygon fill="none" points="211.99,203.9331,204.94,183.9531,222.92,195.1731,211.99,203.9331" style="stroke:#A80036;stroke-width:1.0;"/><!--MD5=[909f34e5511d5d3613f1409f4ea045d4]
+@startuml
+'https://plantuml.com/class-diagram
+
+title: The dependencies between Keepers (Feb 2021)
+
+abstract class Staking
+abstract class Distribution
+abstract class Slashing
+abstract class Evidence
+abstract class Bank
+abstract class "Auth/Account" as Auth
+abstract class Gov
+abstract class Mint
+
+Staking <|- - Mint
+Bank <|- - Mint
+
+Staking <|- - Gov
+Bank <|- - Gov
+Auth <|- - Gov
+
+Auth <|- - Bank
+
+Bank <|- - Distribution
+Auth <|- - Distribution
+Staking <|- - Distribution
+
+Staking <|- - Evidence
+Slashing <|- - Evidence
+
+Staking <|- - Slashing
+
+Auth <|- - Staking
+Bank <|- - Staking
+
+@enduml
+
+@startuml
+
+title: The dependencies between Keepers (Feb 2021)
+
+abstract class Staking
+abstract class Distribution
+abstract class Slashing
+abstract class Evidence
+abstract class Bank
+abstract class "Auth/Account" as Auth
+abstract class Gov
+abstract class Mint
+
+Staking <|- - Mint
+Bank <|- - Mint
+
+Staking <|- - Gov
+Bank <|- - Gov
+Auth <|- - Gov
+
+Auth <|- - Bank
+
+Bank <|- - Distribution
+Auth <|- - Distribution
+Staking <|- - Distribution
+
+Staking <|- - Evidence
+Slashing <|- - Evidence
+
+Staking <|- - Slashing
+
+Auth <|- - Staking
+Bank <|- - Staking
+
+@enduml
+
+PlantUML version 1.2021.4(Sun Apr 04 10:49:39 CEST 2021)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: US
+--></g></svg>

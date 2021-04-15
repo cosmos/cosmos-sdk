@@ -50,6 +50,8 @@ Any remaining rewards are dust amounts.
 
 - triggered-by: `staking.Slash`
   
-The current validator period reference count is incremented, since the slash event will need to refer to it.
+The current validator period reference count is incremented.
+The reference count is incremented because the slash event has created a reference to it.
 The validator period is incremented.
-The slash event is stored, to be referenced when calculating delegator rewards.
+The slash event is stored for later use.
+The slash event will be referenced when calculating delegator rewards.

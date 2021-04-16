@@ -170,9 +170,9 @@ message ThresholdDecisionPolicy {
     // threshold is the minimum weighted sum of support votes for a proposal to succeed.
     string threshold = 1;
     
-    // timeout is the duration from submission of a proposal to the end of voting period
-    // Within this times votes and exec messages can be submitted.
-    google.protobuf.Duration timeout = 2 [(gogoproto.nullable) = false];
+    // voting_period is the duration from submission of a proposal to the end of voting period
+    // Within this period, votes and exec messages can be submitted.
+    google.protobuf.Duration voting_period = 2 [(gogoproto.nullable) = false];
 }
 ```
 

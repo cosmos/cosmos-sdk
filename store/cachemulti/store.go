@@ -50,11 +50,12 @@ func NewFromKVStore(
 
 	for key, store := range stores {
 		var cacheWrapped types.CacheWrap
-		if cms.ListeningEnabled(key) {
+		switch {
+		case cms.ListeningEnabled(key):
 			cacheWrapped = store.CacheWrapWithListeners(key, cms.listeners[key])
-		} else if cms.TracingEnabled() {
+		case cms.TracingEnabled():
 			cacheWrapped = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
-		} else {
+		default:
 			cacheWrapped = store.CacheWrap()
 		}
 		cms.stores[key] = cacheWrapped

@@ -29,13 +29,17 @@ The proof of concept of the group module can be found in https://github.com/rege
 
 We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/regen-network/regen-ledger/tree/master/orm) ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
 
+A group define a set of accounts that can create proposals and vote on them
+through group accounts using different decision policies.
+
 ### Group
 
 A group is a composition of accounts with associated weights. It is not
 an account and doesn't have a balance. It doesn't in and of itself have any
-sort of voting or decision weight. It has an `admin` account which can manage members in the group.
+sort of voting or decision weight.
 
-Groups are stored in state as part of an ORM-based `groupTable` using the `GroupInfo` type. The `group_id` is an auto-increment integer.
+It has an `admin` account which can manage members in the group, update the group
+metadata and set a new admin.
 
 ```proto
 message GroupInfo {
@@ -59,8 +63,6 @@ message GroupInfo {
     string total_weight = 5;
 }
 ```
-
-Group members are stored in a `groupMemberTable` using the `GroupMember` type:
 
 ```proto
 message GroupMember {
@@ -101,8 +103,6 @@ and then to create separate group accounts with different decision policies
 and delegate the desired permissions from the master account to
 those "sub-accounts" using the [`x/authz` module](adr-030-authz-module.md).
 
-Group accounts are stored as part of the `groupAccountTable` and defined by `GroupAccountInfo`.
-
 ```proto
 message GroupAccountInfo {
 
@@ -127,7 +127,6 @@ message GroupAccountInfo {
 }
 ```
 
-The group account address is generated based on an auto-increment integer which is used to derive the group module `RootModuleKey` into a `DerivedModuleKey`, as stated in [ADR-033](adr-033-protobuf-inter-module-comm.md#modulekeys-and-moduleids). The group account is added as a new `ModuleAccount` through `x/auth`.
 
 ### Decision Policy
 
@@ -181,8 +180,6 @@ message ThresholdDecisionPolicy {
 Any member of a group can submit a proposal for a group account to decide upon.
 A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
 passes as well as any metadata associated with the proposal.
-
-Proposals are stored as part of the `proposalTable` using the `Proposal` type. The `proposal_id` is an auto-increment integer.
 
 ```proto
 message Proposal {
@@ -307,7 +304,6 @@ During the voting window, accounts that have already voted may change their vote
 In the current implementation, the voting window begins as soon as a proposal
 is submitted.
 
-Votes are stored in the `voteTable`.
 
 ```proto
 message Vote {
@@ -344,6 +340,18 @@ For these messages to execute successfully, their signer should be set as the gr
 #### Changing Group Membership
 
 In the current implementation, updating a group or a group account after submitting a proposal will make it invalid. It will simply fail if someone calls `Msg/Exec` and will eventually be garbage collected.
+
+### Implementation using ORM
+
+The ORM package defines tables, sequences and secondary indexes which are used in the proof of concept of `x/group`. 
+
+Groups are stored in state as part of a `groupTable`, the `group_id` being an auto-increment integer. Group members are stored in a `groupMemberTable`.
+
+Group accounts are stored in a `groupAccountTable`. The group account address is generated based on an auto-increment integer which is used to derive the group module `RootModuleKey` into a `DerivedModuleKey`, as stated in [ADR-033](adr-033-protobuf-inter-module-comm.md#modulekeys-and-moduleids). The group account is added as a new `ModuleAccount` through `x/auth`.
+
+Proposals are stored as part of the `proposalTable` using the `Proposal` type. The `proposal_id` is an auto-increment integer.
+
+Votes are stored in the `voteTable`. The primary key is based on the vote's `proposal_id` and `voter` account address.
 
 ## Consequences
 

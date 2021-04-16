@@ -272,16 +272,6 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 // 				panic(err)
 // 			}
 // 			execMsg.Request = proposal
-// 		case "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance":
-// 			feeAllowance := feegranttype.BasicFeeAllowance{
-// 				SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000))),
-// 				Expiration: feegranttype.ExpiresAtTime(ctx.BlockTime().AddDate(1, 0, 0)),
-// 			}
-// 			allowance, err := feegranttype.NewMsgGrantFeeAllowance(&feeAllowance, granter, grantee)
-// 			if err != nil {
-// 				panic(err)
-// 			}
-// 			execMsg.Request = allowance
 // 		default:
 // 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee error"), nil, errors.New("unknown authorization")
 // 		}

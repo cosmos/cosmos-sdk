@@ -4,13 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // Simulation parameter constant.
@@ -18,35 +14,36 @@ const authz = "authz"
 
 // genAuthorizationGrant returns an empty slice of authorization grants.
 func genAuthorizationGrant(r *rand.Rand, accounts []simtypes.Account) []types.GrantAuthorization {
-	authorizations := make([]types.GrantAuthorization, len(accounts))
+	// authorizations := make([]types.GrantAuthorization, len(accounts))
 
-	for i := 0; i < len(accounts); i++ {
-		granter, _ := simtypes.RandomAcc(r, accounts)
-		grantee, _ := simtypes.RandomAcc(r, accounts)
-		authorizations[i] = types.GrantAuthorization{
-			Granter:       granter.Address.String(),
-			Grantee:       grantee.Address.String(),
-			Authorization: generateRandomGrant(r),
-		}
-	}
-	return authorizations
+	// for i := 0; i < len(accounts); i++ {
+	// 	granter, _ := simtypes.RandomAcc(r, accounts)
+	// 	grantee, _ := simtypes.RandomAcc(r, accounts)
+	// 	authorizations[i] = types.GrantAuthorization{
+	// 		Granter:       granter.Address.String(),
+	// 		Grantee:       grantee.Address.String(),
+	// 		Authorization: generateRandomGrant(r),
+	// 	}
+	// }
+	// return authorizations
+	return []types.GrantAuthorization{}
 }
 
-func generateRandomGrant(r *rand.Rand) *codectypes.Any {
-	authorizations := make([]*codectypes.Any, 2)
-	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
-	authorizations[1] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal"))
+// func generateRandomGrant(r *rand.Rand) *codectypes.Any {
+// 	authorizations := make([]*codectypes.Any, 2)
+// 	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
+// 	authorizations[1] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal"))
 
-	return authorizations[r.Intn(len(authorizations))]
-}
+// 	return authorizations[r.Intn(len(authorizations))]
+// }
 
-func newAnyAuthorization(grant exported.Authorization) *codectypes.Any {
-	any, err := codectypes.NewAnyWithValue(grant)
-	if err != nil {
-		panic(err)
-	}
-	return any
-}
+// func newAnyAuthorization(grant exported.Authorization) *codectypes.Any {
+// 	any, err := codectypes.NewAnyWithValue(grant)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return any
+// }
 
 // RandomizedGenState generates a random GenesisState for authz.
 func RandomizedGenState(simState *module.SimulationState) {

@@ -119,7 +119,7 @@ message GroupAccountInfo {
     bytes metadata = 4;
 
     // version is used to track changes to a group's GroupAccountInfo structure that
-    // would create a different result on a running proposal.
+    // invalidates active proposal from old versions.
     uint64 version = 5;
 
     // decision_policy specifies the group account's decision policy.

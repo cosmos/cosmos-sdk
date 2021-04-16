@@ -7,7 +7,8 @@
 // folder. However, it needs access to staking and bank state. To avoid
 // cyclic dependencies, we cannot import those 2 keepers in this file. To solve
 // this, we use the baseapp router to do inter-module querying, by importing
-// the `baseapp.QueryServer grpc.Server`. This is really hacky.
+// the `baseapp.QueryRouter grpc.Server`. This is really hacky.
+//
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
 //
 // Proposals to refactor this file have been made in:
@@ -43,7 +44,7 @@ const (
 	balancesPath                      = "/cosmos.bank.v1beta1.Query/AllBalances"
 )
 
-// We use the baseapp.QueryServer here to do inter-module state querying.
+// We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
 func migrateVestingAccounts(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
 	bondDenom, err := getBondDenom(ctx, queryServer)
@@ -129,7 +130,7 @@ func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.Ves
 	}
 }
 
-// We use the baseapp.QueryServer here to do inter-module state querying.
+// We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
 func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.Coins, error) {
 	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
@@ -173,7 +174,7 @@ func getDelegatorDelegationsSum(ctx sdk.Context, address string, queryServer grp
 	return res, nil
 }
 
-// We use the baseapp.QueryServer here to do inter-module state querying.
+// We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
 func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom string, queryServer grpc.Server) (sdk.Coins, error) {
 	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
@@ -219,7 +220,7 @@ func getDelegatorUnbondingDelegationsSum(ctx sdk.Context, address, bondDenom str
 	return res, nil
 }
 
-// We use the baseapp.QueryServer here to do inter-module state querying.
+// We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
 func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.Coins, error) {
 	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
@@ -253,7 +254,7 @@ func getBalance(ctx sdk.Context, address string, queryServer grpc.Server) (sdk.C
 	return balance.Balances, nil
 }
 
-// We use the baseapp.QueryServer here to do inter-module state querying.
+// We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
 func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 	querier, ok := queryServer.(*baseapp.GRPCQueryRouter)
@@ -291,7 +292,7 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 // track delegations.
 // References: https://github.com/cosmos/cosmos-sdk/issues/8601, https://github.com/cosmos/cosmos-sdk/issues/8812
 //
-// We use the baseapp.QueryServer here to do inter-module state querying.
+// We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
 func MigrateAccount(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
 	return migrateVestingAccounts(ctx, account, queryServer)

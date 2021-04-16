@@ -115,7 +115,7 @@ message GroupAccountInfo {
     // admin is the account address of the group admin.
     string admin = 3;
     
-    // metadata is any arbitrary metadata to attached to the group account.
+    // metadata is any arbitrary metadata of this group account.
     bytes metadata = 4;
 
     // version is used to track changes to a group's GroupAccountInfo structure that

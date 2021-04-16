@@ -160,9 +160,9 @@ type DecisionPolicyResult struct {
 
 #### Threshold decision policy
 
-A threshold decision policy defines a threshold of yes votes (based on a tally
-of voter weights) that must be achieved in order for a proposal to pass. For
-this decision policy, abstain and veto are simply treated as no's.
+A threshold decision policy defines a minimum support votes (_yes_), based on a tally
+of voter weights, for a proposal to pass. For
+this decision policy, abstain and veto are treated as no support (_no_).
 
 ```proto
 message ThresholdDecisionPolicy {

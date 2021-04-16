@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -38,7 +39,7 @@ const (
 // authz operations weights
 const (
 	WeightGrantAuthorization  = 100
-	WeightRevokeAuthorization = 60
+	WeightRevokeAuthorization = 80
 	WeightExecAuthorization   = 80
 )
 
@@ -152,18 +153,18 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 }
 
 func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) exported.Authorization {
-	authorizations := make([]exported.Authorization, 2)
+	authorizations := make([]exported.Authorization, 1)
 	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
-	authorizations[1] = types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal")
+	// authorizations[1] = types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal")
 	// authorizations[2] = types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance")
 
 	return authorizations[r.Intn(len(authorizations))]
 }
 
 func generateRandomAuthorizationType(r *rand.Rand) string {
-	authorizationTypes := make([]string, 2)
+	authorizationTypes := make([]string, 1)
 	authorizationTypes[0] = banktype.SendAuthorization{}.MethodName()
-	authorizationTypes[1] = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
+	// authorizationTypes[1] = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
 	// authorizationTypes[2] = "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"
 
 	return authorizationTypes[r.Intn(len(authorizationTypes))]
@@ -275,7 +276,7 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 			}
 			execMsg.Request = allowance
 		default:
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee error"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee error"), nil, errors.New("unknown authorization")
 		}
 
 		granteeAcc := ak.GetAccount(ctx, grantee.Address)

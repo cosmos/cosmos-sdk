@@ -243,12 +243,13 @@ func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 }
 
 // encoding info
-func marshalInfo(i Info) []byte {
+// TODO: remove
+func aminoMarshalInfo(i Info) []byte {
 	return legacy.Cdc.MustMarshalBinaryLengthPrefixed(i)
 }
 
 // decoding info
-func unmarshalInfo(bz []byte) (info Info, err error) {
+func aminoUnmarshalInfo(bz []byte) (info Info, err error) {
 	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
@@ -270,4 +271,15 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 	}
 
 	return
+}
+
+// encoding info
+func protoMarshalInfo(i Info) []byte {
+	// TODO
+	// Convert pub key to a proto keyring.Item structure
+}
+
+// decoding info
+func protoUnmarshalInfo(bz []byte) (item Info, err error) {
+	// TODO
 }

@@ -14,6 +14,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// TODO - should we migrate a legacy as well?
+
 // LegacyKeybase is implemented by the legacy keybase implementation.
 type LegacyKeybase interface {
 	List() ([]Info, error)
@@ -71,7 +73,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 
 		// need to include only keys in storage that have an info suffix
 		if strings.HasSuffix(key, infoSuffix) {
-			info, err := unmarshalInfo(iter.Value())
+			info, err := aminoUnmarshalInfo(iter.Value())
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +96,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 
-	return unmarshalInfo(bs)
+	return aminoUnmarshalInfo(bs)
 }
 
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
@@ -153,7 +155,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	info, err := unmarshalInfo(bz)
+	info, err := aminoUnmarshalInfo(bz)
 	if err != nil {
 		return
 	}

@@ -2,6 +2,7 @@ package keyring
 
 import (
 	"bufio"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -41,6 +42,12 @@ const (
 	keyringFileDirName = "keyring-file"
 	keyringTestDirName = "keyring-test"
 	passKeyringPrefix  = "keyring-%s"
+)
+
+// Keyring version
+const (
+	VERSION_KEY     = string([]byte{0})
+	CURRENT_VERSION = 1
 )
 
 var (
@@ -465,6 +472,10 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]Info, error) {
+	if err := ks.checkMigrate(); err != nil {
+		return nil, err
+	}
+
 	var res []Info
 
 	keys, err := ks.db.Keys()
@@ -473,7 +484,6 @@ func (ks keystore) List() ([]Info, error) {
 	}
 
 	sort.Strings(keys)
-
 	for _, key := range keys {
 		if strings.HasSuffix(key, infoSuffix) {
 			rawInfo, err := ks.db.Get(key)
@@ -485,7 +495,7 @@ func (ks keystore) List() ([]Info, error) {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 			}
 
-			info, err := unmarshalInfo(rawInfo.Data)
+			info, err := protoUnmarshalInfo(rawInfo.Data)
 			if err != nil {
 				return nil, err
 			}
@@ -558,6 +568,9 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) key(infoKey string) (Info, error) {
+	if err := ks.checkMigrate(); err != nil {
+		return nil, err
+	}
 	bs, err := ks.db.Get(infoKey)
 	if err != nil {
 		return nil, wrapKeyNotFound(err, infoKey)
@@ -565,7 +578,7 @@ func (ks keystore) key(infoKey string) (Info, error) {
 	if len(bs.Data) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
-	return unmarshalInfo(bs.Data)
+	return protoUnmarshalInfo(bs.Data)
 }
 
 func (ks keystore) Key(uid string) (Info, error) {
@@ -753,7 +766,7 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKey
 
 func (ks keystore) writeInfo(info Info) error {
 	key := infoKeyBz(info.GetName())
-	serializedInfo := marshalInfo(info)
+	serializedInfo := protoMarshalInfo(info)
 
 	exists, err := ks.existsInDb(info)
 	if err != nil {
@@ -821,6 +834,70 @@ func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error)
 	}
 
 	return info, nil
+}
+
+func (ks keystore) checkMigrate() error {
+	var version uint32 = 0
+	item, err := ks.db.Get(VERSION_KEY)
+	if err != nil {
+		if err != keyring.ErrKeyNotFound {
+			return err
+		}
+		// key not found, all good: assume version = 0
+	} else {
+		if len(item.Data) != 4 {
+			return sdkerrors.ErrInvalidVersion.Wrapf(
+				"Can't migrate the keyring - the stored version is malformed: [%v]: %v",
+				item.Description, string(item.Data))
+		}
+		version = binary.LittleEndian.Uint32(item.Data)
+	}
+	return ks.migrate(version, item)
+}
+
+func (ks keystore) migrate(version uint32, i keyring.Item) error {
+	if version == CURRENT_VERSION {
+		return nil
+	}
+	if version > CURRENT_VERSION {
+		return sdkerrors.ErrInvalidVersion.Wrapf(
+			"Can't migrate the keyring - wrong keyring version: [%v]: %v, expected version to be max %d",
+			i.Description, string(i.Data), CURRENT_VERSION)
+	}
+	keys, err := ks.db.Keys()
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		if !strings.HasSuffix(key, infoSuffix) {
+			continue
+		}
+		item, err := ks.db.Get(key)
+		if err != nil {
+			return err
+		}
+
+		if len(item.Data) == 0 {
+			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+		}
+
+		info, err := aminoUnmarshalInfo(item.Data)
+		if err != nil {
+			return err
+		}
+		// TODO:
+		// + marshal as proto
+		// + ks.db.Set(item keyring.Item)
+	}
+	var versionBytes = make([]byte, 4)
+	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
+	ks.db.Set(keyring.Item{
+		Key:         VERSION_KEY,
+		Data:        versionBytes,
+		Description: "SDK kerying version",
+	})
+
 }
 
 type unsafeKeystore struct {

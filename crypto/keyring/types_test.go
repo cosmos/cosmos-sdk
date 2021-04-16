@@ -31,7 +31,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 
 	// Serialize and restore
 	serialized := marshalInfo(lInfo)
-	restoredInfo, err := unmarshalInfo(serialized)
+	restoredInfo, err := aminoUnmarshalInfo(serialized)
 	require.NoError(t, err)
 	require.NotNil(t, restoredInfo)
 

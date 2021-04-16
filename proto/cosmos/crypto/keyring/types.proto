@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmos.crypto.keyring;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
+option (gogoproto.goproto_getters_all) = false;
+
+// Item is a keyring item stored in a keyring backend.
+message Item {
+  option (gogoproto.goproto_stringer) = false;
+
+  // TODO:
+  // bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
+}

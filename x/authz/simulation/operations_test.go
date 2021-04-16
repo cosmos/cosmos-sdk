@@ -55,7 +55,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simulation.WeightGrantAuthorization, types.ModuleName, simulation.TypeMsgGrantAuthorization},
 		{simulation.WeightRevokeAuthorization, types.ModuleName, simulation.TypeMsgRevokeAuthorization},
-		{simulation.WeightExecAuthorization, types.ModuleName, simulation.TypeMsgExecAuthorization},
 	}
 
 	for i, w := range weightesOps {

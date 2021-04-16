@@ -23,21 +23,21 @@ import (
 const (
 	TypeMsgGrantAuthorization  = "/cosmos.authz.v1beta1.Msg/GrantAuthorization"
 	TypeMsgRevokeAuthorization = "/cosmos.authz.v1beta1.Msg/RevokeAuthorization"
-	TypeMsgExecAuthorization   = "/cosmos.authz.v1beta1.Msg/ExecAuthorized"
+	// TypeMsgExecAuthorization   = "/cosmos.authz.v1beta1.Msg/ExecAuthorized"
 )
 
 // Simulation operation weights constants
 const (
 	OpWeightMsgGrantAuthorization = "op_weight_msg_grant_authorization"
 	OpWeightRevokeAuthorization   = "op_weight_msg_revoke_authorization"
-	OpWeightExecAuthorization     = "op_weight_msg_execute_authorization"
+	// OpWeightExecAuthorization     = "op_weight_msg_execute_authorization"
 )
 
 // authz operations weights
 const (
 	WeightGrantAuthorization  = 100
 	WeightRevokeAuthorization = 80
-	WeightExecAuthorization   = 80
+	// WeightExecAuthorization   = 80
 )
 
 var sendLimit = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10)))
@@ -49,7 +49,7 @@ func WeightedOperations(
 	var (
 		weightMsgGrantAuthorization int
 		weightRevokeAuthorization   int
-		weightExecAuthorization     int
+		// weightExecAuthorization     int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgGrantAuthorization, &weightMsgGrantAuthorization, nil,
@@ -61,12 +61,6 @@ func WeightedOperations(
 	appParams.GetOrGenerate(cdc, OpWeightRevokeAuthorization, &weightRevokeAuthorization, nil,
 		func(_ *rand.Rand) {
 			weightRevokeAuthorization = WeightRevokeAuthorization
-		},
-	)
-
-	appParams.GetOrGenerate(cdc, OpWeightExecAuthorization, &weightExecAuthorization, nil,
-		func(_ *rand.Rand) {
-			weightExecAuthorization = WeightExecAuthorization
 		},
 	)
 
@@ -147,21 +141,19 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 }
 
 func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) exported.Authorization {
-	authorizations := make([]exported.Authorization, 1)
+	authorizations := make([]exported.Authorization, 2)
 	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
-	// authorizations[1] = types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal")
-	// authorizations[2] = types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance")
+	authorizations[1] = types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal")
 
-	return authorizations[0]
+	return authorizations[r.Intn(len(authorizations))]
 }
 
 func generateRandomAuthorizationType(r *rand.Rand) string {
-	authorizationTypes := make([]string, 1)
+	authorizationTypes := make([]string, 2)
 	authorizationTypes[0] = banktype.SendAuthorization{}.MethodName()
-	// authorizationTypes[1] = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
-	// authorizationTypes[2] = "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"
+	authorizationTypes[1] = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
 
-	return authorizationTypes[0]
+	return authorizationTypes[r.Intn(len(authorizationTypes))]
 }
 
 // SimulateMsgRevokeAuthorization generates a MsgRevokeAuthorization with random values.
@@ -183,7 +175,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		})
 
 		if !hasGrant {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "no authorizations exists"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRevokeAuthorization, "no authorizations exists"), nil, nil
 		}
 
 		spendableCoins := bk.SpendableCoins(ctx, granter)

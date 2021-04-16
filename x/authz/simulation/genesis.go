@@ -1,16 +1,13 @@
 package simulation
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // Simulation parameter constant.
@@ -34,22 +31,22 @@ func genAuthorizationGrant(r *rand.Rand, accounts []simtypes.Account) []types.Gr
 
 }
 
-func generateRandomGrant(r *rand.Rand) *codectypes.Any {
-	authorizations := make([]*codectypes.Any, 3)
-	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
-	authorizations[1] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal"))
-	authorizations[2] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"))
+// func generateRandomGrant(r *rand.Rand) *codectypes.Any {
+// 	authorizations := make([]*codectypes.Any, 3)
+// 	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
+// 	authorizations[1] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal"))
+// 	authorizations[2] = newAnyAuthorization(types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"))
 
-	return authorizations[r.Intn(len(authorizations))]
-}
+// 	return authorizations[r.Intn(len(authorizations))]
+// }
 
-func newAnyAuthorization(grant exported.Authorization) *codectypes.Any {
-	any, err := codectypes.NewAnyWithValue(grant)
-	if err != nil {
-		panic(err)
-	}
-	return any
-}
+// func newAnyAuthorization(grant exported.Authorization) *codectypes.Any {
+// 	any, err := codectypes.NewAnyWithValue(grant)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return any
+// }
 
 // RandomizedGenState generates a random GenesisState for authz.
 func RandomizedGenState(simState *module.SimulationState) {
@@ -61,7 +58,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	authzGrantsGenesis := types.NewGenesisState(grants)
 
-	bz, err := simState.Cdc.MarshalJSON(authzGrantsGenesis)
+	bz, err := json.MarshalIndent(&authzGrantsGenesis, "", " ")
 	if err != nil {
 		panic(err)
 	}

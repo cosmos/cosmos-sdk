@@ -134,9 +134,10 @@ A decision policy is the mechanism by which members of a group can vote on
 proposals.
 
 All decision policies should have a minimum and maximum voting window.
-The minimum voting window is the minimum amount of time that must pass in order
+The minimum voting window is the minimum duration that must pass in order
 for a proposal to potentially pass, and it may be set to 0. The maximum voting
-window is the maximum time that a proposal may be voted on before it is closed.
+window is the maximum time that a proposal may be voted on and executed if 
+it reached enough support before it is closed.
 Both of these values must be less than a chain-wide max voting window parameter.
 
 We define the `DecisionPolicy` interface that all decision policies must implement:

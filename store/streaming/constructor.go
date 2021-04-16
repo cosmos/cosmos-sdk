@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/streaming/file"
+	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cast"
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error)
+type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -62,7 +63,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 }
 
 // FileStreamingConstructor is the streaming.ServiceConstructor function for creating a FileStreamingService
-func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error) {
+func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (baseapp.StreamingService, error) {
 	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
 	fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)

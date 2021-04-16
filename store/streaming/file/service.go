@@ -10,6 +10,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,7 +33,7 @@ subsequent state changes are written out to this file until the next `BeginBlock
 the length-prefixed protobuf encoded `EndBlock` request is written, and the response is written at the tail.
 */
 
-var _ sdk.StreamingService = &StreamingService{}
+var _ baseapp.StreamingService = &StreamingService{}
 
 // StreamingService is a concrete implementation of StreamingService that writes state changes out to files
 type StreamingService struct {

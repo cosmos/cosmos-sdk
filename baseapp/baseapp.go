@@ -137,7 +137,7 @@ type BaseApp struct { // nolint: maligned
 
 	// hooked services
 	// these hooks will have the ABCI messages routed through them
-	hooks []sdk.Hook
+	hooks []Hook
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

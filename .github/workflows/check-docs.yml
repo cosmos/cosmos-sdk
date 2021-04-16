@@ -1,0 +1,25 @@
+name: Check docs build
+# This workflow runs when a PR is labeled with `docs`
+# This will check if the docs build successfully by running `npm run build`
+on:
+  pull_request:
+    types: [ labeled ]
+
+jobs:
+  check-docs-build:
+    if: ${{ github.event.label.name == 'docs' }}
+
+    name: Check docs build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install dependencies and build docs 🧱
+        run: |
+          cd docs
+          npm install
+          npm run build

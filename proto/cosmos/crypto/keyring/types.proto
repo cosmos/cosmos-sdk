@@ -6,10 +6,19 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
 
+// TODO - define proto structs for all structs in cryto/kerying/info.go and remove the original structs.
+
 // Item is a keyring item stored in a keyring backend.
-message Item {
+message LocalInfo {
   option (gogoproto.goproto_stringer) = false;
 
   // TODO:
   // bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
+}
+
+
+message LedgerInfo {
+    option (gogoproto.goproto_stringer) = false;
+
+  // TODO
 }

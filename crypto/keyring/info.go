@@ -53,6 +53,11 @@ func newLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd
 }
 
 // GetType implements Info interface
+func (i localInfo) String() KeyType {
+	return fmt.Sprintf("LocalInfo{%s}", i.Name)
+}
+
+// GetType implements Info interface
 func (i localInfo) GetType() KeyType {
 	return TypeLocal
 }

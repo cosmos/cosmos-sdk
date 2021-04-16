@@ -356,7 +356,7 @@ In the current implementation, updating a group or a group account after submitt
 ### Neutral
 
 - It uses ADR 033 so it will need to be implemented within the Cosmos SDK, but this doesn't imply necessarily any large refactoring of existing Cosmos SDK modules.
-- It requires the ORM package.
+- The current implementation of the group module uses the ORM package.
 
 ## Further Discussions
 

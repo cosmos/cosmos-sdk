@@ -30,7 +30,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 		lInfo.GetPubKey().String())
 
 	// Serialize and restore
-	serialized := marshalInfo(lInfo)
+	serialized := aminoMarshalInfo(lInfo)
 	restoredInfo, err := aminoUnmarshalInfo(serialized)
 	require.NoError(t, err)
 	require.NotNil(t, restoredInfo)

@@ -70,14 +70,14 @@ func NewKeeper(
 }
 
 // SetHooks sets the hooks for governance
-func (k *Keeper) SetHooks(sh types.GovHooks) *Keeper {
-	if k.hooks != nil {
+func (keeper *Keeper) SetHooks(sh types.GovHooks) *Keeper {
+	if keeper.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
 
-	k.hooks = sh
+	keeper.hooks = sh
 
-	return k
+	return keeper
 }
 
 // Logger returns a module-specific logger.

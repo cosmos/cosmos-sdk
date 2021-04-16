@@ -134,7 +134,7 @@ The group account address is generated based on an auto-increment integer which 
 A decision policy is the mechanism by which members of a group can vote on 
 proposals.
 
-All decision policies generally would have a minimum and maximum voting window.
+All decision policies should have a minimum and maximum voting window.
 The minimum voting window is the minimum amount of time that must pass in order
 for a proposal to potentially pass, and it may be set to 0. The maximum voting
 window is the maximum time that a proposal may be voted on before it is closed.

@@ -3,7 +3,6 @@ package simulation
 import (
 	"context"
 	"math/rand"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -153,19 +152,19 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 }
 
 func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) exported.Authorization {
-	authorizations := make([]exported.Authorization, 3)
+	authorizations := make([]exported.Authorization, 2)
 	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
 	authorizations[1] = types.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal")
-	authorizations[2] = types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance")
+	// authorizations[2] = types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance")
 
 	return authorizations[r.Intn(len(authorizations))]
 }
 
 func generateRandomAuthorizationType(r *rand.Rand) string {
-	authorizationTypes := make([]string, 3)
+	authorizationTypes := make([]string, 2)
 	authorizationTypes[0] = banktype.SendAuthorization{}.MethodName()
 	authorizationTypes[1] = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
-	authorizationTypes[2] = "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"
+	// authorizationTypes[2] = "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"
 
 	return authorizationTypes[r.Intn(len(authorizationTypes))]
 }
@@ -317,9 +316,6 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			if strings.Contains(err.Error(), "fee allowance already exists") {
-				return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee allowance exists"), nil, nil
-			}
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, err.Error()), nil, err
 		}
 

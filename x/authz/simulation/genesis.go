@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 
@@ -59,7 +58,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	authzGrantsGenesis := types.NewGenesisState(grants)
 
-	bz, err := json.MarshalIndent(&authzGrantsGenesis, "", " ")
+	bz, err := simState.Cdc.MarshalJSON(authzGrantsGenesis)
 	if err != nil {
 		panic(err)
 	}

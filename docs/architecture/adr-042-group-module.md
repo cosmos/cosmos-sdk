@@ -40,7 +40,7 @@ Groups are stored in state as part of an ORM-based `groupTable` using the `Group
 ```proto
 message GroupInfo {
 
-    // group_id is the unique ID of the group.
+    // group_id is the unique ID of this group.
     uint64 group_id = 1;
 
     // admin is the account address of the group's admin.

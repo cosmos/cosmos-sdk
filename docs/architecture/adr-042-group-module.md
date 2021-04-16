@@ -101,7 +101,7 @@ and then to create separate group accounts with different decision policies
 and delegate the desired permissions from the master account to
 those "sub-accounts" using the [`x/authz` module](adr-030-authz-module.md).
 
-Group accounts are stored as part of the `groupAccountTable` and modeled by `GroupAccountInfo`.
+Group accounts are stored as part of the `groupAccountTable` and defined by `GroupAccountInfo`.
 
 ```proto
 message GroupAccountInfo {

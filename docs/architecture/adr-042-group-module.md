@@ -109,7 +109,7 @@ message GroupAccountInfo {
     // address is the group account address.
     string address = 1;
     
-    // group_id is the unique ID of the group.
+    // group_id is the ID of the Group the GroupAccount belongs to.
     uint64 group_id = 2;
 
     // admin is the account address of the group admin.

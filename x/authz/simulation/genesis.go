@@ -19,7 +19,6 @@ const authz = "authz"
 // genAuthorizationGrant returns an empty slice of authorization grants.
 func genAuthorizationGrant(r *rand.Rand, accounts []simtypes.Account) []types.GrantAuthorization {
 	authorizations := make([]types.GrantAuthorization, len(accounts)-1)
-
 	for i := 0; i < len(accounts)-1; i++ {
 		granter := accounts[i]
 		grantee := accounts[i+1]
@@ -29,6 +28,7 @@ func genAuthorizationGrant(r *rand.Rand, accounts []simtypes.Account) []types.Gr
 			Authorization: generateRandomGrant(r),
 		}
 	}
+
 	return authorizations
 }
 
@@ -45,6 +45,7 @@ func newAnyAuthorization(grant exported.Authorization) *codectypes.Any {
 	if err != nil {
 		panic(err)
 	}
+
 	return any
 }
 

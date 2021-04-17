@@ -34,7 +34,7 @@ func (suite *AddressSuite) TestComposed() {
 	a2 := addrMock{[]byte{21, 22}}
 
 	typ := "multisig"
-	ac, err := NewComposed(typ, []Addressable{a1, a2})
+	ac, err := Compose(typ, []Addressable{a1, a2})
 	assert.NoError(err)
 	assert.Len(ac, Len)
 
@@ -45,18 +45,18 @@ func (suite *AddressSuite) TestComposed() {
 	assert.Equal(ac, ac2, "NewComposed works correctly")
 
 	// changing order of addresses shouldn't impact a composed address
-	ac2, err = NewComposed(typ, []Addressable{a2, a1})
+	ac2, err = Compose(typ, []Addressable{a2, a1})
 	assert.NoError(err)
 	assert.Len(ac2, Len)
 	assert.Equal(ac, ac2, "NewComposed is not sensitive for order")
 
 	// changing a type should change composed address
-	ac2, err = NewComposed(typ+"other", []Addressable{a2, a1})
+	ac2, err = Compose(typ+"other", []Addressable{a2, a1})
 	assert.NoError(err)
 	assert.NotEqual(ac, ac2, "NewComposed must be sensitive to type")
 
 	// changing order of addresses shouldn't impact a composed address
-	ac2, err = NewComposed(typ, []Addressable{a1, addrMock{make([]byte, 300, 300)}})
+	ac2, err = Compose(typ, []Addressable{a1, addrMock{make([]byte, 300, 300)}})
 	assert.Error(err)
 	assert.Contains(err.Error(), "should be max 255 bytes, got 300")
 }
@@ -73,6 +73,21 @@ func (suite *AddressSuite) TestModule() {
 	addr3 := Module(modName, []byte{1, 2, 3})
 	assert.NotEqual(addr, addr3, "changing key must change address")
 	assert.NotEqual(addr2, addr3, "changing key must change address")
+}
+
+func (suite *AddressSuite) TestDerive() {
+	assert := suite.Assert()
+	var addr, key1, key2 = []byte{1, 2}, []byte{3, 4}, []byte{1, 2}
+	d1 := Derive(addr, key1)
+	d2 := Derive(addr, key2)
+	d3 := Derive(key1, key2)
+	assert.Len(d1, Len)
+	assert.Len(d2, Len)
+	assert.Len(d3, Len)
+
+	assert.NotEqual(d1, d2)
+	assert.NotEqual(d1, d3)
+	assert.NotEqual(d2, d3)
 }
 
 type addrMock struct {

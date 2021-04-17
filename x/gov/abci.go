@@ -21,6 +21,9 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		keeper.DeleteProposal(ctx, proposal.ProposalId)
 		keeper.DeleteDeposits(ctx, proposal.ProposalId)
 
+		// called when proposal become inactive
+		keeper.AfterProposalInactive(ctx, proposal.ProposalId)
+
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeInactiveProposal,
@@ -95,6 +98,9 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			"title", proposal.GetTitle(),
 			"result", logMsg,
 		)
+
+		// when proposal become active
+		keeper.AfterProposalActive(ctx, proposal.ProposalId)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

@@ -49,7 +49,7 @@ voteMul = 1 - communitytax - proposerMul
 ```
 
 In total, the proposer receives `fees  * (voteMul * powFrac + proposerMul)`.
-All other validators receive `fees * voteMul`.
+All other validators receive `fees * voteMul * powFrac`.
 
 ### Rewards to Delegators
 

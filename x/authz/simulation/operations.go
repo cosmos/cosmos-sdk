@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -117,7 +116,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		expiration := ctx.BlockTime().AddDate(1, 0, 0)
 		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
-			generateRandomAuthorization(r, spendLimit), expiration)
+			banktype.NewSendAuthorization(spendLimit), expiration)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
@@ -151,14 +150,6 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
 	}
-}
-
-func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) exported.Authorization {
-	authorizations := make([]exported.Authorization, 2)
-	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
-	authorizations[1] = types.NewGenericAuthorization("/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance")
-
-	return authorizations[r.Intn(len(authorizations))]
 }
 
 // SimulateMsgRevokeAuthorization generates a MsgRevokeAuthorization with random values.
@@ -258,24 +249,13 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 		execMsg := sdk.ServiceMsg{
 			MethodName: authorization.MethodName(),
 		}
-		switch authorization.MethodName() {
-		case banktype.SendAuthorization{}.MethodName():
+		if authorization.MethodName() == (banktype.SendAuthorization{}.MethodName()) {
 			execMsg.Request = banktype.NewMsgSend(
 				granter,
 				grantee,
 				sendLimit,
 			)
-		case "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance":
-			allowance := &feegrant.BasicFeeAllowance{
-				SpendLimit: sendLimit,
-				Expiration: feegrant.ExpiresAtTime(ctx.BlockTime().AddDate(1, 0, 0)),
-			}
-			proposal, err := feegrant.NewMsgGrantFeeAllowance(allowance, granter, grantee)
-			if err != nil {
-				panic(err)
-			}
-			execMsg.Request = proposal
-		default:
+		} else {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "unknown authorization"), nil, errors.New("unknown authorization")
 		}
 
@@ -318,8 +298,6 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
 			if strings.Contains(err.Error(), "insufficient funds") {
-				return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, err.Error()), nil, nil
-			} else if strings.Contains(err.Error(), "fee allowance already exists") {
 				return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, err.Error()), nil, nil
 			}
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, err.Error()), nil, err

@@ -56,7 +56,7 @@ This method takes care of marshaling the `res` parameter to protobuf and attachi
 
 This diagram shows a typical structure of an `Msg` Service, and how the message propagates through the module.
 
-![](../uml/transaction_flow.svg)
+![Transaction flow](../uml/svg/transaction_flow.svg)
 
 ## Legacy Amino `Msg`s
 

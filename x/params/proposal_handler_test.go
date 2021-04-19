@@ -3,132 +3,83 @@ package params_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-func validateNoOp(_ interface{}) error { return nil }
+type HandlerTestSuite struct {
+	suite.Suite
 
-type testInput struct {
-	ctx    sdk.Context
-	cdc    *codec.LegacyAmino
-	keeper keeper.Keeper
+	app        *simapp.SimApp
+	ctx        sdk.Context
+	govHandler govtypes.Handler
 }
 
-var (
-	_ types.ParamSet = (*testParams)(nil)
-
-	keyMaxValidators = "MaxValidators"
-	keySlashingRate  = "SlashingRate"
-	testSubspace     = "TestSubspace"
-)
-
-type testParamsSlashingRate struct {
-	DoubleSign uint16 `json:"double_sign,omitempty" yaml:"double_sign,omitempty"`
-	Downtime   uint16 `json:"downtime,omitempty" yaml:"downtime,omitempty"`
+func (suite *HandlerTestSuite) SetupTest() {
+	suite.app = simapp.Setup(false)
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
 }
 
-type testParams struct {
-	MaxValidators uint16                 `json:"max_validators" yaml:"max_validators"` // maximum number of validators (max uint16 = 65535)
-	SlashingRate  testParamsSlashingRate `json:"slashing_rate" yaml:"slashing_rate"`
-}
-
-func (tp *testParams) ParamSetPairs() types.ParamSetPairs {
-	return types.ParamSetPairs{
-		types.NewParamSetPair([]byte(keyMaxValidators), &tp.MaxValidators, validateNoOp),
-		types.NewParamSetPair([]byte(keySlashingRate), &tp.SlashingRate, validateNoOp),
-	}
+func TestHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(HandlerTestSuite))
 }
 
 func testProposal(changes ...proposal.ParamChange) *proposal.ParameterChangeProposal {
-	return proposal.NewParameterChangeProposal(
-		"Test",
-		"description",
-		changes,
-	)
+	return proposal.NewParameterChangeProposal("title", "description", changes)
 }
 
-func newTestInput(t *testing.T) testInput {
-	cdc := codec.NewLegacyAmino()
-	proposal.RegisterLegacyAminoCodec(cdc)
+func (suite *HandlerTestSuite) TestProposalHandlerPassed() {
+	// tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "1"))
+	// suite.Require().NoError(suite.govHandler(suite.ctx, tp))
 
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-
-	keyParams := sdk.NewKVStoreKey("params")
-	tKeyParams := sdk.NewTransientStoreKey("transient_params")
-
-	cms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tKeyParams, sdk.StoreTypeTransient, db)
-
-	err := cms.LoadLatestVersion()
-	require.Nil(t, err)
-
-	encCfg := simapp.MakeTestEncodingConfig()
-	keeper := keeper.NewKeeper(encCfg.Marshaler, encCfg.Amino, keyParams, tKeyParams)
-	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
-
-	return testInput{ctx, cdc, keeper}
+	// var param uint16
+	// ss.Get(suite.ctx, []byte(keyMaxValidators), &param)
+	// suite.Require().Equal(param, uint16(1))
 }
 
-func TestProposalHandlerPassed(t *testing.T) {
-	input := newTestInput(t)
-	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		types.NewKeyTable().RegisterParamSet(&testParams{}),
-	)
+func (suite *HandlerTestSuite) TestProposalHandlerFailed() {
 
-	tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "1"))
-	hdlr := params.NewParamChangeProposalHandler(input.keeper)
-	require.NoError(t, hdlr(input.ctx, tp))
+	// tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
+	// suite.Require().Error(suite.govHandler(suite.ctx, tp))
 
-	var param uint16
-	ss.Get(input.ctx, []byte(keyMaxValidators), &param)
-	require.Equal(t, param, uint16(1))
+	// suite.Require().False(ss.Has(suite.ctx, []byte(keyMaxValidators)))
 }
 
-func TestProposalHandlerFailed(t *testing.T) {
-	input := newTestInput(t)
-	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		types.NewKeyTable().RegisterParamSet(&testParams{}),
-	)
+func (suite *HandlerTestSuite) TestProposalHandlerUpdateOmitempty() {
 
-	tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
-	hdlr := params.NewParamChangeProposalHandler(input.keeper)
-	require.Error(t, hdlr(input.ctx, tp))
+	// var param testParamsSlashingRate
 
-	require.False(t, ss.Has(input.ctx, []byte(keyMaxValidators)))
-}
+	// tp := testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
+	// suite.Require().NoError(suite.govHandler(suite.ctx, tp))
 
-func TestProposalHandlerUpdateOmitempty(t *testing.T) {
-	input := newTestInput(t)
-	ss := input.keeper.Subspace(testSubspace).WithKeyTable(
-		types.NewKeyTable().RegisterParamSet(&testParams{}),
-	)
+	// ss.Get(suite.ctx, []byte(keySlashingRate), &param)
+	// suite.Require().Equal(testParamsSlashingRate{0, 7}, param)
 
-	hdlr := params.NewParamChangeProposalHandler(input.keeper)
-	var param testParamsSlashingRate
+	// tp = testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
+	// suite.Require().NoError(suite.govHandler(suite.ctx, tp))
 
-	tp := testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
-	require.NoError(t, hdlr(input.ctx, tp))
+	// ss.Get(suite.ctx, []byte(keySlashingRate), &param)
+	// suite.Require().Equal(testParamsSlashingRate{10, 7}, param)
 
-	ss.Get(input.ctx, []byte(keySlashingRate), &param)
-	require.Equal(t, testParamsSlashingRate{0, 7}, param)
+	tp := testProposal(proposal.ParamChange{
+		Subspace: "gov",
+		Key:      "depositparams",
+		Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
+	})
 
-	tp = testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
-	require.NoError(t, hdlr(input.ctx, tp))
+	suite.Require().NoError(suite.govHandler(suite.ctx, tp))
 
-	ss.Get(input.ctx, []byte(keySlashingRate), &param)
-	require.Equal(t, testParamsSlashingRate{10, 7}, param)
+	depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+	suite.Require().Equal(govtypes.DepositParams{
+		MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
+		MaxDepositPeriod: govtypes.DefaultPeriod,
+	}, depositParams)
 }

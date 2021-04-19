@@ -14,6 +14,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type SimTestSuite struct {
@@ -122,37 +123,45 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 }
 
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 1)
 
-	addr := suite.app.AccountKeeper.GetModuleAddress(types.ModuleName)
+	addr := suite.app.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+	//addr := suite.app.AccountKeeper.GetModuleAddress(types.ModuleName) // use multiple module accounts.
+
 	acc := suite.app.AccountKeeper.GetAccount(suite.ctx, addr) // types.AccountI
-	sacc, ok := acc.(simtypes.Account)
-	suite.Require().True(ok)
+	//sacc, ok := acc.(simtypes.Account)
 
-	accounts := make([]simtypes.Account, 1)
-	accounts = append(accounts, sacc)
+	mAcc := simtypes.Account{
+		Address: acc.GetAddress(),
+		PrivKey: nil,
+		ConsKey: nil,
+		PubKey: acc.GetPubKey(),
+	}
+
+	accounts = append(accounts, mAcc)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSend(suite.app.AccountKeeper, suite.app.BankKeeper)
-	s := rand.NewSource(1)
-	r := rand.New(s)
+	op := simulation.SimulateMsgSendToModuleAccount(suite.app.AccountKeeper, suite.app.BankKeeper)
+
+	s = rand.NewSource(1)
+	r = rand.New(s)
+
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)
 
-	/*
-		var msg types.MsgSend
-		types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	var msg types.MsgSend
+	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-		suite.Require().True(operationMsg.OK)
-		suite.Require().Equal("65337742stake", msg.Amount.String())
-		suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.FromAddress)
-		suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.ToAddress)
-		suite.Require().Equal(types.TypeMsgSend, msg.Type())
-		suite.Require().Equal(types.ModuleName, msg.Route())
-		suite.Require().Len(futureOperations, 0)
-	*/
+	suite.Require().False(operationMsg.OK) // sending tokens to a module account should fail
+	suite.Require().Equal(operationMsg.Comment, "invalid transfers")
+	suite.Require().Equal(types.TypeMsgSend, msg.Type())
+	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Len(futureOperations, 0)
 }
 
 /*

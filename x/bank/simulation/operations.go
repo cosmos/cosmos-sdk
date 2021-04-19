@@ -80,6 +80,35 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 	}
 }
 
+// SimulateMsgSendToModuleAccount tests and runs a single msg send where both
+// accounts already exist.
+func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount := accs[0]
+		toSimAcc := accs[1]
+
+		spendable := bk.SpendableCoins(ctx, simAccount.Address)
+		coins := simtypes.RandSubsetCoins(r, spendable)
+
+		// Check send_enabled status of each coin denom
+		if err := bk.SendEnabledCoins(ctx, coins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
+		}
+
+		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
+
+		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{simAccount.PrivKey})
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+	}
+}
+
 // sendMsgSend sends a transaction with a MsgSend from a provided random account.
 func sendMsgSend(
 	r *rand.Rand, app *baseapp.BaseApp, bk keeper.Keeper, ak types.AccountKeeper,

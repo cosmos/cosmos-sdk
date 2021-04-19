@@ -703,19 +703,19 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		var (
-			msgEvents sdk.Events
-			msgResult *sdk.Result
-			msgFqName string
-			err       error
+			msgResult      *sdk.Result
+			msgEventAction string // name to use as value in event `message.action`
+			err            error
 		)
 
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
+			msgEventAction = proto.MessageName(msg)
 		} else if legacyMsg, ok := msg.(sdk.LegacyMsg); ok {
 			// legacy sdk.Msg routing
 			msgRoute := legacyMsg.Route()
-			msgFqName = legacyMsg.Type()
+			msgEventAction = legacyMsg.Type()
 			handler := app.router.Route(ctx, msgRoute)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
@@ -730,8 +730,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
-		msgEvents = sdk.Events{
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgFqName)),
+		msgEvents := sdk.Events{
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgEventAction)),
 		}
 		msgEvents = msgEvents.AppendEvents(msgResult.GetEvents())
 

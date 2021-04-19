@@ -27,8 +27,8 @@
     - [Query](#cosmos.auth.v1beta1.Query)
   
 - [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
-    - [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant)
     - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
+    - [Grant](#cosmos.authz.v1beta1.Grant)
   
 - [cosmos/authz/v1beta1/event.proto](#cosmos/authz/v1beta1/event.proto)
     - [EventGrant](#cosmos.authz.v1beta1.EventGrant)
@@ -59,10 +59,10 @@
 - [cosmos/authz/v1beta1/tx.proto](#cosmos/authz/v1beta1/tx.proto)
     - [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest)
     - [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse)
-    - [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest)
-    - [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse)
-    - [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest)
-    - [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse)
+    - [MsgGrantRequest](#cosmos.authz.v1beta1.MsgGrantRequest)
+    - [MsgGrantResponse](#cosmos.authz.v1beta1.MsgGrantResponse)
+    - [MsgRevokeRequest](#cosmos.authz.v1beta1.MsgRevokeRequest)
+    - [MsgRevokeResponse](#cosmos.authz.v1beta1.MsgRevokeResponse)
   
     - [Msg](#cosmos.authz.v1beta1.Msg)
   
@@ -876,23 +876,6 @@ Query defines the gRPC querier service.
 
 
 
-<a name="cosmos.authz.v1beta1.AuthorizationGrant"></a>
-
-### AuthorizationGrant
-AuthorizationGrant gives permissions to execute
-the provide method with expiration time.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
-
 <a name="cosmos.authz.v1beta1.GenericAuthorization"></a>
 
 ### GenericAuthorization
@@ -902,7 +885,24 @@ the provided method on behalf of the granter's account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `method_name` | [string](#string) |  | method name to grant unrestricted permissions to execute Note: MethodName() is already a method on `GenericAuthorization` type, we need some custom naming here so using `MessageName` |
+| `msg_type_url` | [string](#string) |  | Msg method to grant unrestricted permissions to execute |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.Grant"></a>
+
+### Grant
+AuthorizationGrant gives permissions to execute
+the provide method with expiration time.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 
@@ -1052,7 +1052,7 @@ QueryGrantsResponse is the response type for the Query/Authorizations RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `grants` | [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant) | repeated | authorizations is a list of grants granted for grantee by granter. |
+| `grants` | [Grant](#cosmos.authz.v1beta1.Grant) | repeated | authorizations is a list of grants granted for grantee by granter. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
 
 
@@ -1316,10 +1316,10 @@ MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response typ
 
 
 
-<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationRequest"></a>
+<a name="cosmos.authz.v1beta1.MsgGrantRequest"></a>
 
-### MsgGrantAuthorizationRequest
-MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
+### MsgGrantRequest
+MsgGrantRequest grants the provided authorization to the grantee on the granter's
 account with the provided expiration time.
 
 
@@ -1335,20 +1335,20 @@ account with the provided expiration time.
 
 
 
-<a name="cosmos.authz.v1beta1.MsgGrantAuthorizationResponse"></a>
+<a name="cosmos.authz.v1beta1.MsgGrantResponse"></a>
 
-### MsgGrantAuthorizationResponse
-MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
-
-
+### MsgGrantResponse
+MsgGrantResponse defines the Msg/MsgGrant response type.
 
 
 
 
-<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest"></a>
 
-### MsgRevokeAuthorizationRequest
-MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
+
+<a name="cosmos.authz.v1beta1.MsgRevokeRequest"></a>
+
+### MsgRevokeRequest
+MsgRevokeRequest revokes any authorization with the provided sdk.Msg type on the
 granter's account with that has been granted to the grantee.
 
 
@@ -1363,10 +1363,10 @@ granter's account with that has been granted to the grantee.
 
 
 
-<a name="cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse"></a>
+<a name="cosmos.authz.v1beta1.MsgRevokeResponse"></a>
 
-### MsgRevokeAuthorizationResponse
-MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.
+### MsgRevokeResponse
+MsgRevokeResponse defines the Msg/MsgRevokeResponse response type.
 
 
 
@@ -1386,9 +1386,9 @@ Msg defines the authz Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `GrantAuthorization` | [MsgGrantAuthorizationRequest](#cosmos.authz.v1beta1.MsgGrantAuthorizationRequest) | [MsgGrantAuthorizationResponse](#cosmos.authz.v1beta1.MsgGrantAuthorizationResponse) | GrantAuthorization grants the provided authorization to the grantee on the granter's account with the provided expiration time. | |
+| `Grantxx` | [MsgGrantRequest](#cosmos.authz.v1beta1.MsgGrantRequest) | [MsgGrantResponse](#cosmos.authz.v1beta1.MsgGrantResponse) | Grant grants the provided authorization to the grantee on the granter's account with the provided expiration time. | |
 | `ExecAuthorized` | [MsgExecAuthorizedRequest](#cosmos.authz.v1beta1.MsgExecAuthorizedRequest) | [MsgExecAuthorizedResponse](#cosmos.authz.v1beta1.MsgExecAuthorizedResponse) | ExecAuthorized attempts to execute the provided messages using authorizations granted to the grantee. Each message should have only one signer corresponding to the granter of the authorization. | |
-| `RevokeAuthorization` | [MsgRevokeAuthorizationRequest](#cosmos.authz.v1beta1.MsgRevokeAuthorizationRequest) | [MsgRevokeAuthorizationResponse](#cosmos.authz.v1beta1.MsgRevokeAuthorizationResponse) | RevokeAuthorization revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
+| `Revoke` | [MsgRevokeRequest](#cosmos.authz.v1beta1.MsgRevokeRequest) | [MsgRevokeResponse](#cosmos.authz.v1beta1.MsgRevokeResponse) | Revoke revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
 
  <!-- end services -->
 

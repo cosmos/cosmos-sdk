@@ -38,7 +38,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // getAuthorizationGrant returns grant between granter and grantee for the given msg type
-func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (grant types.AuthorizationGrant, found bool) {
+func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (grant types.Grant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(grantStoreKey)
 	if bz == nil {
@@ -164,7 +164,7 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	key := types.GetAuthorizationStoreKey(grantee, granter, "")
 	iter := sdk.KVStorePrefixIterator(store, key)
 	defer iter.Close()
-	var authorization types.AuthorizationGrant
+	var authorization types.Grant
 	for ; iter.Valid(); iter.Next() {
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &authorization)
 		authorizations = append(authorizations, authorization.GetAuthorizationGrant())
@@ -190,12 +190,12 @@ func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress
 
 // IterateGrants iterates over all authorization grants
 func (k Keeper) IterateGrants(ctx sdk.Context,
-	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant types.AuthorizationGrant) bool) {
+	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant types.Grant) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var grant types.AuthorizationGrant
+		var grant types.Grant
 		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
 		if handler(granterAddr, granteeAddr, grant) {

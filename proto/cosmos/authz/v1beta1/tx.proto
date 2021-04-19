@@ -10,23 +10,23 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
 
 // Msg defines the authz Msg service.
 service Msg {
-  // GrantAuthorization grants the provided authorization to the grantee on the granter's
+  // Grant grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.
-  rpc GrantAuthorization(MsgGrantAuthorizationRequest) returns (MsgGrantAuthorizationResponse);
+  rpc Grantxx(MsgGrantRequest) returns (MsgGrantResponse);
 
   // ExecAuthorized attempts to execute the provided messages using
   // authorizations granted to the grantee. Each message should have only
   // one signer corresponding to the granter of the authorization.
   rpc ExecAuthorized(MsgExecAuthorizedRequest) returns (MsgExecAuthorizedResponse);
 
-  // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
+  // Revoke revokes any authorization corresponding to the provided method name on the
   // granter's account that has been granted to the grantee.
-  rpc RevokeAuthorization(MsgRevokeAuthorizationRequest) returns (MsgRevokeAuthorizationResponse);
+  rpc Revoke(MsgRevokeRequest) returns (MsgRevokeResponse);
 }
 
-// MsgGrantAuthorizationRequest grants the provided authorization to the grantee on the granter's
+// MsgGrantRequest grants the provided authorization to the grantee on the granter's
 // account with the provided expiration time.
-message MsgGrantAuthorizationRequest {
+message MsgGrantRequest {
   string granter = 1;
   string grantee = 2;
 
@@ -47,16 +47,16 @@ message MsgExecAuthorizedRequest {
   repeated google.protobuf.Any msgs = 2;
 }
 
-// MsgGrantAuthorizationResponse defines the Msg/MsgGrantAuthorization response type.
-message MsgGrantAuthorizationResponse {}
+// MsgGrantResponse defines the Msg/MsgGrant response type.
+message MsgGrantResponse {}
 
-// MsgRevokeAuthorizationRequest revokes any authorization with the provided sdk.Msg type on the
+// MsgRevokeRequest revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
-message MsgRevokeAuthorizationRequest {
+message MsgRevokeRequest {
   string granter     = 1;
   string grantee     = 2;
   string method_name = 3;
 }
 
-// MsgRevokeAuthorizationResponse defines the Msg/MsgRevokeAuthorizationResponse response type.
-message MsgRevokeAuthorizationResponse {}
+// MsgRevokeResponse defines the Msg/MsgRevokeResponse response type.
+message MsgRevokeResponse {}

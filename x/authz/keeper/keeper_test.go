@@ -118,7 +118,7 @@ func (s *TestSuite) TestKeeperIter() {
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, "abcd")
 	s.Require().Nil(authorization)
 
-	app.AuthzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.AuthorizationGrant) bool {
+	app.AuthzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
 		s.Require().Equal(granter, granterAddr)
 		s.Require().Equal(grantee, granteeAddr)
 		return true

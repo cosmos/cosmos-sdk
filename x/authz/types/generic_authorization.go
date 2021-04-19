@@ -14,13 +14,13 @@ var (
 // NewGenericAuthorization creates a new GenericAuthorization object.
 func NewGenericAuthorization(methodName string) *GenericAuthorization {
 	return &GenericAuthorization{
-		MessageName: methodName,
+		MsgTypeUrl: methodName,
 	}
 }
 
 // MethodName implements Authorization.MethodName.
 func (a GenericAuthorization) MethodName() string {
-	return a.MessageName
+	return a.MsgTypeUrl
 }
 
 // Accept implements Authorization.Accept.
@@ -30,8 +30,8 @@ func (a GenericAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (authz
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (a GenericAuthorization) ValidateBasic() error {
-	if !msgservice.IsServiceMsg(a.MessageName) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, " %s is not a valid service msg", a.MessageName)
+	if !msgservice.IsServiceMsg(a.MsgTypeUrl) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, " %s is not a valid service msg", a.MsgTypeUrl)
 	}
 	return nil
 }

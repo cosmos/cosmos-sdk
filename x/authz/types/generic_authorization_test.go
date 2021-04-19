@@ -17,5 +17,5 @@ func TestGenericAuthorization(t *testing.T) {
 	t.Log("verify ValidateBasic returns nil for service msg")
 	authorization = types.NewGenericAuthorization(banktypes.SendAuthorization{}.MethodName())
 	require.NoError(t, authorization.ValidateBasic())
-	require.Equal(t, banktypes.SendAuthorization{}.MethodName(), authorization.MessageName)
+	require.Equal(t, banktypes.SendAuthorization{}.MethodName(), authorization.MsgTypeUrl)
 }

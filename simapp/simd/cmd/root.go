@@ -53,6 +53,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Use:   "simd",
 		Short: "simulation app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			// set the default command outputs
+			cmd.SetOut(cmd.OutOrStdout())
+			cmd.SetErr(cmd.ErrOrStderr())
+
 			initClientCtx = client.ReadHomeFlag(initClientCtx, cmd)
 
 			initClientCtx, err := config.ReadFromClientConfig(initClientCtx)

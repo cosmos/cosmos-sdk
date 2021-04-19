@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type SimTestSuite struct {
@@ -123,24 +124,30 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 }
 
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
-	s := rand.NewSource(1)
+	moduleAccCount := 2
+	s := rand.NewSource(int64(moduleAccCount))
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 1)
 
-	addr := suite.app.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
-	//addr := suite.app.AccountKeeper.GetModuleAddress(types.ModuleName) // use multiple module accounts.
+	for i := 0; i < moduleAccCount; i++ {
+		var addr sdk.AccAddress
 
-	acc := suite.app.AccountKeeper.GetAccount(suite.ctx, addr) // types.AccountI
-	//sacc, ok := acc.(simtypes.Account)
+		switch {
+		case r.Int()%2 == 0:
+			addr = suite.app.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+		default:
+			addr = suite.app.AccountKeeper.GetModuleAddress(stakingtypes.ModuleName)
+		}
 
-	mAcc := simtypes.Account{
-		Address: acc.GetAddress(),
-		PrivKey: nil,
-		ConsKey: nil,
-		PubKey: acc.GetPubKey(),
+		acc := suite.app.AccountKeeper.GetAccount(suite.ctx, addr)
+		mAcc := simtypes.Account{
+			Address: acc.GetAddress(),
+			PrivKey: nil,
+			ConsKey: nil,
+			PubKey:  acc.GetPubKey(),
+		}
+		accounts = append(accounts, mAcc)
 	}
-
-	accounts = append(accounts, mAcc)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})

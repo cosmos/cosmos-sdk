@@ -39,13 +39,13 @@ The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable
 
 In the F1 distribution, the total rewards are calculated per validator period, and a delegator receives a piece of those rewards in proportion to their stake in the validator.
 In basic F1, the total rewards that all the delegators are entitled to between to periods is calculated the following way.
-Let `R(X)` be the total accumulated rewards up to period `X` divided by the tokens staked at that time, i.e. the reward ratio to multiply an individual delegators stake with to get their reward.
+Let `R(X)` be the total accumulated rewards up to period `X` divided by the tokens staked at that time. The delegator allocation is `R(X) * delegator_stake`.
 Then the rewards for all the delegators for staking between periods `A` and `B` are `(R(B) - R(A)) * total stake`.
-However, this doesn't take slashing into account.
+However, these calculated rewards don't account for slashing.
 
 Taking the slashes into account requires iteration.
-Let `F(X)` be the fraction a validator is to be slashed for the slashing event that happened at period `X`.
-If the validator was slashed at periods `P1, ..., PN`, where `A < P1`, `PN < B`, we calculate the individual delegator's rewards, `T(A, B)`, as follows:
+Let `F(X)` be the fraction a validator is to be slashed for a slashing event that happened at period `X`.
+If the validator was slashed at periods `P1, ..., PN`, where `A < P1`, `PN < B`, the distribution module calculates the individual delegator's rewards, `T(A, B)`, as follows:
 
 ```
 stake := initial stake
@@ -58,8 +58,8 @@ for P in P1, ..., PN`:
 rewards = rewards + (R(B) - R(PN)) * stake
 ```
 
-Put another way, the historical rewards are calculated retroactively by playing back all the slashes, and attenuating the delegator's stake at each step.
-The final calculated stake should be equivalent to the actual staked coins in the delegation, within a margin of error due to rounding errors.
+The historical rewards are calculated retroactively by playing back all the slashes and then attenuating the delegator's stake at each step.
+The final calculated stake is equivalent to the actual staked coins in the delegation with a margin of error due to rounding errors.
 
 Response:
 
@@ -70,13 +70,13 @@ Response:
 The validator can send this message to withdraw their accumulated commission.
 The commission is calculated in every block during `BeginBlock`, so no iteration is required to withdraw.
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
-Only integer amounts can be sent, so if the accumulated awards have any decimals, the amount is truncated before it's sent, and the remainder is left to be withdrawn later.
+Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
 
 ## FundCommunityPool
 
 This message sends coins directly from the sender to the community pool.
 
-Expected to fail if for some reason the amount cannot be transferred from the sender to the distribution module account.
+The transaction fails if the amount cannot be transferred from the sender to the distribution module account.
 
 ```go
 func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
@@ -92,12 +92,12 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 }
 ```
 
-## Common operations
+## Common distribution operations
 
 ### Initialize delegation
 
-Every time a delegation is changed, the rewards are withdrawn, and the delegation is reinitialized.
-Initializing a delegation means incrementing the validator period and keeping track of the starting period of the delegation.
+Each time a delegation is changed, the rewards are withdrawn and the delegation is reinitialized.
+Initializing a delegation increments the validator period and keeps track of the starting period of the delegation.
 
 ```go
 // initialize starting info for a new delegation

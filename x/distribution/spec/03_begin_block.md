@@ -29,16 +29,15 @@ withdrawals can be triggered through the messages `FundCommunityPool`,
 ### Reward to the Community Pool
 
 The community pool gets `community_tax * fees`, plus any remaining dust after
-validators get their rewards, which will always be rounded down to nearest
+validators get their rewards that are always rounded down to the nearest
 integer value.
 
 ### Reward To the Validators
 
-The proposer will receive a base reward of `fees * baseproposerreward`. In
-addition, they will receive a bonus of `fees * bonusproposerreward * P`, where
+The proposer receives a base reward of `fees * baseproposerreward` and a bonus of `fees * bonusproposerreward * P`, where
 `P = (precommits included / total bonded validator power)`. The more precommits
 the proposer includes, the larger `P` is. `P` can never be larger than `1.00`
-, and will always be larger than `2/3`.
+and is always be larger than `2/3`.
 
 Any remaining fees are distributed among all the bonded validators, including
 the proposer, in proportion to their consensus power.
@@ -49,18 +48,16 @@ proposerMul = baseproposerreward + bonusproposerreward * P
 voteMul = 1 - communitytax - proposerMul
 ```
 
-In total, the proposer will receive `fees * voteMul * powFrac + fees * proposerMul`.
-All other validators will receive `fees * voteMul`.
+In total, the proposer receives `fees  * (voteMul * powFrac + proposerMul)`.
+All other validators receive `fees * voteMul`.
 
 ### Rewards to Delegators
 
-Each validators rewards are distributed to its delegators. Note that the
-validator also has a self-delegation.
+Each validator's rewards are distributed to its delegators. The
+the validator also has a self-delegation.
 
 The validator sets a commission rate. The commission rate is flexible, but each
-validator sets a max rate which may never be exceeded, and a max daily increase
-which may never be exceeded. This protects delegators against a validator
-suddenly increasing their commission rate, taking all the rewards.
+validator sets a maximum rate and a maximum daily increase. These maximums cannot be exceeded and protect delegators from sudden increases of validator commission rates to prevent validators from taking all of the rewards.
 
 The outstanding rewards that the operator is entitled to are stored
 in `ValidatorCurrentRewards`, while the rewards the delegators are entitled to
@@ -71,12 +68,12 @@ not handled in `BeginBlock`.
 
 ### Example Distribution
 
-As an example, assume the underlying consensus engine selects block proposers in
-proportion to their power relative to the entire bonded power. Further, assume
-all validators are equally good at including pre-commits in their proposed
-blocks. Then we hold `(precommits included) / (total bonded validator power)`
-constant, and then the amortized block reward for the validator is
-simply `( validator power / total bonded power) * (1 - community tax rate)` of
+For this example distribution, the underlying consensus engine selects block proposers in
+proportion to their power relative to the entire bonded power. 
+
+All validators are equally performant at including pre-commits in their proposed
+blocks. Then hold `(precommits included) / (total bonded validator power)`
+constant so that the amortized block reward for the validator is `( validator power / total bonded power) * (1 - community tax rate)` of
 the total rewards. Consequently, the reward for a single delegator is:
 
 ```

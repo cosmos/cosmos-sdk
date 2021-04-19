@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#8786](https://github.com/cosmos/cosmos-sdk/pull/8786) Enabled secp256r1 in x/auth.
 * (rosetta) [\#8729](https://github.com/cosmos/cosmos-sdk/pull/8729) Data API fully supports balance tracking. Construction API can now construct any message supported by the application.
 * [\#8754](https://github.com/cosmos/cosmos-sdk/pull/8875) Added support for reverse iteration to pagination.
+* [#9088](https://github.com/cosmos/cosmos-sdk/pull/9088) Added implementation to ADR-28 Derived Addresses.
 
 ### Client Breaking Changes
 * [\#8363](https://github.com/cosmos/cosmos-sdk/pull/8363) Addresses no longer have a fixed 20-byte length. From the SDK modules' point of view, any 1-255 bytes-long byte array is a valid address.
@@ -54,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Renamed `MarshalAny` and `UnmarshalAny` to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take an interface as parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
   * CLI: removed `--text` flag from `show-node-id` command; the text format for public keys is not used any more - instead we use ProtoJSON.
 * (types) [\#9079](https://github.com/cosmos/cosmos-sdk/issues/9079) Add `AddAmount`/`SubAmount` methods to `sdk.Coin`.
+* [\#8628](https://github.com/cosmos/cosmos-sdk/issues/8628) Commands no longer print outputs using `stderr` by default
 
 ### API Breaking Changes
 
@@ -81,6 +83,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 * (x/bank) [\#8798](https://github.com/cosmos/cosmos-sdk/pull/8798) `GetTotalSupply` is removed in favour of `GetPaginatedTotalSupply`
 * (x/bank/types) [\#9061](https://github.com/cosmos/cosmos-sdk/pull/9061) `AddressFromBalancesStore` now returns an error for invalid key instead of panic.
+
+
 
 ### State Machine Breaking
 

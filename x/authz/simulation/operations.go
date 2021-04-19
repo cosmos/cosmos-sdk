@@ -244,6 +244,12 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "grant expired"), nil, nil
 		}
 
+		granteespendableCoins := bk.SpendableCoins(ctx, grantee)
+		fees, err := simtypes.RandomFees(r, ctx, granteespendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee error"), nil, err
+		}
+
 		authorization := grant.Authorization.GetCachedValue().(exported.Authorization)
 
 		execMsg := sdk.ServiceMsg{
@@ -257,12 +263,6 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 			)
 		} else {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "unknown authorization"), nil, errors.New("unknown authorization")
-		}
-
-		granteespendableCoins := bk.SpendableCoins(ctx, grantee)
-		fees, err := simtypes.RandomFees(r, ctx, granteespendableCoins)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, "fee error"), nil, err
 		}
 
 		msg := types.NewMsgExecAuthorized(grantee, []sdk.ServiceMsg{execMsg})
@@ -297,7 +297,7 @@ func SimulateMsgExecAuthorization(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			if strings.Contains(err.Error(), "insufficient funds") {
+			if strings.Contains(err.Error(), "insufficient fee") {
 				return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, err.Error()), nil, nil
 			}
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecAuthorization, err.Error()), nil, err

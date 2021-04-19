@@ -22,7 +22,7 @@ message QueryAuthorizationsRequest {
   // If method name is not included then we return all authorizations for given granter and grantee
   string method_name = 3;
   // pagination defines an pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
 // QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.

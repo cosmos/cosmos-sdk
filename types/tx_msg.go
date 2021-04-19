@@ -21,6 +21,9 @@ type (
 		GetSigners() []AccAddress
 	}
 
+	// LegacyMsg defines the old interface a message must fulfill, containing
+	// Amino signing method and legacy router info.
+	// Deprecated: Please use `Msg` instead.
 	LegacyMsg interface {
 		Msg
 

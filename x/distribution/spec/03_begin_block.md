@@ -34,10 +34,12 @@ integer value.
 
 ### Reward To the Validators
 
-The proposer receives a base reward of `fees * baseproposerreward` and a bonus of `fees * bonusproposerreward * P`, where
-`P = (precommits included / total bonded validator power)`. The more precommits
-the proposer includes, the larger `P` is. `P` can never be larger than `1.00`
-and is always be larger than `2/3`.
+The proposer receives a base reward of `fees * baseproposerreward` and a bonus
+of `fees * bonusproposerreward * P`, where `P = (total power of validators with
+included precommits / total bonded validator power)`. The more precommits the
+proposer includes, the larger `P` is. `P` can never be larger than `1.00` (since
+ony bonded validators can supply valid precommits) and is always be larger than
+`2/3`.
 
 Any remaining fees are distributed among all the bonded validators, including
 the proposer, in proportion to their consensus power.

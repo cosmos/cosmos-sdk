@@ -148,16 +148,16 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 }
 
 func emitEvent(ctx sdk.Context, name string, grantee sdk.AccAddress, granter sdk.AccAddress) {
-	ctx.EventManager().EmitTypedEvent( /* the proto event */ )
-	// ctx.EventManager().EmitEvent(
-	// 	sdk.NewEvent(
-	// 		types.EventRevokeAuthorization,
-	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-	// 		sdk.NewAttribute(types.AttributeKeyGrantType, msgType),
-	// 		sdk.NewAttribute(types.AttributeKeyGranterAddress, granter.String()),
-	// 		sdk.NewAttribute(types.AttributeKeyGranteeAddress, grantee.String()),
-	// 	),
-	// )
+	// TODO: ctx.EventManager().EmitTypedEvent( /* the proto event */ )
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventRevokeAuthorization,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyGrantType, msgType),
+			sdk.NewAttribute(types.AttributeKeyGranterAddress, granter.String()),
+			sdk.NewAttribute(types.AttributeKeyGranteeAddress, grantee.String()),
+		),
+	)
 	return nil
 }
 

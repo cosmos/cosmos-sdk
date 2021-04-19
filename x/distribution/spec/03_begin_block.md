@@ -28,7 +28,7 @@ withdrawals can be triggered through the messages `FundCommunityPool`,
 
 ### Reward to the Community Pool
 
-The community pool gets `communitytax * fees`, plus any remaining dust after
+The community pool gets `community_tax * fees`, plus any remaining dust after
 validators get their rewards, which will always be rounded down to nearest
 integer value.
 

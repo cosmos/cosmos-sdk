@@ -15,9 +15,22 @@ type Authorization interface {
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
 	// so provides an upgraded authorization instance.
-	Accept(ctx sdk.Context, msg sdk.ServiceMsg) (updated Authorization, delete bool, err error)
+	Accept(ctx sdk.Context, msg sdk.ServiceMsg) (AcceptResponse, error)
 
 	// ValidateBasic does a simple validation check that
 	// doesn't require access to any other information.
 	ValidateBasic() error
+}
+
+// AcceptResponse instruments the controller of an authz message if the request is accepted
+// and if it should be updated or deleted.
+type AcceptResponse struct {
+	// If Accept=true, the controller can accept and authorization and handle the update.
+	Accept bool
+	// If Delete=true, the controller must delete the authorization object and release
+	// storage resources.
+	Delete bool
+	// Controller, who is calling Authorization.Accept must check if `Updated != nil`. If yes,
+	// it must use the updated version and handle the update on the storage level.
+	Updated Authorization
 }

@@ -73,10 +73,10 @@ func WeightedOperations(
 			weightRevokeAuthorization,
 			SimulateMsgRevokeAuthorization(ak, bk, k, protoCdc),
 		),
-		// simulation.NewWeightedOperation(
-		// 	weightExecAuthorized,
-		// 	SimulateMsgExecuteAuthorized(ak, bk, k, appCdc, protoCdc),
-		// ),
+		simulation.NewWeightedOperation(
+			weightExecAuthorized,
+			SimulateMsgExecuteAuthorized(ak, bk, k, appCdc, protoCdc),
+		),
 	}
 }
 

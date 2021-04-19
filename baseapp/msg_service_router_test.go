@@ -80,11 +80,11 @@ func TestMsgService(t *testing.T) {
 	)
 	_ = app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 
-	msg := testdata.NewServiceMsgCreateDog(&testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}})
+	msg := testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	err := txBuilder.SetMsgs(msg)
+	err := txBuilder.SetMsgs(&msg)
 	require.NoError(t, err)
 
 	// First round: we gather all the signer infos. We use the "set empty

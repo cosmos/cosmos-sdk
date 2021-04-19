@@ -55,7 +55,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 		denied               []sdk.ValAddress
 		msgType              stakingtypes.AuthorizationType
 		limit                *sdk.Coin
-		srvMsg               sdk.ServiceMsg
+		srvMsg               sdk.Msg
 		expectErr            bool
 		isDelete             bool
 		updatedAuthorization *stakingtypes.StakeAuthorization
@@ -66,7 +66,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
-			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin100),
+			stakingtypes.NewMsgDelegate(delAddr, val1, coin100),
 			false,
 			true,
 			nil,
@@ -77,7 +77,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
-			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin50),
+			stakingtypes.NewMsgDelegate(delAddr, val1, coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -91,7 +91,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			&coin100,
-			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val3, coin100),
+			stakingtypes.NewMsgDelegate(delAddr, val3, coin100),
 			true,
 			false,
 			nil,
@@ -102,7 +102,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			nil,
-			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val2, coin100),
+			stakingtypes.NewMsgDelegate(delAddr, val2, coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -116,7 +116,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE,
 			nil,
-			createSrvMsgDelegate(delAuth.MethodName(), delAddr, val1, coin100),
+			stakingtypes.NewMsgDelegate(delAddr, val1, coin100),
 			true,
 			false,
 			nil,
@@ -128,7 +128,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr, val1, coin100),
 			false,
 			true,
 			nil,
@@ -139,7 +139,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin50),
+			stakingtypes.NewMsgUndelegate(delAddr, val1, coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -153,7 +153,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val3, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr, val3, coin100),
 			true,
 			false,
 			nil,
@@ -164,7 +164,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			nil,
-			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val2, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr, val2, coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -178,7 +178,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE,
 			&coin100,
-			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr, val1, coin100),
 			true,
 			false,
 			nil,
@@ -190,7 +190,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			createSrvMsgUndelegate(undelAuth.MethodName(), delAddr, val1, coin100),
+			stakingtypes.NewMsgUndelegate(delAddr, val1, coin100),
 			false,
 			true,
 			nil,
@@ -201,7 +201,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val1, coin50),
+			stakingtypes.NewMsgBeginRedelegate(delAddr, val1, val1, coin50),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -215,7 +215,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val3, coin100),
+			stakingtypes.NewMsgBeginRedelegate(delAddr, val3, val3, coin100),
 			true,
 			false,
 			nil,
@@ -226,7 +226,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			nil,
-			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val2, coin100),
+			stakingtypes.NewMsgBeginRedelegate(delAddr, val2, val2, coin100),
 			false,
 			false,
 			&stakingtypes.StakeAuthorization{
@@ -240,7 +240,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 			[]sdk.ValAddress{val1},
 			stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE,
 			&coin100,
-			createSrvMsgReDelegate(undelAuth.MethodName(), delAddr, val1, coin100),
+			stakingtypes.NewMsgBeginRedelegate(delAddr, val1, val1, coin100),
 			true,
 			false,
 			nil,
@@ -264,29 +264,5 @@ func TestAuthzAuthorizations(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-func createSrvMsgUndelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
-	msg := stakingtypes.NewMsgUndelegate(delAddr, valAddr, amount)
-	return sdk.ServiceMsg{
-		MethodName: methodName,
-		Request:    msg,
-	}
-}
-
-func createSrvMsgReDelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
-	msg := stakingtypes.NewMsgBeginRedelegate(delAddr, valAddr, valAddr, amount)
-	return sdk.ServiceMsg{
-		MethodName: methodName,
-		Request:    msg,
-	}
-}
-
-func createSrvMsgDelegate(methodName string, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) sdk.ServiceMsg {
-	msg := stakingtypes.NewMsgDelegate(delAddr, valAddr, amount)
-	return sdk.ServiceMsg{
-		MethodName: methodName,
-		Request:    msg,
 	}
 }

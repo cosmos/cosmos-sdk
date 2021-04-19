@@ -384,10 +384,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 	s.Require().NoError(err)
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
-	s.Require().Equal([]sdk.Msg{sdk.ServiceMsg{
-		MethodName: "/cosmos.bank.v1beta1.Msg/Send",
-		Request:    types.NewMsgSend(from, to, amount),
-	}}, tx.GetMsgs())
+	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
 }
 
 func (s *IntegrationTestSuite) TestNewSendTxCmd() {

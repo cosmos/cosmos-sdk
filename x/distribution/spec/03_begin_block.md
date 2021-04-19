@@ -53,18 +53,18 @@ All other validators receive `fees * voteMul`.
 
 ### Rewards to Delegators
 
-Each validator's rewards are distributed to its delegators. The
-the validator also has a self-delegation.
+Each validator's rewards are distributed to its delegators. The validator also
+has a self-delegation, which is treated like a regular delegation in
+distribution calculations.
 
 The validator sets a commission rate. The commission rate is flexible, but each
 validator sets a maximum rate and a maximum daily increase. These maximums cannot be exceeded and protect delegators from sudden increases of validator commission rates to prevent validators from taking all of the rewards.
 
-The outstanding rewards that the operator is entitled to are stored
-in `ValidatorCurrentRewards`, while the rewards the delegators are entitled to
-are stored in `ValidatorCurrentRewards`.
-The [F1 fee distribution scheme](01_concepts.md) is used to calculate the
-rewards per delegator as they withdraw or update their delegation, and is thus
-not handled in `BeginBlock`.
+The outstanding rewards that the operator is entitled to are stored in
+`ValidatorAccumulatedCommission`, while the rewards the delegators are entitled
+to are stored in `ValidatorCurrentRewards`. The [F1 fee distribution
+scheme](01_concepts.md) is used to calculate the rewards per delegator as they
+withdraw or update their delegation, and is thus not handled in `BeginBlock`.
 
 ### Example Distribution
 

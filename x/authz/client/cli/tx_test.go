@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -8,27 +6,23 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -86,7 +80,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 var typeMsgSend = bank.SendAuthorization{}.MethodName()
-var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
+var typeMsgVote = proto.MessageName(&govtypes.MsgVote{})
 
 var commonFlags = []string{}
 
@@ -434,7 +428,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	)
 	s.Require().NoError(err)
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.Msg/Vote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	// waiting for authorization to expires
@@ -475,7 +469,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	s.Require().NoError(err)
 
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.Msg/Vote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	testCases := []struct {
@@ -565,7 +559,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	tokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(12)),
 	)
-	normalGeneratedTx, err := bankcli.MsgSendExec(
+	normalGeneratedTx, err := banktestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
 		grantee,
@@ -653,7 +647,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		sdk.NewCoin("stake", sdk.NewInt(50)),
 	)
 
-	delegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.Msg/Delegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+	delegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg := testutil.WriteToNewTempFile(s.T(), delegateTx)
 
@@ -743,7 +737,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 		sdk.NewCoin("stake", sdk.NewInt(50)),
 	)
 
-	delegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.Msg/Delegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+	delegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgDelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg = testutil.WriteToNewTempFile(s.T(), delegateTx)
 
@@ -872,7 +866,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 		sdk.NewCoin("stake", sdk.NewInt(50)),
 	)
 
-	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.Msg/Undelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+	undelegateTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg := testutil.WriteToNewTempFile(s.T(), undelegateTx)
 
@@ -962,7 +956,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 		sdk.NewCoin("stake", sdk.NewInt(50)),
 	)
 
-	undelegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.Msg/Undelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
+	undelegateTx = fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.staking.v1beta1.MsgUndelegate","delegator_address":"%s","validator_address":"%s","amount":{"denom":"%s","amount":"%s"}}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String(), val.ValAddress.String(),
 		tokens.GetDenomByIndex(0), tokens[0].Amount)
 	execMsg = testutil.WriteToNewTempFile(s.T(), undelegateTx)
 

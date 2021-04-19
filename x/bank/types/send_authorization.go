@@ -1,6 +1,8 @@
 package types
 
 import (
+	"github.com/gogo/protobuf/proto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
@@ -19,7 +21,7 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 
 // MethodName implements Authorization.MethodName.
 func (authorization SendAuthorization) MethodName() string {
-	return "/cosmos.bank.v1beta1.Msg/Send"
+	return proto.MessageName(&MsgSend{})
 }
 
 // Accept implements Authorization.Accept.

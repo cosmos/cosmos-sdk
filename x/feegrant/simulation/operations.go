@@ -23,8 +23,11 @@ import (
 const (
 	OpWeightMsgGrantFeeAllowance  = "op_weight_msg_grant_fee_allowance"
 	OpWeightMsgRevokeFeeAllowance = "op_weight_msg_grant_revoke_allowance"
-	TypeMsgGrantFeeAllowance      = "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"
-	TypeMsgRevokeFeeAllowance     = "/cosmos.feegrant.v1beta1.Msg/RevokeFeeAllowance"
+)
+
+var (
+	TypeMsgGrantFeeAllowance  = proto.MessageName(&types.MsgGrantFeeAllowance{})
+	TypeMsgRevokeFeeAllowance = proto.MessageName(&types.MsgRevokeFeeAllowance{})
 )
 
 func WeightedOperations(

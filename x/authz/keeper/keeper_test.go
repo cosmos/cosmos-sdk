@@ -1,18 +1,16 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/stretchr/testify/suite"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
@@ -139,14 +137,11 @@ func (s *TestSuite) TestKeeperFees() {
 	smallCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 20))
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
 
-	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
-		{
-			MethodName: banktypes.SendAuthorization{}.MethodName(),
-			Request: &banktypes.MsgSend{
-				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-				FromAddress: granterAddr.String(),
-				ToAddress:   recipientAddr.String(),
-			},
+	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.Msg{
+		&banktypes.MsgSend{
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+			FromAddress: granterAddr.String(),
+			ToAddress:   recipientAddr.String(),
 		},
 	})
 
@@ -172,6 +167,7 @@ func (s *TestSuite) TestKeeperFees() {
 	executeMsgs, err = msgs.GetMessages()
 	s.Require().NoError(err)
 
+	fmt.Println("TEST granteeAddr=", granteeAddr, "executeMsgs=", executeMsgs)
 	result, err = app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	s.Require().NoError(err)
 	s.Require().NotNil(result)
@@ -182,14 +178,11 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch fails with overlimit")
 	// grant authorization
 
-	msgs = types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
-		{
-			MethodName: banktypes.SendAuthorization{}.MethodName(),
-			Request: &banktypes.MsgSend{
-				Amount:      someCoin,
-				FromAddress: granterAddr.String(),
-				ToAddress:   recipientAddr.String(),
-			},
+	msgs = types.NewMsgExecAuthorized(granteeAddr, []sdk.Msg{
+		&banktypes.MsgSend{
+			Amount:      someCoin,
+			FromAddress: granterAddr.String(),
+			ToAddress:   recipientAddr.String(),
 		},
 	})
 

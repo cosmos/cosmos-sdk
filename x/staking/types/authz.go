@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/gogo/protobuf/proto"
 )
 
 // TODO: Revisit this once we have propoer gas fee framework.
@@ -12,10 +13,6 @@ const gasCostPerIteration = uint64(10)
 
 var (
 	_ authz.Authorization = &StakeAuthorization{}
-
-	TypeDelegate        = "/cosmos.staking.v1beta1.Msg/Delegate"
-	TypeUndelegate      = "/cosmos.staking.v1beta1.Msg/Undelegate"
-	TypeBeginRedelegate = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
@@ -142,11 +139,11 @@ func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]s
 func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	switch authzType {
 	case AuthorizationType_AUTHORIZATION_TYPE_DELEGATE:
-		return TypeDelegate, nil
+		return proto.MessageName(&MsgDelegate{}), nil
 	case AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE:
-		return TypeUndelegate, nil
+		return proto.MessageName(&MsgUndelegate{}), nil
 	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
-		return TypeBeginRedelegate, nil
+		return proto.MessageName(&MsgBeginRedelegate{}), nil
 	default:
 		return "", sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type %T", authzType)
 	}

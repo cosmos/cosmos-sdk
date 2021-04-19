@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +33,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 	// verify MethodName
 	delAuth, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
 	require.NoError(t, err)
-	require.Equal(t, delAuth.MethodName(), stakingtypes.TypeDelegate)
+	require.Equal(t, delAuth.MethodName(), proto.MessageName(&stakingtypes.MsgDelegate{}))
 
 	// error both allow & deny list
 	_, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
@@ -41,11 +41,11 @@ func TestAuthzAuthorizations(t *testing.T) {
 
 	// verify MethodName
 	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, &coin100)
-	require.Equal(t, undelAuth.MethodName(), stakingtypes.TypeUndelegate)
+	require.Equal(t, undelAuth.MethodName(), proto.MessageName(&stakingtypes.MsgUndelegate{}))
 
 	// verify MethodName
 	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, &coin100)
-	require.Equal(t, beginRedelAuth.MethodName(), stakingtypes.TypeBeginRedelegate)
+	require.Equal(t, beginRedelAuth.MethodName(), proto.MessageName(&stakingtypes.MsgBeginRedelegate{}))
 
 	validators1_2 := []string{val1.String(), val2.String()}
 

@@ -1,5 +1,3 @@
-// +build norace
-
 package cli_test
 
 import (
@@ -293,16 +291,16 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 			"",
 		},
 		{
-			"happy case (legacy Msg)",
+			"happy case (sdk.LegacyMsg)",
 			[]string{legacyTxRes.TxResponse.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			"",
 		},
 		{
-			"happy case (service Msg)",
+			"happy case (sdk.Msg)",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-			"/cosmos.bank.v1beta1.Msg/Send",
+			"/cosmos.bank.v1beta1.MsgSend",
 		},
 	}
 

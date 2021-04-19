@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -20,10 +22,11 @@ import (
 )
 
 // authz message types
-const (
-	TypeMsgGrantAuthorization  = "/cosmos.authz.v1beta1.Msg/GrantAuthorization"
-	TypeMsgRevokeAuthorization = "/cosmos.authz.v1beta1.Msg/RevokeAuthorization"
-	TypeMsgExecDelegated       = "/cosmos.authz.v1beta1.Msg/ExecAuthorized"
+var (
+	// FIXME Remove `Request` suffix
+	TypeMsgGrantAuthorization  = proto.MessageName(&types.MsgGrantAuthorizationRequest{})
+	TypeMsgRevokeAuthorization = proto.MessageName(&types.MsgRevokeAuthorizationRequest{})
+	TypeMsgExecDelegated       = proto.MessageName(&types.MsgExecAuthorizedRequest{})
 )
 
 // Simulation operation weights constants
@@ -70,10 +73,10 @@ func WeightedOperations(
 			weightRevokeAuthorization,
 			SimulateMsgRevokeAuthorization(ak, bk, k, protoCdc),
 		),
-		simulation.NewWeightedOperation(
-			weightExecAuthorized,
-			SimulateMsgExecuteAuthorized(ak, bk, k, appCdc, protoCdc),
-		),
+		// simulation.NewWeightedOperation(
+		// 	weightExecAuthorized,
+		// 	SimulateMsgExecuteAuthorized(ak, bk, k, appCdc, protoCdc),
+		// ),
 	}
 }
 
@@ -130,7 +133,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, svcMsgClientConn.GetMsgs()[0].Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, proto.MessageName(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
 		}
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}
@@ -242,16 +245,13 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 		sendCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)))
 
-		execMsg := sdk.ServiceMsg{
-			MethodName: banktype.SendAuthorization{}.MethodName(),
-			Request: banktype.NewMsgSend(
-				granterAddr,
-				granteeAddr,
-				sendCoins,
-			),
-		}
+		execMsg := banktype.NewMsgSend(
+			granterAddr,
+			granteeAddr,
+			sendCoins,
+		)
 
-		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
+		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.Msg{execMsg})
 		sendGrant := targetGrant.Authorization.GetCachedValue().(*banktype.SendAuthorization)
 		_, _, err = sendGrant.Accept(ctx, execMsg)
 		if err != nil {

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,6 +21,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type IntegrationTestSuite struct {
@@ -30,7 +32,7 @@ type IntegrationTestSuite struct {
 }
 
 var typeMsgSend = banktypes.SendAuthorization{}.MethodName()
-var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
+var typeMsgVote = proto.MessageName(&govtypes.MsgVote{})
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")

@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Renamed `MarshalAny` and `UnmarshalAny` to `MarshalInterface` and `UnmarshalInterface` respectively. These functions must take an interface as parameter (not a concrete type nor `Any` object). Underneath they use `Any` wrapping for correct protobuf serialization.
   * CLI: removed `--text` flag from `show-node-id` command; the text format for public keys is not used any more - instead we use ProtoJSON.
 * (types) [\#9079](https://github.com/cosmos/cosmos-sdk/issues/9079) Add `AddAmount`/`SubAmount` methods to `sdk.Coin`.
+* [\#8628](https://github.com/cosmos/cosmos-sdk/issues/8628) Commands no longer print outputs using `stderr` by default
 
 ### API Breaking Changes
 

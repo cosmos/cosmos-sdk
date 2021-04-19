@@ -52,12 +52,12 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, updated.MethodName())
 	grant, found := k.getAuthorizationGrant(ctx, grantStoreKey)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrNotFound, "authorization not found")
+		return sdkerrors.ErrNotFound.Wrap("authorization not found")
 	}
 
 	msg, ok := updated.(proto.Message)
 	if !ok {
-		sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", updated)
+		sdkerrors.ErrPackAny.Wrapf("cannot proto marshal %T", updated)
 	}
 
 	any, err := codectypes.NewAnyWithValue(msg)
@@ -79,32 +79,35 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 	for _, serviceMsg := range serviceMsgs {
 		signers := serviceMsg.GetSigners()
 		if len(signers) != 1 {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "authorization can be given to msg with only one signer")
+			return nil, sdkerrors.ErrInvalidRequest.Wrap("authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
 		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
 			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
 			if authorization == nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
 			}
-			updated, del, err := authorization.Accept(ctx, serviceMsg)
+			resp, err := authorization.Accept(ctx, serviceMsg)
 			if err != nil {
 				return nil, err
 			}
-			if del {
+			if resp.Delete {
 				k.Revoke(ctx, grantee, granter, serviceMsg.Type())
-			} else if updated != nil {
-				err = k.update(ctx, grantee, granter, updated)
+			} else if resp.Updated != nil {
+				err = k.update(ctx, grantee, granter, resp.Updated)
 				if err != nil {
 					return nil, err
 				}
+			}
+			if !resp.Accept {
+				return nil, sdkerrors.ErrUnauthorized
 			}
 		}
 		handler := k.router.Handler(serviceMsg.Route())
 
 		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", serviceMsg.Route())
+			return nil, sdkerrors.ErrUnknownRequest.Wrapf("unrecognized message route: %s", serviceMsg.Route())
 		}
 
 		msgResult, err = handler(ctx, serviceMsg.Request)
@@ -130,8 +133,12 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, authorization.MethodName())
 	store.Set(grantStoreKey, bz)
-	emitEvent(ctx, types.EventGrantAuthorization, grantee, granter)
-	return nil
+	return ctx.EventManager().EmitTypedEvent(&types.EventGrant{
+		Module:  types.ModuleName,
+		Msg:     authorization.MethodName(),
+		Granter: granter.String(),
+		Grantee: grantee.String(),
+	})
 }
 
 // Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
@@ -140,25 +147,15 @@ func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, grantStoreKey)
 	if !found {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "authorization not found")
+		return sdkerrors.ErrNotFound.Wrap("authorization not found")
 	}
 	store.Delete(grantStoreKey)
-	emitEvent(ctx, types.EventRevokeAuthorization, grantee, granter)
-	return nil
-}
-
-func emitEvent(ctx sdk.Context, name string, grantee sdk.AccAddress, granter sdk.AccAddress) {
-	// TODO: ctx.EventManager().EmitTypedEvent( /* the proto event */ )
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventRevokeAuthorization,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyGrantType, msgType),
-			sdk.NewAttribute(types.AttributeKeyGranterAddress, granter.String()),
-			sdk.NewAttribute(types.AttributeKeyGranteeAddress, grantee.String()),
-		),
-	)
-	return nil
+	return ctx.EventManager().EmitTypedEvent(&types.EventRevoke{
+		Module:  types.ModuleName,
+		Msg:     msgType,
+		Granter: granter.String(),
+		Grantee: grantee.String(),
+	})
 }
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.

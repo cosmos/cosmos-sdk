@@ -30,6 +30,10 @@
     - [AuthorizationGrant](#cosmos.authz.v1beta1.AuthorizationGrant)
     - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
   
+- [cosmos/authz/v1beta1/event.proto](#cosmos/authz/v1beta1/event.proto)
+    - [EventGrant](#cosmos.authz.v1beta1.EventGrant)
+    - [EventRevoke](#cosmos.authz.v1beta1.EventRevoke)
+  
 - [cosmos/authz/v1beta1/genesis.proto](#cosmos/authz/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.authz.v1beta1.GenesisState)
     - [GrantAuthorization](#cosmos.authz.v1beta1.GrantAuthorization)
@@ -901,6 +905,58 @@ the provided method on behalf of the granter's account.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `method_name` | [string](#string) |  | method name to grant unrestricted permissions to execute Note: MethodName() is already a method on `GenericAuthorization` type, we need some custom naming here so using `MessageName` |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authz/v1beta1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authz/v1beta1/event.proto
+
+
+
+<a name="cosmos.authz.v1beta1.EventGrant"></a>
+
+### EventGrant
+EventGrant is emitted on Msg/Grant
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module` | [string](#string) |  | Module which invokes the authorizaiton grant TODO: not sure if this is needed. It's always have the same value |
+| `msg` | [string](#string) |  | Msg type for which an autorization is granted |
+| `granter` | [string](#string) |  | Granter account address |
+| `grantee` | [string](#string) |  | Grantee account address |
+
+
+
+
+
+
+<a name="cosmos.authz.v1beta1.EventRevoke"></a>
+
+### EventRevoke
+EventRevoke is emitted on Msg/Revoke
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module` | [string](#string) |  | Module which invokes the authorizaiton revokation |
+| `msg` | [string](#string) |  | Msg type for which an autorization is revoked |
+| `granter` | [string](#string) |  | Granter account address |
+| `grantee` | [string](#string) |  | Grantee account address |
 
 
 

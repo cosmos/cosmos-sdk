@@ -4,9 +4,16 @@ order: 3
 
 # Begin Block
 
-At each `BeginBlock`, the fees received in the previous block are transferred to the distribution `ModuleAccount`, as it's the account the one who keeps track of the flow of coins in (as in this case) and out the module. The fees are also allocated to the proposer, community fund and global pool. When the validator is the proposer of the round, that validator (and their delegators) receives between 1% and 5% of fee rewards, the reserve community tax is then charged, then the remainder is distributed proportionally by voting power to all bonded validators independent of whether they voted (social distribution). Note the social distribution is applied to proposer validator in addition to the proposer reward.
+At each `BeginBlock`, all fees received in the previous block are transferred to
+the distribution `ModuleAccount` account. When a delegator or validator
+withdraws their rewards, they are taken out of the `ModuleAccount`. During begin
+block, the different claims on the fees collected are updated as follows:
 
-The amount of proposer reward is calculated from pre-commits Tendermint messages in order to incentivize validators to wait and include additional pre-commits in the block. All provision rewards are added to a provision reward pool which validator holds individually (`ValidatorDistribution.ProvisionsRewardPool`).
+- The block proposer of the previous round and its delegators receive between 1% and 5% of fee rewards.
+- The reserve community tax is charged.
+- The remainder is distributed proportionally by voting power to all bonded validators
+
+To incentivize validators to wait and include additional pre-commits in the block, the block proposer reward is calculated from Tendermint pre-commit messages.
 
 ## The Distribution Scheme
 

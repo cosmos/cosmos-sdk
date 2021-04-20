@@ -17,7 +17,6 @@ func NewVersionCommand() *cobra.Command {
 		Short: "Print the application binary version information",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			verInfo := NewInfo()
-			cmd.SetOut(cmd.OutOrStdout())
 
 			if long, _ := cmd.Flags().GetBool(flagLong); !long {
 				cmd.Println(verInfo.Version)

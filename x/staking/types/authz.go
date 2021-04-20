@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
-	"github.com/gogo/protobuf/proto"
 )
 
 // TODO: Revisit this once we have propoer gas fee framework.
@@ -139,11 +138,11 @@ func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]s
 func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	switch authzType {
 	case AuthorizationType_AUTHORIZATION_TYPE_DELEGATE:
-		return proto.MessageName(&MsgDelegate{}), nil
+		return sdk.MsgName(&MsgDelegate{}), nil
 	case AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE:
-		return proto.MessageName(&MsgUndelegate{}), nil
+		return sdk.MsgName(&MsgUndelegate{}), nil
 	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
-		return proto.MessageName(&MsgBeginRedelegate{}), nil
+		return sdk.MsgName(&MsgBeginRedelegate{}), nil
 	default:
 		return "", sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type %T", authzType)
 	}

@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,7 +76,7 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 
 // NewOperationMsg - create a new operation message from sdk.Msg
 func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
-	msgName := proto.MessageName(msg)
+	msgName := sdk.MsgName(msg)
 	return NewOperationMsgBasic(msgName, msgName, comment, ok, sdk.GetLegacySignBytes(msg))
 }
 

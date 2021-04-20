@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -26,8 +24,8 @@ const (
 )
 
 var (
-	TypeMsgGrantFeeAllowance  = proto.MessageName(&types.MsgGrantFeeAllowance{})
-	TypeMsgRevokeFeeAllowance = proto.MessageName(&types.MsgRevokeFeeAllowance{})
+	TypeMsgGrantFeeAllowance  = sdk.MsgName(&types.MsgGrantFeeAllowance{})
+	TypeMsgRevokeFeeAllowance = sdk.MsgName(&types.MsgRevokeFeeAllowance{})
 )
 
 func WeightedOperations(
@@ -126,7 +124,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, proto.MessageName(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgName(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
 		}
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}

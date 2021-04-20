@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
@@ -74,7 +73,7 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Equal(authorization.MethodName(), banktypes.SendAuthorization{}.MethodName())
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgMultiSend{}))
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, sdk.MsgName(&banktypes.MsgMultiSend{}))
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify fetching authorization with wrong grantee fails")

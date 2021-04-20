@@ -81,7 +81,7 @@ func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.
 
 	for _, msg := range msgs {
 		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
-		if !msgsMap[proto.MessageName(msg)] {
+		if !msgsMap[sdk.MsgName(msg)] {
 			return false
 		}
 	}

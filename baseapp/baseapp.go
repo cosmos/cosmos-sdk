@@ -711,7 +711,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
-			msgEventAction = proto.MessageName(msg)
+			msgEventAction = sdk.MsgName(msg)
 		} else if legacyMsg, ok := msg.(sdk.LegacyMsg); ok {
 			// legacy sdk.Msg routing
 			msgRoute := legacyMsg.Route()
@@ -741,7 +741,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
 
-		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: proto.MessageName(msg), Data: msgResult.Data})
+		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: sdk.MsgName(msg), Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 

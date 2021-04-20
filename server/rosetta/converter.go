@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/gogo/protobuf/proto"
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -241,7 +240,7 @@ func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
 // with the message proto name as type, and the raw fields
 // as metadata
 func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
-	opName := proto.MessageName(msg)
+	opName := sdk.MsgName(msg)
 
 	meta, err := c.Meta(msg)
 	if err != nil {

@@ -82,7 +82,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 var typeMsgSend = bank.SendAuthorization{}.MethodName()
-var typeMsgVote = proto.MessageName(&govtypes.MsgVote{})
+var typeMsgVote = sdk.MsgName(&govtypes.MsgVote{})
 
 var commonFlags = []string{}
 

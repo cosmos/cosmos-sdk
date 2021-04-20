@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -24,9 +22,9 @@ import (
 // authz message types
 var (
 	// FIXME Remove `Request` suffix
-	TypeMsgGrantAuthorization  = proto.MessageName(&types.MsgGrantAuthorizationRequest{})
-	TypeMsgRevokeAuthorization = proto.MessageName(&types.MsgRevokeAuthorizationRequest{})
-	TypeMsgExecDelegated       = proto.MessageName(&types.MsgExecAuthorizedRequest{})
+	TypeMsgGrantAuthorization  = sdk.MsgName(&types.MsgGrantAuthorizationRequest{})
+	TypeMsgRevokeAuthorization = sdk.MsgName(&types.MsgRevokeAuthorizationRequest{})
+	TypeMsgExecDelegated       = sdk.MsgName(&types.MsgExecAuthorizedRequest{})
 )
 
 // Simulation operation weights constants
@@ -133,7 +131,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, proto.MessageName(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgName(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
 		}
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}

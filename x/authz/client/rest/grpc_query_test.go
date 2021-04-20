@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -32,7 +31,7 @@ type IntegrationTestSuite struct {
 }
 
 var typeMsgSend = banktypes.SendAuthorization{}.MethodName()
-var typeMsgVote = proto.MessageName(&govtypes.MsgVote{})
+var typeMsgVote = sdk.MsgName(&govtypes.MsgVote{})
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")

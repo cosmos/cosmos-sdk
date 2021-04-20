@@ -17,6 +17,7 @@ import (
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -24,7 +25,9 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -161,9 +164,45 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 	val0 := s.network.Validators[0]
 
-	grpcRes, err := banktestutil.LegacyGRPCProtoMsgSend(val0.ClientCtx,
-		val0.Moniker, val0.Address, val0.Address,
-		sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}, sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+	// prepare txBuilder with msg
+	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+	gasLimit := testdata.NewTestGasLimit()
+
+	// This sets a legacy Proto MsgSend.
+	err := txBuilder.SetMsgs(&types.MsgSend{
+		FromAddress: val0.Address.String(),
+		ToAddress:   val0.Address.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+	})
+	s.Require().NoError(err)
+
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val0.ClientCtx.ChainID).
+		WithKeybase(val0.ClientCtx.Keyring).
+		WithTxConfig(val0.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	// Sign Tx.
+	err = authclient.SignTx(txFactory, val0.ClientCtx, val0.Moniker, txBuilder, false, true)
+	s.Require().NoError(err)
+
+	txBytes, err := val0.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+
+	// Broadcast the tx via gRPC.
+	queryClient := txtypes.NewServiceClient(val0.ClientCtx)
+
+	grpcRes, err := queryClient.BroadcastTx(
+		context.Background(),
+		&txtypes.BroadcastTxRequest{
+			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		},
 	)
 	s.Require().NoError(err)
 	s.Require().Equal(uint32(0), grpcRes.TxResponse.Code)

@@ -250,19 +250,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 
-	// Send coins, try both with legacy Msg and with Msg service.
-	// Legacy proto Msg.
-	legacyTxRes, err := bankcli.LegacyGRPCProtoMsgSend(
-		val.ClientCtx, val.Moniker,
-		val.Address,
-		account2.GetAddress(),
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))),
-		sdk.NewCoins(sendTokens),
-	)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// Service Msg.
+	// Send coins.
 	out, err := s.createBankMsg(
 		val, account2.GetAddress(),
 		sdk.NewCoins(sendTokens),
@@ -291,16 +279,10 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 			"",
 		},
 		{
-			"happy case (sdk.LegacyMsg)",
-			[]string{legacyTxRes.TxResponse.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			false,
-			"",
-		},
-		{
-			"happy case (sdk.Msg)",
+			"happy case",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-			"/cosmos.bank.v1beta1.MsgSend",
+			"cosmos.bank.v1beta1.MsgSend",
 		},
 	}
 

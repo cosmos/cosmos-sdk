@@ -80,7 +80,7 @@ tracked in validator object in the `Validators` index.
 It is possible to delegate to a jailed validator, the only difference being it
 will not be added to the power index until it is unjailed.
 
-![](docs/uml/delegation_sequence.svg)
+![Delegation sequence](../../../docs/uml/svg/delegation_sequence.svg)
 
 ## Msg/Undelegate
 
@@ -114,7 +114,7 @@ When this service message is processed the following actions occur:
 - if there are no more `Shares` in the delegation, then the delegation object is removed from the store
   - under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![](docs/uml/unbond_sequence.svg)
+![Unbond sequence](../../../docs/uml/svg/unbond_sequence.svg)
 
 ## Msg/BeginRedelegate
 
@@ -151,4 +151,4 @@ When this service message is processed the following actions occur:
 - if there are no more `Shares` in the source delegation, then the source delegation object is removed from the store
   - under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
-![](docs/uml/begin_redelegation_sequence.svg)
+![Begin redelegation sequence](../../../docs/uml/svg/begin_redelegation_sequence.svg)

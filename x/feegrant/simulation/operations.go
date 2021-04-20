@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	TypeMsgGrantFeeAllowance  = sdk.MsgName(&types.MsgGrantFeeAllowance{})
-	TypeMsgRevokeFeeAllowance = sdk.MsgName(&types.MsgRevokeFeeAllowance{})
+	TypeMsgGrantFeeAllowance  = sdk.MsgRoute(&types.MsgGrantFeeAllowance{})
+	TypeMsgRevokeFeeAllowance = sdk.MsgRoute(&types.MsgRevokeFeeAllowance{})
 )
 
 func WeightedOperations(
@@ -124,7 +124,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgName(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgRoute(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
 		}
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}

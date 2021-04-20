@@ -5,7 +5,7 @@ import (
 )
 
 func Fuzz(data []byte) int {
-	_, err := types.ParseCoin(string(data))
+	_, err := types.ParseCoinNormalized(string(data))
 	if err != nil {
 		return 0
 	}

@@ -6,5 +6,6 @@ import (
 
 var (
 	app                   = simapp.Setup(false)
-	appCodec, legacyAmino = simapp.MakeCodecs()
+	ecdc                  = simapp.MakeTestEncodingConfig()
+	appCodec, legacyAmino = ecdc.Marshaler, ecdc.Amino
 )

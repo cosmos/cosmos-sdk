@@ -1,5 +1,5 @@
 <!--
-order: 10
+order: 12
 -->
 
 # RunTx recovery middleware
@@ -22,12 +22,12 @@ type RecoveryHandler func(recoveryObj interface{}) error
 
 **Contract:**
 
-* RecoveryHandler returns `nil` if `recoveryObj` wasn't handled and should be passed to the next recovery middleware;
-* RecoveryHandler returns a non-nil `error` if `recoveryObj` was handled;
+- RecoveryHandler returns `nil` if `recoveryObj` wasn't handled and should be passed to the next recovery middleware;
+- RecoveryHandler returns a non-nil `error` if `recoveryObj` was handled;
 
 ## Custom RecoveryHandler register
 
-``BaseApp.AddRunTxRecoveryHandler(handlers ...RecoveryHandler)``
+`BaseApp.AddRunTxRecoveryHandler(handlers ...RecoveryHandler)`
 
 BaseApp method adds recovery middleware to the default recovery chain.
 

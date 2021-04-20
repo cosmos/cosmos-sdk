@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
-	grpc "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -33,89 +33,55 @@ func QueryBalancesExec(clientCtx client.Context, address fmt.Stringer, extraArgs
 	return clitestutil.ExecTestCLICmd(clientCtx, bankcli.GetBalancesCmd(), args)
 }
 
-// serviceMsgClientConn is an instance of grpc.ClientConn that is used to test building
-// transactions with MsgClient's. It is intended to be replaced by the work in
-// https://github.com/cosmos/cosmos-sdk/issues/7541 when that is ready.
-type serviceMsgClientConn struct {
-	msgs []sdk.Msg
-}
+// LegacyGRPCProtoMsgSend is a legacy method to broadcast a legacy proto MsgSend.
+//
+// Deprecated.
+//nolint:interfacer
+func LegacyGRPCProtoMsgSend(clientCtx client.Context, keyName string, from, to sdk.Address, fee, amount []sdk.Coin, extraArgs ...string) (*txtypes.BroadcastTxResponse, error) {
+	// prepare txBuilder with msg
+	txBuilder := clientCtx.TxConfig.NewTxBuilder()
+	feeAmount := fee
+	gasLimit := testdata.NewTestGasLimit()
 
-func (t *serviceMsgClientConn) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc.CallOption) error {
-	req, ok := args.(sdk.MsgRequest)
-	if !ok {
-		return fmt.Errorf("%T should implement %T", args, (*sdk.MsgRequest)(nil))
-	}
-
-	err := req.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
-	t.msgs = append(t.msgs, sdk.ServiceMsg{
-		MethodName: method,
-		Request:    req,
+	// This sets a legacy Proto MsgSend.
+	err := txBuilder.SetMsgs(&types.MsgSend{
+		FromAddress: from.String(),
+		ToAddress:   to.String(),
+		Amount:      amount,
 	})
-
-	return nil
-}
-
-func (t *serviceMsgClientConn) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
-}
-
-var _ gogogrpc.ClientConn = &serviceMsgClientConn{}
-
-// newSendTxMsgServiceCmd is just for the purpose of testing ServiceMsg's in an end-to-end case. It is effectively
-// NewSendTxCmd but using MsgClient.
-func newSendTxMsgServiceCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use: "send [from_key_or_address] [to_address] [amount]",
-		Short: `Send funds from one account to another. Note, the'--from' flag is
-ignored as it is implied from [from_key_or_address].`,
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
-
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			toAddr, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-
-			coins, err := sdk.ParseCoins(args[2])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
-			svcMsgClientConn := &serviceMsgClientConn{}
-			bankMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = bankMsgClient.Send(context.Background(), msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.msgs...)
-		},
+	if err != nil {
+		return nil, err
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
 
-	return cmd
-}
+	// setup txFactory
+	txFactory := tx.Factory{}.
+		WithChainID(clientCtx.ChainID).
+		WithKeybase(clientCtx.Keyring).
+		WithTxConfig(clientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 
-// ServiceMsgSendExec is a temporary method to test Msg services in CLI using
-// x/bank's Msg/Send service. After https://github.com/cosmos/cosmos-sdk/issues/7541
-// is merged, this method should be removed, and we should prefer MsgSendExec
-// instead.
-func ServiceMsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{from.String(), to.String(), amount.String()}
-	args = append(args, extraArgs...)
+	// Sign Tx.
+	err = authclient.SignTx(txFactory, clientCtx, keyName, txBuilder, false, true)
+	if err != nil {
+		return nil, err
+	}
 
-	return clitestutil.ExecTestCLICmd(clientCtx, newSendTxMsgServiceCmd(), args)
+	txBytes, err := clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	if err != nil {
+		return nil, err
+	}
+
+	// Broadcast the tx via gRPC.
+	queryClient := txtypes.NewServiceClient(clientCtx)
+
+	return queryClient.BroadcastTx(
+		context.Background(),
+		&txtypes.BroadcastTxRequest{
+			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		},
+	)
 }

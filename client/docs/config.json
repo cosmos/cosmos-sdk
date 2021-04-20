@@ -29,6 +29,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/base/tendermint/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BaseParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/distribution/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -86,42 +94,16 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/tx/v1beta1/service.swagger.json",
+      "dereference": {
+        "circular": "ignore"
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/upgrade/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "UpgradeParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/ibc/core/channel/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCChannelParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/ibc/core/client/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCClientParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/ibc/core/connection/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCConnectionParams"
-        }
-      }
-    },
-    {
-      "url": "./tmp-swagger-gen/ibc/applications/transfer/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCTransferParams"
         }
       }
     }

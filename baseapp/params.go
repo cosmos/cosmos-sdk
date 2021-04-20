@@ -64,7 +64,7 @@ func ValidateEvidenceParams(i interface{}) error {
 	}
 
 	if v.MaxBytes < 0 {
-		return fmt.Errorf("maximum evidence bytes must be positive: %v", v.MaxBytes)
+		return fmt.Errorf("maximum evidence bytes must be non-negative: %v", v.MaxBytes)
 	}
 
 	return nil

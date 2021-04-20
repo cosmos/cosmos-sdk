@@ -1,6 +1,8 @@
 package staking_test
 
 import (
+	"math/big"
+
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,6 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+func init() {
+	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+}
 
 // nolint:deadcode,unused,varcheck
 var (
@@ -48,8 +54,8 @@ func getBaseSimappWithCustomKeeper() (*codec.LegacyAmino, *simapp.SimApp, sdk.Co
 }
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
-func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, sdk.NewInt(accAmount))
+func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount sdk.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
+	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, accAmount)
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	return addrDels, addrVals

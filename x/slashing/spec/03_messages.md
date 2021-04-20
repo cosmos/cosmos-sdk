@@ -20,13 +20,16 @@ message MsgUnjail {
 }
 ```
 
-And below is its corresponding handler:
+Below is a pseudocode of the `MsgSrv/Unjail` RPC:
 
 ```
-handleMsgUnjail(tx MsgUnjail)
+unjail(tx MsgUnjail)
     validator = getValidator(tx.ValidatorAddr)
     if validator == nil
       fail with "No validator found"
+
+    if getSelfDelegation(validator) == 0
+      fail with "validator must self delegate before unjailing"
 
     if !validator.Jailed
       fail with "Validator not jailed, cannot unjail"
@@ -43,6 +46,6 @@ handleMsgUnjail(tx MsgUnjail)
     return
 ```
 
-If the validator has enough stake to be in the top `n = MaximumBondedValidators`, they will be automatically rebonded,
+If the validator has enough stake to be in the top `n = MaximumBondedValidators`, it will be automatically rebonded,
 and all delegators still delegated to the validator will be rebonded and begin to again collect
 provisions and rewards.

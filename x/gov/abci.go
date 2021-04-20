@@ -30,13 +30,13 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		)
 
 		logger.Info(
-			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
-				proposal.ProposalId,
-				proposal.GetTitle(),
-				keeper.GetDepositParams(ctx).MinDeposit,
-				proposal.TotalDeposit,
-			),
+			"proposal did not meet minimum deposit; deleted",
+			"proposal", proposal.ProposalId,
+			"title", proposal.GetTitle(),
+			"min_deposit", keeper.GetDepositParams(ctx).MinDeposit.String(),
+			"total_deposit", proposal.TotalDeposit.String(),
 		)
+
 		return false
 	})
 
@@ -90,10 +90,10 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.ProposalId, proposal.VotingEndTime)
 
 		logger.Info(
-			fmt.Sprintf(
-				"proposal %d (%s) tallied; result: %s",
-				proposal.ProposalId, proposal.GetTitle(), logMsg,
-			),
+			"proposal tallied",
+			"proposal", proposal.ProposalId,
+			"title", proposal.GetTitle(),
+			"result", logMsg,
 		)
 
 		ctx.EventManager().EmitEvent(

@@ -9,7 +9,7 @@ import (
 )
 
 func TestParseSubmitProposalFlags(t *testing.T) {
-	okJSON, cleanup1 := testutil.WriteToNewTempFile(t, `
+	okJSON := testutil.WriteToNewTempFile(t, `
 {
   "title": "Test Proposal",
   "description": "My awesome proposal",
@@ -17,11 +17,8 @@ func TestParseSubmitProposalFlags(t *testing.T) {
   "deposit": "1000test"
 }
 `)
-	t.Cleanup(cleanup1)
 
-	badJSON, cleanup2 := testutil.WriteToNewTempFile(t, "bad json")
-	t.Cleanup(cleanup2)
-
+	badJSON := testutil.WriteToNewTempFile(t, "bad json")
 	fs := NewCmdSubmitProposal().Flags()
 
 	// nonexistent json

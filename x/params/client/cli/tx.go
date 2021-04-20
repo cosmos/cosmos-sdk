@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramscutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
@@ -57,12 +58,10 @@ Where proposal.json contains:
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			proposal, err := paramscutils.ParseParamChangeProposalJSON(clientCtx.LegacyAmino, args[0])
 			if err != nil {
 				return err
@@ -73,7 +72,7 @@ Where proposal.json contains:
 				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
 			)
 
-			deposit, err := sdk.ParseCoins(proposal.Deposit)
+			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err
 			}
@@ -82,11 +81,14 @@ Where proposal.json contains:
 			if err != nil {
 				return err
 			}
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := govtypes.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.SubmitProposal(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 }

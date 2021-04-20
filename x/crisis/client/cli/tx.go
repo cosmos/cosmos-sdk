@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
@@ -34,13 +35,10 @@ func NewMsgVerifyInvariantTxCmd() *cobra.Command {
 		Short: "Submit proof that an invariant broken to halt the chain",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			moduleName, route := args[0], args[1]
 			if moduleName == "" {
 				return errors.New("invalid module name")
@@ -52,11 +50,14 @@ func NewMsgVerifyInvariantTxCmd() *cobra.Command {
 			senderAddr := clientCtx.GetFromAddress()
 
 			msg := types.NewMsgVerifyInvariant(senderAddr, moduleName, route)
-			if err := msg.ValidateBasic(); err != nil {
+			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+			msgClient := types.NewMsgClient(svcMsgClientConn)
+			_, err = msgClient.VerifyInvariant(cmd.Context(), msg)
+			if err != nil {
 				return err
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
 		},
 	}
 

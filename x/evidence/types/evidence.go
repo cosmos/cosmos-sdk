@@ -43,7 +43,7 @@ func (e *Equivocation) Hash() tmbytes.HexBytes {
 
 // ValidateBasic performs basic stateless validation checks on an Equivocation object.
 func (e *Equivocation) ValidateBasic() error {
-	if e.Time.IsZero() {
+	if e.Time.Unix() <= 0 {
 		return fmt.Errorf("invalid equivocation time: %s", e.Time)
 	}
 	if e.Height < 1 {
@@ -88,7 +88,8 @@ func (e Equivocation) GetTotalPower() int64 { return 0 }
 // FromABCIEvidence converts a Tendermint concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
 func FromABCIEvidence(e abci.Evidence) exported.Evidence {
-	consAddr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixConsAddr, e.Validator.Address)
+	bech32PrefixConsAddr := sdk.GetConfig().GetBech32ConsensusAddrPrefix()
+	consAddr, err := sdk.Bech32ifyAddressBytes(bech32PrefixConsAddr, e.Validator.Address)
 	if err != nil {
 		panic(err)
 	}

@@ -14,9 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
@@ -68,6 +71,57 @@ func AppStateFn(cdc codec.JSONMarshaler, simManager *module.SimulationManager) s
 			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
 		}
 
+		rawState := make(map[string]json.RawMessage)
+		err := json.Unmarshal(appState, &rawState)
+		if err != nil {
+			panic(err)
+		}
+
+		stakingStateBz, ok := rawState[stakingtypes.ModuleName]
+		if !ok {
+			panic("staking genesis state is missing")
+		}
+
+		stakingState := new(stakingtypes.GenesisState)
+		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
+		if err != nil {
+			panic(err)
+		}
+		// compute not bonded balance
+		notBondedTokens := sdk.ZeroInt()
+		for _, val := range stakingState.Validators {
+			if val.Status != stakingtypes.Unbonded {
+				continue
+			}
+			notBondedTokens = notBondedTokens.Add(val.GetTokens())
+		}
+		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
+		// edit bank state to make it have the not bonded pool tokens
+		bankStateBz, ok := rawState[banktypes.ModuleName]
+		// TODO(fdymylja/jonathan): should we panic in this case
+		if !ok {
+			panic("bank genesis state is missing")
+		}
+		bankState := new(banktypes.GenesisState)
+		err = cdc.UnmarshalJSON(bankStateBz, bankState)
+		if err != nil {
+			panic(err)
+		}
+
+		bankState.Balances = append(bankState.Balances, banktypes.Balance{
+			Address: authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String(),
+			Coins:   sdk.NewCoins(notBondedCoins),
+		})
+
+		// change appState back
+		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
+		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+
+		// replace appstate
+		appState, err = json.Marshal(rawState)
+		if err != nil {
+			panic(err)
+		}
 		return appState, simAccs, chainID, genesisTimestamp
 	}
 }
@@ -79,7 +133,7 @@ func AppStateRandomizedFn(
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
-	genesisState := NewDefaultGenesisState()
+	genesisState := NewDefaultGenesisState(cdc)
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts

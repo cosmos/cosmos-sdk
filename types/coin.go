@@ -100,6 +100,11 @@ func (coin Coin) Add(coinB Coin) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
+// AddAmount adds an amount to the Coin.
+func (coin Coin) AddAmount(amount Int) Coin {
+	return Coin{coin.Denom, coin.Amount.Add(amount)}
+}
+
 // Sub subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
 func (coin Coin) Sub(coinB Coin) Coin {
@@ -108,6 +113,16 @@ func (coin Coin) Sub(coinB Coin) Coin {
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+	if res.IsNegative() {
+		panic("negative coin amount")
+	}
+
+	return res
+}
+
+// SubAmount subtracts an amount from the Coin.
+func (coin Coin) SubAmount(amount Int) Coin {
+	res := Coin{coin.Denom, coin.Amount.Sub(amount)}
 	if res.IsNegative() {
 		panic("negative coin amount")
 	}
@@ -599,22 +614,14 @@ var (
 	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
 	// a letter, a number or a separator ('/').
 	reDnmString = `[a-zA-Z][a-zA-Z0-9/]{2,127}`
-	reAmt       = `[[:digit:]]+`
-	reDecAmt    = `[[:digit:]]*\.[[:digit:]]+`
+	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
-	reDnm       = returnReDnm
-	reCoin      = returnReCoin
-	reDecCoin   = returnDecCoin
+	reDnm       *regexp.Regexp
+	reDecCoin   *regexp.Regexp
 )
 
-func returnDecCoin() *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, CoinDenomRegex()))
-}
-func returnReCoin() *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, CoinDenomRegex()))
-}
-func returnReDnm() *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf(`^%s$`, CoinDenomRegex()))
+func init() {
+	SetCoinDenomRegex(DefaultCoinDenomRegex)
 }
 
 // DefaultCoinDenomRegex returns the default regex string
@@ -622,12 +629,21 @@ func DefaultCoinDenomRegex() string {
 	return reDnmString
 }
 
-// CoinDenomRegex returns the current regex string and can be overwritten for custom validation
-var CoinDenomRegex = DefaultCoinDenomRegex
+// coinDenomRegex returns the current regex string and can be overwritten for custom validation
+var coinDenomRegex = DefaultCoinDenomRegex
+
+// SetCoinDenomRegex allows for coin's custom validation by overriding the regular
+// expression string used for denom validation.
+func SetCoinDenomRegex(reFn func() string) {
+	coinDenomRegex = reFn
+
+	reDnm = regexp.MustCompile(fmt.Sprintf(`^%s$`, coinDenomRegex()))
+	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, coinDenomRegex()))
+}
 
 // ValidateDenom is the default validation function for Coin.Denom.
 func ValidateDenom(denom string) error {
-	if !reDnm().MatchString(denom) {
+	if !reDnm.MatchString(denom) {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil
@@ -639,58 +655,31 @@ func mustValidateDenom(denom string) {
 	}
 }
 
-// ParseCoin parses a cli input for one coin type, returning errors if invalid or on an empty string
+// ParseCoinNormalized parses and normalize a cli input for one coin type, returning errors if invalid or on an empty string
 // as well.
 // Expected format: "{amount}{denomination}"
-func ParseCoin(coinStr string) (coin Coin, err error) {
-	coinStr = strings.TrimSpace(coinStr)
-
-	matches := reCoin().FindStringSubmatch(coinStr)
-	if matches == nil {
-		return Coin{}, fmt.Errorf("invalid coin expression: %s", coinStr)
-	}
-
-	denomStr, amountStr := matches[2], matches[1]
-
-	amount, ok := NewIntFromString(amountStr)
-	if !ok {
-		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
-	}
-
-	if err := ValidateDenom(denomStr); err != nil {
+func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
+	decCoin, err := ParseDecCoin(coinStr)
+	if err != nil {
 		return Coin{}, err
 	}
 
-	return NewCoin(denomStr, amount), nil
+	coin, _ = NormalizeDecCoin(decCoin).TruncateDecimal()
+	return coin, nil
 }
 
-// ParseCoins will parse out a list of coins separated by commas. If the parsing is successuful,
-// the provided coins will be sanitized by removing zero coins and sorting the coin set. Lastly
-// a validation of the coin set is executed. If the check passes, ParseCoins will return the sanitized coins.
+// ParseCoinsNormalized will parse out a list of coins separated by commas, and normalize them by converting to smallest
+// unit. If the parsing is successuful, the provided coins will be sanitized by removing zero coins and sorting the coin
+// set. Lastly a validation of the coin set is executed. If the check passes, ParseCoinsNormalized will return the
+// sanitized coins.
 // Otherwise it will return an error.
-// If an empty string is provided to ParseCoins, it returns nil Coins.
+// If an empty string is provided to ParseCoinsNormalized, it returns nil Coins.
+// ParseCoinsNormalized supports decimal coins as inputs, and truncate them to int after converted to smallest unit.
 // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
-func ParseCoins(coinsStr string) (Coins, error) {
-	coinsStr = strings.TrimSpace(coinsStr)
-	if len(coinsStr) == 0 {
-		return nil, nil
+func ParseCoinsNormalized(coinStr string) (Coins, error) {
+	coins, err := ParseDecCoins(coinStr)
+	if err != nil {
+		return Coins{}, err
 	}
-
-	coinStrs := strings.Split(coinsStr, ",")
-	coins := make(Coins, len(coinStrs))
-	for i, coinStr := range coinStrs {
-		coin, err := ParseCoin(coinStr)
-		if err != nil {
-			return nil, err
-		}
-
-		coins[i] = coin
-	}
-
-	newCoins := sanitizeCoins(coins)
-	if err := newCoins.Validate(); err != nil {
-		return nil, err
-	}
-
-	return newCoins, nil
+	return NormalizeCoins(coins), nil
 }

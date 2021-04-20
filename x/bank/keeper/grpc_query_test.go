@@ -1,9 +1,12 @@
-// +build norace
-
 package keeper_test
 
 import (
 	gocontext "context"
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +34,7 @@ func (suite *IntegrationTestSuite) TestQueryBalance() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -63,7 +66,7 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, acc.GetAddress(), origCoins))
+	suite.Require().NoError(simapp.FundAccount(app, ctx, acc.GetAddress(), origCoins))
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -85,14 +88,16 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
-	expectedTotalSupply := types.NewSupply(sdk.NewCoins(sdk.NewInt64Coin("test", 400000000)))
-	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
+	expectedTotalSupply := sdk.NewCoins(sdk.NewInt64Coin("test", 400000000))
+	suite.
+		Require().
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
 	res, err := queryClient.TotalSupply(gocontext.Background(), &types.QueryTotalSupplyRequest{})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	suite.Require().Equal(expectedTotalSupply.Total, res.Supply)
+	suite.Require().Equal(expectedTotalSupply, res.Supply)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
@@ -100,8 +105,10 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {
 
 	test1Supply := sdk.NewInt64Coin("test1", 4000000)
 	test2Supply := sdk.NewInt64Coin("test2", 700000000)
-	expectedTotalSupply := types.NewSupply(sdk.NewCoins(test1Supply, test2Supply))
-	app.BankKeeper.SetSupply(ctx, expectedTotalSupply)
+	expectedTotalSupply := sdk.NewCoins(test1Supply, test2Supply)
+	suite.
+		Require().
+		NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, expectedTotalSupply))
 
 	_, err := queryClient.SupplyOf(gocontext.Background(), &types.QuerySupplyOfRequest{})
 	suite.Require().Error(err)
@@ -118,4 +125,183 @@ func (suite *IntegrationTestSuite) TestQueryParams() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Require().Equal(suite.app.BankKeeper.GetParams(suite.ctx), res.GetParams())
+}
+
+func (suite *IntegrationTestSuite) QueryDenomsMetadataRequest() {
+	var (
+		req         *types.QueryDenomsMetadataRequest
+		expMetadata = []types.Metadata{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty pagination",
+			func() {
+				req = &types.QueryDenomsMetadataRequest{}
+			},
+			true,
+		},
+		{
+			"success, no results",
+			func() {
+				req = &types.QueryDenomsMetadataRequest{
+					Pagination: &query.PageRequest{
+						Limit:      3,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+		{
+			"success",
+			func() {
+				metadataAtom := types.Metadata{
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*types.DenomUnit{
+						{
+							Denom:    "uatom",
+							Exponent: 0,
+							Aliases:  []string{"microatom"},
+						},
+						{
+							Denom:    "atom",
+							Exponent: 6,
+							Aliases:  []string{"ATOM"},
+						},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				}
+
+				metadataEth := types.Metadata{
+					Description: "Ethereum native token",
+					DenomUnits: []*types.DenomUnit{
+						{
+							Denom:    "wei",
+							Exponent: 0,
+						},
+						{
+							Denom:    "eth",
+							Exponent: 18,
+							Aliases:  []string{"ETH", "ether"},
+						},
+					},
+					Base:    "wei",
+					Display: "eth",
+				}
+
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataEth)
+				expMetadata = []types.Metadata{metadataAtom, metadataEth}
+				req = &types.QueryDenomsMetadataRequest{
+					Pagination: &query.PageRequest{
+						Limit:      7,
+						CountTotal: true,
+					},
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.DenomsMetadata(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expMetadata, res.Metadatas)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *IntegrationTestSuite) QueryDenomMetadataRequest() {
+	var (
+		req         *types.QueryDenomMetadataRequest
+		expMetadata = types.Metadata{}
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty denom",
+			func() {
+				req = &types.QueryDenomMetadataRequest{}
+			},
+			false,
+		},
+		{
+			"not found denom",
+			func() {
+				req = &types.QueryDenomMetadataRequest{
+					Denom: "foo",
+				}
+			},
+			false,
+		},
+		{
+			"success",
+			func() {
+				expMetadata := types.Metadata{
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*types.DenomUnit{
+						{
+							Denom:    "uatom",
+							Exponent: 0,
+							Aliases:  []string{"microatom"},
+						},
+						{
+							Denom:    "atom",
+							Exponent: 6,
+							Aliases:  []string{"ATOM"},
+						},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				}
+
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
+				req = &types.QueryDenomMetadataRequest{
+					Denom: expMetadata.Base,
+				}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.DenomMetadata(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(expMetadata, res.Metadata)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
 }

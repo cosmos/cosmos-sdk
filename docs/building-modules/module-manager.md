@@ -62,25 +62,26 @@ It does not have its own manager, and exists separately from [`AppModule`](#appm
 
 The `AppModule` interface defines the inter-dependent methods modules need to implement.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/228728cce2af8d494c8b4e996d011492139b04ab/types/module/module.go#L160-L182
++++ https://github.com/cosmos/cosmos-sdk/blob/b4cce159bcc6a32ac78245c6866dd87c73f3720d/types/module/module.go#L160-L182
 
 `AppModule`s are managed by the [module manager](#manager). This interface embeds the `AppModuleGenesis` interface so that the manager can access all the independent and genesis inter-dependent methods of the module. This means that a concrete type implementing the `AppModule` interface must either implement all the methods of `AppModuleGenesis` (and by extension `AppModuleBasic`), or include a concrete type that does as parameter.
 
 Let us go through the methods of `AppModule`:
 
 - `RegisterInvariants(sdk.InvariantRegistry)`: Registers the [`invariants`](./invariants.md) of the module. If the invariants deviates from its predicted value, the [`InvariantRegistry`](./invariants.md#registry) triggers appropriate logic (most often the chain will be halted).
-- `Route()`: Returns the route for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`baseapp`](../core/baseapp.md#message-routing).
-- `QuerierRoute()` (deprecated): Returns the name of the module's query route, for [`queries`](./messages-and-queries.md#queries) to be routes to the module by [`baseapp`](../core/baseapp.md#query-routing).
+- `Route()`: Returns the route for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`BaseApp`](../core/baseapp.md#message-routing).
+- `QuerierRoute()` (deprecated): Returns the name of the module's query route, for [`queries`](./messages-and-queries.md#queries) to be routes to the module by [`BaseApp`](../core/baseapp.md#query-routing).
 - `LegacyQuerierHandler(*codec.LegacyAmino)` (deprecated): Returns a [`querier`](./query-services.md#legacy-queriers) given the query `path`, in order to process the `query`.
-- `RegisterQueryService(grpc.Server)`: Allows a module to register a gRPC query service.
+- `RegisterServices(Configurator)`: Allows a module to register services.
 - `BeginBlock(sdk.Context, abci.RequestBeginBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block. Implement empty if no logic needs to be triggered at the beginning of each block for this module.
-- `EndBlock(sdk.Context, abci.RequestEndBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the beginning of each block. This is also where the module can inform the underlying consensus engine of validator set changes (e.g. the `staking` module). Implement empty if no logic needs to be triggered at the beginning of each block for this module.
+- `EndBlock(sdk.Context, abci.RequestEndBlock)`: This method gives module developers the option to implement logic that is automatically triggered at the end of each block. This is also where the module can inform the underlying consensus engine of validator set changes (e.g. the `staking` module). Implement empty if no logic needs to be triggered at the end of each block for this module.
+
 
 ### Implementing the Application Module Interfaces
 
 Typically, the various application module interfaces are implemented in a file called `module.go`, located in the module's folder (e.g. `./x/module/module.go`).
 
-Almost every module need to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewHandler(k keeper)` function defined in [`handler.go`](./handler.md) and therefore needs to pass the module's [`keeper`](./keeper.md) as parameter.
+Almost every module needs to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewHandler(k keeper)` function defined in [`handler.go`](./msg-services.md#handler-type) and therefore needs to pass the module's [`keeper`](./keeper.md) as a parameter.
 
 ```go
 // example
@@ -132,14 +133,14 @@ The module manager is used throughout the application whenever an action on a co
 - `SetOrderInitGenesis(moduleNames ...string)`: Sets the order in which the [`InitGenesis`](./genesis.md#initgenesis) function of each module will be called when the application is first started. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
 - `SetOrderExportGenesis(moduleNames ...string)`: Sets the order in which the [`ExportGenesis`](./genesis.md#exportgenesis) function of each module will be called in case of an export. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
 - `SetOrderBeginBlockers(moduleNames ...string)`: Sets the order in which the `BeginBlock()` function of each module will be called at the beginning of each block. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
-- `SetOrderEndBlockers(moduleNames ...string)`: Sets the order in which the `EndBlock()` function of each module will be called at the beginning of each block. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
+- `SetOrderEndBlockers(moduleNames ...string)`: Sets the order in which the `EndBlock()` function of each module will be called at the end of each block. This function is generally called from the application's main [constructor function](../basics/app-anatomy.md#constructor-function).
 - `RegisterInvariants(ir sdk.InvariantRegistry)`: Registers the [invariants](./invariants.md) of each module.
-- `RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino)`: Registers module routes to the application's `router`, in order to route [`message`s](./messages-and-queries.md#messages) to the appropriate [`handler`](./handler.md), and module query routes to the application's `queryRouter`, in order to route [`queries`](./messages-and-queries.md#queries) to the appropriate [`querier`](./query-services.md#legacy-queriers).
-- `RegisterQueryServices(grpcRouter grpc.Server)`: Registers all module gRPC query services.
+- `RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino)`: Registers legacy [`Msg`](./messages-and-queries.md#messages) and [`querier`](./query-services.md#legacy-queriers) routes. 
+- `RegisterServices(cfg Configurator)`: Registers all module services.
 - `InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, genesisData map[string]json.RawMessage)`: Calls the [`InitGenesis`](./genesis.md#initgenesis) function of each module when the application is first started, in the order defined in `OrderInitGenesis`. Returns an `abci.ResponseInitChain` to the underlying consensus engine, which can contain validator updates.
 - `ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler)`: Calls the [`ExportGenesis`](./genesis.md#exportgenesis) function of each module, in the order defined in `OrderExportGenesis`. The export constructs a genesis file from a previously existing state, and is mainly used when a hard-fork upgrade of the chain is required.
-- `BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock)`: At the beginning of each block, this function is called from [`baseapp`](../core/baseapp.md#beginblock) and, in turn, calls the [`BeginBlock`](./beginblock-endblock.md) function of each module, in the order defined in `OrderBeginBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](../core/events.md) emitted from all modules. The function returns an `abci.ResponseBeginBlock` which contains the aforementioned events.
-- `EndBlock(ctx sdk.Context, req abci.RequestEndBlock)`: At the end of each block, this function is called from [`baseapp`](../core/baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./beginblock-endblock.md) function of each module, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](../core/events.md) emitted from all modules. The function returns an `abci.ResponseEndBlock` which contains the aforementioned events, as well as validator set updates (if any).
+- `BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock)`: At the beginning of each block, this function is called from [`BaseApp`](../core/baseapp.md#beginblock) and, in turn, calls the [`BeginBlock`](./beginblock-endblock.md) function of each module, in the order defined in `OrderBeginBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](../core/events.md) emitted from all modules. The function returns an `abci.ResponseBeginBlock` which contains the aforementioned events.
+- `EndBlock(ctx sdk.Context, req abci.RequestEndBlock)`: At the end of each block, this function is called from [`BaseApp`](../core/baseapp.md#endblock) and, in turn, calls the [`EndBlock`](./beginblock-endblock.md) function of each module, in the order defined in `OrderEndBlockers`. It creates a child [context](../core/context.md) with an event manager to aggregate [events](../core/events.md) emitted from all modules. The function returns an `abci.ResponseEndBlock` which contains the aforementioned events, as well as validator set updates (if any).
 
 Here's an example of a concrete integration within an application:
 

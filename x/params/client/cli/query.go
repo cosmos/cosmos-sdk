@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,20 +32,19 @@ func NewQuerySubspaceParamsCmd() *cobra.Command {
 		Short: "Query for raw parameters by subspace and key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 			queryClient := proposal.NewQueryClient(clientCtx)
 
 			params := proposal.QueryParamsRequest{Subspace: args[0], Key: args[1]}
-			res, err := queryClient.Params(context.Background(), &params)
+			res, err := queryClient.Params(cmd.Context(), &params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Param)
+			return clientCtx.PrintProto(&res.Param)
 		},
 	}
 

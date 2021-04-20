@@ -1,51 +1,64 @@
 package types
 
 import (
-	"bytes"
 	"encoding/json"
-	"sort"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 )
 
-var _ exported.GenesisBalance = (*Balance)(nil)
-
-// GetAddress returns the account address of the Balance object.
-func (b Balance) GetAddress() sdk.AccAddress {
-	addr1, _ := sdk.AccAddressFromBech32(b.Address)
-	return addr1
-}
-
-// GetAddress returns the account coins of the Balance object.
-func (b Balance) GetCoins() sdk.Coins {
-	return b.Coins
-}
-
-// SanitizeGenesisAccounts sorts addresses and coin sets.
-func SanitizeGenesisBalances(balances []Balance) []Balance {
-	sort.Slice(balances, func(i, j int) bool {
-		addr1, _ := sdk.AccAddressFromBech32(balances[i].Address)
-		addr2, _ := sdk.AccAddressFromBech32(balances[j].Address)
-		return bytes.Compare(addr1.Bytes(), addr2.Bytes()) < 0
-	})
-
-	for _, balance := range balances {
-		balance.Coins = balance.Coins.Sort()
-	}
-
-	return balances
-}
-
-// ValidateGenesis performs basic validation of supply genesis data returning an
+// Validate performs basic validation of supply genesis data returning an
 // error for any failed validation criteria.
-func ValidateGenesis(data GenesisState) error {
-	if err := data.Params.Validate(); err != nil {
+func (gs GenesisState) Validate() error {
+	if err := gs.Params.Validate(); err != nil {
 		return err
 	}
 
-	return NewSupply(data.Supply).ValidateBasic()
+	seenBalances := make(map[string]bool)
+	seenMetadatas := make(map[string]bool)
+
+	totalSupply := sdk.Coins{}
+
+	for _, balance := range gs.Balances {
+		if seenBalances[balance.Address] {
+			return fmt.Errorf("duplicate balance for address %s", balance.Address)
+		}
+
+		if err := balance.Validate(); err != nil {
+			return err
+		}
+
+		seenBalances[balance.Address] = true
+
+		totalSupply = totalSupply.Add(balance.Coins...)
+	}
+
+	for _, metadata := range gs.DenomMetadata {
+		if seenMetadatas[metadata.Base] {
+			return fmt.Errorf("duplicate client metadata for denom %s", metadata.Base)
+		}
+
+		if err := metadata.Validate(); err != nil {
+			return err
+		}
+
+		seenMetadatas[metadata.Base] = true
+	}
+
+	if !gs.Supply.Empty() {
+		// NOTE: this errors if supply for any given coin is zero
+		err := gs.Supply.Validate()
+		if err != nil {
+			return err
+		}
+
+		if !gs.Supply.IsEqual(totalSupply) {
+			return fmt.Errorf("genesis supply is incorrect, expected %v, got %v", gs.Supply, totalSupply)
+		}
+	}
+
+	return nil
 }
 
 // NewGenesisState creates a new genesis state.
@@ -60,7 +73,7 @@ func NewGenesisState(params Params, balances []Balance, supply sdk.Coins, denomM
 
 // DefaultGenesisState returns a default bank module genesis state.
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams(), []Balance{}, DefaultSupply().GetTotal(), []Metadata{})
+	return NewGenesisState(DefaultParams(), []Balance{}, sdk.Coins{}, []Metadata{})
 }
 
 // GetGenesisStateFromAppState returns x/bank GenesisState given raw application
@@ -73,20 +86,4 @@ func GetGenesisStateFromAppState(cdc codec.JSONMarshaler, appState map[string]js
 	}
 
 	return &genesisState
-}
-
-// GenesisAccountIterator implements genesis account iteration.
-type GenesisBalancesIterator struct{}
-
-// IterateGenesisAccounts iterates over all the genesis accounts found in
-// appGenesis and invokes a callback on each genesis account. If any call
-// returns true, iteration stops.
-func (GenesisBalancesIterator) IterateGenesisBalances(
-	cdc codec.JSONMarshaler, appState map[string]json.RawMessage, cb func(exported.GenesisBalance) (stop bool),
-) {
-	for _, balance := range GetGenesisStateFromAppState(cdc, appState).Balances {
-		if cb(balance) {
-			break
-		}
-	}
 }

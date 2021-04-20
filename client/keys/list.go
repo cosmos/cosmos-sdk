@@ -2,7 +2,6 @@ package keys
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -24,18 +23,18 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, _ []string) error {
-	clientCtx := client.GetClientContextFromCmd(cmd)
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
 
 	infos, err := clientCtx.Keyring.List()
 	if err != nil {
 		return err
 	}
 
-	cmd.SetOut(cmd.OutOrStdout())
-
 	if ok, _ := cmd.Flags().GetBool(flagListNames); !ok {
-		output, _ := cmd.Flags().GetString(cli.OutputFlag)
-		printInfos(cmd.OutOrStdout(), infos, output)
+		printInfos(cmd.OutOrStdout(), infos, clientCtx.OutputFormat)
 		return nil
 	}
 

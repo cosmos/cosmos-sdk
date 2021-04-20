@@ -343,7 +343,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 
 	tstaking := teststaking.NewHelper(suite.T(), ctx, app.StakingKeeper)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, 100, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -623,7 +623,7 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 			"valid request",
 			func() {
 				amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-				suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addrs[0], amount))
+				suite.Require().NoError(simapp.FundAccount(app, ctx, addrs[0], amount))
 
 				err := app.DistrKeeper.FundCommunityPool(ctx, amount, addrs[0])
 				suite.Require().Nil(err)

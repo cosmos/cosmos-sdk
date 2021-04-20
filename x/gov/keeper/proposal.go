@@ -15,9 +15,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
-	// Execute the proposal content in a cache-wrapped context to validate the
-	// actual parameter changes before the proposal proceeds through the
-	// governance process. State is not persisted.
+	// Execute the proposal content in a new context branch (with branched store)
+	// to validate the actual parameter changes before the proposal proceeds
+	// through the governance process. State is not persisted.
 	cacheCtx, _ := ctx.CacheContext()
 	handler := keeper.router.GetRoute(content.ProposalRoute())
 	if err := handler(cacheCtx, content); err != nil {

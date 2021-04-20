@@ -91,7 +91,7 @@ func (e Equivocation) Hash() tmbytes.HexBytes {
 
 // ValidateBasic performs basic stateless validation checks on an Equivocation object.
 func (e Equivocation) ValidateBasic() error {
-	if e.Time.IsZero() {
+	if e.Time.Unix() <= 0 {
 		return fmt.Errorf("invalid equivocation time: %s", e.Time)
 	}
 	if e.Height < 1 {

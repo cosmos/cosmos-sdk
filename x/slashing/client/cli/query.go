@@ -1,15 +1,14 @@
 package cli
 
 import (
-	"context"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -41,31 +40,29 @@ func GetCmdQuerySigningInfo() *cobra.Command {
 		Short: "Query a validator's signing information",
 		Long: strings.TrimSpace(`Use a validators' consensus public key to find the signing-info for that validator:
 
-$ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexxhmz0l8c7sgswl7ulv7aulk364x4g5xsw7sr0k2g5
+$ <appd> query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
+				return err
+			}
+
+			var pk cryptotypes.PubKey
+			if err := clientCtx.JSONMarshaler.UnmarshalInterfaceJSON([]byte(args[0]), &pk); err != nil {
 				return err
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-
-			pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, args[0])
-			if err != nil {
-				return err
-			}
-
 			consAddr := sdk.ConsAddress(pk.Address())
 			params := &types.QuerySigningInfoRequest{ConsAddress: consAddr.String()}
-			res, err := queryClient.SigningInfo(context.Background(), params)
+			res, err := queryClient.SigningInfo(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.ValSigningInfo)
+			return clientCtx.PrintProto(&res.ValSigningInfo)
 		},
 	}
 
@@ -83,14 +80,12 @@ func GetCmdQuerySigningInfos() *cobra.Command {
 
 $ <appd> query slashing signing-infos
 `),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -99,12 +94,12 @@ $ <appd> query slashing signing-infos
 			}
 
 			params := &types.QuerySigningInfosRequest{Pagination: pageReq}
-			res, err := queryClient.SigningInfos(context.Background(), params)
+			res, err := queryClient.SigningInfos(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -125,21 +120,19 @@ func GetCmdQueryParams() *cobra.Command {
 $ <appd> query slashing params
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryParamsRequest{}
-			res, err := queryClient.Params(context.Background(), params)
+			res, err := queryClient.Params(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 

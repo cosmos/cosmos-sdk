@@ -209,14 +209,16 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, err
 	}
 
-	defer func() {
-		telemetry.IncrCounter(1, types.ModuleName, "delegate")
-		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", msg.Type()},
-			float32(msg.Amount.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-		)
-	}()
+	if msg.Amount.Amount.IsInt64() {
+		defer func() {
+			telemetry.IncrCounter(1, types.ModuleName, "delegate")
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", msg.Type()},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+			)
+		}()
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -268,14 +270,16 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
-	defer func() {
-		telemetry.IncrCounter(1, types.ModuleName, "redelegate")
-		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", msg.Type()},
-			float32(msg.Amount.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-		)
-	}()
+	if msg.Amount.Amount.IsInt64() {
+		defer func() {
+			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", msg.Type()},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+			)
+		}()
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -325,14 +329,16 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		return nil, err
 	}
 
-	defer func() {
-		telemetry.IncrCounter(1, types.ModuleName, "undelegate")
-		telemetry.SetGaugeWithLabels(
-			[]string{"tx", "msg", msg.Type()},
-			float32(msg.Amount.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
-		)
-	}()
+	if msg.Amount.Amount.IsInt64() {
+		defer func() {
+			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
+			telemetry.SetGaugeWithLabels(
+				[]string{"tx", "msg", msg.Type()},
+				float32(msg.Amount.Amount.Int64()),
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+			)
+		}()
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

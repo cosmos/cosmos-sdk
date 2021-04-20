@@ -59,14 +59,16 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 // Call next AnteHandler if fees successfully deducted
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
-	ak         AccountKeeper
-	bankKeeper types.BankKeeper
+	ak             AccountKeeper
+	bankKeeper     types.BankKeeper
+	feegrantKeeper FeegrantKeeper
 }
 
-func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper) DeductFeeDecorator {
+func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
-		ak:         ak,
-		bankKeeper: bk,
+		ak:             ak,
+		bankKeeper:     bk,
+		feegrantKeeper: fk,
 	}
 }
 
@@ -80,16 +82,36 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		panic(fmt.Sprintf("%s module account has not been set", types.FeeCollectorName))
 	}
 
+	fee := feeTx.GetFee()
 	feePayer := feeTx.FeePayer()
-	feePayerAcc := dfd.ak.GetAccount(ctx, feePayer)
+	feeGranter := feeTx.FeeGranter()
 
-	if feePayerAcc == nil {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", feePayer)
+	deductFeesFrom := feePayer
+
+	// if feegranter set deduct fee from feegranter account.
+	// this works with only when feegrant enabled.
+	if feeGranter != nil {
+		if dfd.feegrantKeeper == nil {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee grants are not enabled")
+		} else if !feeGranter.Equals(feePayer) {
+			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, tx.GetMsgs())
+
+			if err != nil {
+				return ctx, sdkerrors.Wrapf(err, "%s not allowed to pay fees from %s", feeGranter, feePayer)
+			}
+		}
+
+		deductFeesFrom = feeGranter
+	}
+
+	deductFeesFromAcc := dfd.ak.GetAccount(ctx, deductFeesFrom)
+	if deductFeesFromAcc == nil {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "fee payer address: %s does not exist", deductFeesFrom)
 	}
 
 	// deduct the fees
 	if !feeTx.GetFee().IsZero() {
-		err = DeductFees(dfd.bankKeeper, ctx, feePayerAcc, feeTx.GetFee())
+		err = DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, feeTx.GetFee())
 		if err != nil {
 			return ctx, err
 		}

@@ -136,6 +136,30 @@ rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 enabled-unsafe-cors = {{ .API.EnableUnsafeCORS }}
 
 ###############################################################################
+###                           Rosetta Configuration                         ###
+###############################################################################
+
+[rosetta]
+
+# Enable defines if the Rosetta API server should be enabled.
+enable = {{ .Rosetta.Enable }}
+
+# Address defines the Rosetta API server to listen on.
+address = "{{ .Rosetta.Address }}"
+
+# Network defines the name of the blockchain that will be returned by Rosetta.
+blockchain = "{{ .Rosetta.Blockchain }}"
+
+# Network defines the name of the network that will be returned by Rosetta.
+network = "{{ .Rosetta.Network }}"
+
+# Retries defines the number of retries when connecting to the node before failing.
+retries = {{ .Rosetta.Retries }}
+
+# Offline defines if Rosetta server should run in offline mode.
+offline = {{ .Rosetta.Offline }}
+
+###############################################################################
 ###                           gRPC Configuration                            ###
 ###############################################################################
 
@@ -146,6 +170,19 @@ enable = {{ .GRPC.Enable }}
 
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
+
+###############################################################################
+###                        gRPC Web Configuration                           ###
+###############################################################################
+
+[grpc-web]
+
+# GRPCWebEnable defines if the gRPC-web should be enabled.
+# NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
+enable = {{ .GRPCWeb.Enable }}
+
+# Address defines the gRPC-web server address to bind to.
+address = "{{ .GRPCWeb.Address }}"
 
 ###############################################################################
 ###                        State Sync Configuration                         ###

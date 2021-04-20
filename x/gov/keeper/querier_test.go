@@ -153,7 +153,7 @@ func TestQueries(t *testing.T) {
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))
 
 	oneCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))
-	consCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
+	consCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
 
 	tp := TestProposal
 
@@ -251,13 +251,13 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, proposal3, proposals[1])
 
 	// Addrs[0] votes on proposals #2 & #3
-	vote1 := types.NewVote(proposal2.ProposalId, TestAddrs[0], types.OptionYes)
-	vote2 := types.NewVote(proposal3.ProposalId, TestAddrs[0], types.OptionYes)
+	vote1 := types.NewVote(proposal2.ProposalId, TestAddrs[0], types.NewNonSplitVoteOption(types.OptionYes))
+	vote2 := types.NewVote(proposal3.ProposalId, TestAddrs[0], types.NewNonSplitVoteOption(types.OptionYes))
 	app.GovKeeper.SetVote(ctx, vote1)
 	app.GovKeeper.SetVote(ctx, vote2)
 
 	// Addrs[1] votes on proposal #3
-	vote3 := types.NewVote(proposal3.ProposalId, TestAddrs[1], types.OptionYes)
+	vote3 := types.NewVote(proposal3.ProposalId, TestAddrs[1], types.NewNonSplitVoteOption(types.OptionYes))
 	app.GovKeeper.SetVote(ctx, vote3)
 
 	// Test query voted by TestAddrs[0]
@@ -323,7 +323,7 @@ func TestPaginatedVotesQuery(t *testing.T) {
 		vote := types.Vote{
 			ProposalId: proposal.ProposalId,
 			Voter:      addr.String(),
-			Option:     types.OptionYes,
+			Options:    types.NewNonSplitVoteOption(types.OptionYes),
 		}
 		votes[i] = vote
 		app.GovKeeper.SetVote(ctx, vote)

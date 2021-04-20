@@ -21,12 +21,13 @@ func TestBeginBlocker(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	pks := simapp.CreateTestPubKeys(1)
-	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, sdk.TokensFromConsensusPower(200))
+	simapp.AddTestAddrsFromPubKeys(app, ctx, pks, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
 	addr, pk := sdk.ValAddress(pks[0].Address()), pks[0]
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	// bond the validator
-	amt := tstaking.CreateValidatorWithValPower(addr, pk, 100, true)
+	power := int64(100)
+	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),
@@ -36,7 +37,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	val := abci.Validator{
 		Address: pk.Address(),
-		Power:   amt.Int64(),
+		Power:   power,
 	}
 
 	// mark the validator as having signed

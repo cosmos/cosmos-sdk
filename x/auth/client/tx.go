@@ -14,19 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
-
-// Codec defines the x/auth account codec to be used for use with the
-// AccountRetriever. The application must be sure to set this to their respective
-// codec that implements the Codec interface and must be the same codec that
-// passed to the x/auth module.
-//
-// TODO:/XXX: Using a package-level global isn't ideal and we should consider
-// refactoring the module manager to allow passing in the correct module codec.
-var Codec codec.Marshaler
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
 type GasEstimateResponse struct {
@@ -43,16 +36,23 @@ func PrintUnsignedStdTx(txBldr tx.Factory, clientCtx client.Context, msgs []sdk.
 	return err
 }
 
-// SignTx appends a signature to a transaction. If appendSig
-// is false, it replaces the signatures already attached with the new signature.
+// SignTx signs a transaction managed by the TxBuilder using a `name` key stored in Keybase.
+// The new signature is appended to the TxBuilder when overwrite=false or overwritten otherwise.
 // Don't perform online validation or lookups if offline is true.
-func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx client.TxBuilder, offline bool) error {
+func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuilder client.TxBuilder, offline, overwriteSig bool) error {
 	info, err := txFactory.Keybase().Key(name)
 	if err != nil {
 		return err
 	}
+
+	// Ledger and Multisigs only support LEGACY_AMINO_JSON signing.
+	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED &&
+		(info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeMulti) {
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
+
 	addr := sdk.AccAddress(info.GetPubKey().Address())
-	if !isTxSigner(addr, stdTx.GetTx().GetSigners()) {
+	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
 		return fmt.Errorf("%s: %s", sdkerrors.ErrorInvalidSigner, name)
 	}
 	if !offline {
@@ -62,14 +62,20 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, stdTx c
 		}
 	}
 
-	return tx.Sign(txFactory, name, stdTx)
+	return tx.Sign(txFactory, name, txBuilder, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
+// This function should only be used when signing with a multisig. For
+// normal keys, please use SignTx directly.
 func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
-	name string, txBuilder client.TxBuilder, offline bool) (err error) {
+	name string, txBuilder client.TxBuilder, offline, overwrite bool) (err error) {
+	// Multisigs only support LEGACY_AMINO_JSON signing.
+	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
+		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+	}
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, txBuilder.GetTx().GetSigners()) {
@@ -83,7 +89,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	return tx.Sign(txFactory, name, txBuilder)
+	return tx.Sign(txFactory, name, txBuilder, overwrite)
 }
 
 // Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.

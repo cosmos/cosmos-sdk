@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -110,9 +111,9 @@ func DefaultConfig() Config {
 		NumValidators:     4,
 		BondDenom:         sdk.DefaultBondDenom,
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
-		AccountTokens:     sdk.TokensFromConsensusPower(1000),
-		StakingTokens:     sdk.TokensFromConsensusPower(500),
-		BondedTokens:      sdk.TokensFromConsensusPower(100),
+		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
+		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
+		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
 		PruningStrategy:   storetypes.PruningOptionNothing,
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.Secp256k1Type),
@@ -157,9 +158,10 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
-		tmNode *node.Node
-		api    *api.Server
-		grpc   *grpc.Server
+		tmNode  *node.Node
+		api     *api.Server
+		grpc    *grpc.Server
+		grpcWeb *http.Server
 	}
 )
 
@@ -212,6 +214,7 @@ func New(t *testing.T, cfg Config) *Network {
 		apiAddr := ""
 		tmCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
+		appCfg.GRPCWeb.Enable = false
 		if i == 0 {
 			apiListenAddr, _, err := server.FreeTCPAddr()
 			require.NoError(t, err)
@@ -229,12 +232,17 @@ func New(t *testing.T, cfg Config) *Network {
 			require.NoError(t, err)
 			appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			appCfg.GRPC.Enable = true
+
+			_, grpcWebPort, err := server.FreeTCPAddr()
+			require.NoError(t, err)
+			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
+			appCfg.GRPCWeb.Enable = true
 		}
 
 		logger := log.NewNopLogger()
 		if cfg.EnableLogging {
 			logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-			logger, _ = tmflags.ParseLogLevel("info", logger, tmcfg.DefaultLogLevel())
+			logger, _ = tmflags.ParseLogLevel("info", logger, tmcfg.DefaultLogLevel)
 		}
 
 		ctx.Logger = logger
@@ -298,7 +306,7 @@ func New(t *testing.T, cfg Config) *Network {
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(sdk.DefaultBondDenom, cfg.BondedTokens),
+			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
@@ -323,7 +331,7 @@ func New(t *testing.T, cfg Config) *Network {
 			WithKeybase(kb).
 			WithTxConfig(cfg.TxConfig)
 
-		err = tx.Sign(txFactory, nodeDirName, txBuilder)
+		err = tx.Sign(txFactory, nodeDirName, txBuilder, true)
 		require.NoError(t, err)
 
 		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
@@ -333,6 +341,7 @@ func New(t *testing.T, cfg Config) *Network {
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), appCfg)
 
 		clientCtx := client.Context{}.
+			WithKeyringDir(clientDir).
 			WithKeyring(kb).
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
@@ -466,6 +475,9 @@ func (n *Network) Cleanup() {
 
 		if v.grpc != nil {
 			v.grpc.Stop()
+			if v.grpcWeb != nil {
+				_ = v.grpcWeb.Close()
+			}
 		}
 	}
 

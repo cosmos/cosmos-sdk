@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
@@ -27,6 +29,7 @@ type Context struct {
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
 	Keyring           keyring.Keyring
+	KeyringOptions    []keyring.Option
 	Output            io.Writer
 	OutputFormat      string
 	Height            int64
@@ -35,6 +38,7 @@ type Context struct {
 	From              string
 	BroadcastMode     string
 	FromName          string
+	SignModeStr       string
 	UseLedger         bool
 	Simulate          bool
 	GenerateOnly      bool
@@ -43,6 +47,8 @@ type Context struct {
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
+	FeeGranter        sdk.AccAddress
+	Viper             *viper.Viper
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -51,6 +57,12 @@ type Context struct {
 // WithKeyring returns a copy of the context with an updated keyring.
 func (ctx Context) WithKeyring(k keyring.Keyring) Context {
 	ctx.Keyring = k
+	return ctx
+}
+
+// WithKeyringOptions returns a copy of the context with an updated keyring.
+func (ctx Context) WithKeyringOptions(opts ...keyring.Option) Context {
+	ctx.KeyringOptions = opts
 	return ctx
 }
 
@@ -124,7 +136,9 @@ func (ctx Context) WithChainID(chainID string) Context {
 
 // WithHomeDir returns a copy of the Context with HomeDir set.
 func (ctx Context) WithHomeDir(dir string) Context {
-	ctx.HomeDir = dir
+	if dir != "" {
+		ctx.HomeDir = dir
+	}
 	return ctx
 }
 
@@ -165,10 +179,24 @@ func (ctx Context) WithFromAddress(addr sdk.AccAddress) Context {
 	return ctx
 }
 
+// WithFeeGranterAddress returns a copy of the context with an updated fee granter account
+// address.
+func (ctx Context) WithFeeGranterAddress(addr sdk.AccAddress) Context {
+	ctx.FeeGranter = addr
+	return ctx
+}
+
 // WithBroadcastMode returns a copy of the context with an updated broadcast
 // mode.
 func (ctx Context) WithBroadcastMode(mode string) Context {
 	ctx.BroadcastMode = mode
+	return ctx
+}
+
+// WithSignModeStr returns a copy of the context with an updated SignMode
+// value.
+func (ctx Context) WithSignModeStr(signModeStr string) Context {
+	ctx.SignModeStr = signModeStr
 	return ctx
 }
 
@@ -197,21 +225,37 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
-// PrintString prints the raw string to ctx.Output or os.Stdout
+// WithViper returns the context with Viper field. This Viper instance is used to read
+// client-side config from the config file.
+func (ctx Context) WithViper(prefix string) Context {
+	v := viper.New()
+	v.SetEnvPrefix(prefix)
+	v.AutomaticEnv()
+	ctx.Viper = v
+	return ctx
+}
+
+// PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
+	return ctx.PrintBytes([]byte(str))
+}
+
+// PrintBytes prints the raw bytes to ctx.Output if it's defined, otherwise to os.Stdout.
+// NOTE: for printing a complex state object, you should use ctx.PrintOutput
+func (ctx Context) PrintBytes(o []byte) error {
 	writer := ctx.Output
 	if writer == nil {
 		writer = os.Stdout
 	}
 
-	_, err := writer.Write([]byte(str))
+	_, err := writer.Write(o)
 	return err
 }
 
-// PrintOutput outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
+// PrintProto outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
 // will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
-func (ctx Context) PrintOutput(toPrint proto.Message) error {
+func (ctx Context) PrintProto(toPrint proto.Message) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
 	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
 	if err != nil {
@@ -220,9 +264,10 @@ func (ctx Context) PrintOutput(toPrint proto.Message) error {
 	return ctx.printOutput(out)
 }
 
-// PrintOutputLegacy is a variant of PrintOutput that doesn't require a proto type
-// and uses amino JSON encoding. It will be removed in the near future!
-func (ctx Context) PrintOutputLegacy(toPrint interface{}) error {
+// PrintObjectLegacy is a variant of PrintProto that doesn't require a proto.Message type
+// and uses amino JSON encoding.
+// Deprecated: It will be removed in the near future!
+func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)
 	if err != nil {
 		return err
@@ -267,43 +312,44 @@ func (ctx Context) printOutput(out []byte) error {
 	return nil
 }
 
-// GetFromFields returns a from account address and Keybase name given either
+// GetFromFields returns a from account address, account name and keyring type, given either
 // an address or key name. If genOnly is true, only a valid Bech32 cosmos
 // address is returned.
-func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, error) {
+func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
-		return nil, "", nil
+		return nil, "", 0, nil
 	}
 
 	if genOnly {
 		addr, err := sdk.AccAddressFromBech32(from)
 		if err != nil {
-			return nil, "", errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
+			return nil, "", 0, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
 		}
 
-		return addr, "", nil
+		return addr, "", 0, nil
 	}
 
 	var info keyring.Info
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		info, err = kr.KeyByAddress(addr)
 		if err != nil {
-			return nil, "", err
+			return nil, "", 0, err
 		}
 	} else {
 		info, err = kr.Key(from)
 		if err != nil {
-			return nil, "", err
+			return nil, "", 0, err
 		}
 	}
 
-	return info.GetAddress(), info.GetName(), nil
+	return info.GetAddress(), info.GetName(), info.GetType(), nil
 }
 
-func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
-	if ctx.GenerateOnly {
-		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input)
+// NewKeyringFromBackend gets a Keyring object from a backend
+func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
+	if ctx.GenerateOnly || ctx.Simulate {
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
 	}
 
-	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input)
+	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
 }

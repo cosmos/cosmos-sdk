@@ -31,12 +31,14 @@ is a list of the most popular operating systems and their respective passwords m
 GNU/Linux distributions that use GNOME as default desktop environment typically come with
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
 commonly provided with [KDE Wallet Manager](https://userbase.kde.org/KDE_Wallet_Manager).
-Whilst the former is in fact a `libsecret` convenient frontend, the former is a `kwallet`
+Whilst the former is in fact a `libsecret` convenient frontend, the latter is a `kwallet`
 client.
 
 `os` is the default option since operating system's default credentials managers are
 designed to meet users' most common needs and provide them with a comfortable
 experience without compromising on security.
+
+The recommended backends for headless environments are `file` and `pass`.
 
 ### The `file` backend
 
@@ -82,12 +84,6 @@ $ pass init <GPG_KEY_ID>
 Replace `<GPG_KEY_ID>` with your GPG key ID. You can use your personal GPG key or an alternative
 one you may want to use specifically to encrypt the password store.
 
-### The `test` backend
-
-The `test` backend is a password-less variation of the `file` backend. Keys are stored
-unencrypted on disk. This backend is meant for testing purposes only and **should never be used
-in production environments**.
-
 ### The `kwallet` backend
 
 The `kwallet` backend uses `KDE Wallet Manager`, which comes installed by default on the
@@ -95,13 +91,26 @@ GNU/Linux distributions that ships KDE as default desktop environment. Please re
 [KWallet Handbook](https://docs.kde.org/stable5/en/kdeutils/kwallet5/index.html) for more
 information.
 
+### The `test` backend
+
+The `test` backend is a password-less variation of the `file` backend. Keys are stored
+unencrypted on disk.
+
+**Provided for testing purposes only. The `test` backend is not recommended for use in production environments**.
+
+### The `memory` backend
+
+The `memory` backend stores keys in memory. The keys are immediately deleted after the program has exited.
+
+**Provided for testing purposes only. The `memory` backend is not recommended for use in production environments**.
+
 ## Adding keys to the keyring
 
 ::: warning
 Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
 :::
 
-Applications developed using the Cosmos SDK come with the `keys` subcommand. For the purpose of this tutorial, we're running the `simd` CLI, which is an application built using the Cosmos SDK for testing and educational purposes. For more information, see [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc2/simapp).
+Applications developed using the Cosmos SDK come with the `keys` subcommand. For the purpose of this tutorial, we're running the `simd` CLI, which is an application built using the Cosmos SDK for testing and educational purposes. For more information, see [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc3/simapp).
 
 You can use `simd keys` for help about the keys command and `simd keys [command] --help` for more information about a particular subcommand.
 
@@ -121,3 +130,7 @@ MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!
 
 By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module (in particular its [AnteHandlers](../core/baseapp.md#antehandler)) supports natively these two public key algorithms.
+
+## Next {hide}
+
+Read about [running a node](./run-node.md) {hide}

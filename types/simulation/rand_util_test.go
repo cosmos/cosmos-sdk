@@ -56,7 +56,7 @@ func TestRandStringOfLength(t *testing.T) {
 }
 
 func mustParseCoins(s string) sdk.Coins {
-	coins, err := sdk.ParseCoins(s)
+	coins, err := sdk.ParseCoinsNormalized(s)
 	if err != nil {
 		panic(err)
 	}

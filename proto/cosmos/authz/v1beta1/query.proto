@@ -1,0 +1,51 @@
+syntax = "proto3";
+package cosmos.authz.v1beta1;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/authz/v1beta1/authz.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
+  // provided msg type.
+  rpc Authorization(QueryAuthorizationRequest) returns (QueryAuthorizationResponse) {
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grant";
+  }
+
+  // Returns list of `Authorization`, granted to the grantee by the granter.
+  rpc Authorizations(QueryAuthorizationsRequest) returns (QueryAuthorizationsResponse) {
+    option (google.api.http).get = "/cosmos/authz/v1beta1/granters/{granter}/grantees/{grantee}/grants";
+  }
+}
+
+// QueryAuthorizationRequest is the request type for the Query/Authorization RPC method.
+message QueryAuthorizationRequest {
+  string granter     = 1;
+  string grantee     = 2;
+  string method_name = 3;
+}
+
+// QueryAuthorizationResponse is the response type for the Query/Authorization RPC method.
+message QueryAuthorizationResponse {
+  // authorization is a authorization granted for grantee by granter.
+  cosmos.authz.v1beta1.AuthorizationGrant authorization = 1;
+}
+
+// QueryAuthorizationsRequest is the request type for the Query/Authorizations RPC method.
+message QueryAuthorizationsRequest {
+  string granter = 1;
+  string grantee = 2;
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryAuthorizationsResponse is the response type for the Query/Authorizations RPC method.
+message QueryAuthorizationsResponse {
+  // authorizations is a list of grants granted for grantee by granter.
+  repeated cosmos.authz.v1beta1.AuthorizationGrant authorizations = 1;
+  // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

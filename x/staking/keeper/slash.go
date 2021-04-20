@@ -29,7 +29,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	amount := sdk.TokensFromConsensusPower(power)
+	amount := k.TokensFromConsensusPower(ctx, power)
 	slashAmountDec := amount.ToDec().Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
@@ -41,10 +41,10 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
 		//        slashed in this case - which we don't explicitly check, but should be true.
 		// Log the slash attempt for future reference (maybe we should tag it too)
-		logger.Error(fmt.Sprintf(
-			"WARNING: Ignored attempt to slash a nonexistent validator with address %s, we recommend you investigate immediately",
-			consAddr))
-
+		logger.Error(
+			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
+			"validator", consAddr.String(),
+		)
 		return
 	}
 
@@ -71,10 +71,12 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			infractionHeight, ctx.BlockHeight()))
 
 	case infractionHeight == ctx.BlockHeight():
-		// Special-case slash at current height for efficiency - we don't need to look through unbonding delegations or redelegations
-		logger.Info(fmt.Sprintf(
-			"slashing at current height %d, not scanning unbonding delegations & redelegations",
-			infractionHeight))
+		// Special-case slash at current height for efficiency - we don't need to
+		// look through unbonding delegations or redelegations.
+		logger.Info(
+			"slashing at current height; not scanning unbonding delegations & redelegations",
+			"height", infractionHeight,
+		)
 
 	case infractionHeight < ctx.BlockHeight():
 		// Iterate through unbonding delegations from slashed validator
@@ -132,10 +134,12 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		panic("invalid validator status")
 	}
 
-	// Log that a slash occurred!
-	logger.Info(fmt.Sprintf(
-		"validator %s slashed by slash factor of %s; burned %v tokens",
-		validator.GetOperator(), slashFactor.String(), tokensToBurn))
+	logger.Info(
+		"validator slashed by slash factor",
+		"validator", validator.GetOperator().String(),
+		"slash_factor", slashFactor.String(),
+		"burned", tokensToBurn,
+	)
 }
 
 // jail a validator
@@ -143,7 +147,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.jailValidator(ctx, validator)
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
+	logger.Info("validator jailed", "validator", consAddr)
 }
 
 // unjail a validator
@@ -151,7 +155,7 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.unjailValidator(ctx, validator)
 	logger := k.Logger(ctx)
-	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))
+	logger.Info("validator un-jailed", "validator", consAddr)
 }
 
 // slash an unbonding delegation and update the pool

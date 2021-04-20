@@ -16,6 +16,8 @@ has also been created to define a contract for evidence against malicious valida
 // Evidence defines the contract which concrete evidence types of misbehavior
 // must implement.
 type Evidence interface {
+	proto.Message
+
 	Route() string
 	Type() string
 	String() string
@@ -64,12 +66,13 @@ The `Handler` (defined below) is responsible for executing the entirety of the
 business logic for handling `Evidence`. This typically includes validating the
 evidence, both stateless checks via `ValidateBasic` and stateful checks via any
 keepers provided to the `Handler`. In addition, the `Handler` may also perform
-capabilities such as slashing and jailing a validator.
+capabilities such as slashing and jailing a validator. All `Evidence` handled 
+by the `Handler` should be persisted.
 
 ```go
 // Handler defines an agnostic Evidence handler. The handler is responsible
 // for executing all corresponding business logic necessary for verifying the
 // evidence as valid. In addition, the Handler may execute any necessary
 // slashing and potential jailing.
-type Handler func(Context, Evidence) error
+type Handler func(sdk.Context, Evidence) error
 ```

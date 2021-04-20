@@ -66,6 +66,9 @@ func startInProcess(cfg Config, val *Validator) error {
 
 		// Add the tx service in the gRPC router.
 		app.RegisterTxService(val.ClientCtx)
+
+		// Add the tendermint queries service in the gRPC router.
+		app.RegisterTendermintService(val.ClientCtx)
 	}
 
 	if val.APIAddress != "" {
@@ -90,12 +93,30 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(app, val.AppConfig.GRPC.Address)
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC.Address)
 		if err != nil {
 			return err
 		}
 
 		val.grpc = grpcSrv
+
+		if val.AppConfig.GRPCWeb.Enable {
+			errCh1 := make(chan error)
+			go func() {
+				grpcWeb, err := servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
+				if err != nil {
+					errCh1 <- err
+				}
+
+				val.grpcWeb = grpcWeb
+			}()
+			select {
+			case err := <-errCh1:
+				return err
+			case <-time.After(5 * time.Second): // assume server started successfully
+			}
+
+		}
 	}
 
 	return nil
@@ -147,14 +168,14 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 		return err
 	}
 
-	authGenState.Accounts = accounts
+	authGenState.Accounts = append(authGenState.Accounts, accounts...)
 	cfg.GenesisState[authtypes.ModuleName] = cfg.Codec.MustMarshalJSON(&authGenState)
 
 	// set the balances in the genesis state
 	var bankGenState banktypes.GenesisState
 	cfg.Codec.MustUnmarshalJSON(cfg.GenesisState[banktypes.ModuleName], &bankGenState)
 
-	bankGenState.Balances = genBalances
+	bankGenState.Balances = append(bankGenState.Balances, genBalances...)
 	cfg.GenesisState[banktypes.ModuleName] = cfg.Codec.MustMarshalJSON(&bankGenState)
 
 	appGenStateJSON, err := json.MarshalIndent(cfg.GenesisState, "", "  ")

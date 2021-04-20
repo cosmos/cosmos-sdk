@@ -29,18 +29,24 @@ its unique `proposalID`.
 
 ### Proposal types
 
-In the initial version of the governance module, there are two types of
-proposal:
+In the initial version of the governance module, there are five types of
+proposals:
 
-- `PlainTextProposal` All the proposals that do not involve a modification of
+- `TextProposal` All the proposals that do not involve a modification of
   the source code go under this type. For example, an opinion poll would use a
-  proposal of type `PlainTextProposal`.
+  proposal of type `TextProposal`.
 - `SoftwareUpgradeProposal`. If accepted, validators are expected to update
   their software in accordance with the proposal. They must do so by following
   a 2-steps process described in the [Software Upgrade](#software-upgrade)
   section below. Software upgrade roadmap may be discussed and agreed on via
-  `PlainTextProposals`, but actual software upgrades must be performed via
+  `TextProposals`, but actual software upgrades must be performed via
   `SoftwareUpgradeProposals`.
+- `CommunityPoolSpendProposal` details a proposal for use of community funds,
+  together with how many coins are proposed to be spent, and to which recipient account.
+- `ParameterChangeProposal` defines a proposal to change one or 
+  more parameters. If accepted, the requested parameter change is updated 
+  automatically by the proposal handler upon conclusion of the voting period.
+- `CancelSoftwareUpgradeProposal` is a gov Content type for cancelling a software upgrade.
 
 Other modules may expand upon the governance module by implementing their own
 proposal types and handlers. These types are registered and processed through the
@@ -128,9 +134,6 @@ that proposals are accepted if the proportion of `Yes` votes (excluding
 `Abstain` votes) at the end of the voting period is superior to 50% and if the
 proportion of `NoWithVeto` votes is inferior to 1/3 (excluding `Abstain`
 votes).
-
-Proposals can be accepted before the end of the voting period if they meet a special condition. Namely, if the ratio of `Yes` votes to `InitTotalVotingPower`exceeds 2:3, the proposal will be immediately accepted, even if the `Voting period` is not finished. `InitTotalVotingPower` is the total voting power of all bonded Atom holders at the moment when the vote opens.
-This condition exists so that the network can react quickly in case of urgency.
 
 ### Inheritance
 

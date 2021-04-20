@@ -15,9 +15,8 @@ There are two main types, Keeper and Subspace. Subspace is an isolated namespace
 paramstore, where keys are prefixed by preconfigured spacename. Keeper has a
 permission to access all existing spaces.
 
-Subspace can be used by the individual keepers, who needs a private parameter store
-that the other keeper cannot modify. Keeper can be used by the Governance keeper,
-who need to modify any parameter in case of the proposal passes.
+Subspace can be used by the individual keepers, which need a private parameter store
+that the other keepers cannot modify. The params Keeper can be used to add a route to `x/gov` router in order to modify any parameter in case a proposal passes.
 
 The following contents explains how to use params module for master and user modules.
 

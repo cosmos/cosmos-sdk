@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -49,13 +50,21 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	},
 }
 
+func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
+	db := dbm.NewMemDB()
+	encCdc := MakeTestEncodingConfig()
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	if withGenesis {
+		return app, NewDefaultGenesisState(encCdc.Marshaler)
+	}
+	return app, GenesisState{}
+}
+
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(isCheckTx bool) *SimApp {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeTestEncodingConfig(), EmptyAppOptions{})
+	app, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genesisState := NewDefaultGenesisState()
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)
@@ -79,10 +88,7 @@ func Setup(isCheckTx bool) *SimApp {
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
 // account. A Nop logger is set in SimApp.
 func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeTestEncodingConfig(), EmptyAppOptions{})
-	genesisState := NewDefaultGenesisState()
-
+	app, genesisState := setup(true, 5)
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -95,7 +101,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
 		require.NoError(t, err)
-		pkAny, err := codectypes.PackAny(pk)
+		pkAny, err := codectypes.NewAnyWithValue(pk)
 		require.NoError(t, err)
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
@@ -114,7 +120,6 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
 
 	}
-
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
 	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
@@ -124,6 +129,12 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 		// add genesis acc tokens and delegated tokens to total supply
 		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))...)
 	}
+
+	// add bonded amount to bonded pool module account
+	balances = append(balances, banktypes.Balance{
+		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
+		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
+	})
 
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
@@ -156,12 +167,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 // SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
 // accounts and possible balances.
 func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeTestEncodingConfig(), EmptyAppOptions{})
-
-	// initialize the chain with the passed in genesis accounts
-	genesisState := NewDefaultGenesisState()
-
+	app, genesisState := setup(true, 0)
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 
@@ -213,9 +219,9 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	// start at 100 so we can make up to 999 test addresses with valid test addresses
 	for i := 100; i < (accNum + 100); i++ {
 		numString := strconv.Itoa(i)
-		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") //base address string
+		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") // base address string
 
-		buffer.WriteString(numString) //adding on final two digits to make addresses unique
+		buffer.WriteString(numString) // adding on final two digits to make addresses unique
 		res, _ := sdk.AccAddressFromHex(buffer.String())
 		bech := res.String()
 		addr, _ := TestAddr(buffer.String(), bech)
@@ -231,19 +237,9 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
 
-	setTotalSupply(app, ctx, accAmt, len(pubKeys))
-
-	// fill all the addresses with some coins, set the loose pool tokens simultaneously
-	for _, pubKey := range pubKeys {
-		saveAccount(app, ctx, sdk.AccAddress(pubKey.Address()), initCoins)
+	for _, pk := range pubKeys {
+		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
 	}
-}
-
-// setTotalSupply provides the total supply based on accAmt * totalAccounts.
-func setTotalSupply(app *SimApp, ctx sdk.Context, accAmt sdk.Int, totalAccounts int) {
-	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt.MulRaw(int64(totalAccounts))))
-	prevSupply := app.BankKeeper.GetSupply(ctx)
-	app.BankKeeper.SetSupply(ctx, banktypes.NewSupply(prevSupply.GetTotal().Add(totalSupply...)))
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
@@ -262,21 +258,21 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdk.Int, stra
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
-	setTotalSupply(app, ctx, accAmt, accNum)
 
-	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
-		saveAccount(app, ctx, addr, initCoins)
+		initAccountWithCoins(app, ctx, addr, initCoins)
 	}
 
 	return testAddrs
 }
 
-// saveAccount saves the provided account into the simapp with balance based on initCoins.
-func saveAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, initCoins sdk.Coins) {
-	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
-	app.AccountKeeper.SetAccount(ctx, acc)
-	err := app.BankKeeper.AddCoins(ctx, addr, initCoins)
+func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+	if err != nil {
+		panic(err)
+	}
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, coins)
 	if err != nil {
 		panic(err)
 	}
@@ -439,4 +435,32 @@ type EmptyAppOptions struct{}
 // Get implements AppOptions
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
+}
+
+// FundAccount is a utility function that funds an account by minting and
+// sending the coins to the address. This should be used for testing purposes
+// only!
+//
+// TODO: Instead of using the mint module account, which has the
+// permission of minting, create a "faucet" account. (@fdymylja)
+func FundAccount(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, amounts sdk.Coins) error {
+	if err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
+		return err
+	}
+
+	return app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+}
+
+// FundModuleAccount is a utility function that funds a module account by
+// minting and sending the coins to the address. This should be used for testing
+// purposes only!
+//
+// TODO: Instead of using the mint module account, which has the
+// permission of minting, create a "faucet" account. (@fdymylja)
+func FundModuleAccount(app *SimApp, ctx sdk.Context, recipientMod string, amounts sdk.Coins) error {
+	if err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
+		return err
+	}
+
+	return app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, recipientMod, amounts)
 }

@@ -3,6 +3,7 @@ package msgservice
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
@@ -41,4 +42,10 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 // gRPC NOOP interceptor
 func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
 	return nil, nil
+}
+
+// IsServiceMsg checks if a type URL corresponds to a service method name,
+// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
+func IsServiceMsg(typeURL string) bool {
+	return strings.Count(typeURL, "/") >= 2
 }

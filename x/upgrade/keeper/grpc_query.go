@@ -32,3 +32,17 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 
 	return &types.QueryAppliedPlanResponse{Height: applied}, nil
 }
+
+// UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
+func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	consState, found := k.GetUpgradedConsensusState(ctx, req.LastHeight)
+	if !found {
+		return &types.QueryUpgradedConsensusStateResponse{}, nil
+	}
+
+	return &types.QueryUpgradedConsensusStateResponse{
+		UpgradedConsensusState: consState,
+	}, nil
+}

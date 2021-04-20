@@ -34,7 +34,7 @@ type Store struct {
 }
 ```
 
-`cachemulti.Store` cache wraps all substores in its constructor and hold them in `Store.stores`. `Store.GetKVStore()` returns the store from `Store.stores`, and `Store.Write()` recursively calls `CacheWrap.Write()` on the substores.
+`cachemulti.Store` branches all substores in its constructor and hold them in `Store.stores`. `Store.GetKVStore()` returns the store from `Store.stores`, and `Store.Write()` recursively calls `CacheWrap.Write()` on the substores.
 
 ## DBAdapter
 

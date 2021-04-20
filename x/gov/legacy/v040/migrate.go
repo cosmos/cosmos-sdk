@@ -3,12 +3,18 @@ package v040
 import (
 	"fmt"
 
+	proto "github.com/gogo/protobuf/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
 	v040distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
+	v040params "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
+	v040upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func migrateVoteOption(oldVoteOption v034gov.VoteOption) v040gov.VoteOption {
@@ -60,10 +66,12 @@ func migrateProposalStatus(oldProposalStatus v034gov.ProposalStatus) v040gov.Pro
 }
 
 func migrateContent(oldContent v036gov.Content) *codectypes.Any {
+	var protoProposal proto.Message
+
 	switch oldContent := oldContent.(type) {
 	case v036gov.TextProposal:
 		{
-			protoProposal := &v040gov.TextProposal{
+			protoProposal = &v040gov.TextProposal{
 				Title:       oldContent.Title,
 				Description: oldContent.Description,
 			}
@@ -77,23 +85,60 @@ func migrateContent(oldContent v036gov.Content) *codectypes.Any {
 		}
 	case v036distr.CommunityPoolSpendProposal:
 		{
-			protoProposal := &v040distr.CommunityPoolSpendProposal{
+			protoProposal = &v040distr.CommunityPoolSpendProposal{
 				Title:       oldContent.Title,
 				Description: oldContent.Description,
 				Recipient:   oldContent.Recipient.String(),
 				Amount:      oldContent.Amount,
 			}
-			// Convert the content into Any.
-			contentAny, err := codectypes.NewAnyWithValue(protoProposal)
-			if err != nil {
-				panic(err)
+		}
+	case v038upgrade.CancelSoftwareUpgradeProposal:
+		{
+			protoProposal = &v040upgrade.CancelSoftwareUpgradeProposal{
+				Description: oldContent.Description,
+				Title:       oldContent.Title,
+			}
+		}
+	case v038upgrade.SoftwareUpgradeProposal:
+		{
+			protoProposal = &v040upgrade.SoftwareUpgradeProposal{
+				Description: oldContent.Description,
+				Title:       oldContent.Title,
+				Plan: v040upgrade.Plan{
+					Name:   oldContent.Plan.Name,
+					Height: oldContent.Plan.Height,
+					Info:   oldContent.Plan.Info,
+				},
+			}
+		}
+	case v036params.ParameterChangeProposal:
+		{
+			newChanges := make([]v040params.ParamChange, len(oldContent.Changes))
+			for i, oldChange := range oldContent.Changes {
+				newChanges[i] = v040params.ParamChange{
+					Subspace: oldChange.Subspace,
+					Key:      oldChange.Key,
+					Value:    oldChange.Value,
+				}
 			}
 
-			return contentAny
+			protoProposal = &v040params.ParameterChangeProposal{
+				Description: oldContent.Description,
+				Title:       oldContent.Title,
+				Changes:     newChanges,
+			}
 		}
 	default:
-		panic(fmt.Errorf("'%T' is not a valid proposal content type", oldContent))
+		panic(fmt.Errorf("%T is not a valid proposal content type", oldContent))
 	}
+
+	// Convert the content into Any.
+	contentAny, err := codectypes.NewAnyWithValue(protoProposal)
+	if err != nil {
+		panic(err)
+	}
+
+	return contentAny
 }
 
 // Migrate accepts exported v0.36 x/gov genesis state and migrates it to
@@ -118,7 +163,7 @@ func Migrate(oldGovState v036gov.GenesisState) *v040gov.GenesisState {
 		newVotes[i] = v040gov.Vote{
 			ProposalId: oldVote.ProposalID,
 			Voter:      oldVote.Voter.String(),
-			Option:     migrateVoteOption(oldVote.Option),
+			Options:    v040gov.NewNonSplitVoteOption(migrateVoteOption(oldVote.Option)),
 		}
 	}
 

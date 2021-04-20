@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
@@ -41,7 +42,7 @@ const (
 )
 
 // Store is composed of many CommitStores. Name contrasts with
-// cacheMultiStore which is for cache-wrapping other MultiStores. It implements
+// cacheMultiStore which is used for branching other MultiStores. It implements
 // the CommitMultiStore interface.
 type Store struct {
 	db             dbm.DB
@@ -58,6 +59,8 @@ type Store struct {
 	traceContext types.TraceContext
 
 	interBlockCache types.MultiStorePersistentCache
+
+	listeners map[types.StoreKey][]types.WriteListener
 }
 
 var (
@@ -77,6 +80,7 @@ func NewStore(db dbm.DB) *Store {
 		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
 		pruneHeights: make([]int64, 0),
+		listeners:    make(map[types.StoreKey][]types.WriteListener),
 	}
 }
 
@@ -312,6 +316,23 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
+// AddListeners adds listeners for a specific KVStore
+func (rs *Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
+	if ls, ok := rs.listeners[key]; ok {
+		rs.listeners[key] = append(ls, listeners...)
+	} else {
+		rs.listeners[key] = listeners
+	}
+}
+
+// ListeningEnabled returns if listening is enabled for a specific KVStore
+func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
+	if ls, ok := rs.listeners[key]; ok {
+		return len(ls) != 0
+	}
+	return false
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
@@ -404,15 +425,19 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
-// CacheMultiStore cache-wraps the multi-store and returns a CacheMultiStore.
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (rs *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
+	return rs.CacheWrap()
+}
+
+// CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
-
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -442,7 +467,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		}
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -471,6 +496,9 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
+	}
+	if rs.ListeningEnabled(key) {
+		store = listenkv.NewStore(store, key, rs.listeners[key])
 	}
 
 	return store
@@ -549,9 +577,12 @@ func (rs *Store) SetInitialVersion(version int64) error {
 
 	// Loop through all the stores, if it's an IAVL store, then set initial
 	// version on it.
-	for _, commitKVStore := range rs.stores {
-		if storeWithVersion, ok := commitKVStore.(types.StoreWithInitialVersion); ok {
-			storeWithVersion.SetInitialVersion(version)
+	for key, store := range rs.stores {
+		if store.GetStoreType() == types.StoreTypeIAVL {
+			// If the store is wrapped with an inter-block cache, we must first unwrap
+			// it to get the underlying IAVL store.
+			store = rs.GetCommitKVStore(key)
+			store.(*iavl.Store).SetInitialVersion(version)
 		}
 	}
 
@@ -708,9 +739,9 @@ func (rs *Store) Restore(
 	if height == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrLogic, "cannot restore snapshot at height 0")
 	}
-	if height > math.MaxInt64 {
+	if height > uint64(math.MaxInt64) {
 		return sdkerrors.Wrapf(snapshottypes.ErrInvalidMetadata,
-			"snapshot height %v cannot exceed %v", height, math.MaxInt64)
+			"snapshot height %v cannot exceed %v", height, int64(math.MaxInt64))
 	}
 
 	// Signal readiness. Must be done before the readers below are set up, since the zlib
@@ -838,7 +869,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		if rs.interBlockCache != nil {
 			// Wrap and get a CommitKVStore with inter-block caching. Note, this should
 			// only wrap the primary CommitKVStore, not any store that is already
-			// cache-wrapped as that will create unexpected behavior.
+			// branched as that will create unexpected behavior.
 			store = rs.interBlockCache.GetStoreCache(key, store)
 		}
 

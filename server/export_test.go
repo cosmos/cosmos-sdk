@@ -22,6 +22,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -135,7 +136,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithJSONMarshaler(app.AppCodec())
-	genDoc := newDefaultGenesisDoc()
+	genDoc := newDefaultGenesisDoc(encCfg.Marshaler)
 
 	require.NoError(t, saveGenesisFile(genDoc, serverCtx.Config.GenesisFile()))
 	app.InitChain(
@@ -176,8 +177,8 @@ func createConfigFolder(dir string) error {
 	return os.Mkdir(path.Join(dir, "config"), 0700)
 }
 
-func newDefaultGenesisDoc() *tmtypes.GenesisDoc {
-	genesisState := simapp.NewDefaultGenesisState()
+func newDefaultGenesisDoc(cdc codec.Marshaler) *tmtypes.GenesisDoc {
+	genesisState := simapp.NewDefaultGenesisState(cdc)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	if err != nil {

@@ -11,10 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
-	commitmenttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
-	ibcexported "github.com/cosmos/cosmos-sdk/x/ibc/core/exported"
-	ibctmtypes "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tendermint/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -31,7 +28,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	homeDir := filepath.Join(s.T().TempDir(), "x_upgrade_keeper_test")
 	app.UpgradeKeeper = keeper.NewKeeper( // recreate keeper in order to use a custom home path
-		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir,
+		make(map[int64]bool), app.GetKey(types.StoreKey), app.AppCodec(), homeDir, app.BaseApp,
 	)
 	s.T().Log("home dir:", homeDir)
 	s.homeDir = homeDir
@@ -61,18 +58,6 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 }
 
 func (s *KeeperTestSuite) TestScheduleUpgrade() {
-	clientState := &ibctmtypes.ClientState{ChainId: "gaiachain"}
-	cs, err := clienttypes.PackClientState(clientState)
-	s.Require().NoError(err)
-
-	altClientState := &ibctmtypes.ClientState{ChainId: "ethermint"}
-	altCs, err := clienttypes.PackClientState(altClientState)
-	s.Require().NoError(err)
-
-	consState := ibctmtypes.NewConsensusState(time.Now(), commitmenttypes.NewMerkleRoot([]byte("app_hash")), []byte("next_vals_hash"))
-	consAny, err := clienttypes.PackConsensusState(consState)
-	s.Require().NoError(err)
-
 	cases := []struct {
 		name    string
 		plan    types.Plan
@@ -80,32 +65,11 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 		expPass bool
 	}{
 		{
-			name: "successful time schedule",
-			plan: types.Plan{
-				Name: "all-good",
-				Info: "some text here",
-				Time: s.ctx.BlockTime().Add(time.Hour),
-			},
-			setup:   func() {},
-			expPass: true,
-		},
-		{
 			name: "successful height schedule",
 			plan: types.Plan{
 				Name:   "all-good",
 				Info:   "some text here",
 				Height: 123450000,
-			},
-			setup:   func() {},
-			expPass: true,
-		},
-		{
-			name: "successful ibc schedule",
-			plan: types.Plan{
-				Name:                "all-good",
-				Info:                "some text here",
-				Height:              123450000,
-				UpgradedClientState: cs,
 			},
 			setup:   func() {},
 			expPass: true,
@@ -127,55 +91,9 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			expPass: true,
 		},
 		{
-			name: "successful IBC overwrite",
-			plan: types.Plan{
-				Name:                "all-good",
-				Info:                "some text here",
-				Height:              123450000,
-				UpgradedClientState: cs,
-			},
-			setup: func() {
-				s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
-					Name:                "alt-good",
-					Info:                "new text here",
-					Height:              543210000,
-					UpgradedClientState: altCs,
-				})
-			},
-			expPass: true,
-		},
-		{
-			name: "successful IBC overwrite with non IBC plan",
-			plan: types.Plan{
-				Name:   "all-good",
-				Info:   "some text here",
-				Height: 123450000,
-			},
-			setup: func() {
-				s.app.UpgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
-					Name:                "alt-good",
-					Info:                "new text here",
-					Height:              543210000,
-					UpgradedClientState: altCs,
-				})
-			},
-			expPass: true,
-		},
-
-		{
 			name: "unsuccessful schedule: invalid plan",
 			plan: types.Plan{
 				Height: 123450000,
-			},
-			setup:   func() {},
-			expPass: false,
-		},
-		{
-			name: "unsuccessful time schedule: due date in past",
-			plan: types.Plan{
-				Name: "all-good",
-				Info: "some text here",
-				Time: s.ctx.BlockTime(),
 			},
 			setup:   func() {},
 			expPass: false,
@@ -198,24 +116,15 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.app.UpgradeKeeper.SetUpgradeHandler("all-good", func(_ sdk.Context, _ types.Plan) {})
+				s.app.UpgradeKeeper.SetUpgradeHandler("all-good", func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+					return vm, nil
+				})
 				s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
 					Height: 123450000,
 				})
 			},
-			expPass: false,
-		},
-		{
-			name: "unsuccessful IBC schedule: UpgradedClientState is not valid client state",
-			plan: types.Plan{
-				Name:                "all-good",
-				Info:                "some text here",
-				Height:              123450000,
-				UpgradedClientState: consAny,
-			},
-			setup:   func() {},
 			expPass: false,
 		},
 	}
@@ -234,17 +143,6 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 
 			if tc.expPass {
 				s.Require().NoError(err, "valid test case failed")
-				if tc.plan.UpgradedClientState != nil {
-					got, height, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
-					s.Require().NoError(err)
-					s.Require().Equal(tc.plan.Height, height, "upgradedClient not stored at correct upgrade height")
-					s.Require().Equal(clientState, got, "upgradedClient not equal to expected value")
-				} else {
-					// check that upgraded client is empty if latest plan does not specify an upgraded client
-					got, _, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
-					s.Require().Error(err)
-					s.Require().Nil(got)
-				}
 			} else {
 				s.Require().Error(err, "invalid test case passed")
 			}
@@ -253,39 +151,25 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 }
 
 func (s *KeeperTestSuite) TestSetUpgradedClient() {
-	var (
-		clientState ibcexported.ClientState
-		height      int64
-	)
+	cs := []byte("IBC client state")
+
 	cases := []struct {
 		name   string
+		height int64
 		setup  func()
 		exists bool
 	}{
 		{
 			name:   "no upgraded client exists",
+			height: 10,
 			setup:  func() {},
 			exists: false,
 		},
 		{
-			name: "success",
+			name:   "success",
+			height: 10,
 			setup: func() {
-				clientState = &ibctmtypes.ClientState{ChainId: "gaiachain"}
-				height = 10
-
-				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, clientState)
-			},
-			exists: true,
-		},
-		{
-			name: "successful overwrite",
-			setup: func() {
-				clientState = &ibctmtypes.ClientState{ChainId: "gaiachain"}
-				altCs := &ibctmtypes.ClientState{ChainId: "ethermint"}
-				height = 10
-
-				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 50, altCs)
-				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, clientState)
+				s.app.UpgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
 			},
 			exists: true,
 		},
@@ -298,18 +182,54 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 		// setup test case
 		tc.setup()
 
-		gotCs, gotHeight, err := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx)
+		gotCs, exists := s.app.UpgradeKeeper.GetUpgradedClient(s.ctx, tc.height)
 		if tc.exists {
-			s.Require().Equal(clientState, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
-			s.Require().Equal(height, gotHeight, "valid case: %s did not retrieve correct upgrade height", tc.name)
-			s.Require().NoError(err, "valid case: %s returned error")
+			s.Require().Equal(cs, gotCs, "valid case: %s did not retrieve correct client state", tc.name)
+			s.Require().True(exists, "valid case: %s did not retrieve client state", tc.name)
 		} else {
 			s.Require().Nil(gotCs, "invalid case: %s retrieved valid client state", tc.name)
-			s.Require().Equal(int64(0), gotHeight, "invalid case: %s retrieved valid upgrade height", tc.name)
-			s.Require().Error(err, "invalid case: %s did not return error", tc.name)
+			s.Require().False(exists, "invalid case: %s retrieved valid client state", tc.name)
 		}
 	}
 
+}
+
+// Test that the protocol version successfully increments after an
+// upgrade and is successfully set on BaseApp's appVersion.
+func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
+	oldProtocolVersion := s.app.BaseApp.AppVersion()
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
+	dummyPlan := types.Plan{
+		Name:   "dummy",
+		Info:   "some text here",
+		Height: 100,
+	}
+	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	upgradedProtocolVersion := s.app.BaseApp.AppVersion()
+
+	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
+}
+
+// Tests that the underlying state of x/upgrade is set correctly after
+// an upgrade.
+func (s *KeeperTestSuite) TestMigrations() {
+	initialVM := module.VersionMap{"bank": uint64(1)}
+	s.app.UpgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
+	vmBefore := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
+	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		// simulate upgrading the bank module
+		vm["bank"] = vm["bank"] + 1
+		return vm, nil
+	})
+	dummyPlan := types.Plan{
+		Name:   "dummy",
+		Info:   "some text here",
+		Height: 123450000,
+	}
+
+	s.app.UpgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
+	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
 }
 
 func TestKeeperTestSuite(t *testing.T) {

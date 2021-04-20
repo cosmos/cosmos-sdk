@@ -85,6 +85,13 @@ type buildDep struct {
 	*debug.Module
 }
 
-func (d buildDep) String() string                    { return fmt.Sprintf("%s@%s", d.Path, d.Version) }
+func (d buildDep) String() string {
+	if d.Replace != nil {
+		return fmt.Sprintf("%s@%s => %s@%s", d.Path, d.Version, d.Replace.Path, d.Replace.Version)
+	}
+
+	return fmt.Sprintf("%s@%s", d.Path, d.Version)
+}
+
 func (d buildDep) MarshalJSON() ([]byte, error)      { return json.Marshal(d.String()) }
 func (d buildDep) MarshalYAML() (interface{}, error) { return d.String(), nil }

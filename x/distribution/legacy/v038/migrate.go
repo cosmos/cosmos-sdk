@@ -1,7 +1,6 @@
 package v038
 
 // DONTCOVER
-// nolint
 
 import (
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"

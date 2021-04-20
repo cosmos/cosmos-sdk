@@ -29,19 +29,15 @@ type Factory struct {
 	simulateAndExecute bool
 }
 
-const (
-	signModeDirect    = "direct"
-	signModeAminoJSON = "amino-json"
-)
-
+// NewFactoryCLI creates a new Factory.
 func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
-	signModeStr, _ := flagSet.GetString(flags.FlagSignMode)
+	signModeStr := clientCtx.SignModeStr
 
 	signMode := signing.SignMode_SIGN_MODE_UNSPECIFIED
 	switch signModeStr {
-	case signModeDirect:
+	case flags.SignModeDirect:
 		signMode = signing.SignMode_SIGN_MODE_DIRECT
-	case signModeAminoJSON:
+	case flags.SignModeLegacyAminoJSON:
 		signMode = signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
 
@@ -120,7 +116,7 @@ func (f Factory) WithGas(gas uint64) Factory {
 
 // WithFees returns a copy of the Factory with an updated fee.
 func (f Factory) WithFees(fees string) Factory {
-	parsedFees, err := sdk.ParseCoins(fees)
+	parsedFees, err := sdk.ParseCoinsNormalized(fees)
 	if err != nil {
 		panic(err)
 	}

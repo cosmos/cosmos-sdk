@@ -38,11 +38,14 @@ type (
 
 		// RegisterGRPCServer registers gRPC services directly with the gRPC
 		// server.
-		RegisterGRPCServer(grpc.Server)
+		RegisterGRPCServer(client.Context, grpc.Server)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
 		RegisterTxService(clientCtx client.Context)
+
+		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
+		RegisterTendermintService(clientCtx client.Context)
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

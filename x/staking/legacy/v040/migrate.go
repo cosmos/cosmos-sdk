@@ -6,19 +6,18 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
-	v040staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func migrateBondStatus(oldStatus v034staking.BondStatus) v040staking.BondStatus {
+func migrateBondStatus(oldStatus v034staking.BondStatus) BondStatus {
 	switch oldStatus {
 	case v034staking.Unbonded:
-		return v040staking.Unbonded
+		return Unbonded
 
 	case v034staking.Unbonding:
-		return v040staking.Unbonding
+		return Unbonding
 
 	case v034staking.Bonded:
-		return v040staking.Bonded
+		return Bonded
 
 	default:
 		panic(fmt.Errorf("invalid bond status %d", oldStatus))
@@ -31,29 +30,29 @@ func migrateBondStatus(oldStatus v034staking.BondStatus) v040staking.BondStatus 
 // - Convert addresses from bytes to bech32 strings.
 // - Update BondStatus staking constants.
 // - Re-encode in v0.40 GenesisState.
-func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
-	newLastValidatorPowers := make([]v040staking.LastValidatorPower, len(stakingState.LastValidatorPowers))
+func Migrate(stakingState v038staking.GenesisState) *GenesisState {
+	newLastValidatorPowers := make([]LastValidatorPower, len(stakingState.LastValidatorPowers))
 	for i, oldLastValidatorPower := range stakingState.LastValidatorPowers {
-		newLastValidatorPowers[i] = v040staking.LastValidatorPower{
+		newLastValidatorPowers[i] = LastValidatorPower{
 			Address: oldLastValidatorPower.Address.String(),
 			Power:   oldLastValidatorPower.Power,
 		}
 	}
 
-	newValidators := make([]v040staking.Validator, len(stakingState.Validators))
+	newValidators := make([]Validator, len(stakingState.Validators))
 	for i, oldValidator := range stakingState.Validators {
-		pkAny, err := codectypes.PackAny(oldValidator.ConsPubKey)
+		pkAny, err := codectypes.NewAnyWithValue(oldValidator.ConsPubKey)
 		if err != nil {
 			panic(fmt.Sprintf("Can't pack validator consensus PK as Any: %s", err))
 		}
-		newValidators[i] = v040staking.Validator{
+		newValidators[i] = Validator{
 			OperatorAddress: oldValidator.OperatorAddress.String(),
 			ConsensusPubkey: pkAny,
 			Jailed:          oldValidator.Jailed,
 			Status:          migrateBondStatus(oldValidator.Status),
 			Tokens:          oldValidator.Tokens,
 			DelegatorShares: oldValidator.DelegatorShares,
-			Description: v040staking.Description{
+			Description: Description{
 				Moniker:         oldValidator.Description.Moniker,
 				Identity:        oldValidator.Description.Identity,
 				Website:         oldValidator.Description.Website,
@@ -62,8 +61,8 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 			},
 			UnbondingHeight: oldValidator.UnbondingHeight,
 			UnbondingTime:   oldValidator.UnbondingCompletionTime,
-			Commission: v040staking.Commission{
-				CommissionRates: v040staking.CommissionRates{
+			Commission: Commission{
+				CommissionRates: CommissionRates{
 					Rate:          oldValidator.Commission.Rate,
 					MaxRate:       oldValidator.Commission.MaxRate,
 					MaxChangeRate: oldValidator.Commission.MaxChangeRate,
@@ -74,20 +73,20 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 		}
 	}
 
-	newDelegations := make([]v040staking.Delegation, len(stakingState.Delegations))
+	newDelegations := make([]Delegation, len(stakingState.Delegations))
 	for i, oldDelegation := range stakingState.Delegations {
-		newDelegations[i] = v040staking.Delegation{
+		newDelegations[i] = Delegation{
 			DelegatorAddress: oldDelegation.DelegatorAddress.String(),
 			ValidatorAddress: oldDelegation.ValidatorAddress.String(),
 			Shares:           oldDelegation.Shares,
 		}
 	}
 
-	newUnbondingDelegations := make([]v040staking.UnbondingDelegation, len(stakingState.UnbondingDelegations))
+	newUnbondingDelegations := make([]UnbondingDelegation, len(stakingState.UnbondingDelegations))
 	for i, oldUnbondingDelegation := range stakingState.UnbondingDelegations {
-		newEntries := make([]v040staking.UnbondingDelegationEntry, len(oldUnbondingDelegation.Entries))
+		newEntries := make([]UnbondingDelegationEntry, len(oldUnbondingDelegation.Entries))
 		for j, oldEntry := range oldUnbondingDelegation.Entries {
-			newEntries[j] = v040staking.UnbondingDelegationEntry{
+			newEntries[j] = UnbondingDelegationEntry{
 				CreationHeight: oldEntry.CreationHeight,
 				CompletionTime: oldEntry.CompletionTime,
 				InitialBalance: oldEntry.InitialBalance,
@@ -95,18 +94,18 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 			}
 		}
 
-		newUnbondingDelegations[i] = v040staking.UnbondingDelegation{
+		newUnbondingDelegations[i] = UnbondingDelegation{
 			DelegatorAddress: oldUnbondingDelegation.DelegatorAddress.String(),
 			ValidatorAddress: oldUnbondingDelegation.ValidatorAddress.String(),
 			Entries:          newEntries,
 		}
 	}
 
-	newRedelegations := make([]v040staking.Redelegation, len(stakingState.Redelegations))
+	newRedelegations := make([]Redelegation, len(stakingState.Redelegations))
 	for i, oldRedelegation := range stakingState.Redelegations {
-		newEntries := make([]v040staking.RedelegationEntry, len(oldRedelegation.Entries))
+		newEntries := make([]RedelegationEntry, len(oldRedelegation.Entries))
 		for j, oldEntry := range oldRedelegation.Entries {
-			newEntries[j] = v040staking.RedelegationEntry{
+			newEntries[j] = RedelegationEntry{
 				CreationHeight: oldEntry.CreationHeight,
 				CompletionTime: oldEntry.CompletionTime,
 				InitialBalance: oldEntry.InitialBalance,
@@ -114,7 +113,7 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 			}
 		}
 
-		newRedelegations[i] = v040staking.Redelegation{
+		newRedelegations[i] = Redelegation{
 			DelegatorAddress:    oldRedelegation.DelegatorAddress.String(),
 			ValidatorSrcAddress: oldRedelegation.ValidatorSrcAddress.String(),
 			ValidatorDstAddress: oldRedelegation.ValidatorDstAddress.String(),
@@ -122,8 +121,8 @@ func Migrate(stakingState v038staking.GenesisState) *v040staking.GenesisState {
 		}
 	}
 
-	return &v040staking.GenesisState{
-		Params: v040staking.Params{
+	return &GenesisState{
+		Params: Params{
 			UnbondingTime:     stakingState.Params.UnbondingTime,
 			MaxValidators:     uint32(stakingState.Params.MaxValidators),
 			MaxEntries:        uint32(stakingState.Params.MaxEntries),

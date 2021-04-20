@@ -3,10 +3,15 @@ parent:
   order: false
 ---
 
-# 코스모스 SDK 문서에 오신 걸 환영합니다! 
+# 코스모스 SDK 문서에 오신 걸 환영합니다!
 
 ::: warning
-번역된 문서는 **참고용**으로 번역되었습니다. 다수의 오타, 오류가 존재할 수 있으며, 영문 업데이트보다 번역이 느리게 진행될 수 있다는 점을 인지하시기 바랍니다. 
+**DEPRECATED**
+This documentation is not complete and it's outdated. Please use the English version.
+:::
+
+::: warning
+번역된 문서는 **참고용**으로 번역되었습니다. 다수의 오타, 오류가 존재할 수 있으며, 영문 업데이트보다 번역이 느리게 진행될 수 있다는 점을 인지하시기 바랍니다.
 
 코스모스 관련 가장 정확한 정보를 확인하시기 위해서는 영어 원문을 참고하시기 바랍니다.
 :::

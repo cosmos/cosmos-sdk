@@ -10,22 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Cache the amino decoding of validators, as it can be the case that repeated slashing calls
-// cause many calls to GetValidator, which were shown to throttle the state machine in our
-// simulation. Note this is quite biased though, as the simulator does more slashes than a
-// live chain should, however we require the slashing to be fast as noone pays gas for it.
-type cachedValidator struct {
-	val        types.Validator
-	marshalled string // marshalled amino bytes for the validator object (not operator address)
-}
-
-func newCachedValidator(val types.Validator, marshalled string) cachedValidator {
-	return cachedValidator{
-		val:        val,
-		marshalled: marshalled,
-	}
-}
-
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -35,30 +19,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 		return validator, false
 	}
 
-	// If these amino encoded bytes are in the cache, return the cached validator
-	strValue := string(value)
-	if val, ok := k.validatorCache[strValue]; ok {
-		valToReturn := val.val
-		// Doesn't mutate the cache's value
-		valToReturn.OperatorAddress = addr.String()
-
-		return valToReturn, true
-	}
-
-	// amino bytes weren't found in cache, so amino unmarshal and add it to the cache
 	validator = types.MustUnmarshalValidator(k.cdc, value)
-	cachedVal := newCachedValidator(validator, strValue)
-	k.validatorCache[strValue] = newCachedValidator(validator, strValue)
-	k.validatorCacheList.PushBack(cachedVal)
-
-	// if the cache is too big, pop off the last element from it
-	if k.validatorCacheList.Len() > aminoCacheSize {
-		valToRemove := k.validatorCacheList.Remove(k.validatorCacheList.Front()).(cachedValidator)
-		delete(k.validatorCache, valToRemove.marshalled)
-	}
-
-	validator = types.MustUnmarshalValidator(k.cdc, value)
-
 	return validator, true
 }
 
@@ -118,19 +79,19 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetValidatorsByPowerIndexKey(validator), validator.GetOperator())
+	store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
 // validator index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetValidatorsByPowerIndexKey(validator))
+	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 }
 
 // validator index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetValidatorsByPowerIndexKey(validator), validator.GetOperator())
+	store.Set(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)), validator.GetOperator())
 }
 
 // Update the tokens of an existing validator, update the validators power index key
@@ -210,7 +171,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetValidatorKey(address))
 	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
-	store.Delete(types.GetValidatorsByPowerIndexKey(validator))
+	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
 	// call hooks
 	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
@@ -279,7 +240,6 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 	return sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 }
 
-//_______________________________________________________________________
 // Last Validator Index
 
 // Load the last validator power.
@@ -327,7 +287,7 @@ func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operato
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(iter.Key()[len(types.LastValidatorPowerKey):])
+		addr := sdk.ValAddress(types.AddressFromLastValidatorPowerKey(iter.Key()))
 		intV := &gogotypes.Int64Value{}
 
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), intV)

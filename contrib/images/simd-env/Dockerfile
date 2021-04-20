@@ -12,7 +12,7 @@ VOLUME [ /simd ]
 WORKDIR /simd
 EXPOSE 26656 26657
 ENTRYPOINT ["/usr/bin/wrapper.sh"]
-CMD ["start"]
+CMD ["start", "--log_format", "plain"]
 STOPSIGNAL SIGTERM
 
 COPY wrapper.sh /usr/bin/wrapper.sh

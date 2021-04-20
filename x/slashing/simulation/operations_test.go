@@ -77,7 +77,7 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	app.StakingKeeper.Jail(ctx, val0ConsAddress)
 
 	// setup self delegation
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	val0AccAddress, err := sdk.ValAddressFromBech32(validator0.OperatorAddress)
 	require.NoError(t, err)
@@ -116,15 +116,14 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.Context, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		err := app.BankKeeper.SetBalances(ctx, account.Address, initCoins)
-		require.NoError(t, err)
+		require.NoError(t, simapp.FundAccount(app, ctx, account.Address, initCoins))
 	}
 
 	return accounts

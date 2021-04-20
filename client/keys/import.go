@@ -19,7 +19,10 @@ func ImportKeyCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			buf := bufio.NewReader(cmd.InOrStdin())
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 
 			bz, err := ioutil.ReadFile(args[1])
 			if err != nil {

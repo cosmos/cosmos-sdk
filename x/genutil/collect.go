@@ -134,9 +134,6 @@ func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, g
 
 		// genesis transactions must be single-message
 		msgs := genTx.GetMsgs()
-		if len(msgs) != 1 {
-			return appGenTxs, persistentPeers, errors.New("each genesis transaction must provide a single genesis message")
-		}
 
 		// TODO abstract out staking message validation back to staking
 		msg := msgs[0].(*stakingtypes.MsgCreateValidator)

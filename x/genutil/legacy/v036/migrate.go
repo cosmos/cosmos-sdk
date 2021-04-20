@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
 	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
+	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
 	v036staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v036"
 )
@@ -28,6 +29,7 @@ func Migrate(appState types.AppMap, _ client.Context) types.AppMap {
 	cryptocodec.RegisterCrypto(v036Codec)
 	v036gov.RegisterLegacyAminoCodec(v036Codec)
 	v036distr.RegisterLegacyAminoCodec(v036Codec)
+	v036params.RegisterLegacyAminoCodec(v036Codec)
 
 	// migrate genesis accounts state
 	if appState[v034genAccounts.ModuleName] != nil {

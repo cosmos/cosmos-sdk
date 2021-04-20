@@ -2,6 +2,7 @@ package utils_test
 
 import (
 	"context"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,15 +11,14 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type TxSearchMock struct {
+	txConfig client.TxConfig
 	mock.Client
 	txs []tmtypes.Tx
 }
@@ -32,12 +32,35 @@ func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool,
 		*perPage = 0
 	}
 
+	// Get the `message.action` value from the query.
+	messageAction := regexp.MustCompile(`message\.action='(.*)' .*$`)
+	msgType := messageAction.FindStringSubmatch(query)[1]
+
+	// Filter only the txs that match the query
+	matchingTxs := make([]tmtypes.Tx, 0)
+	for _, tx := range mock.txs {
+		sdkTx, err := mock.txConfig.TxDecoder()(tx)
+		if err != nil {
+			return nil, err
+		}
+		for _, msg := range sdkTx.GetMsgs() {
+			if msg.Type() == msgType {
+				matchingTxs = append(matchingTxs, tx)
+				break
+			}
+		}
+	}
+
 	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
 	if start < 0 || end < 0 {
 		// nil result with nil error crashes utils.QueryTxsByEvents
 		return &ctypes.ResultTxSearch{}, nil
 	}
-	txs := mock.txs[start:end]
+	if len(matchingTxs) < end {
+		return &ctypes.ResultTxSearch{}, nil
+	}
+
+	txs := matchingTxs[start:end]
 	rst := &ctypes.ResultTxSearch{Txs: make([]*ctypes.ResultTx, len(txs)), TotalCount: len(txs)}
 	for i := range txs {
 		rst.Txs[i] = &ctypes.ResultTx{Tx: txs[i]}
@@ -50,15 +73,9 @@ func (mock TxSearchMock) Block(ctx context.Context, height *int64) (*ctypes.Resu
 	return &ctypes.ResultBlock{Block: &tmtypes.Block{}}, nil
 }
 
-func newTestCodec() *codec.LegacyAmino {
-	cdc := codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
-	types.RegisterLegacyAminoCodec(cdc)
-	authtypes.RegisterLegacyAminoCodec(cdc)
-	return cdc
-}
-
 func TestGetPaginatedVotes(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+
 	type testCase struct {
 		description string
 		page, limit int
@@ -75,7 +92,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 	}
 	acc2Msgs := []sdk.Msg{
 		types.NewMsgVote(acc2, 0, types.OptionYes),
-		types.NewMsgVote(acc2, 0, types.OptionYes),
+		types.NewMsgVoteWeighted(acc2, 0, types.NewNonSplitVoteOption(types.OptionYes)),
 	}
 	for _, tc := range []testCase{
 		{
@@ -87,8 +104,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs[:1],
 			},
 			votes: []types.Vote{
-				types.NewVote(0, acc1, types.OptionYes),
-				types.NewVote(0, acc2, types.OptionYes)},
+				types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes)),
+				types.NewVote(0, acc2, types.NewNonSplitVoteOption(types.OptionYes))},
 		},
 		{
 			description: "2MsgPerTx1Chunk",
@@ -99,8 +116,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []types.Vote{
-				types.NewVote(0, acc1, types.OptionYes),
-				types.NewVote(0, acc1, types.OptionYes)},
+				types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes)),
+				types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes)),
+			},
 		},
 		{
 			description: "2MsgPerTx2Chunk",
@@ -111,8 +129,9 @@ func TestGetPaginatedVotes(t *testing.T) {
 				acc2Msgs,
 			},
 			votes: []types.Vote{
-				types.NewVote(0, acc2, types.OptionYes),
-				types.NewVote(0, acc2, types.OptionYes)},
+				types.NewVote(0, acc2, types.NewNonSplitVoteOption(types.OptionYes)),
+				types.NewVote(0, acc2, types.NewNonSplitVoteOption(types.OptionYes)),
+			},
 		},
 		{
 			description: "IncompleteSearchTx",
@@ -121,7 +140,7 @@ func TestGetPaginatedVotes(t *testing.T) {
 			msgs: [][]sdk.Msg{
 				acc1Msgs[:1],
 			},
-			votes: []types.Vote{types.NewVote(0, acc1, types.OptionYes)},
+			votes: []types.Vote{types.NewVote(0, acc1, types.NewNonSplitVoteOption(types.OptionYes))},
 		},
 		{
 			description: "InvalidPage",
@@ -142,17 +161,12 @@ func TestGetPaginatedVotes(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.description, func(t *testing.T) {
-			var (
-				marshalled = make([]tmtypes.Tx, len(tc.msgs))
-				cdc        = newTestCodec()
-			)
-
-			encodingConfig := simapp.MakeTestEncodingConfig()
-			cli := TxSearchMock{txs: marshalled}
+			var marshalled = make([]tmtypes.Tx, len(tc.msgs))
+			cli := TxSearchMock{txs: marshalled, txConfig: encCfg.TxConfig}
 			clientCtx := client.Context{}.
-				WithLegacyAmino(cdc).
+				WithLegacyAmino(encCfg.Amino).
 				WithClient(cli).
-				WithTxConfig(encodingConfig.TxConfig)
+				WithTxConfig(encCfg.TxConfig)
 
 			for i := range tc.msgs {
 				txBuilder := clientCtx.TxConfig.NewTxBuilder()

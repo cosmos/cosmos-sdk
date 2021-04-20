@@ -48,7 +48,7 @@ aside: false
 ## Get Started
 
 - **[SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
-- **[Quick Start Guide](./using-the-sdk/quick-start.md)**: Scaffold a standard Cosmos SDK app and run a node. 
+- **[Quick Start Guide](./using-the-sdk/quick-start.md)**: Scaffold a standard Cosmos SDK app and run a node.
 - **[SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial that showcases how to build an SDK-based blockchain from scratch and explains the basic principles of the SDK in the process.
 
 ## Reference
@@ -56,7 +56,9 @@ aside: false
 - **[Basics](./basics/)**: Documentation on the basic concepts of the Cosmos SDK, like the standard anatomy of an application, the transaction lifecycle and accounts management.
 - **[Core](./core/)**: Documentation on the core concepts of the Cosmos SDK, like `baseapp`, the `store` or the `server`.
 - **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`s, `keeper`s, `handler`s and `querier`s.
-- **[Interfaces](./interfaces/)**: Documentation on building interfaces for Cosmos SDK applications.
+- **[IBC](./ibc/)**: Documentation for the IBC protocol integration and concepts.
+- **[Running a Node, API, CLI](./run-node/)**: Documentation on how to run a node, and how to interact with it using the CLI and the API.
+- **[Migrations](./migrations/)**: Migration guides for updating to Stargate.
 
 ## Other Resources
 

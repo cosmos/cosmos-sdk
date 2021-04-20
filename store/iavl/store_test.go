@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -556,6 +558,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 }
 
 func BenchmarkIAVLIteratorNext(b *testing.B) {
+	b.ReportAllocs()
 	db := dbm.NewMemDB()
 	treeSize := 1000
 	tree, err := iavl.NewMutableTree(db, cacheSize)
@@ -632,4 +635,19 @@ func TestSetInitialVersion(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCacheWraps(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, _ := newAlohaTree(t, db)
+	store := UnsafeNewStore(tree)
+
+	cacheWrapper := store.CacheWrap()
+	require.IsType(t, &cachekv.Store{}, cacheWrapper)
+
+	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
+	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
+
+	cacheWrappedWithListeners := store.CacheWrapWithListeners(nil, nil)
+	require.IsType(t, &cachekv.Store{}, cacheWrappedWithListeners)
 }

@@ -1,52 +1,158 @@
-package types_test
+package types
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestMarshalJSONMetaData(t *testing.T) {
-	cdc := codec.NewLegacyAmino()
+func TestGenesisStateValidate(t *testing.T) {
 
 	testCases := []struct {
-		name      string
-		input     []types.Metadata
-		strOutput string
+		name         string
+		genesisState GenesisState
+		expErr       bool
 	}{
-		{"nil metadata", nil, `null`},
-		{"empty metadata", []types.Metadata{}, `[]`},
-		{"non-empty coins", []types.Metadata{{
-			Description: "The native staking token of the Cosmos Hub.",
-			DenomUnits: []*types.DenomUnit{
-				{"uatom", uint32(0), []string{"microatom"}}, // The default exponent value 0 is omitted in the json
-				{"matom", uint32(3), []string{"milliatom"}},
-				{"atom", uint32(6), nil},
+		{
+			"valid genesisState",
+			GenesisState{
+				Params: DefaultParams(),
+				Balances: []Balance{
+					{
+						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
+						Coins:   sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
+					},
+				},
+				Supply: sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
+				DenomMetadata: []Metadata{
+					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
+						Description: "The native staking token of the Cosmos Hub.",
+						DenomUnits: []*DenomUnit{
+							{"uatom", uint32(0), []string{"microatom"}},
+							{"matom", uint32(3), []string{"milliatom"}},
+							{"atom", uint32(6), nil},
+						},
+						Base:    "uatom",
+						Display: "atom",
+					},
+				},
 			},
-			Base:    "uatom",
-			Display: "atom",
+			false,
 		},
+		{"empty genesisState", GenesisState{}, false},
+		{
+			"invalid params ",
+			GenesisState{
+				Params: Params{
+					SendEnabled: []*SendEnabled{
+						{"", true},
+					},
+				},
+			},
+			true,
 		},
-			`[{"description":"The native staking token of the Cosmos Hub.","denom_units":[{"denom":"uatom","aliases":["microatom"]},{"denom":"matom","exponent":3,"aliases":["milliatom"]},{"denom":"atom","exponent":6}],"base":"uatom","display":"atom"}]`},
+		{
+			"dup balances",
+			GenesisState{
+				Balances: []Balance{
+					{
+						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
+						Coins:   sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
+					},
+					{
+						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
+						Coins:   sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
+					},
+				},
+			},
+			true,
+		},
+		{
+			"0  balance",
+			GenesisState{
+				Balances: []Balance{
+					{
+						Address: "cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t",
+					},
+				},
+			},
+			false,
+		},
+		{
+			"dup Metadata",
+			GenesisState{
+				DenomMetadata: []Metadata{
+					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
+						Description: "The native staking token of the Cosmos Hub.",
+						DenomUnits: []*DenomUnit{
+							{"uatom", uint32(0), []string{"microatom"}},
+							{"matom", uint32(3), []string{"milliatom"}},
+							{"atom", uint32(6), nil},
+						},
+						Base:    "uatom",
+						Display: "atom",
+					},
+					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
+						Description: "The native staking token of the Cosmos Hub.",
+						DenomUnits: []*DenomUnit{
+							{"uatom", uint32(0), []string{"microatom"}},
+							{"matom", uint32(3), []string{"milliatom"}},
+							{"atom", uint32(6), nil},
+						},
+						Base:    "uatom",
+						Display: "atom",
+					},
+				},
+			},
+			true,
+		},
+		{
+			"invalid Metadata",
+			GenesisState{
+				DenomMetadata: []Metadata{
+					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
+						Description: "The native staking token of the Cosmos Hub.",
+						DenomUnits: []*DenomUnit{
+							{"uatom", uint32(0), []string{"microatom"}},
+							{"matom", uint32(3), []string{"milliatom"}},
+							{"atom", uint32(6), nil},
+						},
+						Base:    "",
+						Display: "",
+					},
+				},
+			},
+			true,
+		},
+		{
+			"invalid supply",
+			GenesisState{
+				Supply: sdk.Coins{sdk.Coin{Denom: "", Amount: sdk.OneInt()}},
+			},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			bz, err := cdc.MarshalJSON(tc.input)
-			require.NoError(t, err)
-			require.Equal(t, tc.strOutput, string(bz))
 
-			var newMetadata []types.Metadata
-			require.NoError(t, cdc.UnmarshalJSON(bz, &newMetadata))
+			err := tc.genesisState.Validate()
 
-			if len(tc.input) == 0 {
-				require.Nil(t, newMetadata)
+			if tc.expErr {
+				require.Error(t, err)
 			} else {
-				require.Equal(t, tc.input, newMetadata)
+				require.NoError(t, err)
 			}
 		})
 	}

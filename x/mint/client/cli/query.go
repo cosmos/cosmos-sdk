@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -38,22 +37,20 @@ func GetCmdQueryParams() *cobra.Command {
 		Short: "Query the current minting parameters",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryParamsRequest{}
-			res, err := queryClient.Params(context.Background(), params)
+			res, err := queryClient.Params(cmd.Context(), params)
 
 			if err != nil {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Params)
+			return clientCtx.PrintProto(&res.Params)
 		},
 	}
 
@@ -70,16 +67,14 @@ func GetCmdQueryInflation() *cobra.Command {
 		Short: "Query the current minting inflation value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryInflationRequest{}
-			res, err := queryClient.Inflation(context.Background(), params)
+			res, err := queryClient.Inflation(cmd.Context(), params)
 
 			if err != nil {
 				return err
@@ -102,16 +97,14 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 		Short: "Query the current minting annual provisions value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryAnnualProvisionsRequest{}
-			res, err := queryClient.AnnualProvisions(context.Background(), params)
+			res, err := queryClient.AnnualProvisions(cmd.Context(), params)
 
 			if err != nil {
 				return err

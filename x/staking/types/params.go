@@ -26,10 +26,10 @@ const (
 	// Default maximum entries in a UBD/RED pair
 	DefaultMaxEntries uint32 = 7
 
-	// DefaultHistorical entries is 100. Apps that don't use IBC can ignore this
+	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
-	DefaultHistoricalEntries uint32 = 100
+	DefaultHistoricalEntries uint32 = 10000
 )
 
 var (
@@ -38,6 +38,7 @@ var (
 	KeyMaxEntries        = []byte("MaxEntries")
 	KeyBondDenom         = []byte("BondDenom")
 	KeyHistoricalEntries = []byte("HistoricalEntries")
+	KeyPowerReduction    = []byte("PowerReduction")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -48,13 +49,14 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, powerReduction sdk.Int) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
 		MaxEntries:        maxEntries,
 		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
+		PowerReduction:    powerReduction,
 	}
 }
 
@@ -66,6 +68,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
+		paramtypes.NewParamSetPair(KeyPowerReduction, &p.PowerReduction, ValidatePowerReduction),
 	}
 }
 
@@ -77,6 +80,7 @@ func DefaultParams() Params {
 		DefaultMaxEntries,
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
+		sdk.DefaultPowerReduction,
 	)
 }
 
@@ -187,6 +191,19 @@ func validateBondDenom(i interface{}) error {
 
 	if err := sdk.ValidateDenom(v); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func ValidatePowerReduction(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.LT(sdk.NewInt(1)) {
+		return fmt.Errorf("power reduction cannot be lower than 1")
 	}
 
 	return nil

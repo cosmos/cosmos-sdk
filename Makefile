@@ -3,6 +3,7 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --always) | sed 's/^v//')
+TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -10,7 +11,8 @@ BUILDDIR ?= $(CURDIR)/build
 SIMAPP = ./simapp
 MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
-DOCKER_BUF := docker run -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+DOCKER := $(shell which docker)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 
 export GO111MODULE = on
 
@@ -43,8 +45,6 @@ endif
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
-build_tags += $(BUILD_TAGS)
-build_tags := $(strip $(build_tags))
 
 whitespace :=
 whitespace += $(whitespace)
@@ -57,7 +57,8 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=simd \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
+		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
+			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -65,6 +66,7 @@ ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
 endif
 ifeq (badgerdb,$(findstring badgerdb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=badgerdb
+  BUILD_TAGS += badgerdb
 endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
@@ -83,6 +85,9 @@ ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
+
+build_tags += $(BUILD_TAGS)
+build_tags := $(strip $(build_tags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 # check for nostrip option
@@ -112,26 +117,26 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-simd-all: go.sum
-	docker rm latest-build || true
-	docker run --volume=$(CURDIR):/sources:ro \
+	$(DOCKER) rm latest-build || true
+	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
         --name latest-build cosmossdk/rbuilder:latest
-	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-simd-linux: go.sum $(BUILDDIR)/
-	docker rm latest-build || true
-	docker run --volume=$(CURDIR):/sources:ro \
+	$(DOCKER) rm latest-build || true
+	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
         --env TARGET_PLATFORMS='linux/amd64' \
         --env APP=simd \
         --env VERSION=$(VERSION) \
         --env COMMIT=$(COMMIT) \
         --env LEDGER_ENABLED=false \
         --name latest-build cosmossdk/rbuilder:latest
-	docker cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 	cp artifacts/simd-*-linux-amd64 $(BUILDDIR)/simd
 
 cosmovisor:
@@ -175,6 +180,16 @@ go.sum: go.mod
 ###                              Documentation                              ###
 ###############################################################################
 
+update-swagger-docs: statik
+	$(BINDIR)/statik -src=client/docs/swagger-ui -dest=client/docs -f -m
+	@if [ -n "$(git status --porcelain)" ]; then \
+        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
+        exit 1;\
+    else \
+        echo "\033[92mSwagger docs are in sync\033[0m";\
+    fi
+.PHONY: update-swagger-docs
+
 godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
@@ -190,14 +205,7 @@ build-docs:
 		cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
 		cp ~/output/$${path_prefix}/index.html ~/output ; \
 	done < versions ;
-
-sync-docs:
-	cd ~/output && \
-	echo "role_arn = ${DEPLOYMENT_ROLE_ARN}" >> /root/.aws/config ; \
-	echo "CI job = ${CIRCLE_BUILD_URL}" >> version.html ; \
-	aws s3 sync . s3://${WEBSITE_BUCKET} --profile terraform --delete ; \
-	aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --profile terraform --path "/*" ;
-.PHONY: sync-docs
+.PHONY: build-docs
 
 ###############################################################################
 ###                           Tests & Simulation                            ###
@@ -305,6 +313,11 @@ test-cover:
 	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
 .PHONY: test-cover
 
+test-rosetta:
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
+.PHONY: test-rosetta
+
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
@@ -333,12 +346,12 @@ format:
 DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
 
 devdoc-init:
-	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
+	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
 	# TODO make this safer
 	$(call DEVDOC_SAVE)
 
 devdoc:
-	docker run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
+	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
 
 devdoc-save:
 	# TODO make this safer
@@ -356,41 +369,42 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-proto-all: proto-format proto-lint proto-check-breaking proto-gen
+proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	docker run -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.1 sh ./scripts/protocgen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	docker run -v $(CURDIR):/workspace \
+	$(DOCKER) run --rm -v $(CURDIR):/workspace \
 	--workdir /workspace tendermintdev/docker-build-proto \
 	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
-	docker run -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen-any.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen-any.sh
 
 proto-swagger-gen:
-	@./scripts/protoc-swagger-gen.sh
+	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protoc-swagger-gen.sh
 
 proto-lint:
-	@$(DOCKER_BUF) check lint --error-format=json
+	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
-	@$(DOCKER_BUF) check breaking --against-input $(HTTPS_GIT)#branch=master
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=master
 
-TM_URL           = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
-GOGO_PROTO_URL   = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-COSMOS_PROTO_URL = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
-CONFIO_URL 		 = https://raw.githubusercontent.com/confio/ics23/v0.6.3
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.0-rc6/proto/tendermint
+GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+COSMOS_PROTO_URL    = https://raw.githubusercontent.com/regen-network/cosmos-proto/master
+CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.6.3
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       = third_party/proto/tendermint/abci
-TM_TYPES     			  = third_party/proto/tendermint/types
-TM_VERSION 					= third_party/proto/tendermint/version
-TM_LIBS							= third_party/proto/tendermint/libs/bits
+TM_TYPES            = third_party/proto/tendermint/types
+TM_VERSION          = third_party/proto/tendermint/version
+TM_LIBS             = third_party/proto/tendermint/libs/bits
+TM_P2P              = third_party/proto/tendermint/p2p
 
 GOGO_PROTO_TYPES    = third_party/proto/gogoproto
 COSMOS_PROTO_TYPES  = third_party/proto/cosmos_proto
@@ -418,6 +432,7 @@ proto-update-deps:
 	@curl -sSL $(TM_URL)/types/evidence.proto > $(TM_TYPES)/evidence.proto
 	@curl -sSL $(TM_URL)/types/params.proto > $(TM_TYPES)/params.proto
 	@curl -sSL $(TM_URL)/types/validator.proto > $(TM_TYPES)/validator.proto
+	@curl -sSL $(TM_URL)/types/block.proto > $(TM_TYPES)/block.proto
 
 	@mkdir -p $(TM_CRYPTO_TYPES)
 	@curl -sSL $(TM_URL)/crypto/proof.proto > $(TM_CRYPTO_TYPES)/proof.proto
@@ -425,6 +440,9 @@ proto-update-deps:
 
 	@mkdir -p $(TM_LIBS)
 	@curl -sSL $(TM_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
+
+	@mkdir -p $(TM_P2P)
+	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
 
 	@mkdir -p $(CONFIO_TYPES)
 	@curl -sSL $(CONFIO_URL)/proofs.proto > $(CONFIO_TYPES)/proofs.proto
@@ -440,8 +458,8 @@ proto-update-deps:
 
 # Run a 4-node testnet locally
 localnet-start: build-linux localnet-stop
-	$(if $(shell docker inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
-	if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm \
+	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
+	if ! [ -f build/node0/simd/config/genesis.json ]; then $(DOCKER) run --rm \
 		--user $(shell id -u):$(shell id -g) \
 		-v $(BUILDDIR):/simd:Z \
 		-v /etc/group:/etc/group:ro \
@@ -454,3 +472,15 @@ localnet-stop:
 	docker-compose down
 
 .PHONY: localnet-start localnet-stop
+
+###############################################################################
+###                                rosetta                                  ###
+###############################################################################
+# builds rosetta test data dir
+rosetta-data:
+	-docker container rm data_dir_build
+	docker build -t rosetta-ci:latest -f contrib/rosetta/node/Dockerfile .
+	docker run --name data_dir_build -t rosetta-ci:latest sh /rosetta/data.sh
+	docker cp data_dir_build:/tmp/data.tar.gz "$(CURDIR)/contrib/rosetta/node/data.tar.gz"
+	docker container rm data_dir_build
+.PHONY: rosetta-data

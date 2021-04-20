@@ -12,8 +12,7 @@ import (
 )
 
 func TestManager_List(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	manager := snapshots.NewManager(store, nil)
 
 	mgrList, err := manager.List()
@@ -25,16 +24,14 @@ func TestManager_List(t *testing.T) {
 	assert.Equal(t, storeList, mgrList)
 
 	// list should not block or error on busy managers
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	list, err := manager.List()
 	require.NoError(t, err)
 	assert.Equal(t, []*types.Snapshot{}, list)
 }
 
 func TestManager_LoadChunk(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	manager := snapshots.NewManager(store, nil)
 
 	// Existing chunk should return body
@@ -48,16 +45,14 @@ func TestManager_LoadChunk(t *testing.T) {
 	assert.Nil(t, chunk)
 
 	// LoadChunk should not block or error on busy managers
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	chunk, err = manager.LoadChunk(2, 1, 0)
 	require.NoError(t, err)
 	assert.Nil(t, chunk)
 }
 
 func TestManager_Take(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	snapshotter := &mockSnapshotter{
 		chunks: [][]byte{
 			{1, 2, 3},
@@ -84,11 +79,8 @@ func TestManager_Take(t *testing.T) {
 		Chunks: 3,
 		Hash:   []uint8{0x47, 0xe4, 0xee, 0x7f, 0x21, 0x1f, 0x73, 0x26, 0x5d, 0xd1, 0x76, 0x58, 0xf6, 0xe2, 0x1c, 0x13, 0x18, 0xbd, 0x6c, 0x81, 0xf3, 0x75, 0x98, 0xe2, 0xa, 0x27, 0x56, 0x29, 0x95, 0x42, 0xef, 0xcf},
 		Metadata: types.Metadata{
-			ChunkHashes: [][]byte{
-				checksum([]byte{1, 2, 3}),
-				checksum([]byte{4, 5, 6}),
-				checksum([]byte{7, 8, 9}),
-			},
+			ChunkHashes: checksums([][]byte{
+				{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}),
 		},
 	}, snapshot)
 
@@ -98,15 +90,13 @@ func TestManager_Take(t *testing.T) {
 	assert.Equal(t, [][]byte{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, readChunks(chunks))
 
 	// creating a snapshot while a different snapshot is being created should error
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	_, err = manager.Create(9)
 	require.Error(t, err)
 }
 
 func TestManager_Prune(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	manager := snapshots.NewManager(store, nil)
 
 	pruned, err := manager.Prune(2)
@@ -118,15 +108,13 @@ func TestManager_Prune(t *testing.T) {
 	assert.Len(t, list, 3)
 
 	// Prune should error while a snapshot is being taken
-	manager, teardown = setupBusyManager(t)
-	defer teardown()
+	manager = setupBusyManager(t)
 	_, err = manager.Prune(2)
 	require.Error(t, err)
 }
 
 func TestManager_Restore(t *testing.T) {
-	store, teardown := setupStore(t)
-	defer teardown()
+	store := setupStore(t)
 	target := &mockSnapshotter{}
 	manager := snapshots.NewManager(store, target)
 

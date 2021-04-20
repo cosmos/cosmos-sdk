@@ -24,8 +24,7 @@ func TestTxBuilder(t *testing.T) {
 	memo := "sometestmemo"
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
-
-	any, err := PubKeyToAny(pubkey)
+	any, err := codectypes.NewAnyWithValue(pubkey)
 	require.NoError(t, err)
 
 	var signerInfo []*txtypes.SignerInfo
@@ -41,8 +40,7 @@ func TestTxBuilder(t *testing.T) {
 		Sequence: accSeq,
 	})
 
-	var sig signing.SignatureV2
-	sig = signing.SignatureV2{
+	var sig signing.SignatureV2 = signing.SignatureV2{
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
@@ -90,7 +88,9 @@ func TestTxBuilder(t *testing.T) {
 	txBuilder.SetMemo(memo)
 	require.Equal(t, bodyBytes, txBuilder.getBodyBytes())
 	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
-	require.Equal(t, 0, len(txBuilder.GetPubKeys()))
+	pks, err := txBuilder.GetPubKeys()
+	require.NoError(t, err)
+	require.Empty(t, pks)
 
 	t.Log("verify that updated AuthInfo  results in the correct getAuthInfoBytes and GetPubKeys")
 	require.NotEqual(t, authInfoBytes, txBuilder.getAuthInfoBytes())
@@ -105,8 +105,10 @@ func TestTxBuilder(t *testing.T) {
 	require.Equal(t, authInfoBytes, txBuilder.getAuthInfoBytes())
 
 	require.Equal(t, len(msgs), len(txBuilder.GetMsgs()))
-	require.Equal(t, 1, len(txBuilder.GetPubKeys()))
-	require.Equal(t, legacy.Cdc.MustMarshalBinaryBare(pubkey), legacy.Cdc.MustMarshalBinaryBare(txBuilder.GetPubKeys()[0]))
+	pks, err = txBuilder.GetPubKeys()
+	require.NoError(t, err)
+	require.Equal(t, 1, len(pks))
+	require.True(t, pubkey.Equals(pks[0]))
 
 	any, err = codectypes.NewAnyWithValue(testdata.NewTestMsg())
 	require.NoError(t, err)

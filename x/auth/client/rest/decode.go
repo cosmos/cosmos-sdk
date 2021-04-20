@@ -55,6 +55,13 @@ func DecodeTxRequestHandlerFn(clientCtx client.Context) http.HandlerFunc {
 
 		response := DecodeResp(stdTx)
 
+		err = checkAminoMarshalError(clientCtx, response, "/cosmos/tx/v1beta1/txs/decode")
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+
+			return
+		}
+
 		rest.PostProcessResponse(w, clientCtx, response)
 	}
 }

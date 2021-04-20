@@ -1,15 +1,12 @@
 package cli_test
 
 import (
-	"context"
-	"io/ioutil"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
@@ -19,29 +16,51 @@ func TestGetMigrationCallback(t *testing.T) {
 	}
 }
 
-func TestMigrateGenesis(t *testing.T) {
-	home := t.TempDir()
+func (s *IntegrationTestSuite) TestMigrateGenesis() {
+	val0 := s.network.Validators[0]
 
-	cdc := makeCodec()
+	testCases := []struct {
+		name      string
+		genesis   string
+		target    string
+		expErr    bool
+		expErrMsg string
+		check     func(jsonOut string)
+	}{
+		{
+			"migrate 0.34 to 0.36",
+			`{"chain_id":"test","app_state":{}}`,
+			"v0.36",
+			false, "", func(_ string) {},
+		},
+		{
+			"migrate 0.37 to 0.42",
+			v037Exported,
+			"v0.42",
+			true, "Make sure that you have correctly migrated all Tendermint consensus params", func(_ string) {},
+		},
+		{
+			"migrate 0.42 to 0.43",
+			v040Valid,
+			"v0.43",
+			false, "",
+			func(jsonOut string) {
+				// Make sure the json output contains the ADR-037 gov weighted votes.
+				s.Require().Contains(jsonOut, "\"weight\":\"1.000000000000000000\"")
+			},
+		},
+	}
 
-	genesisPath := path.Join(home, "genesis.json")
-	target := "v0.36"
-
-	cmd := cli.MigrateGenesisCmd()
-	_ = testutil.ApplyMockIODiscardOutErr(cmd)
-
-	clientCtx := client.Context{}.WithLegacyAmino(cdc)
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
-	// Reject if we dont' have the right parameters or genesis does not exists
-	cmd.SetArgs([]string{target, genesisPath})
-	require.Error(t, cmd.ExecuteContext(ctx))
-
-	// Noop migration with minimal genesis
-	emptyGenesis := []byte(`{"chain_id":"test","app_state":{}}`)
-	require.NoError(t, ioutil.WriteFile(genesisPath, emptyGenesis, 0644))
-
-	cmd.SetArgs([]string{target, genesisPath})
-	require.NoError(t, cmd.ExecuteContext(ctx))
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
+			jsonOutput, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.MigrateGenesisCmd(), []string{tc.target, genesisFile.Name()})
+			if tc.expErr {
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				tc.check(jsonOutput.String())
+			}
+		})
+	}
 }

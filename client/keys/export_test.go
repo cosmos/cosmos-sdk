@@ -31,20 +31,41 @@ func Test_runExportCmd(t *testing.T) {
 		kb.Delete("keyname1") // nolint:errcheck
 	})
 
-	path := sdk.GetConfig().GetFullFundraiserPath()
+	path := sdk.GetConfig().GetFullBIP44Path()
 	_, err = kb.NewAccount("keyname1", testutil.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 
 	// Now enter password
-	mockIn.Reset("123456789\n123456789\n")
-	cmd.SetArgs([]string{
+	args := []string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-	})
+	}
 
-	clientCtx := client.Context{}.WithKeyring(kb)
+	mockIn.Reset("123456789\n123456789\n")
+	cmd.SetArgs(args)
+
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	argsUnsafeOnly := append(args, "--unsafe")
+	cmd.SetArgs(argsUnsafeOnly)
+	require.Error(t, cmd.ExecuteContext(ctx))
+
+	argsUnarmoredHexOnly := append(args, "--unarmored-hex")
+	cmd.SetArgs(argsUnarmoredHexOnly)
+	require.Error(t, cmd.ExecuteContext(ctx))
+
+	argsUnsafeUnarmoredHex := append(args, "--unsafe", "--unarmored-hex")
+	cmd.SetArgs(argsUnsafeUnarmoredHex)
+	require.Error(t, cmd.ExecuteContext(ctx))
+
+	mockIn, mockOut := testutil.ApplyMockIO(cmd)
+	mockIn.Reset("y\n")
+	require.NoError(t, cmd.ExecuteContext(ctx))
+	require.Equal(t, "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n", mockOut.String())
 }

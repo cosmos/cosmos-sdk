@@ -20,10 +20,10 @@ func getTestCases() testCases {
 	return testCases{
 		// nolint:govet
 		[]keyring.KeyOutput{
-			{"A", "B", "C", "D", "E", 0, nil},
-			{"A", "B", "C", "D", "", 0, nil},
-			{"", "B", "C", "D", "", 0, nil},
-			{"", "", "", "", "", 0, nil},
+			{"A", "B", "C", "D", "E"},
+			{"A", "B", "C", "D", ""},
+			{"", "B", "C", "D", ""},
+			{"", "", "", "", ""},
 		},
 		make([]keyring.KeyOutput, 4),
 		[][]byte{

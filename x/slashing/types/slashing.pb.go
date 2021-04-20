@@ -9,8 +9,8 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "github.com/golang/protobuf/ptypes/duration"
-	_ "github.com/golang/protobuf/ptypes/timestamp"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -33,16 +33,19 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // liveness activity.
 type ValidatorSigningInfo struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// height at which validator was first a candidate OR was unjailed
+	// Height at which validator was first a candidate OR was unjailed
 	StartHeight int64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty" yaml:"start_height"`
-	// index offset into signed block bit array
+	// Index which is incremented each time the validator was a bonded
+	// in a block and may have signed a precommit or not. This in conjunction with the
+	// `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
 	IndexOffset int64 `protobuf:"varint,3,opt,name=index_offset,json=indexOffset,proto3" json:"index_offset,omitempty" yaml:"index_offset"`
-	// timestamp validator cannot be unjailed until
+	// Timestamp until which the validator is jailed due to liveness downtime.
 	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until" yaml:"jailed_until"`
-	// whether or not a validator has been tombstoned (killed out of validator
-	// set)
+	// Whether or not a validator has been tombstoned (killed out of validator set). It is set
+	// once the validator commits an equivocation or for any other configured misbehiavor.
 	Tombstoned bool `protobuf:"varint,5,opt,name=tombstoned,proto3" json:"tombstoned,omitempty"`
-	// missed blocks counter (to avoid scanning the array every time)
+	// A counter kept to avoid unnecessary array reads.
+	// Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
 	MissedBlocksCounter int64 `protobuf:"varint,6,opt,name=missed_blocks_counter,json=missedBlocksCounter,proto3" json:"missed_blocks_counter,omitempty" yaml:"missed_blocks_counter"`
 }
 
@@ -674,10 +677,7 @@ func (m *ValidatorSigningInfo) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSlashing
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSlashing
 			}
 			if (iNdEx + skippy) > l {
@@ -878,10 +878,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthSlashing
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthSlashing
 			}
 			if (iNdEx + skippy) > l {

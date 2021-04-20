@@ -27,7 +27,7 @@ type addrData struct {
 }
 
 func TestFullFundraiserPath(t *testing.T) {
-	require.Equal(t, "44'/118'/0'/0/0", hd.NewFundraiserParams(0, 118, 0).String())
+	require.Equal(t, "m/44'/118'/0'/0/0", hd.NewFundraiserParams(0, 118, 0).String())
 }
 
 func initFundraiserTestVectors(t *testing.T) []addrData {
@@ -63,8 +63,9 @@ func TestFundraiserCompatibility(t *testing.T) {
 		t.Logf("ROUND: %d MNEMONIC: %s", i, d.Mnemonic)
 
 		master, ch := hd.ComputeMastersFromSeed(seed)
-		priv, err := hd.DerivePrivateKeyForPath(master, ch, "44'/118'/0'/0/0")
+		priv, err := hd.DerivePrivateKeyForPath(master, ch, "m/44'/118'/0'/0/0")
 		require.NoError(t, err)
+
 		privKey := &secp256k1.PrivKey{Key: priv}
 		pub := privKey.PubKey()
 

@@ -149,6 +149,27 @@ func (s *errorsTestSuite) TestErrorIs() {
 	}
 }
 
+func (s *errorsTestSuite) TestIsOf() {
+	require := s.Require()
+
+	var errNil *Error
+	var err = ErrInvalidAddress
+	var errW = Wrap(ErrLogic, "more info")
+
+	require.False(IsOf(errNil), "nil error should always have no causer")
+	require.False(IsOf(errNil, err), "nil error should always have no causer")
+
+	require.False(IsOf(err))
+	require.False(IsOf(err, nil))
+	require.False(IsOf(err, ErrLogic))
+
+	require.True(IsOf(errW, ErrLogic))
+	require.True(IsOf(errW, err, ErrLogic))
+	require.True(IsOf(errW, nil, errW), "error should much itself")
+	var err2 = errors.New("other error")
+	require.True(IsOf(err2, nil, err2), "error should much itself")
+}
+
 type customError struct {
 }
 
@@ -161,17 +182,24 @@ func (s *errorsTestSuite) TestWrapEmpty() {
 }
 
 func (s *errorsTestSuite) TestWrappedIs() {
+	require := s.Require()
 	err := Wrap(ErrTxTooLarge, "context")
-	s.Require().True(stdlib.Is(err, ErrTxTooLarge))
+	require.True(stdlib.Is(err, ErrTxTooLarge))
 
 	err = Wrap(err, "more context")
-	s.Require().True(stdlib.Is(err, ErrTxTooLarge))
+	require.True(stdlib.Is(err, ErrTxTooLarge))
 
 	err = Wrap(err, "even more context")
-	s.Require().True(stdlib.Is(err, ErrTxTooLarge))
+	require.True(stdlib.Is(err, ErrTxTooLarge))
 
 	err = Wrap(ErrInsufficientFee, "...")
-	s.Require().False(stdlib.Is(err, ErrTxTooLarge))
+	require.False(stdlib.Is(err, ErrTxTooLarge))
+
+	errs := stdlib.New("other")
+	require.True(stdlib.Is(errs, errs))
+
+	errw := &wrappedError{"msg", errs}
+	require.True(errw.Is(errw), "should match itself")
 }
 
 func (s *errorsTestSuite) TestWrappedIsMultiple() {

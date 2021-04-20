@@ -32,12 +32,17 @@ type (
 		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
 		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
+		MarshalInterface(i proto.Message) ([]byte, error)
+		UnmarshalInterface(bz []byte, ptr interface{}) error
+
 		types.AnyUnpacker
 	}
 
 	JSONMarshaler interface {
 		MarshalJSON(o proto.Message) ([]byte, error)
 		MustMarshalJSON(o proto.Message) []byte
+		MarshalInterfaceJSON(i proto.Message) ([]byte, error)
+		UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error
 
 		UnmarshalJSON(bz []byte, ptr proto.Message) error
 		MustUnmarshalJSON(bz []byte, ptr proto.Message)

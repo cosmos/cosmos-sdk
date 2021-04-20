@@ -102,7 +102,7 @@ func SimulateFromSeed(
 	opCount := 0
 
 	// Setup code to catch SIGTERM's
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	go func() {
@@ -239,8 +239,6 @@ func SimulateFromSeed(
 
 	return false, exportedParams, nil
 }
-
-//______________________________________________________________________________
 
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	accounts []simulation.Account, header tmproto.Header) (opCount int)

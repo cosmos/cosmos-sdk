@@ -25,16 +25,12 @@ func TestApplyMockIO(t *testing.T) {
 }
 
 func TestWriteToNewTempFile(t *testing.T) {
-	tempfile, cleanup := testutil.WriteToNewTempFile(t, "test string")
+	tempfile := testutil.WriteToNewTempFile(t, "test string")
 	tempfile.Close()
 
 	bs, err := ioutil.ReadFile(tempfile.Name())
 	require.NoError(t, err)
 	require.Equal(t, "test string", string(bs))
-
-	cleanup()
-
-	require.NoFileExists(t, tempfile.Name())
 }
 
 func TestApplyMockIODiscardOutErr(t *testing.T) {

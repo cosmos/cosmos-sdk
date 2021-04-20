@@ -101,9 +101,9 @@ func (s *coinTestSuite) TestCoinIsValid() {
 func (s *coinTestSuite) TestCustomValidation() {
 
 	newDnmRegex := `[\x{1F600}-\x{1F6FF}]`
-	sdk.CoinDenomRegex = func() string {
+	sdk.SetCoinDenomRegex(func() string {
 		return newDnmRegex
-	}
+	})
 
 	cases := []struct {
 		coin       sdk.Coin
@@ -119,7 +119,7 @@ func (s *coinTestSuite) TestCustomValidation() {
 	for i, tc := range cases {
 		s.Require().Equal(tc.expectPass, tc.coin.IsValid(), "unexpected result for IsValid, tc #%d", i)
 	}
-	sdk.CoinDenomRegex = sdk.DefaultCoinDenomRegex
+	sdk.SetCoinDenomRegex(sdk.DefaultCoinDenomRegex)
 }
 
 func (s *coinTestSuite) TestAddCoin() {
@@ -142,6 +142,21 @@ func (s *coinTestSuite) TestAddCoin() {
 			res := tc.inputOne.Add(tc.inputTwo)
 			s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 		}
+	}
+}
+
+func (s *coinTestSuite) TestAddCoinAmount() {
+	cases := []struct {
+		coin     sdk.Coin
+		amount   sdk.Int
+		expected sdk.Coin
+	}{
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 2)},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(0), sdk.NewInt64Coin(testDenom1, 1)},
+	}
+	for i, tc := range cases {
+		res := tc.coin.AddAmount(tc.amount)
+		s.Require().Equal(tc.expected, res, "result of addition is incorrect, tc #%d", i)
 	}
 }
 
@@ -176,6 +191,30 @@ func (s *coinTestSuite) TestSubCoin() {
 	}{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), 0}
 	res := tc.inputOne.Sub(tc.inputTwo)
 	s.Require().Equal(tc.expected, res.Amount.Int64())
+}
+
+func (s *coinTestSuite) TestSubCoinAmount() {
+	cases := []struct {
+		coin        sdk.Coin
+		amount      sdk.Int
+		expected    sdk.Coin
+		shouldPanic bool
+	}{
+		{sdk.NewInt64Coin(testDenom1, 2), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 1), false},
+		{sdk.NewInt64Coin(testDenom1, 10), sdk.NewInt(1), sdk.NewInt64Coin(testDenom1, 9), false},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt(3), sdk.NewInt64Coin(testDenom1, 2), false},
+		{sdk.NewInt64Coin(testDenom1, 5), sdk.NewInt(0), sdk.NewInt64Coin(testDenom1, 5), false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt(5), sdk.Coin{}, true},
+	}
+
+	for i, tc := range cases {
+		if tc.shouldPanic {
+			s.Require().Panics(func() { tc.coin.SubAmount(tc.amount) })
+		} else {
+			res := tc.coin.SubAmount(tc.amount)
+			s.Require().Equal(tc.expected, res, "result of subtraction is incorrect, tc #%d", i)
+		}
+	}
 }
 
 func (s *coinTestSuite) TestIsGTECoin() {
@@ -660,18 +699,18 @@ func (s *coinTestSuite) TestParseCoins() {
 		{"98 bar , 1 foo  ", true, sdk.Coins{{"bar", sdk.NewInt(98)}, {"foo", one}}},
 		{"  55\t \t bling\n", true, sdk.Coins{{"bling", sdk.NewInt(55)}}},
 		{"2foo, 97 bar", true, sdk.Coins{{"bar", sdk.NewInt(97)}, {"foo", sdk.NewInt(2)}}},
-		{"5 mycoin,", false, nil},             // no empty coins in a list
-		{"2 3foo, 97 bar", false, nil},        // 3foo is invalid coin name
-		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
-		{"1.2btc", false, nil},                // amount must be integer
-		{"5foo:bar", false, nil},              // invalid separator
+		{"5 mycoin,", false, nil},                           // no empty coins in a list
+		{"2 3foo, 97 bar", false, nil},                      // 3foo is invalid coin name
+		{"11me coin, 12you coin", false, nil},               // no spaces in coin names
+		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount can be decimal, will get truncated
+		{"5foo:bar", false, nil},                            // invalid separator
 		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
 		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
 		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},
 	}
 
 	for tcIndex, tc := range cases {
-		res, err := sdk.ParseCoins(tc.input)
+		res, err := sdk.ParseCoinsNormalized(tc.input)
 		if !tc.valid {
 			s.Require().Error(err, "%s: %#v. tc #%d", tc.input, res, tcIndex)
 		} else if s.Assert().Nil(err, "%s: %+v", tc.input, err) {

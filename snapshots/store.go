@@ -63,11 +63,8 @@ func (s *Store) Delete(height uint64, format uint32) error {
 			height, format)
 	}
 	err = os.RemoveAll(s.pathSnapshot(height, format))
-	if err != nil {
-		return sdkerrors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v",
-			height, format)
-	}
-	return nil
+	return sdkerrors.Wrapf(err, "failed to delete snapshot chunks for height %v format %v",
+		height, format)
 }
 
 // Get fetches snapshot info from the database.
@@ -94,7 +91,7 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 
 // Get fetches the latest snapshot from the database, if any.
 func (s *Store) GetLatest() (*types.Snapshot, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to find latest snapshot")
 	}
@@ -109,15 +106,12 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 		}
 	}
 	err = iter.Error()
-	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to find latest snapshot")
-	}
-	return snapshot, nil
+	return snapshot, sdkerrors.Wrap(err, "failed to find latest snapshot")
 }
 
 // List lists snapshots, in reverse order (newest first).
 func (s *Store) List() ([]*types.Snapshot, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to list snapshots")
 	}
@@ -132,22 +126,15 @@ func (s *Store) List() ([]*types.Snapshot, error) {
 		}
 		snapshots = append(snapshots, snapshot)
 	}
-	err = iter.Error()
-	if err != nil {
-		return nil, err
-	}
-	return snapshots, nil
+	return snapshots, iter.Error()
 }
 
 // Load loads a snapshot (both metadata and binary chunks). The chunks must be consumed and closed.
 // Returns nil if the snapshot does not exist.
 func (s *Store) Load(height uint64, format uint32) (*types.Snapshot, <-chan io.ReadCloser, error) {
 	snapshot, err := s.Get(height, format)
-	if err != nil {
+	if snapshot == nil || err != nil {
 		return nil, nil, err
-	}
-	if snapshot == nil {
-		return nil, nil, nil
 	}
 
 	ch := make(chan io.ReadCloser)
@@ -189,16 +176,12 @@ func (s *Store) LoadChunk(height uint64, format uint32, chunk uint32) (io.ReadCl
 // loadChunkFile loads a chunk from disk, and errors if it does not exist.
 func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.ReadCloser, error) {
 	path := s.pathChunk(height, format, chunk)
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
+	return os.Open(path)
 }
 
 // Prune removes old snapshots. The given number of most recent heights (regardless of format) are retained.
 func (s *Store) Prune(retain uint32) (uint64, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
 		return 0, sdkerrors.Wrap(err, "failed to prune snapshots")
 	}
@@ -233,11 +216,7 @@ func (s *Store) Prune(retain uint32) (uint64, error) {
 			}
 		}
 	}
-	err = iter.Error()
-	if err != nil {
-		return 0, err
-	}
-	return pruned, nil
+	return pruned, iter.Error()
 }
 
 // Save saves a snapshot to disk, returning it.
@@ -292,6 +271,7 @@ func (s *Store) Save(
 			return nil, sdkerrors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 		}
 		defer file.Close() // nolint: staticcheck
+
 		chunkHasher.Reset()
 		_, err = io.Copy(io.MultiWriter(file, chunkHasher, snapshotHasher), chunkBody)
 		if err != nil {
@@ -310,11 +290,7 @@ func (s *Store) Save(
 	}
 	snapshot.Chunks = index
 	snapshot.Hash = snapshotHasher.Sum(nil)
-	err = s.saveSnapshot(snapshot)
-	if err != nil {
-		return nil, err
-	}
-	return snapshot, nil
+	return snapshot, s.saveSnapshot(snapshot)
 }
 
 // saveSnapshot saves snapshot metadata to the database.
@@ -324,10 +300,7 @@ func (s *Store) saveSnapshot(snapshot *types.Snapshot) error {
 		return sdkerrors.Wrap(err, "failed to encode snapshot metadata")
 	}
 	err = s.db.SetSync(encodeKey(snapshot.Height, snapshot.Format), value)
-	if err != nil {
-		return sdkerrors.Wrap(err, "failed to store snapshot")
-	}
-	return nil
+	return sdkerrors.Wrap(err, "failed to store snapshot")
 }
 
 // pathHeight generates the path to a height, containing multiple snapshot formats.

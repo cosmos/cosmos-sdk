@@ -2,12 +2,10 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -214,33 +212,8 @@ func NewSimApp(
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	// configure state listening capabilities using AppOptions
-	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
-	for _, listenerName := range listeners {
-		// get the store keys allowed to be exposed for this streaming service/state listeners
-		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", listenerName)))
-		exposeStoreKeys := make([]sdk.StoreKey, 0, len(exposeKeyStrs))
-		for _, keyStr := range exposeKeyStrs {
-			if storeKey, ok := keys[keyStr]; ok {
-				exposeStoreKeys = append(exposeStoreKeys, storeKey)
-			}
-		}
-		// get the constructor for this listener name
-		constructor, err := streaming.NewServiceConstructor(listenerName)
-		if err != nil {
-			tmos.Exit(err.Error()) // or continue?
-		}
-		// generate the streaming service using the constructor, appOptions, and the StoreKeys we want to expose
-		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
-		if err != nil {
-			tmos.Exit(err.Error())
-		}
-		// register the streaming service with the BaseApp
-		bApp.SetStreamingService(streamingService)
-		// waitgroup and quit channel for optional shutdown coordination of the streaming service
-		wg := new(sync.WaitGroup)
-		quitChan := make(chan struct{})
-		// kick off the background streaming service loop
-		streamingService.Stream(wg, quitChan)
+	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, keys); err != nil {
+		tmos.Exit(err.Error())
 	}
 
 	app := &SimApp{

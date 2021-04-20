@@ -6,7 +6,7 @@ The child directories contain the implementations for specific output destinatio
 Currently, a `StreamingService` implementation that writes state changes out to files is supported, in the future support for additional
 output destinations can be added.
 
-The `StreamingService` is configured from within an App using the `AppOptions` loaded from a .toml file:
+The `StreamingService` is configured from within an App using the `AppOptions` loaded from the app.toml file:
 
 ```toml
 [store]

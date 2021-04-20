@@ -2,12 +2,14 @@ package offchain
 
 import (
 	"errors"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type signerTestSuite struct {

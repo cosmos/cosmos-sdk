@@ -251,7 +251,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 			),
 		}
 
-		msg := types.NewMsgExecAuthorized(grantee.Address, []sdk.ServiceMsg{execMsg})
+		msg := types.NewMsgExec(grantee.Address, []sdk.ServiceMsg{execMsg})
 		sendGrant := targetGrant.Authorization.GetCachedValue().(*banktype.SendAuthorization)
 		_, err = sendGrant.Accept(ctx, execMsg)
 		if err != nil {

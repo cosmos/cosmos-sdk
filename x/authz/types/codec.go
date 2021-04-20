@@ -14,7 +14,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.MsgRequest)(nil),
 		&MsgGrantRequest{},
 		&MsgRevokeRequest{},
-		&MsgExecAuthorizedRequest{},
+		&MsgExecRequest{},
 	)
 
 	registry.RegisterInterface(

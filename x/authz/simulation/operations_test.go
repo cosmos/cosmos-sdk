@@ -153,7 +153,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-	suite.Require().Equal(banktypes.SendAuthorization{}.MethodName(), msg.MethodName)
+	suite.Require().Equal(banktypes.SendAuthorization{}.MethodName(), msg.MsgTypeUrl)
 	suite.Require().Len(futureOperations, 0)
 
 }
@@ -182,7 +182,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgExecAuthorizedRequest
+	var msg types.MsgExecRequest
 
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 

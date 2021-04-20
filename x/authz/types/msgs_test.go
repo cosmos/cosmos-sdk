@@ -40,7 +40,7 @@ func TestMsgExecAuthorized(t *testing.T) {
 		}, true},
 	}
 	for i, tc := range tests {
-		msg := types.NewMsgExecAuthorized(tc.grantee, tc.msgs)
+		msg := types.NewMsgExec(tc.grantee, tc.msgs)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

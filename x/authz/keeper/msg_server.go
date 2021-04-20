@@ -48,7 +48,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevokeRequest) (*typ
 		return nil, err
 	}
 
-	err = k.RevokeX(ctx, grantee, granter, msg.MethodName)
+	err = k.RevokeX(ctx, grantee, granter, msg.MsgTypeUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +56,8 @@ func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevokeRequest) (*typ
 	return &types.MsgRevokeResponse{}, nil
 }
 
-// ExecAuthorized implements the MsgServer.ExecAuthorized method.
-func (k Keeper) ExecAuthorized(goCtx context.Context, msg *types.MsgExecAuthorizedRequest) (*types.MsgExecAuthorizedResponse, error) {
+// Exec implements the MsgServer.Exec method.
+func (k Keeper) Exec(goCtx context.Context, msg *types.MsgExecRequest) (*types.MsgExecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -71,5 +71,5 @@ func (k Keeper) ExecAuthorized(goCtx context.Context, msg *types.MsgExecAuthoriz
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgExecAuthorizedResponse{Result: result}, nil
+	return &types.MsgExecResponse{Result: result}, nil
 }

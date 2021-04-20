@@ -261,7 +261,7 @@ Example:
 				serviceMsgs[i] = srvMsg
 			}
 
-			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
+			msg := types.NewMsgExec(grantee, serviceMsgs)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.ExecAuthorized(cmd.Context(), &msg)

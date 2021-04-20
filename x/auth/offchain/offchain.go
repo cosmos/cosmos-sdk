@@ -28,7 +28,7 @@ type msg interface {
 }
 
 // NewMsgSignData is MsgSignData's constructor
-func NewMsgSignData(signer sdk.AccAddress, data []byte) *MsgSignData { // nolint
+func NewMsgSignData(signer sdk.AccAddress, data []byte) *MsgSignData {
 	return &MsgSignData{
 		Signer: signer.String(),
 		Data:   data,

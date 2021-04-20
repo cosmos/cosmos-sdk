@@ -46,7 +46,11 @@ func (v SignatureVerifier) Verify(tx sdk.Tx) error {
 		}
 	}
 
-	signers := sigTx.GetPubKeys()
+	signers, err := sigTx.GetPubKeys()
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
+	}
+
 	signatures, err := sigTx.GetSignaturesV2()
 	if err != nil {
 		return fmt.Errorf("cannot verify: %w", err)

@@ -581,7 +581,7 @@
     - [DelayedVestingAccount](#cosmos.vesting.v1beta1.DelayedVestingAccount)
     - [Period](#cosmos.vesting.v1beta1.Period)
     - [PeriodicVestingAccount](#cosmos.vesting.v1beta1.PeriodicVestingAccount)
-    - [PermanentLockedVestingAccount](#cosmos.vesting.v1beta1.PermanentLockedVestingAccount)
+    - [PermanentLockedAccount](#cosmos.vesting.v1beta1.PermanentLockedAccount)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -5392,23 +5392,6 @@ QueryVotesResponse is the response type for the Query/Votes RPC method.
 
 
 
-
-<a name="cosmos.vesting.v1beta1.PermanentLockedVestingAccount"></a>
-
-### PermanentLockedVestingAccount
-PermanentLockedVestingAccount implements the VestingAccount interface. It does
-not ever release coins, locking them indefinitely. Coins in this account can
-still be used for delegating and for governance votes even while locked.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -8205,6 +8188,23 @@ periodically vests by unlocking coins during each specified period.
 | `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 | `start_time` | [int64](#int64) |  |  |
 | `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.PermanentLockedAccount"></a>
+
+### PermanentLockedAccount
+PermanentLockedAccount implements the VestingAccount interface. It does
+not ever release coins, locking them indefinitely. Coins in this account can
+still be used for delegating and for governance votes even while locked.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 
 
 

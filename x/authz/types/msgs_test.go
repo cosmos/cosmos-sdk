@@ -61,7 +61,7 @@ func TestMsgRevokeAuthorization(t *testing.T) {
 		{"valid test case", granter, grantee, "hello", true},
 	}
 	for i, tc := range tests {
-		msg := types.NewMsgRevokeAuthorization(tc.granter, tc.grantee, tc.msgType)
+		msg := types.NewMsgRevoke(tc.granter, tc.grantee, tc.msgType)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -87,7 +87,7 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
 	}
 	for i, tc := range tests {
-		msg, err := types.NewMsgGrantAuthorization(
+		msg, err := types.NewMsgGrant(
 			tc.granter, tc.grantee, tc.authorization, tc.expiration,
 		)
 		if !tc.expectErr {

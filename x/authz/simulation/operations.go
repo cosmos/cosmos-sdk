@@ -21,16 +21,16 @@ import (
 
 // authz message types
 const (
-	TypeMsgGrantAuthorization  = "/cosmos.authz.v1beta1.Msg/GrantAuthorization"
-	TypeMsgRevokeAuthorization = "/cosmos.authz.v1beta1.Msg/RevokeAuthorization"
-	TypeMsgExecDelegated       = "/cosmos.authz.v1beta1.Msg/ExecAuthorized"
+	TypeMsgGrantAuthorization  = "/cosmos.authz.v1beta1.Msg/Grant"
+	TypeMsgRevokeAuthorization = "/cosmos.authz.v1beta1.Msg/Revoke"
+	TypeMsgExecDelegated       = "/cosmos.authz.v1beta1.Msg/Exec"
 )
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgGrantAuthorization = "op_weight_msg_grant_authorization"
-	OpWeightRevokeAuthorization   = "op_weight_msg_revoke_authorization"
-	OpWeightExecAuthorized        = "op_weight_msg_execute_authorized"
+	OpWeightMsgGrantAuthorization = "op_weight_msg_grant"
+	OpWeightRevokeAuthorization   = "op_weight_msg_revoke"
+	OpWeightExecAuthorized        = "op_weight_msg_execute"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -100,7 +100,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		if spendLimit == nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, "spend limit is nil"), nil, nil
 		}
-		msg, err := types.NewMsgGrantAuthorization(granter.Address, grantee.Address,
+		msg, err := types.NewMsgGrant(granter.Address, grantee.Address,
 			banktype.NewSendAuthorization(spendLimit), blockTime.AddDate(1, 0, 0))
 
 		if err != nil {
@@ -109,7 +109,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-		_, err = authzMsgClient.GrantAuthorization(context.Background(), msg)
+		_, err = authzMsgClient.Grant(context.Background(), msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantAuthorization, err.Error()), nil, err
 		}
@@ -143,10 +143,10 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		hasGrant := false
-		var targetGrant types.AuthorizationGrant
+		var targetGrant types.Grant
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
-		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.AuthorizationGrant) bool {
+		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
 			targetGrant = grant
 			granterAddr = granter
 			granteeAddr = grantee
@@ -169,13 +169,13 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRevokeAuthorization, "fee error"), nil, err
 		}
-		auth := targetGrant.GetAuthorizationGrant()
-		msg := types.NewMsgRevokeAuthorization(granterAddr, granteeAddr, auth.MethodName())
+		auth := targetGrant.GetAuthorization()
+		msg := types.NewMsgRevoke(granterAddr, granteeAddr, auth.GetTypeUrl())
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-		_, err = authzMsgClient.RevokeAuthorization(context.Background(), &msg)
+		_, err = authzMsgClient.Revoke(context.Background(), &msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRevokeAuthorization, err.Error()), nil, err
 		}
@@ -207,10 +207,10 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
 		hasGrant := false
-		var targetGrant types.AuthorizationGrant
+		var targetGrant types.Grant
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
-		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.AuthorizationGrant) bool {
+		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
 			targetGrant = grant
 			granterAddr = granter
 			granteeAddr = grantee

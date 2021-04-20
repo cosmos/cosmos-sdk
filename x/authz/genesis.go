@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic("expected authorization")
 		}
 
-		err = keeper.Grant(ctx, grantee, granter, authorization, entry.Expiration)
+		err = keeper.GrantX(ctx, grantee, granter, authorization, entry.Expiration)
 		if err != nil {
 			panic(err)
 		}
@@ -33,7 +33,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	var entries []types.GrantAuthorization
-	keeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.AuthorizationGrant) bool {
+	keeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
 		exp := grant.Expiration
 		entries = append(entries, types.GrantAuthorization{
 			Granter:       granter.String(),

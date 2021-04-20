@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
 service Msg {
   // Grant grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.
-  rpc Grantxx(MsgGrantRequest) returns (MsgGrantResponse);
+  rpc Grant(MsgGrantRequest) returns (MsgGrantResponse);
 
   // ExecAuthorized attempts to execute the provided messages using
   // authorizations granted to the grantee. Each message should have only

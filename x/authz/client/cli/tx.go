@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -160,14 +159,14 @@ Examples:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			msg, err := types.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
 			if err != nil {
 				return err
 			}
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.GrantAuthorization(context.Background(), msg)
+			_, err = msgClient.Grant(cmd.Context(), msg)
 			if err != nil {
 				return err
 			}
@@ -207,14 +206,12 @@ Example:
 			}
 
 			granter := clientCtx.GetFromAddress()
-
 			msgAuthorized := args[1]
-
-			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
+			msg := types.NewMsgRevoke(granter, grantee, msgAuthorized)
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.RevokeAuthorization(context.Background(), &msg)
+			_, err = msgClient.Revoke(cmd.Context(), &msg)
 			if err != nil {
 				return err
 			}
@@ -267,7 +264,7 @@ Example:
 			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.ExecAuthorized(context.Background(), &msg)
+			_, err = msgClient.ExecAuthorized(cmd.Context(), &msg)
 			if err != nil {
 				return err
 			}

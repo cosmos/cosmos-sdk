@@ -110,7 +110,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgGrantAuthorizationRequest
+	var msg types.MsgGrantRequest
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
@@ -139,7 +139,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	grantee := accounts[1]
 	authorization := banktypes.NewSendAuthorization(initCoins)
 
-	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.GrantX(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation
@@ -147,7 +147,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgRevokeAuthorizationRequest
+	var msg types.MsgRevokeRequest
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
@@ -174,7 +174,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	grantee := accounts[1]
 	authorization := banktypes.NewSendAuthorization(initCoins)
 
-	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.GrantX(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation

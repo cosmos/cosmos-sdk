@@ -10,19 +10,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
-// NewAuthorizationGrant returns new AuthrizationGrant
-func NewAuthorizationGrant(authorization exported.Authorization, expiration time.Time) (AuthorizationGrant, error) {
-	auth := AuthorizationGrant{
+// NewGrant returns new AuthrizationGrant
+func NewGrant(authorization exported.Authorization, expiration time.Time) (Grant, error) {
+	auth := Grant{
 		Expiration: expiration,
 	}
 	msg, ok := authorization.(proto.Message)
 	if !ok {
-		return AuthorizationGrant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", authorization)
+		return Grant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", authorization)
 	}
 
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		return AuthorizationGrant{}, err
+		return Grant{}, err
 	}
 
 	auth.Authorization = any
@@ -31,17 +31,17 @@ func NewAuthorizationGrant(authorization exported.Authorization, expiration time
 }
 
 var (
-	_ types.UnpackInterfacesMessage = &AuthorizationGrant{}
+	_ types.UnpackInterfacesMessage = &Grant{}
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (auth AuthorizationGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (auth Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var authorization exported.Authorization
 	return unpacker.UnpackAny(auth.Authorization, &authorization)
 }
 
-// GetAuthorizationGrant returns the cached value from the AuthorizationGrant.Authorization if present.
-func (auth AuthorizationGrant) GetAuthorizationGrant() exported.Authorization {
+// GetGrant returns the cached value from the Grant.Authorization if present.
+func (auth Grant) GetGrant() exported.Authorization {
 	authorization, ok := auth.Authorization.GetCachedValue().(exported.Authorization)
 	if !ok {
 		return nil

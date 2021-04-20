@@ -10,8 +10,8 @@ import (
 
 var _ types.MsgServer = Keeper{}
 
-// GrantAuthorization implements the MsgServer.GrantAuthorization method.
-func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAuthorizationRequest) (*types.MsgGrantAuthorizationResponse, error) {
+// GrantAuthorization implements the MsgServer.Grant method.
+func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrantRequest) (*types.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -22,22 +22,22 @@ func (k Keeper) GrantAuthorization(goCtx context.Context, msg *types.MsgGrantAut
 		return nil, err
 	}
 
-	authorization := msg.GetGrantAuthorization()
+	authorization := msg.GetGrant()
 	// If the granted service Msg doesn't exist, we throw an error.
 	if k.router.Handler(authorization.MethodName()) == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", authorization.MethodName())
 	}
 
-	err = k.Grant(ctx, grantee, granter, authorization, msg.Expiration)
+	err = k.GrantX(ctx, grantee, granter, authorization, msg.Expiration)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgGrantAuthorizationResponse{}, nil
+	return &types.MsgGrantResponse{}, nil
 }
 
-// RevokeAuthorization implements the MsgServer.RevokeAuthorization method.
-func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeAuthorizationRequest) (*types.MsgRevokeAuthorizationResponse, error) {
+// RevokeAuthorization implements the MsgServer.Revoke method.
+func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevokeRequest) (*types.MsgRevokeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -48,12 +48,12 @@ func (k Keeper) RevokeAuthorization(goCtx context.Context, msg *types.MsgRevokeA
 		return nil, err
 	}
 
-	err = k.Revoke(ctx, grantee, granter, msg.MethodName)
+	err = k.RevokeX(ctx, grantee, granter, msg.MethodName)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgRevokeAuthorizationResponse{}, nil
+	return &types.MsgRevokeResponse{}, nil
 }
 
 // ExecAuthorized implements the MsgServer.ExecAuthorized method.

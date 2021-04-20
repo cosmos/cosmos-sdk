@@ -18,7 +18,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Authorizations implements the Query/Authorizations gRPC method.
+// Authorizations implements the Query/Grants gRPC method.
 func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -62,7 +62,7 @@ func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types
 		if err != nil {
 			return false, err
 		}
-		auth1 := auth.GetAuthorizationGrant()
+		auth1 := auth.GetGrant()
 		if accumulate {
 			msg, ok := auth1.(proto.Message)
 			if !ok {

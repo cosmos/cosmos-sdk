@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -52,7 +51,7 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) typ
 	allowances[1] = periodicAllowance
 
 	filteredAllowance, err := types.NewFeeAllowanceGrant(granter, grantee, &types.AllowedMsgFeeAllowance{
-		Allowance:       basicAllowance.Allowance,
+		Allowance:       basicAllowance.GetAllowance(),
 		AllowedMessages: []string{"/cosmos.gov.v1beta1.Msg/SubmitProposal"},
 	})
 	if err != nil {
@@ -71,13 +70,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 		simState.Cdc, feegrant, &feegrants, simState.Rand,
 		func(r *rand.Rand) { feegrants = genFeeGrants(r, simState.Accounts) },
 	)
-	feegrantGenesis := types.NewGenesisState(feegrants)
 
-	bz, err := json.MarshalIndent(&feegrantGenesis, "", " ")
+	feegrantGenesis := types.NewGenesisState(feegrants)
+	bz, err := simState.Cdc.MarshalJSON(feegrantGenesis)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(feegrantGenesis)
+	simState.GenState[types.ModuleName] = bz
 }

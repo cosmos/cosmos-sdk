@@ -39,7 +39,6 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) typ
 	if err != nil {
 		panic(err)
 	}
-
 	allowances[0] = basicAllowance
 
 	periodicAllowance, err := types.NewFeeAllowanceGrant(granter, grantee, &types.PeriodicFeeAllowance{
@@ -56,7 +55,6 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) typ
 		Allowance:       basicAllowance.Allowance,
 		AllowedMessages: []string{"/cosmos.gov.v1beta1.Msg/SubmitProposal"},
 	})
-
 	if err != nil {
 		panic(err)
 	}

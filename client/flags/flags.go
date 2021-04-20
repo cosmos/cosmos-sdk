@@ -89,9 +89,6 @@ func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 
 	cmd.MarkFlagRequired(FlagChainID)
-
-	cmd.SetErr(cmd.ErrOrStderr())
-	cmd.SetOut(cmd.OutOrStdout())
 }
 
 // AddTxFlagsToCmd adds common flags to a module tx command.
@@ -120,9 +117,6 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
 
 	cmd.MarkFlagRequired(FlagChainID)
-
-	cmd.SetErr(cmd.ErrOrStderr())
-	cmd.SetOut(cmd.OutOrStdout())
 }
 
 // AddPaginationFlagsToCmd adds common pagination flags to cmd

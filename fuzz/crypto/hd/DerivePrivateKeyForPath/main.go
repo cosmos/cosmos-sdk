@@ -1,4 +1,4 @@
-package derive
+package deriveprivatekeyforpath
 
 import (
 	"bytes"
@@ -13,9 +13,9 @@ func mnemonicToSeed(mnemonic string) []byte {
 
 func Fuzz(in []byte) int {
 	splits := bytes.Split(in, []byte("*"))
-        if len(splits) == 1 {
-            return -1
-        }
+	if len(splits) == 1 {
+		return -1
+	}
 	mnemonic, path := splits[0], splits[1]
 	seed := mnemonicToSeed(string(mnemonic))
 	master, ch := hd.ComputeMastersFromSeed(seed)

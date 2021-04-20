@@ -67,7 +67,7 @@ Response:
 
 ## WithdrawValidatorCommission
 
-The validator can send WithdrawValidatorCommission message to withdraw their accumulated commission.
+The validator can send the WithdrawValidatorCommission message to withdraw their accumulated commission.
 The commission is calculated in every block during `BeginBlock`, so no iteration is required to withdraw.
 The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.

@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	"github.com/gogo/protobuf/proto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -101,4 +103,9 @@ func GetLegacySignBytes(msg Msg) []byte {
 // MsgName returns the protobuf MessageName of a sdk.Msg.
 func MsgName(msg Msg) string {
 	return proto.MessageName(msg)
+}
+
+// MsgRoute returns the the key of a sdk.Msg in the BaseApp msg_service router.
+func MsgRoute(msg Msg) string {
+	return fmt.Sprintf("/%s", MsgName(msg))
 }

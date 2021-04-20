@@ -83,7 +83,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 		granter := signers[0]
 		if !granter.Equals(grantee) {
-			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, sdk.MsgName(msg))
+			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, sdk.MsgRoute(msg))
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
@@ -92,7 +92,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 				return nil, err
 			}
 			if del {
-				err = k.Revoke(ctx, grantee, granter, sdk.MsgName(msg))
+				err = k.Revoke(ctx, grantee, granter, sdk.MsgRoute(msg))
 				if err != nil {
 					return nil, err
 				}
@@ -106,7 +106,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		handler := k.router.Handler(msg)
 
 		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", sdk.MsgName(msg))
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", sdk.MsgRoute(msg))
 		}
 
 		msgResult, err = handler(ctx, msg)

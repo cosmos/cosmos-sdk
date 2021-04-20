@@ -39,7 +39,6 @@ func (s *TestSuite) SetupTest() {
 	s.ctx = ctx
 	s.queryClient = queryClient
 	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
-
 }
 
 func (s *TestSuite) TestKeeper() {

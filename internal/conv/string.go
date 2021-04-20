@@ -8,8 +8,12 @@ import (
 // UnsafeStrToBytes uses unsafe to convert string into byte array. Returned bytes
 // must not be altered after this function is called as it will cause a segmentation fault.
 func UnsafeStrToBytes(s string) []byte {
-	var buf = *(*[]byte)(unsafe.Pointer(&s))
-	(*reflect.SliceHeader)(unsafe.Pointer(&buf)).Cap = len(s)
+	var buf []byte
+	sHdr := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	bufHdr := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
+	bufHdr.Data = sHdr.Data
+	bufHdr.Cap = sHdr.Len
+	bufHdr.Len = sHdr.Len
 	return buf
 }
 
@@ -18,6 +22,5 @@ func UnsafeStrToBytes(s string) []byte {
 // to be used generally, but for a specific pattern to delete keys
 // from a map.
 func UnsafeBytesToStr(b []byte) string {
-	hdr := (*reflect.StringHeader)(unsafe.Pointer(&b))
-	return *(*string)(unsafe.Pointer(hdr))
+	return *(*string)(unsafe.Pointer(&b))
 }

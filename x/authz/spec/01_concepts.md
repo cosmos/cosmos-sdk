@@ -35,3 +35,6 @@ Cosmos-SDK `x/authz` module comes with following authorization types
 +++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/x/authz/types/generic_authorization.go#L20-L28
 
 - `method_name` holds ServiceMsg type.
+
+## Gas
+In order to prevent DoS attacks, granting `StakeAuthorizaiton`s with `x/authz` incur gas. `StakeAuthorizaiton` allows you to authorize another account to delegate, undelegate, or redelegate to validators. The authorizer can define a list of validators they will allow and/or deny delegations to. The SDK will iterate over these lists and charge 10 gas for each validator in both of the lists. 

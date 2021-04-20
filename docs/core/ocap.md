@@ -72,7 +72,7 @@ gaia app.
 
 The following diagram shows the current dependencies between keepers.
 
-![](../uml/keeper_dependencies.svg)
+![Keeper dependencies](../uml/svg/keeper_dependencies.svg)
 
 ## Next {hide}
 

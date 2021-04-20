@@ -101,7 +101,7 @@ func printAndValidateSigs(
 		if !offline && success {
 			accNum, accSeq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, sigAddr)
 			if err != nil {
-				cmd.Printf("failed to get account: %s\n", sigAddr)
+				cmd.PrintErrf("failed to get account: %s\n", sigAddr)
 				return false
 			}
 

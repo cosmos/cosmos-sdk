@@ -76,8 +76,14 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 
 // NewOperationMsg - create a new operation message from sdk.Msg
 func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
-	msgName := sdk.MsgName(msg)
-	return NewOperationMsgBasic(msgName, msgName, comment, ok, sdk.GetLegacySignBytes(msg))
+	if legacyMsg, okType := msg.(sdk.LegacyMsg); okType {
+		return NewOperationMsgBasic(legacyMsg.Route(), legacyMsg.Type(), comment, ok, legacyMsg.GetSignBytes())
+	}
+
+	bz := cdc.MustMarshalJSON(msg)
+
+	return NewOperationMsgBasic(sdk.MsgRoute(msg), sdk.MsgRoute(msg), comment, ok, bz)
+
 }
 
 // NoOpMsg - create a no-operation message

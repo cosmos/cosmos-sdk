@@ -263,6 +263,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 
 	rootCmd.AddCommand(
 		startCmd,
+		LightCmd(),
 		UnsafeResetAllCmd(),
 		flags.LineBreak,
 		tendermintCmd,

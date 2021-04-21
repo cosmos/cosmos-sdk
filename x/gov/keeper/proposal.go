@@ -41,6 +41,9 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	keeper.InsertInactiveProposalQueue(ctx, proposalID, proposal.DepositEndTime)
 	keeper.SetProposalID(ctx, proposalID+1)
 
+	// called right after a proposal is submitted
+	keeper.AfterProposalSubmission(ctx, proposalID)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSubmitProposal,

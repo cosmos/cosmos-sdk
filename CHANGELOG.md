@@ -87,7 +87,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank/types) [\#9061](https://github.com/cosmos/cosmos-sdk/pull/9061) `AddressFromBalancesStore` now returns an error for invalid key instead of panic.
 * [\#9139](https://github.com/cosmos/cosmos-sdk/pull/9139) ServiceMsgs as defined in ADR-031 have been removed, so that the SDK adheres to the Protobuf spec of `Any` packing. This has multiple consequences:
   * The `sdk.ServiceMsg` interface has been removed.
-  * `sdk.Msg` now only contains `ValidateBasic` and `GetSigners` methods. The remaining methods `GetSignBytes`, `Route` and `Type` are moved to `sdk.LegacyMsg`.
+  * `sdk.Msg` now only contains `ValidateBasic` and `GetSigners` methods. The remaining methods `GetSignBytes`, `Route` and `Type` are moved to `legacytx.LegacyMsg`.
   * The `RegisterCustomTypeURL` function and the `cosmos.base.v1beta1.ServiceMsg` interface have been removed from the interface registry.
 
 

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 const (
@@ -712,7 +713,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
 			msgEventAction = sdk.MsgName(msg)
-		} else if legacyMsg, ok := msg.(sdk.LegacyMsg); ok {
+		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 			// legacy sdk.Msg routing
 			msgRoute := legacyMsg.Route()
 			msgEventAction = legacyMsg.Type()

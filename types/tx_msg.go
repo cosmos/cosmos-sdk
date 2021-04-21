@@ -23,24 +23,6 @@ type (
 		GetSigners() []AccAddress
 	}
 
-	// LegacyMsg defines the old interface a message must fulfill, containing
-	// Amino signing method and legacy router info.
-	// Deprecated: Please use `Msg` instead.
-	LegacyMsg interface {
-		Msg
-
-		// Get the canonical byte representation of the Msg.
-		GetSignBytes() []byte
-
-		// Return the message type.
-		// Must be alphanumeric or empty.
-		Route() string
-
-		// Returns a human-readable string for the message, intended for utilization
-		// within tags
-		Type() string
-	}
-
 	// Fee defines an interface for an application application-defined concrete
 	// transaction type to be able to set and return the transaction fee.
 	Fee interface {

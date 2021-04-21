@@ -9,7 +9,7 @@ the distribution `ModuleAccount` account. When a delegator or validator
 withdraws their rewards, they are taken out of the `ModuleAccount`. During begin
 block, the different claims on the fees collected are updated as follows:
 
-- The block proposer of the previous round and its delegators receive between 1% and 5% of fee rewards.
+- The block proposer of the previous height and its delegators receive between 1% and 5% of fee rewards.
 - The reserve community tax is charged.
 - The remainder is distributed proportionally by voting power to all bonded validators
 
@@ -22,7 +22,7 @@ See [params](07_params.md) for description of parameters.
 Let `fees` be the total fees collected in the previous block, including
 inflationary rewards to the stake. All fees are collected in a specific module
 account during the block. During `BeginBlock`, they are sent to the
-`"distribution"` `ModuleAccount`. No other sending of tokens occur. Instead, the
+`"distribution"` `ModuleAccount`. No other sending of tokens occurs. Instead, the
 rewards each account is entitled to are stored, and withdrawals can be triggered
 through the messages `FundCommunityPool`, `WithdrawValidatorCommission` and
 `WithdrawDelegatorReward`.
@@ -39,7 +39,7 @@ The proposer receives a base reward of `fees * baseproposerreward` and a bonus
 of `fees * bonusproposerreward * P`, where `P = (total power of validators with
 included precommits / total bonded validator power)`. The more precommits the
 proposer includes, the larger `P` is. `P` can never be larger than `1.00` (since
-ony bonded validators can supply valid precommits) and is always be larger than
+only bonded validators can supply valid precommits) and is always larger than
 `2/3`.
 
 Any remaining fees are distributed among all the bonded validators, including
@@ -57,7 +57,7 @@ All other validators receive `fees * voteMul * powFrac`.
 ### Rewards to Delegators
 
 Each validator's rewards are distributed to its delegators. The validator also
-has a self-delegation, which is treated like a regular delegation in
+has a self-delegation that is treated like a regular delegation in
 distribution calculations.
 
 The validator sets a commission rate. The commission rate is flexible, but each

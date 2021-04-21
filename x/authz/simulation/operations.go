@@ -21,7 +21,8 @@ import (
 
 // authz message types
 var (
-	// FIXME Remove `Request` suffix
+	// TODO Remove `Request` suffix
+	// https://github.com/cosmos/cosmos-sdk/issues/9114
 	TypeMsgGrantAuthorization  = sdk.MsgTypeURL(&types.MsgGrantAuthorizationRequest{})
 	TypeMsgRevokeAuthorization = sdk.MsgTypeURL(&types.MsgRevokeAuthorizationRequest{})
 	TypeMsgExecDelegated       = sdk.MsgTypeURL(&types.MsgExecAuthorizedRequest{})

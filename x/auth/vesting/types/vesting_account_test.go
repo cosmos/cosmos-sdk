@@ -537,7 +537,7 @@ func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
 	bacc, origCoins := initBaseAccount()
 
 	// require no coins are vested
-	plva := types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva := types.NewPermanentLockedAccount(bacc, origCoins)
 	vestedCoins := plva.GetVestedCoins(now)
 	require.Nil(t, vestedCoins)
 
@@ -553,7 +553,7 @@ func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
 	bacc, origCoins := initBaseAccount()
 
 	// require all coins vesting at the beginning of the schedule
-	plva := types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva := types.NewPermanentLockedAccount(bacc, origCoins)
 	vestingCoins := plva.GetVestingCoins(now)
 	require.Equal(t, origCoins, vestingCoins)
 
@@ -570,7 +570,7 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 
 	// require that all coins are locked in the beginning of the vesting
 	// schedule
-	plva := types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva := types.NewPermanentLockedAccount(bacc, origCoins)
 	lockedCoins := plva.LockedCoins(now)
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
@@ -593,19 +593,19 @@ func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
 	bacc, origCoins := initBaseAccount()
 
 	// require the ability to delegate all vesting coins
-	plva := types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva := types.NewPermanentLockedAccount(bacc, origCoins)
 	plva.TrackDelegation(now, origCoins, origCoins)
 	require.Equal(t, origCoins, plva.DelegatedVesting)
 	require.Nil(t, plva.DelegatedFree)
 
 	// require the ability to delegate all vested coins at endTime
-	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva = types.NewPermanentLockedAccount(bacc, origCoins)
 	plva.TrackDelegation(endTime, origCoins, origCoins)
 	require.Equal(t, origCoins, plva.DelegatedVesting)
 	require.Nil(t, plva.DelegatedFree)
 
 	// require no modifications when delegation amount is zero or not enough funds
-	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva = types.NewPermanentLockedAccount(bacc, origCoins)
 
 	require.Panics(t, func() {
 		plva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
@@ -621,21 +621,21 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 	bacc, origCoins := initBaseAccount()
 
 	// require the ability to undelegate all vesting coins
-	plva := types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva := types.NewPermanentLockedAccount(bacc, origCoins)
 	plva.TrackDelegation(now, origCoins, origCoins)
 	plva.TrackUndelegation(origCoins)
 	require.Nil(t, plva.DelegatedFree)
 	require.Nil(t, plva.DelegatedVesting)
 
 	// require the ability to undelegate all vesting coins at endTime
-	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva = types.NewPermanentLockedAccount(bacc, origCoins)
 	plva.TrackDelegation(endTime, origCoins, origCoins)
 	plva.TrackUndelegation(origCoins)
 	require.Nil(t, plva.DelegatedFree)
 	require.Nil(t, plva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
-	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva = types.NewPermanentLockedAccount(bacc, origCoins)
 	require.Panics(t, func() {
 		plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
 	})
@@ -643,7 +643,7 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 	require.Nil(t, plva.DelegatedVesting)
 
 	// delegate to two validators
-	plva = types.NewPermanentLockedVestingAccount(bacc, origCoins)
+	plva = types.NewPermanentLockedAccount(bacc, origCoins)
 	plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
 	plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
 
@@ -716,12 +716,12 @@ func TestGenesisAccountValidate(t *testing.T) {
 		},
 		{
 			"valid permanent locked vesting account",
-			types.NewPermanentLockedVestingAccount(baseAcc, initialVesting),
+			types.NewPermanentLockedAccount(baseAcc, initialVesting),
 			false,
 		},
 		{
 			"invalid positive end time for permanently locked vest account",
-			&types.PermanentLockedVestingAccount{BaseVestingAccount: baseVestingWithCoins},
+			&types.PermanentLockedAccount{BaseVestingAccount: baseVestingWithCoins},
 			true,
 		},
 	}
@@ -786,16 +786,16 @@ func TestDelayedVestingAccountMarshal(t *testing.T) {
 	_, err = app.AccountKeeper.UnmarshalAccount(bz[:len(bz)/2])
 	require.NotNil(t, err)
 }
-func TestPermanentLockedVestingAccountMarshal(t *testing.T) {
+func TestPermanentLockedAccountMarshal(t *testing.T) {
 	baseAcc, coins := initBaseAccount()
-	acc := types.NewPermanentLockedVestingAccount(baseAcc, coins)
+	acc := types.NewPermanentLockedAccount(baseAcc, coins)
 
 	bz, err := app.AccountKeeper.MarshalAccount(acc)
 	require.Nil(t, err)
 
 	acc2, err := app.AccountKeeper.UnmarshalAccount(bz)
 	require.Nil(t, err)
-	require.IsType(t, &types.PermanentLockedVestingAccount{}, acc2)
+	require.IsType(t, &types.PermanentLockedAccount{}, acc2)
 	require.Equal(t, acc.String(), acc2.String())
 
 	// error on bad bytes

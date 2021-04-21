@@ -249,6 +249,85 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 	}
 }
 
+// SimulateModuleAccountMsgMultiSend sends coins to Module Accounts
+func SimulateModuleAccountMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		inputs := make([]types.Input, 2)
+		outputs := make([]types.Output, 2)
+		// collect signer privKeys
+		privs := make([]cryptotypes.PrivKey, len(inputs))
+
+		var totalSentCoins sdk.Coins
+		for i := range inputs {
+
+			// Sender
+			simAcc := accs[i]
+
+			// set signer privkey
+			privs[i] = simAcc.PrivKey
+
+			spendable := bk.SpendableCoins(ctx, simAcc.Address)
+			coins := simtypes.RandSubsetCoins(r, spendable)
+
+			// set next input and accumulate total sent coins
+			inputs[i] = types.NewInput(simAcc.Address, coins)
+			totalSentCoins = totalSentCoins.Add(coins...)
+		}
+
+		// Check send_enabled status of each sent coin denom
+		if err := bk.SendEnabledCoins(ctx, totalSentCoins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
+		}
+
+		for o := range outputs {
+
+			toSimAcc := accs[o+len(inputs)]
+
+			var outCoins sdk.Coins
+			// split total sent coins into random subsets for output
+			if o == len(outputs)-1 {
+				outCoins = totalSentCoins
+			} else {
+				// take random subset of remaining coins for output
+				// and update remaining coins
+				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
+				totalSentCoins = totalSentCoins.Sub(outCoins)
+			}
+
+			outputs[o] = types.NewOutput(toSimAcc.Address, outCoins)
+		}
+
+		// remove any output that has no coins
+
+		i := 0
+		for i < len(outputs) {
+			if outputs[i].Coins.Empty() {
+				outputs[i] = outputs[len(outputs)-1]
+				outputs = outputs[:len(outputs)-1]
+			} else {
+				// continue onto next coin
+				i++
+			}
+		}
+
+		msg := &types.MsgMultiSend{
+			Inputs:  inputs,
+			Outputs: outputs,
+		}
+
+		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+	}
+}
+
 // sendMsgMultiSend sends a transaction with a MsgMultiSend from a provided random
 // account.
 func sendMsgMultiSend(

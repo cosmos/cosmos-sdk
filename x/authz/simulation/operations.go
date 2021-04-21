@@ -22,9 +22,9 @@ import (
 // authz message types
 var (
 	// FIXME Remove `Request` suffix
-	TypeMsgGrantAuthorization  = sdk.MsgRoute(&types.MsgGrantAuthorizationRequest{})
-	TypeMsgRevokeAuthorization = sdk.MsgRoute(&types.MsgRevokeAuthorizationRequest{})
-	TypeMsgExecDelegated       = sdk.MsgRoute(&types.MsgExecAuthorizedRequest{})
+	TypeMsgGrantAuthorization  = sdk.MsgTypeURL(&types.MsgGrantAuthorizationRequest{})
+	TypeMsgRevokeAuthorization = sdk.MsgTypeURL(&types.MsgRevokeAuthorizationRequest{})
+	TypeMsgExecDelegated       = sdk.MsgTypeURL(&types.MsgExecAuthorizedRequest{})
 )
 
 // Simulation operation weights constants
@@ -131,7 +131,7 @@ func SimulateMsgGrantAuthorization(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgRoute(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
 		}
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}

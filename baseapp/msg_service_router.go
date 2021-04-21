@@ -33,7 +33,7 @@ type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
-	return msr.routes[sdk.MsgRoute(msg)]
+	return msr.routes[sdk.MsgTypeURL(msg)]
 }
 
 // HandlerByName returns the MsgServiceHandler for a given query route path or nil
@@ -69,7 +69,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
 
-			requestTypeName = sdk.MsgRoute(msg)
+			requestTypeName = sdk.MsgTypeURL(msg)
 			return nil
 		}, func(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
 			return nil, nil

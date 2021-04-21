@@ -19,7 +19,7 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 
 // MethodName implements Authorization.MethodName.
 func (authorization SendAuthorization) MethodName() string {
-	return sdk.MsgRoute(&MsgSend{})
+	return sdk.MsgTypeURL(&MsgSend{})
 }
 
 // Accept implements Authorization.Accept.

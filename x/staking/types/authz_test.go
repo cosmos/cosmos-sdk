@@ -32,7 +32,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 	// verify MethodName
 	delAuth, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
 	require.NoError(t, err)
-	require.Equal(t, delAuth.MethodName(), sdk.MsgRoute(&stakingtypes.MsgDelegate{}))
+	require.Equal(t, delAuth.MethodName(), sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}))
 
 	// error both allow & deny list
 	_, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
@@ -40,11 +40,11 @@ func TestAuthzAuthorizations(t *testing.T) {
 
 	// verify MethodName
 	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, &coin100)
-	require.Equal(t, undelAuth.MethodName(), sdk.MsgRoute(&stakingtypes.MsgUndelegate{}))
+	require.Equal(t, undelAuth.MethodName(), sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}))
 
 	// verify MethodName
 	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, &coin100)
-	require.Equal(t, beginRedelAuth.MethodName(), sdk.MsgRoute(&stakingtypes.MsgBeginRedelegate{}))
+	require.Equal(t, beginRedelAuth.MethodName(), sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}))
 
 	validators1_2 := []string{val1.String(), val2.String()}
 

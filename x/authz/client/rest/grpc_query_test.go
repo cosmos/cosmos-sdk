@@ -31,7 +31,7 @@ type IntegrationTestSuite struct {
 }
 
 var typeMsgSend = banktypes.SendAuthorization{}.MethodName()
-var typeMsgVote = sdk.MsgRoute(&govtypes.MsgVote{})
+var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")

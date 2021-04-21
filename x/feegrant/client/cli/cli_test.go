@@ -639,7 +639,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	}
 	spendLimit := sdk.NewCoin("stake", sdk.NewInt(1000))
 
-	allowMsgs := sdk.MsgRoute(&govtypes.MsgSubmitProposal{})
+	allowMsgs := sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})
 
 	testCases := []struct {
 		name         string

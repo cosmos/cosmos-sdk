@@ -82,7 +82,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 var typeMsgSend = bank.SendAuthorization{}.MethodName()
-var typeMsgVote = sdk.MsgRoute(&govtypes.MsgVote{})
+var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]

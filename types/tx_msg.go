@@ -105,7 +105,7 @@ func MsgName(msg Msg) string {
 	return proto.MessageName(msg)
 }
 
-// MsgRoute returns the the key of a sdk.Msg in the BaseApp msg_service router.
-func MsgRoute(msg Msg) string {
+// MsgTypeURL returns the the key of a sdk.Msg in the BaseApp msg_service router.
+func MsgTypeURL(msg Msg) string {
 	return fmt.Sprintf("/%s", MsgName(msg))
 }

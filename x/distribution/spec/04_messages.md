@@ -6,10 +6,10 @@ order: 4
 
 ## MsgSetWithdrawAddress
 
-By default, the withdraw address is delegator address. If a delegator wants to change its withdraw address it must send `MsgSetWithdrawAddress`.
-This is only possible if the parameter `WithdrawAddrEnabled` is set to `true`.
+By default, the withdraw address is the delegator address. To change its withdraw address, a delegator must send a `MsgSetWithdrawAddress` message.
+Changing the withdraw address is possible only if the parameter `WithdrawAddrEnabled` is set to `true`.
 
-The withdraw address cannot be any of the module accounts. These are blocked from being withdraw addresses by being added to the distribution keeper's `blockedAddrs` array at initialization.
+The withdraw address cannot be any of the module accounts. These accounts are blocked from being withdraw addresses by being added to the distribution keeper's `blockedAddrs` array at initialization.
 
 Response:
 
@@ -31,7 +31,7 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 ## MsgWithdrawDelegatorReward
 
 A delegator can withdraw its rewards.
-Internally in the distribution module, this is treated exactly as if the delegator simply started a new delegation of the same value, simultaneously removing the previous delegation with associated rewards.
+Internally in the distribution module, this transaction simultaneously removes the previous delegation with associated rewards, the same as if the delegator simply started a new delegation of the same value.
 The rewards are sent immediately from the distribution `ModuleAccount` to the withdraw address.
 Any remainder (truncated decimals) are sent to the community pool.
 The starting height of the delegation is set to the current validator period, and the reference count for the previous period is decremented.
@@ -93,6 +93,8 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 ```
 
 ## Common distribution operations
+
+These operations take place during many different messages.
 
 ### Initialize delegation
 

@@ -12,7 +12,7 @@ To learn more, see the [F1 Fee Distribution paper](/docs/spec/fee_distribution/f
 The commission to the validator is paid when the validator is removed or when the validator requests a withdrawal.
 The commission is calculated and incremented at every `BeginBlock` operation to update accumulated fee amounts.
 
-The reward to a delegator are distributed the delegation is changed or removed, or a withdrawal is requested. 
+The rewards to a delegator are distributed when the delegation is changed or removed, or a withdrawal is requested. 
 Before rewards are distributed, all slashes to the validator that occurred during the current delegation are applied.
 
 ## Reference Counting in F1 Fee Distribution

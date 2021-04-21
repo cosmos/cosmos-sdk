@@ -19,12 +19,13 @@ To incentivize validators to wait and include additional pre-commits in the bloc
 
 See [params](07_params.md) for description of parameters.
 
-Let `fees` be the total fees collected in the previous block. All fees are
-collected in a specific module account during the block. During `BeginBlock`,
-they are sent to the `"distribution"` `ModuleAccount`. No other sending of
-tokens occur. Instead, the rewards each account is entitled to are stored, and
-withdrawals can be triggered through the messages `FundCommunityPool`,
-`WithdrawValidatorCommission` and `WithdrawDelegatorReward`.
+Let `fees` be the total fees collected in the previous block, including
+inflationary rewards to the stake. All fees are collected in a specific module
+account during the block. During `BeginBlock`, they are sent to the
+`"distribution"` `ModuleAccount`. No other sending of tokens occur. Instead, the
+rewards each account is entitled to are stored, and withdrawals can be triggered
+through the messages `FundCommunityPool`, `WithdrawValidatorCommission` and
+`WithdrawDelegatorReward`.
 
 ### Reward to the Community Pool
 

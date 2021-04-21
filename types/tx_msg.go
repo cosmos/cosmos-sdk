@@ -95,11 +95,6 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
 
-func GetLegacySignBytes(msg Msg) []byte {
-	legacyMsg := msg.(LegacyMsg)
-	return legacyMsg.GetSignBytes()
-}
-
 // MsgName returns the protobuf MessageName of a sdk.Msg.
 func MsgName(msg Msg) string {
 	return proto.MessageName(msg)

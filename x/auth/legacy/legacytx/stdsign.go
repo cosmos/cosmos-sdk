@@ -38,7 +38,7 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 		// If msg is a legacy Msg, then GetSignBytes is implemented.
 		// If msg is a ServiceMsg, then GetSignBytes has graceful support of
 		// calling GetSignBytes from its underlying Msg.
-		msgsBytes = append(msgsBytes, json.RawMessage(sdk.GetLegacySignBytes(msg)))
+		msgsBytes = append(msgsBytes, json.RawMessage(msg.(sdk.LegacyMsg).GetSignBytes()))
 	}
 
 	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{

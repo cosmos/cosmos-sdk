@@ -20,12 +20,10 @@ package main
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/types/descriptorpb"
 	"strconv"
 	"strings"
-
-	"google.golang.org/protobuf/compiler/protogen"
-
-	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 const (

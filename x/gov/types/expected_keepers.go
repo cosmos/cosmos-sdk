@@ -58,6 +58,6 @@ type GovHooks interface {
 	AfterProposalSubmission(ctx sdk.Context, proposalID uint64)                            // Must be called after proposal is submitted
 	AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) // Must be called after a deposit is made
 	AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress)        // Must be called after a vote on a proposal is cast
-	AfterProposalInactive(ctx sdk.Context, proposalID uint64)                              // Must be called when proposal become inactive
-	AfterProposalActive(ctx sdk.Context, proposalID uint64)                                // Must be called when proposal become active
+	AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64)                      // Must be called when proposal fails to reach min deposit
+	AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64)                     // Must be called when proposal's finishes it's voting period
 }

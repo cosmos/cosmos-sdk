@@ -14,13 +14,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+var _ types.GovHooks = &MockGovHooksReceiver{}
+
 // GovHooks event hooks for governance proposal object (noalias)
 type MockGovHooksReceiver struct {
-	AfterProposalSubmissionValid bool
-	AfterProposalDepositValid    bool
-	AfterProposalVoteValid       bool
-	AfterProposalInactiveValid   bool
-	AfterProposalActiveValid     bool
+	AfterProposalSubmissionValid        bool
+	AfterProposalDepositValid           bool
+	AfterProposalVoteValid              bool
+	AfterProposalFailedMinDepositValid  bool
+	AfterProposalVotingPeriodEndedValid bool
 }
 
 func (h *MockGovHooksReceiver) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {
@@ -34,11 +36,11 @@ func (h *MockGovHooksReceiver) AfterProposalDeposit(ctx sdk.Context, proposalID 
 func (h *MockGovHooksReceiver) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	h.AfterProposalVoteValid = true
 }
-func (h *MockGovHooksReceiver) AfterProposalInactive(ctx sdk.Context, proposalID uint64) {
-	h.AfterProposalInactiveValid = true
+func (h *MockGovHooksReceiver) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {
+	h.AfterProposalFailedMinDepositValid = true
 }
-func (h *MockGovHooksReceiver) AfterProposalActive(ctx sdk.Context, proposalID uint64) {
-	h.AfterProposalActiveValid = true
+func (h *MockGovHooksReceiver) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {
+	h.AfterProposalVotingPeriodEndedValid = true
 }
 
 func TestHooks(t *testing.T) {
@@ -59,8 +61,8 @@ func TestHooks(t *testing.T) {
 	require.False(t, govHooksReceiver.AfterProposalSubmissionValid)
 	require.False(t, govHooksReceiver.AfterProposalDepositValid)
 	require.False(t, govHooksReceiver.AfterProposalVoteValid)
-	require.False(t, govHooksReceiver.AfterProposalInactiveValid)
-	require.False(t, govHooksReceiver.AfterProposalActiveValid)
+	require.False(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
+	require.False(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 
 	tp := TestProposal
 	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
@@ -72,7 +74,7 @@ func TestHooks(t *testing.T) {
 	ctx = ctx.WithBlockHeader(newHeader)
 	gov.EndBlocker(ctx, app.GovKeeper)
 
-	require.True(t, govHooksReceiver.AfterProposalInactiveValid)
+	require.True(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
 
 	p2, err := app.GovKeeper.SubmitProposal(ctx, tp)
 	require.NoError(t, err)
@@ -90,5 +92,5 @@ func TestHooks(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(app.GovKeeper.GetVotingParams(ctx).VotingPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 	gov.EndBlocker(ctx, app.GovKeeper)
-	require.True(t, govHooksReceiver.AfterProposalActiveValid)
+	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 }

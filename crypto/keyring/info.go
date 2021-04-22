@@ -281,7 +281,7 @@ func aminoUnmarshalInfo(bz []byte) (info Info, err error) {
 // encoding info
 func protoMarshalInfo(i Info) []byte {
 	// TODO
-	// Convert pub key to a proto keyring.Item structure
+	// Convert pub key to a proto keyring.Item structure Item.Data
 }
 
 // decoding info

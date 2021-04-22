@@ -23,6 +23,9 @@ type Keeper struct {
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
 
+	// GovHooks
+	hooks types.GovHooks
+
 	// The (unexposed) keys used to access the stores from the Context.
 	storeKey sdk.StoreKey
 
@@ -64,6 +67,17 @@ func NewKeeper(
 		cdc:        cdc,
 		router:     rtr,
 	}
+}
+
+// SetHooks sets the hooks for governance
+func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
+	if keeper.hooks != nil {
+		panic("cannot set governance hooks twice")
+	}
+
+	keeper.hooks = gh
+
+	return keeper
 }
 
 // Logger returns a module-specific logger.

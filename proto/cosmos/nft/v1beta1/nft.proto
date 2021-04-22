@@ -1,0 +1,19 @@
+syntax = "proto3";
+package cosmos.nft.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+option go_package                      = "github.com/cosmos/cosmos-sdk/x/nft/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// BaseNFT defines a base NFT type.
+message BaseNFT {
+  option (gogoproto.equal) = true;
+
+  string id    = 1;
+  string name  = 2;
+  string uri   = 3 [(gogoproto.customname) = "URI"];
+  string data  = 4;
+  string owner = 5;
+}

@@ -150,6 +150,9 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		deposit = types.NewDeposit(proposalID, depositorAddr, depositAmount)
 	}
 
+	// called when deposit has been added to a proposal, however the proposal may not be active
+	keeper.AfterProposalDeposit(ctx, proposalID, depositorAddr)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeProposalDeposit,

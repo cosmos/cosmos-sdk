@@ -10,7 +10,7 @@ const (
 	BackendOrmEngineTypeMysql  = "mysql"
 )
 
-var defaultNodeHome = os.ExpandEnv("$HOME/.okexchaind")
+var defaultNodeHome = os.ExpandEnv("$HOME/.exchaind")
 
 // SetNodeHome sets the root directory for all data.
 func SetNodeHome(home string) {
@@ -39,7 +39,7 @@ type BackendOrmEngineInfo struct {
 	// engine type should be sqlite3 or mysql
 	EngineType string `json:"engine_type" mapstructure:"engine_type"`
 
-	// if engine_type is sqlite3, it should be a local path, e.g.) /Users/lingting.fu/.okexchaind/data/sqlite3/backend.db
+	// if engine_type is sqlite3, it should be a local path, e.g.) /Users/lingting.fu/.exchaind/data/sqlite3/backend.db
 	// if engine_type is mysql, it should be "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"
 	ConnectStr string `json:"connect_str" mapstructure:"connect_str"`
 }

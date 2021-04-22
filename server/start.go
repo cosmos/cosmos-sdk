@@ -141,7 +141,7 @@ which accepts a path for the resulting pprof file.
 
 	registerRestServerFlags(cmd)
 	registerAppFlagFn(cmd)
-	registerokexchainPluginFlags(cmd)
+	registerExChainPluginFlags(cmd)
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd

@@ -16,7 +16,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/os"
 )
 
-// okexchain full-node start flags
+// exchain full-node start flags
 const (
 	FlagListenAddr         = "rest.laddr"
 	FlagExternalListenAddr = "rest.external_laddr"
@@ -144,7 +144,7 @@ func StopCmd(ctx *Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			f, err := os.Open(filepath.Join(ctx.Config.RootDir, "config", "pid"))
 			if err != nil {
-				errStr := fmt.Sprintf("%s Please finish the process of okexchaind through kill -2 pid to stop gracefully", err.Error())
+				errStr := fmt.Sprintf("%s Please finish the process of exchaind through kill -2 pid to stop gracefully", err.Error())
 				cmn.Exit(errStr)
 			}
 			defer f.Close()
@@ -152,7 +152,7 @@ func StopCmd(ctx *Context) *cobra.Command {
 			in.Scan()
 			pid, err := strconv.Atoi(in.Text())
 			if err != nil {
-				errStr := fmt.Sprintf("%s Please finish the process of okexchaind through kill -2 pid to stop gracefully", err.Error())
+				errStr := fmt.Sprintf("%s Please finish the process of exchaind through kill -2 pid to stop gracefully", err.Error())
 				cmn.Exit(errStr)
 			}
 			process, err := os.FindProcess(pid)
@@ -185,7 +185,7 @@ func registerRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagListenAddr, "tcp://0.0.0.0:26659", "The address for the rest-server to listen on. (0.0.0.0:0 means any interface, any port)")
 	cmd.Flags().String(FlagUlockKey, "", "Select the keys to unlock on the RPC server")
 	cmd.Flags().String(FlagUlockKeyHome, "", "The keybase home path")
-	cmd.Flags().String(FlagRestPathPrefix, "okexchain", "Path prefix for registering rest api route.")
+	cmd.Flags().String(FlagRestPathPrefix, "exchain", "Path prefix for registering rest api route.")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.Flags().String(FlagCORS, "", "Set the rest-server domains that can make CORS requests (* for all)")
 	cmd.Flags().Int(FlagMaxOpenConnections, 1000, "The number of maximum open connections of rest-server")
@@ -196,8 +196,8 @@ func registerRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	return cmd
 }
 
-// registerokexchainPluginFlags registers the flags required for rest server
-func registerokexchainPluginFlags(cmd *cobra.Command) *cobra.Command {
+// registerExChainPluginFlags registers the flags required for rest server
+func registerExChainPluginFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().Bool(FlagBackendEnableBackend, backendConf.EnableBackend, "Enable the node's backend plugin")
 	cmd.Flags().Bool(FlagBackendEnableMktCompute, backendConf.EnableMktCompute, "Enable kline and ticker calculating")
 	cmd.Flags().Bool(FlagBackendLogSQL, backendConf.LogSQL, "Enable backend plugin logging sql feature")

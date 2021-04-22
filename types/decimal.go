@@ -179,6 +179,9 @@ func NewDecFromStr(str string) (Dec, error) {
 	if !ok {
 		return Dec{}, fmt.Errorf("failed to set decimal string: %s", combinedStr)
 	}
+	if combined.BitLen() > maxBitLen {
+		return Dec{}, fmt.Errorf("decimal out of range; bitLen: got %d, max %d", combined.BitLen(), maxBitLen)
+	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
 	}

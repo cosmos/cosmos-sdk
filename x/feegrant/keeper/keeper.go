@@ -127,29 +127,6 @@ func (k Keeper) GetFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 	return feegrant, true, nil
 }
 
-// IterateAllGranteeFeeAllowances iterates over all the grants from anyone to the given grantee.
-// Callback to get all data, returns true to stop, false to keep reading
-func (k Keeper) IterateAllGranteeFeeAllowances(ctx sdk.Context, grantee sdk.AccAddress, cb func(types.FeeAllowanceGrant) bool) error {
-	store := ctx.KVStore(k.storeKey)
-	prefix := types.FeeAllowancePrefixByGrantee(grantee)
-	iter := sdk.KVStorePrefixIterator(store, prefix)
-	defer iter.Close()
-
-	stop := false
-	for ; iter.Valid() && !stop; iter.Next() {
-		bz := iter.Value()
-
-		var feeGrant types.FeeAllowanceGrant
-		if err := k.cdc.UnmarshalBinaryBare(bz, &feeGrant); err != nil {
-			return err
-		}
-
-		stop = cb(feeGrant)
-	}
-
-	return nil
-}
-
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
@@ -188,26 +165,34 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	remove, err := grant.Accept(ctx, fee, msgs)
-	if err == nil {
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeUseFeeGrant,
-				sdk.NewAttribute(types.AttributeKeyGranter, granter.String()),
-				sdk.NewAttribute(types.AttributeKeyGrantee, grantee.String()),
-			),
-		)
-	}
 
 	if remove {
 		k.RevokeFeeAllowance(ctx, granter, grantee)
-		// note this returns nil if err == nil
-		return sdkerrors.Wrap(err, "removed grant")
+		if err != nil {
+			return err
+		}
+
+		emitUseGrantEvent(ctx, granter.String(), grantee.String())
+
+		return nil
 	}
 
 	if err != nil {
-		return sdkerrors.Wrap(err, "invalid grant")
+		return err
 	}
 
-	// if we accepted, store the updated state of the allowance
+	emitUseGrantEvent(ctx, granter.String(), grantee.String())
+
+	// if fee allowance is accepted, store the updated state of the allowance
 	return k.GrantFeeAllowance(ctx, granter, grantee, grant)
+}
+
+func emitUseGrantEvent(ctx sdk.Context, granter, grantee string) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeUseFeeGrant,
+			sdk.NewAttribute(types.AttributeKeyGranter, granter),
+			sdk.NewAttribute(types.AttributeKeyGrantee, grantee),
+		),
+	)
 }

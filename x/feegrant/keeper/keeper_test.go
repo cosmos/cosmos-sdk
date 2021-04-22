@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -69,6 +70,10 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[1])
 	k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
 
+	// revoke non-exist fee allowance
+	err = k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
+	suite.Require().Error(err)
+
 	err = k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[2], basic)
 	suite.Require().NoError(err)
 
@@ -119,50 +124,19 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 			suite.Equal(tc.allowance, allow)
 		})
 	}
+	accAddr, err := sdk.AccAddressFromBech32("cosmos1rxr4mq58w3gtnx5tsc438mwjjafv3mja7k5pnu")
+	suite.Require().NoError(err)
 
-	grant1, err := types.NewFeeAllowanceGrant(suite.addrs[3], suite.addrs[0], basic2)
-	suite.NoError(err)
+	// let's grant and revoke authorization to non existing account
+	err = k.GrantFeeAllowance(ctx, suite.addrs[3], accAddr, basic2)
+	suite.Require().NoError(err)
 
-	grant2, err := types.NewFeeAllowanceGrant(suite.addrs[1], suite.addrs[2], basic2)
-	suite.NoError(err)
+	_, err = k.GetFeeAllowance(ctx, suite.addrs[3], accAddr)
+	suite.Require().NoError(err)
 
-	grant3, err := types.NewFeeAllowanceGrant(suite.addrs[0], suite.addrs[2], basic)
-	suite.NoError(err)
+	err = k.RevokeFeeAllowance(ctx, suite.addrs[3], accAddr)
+	suite.Require().NoError(err)
 
-	allCases := map[string]struct {
-		grantee sdk.AccAddress
-		grants  []types.FeeAllowanceGrant
-	}{
-		"addr2 has none": {
-			grantee: suite.addrs[1],
-		},
-		"addr has one": {
-			grantee: suite.addrs[0],
-			grants: []types.FeeAllowanceGrant{
-				grant1,
-			},
-		},
-		"addr3 has two": {
-			grantee: suite.addrs[2],
-			grants: []types.FeeAllowanceGrant{
-				grant3,
-				grant2,
-			},
-		},
-	}
-
-	for name, tc := range allCases {
-		tc := tc
-		suite.Run(name, func() {
-			var grants []types.FeeAllowanceGrant
-			err := k.IterateAllGranteeFeeAllowances(ctx, tc.grantee, func(grant types.FeeAllowanceGrant) bool {
-				grants = append(grants, grant)
-				return false
-			})
-			suite.NoError(err)
-			suite.Equal(tc.grants, grants)
-		})
-	}
 }
 
 func (suite *KeeperTestSuite) TestUseGrantedFee() {
@@ -255,4 +229,32 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			suite.Equal(tc.final, loaded)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestIterateGrants() {
+	ctx := suite.ctx
+	k := suite.app.FeeGrantKeeper
+
+	// some helpers
+	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
+	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	allowance := &types.BasicFeeAllowance{
+		SpendLimit: atom,
+		Expiration: types.ExpiresAtHeight(5678),
+	}
+
+	allowance1 := &types.BasicFeeAllowance{
+		SpendLimit: eth,
+		Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(24 * time.Hour)),
+	}
+
+	k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[1], allowance)
+	k.GrantFeeAllowance(ctx, suite.addrs[2], suite.addrs[1], allowance1)
+
+	k.IterateAllFeeAllowances(ctx, func(grant types.FeeAllowanceGrant) bool {
+		suite.Require().Equal(suite.addrs[1].String(), grant.Grantee)
+		suite.Require().Contains([]string{suite.addrs[0].String(), suite.addrs[2].String()}, grant.Granter)
+		return true
+	})
+
 }

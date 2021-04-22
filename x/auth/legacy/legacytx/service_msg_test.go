@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -96,7 +97,7 @@ func (s IntegrationTestSuite) TestServiceMsg() {
 	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
 
 	// This sets a ServiceMsg Msg/Send.
-	// Thanks for the `proto.Marshal` override at the end of this file, tx
+	// Thanks to the `proto.Marshal` override at the end of this file, tx
 	// encoding works nicely.
 	err := txBuilder.SetMsgs(&serviceMsg{
 		MethodName: "/cosmos.bank.v1beta1.Msg/Send",
@@ -143,18 +144,21 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-// newMarshaler is the interface representing objects that can marshal themselves.
-// This exists to overwrite `proto.Marshal` behavior for ServiceMsg.
-//
-// DO NOT DEPEND ON THIS.
-type svcMsgMarshaler interface {
-	XXX_Size() int
-	XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
-}
-
 // Overwrite the `proto.MessageName` and `proto.Marshal` return values for ServiceMsg.
 func (msg *serviceMsg) XXX_MessageName() string { return strings.TrimPrefix(msg.MethodName, "/") }
-func (msg *serviceMsg) XXX_Size() int           { return msg.Request.(svcMsgMarshaler).XXX_Size() }
+func (msg *serviceMsg) XXX_Size() int {
+	any, err := codectypes.NewAnyWithValue(msg.Request)
+	if err != nil {
+		panic(err)
+	}
+
+	return any.XXX_Size()
+}
 func (msg *serviceMsg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return msg.Request.(svcMsgMarshaler).XXX_Marshal(b, deterministic)
+	any, err := codectypes.NewAnyWithValue(msg.Request)
+	if err != nil {
+		return nil, err
+	}
+
+	return any.XXX_Marshal(b, deterministic)
 }

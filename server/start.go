@@ -7,6 +7,8 @@ import (
 	"os"
 	"runtime/pprof"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
@@ -266,6 +268,8 @@ func startInProcess(ctx *Context, cdc *codec.Codec, appCreator AppCreator,
 	if registerRoutesFn != nil {
 		go lcd.StartRestServer(cdc, registerRoutesFn, tmNode, viper.GetString(FlagListenAddr))
 	}
+
+	baseapp.SetGlobalMempool(tmNode.Mempool(), cfg.Mempool.SortTxByGp, cfg.Mempool.Recheck)
 
 	// run forever (the node will not be returned)
 	select {}

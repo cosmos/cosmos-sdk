@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+
+	"github.com/tendermint/tendermint/mempool"
 )
 
 // Transactions messages must fulfill the Msg
@@ -38,6 +40,9 @@ type Tx interface {
 	// ValidateBasic does a simple and lightweight validation check that doesn't
 	// require access to any other information.
 	ValidateBasic() error
+
+	// Return tx sender and gas price
+	GetTxInfo(ctx Context) mempool.ExTxInfo
 }
 
 //__________________________________________________________

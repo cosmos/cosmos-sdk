@@ -10,6 +10,8 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/tendermint/tendermint/mempool"
+
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -39,7 +41,29 @@ var (
 	// mainConsensusParamsKey defines a key to store the consensus params in the
 	// main store.
 	mainConsensusParamsKey = []byte("consensus_params")
+
+	globalMempool        mempool.Mempool
+	mempoolEnableSort    = false
+	mempoolEnableRecheck = true
 )
+
+func GetGlobalMempool() mempool.Mempool {
+	return globalMempool
+}
+
+func IsMempoolEnableSort() bool {
+	return mempoolEnableSort
+}
+
+func IsMempoolEnableRecheck() bool {
+	return mempoolEnableRecheck
+}
+
+func SetGlobalMempool(mempool mempool.Mempool, enableSort bool, enableRecheck bool) {
+	globalMempool = mempool
+	mempoolEnableSort = enableSort
+	mempoolEnableRecheck = enableRecheck
+}
 
 type (
 	// Enum mode for app.runTx
@@ -67,14 +91,14 @@ type BaseApp struct { // nolint: maligned
 	// set upon LoadVersion or LoadLatestVersion.
 	baseKey *sdk.KVStoreKey // Main KVStore in cms
 
-	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
-	GasRefundHandler	   sdk.GasRefundHandler   // gas refund handler for gas refund
-	initChainer    sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker   sdk.BeginBlocker // logic to run before any txs
-	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
-	addrPeerFilter sdk.PeerFilter   // filter peers by address and port
-	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
-	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	anteHandler      sdk.AnteHandler      // ante handler for fee and auth
+	GasRefundHandler sdk.GasRefundHandler // gas refund handler for gas refund
+	initChainer      sdk.InitChainer      // initialize state with validators and state blob
+	beginBlocker     sdk.BeginBlocker     // logic to run before any txs
+	endBlocker       sdk.EndBlocker       // logic to run after all txs, and to determine valset changes
+	addrPeerFilter   sdk.PeerFilter       // filter peers by address and port
+	idPeerFilter     sdk.PeerFilter       // filter peers by node ID
+	fauxMerkleMode   bool                 // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// volatile states:
 	//
@@ -593,7 +617,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 		if mode == runTxModeDeliver && app.GasRefundHandler != nil {
 			GasRefundCtx, msCache := app.cacheTxContext(ctx, txBytes)
 			err := app.GasRefundHandler(GasRefundCtx, tx)
-			if err != nil{
+			if err != nil {
 				panic(err)
 			}
 			msCache.Write()
@@ -652,6 +676,14 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
 		msCache.Write()
+	}
+
+	if mode == runTxModeCheck {
+		exTxInfo := tx.GetTxInfo(ctx)
+		data, err := json.Marshal(exTxInfo)
+		if err == nil {
+			result.Data = data
+		}
 	}
 
 	return gInfo, result, err

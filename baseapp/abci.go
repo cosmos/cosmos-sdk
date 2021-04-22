@@ -78,6 +78,13 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 // SetOption implements the ABCI interface.
 func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
 	// TODO: Implement!
+	switch req.Key {
+	case "ResetCheckState":
+		// reset check state
+		app.checkState.ms = app.cms.CacheMultiStore()
+	default:
+		// do nothing
+	}
 	return
 }
 

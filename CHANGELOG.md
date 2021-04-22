@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (rosetta) [\#8729](https://github.com/cosmos/cosmos-sdk/pull/8729) Data API fully supports balance tracking. Construction API can now construct any message supported by the application.
 * [\#8754](https://github.com/cosmos/cosmos-sdk/pull/8875) Added support for reverse iteration to pagination.
 * [#9088](https://github.com/cosmos/cosmos-sdk/pull/9088) Added implementation to ADR-28 Derived Addresses.
+* [\#9133](https://github.com/cosmos/cosmos-sdk/pull/9133) Added hooks for governance actions.
 
 ### Client Breaking Changes
 

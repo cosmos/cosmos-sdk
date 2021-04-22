@@ -29,14 +29,12 @@ The proof of concept of the group module can be found in https://github.com/rege
 
 We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/regen-network/regen-ledger/tree/master/orm) ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
 
-A group define a set of accounts that can create proposals and vote on them
-through group accounts using different decision policies.
-
 ### Group
 
 A group is a composition of accounts with associated weights. It is not
 an account and doesn't have a balance. It doesn't in and of itself have any
 sort of voting or decision weight.
+Group members can create proposals and vote on them through group accounts using different decision policies.
 
 It has an `admin` account which can manage members in the group, update the group
 metadata and set a new admin.
@@ -127,6 +125,10 @@ message GroupAccountInfo {
 }
 ```
 
+Similarly to a group admin, a group account admin can update its metadata, decision policy or set a new group account admin.
+
+A group account can also be an admin or a member of a group.
+For instance, a group admin could be another group account which could "elects" the members or it could be the same group that elects itself.
 
 ### Decision Policy
 

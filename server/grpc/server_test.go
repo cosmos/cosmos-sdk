@@ -213,7 +213,6 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 // See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
 func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	t := s.T()
-	val0 := s.network.Validators[0]
 
 	// We should reject connections with invalid block heights off the bat.
 	invalidHeightStrs := []struct {

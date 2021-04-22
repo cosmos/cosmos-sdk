@@ -46,6 +46,19 @@ type InterfaceRegistry interface {
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
 
+	// RegisterCustomTypeURL allows a protobuf message to be registered as a
+	// google.protobuf.Any with a custom typeURL (besides its own canonical
+	// typeURL). iface should be an interface as type, as in RegisterInterface
+	// and RegisterImplementations.
+	//
+	// Ex:
+	// This will allow us to pack service methods in Any's using the full method name
+	// as the type URL and the request body as the value, and allow us to unpack
+	// such packed methods using the normal UnpackAny method for the interface iface.
+	//
+	// Deprecated. TODO Remove as part of https://github.com/cosmos/cosmos-sdk/issues/9172.
+	RegisterCustomTypeURL(iface interface{}, typeURL string, impl proto.Message)
+
 	// ListAllInterfaces list the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
 
@@ -114,6 +127,15 @@ func (registry *interfaceRegistry) RegisterImplementations(iface interface{}, im
 		typeURL := "/" + proto.MessageName(impl)
 		registry.registerImpl(iface, typeURL, impl)
 	}
+}
+
+// RegisterCustomTypeURL registers a concrete type which implements the given
+// interface under `typeURL`.
+//
+// This function PANICs if different concrete types are registered under the
+// same typeURL.
+func (registry *interfaceRegistry) RegisterCustomTypeURL(iface interface{}, typeURL string, impl proto.Message) {
+	registry.registerImpl(iface, typeURL, impl)
 }
 
 // registerImpl registers a concrete type which implements the given

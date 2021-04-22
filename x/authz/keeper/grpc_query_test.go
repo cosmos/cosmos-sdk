@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/require"
 )
 
 func (suite *TestSuite) TestGRPCQueryAuthorization() {
@@ -19,74 +20,77 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 	)
 	testCases := []struct {
 		msg      string
-		malleate func()
-		expPass  bool
-		postTest func(res *types.QueryGrantsResponse)
+		malleate func(require *require.Assertions)
+		expError string
+		postTest func(require *require.Assertions, res *types.QueryGrantsResponse)
 	}{
 		{
 			"fail invalid granter addr",
-			func() {
+			func(require *require.Assertions) {
 				req = &types.QueryGrantsRequest{}
 			},
-			false,
-			func(res *types.QueryGrantsResponse) {},
+			"empty address string is not allowed",
+			func(require *require.Assertions, res *types.QueryGrantsResponse) {},
 		},
 		{
 			"fail invalid grantee addr",
-			func() {
+			func(require *require.Assertions) {
 				req = &types.QueryGrantsRequest{
 					Granter: addrs[0].String(),
 				}
 			},
-			false,
-			func(res *types.QueryGrantsResponse) {},
+			"empty address string is not allowed",
+			func(require *require.Assertions, res *types.QueryGrantsResponse) {},
 		},
 		{
 			"fail invalid msg-type",
-			func() {
+			func(require *require.Assertions) {
 				req = &types.QueryGrantsRequest{
-					Granter: addrs[0].String(),
-					Grantee: addrs[1].String(),
+					Granter:    addrs[0].String(),
+					Grantee:    addrs[1].String(),
+					MsgTypeUrl: "unknown",
 				}
 			},
-			false,
-			func(res *types.QueryGrantsResponse) {},
+			"no authorization found for unknown type",
+			func(require *require.Assertions, res *types.QueryGrantsResponse) {},
 		},
 		{
 			"Success",
-			func() {
+			func(require *require.Assertions) {
 				now := ctx.BlockHeader().Time
 				newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 				expAuthorization = &banktypes.SendAuthorization{SpendLimit: newCoins}
 				err := app.AuthzKeeper.GrantX(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
-				suite.Require().NoError(err)
+				require.NoError(err)
 				req = &types.QueryGrantsRequest{
 					Granter:    addrs[1].String(),
 					Grantee:    addrs[0].String(),
 					MsgTypeUrl: expAuthorization.MethodName(),
 				}
 			},
-			true,
-			func(res *types.QueryGrantsResponse) {
+			"",
+			func(require *require.Assertions, res *types.QueryGrantsResponse) {
 				var auth exported.Authorization
-				suite.Require().Equal(1, len(res.Grants))
+				require.Equal(1, len(res.Grants))
 				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
-				suite.Require().NoError(err)
-				suite.Require().NotNil(auth)
-				suite.Require().Equal(auth.String(), expAuthorization.String())
+				require.NoError(err)
+				require.NotNil(auth)
+				require.Equal(auth.String(), expAuthorization.String())
 			},
 		},
 	}
-	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
-			testCase.malleate()
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			require := suite.Require()
+			tc.malleate(require)
 			result, err := queryClient.Grants(gocontext.Background(), req)
-			if testCase.expPass {
-				suite.Require().NoError(err)
+			if tc.expError == "" {
+				require.NoError(err)
 			} else {
-				suite.Require().Error(err)
+				require.Error(err)
+				require.Contains(err.Error(), tc.expError)
 			}
-			testCase.postTest(result)
+			tc.postTest(require, result)
 		})
 	}
 }

@@ -252,15 +252,15 @@ func TestAuthzAuthorizations(t *testing.T) {
 		t.Run(tc.msg, func(t *testing.T) {
 			delAuth, err := stakingtypes.NewStakeAuthorization(tc.allowed, tc.denied, tc.msgType, tc.limit)
 			require.NoError(t, err)
-			updated, del, err := delAuth.Accept(ctx, tc.srvMsg)
+			resp, err := delAuth.Accept(ctx, tc.srvMsg)
 			if tc.expectErr {
 				require.Error(t, err)
 				require.Equal(t, tc.isDelete, del)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.isDelete, del)
+				require.Equal(t, tc.isDelete, resp.Delete)
 				if tc.updatedAuthorization != nil {
-					require.Equal(t, tc.updatedAuthorization.String(), updated.String())
+					require.Equal(t, tc.updatedAuthorization.String(), resp.Updated.String())
 				}
 			}
 		})

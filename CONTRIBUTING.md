@@ -374,9 +374,9 @@ of the **Concept Approval Committee**.
 
 **Committee Members**
 
-* Core Members: **Aaron** (Regen), **Bez** (Fission), **Alessio** (AiB)
+* Core Members: **Aaron** (Regen), **Bez** (IG), **Alessio** (AiB),  **Sunny** (Sikka),  **Zaki** (Iqlusion)
 * Secondary pool of candidates to replace / substitute:
-    * **Chris Goes** (IG), **Sunny** (Sikka)
+    * **Chris Goes** (Anoma), **Marko** (IG), **Ethan Buchman** (Informal), **Robert** (Regen), **Amaury** (Regen), **Fede** (Tharsis), **Emmanuel** (Orijtech), **Frojdi** (AiB), **Jonathan** (AiB)
 
 **Committee Criteria**
 

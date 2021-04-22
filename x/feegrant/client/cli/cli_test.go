@@ -5,6 +5,7 @@ package cli_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -61,7 +62,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	fee := sdk.NewCoin("stake", sdk.NewInt(100))
-	duration := 365 * 24 * 60 * 60
 
 	args := append(
 		[]string{
@@ -69,7 +69,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			grantee.String(),
 			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-			fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
+			fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(365*24*60*60)),
 		},
 		commonFlags...,
 	)
@@ -356,7 +356,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(10*60*60)),
 				},
 				commonFlags...,
 			),
@@ -371,7 +371,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(60*60)),
 				},
 				commonFlags...,
 			),
@@ -387,7 +387,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(60*60)),
 				},
 				commonFlags...,
 			),
@@ -403,7 +403,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(10*60*60)),
 				},
 				commonFlags...,
 			),
@@ -418,7 +418,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(10*60*60)),
 				},
 				commonFlags...,
 			),
@@ -589,7 +589,6 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	}
 
 	fee := sdk.NewCoin("stake", sdk.NewInt(100))
-	duration := 365 * 24 * 60 * 60
 
 	args := append(
 		[]string{
@@ -597,7 +596,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 			grantee.String(),
 			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-			fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
+			fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(365*24*60*60)),
 		},
 		commonFlags...,
 	)
@@ -799,4 +798,8 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func getFormattedExpiration(duration int64) string {
+	return time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339)
 }

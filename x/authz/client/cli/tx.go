@@ -264,7 +264,7 @@ Example:
 			msg := types.NewMsgExec(grantee, serviceMsgs)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.ExecAuthorized(cmd.Context(), &msg)
+			_, err = msgClient.Exec(cmd.Context(), &msg)
 			if err != nil {
 				return err
 			}

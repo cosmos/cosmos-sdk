@@ -261,7 +261,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-		_, err = authzMsgClient.ExecAuthorized(context.Background(), &msg)
+		_, err = authzMsgClient.Exec(context.Background(), &msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgExecDelegated, err.Error()), nil, err
 		}

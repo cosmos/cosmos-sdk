@@ -195,7 +195,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 	s.Require().NoError(err)
 
 	// Broadcast the tx via gRPC.
-	queryClient := txtypes.NewServiceClient(val0.ClientCtx)
+	queryClient := txtypes.NewServiceClient(s.conn)
 
 	grpcRes, err := queryClient.BroadcastTx(
 		context.Background(),
@@ -228,13 +228,7 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	}
 	for _, tt := range invalidHeightStrs {
 		t.Run(tt.value, func(t *testing.T) {
-			conn, err := grpc.Dial(
-				val0.AppConfig.GRPC.Address,
-				grpc.WithInsecure(), // Or else we get "no transport security set"
-			)
-			defer conn.Close()
-
-			testClient := testdata.NewQueryClient(conn)
+			testClient := testdata.NewQueryClient(s.conn)
 			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, tt.value)
 			testRes, err := testClient.Echo(ctx, &testdata.EchoRequest{Message: "hello"})
 			require.Error(t, err)

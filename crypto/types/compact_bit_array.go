@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 )
@@ -15,14 +16,24 @@ import (
 // This is not thread safe, and is not intended for concurrent usage.
 
 // NewCompactBitArray returns a new compact bit array.
-// It returns nil if the number of bits is zero.
+// It returns nil if the number of bits is zero, or if there is any overflow
+// in the arithmetic to encounter for the number of its elements: (bits+7)/8,
+// or if the number of elements will be an unreasonably large number like
+// > maxint32 aka >2**31.
 func NewCompactBitArray(bits int) *CompactBitArray {
 	if bits <= 0 {
 		return nil
 	}
+	nElems := (bits + 7) / 8
+	if nElems <= 0 || nElems > math.MaxInt32 {
+		// We encountered an overflow here, and shouldn't pass negatives
+		// to make, nor should we allow unreasonable limits > maxint32.
+		// See https://github.com/cosmos/cosmos-sdk/issues/9162
+		return nil
+	}
 	return &CompactBitArray{
 		ExtraBitsStored: uint32(bits % 8),
-		Elems:           make([]byte, (bits+7)/8),
+		Elems:           make([]byte, nElems),
 	}
 }
 

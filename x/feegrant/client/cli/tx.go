@@ -187,7 +187,7 @@ Examples:
 // NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeFeeAllowance transaction.
 func NewCmdRevokeFeegrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [granter_address] [grantee_address]",
+		Use:   "revoke [granter] [grantee]",
 		Short: "revoke fee-grant",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the'--from' flag is

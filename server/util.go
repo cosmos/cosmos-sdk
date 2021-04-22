@@ -114,13 +114,13 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	}
 
 	config.SetNodeHome(rootDir)
-	appConfigFilePath := filepath.Join(rootDir, "config/exchaind.toml")
+	appConfigFilePath := filepath.Join(rootDir, "config/okexchaind.toml")
 	if _, err := os.Stat(appConfigFilePath); os.IsNotExist(err) {
 		appConf, _ := config.ParseConfig()
 		config.WriteConfigFile(appConfigFilePath, appConf)
 	}
 
-	viper.SetConfigName("exchaind")
+	viper.SetConfigName("okexchaind")
 	err = viper.MergeInConfig()
 
 	return conf, err

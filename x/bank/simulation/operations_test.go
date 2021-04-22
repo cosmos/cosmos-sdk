@@ -152,7 +152,7 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateModuleAccountMsgMultiSend() {
+func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	const (
 		moduleAccCount = 2
 		accCount       = 2
@@ -163,7 +163,7 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgMultiSend() {
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateModuleAccountMsgMultiSend(suite.app.AccountKeeper, suite.app.BankKeeper)
+	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.app.AccountKeeper, suite.app.BankKeeper)
 
 	s := rand.NewSource(1)
 	r := rand.New(s)

@@ -249,8 +249,8 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 	}
 }
 
-// SimulateModuleAccountMsgMultiSend sends coins to Module Accounts
-func SimulateModuleAccountMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+// SimulateMsgMultiSendToModuleAccount sends coins to Module Accounts
+func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,

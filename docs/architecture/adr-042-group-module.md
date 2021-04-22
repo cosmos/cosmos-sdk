@@ -182,105 +182,14 @@ message ThresholdDecisionPolicy {
 
 Any member of a group can submit a proposal for a group account to decide upon.
 A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
-passes as well as any metadata associated with the proposal.
+passes as well as any metadata associated with the proposal. These `sdk.Msg`s get validated as part of the `Msg/CreateProposal` request validation.
+
+Internally, a proposal also tracks:
+- its current status: submitted, closed or aborted
+- its result: unfinalized, accepted or rejected
+- its vote state in the form of a `Tally`, which is calculated on new votes and when executing the proposal.
 
 ```proto
-message Proposal {
-
-    // proposal_id is the unique id of the proposal.
-    uint64 proposal_id = 1;
-
-    // address is the group account address.
-    string address = 2;
-    
-    // metadata is any arbitrary metadata to attached to the proposal.
-    bytes metadata = 3;
-
-    // proposers are the account addresses of the proposers.
-    repeated string proposers = 4;
-    
-    // submitted_at is a timestamp specifying when a proposal was submitted.
-    google.protobuf.Timestamp submitted_at = 5 [(gogoproto.nullable) = false];
-    
-    // group_version tracks the version of the group that this proposal corresponds to.
-    // When group membership is changed, existing proposals from previous group versions will become invalid.
-    uint64 group_version = 6;
-
-    // group_account_version tracks the version of the group account that this proposal corresponds to.
-    // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
-    uint64 group_account_version = 7;
-
-    // Status defines proposal statuses.
-    enum Status {
-        option (gogoproto.goproto_enum_prefix) = false;
-        
-        // An empty value is invalid and not allowed.
-        STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ProposalStatusInvalid"];
-        
-        // Initial status of a proposal when persisted.
-        STATUS_SUBMITTED = 1 [(gogoproto.enumvalue_customname) = "ProposalStatusSubmitted"];
-        
-        // Final status of a proposal when the final tally was executed.
-        STATUS_CLOSED = 2 [(gogoproto.enumvalue_customname) = "ProposalStatusClosed"];
-        
-        // Final status of a proposal when the group was modified before the final tally.
-        STATUS_ABORTED = 3 [(gogoproto.enumvalue_customname) = "ProposalStatusAborted"];
-    }
-
-    // Status represents the high level position in the life cycle of the proposal. Initial value is Submitted.
-    Status status = 8;
-
-    // Result defines types of proposal results.
-    enum Result {
-        option (gogoproto.goproto_enum_prefix) = false;
-
-        // An empty value is invalid and not allowed
-        RESULT_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ProposalResultInvalid"];
-        
-        // Until a final tally has happened the status is unfinalized
-        RESULT_UNFINALIZED = 1 [(gogoproto.enumvalue_customname) = "ProposalResultUnfinalized"];
-       
-        // Final result of the tally
-        RESULT_ACCEPTED = 2 [(gogoproto.enumvalue_customname) = "ProposalResultAccepted"];
-        
-        // Final result of the tally
-        RESULT_REJECTED = 3 [(gogoproto.enumvalue_customname) = "ProposalResultRejected"];
-    }
-
-    // result is the final result based on the votes and election rule. Initial value is unfinalized.
-    // The result is persisted so that clients can always rely on this state and not have to replicate the logic.
-    Result result = 9;
-
-    // vote_state contains the sums of all weighted votes for this proposal.
-    Tally vote_state = 10 [(gogoproto.nullable) = false];
-
-    // timeout is the block timestamp deadline for the proposal. All votes and execution messages must be processed before the timeout. After the timeout, the proposal can not be executed anymore and should be considered pending delete.
-    google.protobuf.Timestamp timeout = 11 [(gogoproto.nullable) = false];
-
-    // ExecutorResult defines types of proposal executor results.
-    enum ExecutorResult {
-        option (gogoproto.goproto_enum_prefix) = false;
-        
-        // An empty value is not allowed.
-        EXECUTOR_RESULT_UNSPECIFIED = 0  [(gogoproto.enumvalue_customname) = "ProposalExecutorResultInvalid"];
-        
-        // We have not yet run the executor.
-        EXECUTOR_RESULT_NOT_RUN = 1 [(gogoproto.enumvalue_customname) = "ProposalExecutorResultNotRun"];
-        
-        // The executor was successful and proposed action updated state.
-        EXECUTOR_RESULT_SUCCESS = 2 [(gogoproto.enumvalue_customname) = "ProposalExecutorResultSuccess"];
-        
-        // The executor returned an error and proposed action didn't update state.
-        EXECUTOR_RESULT_FAILURE = 3 [(gogoproto.enumvalue_customname) = "ProposalExecutorResultFailure"];
-    }
-
-    // executor_result is the final result based on the votes and election rule. Initial value is NotRun.
-    ExecutorResult executor_result = 12;
-
-    // msgs is a list of Msgs that will be executed if the proposal passes.
-    repeated google.protobuf.Any msgs = 13;
-}
-
 // Tally represents the sum of weighted votes.
 message Tally {
     option (gogoproto.goproto_getters) = false;
@@ -306,7 +215,6 @@ all decision policies will support them. Votes can contain some optional metadat
 During the voting window, accounts that have already voted may change their vote.
 In the current implementation, the voting window begins as soon as a proposal
 is submitted.
-
 
 ```proto
 message Vote {
@@ -374,7 +282,8 @@ Votes are stored in the `voteTable`. The primary key is based on the vote's `pro
 - Convergence of `/group` and `x/gov` as both support proposals and voting: https://github.com/cosmos/cosmos-sdk/discussions/9066
 - `x/group` possible future improvements:
   - Execute proposals on submission (https://github.com/regen-network/regen-ledger/issues/288)
-  - Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41) 
+  - Withdraw a proposal (https://github.com/regen-network/cosmos-modules/issues/41)
+  - Make `Tally` more flexible and support non-binary choices
 
 ## References
 

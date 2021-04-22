@@ -182,12 +182,12 @@ message ThresholdDecisionPolicy {
 
 Any member of a group can submit a proposal for a group account to decide upon.
 A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
-passes as well as any metadata associated with the proposal. These `sdk.Msg`s get validated as part of the `Msg/CreateProposal` request validation.
+passes as well as any metadata associated with the proposal. These `sdk.Msg`s get validated as part of the `Msg/CreateProposal` request validation. They should also have their signer set as the group account.
 
 Internally, a proposal also tracks:
-- its current status: submitted, closed or aborted
-- its result: unfinalized, accepted or rejected
-- its vote state in the form of a `Tally`, which is calculated on new votes and when executing the proposal.
+- its current `Status`: submitted, closed or aborted
+- its `Result`: unfinalized, accepted or rejected
+- its `VoteState` in the form of a `Tally`, which is calculated on new votes and when executing the proposal.
 
 ```proto
 // Tally represents the sum of weighted votes.
@@ -210,33 +210,13 @@ message Tally {
 
 ### Voting
 
-There are four choices to choose while voting - yes, no, abstain and veto. Not
+Members of a group can vote on proposals. There are four choices to choose while voting - yes, no, abstain and veto. Not
 all decision policies will support them. Votes can contain some optional metadata.
 During the voting window, accounts that have already voted may change their vote.
 In the current implementation, the voting window begins as soon as a proposal
 is submitted.
 
-```proto
-message Vote {
-
-    // proposal is the unique ID of the proposal.
-    uint64 proposal_id = 1;
-    
-    // voter is the account address of the voter.
-    string voter = 2;
-    
-    // choice is the voter's choice on the proposal.
-    Choice choice = 3;
-
-    // metadata is any arbitrary metadata to attached to the vote.
-    bytes metadata = 4;
-
-    // submitted_at is the timestamp when the vote was submitted.
-    google.protobuf.Timestamp submitted_at = 5 [(gogoproto.nullable) = false];
-}
-```
-
-Voting internally updates the proposal `Status` and `Result` if needed.
+Voting internally updates the proposal `VoteState` as well as `Status` and `Result` if needed.
 
 ### Executing Proposals
 
@@ -245,16 +225,17 @@ but rather a user must submit a `Msg/Exec` transaction to attempt to execute the
 proposal based on the current votes and decision policy. A future upgrade could
 automate this and have the group account (or a fee granter) pay.
 
-Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module-comm.md) will be used to route a proposal's messages using the `DerivedModuleKey` corresponding to the proposal's group account. It can also temporarily support routing of non `ServiceMsg`s through the `sdk.Router` (see [#8864](https://github.com/cosmos/cosmos-sdk/issues/8864)).
-For these messages to execute successfully, their signer should be set as the group account.
-
 #### Changing Group Membership
 
 In the current implementation, updating a group or a group account after submitting a proposal will make it invalid. It will simply fail if someone calls `Msg/Exec` and will eventually be garbage collected.
 
-### Implementation using ORM
+### Notes on current implementation
 
-The ORM package defines tables, sequences and secondary indexes which are used in the proof of concept of `x/group`. 
+This section outlines the current implementation used in the proof of concept of the group module but this could be subject to changes and iterated on.
+
+#### ORM
+
+The [ORM package](https://github.com/cosmos/cosmos-sdk/discussions/9156) defines tables, sequences and secondary indexes which are used in the group module.
 
 Groups are stored in state as part of a `groupTable`, the `group_id` being an auto-increment integer. Group members are stored in a `groupMemberTable`.
 
@@ -263,6 +244,10 @@ Group accounts are stored in a `groupAccountTable`. The group account address is
 Proposals are stored as part of the `proposalTable` using the `Proposal` type. The `proposal_id` is an auto-increment integer.
 
 Votes are stored in the `voteTable`. The primary key is based on the vote's `proposal_id` and `voter` account address.
+
+#### ADR-033 to route proposal messages
+
+Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module-comm.md) can be used to route a proposal's messages using the `DerivedModuleKey` corresponding to the proposal's group account. It can also temporarily support routing of non `ServiceMsg`s through the `sdk.Router` (see [#8864](https://github.com/cosmos/cosmos-sdk/issues/8864)).
 
 ## Consequences
 

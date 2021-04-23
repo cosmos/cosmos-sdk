@@ -38,8 +38,8 @@ func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
 
 // HandlerbyTypeURL returns the MsgServiceHandler for a given query route path or nil
 // if not found.
-func (msr *MsgServiceRouter) HandlerbyTypeURL(msgName string) MsgServiceHandler {
-	return msr.routes[msgName]
+func (msr *MsgServiceRouter) HandlerbyTypeURL(typeURL string) MsgServiceHandler {
+	return msr.routes[typeURL]
 }
 
 // RegisterService implements the gRPC Server.RegisterService method. sd is a gRPC

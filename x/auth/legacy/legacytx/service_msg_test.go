@@ -1,3 +1,5 @@
+// +build norace
+
 // This file contains legacy code for testing `ServiceMsg`s. Following the issue
 // https://github.com/cosmos/cosmos-sdk/issues/9063, `ServiceMsg`s have been
 // deprecated, but we still support them in v043. These tests ensures that txs
@@ -11,7 +13,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -25,26 +26,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// MsgRequest is the interface a transaction message, defined as a proto
-// service method, must fulfill.
-type msgRequest interface {
-	proto.Message
-	// ValidateBasic does a simple validation check that
-	// doesn't require access to any other information.
-	ValidateBasic() error
-	// Signers returns the addrs of signers that must sign.
-	// CONTRACT: All signatures must be present to be valid.
-	// CONTRACT: Returns addrs in some deterministic order.
-	GetSigners() []sdk.AccAddress
-}
-
 // ServiceMsg is the struct into which an Any whose typeUrl matches a service
 // method format (ex. `/cosmos.gov.v1beta1.Msg/SubmitProposal`) unpacks.
 type serviceMsg struct {
 	// MethodName is the fully-qualified service method name.
 	MethodName string
 	// Request is the request payload.
-	Request msgRequest
+	Request sdk.Msg
 }
 
 var _ sdk.Msg = &serviceMsg{}

@@ -168,7 +168,7 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	var authorization types.Grant
 	for ; iter.Valid(); iter.Next() {
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &authorization)
-		authorizations = append(authorizations, authorization.GetGrant())
+		authorizations = append(authorizations, authorization.GetAuthorization())
 	}
 	return authorizations
 }
@@ -186,7 +186,7 @@ func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress
 		return nil, time.Time{}
 	}
 
-	return grant.GetGrant(), grant.Expiration
+	return grant.GetAuthorization(), grant.Expiration
 }
 
 // IterateGrants iterates over all authorization grants

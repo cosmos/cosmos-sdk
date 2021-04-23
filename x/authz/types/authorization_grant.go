@@ -40,8 +40,8 @@ func (auth Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return unpacker.UnpackAny(auth.Authorization, &authorization)
 }
 
-// GetGrant returns the cached value from the Grant.Authorization if present.
-func (auth Grant) GetGrant() exported.Authorization {
+// GetAuthorization returns the cached value from the Grant.Authorization if present.
+func (auth Grant) GetAuthorization() exported.Authorization {
 	authorization, ok := auth.Authorization.GetCachedValue().(exported.Authorization)
 	if !ok {
 		return nil

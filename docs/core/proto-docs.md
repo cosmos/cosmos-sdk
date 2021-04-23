@@ -556,6 +556,7 @@
   
 - [cosmos/upgrade/v1beta1/upgrade.proto](#cosmos/upgrade/v1beta1/upgrade.proto)
     - [CancelSoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal)
+    - [ModuleConsensusVersion](#cosmos.upgrade.v1beta1.ModuleConsensusVersion)
     - [Plan](#cosmos.upgrade.v1beta1.Plan)
     - [SoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.SoftwareUpgradeProposal)
   
@@ -566,9 +567,8 @@
     - [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse)
     - [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest)
     - [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse)
-    - [QueryVersionMap](#cosmos.upgrade.v1beta1.QueryVersionMap)
+    - [QueryVersionMapRequest](#cosmos.upgrade.v1beta1.QueryVersionMapRequest)
     - [QueryVersionMapResponse](#cosmos.upgrade.v1beta1.QueryVersionMapResponse)
-    - [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry)
   
     - [Query](#cosmos.upgrade.v1beta1.Query)
   
@@ -7870,7 +7870,7 @@ Service defines a gRPC service for interacting with transactions.
 <a name="cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal"></a>
 
 ### CancelSoftwareUpgradeProposal
-CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
+CancelSoftwareUpgradeProposalx is a gov Content type for cancelling a software
 upgrade.
 
 
@@ -7878,6 +7878,22 @@ upgrade.
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.upgrade.v1beta1.ModuleConsensusVersion"></a>
+
+### ModuleConsensusVersion
+ModuleConsensusVersion specifies a module and its consensus version.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `module` | [string](#string) |  |  |
+| `version` | [uint64](#uint64) |  |  |
 
 
 
@@ -8026,16 +8042,16 @@ RPC method.
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryVersionMap"></a>
+<a name="cosmos.upgrade.v1beta1.QueryVersionMapRequest"></a>
 
-### QueryVersionMap
+### QueryVersionMapRequest
 QueryVersionMap is the request type for the Query/VersionMap
 RPC method.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module_name` | [string](#string) |  | module_name is an optional field to query a specific module consensus version from state. |
+| `module_name` | [string](#string) |  | module_name is a field to query a specific module consensus version from state. Leaving this empty will fetch the full version map from state |
 
 
 
@@ -8051,23 +8067,7 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `version_map` | [QueryVersionMapResponse.VersionMapEntry](#cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry) | repeated | version_map is a map of module_name to consensus version. |
-
-
-
-
-
-
-<a name="cosmos.upgrade.v1beta1.QueryVersionMapResponse.VersionMapEntry"></a>
-
-### QueryVersionMapResponse.VersionMapEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [uint64](#uint64) |  |  |
+| `version_map` | [ModuleConsensusVersion](#cosmos.upgrade.v1beta1.ModuleConsensusVersion) | repeated | version_map is a map of module name to consensus version. |
 
 
 
@@ -8090,7 +8090,7 @@ Query defines the gRPC upgrade querier service.
 | `CurrentPlan` | [QueryCurrentPlanRequest](#cosmos.upgrade.v1beta1.QueryCurrentPlanRequest) | [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse) | CurrentPlan queries the current upgrade plan. | GET|/cosmos/upgrade/v1beta1/current_plan|
 | `AppliedPlan` | [QueryAppliedPlanRequest](#cosmos.upgrade.v1beta1.QueryAppliedPlanRequest) | [QueryAppliedPlanResponse](#cosmos.upgrade.v1beta1.QueryAppliedPlanResponse) | AppliedPlan queries a previously applied upgrade plan by its name. | GET|/cosmos/upgrade/v1beta1/applied_plan/{name}|
 | `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier | GET|/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}|
-| `VersionMap` | [QueryVersionMap](#cosmos.upgrade.v1beta1.QueryVersionMap) | [QueryVersionMapResponse](#cosmos.upgrade.v1beta1.QueryVersionMapResponse) | VersionMap queries the version map from state. | GET|/cosmos/upgrade/v1beta1/versionmap|
+| `VersionMap` | [QueryVersionMapRequest](#cosmos.upgrade.v1beta1.QueryVersionMapRequest) | [QueryVersionMapResponse](#cosmos.upgrade.v1beta1.QueryVersionMapResponse) | VersionMap queries the version map from state. | GET|/cosmos/upgrade/v1beta1/versionmap|
 
  <!-- end services -->
 

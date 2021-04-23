@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -50,25 +50,33 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 }
 
 // VersionMap implements the Query/VersionMap gRPC method
-func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMap) (*types.QueryVersionMapResponse, error) {
+func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMapRequest) (*types.QueryVersionMapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	// get the version map from the upgrade store
+	// get version map from x/upgrade store
 	vm := k.GetModuleVersionMap(ctx)
 
-	// check if a specific module was requested and if
+	// make response slice
+	res := make([]*types.ModuleConsensusVersion, 0)
+
+	// check if a specific module was requested
 	if len(req.ModuleName) > 0 {
-		// that module exists in the version map
-		if vm[req.GetModuleName()] > 0 {
-			// make a versionmap containing only the requested module
-			singleVM := make(module.VersionMap)
-			singleVM[req.GetModuleName()] = vm[req.GetModuleName()]
-			vm = singleVM
-		} else { // the requested module was not found
-			return &types.QueryVersionMapResponse{}, errors.ErrNotFound
+		// check if the requested module exists
+		if version, found := vm[req.ModuleName]; found {
+			// add the requested module
+			res = append(res, &types.ModuleConsensusVersion{Module: req.ModuleName, Version: version})
+		} else { // module was requested, but not found
+			return &types.QueryVersionMapResponse{}, errors.Wrapf(errors.ErrNotFound, "x/upgrade QueryVersionMap")
+		}
+	} else {
+		// if no module requested, add entire vm to slice
+		for m, v := range vm {
+			res = append(res, &types.ModuleConsensusVersion{Module: m, Version: v})
 		}
 	}
 
+	res = xp.Sort(res)
+
 	return &types.QueryVersionMapResponse{
-		VersionMap: vm,
+		VersionMap: res,
 	}, nil
 }

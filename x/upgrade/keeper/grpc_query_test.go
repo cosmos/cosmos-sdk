@@ -26,7 +26,6 @@ type UpgradeTestSuite struct {
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.app = simapp.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
-
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.UpgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
@@ -144,25 +143,25 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 func (suite *UpgradeTestSuite) TestVersionMap() {
 	testCases := []struct {
 		msg     string
-		req     types.QueryVersionMap
+		req     types.QueryVersionMapRequest
 		single  bool
 		expPass bool
 	}{
 		{
 			msg:     "test full query",
-			req:     types.QueryVersionMap{},
+			req:     types.QueryVersionMapRequest{},
 			single:  false,
 			expPass: true,
 		},
 		{
 			msg:     "test single module",
-			req:     types.QueryVersionMap{ModuleName: "bank"},
+			req:     types.QueryVersionMapRequest{ModuleName: "bank"},
 			single:  true,
 			expPass: true,
 		},
 		{
 			msg:     "test non-existent module",
-			req:     types.QueryVersionMap{ModuleName: "abcdefg"},
+			req:     types.QueryVersionMapRequest{ModuleName: "abcdefg"},
 			single:  true,
 			expPass: false,
 		},
@@ -183,12 +182,15 @@ func (suite *UpgradeTestSuite) TestVersionMap() {
 				if tc.single {
 					// test that the single module response is valid
 					suite.Require().Len(res.VersionMap, 1)
-					suite.Require().Equal(res.VersionMap[tc.req.ModuleName], actualVM[tc.req.ModuleName])
+					// make sure we got the right values
+					suite.Require().Equal(actualVM[tc.req.ModuleName], res.VersionMap[0].Version)
+					suite.Require().Equal(tc.req.ModuleName, res.VersionMap[0].Module)
 				} else {
 					// check that the full response is valid
 					suite.Require().NotEmpty(res.VersionMap)
-					for m, v := range res.VersionMap {
-						suite.Require().Equal(actualVM[m], v)
+					suite.Require().Equal(len(res.VersionMap), len(actualVM))
+					for _, v := range res.VersionMap {
+						suite.Require().Equal(v.Version, actualVM[v.Module])
 					}
 				}
 			} else {

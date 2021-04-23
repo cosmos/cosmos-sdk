@@ -121,7 +121,7 @@ func GetVersionMapCmd() *cobra.Command {
 		Long: "Gets a map of module names and their respective consensus versions.\n" +
 			"Following versionmap with a specific module name will return only the\n" +
 			"version of that module.",
-		Args: cobra.MinimumNArgs(0),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -129,12 +129,12 @@ func GetVersionMapCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			var params types.QueryVersionMap
+			var params types.QueryVersionMapRequest
 
 			if len(args) == 1 {
-				params = types.QueryVersionMap{ModuleName: args[0]}
+				params = types.QueryVersionMapRequest{ModuleName: args[0]}
 			} else {
-				params = types.QueryVersionMap{}
+				params = types.QueryVersionMapRequest{}
 			}
 
 			res, err := queryClient.VersionMap(cmd.Context(), &params)

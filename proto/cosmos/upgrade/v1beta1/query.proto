@@ -28,7 +28,7 @@ service Query {
   }
 
   // VersionMap queries the version map from state.
-  rpc VersionMap(QueryVersionMap) returns (QueryVersionMapResponse) {
+  rpc VersionMap(QueryVersionMapRequest) returns (QueryVersionMapResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/versionmap";
   }
 }
@@ -76,7 +76,7 @@ message QueryUpgradedConsensusStateResponse {
 
 // QueryVersionMap is the request type for the Query/VersionMap
 // RPC method.
-message QueryVersionMap {
+message QueryVersionMapRequest {
   // module_name is a field to query a specific module
   // consensus version from state. Leaving this empty will
   // fetch the full version map from state
@@ -87,5 +87,5 @@ message QueryVersionMap {
 // RPC method.
 message QueryVersionMapResponse {
   // version_map is a map of module name to consensus version.
-  map<string, uint64> version_map = 1;
+  repeated ModuleConsensusVersion version_map = 1;
 }

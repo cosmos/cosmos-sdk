@@ -453,6 +453,21 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			),
 			false, &sdk.TxResponse{}, 0,
 		},
+		{
+			"invalid expiration",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos1vevyks8pthkscvgazc97qyfjt40m6g9xe85ry8",
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, "invalid"),
+				},
+				commonFlags...,
+			),
+			true, nil, 0,
+		},
 	}
 
 	for _, tc := range testCases {

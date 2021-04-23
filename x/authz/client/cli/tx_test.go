@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-var typeMsgSend = bank.SendAuthorization{}.MethodName()
+var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
 var typeMsgVote = "/cosmos.gov.v1beta1.Msg/Vote"
 
 var commonFlags = []string{}

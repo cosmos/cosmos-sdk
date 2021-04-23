@@ -24,7 +24,7 @@ func TestSendAuthorization(t *testing.T) {
 	authorization := types.NewSendAuthorization(coins1000)
 
 	t.Log("verify authorization returns valid method name")
-	require.Equal(t, authorization.MethodName(), "/cosmos.bank.v1beta1.Msg/Send")
+	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.Msg/Send")
 	require.NoError(t, authorization.ValidateBasic())
 	send := types.NewMsgSend(fromAddr, toAddr, coins1000)
 	srvMsg := sdk.ServiceMsg{
@@ -40,7 +40,7 @@ func TestSendAuthorization(t *testing.T) {
 	require.Nil(t, resp.Updated)
 
 	authorization = types.NewSendAuthorization(coins1000)
-	require.Equal(t, authorization.MethodName(), "/cosmos.bank.v1beta1.Msg/Send")
+	require.Equal(t, authorization.MsgTypeURL(), "/cosmos.bank.v1beta1.Msg/Send")
 	require.NoError(t, authorization.ValidateBasic())
 	send = types.NewMsgSend(fromAddr, toAddr, coins500)
 	srvMsg = sdk.ServiceMsg{

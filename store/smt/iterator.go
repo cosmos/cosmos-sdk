@@ -21,16 +21,16 @@ func plainKey(key []byte) []byte {
 
 func startKey(key []byte) []byte {
 	if key == nil {
-		return indexPrefix
+		return dataPrefix
 	}
-	return indexKey(key)
+	return dataKey(key)
 }
 
 func endKey(key []byte) []byte {
 	if key == nil {
-		return afterIndex
+		return indexPrefix
 	}
-	return indexKey(key)
+	return dataKey(key)
 }
 
 func newIterator(s *Store, start, end []byte, reverse bool) (*Iterator, error) {
@@ -53,12 +53,12 @@ func newIterator(s *Store, start, end []byte, reverse bool) (*Iterator, error) {
 // CONTRACT: start, end readonly []byte
 func (i *Iterator) Domain() (start []byte, end []byte) {
 	start, end = i.iter.Domain()
-	if bytes.Equal(start, indexPrefix) {
+	if bytes.Equal(start, dataPrefix) {
 		start = nil
 	} else {
 		start = plainKey(start)
 	}
-	if bytes.Equal(end, afterIndex) {
+	if bytes.Equal(end, indexPrefix) {
 		end = nil
 	} else {
 		end = plainKey(end)

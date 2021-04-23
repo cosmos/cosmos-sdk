@@ -28,8 +28,9 @@ var (
 var (
 	prefixLen      = 1
 	versionsPrefix = []byte{0}
-	indexPrefix    = []byte{1}
-	afterIndex     = []byte{2}
+	dataPrefix     = []byte{1}
+	indexPrefix    = []byte{2}
+	afterIndex     = []byte{3}
 )
 
 // Store Implements types.KVStore and CommitKVStore.
@@ -73,7 +74,7 @@ func (s *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cac
 // Get returns nil iff key doesn't exist. Panics on nil key.
 func (s *Store) Get(key []byte) []byte {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "get")
-	val, err := s.tree.Get(key)
+	val, err := s.db.Get(dataKey(key))
 	if err != nil {
 		panic(err)
 	}
@@ -83,19 +84,26 @@ func (s *Store) Get(key []byte) []byte {
 // Has checks if a key exists. Panics on nil key.
 func (s *Store) Has(key []byte) bool {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "has")
-	has, err := s.db.Has(indexKey(key))
+	has, err := s.db.Has(dataKey(key))
 	return err == nil && has
 }
 
 // Set sets the key. Panics on nil key or value.
 func (s *Store) Set(key []byte, value []byte) {
+	kvHash := sha256.Sum256(append(key, value...))
+
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
-	_, err := s.tree.Update(key, value)
+
+	err := s.db.Set(dataKey(key), value)
 	if err != nil {
 		panic(err.Error())
 	}
-	err = s.db.Set(indexKey(key), []byte{})
+	err = s.db.Set(indexKey(kvHash[:]), key)
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = s.tree.Update(key, kvHash[:])
 	if err != nil {
 		panic(err.Error())
 	}
@@ -104,10 +112,23 @@ func (s *Store) Set(key []byte, value []byte) {
 // Delete deletes the key. Panics on nil key.
 func (s *Store) Delete(key []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "delete")
+
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
+
 	_, _ = s.tree.Delete(key)
-	_ = s.db.Delete(indexKey(key))
+
+	dKey := dataKey(key)
+	defer func() {
+		_ = s.db.Delete(dKey)
+	}()
+
+	value, err := s.db.Get(dKey)
+	if err != nil {
+		panic(err.Error())
+	}
+	kvHash := sha256.Sum256(append(key, value...))
+	_ = s.db.Delete(indexKey(kvHash[:]))
 }
 
 // Iterator over a domain of keys in ascending order. End is exclusive.
@@ -183,4 +204,8 @@ func (s *Store) Query(_ abci.RequestQuery) abci.ResponseQuery {
 // starting a new chain at an arbitrary height.
 func (s *Store) SetInitialVersion(version int64) {
 	s.opts.initialVersion = version
+}
+
+func dataKey(key []byte) []byte {
+	return append(dataPrefix, key...)
 }

@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 				Grantee: suite.addrs[1].String(),
 			},
 			func() {
-				// incaserevoke if any fee allowance exists from previous tests
+				// removing fee allowance from previous tests if exists
 				impl.RevokeFeeAllowance(wrapCtx, &types.MsgRevokeFeeAllowance{
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),

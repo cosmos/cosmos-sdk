@@ -105,20 +105,20 @@ func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 }
 
 // getFeeGrant returns entire grant between both accounts
-func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (types.FeeAllowanceGrant, error) {
+func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*types.FeeAllowanceGrant, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return types.FeeAllowanceGrant{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
 	}
 
 	var feegrant types.FeeAllowanceGrant
 	if err := k.cdc.UnmarshalBinaryBare(bz, &feegrant); err != nil {
-		return types.FeeAllowanceGrant{}, err
+		return nil, err
 	}
 
-	return feegrant, nil
+	return &feegrant, nil
 }
 
 // IterateAllFeeAllowances iterates over all the grants in the store.

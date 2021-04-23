@@ -1,3 +1,5 @@
+// +build norace
+
 package rest_test
 
 import (
@@ -92,7 +94,7 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowance() {
 			"fail: no grants",
 			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, val.Address.String(), s.grantee.String()),
 			true,
-			"no allowance",
+			"fee-grant not found",
 			func() {},
 			func(types.QueryFeeAllowanceResponse) {},
 		},

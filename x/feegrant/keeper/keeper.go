@@ -75,12 +75,9 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
-	_, found, err := k.getFeeGrant(ctx, granter, grantee)
+	_, err := k.getFeeGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
-	}
-	if !found {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
 	}
 
 	store.Delete(key)
@@ -99,32 +96,29 @@ func (k Keeper) RevokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
 func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (types.FeeAllowanceI, error) {
-	grant, found, err := k.getFeeGrant(ctx, granter, grantee)
+	grant, err := k.getFeeGrant(ctx, granter, grantee)
 	if err != nil {
 		return nil, err
-	}
-	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
 	return grant.GetFeeGrant()
 }
 
 // getFeeGrant returns entire grant between both accounts
-func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (types.FeeAllowanceGrant, bool, error) {
+func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (types.FeeAllowanceGrant, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return types.FeeAllowanceGrant{}, false, nil
+		return types.FeeAllowanceGrant{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
 	}
 
 	var feegrant types.FeeAllowanceGrant
 	if err := k.cdc.UnmarshalBinaryBare(bz, &feegrant); err != nil {
-		return types.FeeAllowanceGrant{}, false, err
+		return types.FeeAllowanceGrant{}, err
 	}
 
-	return feegrant, true, nil
+	return feegrant, nil
 }
 
 // IterateAllFeeAllowances iterates over all the grants in the store.
@@ -151,12 +145,9 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
-	f, found, err := k.getFeeGrant(ctx, granter, grantee)
+	f, err := k.getFeeGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
-	}
-	if !found {
-		return sdkerrors.Wrapf(types.ErrNoAllowance, "grant missing")
 	}
 
 	grant, err := f.GetFeeGrant()

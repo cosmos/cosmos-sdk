@@ -27,8 +27,8 @@ func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrantRequest) (*types
 		return nil, sdkerrors.ErrUnpackAny.Wrap("Authorization is not present in the msg")
 	}
 	// If the granted service Msg doesn't exist, we throw an error.
-	if k.router.Handler(authorization.MethodName()) == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", authorization.MethodName())
+	if k.router.Handler(authorization.MsgTypeURL()) == nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", authorization.MsgTypeURL())
 	}
 
 	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Expiration)

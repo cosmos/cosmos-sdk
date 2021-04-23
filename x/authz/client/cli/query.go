@@ -46,7 +46,7 @@ $ %s query %s grants cosmos1skj.. cosmos1skjwj..
 $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 `,
 				version.AppName, types.ModuleName,
-				version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName()),
+				version.AppName, types.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

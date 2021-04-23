@@ -171,7 +171,7 @@ func SimulateMsgRevokeAuthorization(ak types.AccountKeeper, bk types.BankKeeper,
 		}
 
 		auth := targetGrant.GetAuthorization()
-		msg := types.NewMsgRevoke(granterAddr, granteeAddr, auth.MethodName())
+		msg := types.NewMsgRevoke(granterAddr, granteeAddr, auth.MsgTypeURL())
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		authzMsgClient := types.NewMsgClient(svcMsgClientConn)
@@ -243,7 +243,7 @@ func SimulateMsgExecuteAuthorized(ak types.AccountKeeper, bk types.BankKeeper, k
 		sendCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)))
 
 		execMsg := sdk.ServiceMsg{
-			MethodName: banktype.SendAuthorization{}.MethodName(),
+			MethodName: banktype.SendAuthorization{}.MsgTypeURL(),
 			Request: banktype.NewMsgSend(
 				granterAddr,
 				granteeAddr,

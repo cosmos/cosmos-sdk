@@ -47,7 +47,7 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	genesis := suite.keeper.ExportGenesis(suite.ctx)
 
 	// Clear keeper
-	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MethodName())
+	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
 
 	authz.InitGenesis(suite.ctx, suite.keeper, genesis)
 	newGenesis := suite.keeper.ExportGenesis(suite.ctx)

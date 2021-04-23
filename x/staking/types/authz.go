@@ -40,8 +40,8 @@ func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, au
 	return &authorization, nil
 }
 
-// MethodName implements Authorization.MethodName.
-func (a StakeAuthorization) MethodName() string {
+// MsgTypeURL implements Authorization.MsgTypeURL.
+func (a StakeAuthorization) MsgTypeURL() string {
 	authzType, err := normalizeAuthzType(a.AuthorizationType)
 	if err != nil {
 		panic(err)

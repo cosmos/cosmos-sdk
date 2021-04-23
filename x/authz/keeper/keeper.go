@@ -49,7 +49,7 @@ func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant types.Grant, found
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated exported.Authorization) error {
-	skey := grantStoreKey(grantee, granter, updated.MethodName())
+	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
 		return sdkerrors.ErrNotFound.Wrap("authorization not found")
@@ -130,13 +130,13 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 		return err
 	}
 
-	fmt.Println("granting authorization: ", granter, grantee, authorization.MethodName())
+	fmt.Println("granting authorization: ", granter, grantee, authorization.MsgTypeURL())
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
-	skey := grantStoreKey(grantee, granter, authorization.MethodName())
+	skey := grantStoreKey(grantee, granter, authorization.MsgTypeURL())
 	store.Set(skey, bz)
 	return ctx.EventManager().EmitTypedEvent(&types.EventGrant{
 		Module:     types.ModuleName,
-		MsgTypeUrl: authorization.MethodName(),
+		MsgTypeUrl: authorization.MsgTypeURL(),
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
 	})

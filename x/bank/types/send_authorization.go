@@ -17,8 +17,8 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 	}
 }
 
-// MethodName implements Authorization.MethodName.
-func (a SendAuthorization) MethodName() string {
+// MsgTypeURL implements Authorization.MsgTypeURL.
+func (a SendAuthorization) MsgTypeURL() string {
 	return "/cosmos.bank.v1beta1.Msg/Send"
 }
 

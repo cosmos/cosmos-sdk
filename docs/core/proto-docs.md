@@ -886,7 +886,7 @@ the provided method on behalf of the granter's account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `msg_type_url` | [string](#string) |  | Msg method to grant unrestricted permissions to execute |
+| `msg` | [string](#string) |  | Msg, identified by it's type URL, to grant unrestricted permissions to execute |
 
 
 

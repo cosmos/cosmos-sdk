@@ -30,7 +30,7 @@ func TestMsgExecAuthorized(t *testing.T) {
 		{"zero-messages test: should fail", grantee, []sdk.ServiceMsg{}, false},
 		{"valid test: msg type", grantee, []sdk.ServiceMsg{
 			{
-				MethodName: banktypes.SendAuthorization{}.MethodName(),
+				MethodName: banktypes.SendAuthorization{}.MsgTypeURL(),
 				Request: &banktypes.MsgSend{
 					Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 					FromAddress: granter.String(),

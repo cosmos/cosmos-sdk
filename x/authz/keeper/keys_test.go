@@ -12,7 +12,7 @@ import (
 
 var granter = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 var grantee = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-var msgType = bank.SendAuthorization{}.MethodName()
+var msgType = bank.SendAuthorization{}.MsgTypeURL()
 
 func TestGrantkey(t *testing.T) {
 	granter1, grantee1 := addressesFromGrantStoreKey(grantStoreKey(grantee, granter, msgType))

@@ -65,7 +65,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 				req = &types.QueryGrantsRequest{
 					Granter:    addrs[1].String(),
 					Grantee:    addrs[0].String(),
-					MsgTypeUrl: expAuthorization.MethodName(),
+					MsgTypeUrl: expAuthorization.MsgTypeURL(),
 				}
 			},
 			"",

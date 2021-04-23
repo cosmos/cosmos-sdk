@@ -84,7 +84,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 		granter := signers[0]
 		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
-			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
+			authorization, _ := k.GetCleanAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
 			if authorization == nil {
 				return nil, sdkerrors.ErrUnauthorized.Wrap("authorization not found")
 			}
@@ -173,10 +173,10 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	return authorizations
 }
 
-// GetOrRevokeAuthorization returns an `Authorization` and it's expiration time for
+// GetCleanAuthorization returns an `Authorization` and it's expiration time for
 // (grantee, granter, message name) grant. If there is no grant `nil` is returned.
 // If the grant is expired, the grant is revoked, removed from the storage, and `nil` is returned.
-func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap exported.Authorization, expiration time.Time) {
+func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap exported.Authorization, expiration time.Time) {
 	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
 	if !found {
 		return nil, time.Time{}
@@ -190,6 +190,8 @@ func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress
 }
 
 // IterateGrants iterates over all authorization grants
+// This function should be used with caution because it can involve significant IO operations.
+// It should not be used in query or msg services without charging additional gas.
 func (k Keeper) IterateGrants(ctx sdk.Context,
 	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant types.Grant) bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -203,4 +205,21 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 			break
 		}
 	}
+}
+
+// ExportGenesis returns a GenesisState for a given context.
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	var entries []types.GrantAuthorization
+	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
+		exp := grant.Expiration
+		entries = append(entries, types.GrantAuthorization{
+			Granter:       granter.String(),
+			Grantee:       grantee.String(),
+			Expiration:    exp,
+			Authorization: grant.Authorization,
+		})
+		return false
+	})
+
+	return types.NewGenesisState(entries)
 }

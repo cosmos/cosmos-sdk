@@ -40,7 +40,7 @@ func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types
 	authStore := prefix.NewStore(store, key)
 
 	if req.MsgTypeUrl != "" {
-		authorization, expiration := k.GetOrRevokeAuthorization(ctx, grantee, granter, req.MsgTypeUrl)
+		authorization, expiration := k.GetCleanAuthorization(ctx, grantee, granter, req.MsgTypeUrl)
 		if authorization == nil {
 			return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgTypeUrl)
 		}

@@ -29,20 +29,3 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 		}
 	}
 }
-
-// ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
-	var entries []types.GrantAuthorization
-	keeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
-		exp := grant.Expiration
-		entries = append(entries, types.GrantAuthorization{
-			Granter:       granter.String(),
-			Grantee:       grantee.String(),
-			Expiration:    exp,
-			Authorization: grant.Authorization,
-		})
-		return false
-	})
-
-	return types.NewGenesisState(entries)
-}

@@ -16945,6 +16945,11 @@ paths:
                   bond_denom:
                     type: string
                     description: bond_denom defines the bondable coin denomination.
+                  power_reduction:
+                    type: string
+                    title: >-
+                      power_reduction is the amount of staking tokens required
+                      for 1 unit of consensus-engine power
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -21635,10 +21640,20 @@ paths:
             type: object
             properties:
               version_map:
-                type: object
-                additionalProperties:
-                  type: string
-                  format: uint64
+                type: array
+                items:
+                  type: object
+                  properties:
+                    module:
+                      type: string
+                      title: module is the name of the app module
+                    version:
+                      type: string
+                      format: uint64
+                      title: version is the consensus version of the app module
+                  description: >-
+                    ModuleConsensusVersion specifies a module and its consensus
+                    version.
                 description: version_map is a map of module name to consensus version.
             description: >-
               QueryVersionMapResponse is the response type for the
@@ -31336,6 +31351,11 @@ definitions:
       bond_denom:
         type: string
         description: bond_denom defines the bondable coin denomination.
+      power_reduction:
+        type: string
+        title: >-
+          power_reduction is the amount of staking tokens required for 1 unit of
+          consensus-engine power
     description: Params defines the parameters for the staking module.
   cosmos.staking.v1beta1.Pool:
     type: object
@@ -32576,6 +32596,11 @@ definitions:
           bond_denom:
             type: string
             description: bond_denom defines the bondable coin denomination.
+          power_reduction:
+            type: string
+            title: >-
+              power_reduction is the amount of staking tokens required for 1
+              unit of consensus-engine power
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   cosmos.staking.v1beta1.QueryPoolResponse:
     type: object
@@ -37062,6 +37087,17 @@ definitions:
         type: boolean
         format: boolean
     description: 'EventAttribute is a single key-value pair, associated with an event.'
+  cosmos.upgrade.v1beta1.ModuleConsensusVersion:
+    type: object
+    properties:
+      module:
+        type: string
+        title: module is the name of the app module
+      version:
+        type: string
+        format: uint64
+        title: version is the consensus version of the app module
+    description: ModuleConsensusVersion specifies a module and its consensus version.
   cosmos.upgrade.v1beta1.Plan:
     type: object
     properties:
@@ -37173,10 +37209,18 @@ definitions:
     type: object
     properties:
       version_map:
-        type: object
-        additionalProperties:
-          type: string
-          format: uint64
+        type: array
+        items:
+          type: object
+          properties:
+            module:
+              type: string
+              title: module is the name of the app module
+            version:
+              type: string
+              format: uint64
+              title: version is the consensus version of the app module
+          description: ModuleConsensusVersion specifies a module and its consensus version.
         description: version_map is a map of module name to consensus version.
     description: |-
       QueryVersionMapResponse is the response type for the Query/VersionMap

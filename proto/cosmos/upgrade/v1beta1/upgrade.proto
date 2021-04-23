@@ -68,7 +68,7 @@ message ModuleConsensusVersion {
   option (gogoproto.goproto_stringer) = true;
 
   // module is the name of the app module
-  string module  = 1;
+  string module = 1;
 
   // version is the consensus version of the app module
   uint64 version = 2;

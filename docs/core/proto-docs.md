@@ -7870,7 +7870,7 @@ Service defines a gRPC service for interacting with transactions.
 <a name="cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal"></a>
 
 ### CancelSoftwareUpgradeProposal
-CancelSoftwareUpgradeProposalx is a gov Content type for cancelling a software
+CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
 upgrade.
 
 
@@ -7892,8 +7892,8 @@ ModuleConsensusVersion specifies a module and its consensus version.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module` | [string](#string) |  |  |
-| `version` | [uint64](#uint64) |  |  |
+| `module` | [string](#string) |  | module is the name of the app module |
+| `version` | [uint64](#uint64) |  | version is the consensus version of the app module |
 
 
 

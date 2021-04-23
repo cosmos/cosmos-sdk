@@ -115,7 +115,7 @@ func (m *SoftwareUpgradeProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SoftwareUpgradeProposal proto.InternalMessageInfo
 
-// CancelSoftwareUpgradeProposalx is a gov Content type for cancelling a software
+// CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
 // upgrade.
 type CancelSoftwareUpgradeProposal struct {
 	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
@@ -156,7 +156,9 @@ var xxx_messageInfo_CancelSoftwareUpgradeProposal proto.InternalMessageInfo
 
 // ModuleConsensusVersion specifies a module and its consensus version.
 type ModuleConsensusVersion struct {
-	Module  string `protobuf:"bytes,1,opt,name=module,proto3" json:"module,omitempty"`
+	// module is the name of the app module
+	Module string `protobuf:"bytes,1,opt,name=module,proto3" json:"module,omitempty"`
+	// version is the consensus version of the app module
 	Version uint64 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
 }
 

@@ -130,6 +130,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 		return err
 	}
 
+	fmt.Println("granting authorization: ", granter, grantee, authorization.MethodName())
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	skey := grantStoreKey(grantee, granter, authorization.MethodName())
 	store.Set(skey, bz)

@@ -80,7 +80,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryAuthorizations()
+			cmd := cli.GetCmdQueryGrants()
 			clientCtx := val.ClientCtx
 			resp, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -88,7 +88,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 				s.Require().Contains(string(resp.Bytes()), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				var grants types.QueryAuthorizationsResponse
+				var grants types.QueryGrantsResponse
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &grants)
 				s.Require().NoError(err)
 			}
@@ -172,7 +172,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryAuthorization()
+			cmd := cli.GetCmdQueryGrants()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {

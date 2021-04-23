@@ -34,10 +34,10 @@ func TestSendAuthorization(t *testing.T) {
 	require.NoError(t, authorization.ValidateBasic())
 
 	t.Log("verify updated authorization returns nil")
-	updated, del, err := authorization.Accept(ctx, srvMsg)
+	resp, err := authorization.Accept(ctx, srvMsg)
 	require.NoError(t, err)
-	require.True(t, del)
-	require.Nil(t, updated)
+	require.True(t, resp.Delete)
+	require.Nil(t, resp.Updated)
 
 	authorization = types.NewSendAuthorization(coins1000)
 	require.Equal(t, authorization.MethodName(), "/cosmos.bank.v1beta1.Msg/Send")
@@ -48,18 +48,18 @@ func TestSendAuthorization(t *testing.T) {
 		Request:    send,
 	}
 	require.NoError(t, authorization.ValidateBasic())
-	updated, del, err = authorization.Accept(ctx, srvMsg)
+	resp, err = authorization.Accept(ctx, srvMsg)
 
 	t.Log("verify updated authorization returns remaining spent limit")
 	require.NoError(t, err)
-	require.False(t, del)
-	require.NotNil(t, updated)
+	require.False(t, resp.Delete)
+	require.NotNil(t, resp.Updated)
 	sendAuth := types.NewSendAuthorization(coins500)
-	require.Equal(t, sendAuth.String(), updated.String())
+	require.Equal(t, sendAuth.String(), resp.Updated.String())
 
 	t.Log("expect updated authorization nil after spending remaining amount")
-	updated, del, err = updated.Accept(ctx, srvMsg)
+	resp, err = resp.Updated.Accept(ctx, srvMsg)
 	require.NoError(t, err)
-	require.True(t, del)
-	require.Nil(t, updated)
+	require.True(t, resp.Delete)
+	require.Nil(t, resp.Updated)
 }

@@ -44,13 +44,13 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	grant := &bank.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
 	suite.Require().NoError(err)
-	genesis := authz.ExportGenesis(suite.ctx, suite.keeper)
+	genesis := suite.keeper.ExportGenesis(suite.ctx)
 
 	// Clear keeper
 	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MethodName())
 
 	authz.InitGenesis(suite.ctx, suite.keeper, genesis)
-	newGenesis := authz.ExportGenesis(suite.ctx, suite.keeper)
+	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().Equal(genesis, newGenesis)
 }
 

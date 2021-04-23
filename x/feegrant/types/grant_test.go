@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,7 @@ func TestGrant(t *testing.T) {
 	addr2, err := sdk.AccAddressFromBech32("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")
 	require.NoError(t, err)
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
+	zeroAtoms := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 
 	goodGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
 		SpendLimit: atom,
@@ -49,6 +51,12 @@ func TestGrant(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	zeroAllowance, err := types.NewFeeAllowanceGrant(addr, addr2, &types.BasicFeeAllowance{
+		SpendLimit: zeroAtoms,
+		Expiration: types.ExpiresAtTime(time.Now().Add(3 * time.Hour)),
+	})
+	require.NoError(t, err)
+
 	cdc := app.AppCodec()
 	// RegisterLegacyAminoCodec(cdc)
 
@@ -62,15 +70,23 @@ func TestGrant(t *testing.T) {
 		},
 		"no grantee": {
 			grant: noGranteeGrant,
+			valid: false,
 		},
 		"no granter": {
 			grant: noGranterGrant,
+			valid: false,
 		},
 		"self-grant": {
 			grant: selfGrant,
+			valid: false,
 		},
 		"bad allowance": {
 			grant: badAllowanceGrant,
+			valid: false,
+		},
+		"zero allowance": {
+			grant: zeroAllowance,
+			valid: false,
 		},
 	}
 

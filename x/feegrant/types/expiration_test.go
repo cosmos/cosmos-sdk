@@ -15,32 +15,27 @@ func TestExpiresAt(t *testing.T) {
 
 	cases := map[string]struct {
 		example types.ExpiresAt
-		valid   bool
 		zero    bool
 		before  types.ExpiresAt
 		after   types.ExpiresAt
 	}{
 		"basic": {
 			example: types.ExpiresAtHeight(100),
-			valid:   true,
 			before:  types.ExpiresAtHeight(50),
 			after:   types.ExpiresAtHeight(122),
 		},
 		"zero": {
 			example: types.ExpiresAt{},
 			zero:    true,
-			valid:   true,
 			before:  types.ExpiresAtHeight(1),
 		},
 		"match height": {
 			example: types.ExpiresAtHeight(1000),
-			valid:   true,
 			before:  types.ExpiresAtHeight(999),
 			after:   types.ExpiresAtHeight(1000),
 		},
 		"match time": {
 			example: types.ExpiresAtTime(now),
-			valid:   true,
 			before:  types.ExpiresAtTime(now.Add(-1 * time.Second)),
 			after:   types.ExpiresAtTime(now.Add(1 * time.Second)),
 		},
@@ -51,10 +46,6 @@ func TestExpiresAt(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := tc.example.ValidateBasic()
 			assert.Equal(t, tc.zero, tc.example.Undefined())
-			if !tc.valid {
-				require.Error(t, err)
-				return
-			}
 			require.NoError(t, err)
 
 			if !tc.before.Undefined() {

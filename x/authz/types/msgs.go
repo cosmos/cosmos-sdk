@@ -70,8 +70,8 @@ func (msg MsgGrantRequest) ValidateBasic() error {
 	return authorization.ValidateBasic()
 }
 
-// GetGrant returns the cache value from the MsgGrant.Authorization if present.
-func (msg *MsgGrantRequest) GetGrant() exported.Authorization {
+// GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
+func (msg *MsgGrantRequest) GetAuthorization() exported.Authorization {
 	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
 	if !ok {
 		return nil

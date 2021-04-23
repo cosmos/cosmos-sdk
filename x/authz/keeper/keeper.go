@@ -37,10 +37,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// getAuthorizationGrant returns grant between granter and grantee for the given msg type
-func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (grant types.Grant, found bool) {
+// getGrant returns grant stored at skey.
+func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant types.Grant, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(grantStoreKey)
+	bz := store.Get(skey)
 	if bz == nil {
 		return grant, false
 	}
@@ -49,8 +49,8 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (gr
 }
 
 func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated exported.Authorization) error {
-	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, updated.MethodName())
-	grant, found := k.getAuthorizationGrant(ctx, grantStoreKey)
+	skey := grantStoreKey(grantee, granter, updated.MethodName())
+	grant, found := k.getGrant(ctx, skey)
 	if !found {
 		return sdkerrors.ErrNotFound.Wrap("authorization not found")
 	}
@@ -67,7 +67,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
-	store.Set(grantStoreKey, k.cdc.MustMarshalBinaryBare(&grant))
+	store.Set(skey, k.cdc.MustMarshalBinaryBare(&grant))
 	return nil
 }
 
@@ -131,8 +131,8 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	}
 
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
-	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, authorization.MethodName())
-	store.Set(grantStoreKey, bz)
+	skey := grantStoreKey(grantee, granter, authorization.MethodName())
+	store.Set(skey, bz)
 	return ctx.EventManager().EmitTypedEvent(&types.EventGrant{
 		Module:  types.ModuleName,
 		Msg:     authorization.MethodName(),
@@ -145,12 +145,12 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 // by the granter.
 func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
-	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, msgType)
-	_, found := k.getAuthorizationGrant(ctx, grantStoreKey)
+	skey := grantStoreKey(grantee, granter, msgType)
+	_, found := k.getGrant(ctx, skey)
 	if !found {
 		return sdkerrors.ErrNotFound.Wrap("authorization not found")
 	}
-	store.Delete(grantStoreKey)
+	store.Delete(skey)
 	return ctx.EventManager().EmitTypedEvent(&types.EventRevoke{
 		Module:  types.ModuleName,
 		Msg:     msgType,
@@ -162,7 +162,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
 func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) (authorizations []exported.Authorization) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetAuthorizationStoreKey(grantee, granter, "")
+	key := grantStoreKey(grantee, granter, "")
 	iter := sdk.KVStorePrefixIterator(store, key)
 	defer iter.Close()
 	var authorization types.Grant
@@ -173,11 +173,11 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	return authorizations
 }
 
-// GetOrRevokeAuthorization returns an `Authorization` and it's expiration time if the granter
-// has a grant for (granter, message name) pair. If there is no grant `nil` is returned.
+// GetOrRevokeAuthorization returns an `Authorization` and it's expiration time for
+// (grantee, granter, message name) grant. If there is no grant `nil` is returned.
 // If the grant is expired, the grant is revoked, removed from the storage, and `nil` is returned.
 func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap exported.Authorization, expiration time.Time) {
-	grant, found := k.getAuthorizationGrant(ctx, types.GetAuthorizationStoreKey(grantee, granter, msgType))
+	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
 	if !found {
 		return nil, time.Time{}
 	}
@@ -197,7 +197,7 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var grant types.Grant
-		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
+		granterAddr, granteeAddr := addressesFromGrantStoreKey(iter.Key())
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
 		if handler(granterAddr, granteeAddr, grant) {
 			break

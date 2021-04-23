@@ -1,4 +1,4 @@
-package types
+package keeper
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ var grantee = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 var msgType = bank.SendAuthorization{}.MethodName()
 
 func TestGrantkey(t *testing.T) {
-	granter1, grantee1 := ExtractAddressesFromGrantKey(GetAuthorizationStoreKey(grantee, granter, msgType))
+	granter1, grantee1 := addressesFromGrantStoreKey(grantStoreKey(grantee, granter, msgType))
 	require.Equal(t, granter, granter1)
 	require.Equal(t, grantee, grantee1)
 }

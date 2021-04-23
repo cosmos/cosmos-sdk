@@ -36,7 +36,7 @@ func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetAuthorizationStoreKey(grantee, granter, "")
+	key := grantStoreKey(grantee, granter, "")
 	authStore := prefix.NewStore(store, key)
 
 	if req.MsgTypeUrl != "" {

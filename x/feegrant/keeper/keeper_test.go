@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
@@ -36,6 +37,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestKeeperCrud() {
 	ctx := suite.ctx
 	k := suite.app.FeeGrantKeeper
+	msgSrvr := keeper.NewMsgServerImpl(k)
+	wrapCtx := sdk.WrapSDKContext(ctx)
 
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
@@ -67,11 +70,13 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	suite.Require().NoError(err)
 
 	// remove some, overwrite other
-	k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[1])
-	k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
+	_, err = msgSrvr.RevokeFeeAllowance(wrapCtx, &types.MsgRevokeFeeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[1].String()})
+	suite.Require().NoError(err)
+	_, err = msgSrvr.RevokeFeeAllowance(wrapCtx, &types.MsgRevokeFeeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[2].String()})
+	suite.Require().NoError(err)
 
 	// revoke non-exist fee allowance
-	err = k.RevokeFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
+	_, err = msgSrvr.RevokeFeeAllowance(wrapCtx, &types.MsgRevokeFeeAllowance{Granter: suite.addrs[0].String(), Grantee: suite.addrs[2].String()})
 	suite.Require().Error(err)
 
 	err = k.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[2], basic)
@@ -134,7 +139,7 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	_, err = k.GetFeeAllowance(ctx, suite.addrs[3], accAddr)
 	suite.Require().NoError(err)
 
-	err = k.RevokeFeeAllowance(ctx, suite.addrs[3], accAddr)
+	_, err = msgSrvr.RevokeFeeAllowance(wrapCtx, &types.MsgRevokeFeeAllowance{Granter: suite.addrs[3].String(), Grantee: accAddr.String()})
 	suite.Require().NoError(err)
 
 }

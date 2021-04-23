@@ -935,7 +935,7 @@ EventGrant is emitted on Msg/Grant
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `module` | [string](#string) |  | Module which invokes the authorizaiton grant TODO: not sure if this is needed. It always has the same value |
-| `msg` | [string](#string) |  | Msg type for which an autorization is granted |
+| `msg_type_url` | [string](#string) |  | Msg type URL for which an autorization is granted |
 | `granter` | [string](#string) |  | Granter account address |
 | `grantee` | [string](#string) |  | Grantee account address |
 
@@ -953,7 +953,7 @@ EventRevoke is emitted on Msg/Revoke
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `module` | [string](#string) |  | Module which invokes the authorizaiton revokation |
-| `msg` | [string](#string) |  | Msg type for which an autorization is revoked |
+| `msg_type_url` | [string](#string) |  | Msg type URL for which an autorization is revoked |
 | `granter` | [string](#string) |  | Granter account address |
 | `grantee` | [string](#string) |  | Grantee account address |
 

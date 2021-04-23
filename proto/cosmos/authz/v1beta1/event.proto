@@ -14,8 +14,8 @@ message EventGrant {
   // Module which invokes the authorizaiton grant
   // TODO: not sure if this is needed. It always has the same value
   string module = 1;
-  // Msg type for which an autorization is granted
-  string msg = 2;
+  // Msg type URL for which an autorization is granted
+  string msg_type_url = 2;
   // Granter account address
   string granter = 3;
   // Grantee account address
@@ -26,8 +26,8 @@ message EventGrant {
 message EventRevoke {
   // Module which invokes the authorizaiton revokation
   string module = 1;
-  // Msg type for which an autorization is revoked
-  string msg = 2;
+  // Msg type URL for which an autorization is revoked
+  string msg_type_url = 2;
   // Granter account address
   string granter = 3;
   // Grantee account address

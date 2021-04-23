@@ -135,10 +135,10 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	skey := grantStoreKey(grantee, granter, authorization.MethodName())
 	store.Set(skey, bz)
 	return ctx.EventManager().EmitTypedEvent(&types.EventGrant{
-		Module:  types.ModuleName,
-		Msg:     authorization.MethodName(),
-		Granter: granter.String(),
-		Grantee: grantee.String(),
+		Module:     types.ModuleName,
+		MsgTypeUrl: authorization.MethodName(),
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
 	})
 }
 
@@ -153,10 +153,10 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 	}
 	store.Delete(skey)
 	return ctx.EventManager().EmitTypedEvent(&types.EventRevoke{
-		Module:  types.ModuleName,
-		Msg:     msgType,
-		Granter: granter.String(),
-		Grantee: grantee.String(),
+		Module:     types.ModuleName,
+		MsgTypeUrl: msgType,
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
 	})
 }
 

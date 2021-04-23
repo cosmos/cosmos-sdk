@@ -28,7 +28,6 @@ In the current design, IAVL is used for both data storage and as a Merkle Tree f
 + The leaf structure is pretty expensive: it contains the `(key, value)` pair, additional metadata such as height, version. The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md
 ).
 
-
 Moreover, the IAVL project lacks support and a maintainer and we already see better and well-established alternatives. Instead of optimizing the IAVL, we are looking into other solutions for both storage and state commitments.
 
 
@@ -61,7 +60,7 @@ State Storage requirements:
 
 State Commitment requirements:
 + fast updates
-+ path length should be short
++ tree path should be short
 + creating a snapshot
 + pruning (garbage collection)
 
@@ -71,39 +70,36 @@ State Commitment requirements:
 A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intractable size. The assumption here is that as the size of the tree is intractable, there would only be a few leaf nodes with valid data blocks relative to the tree size, rendering the tree as sparse.
 
 
-### Snapshots
+### Snapshots for storage sync and versioning
+s
+One of the Stargate core features are snapshots and fast sync delivered in the `/snapshot` package. This feature is implemented in SDK and requires a storage support. Currently the only supported is IAVL.
 
-One of the Stargate core features are snapshots and fast sync delivered in the `/snapshot` package. Currently this feature is implemented through IAVL.
-Many underlying DB engines support snapshotting. Hence, we propose to reuse that functionality and limit the supported DB engines to ones which support snapshots (Badger, RocksDB, ...) using a _copy on write_ mechanism (we can't create a full copy - it would be too big).
+Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big), usually a snapshot mechanism is based on a _copy on write_ and it allows to efficiently deliver DB state at a certain stage.
+Some DB engines support snapshotting. Hence, we propose to reuse that functionality for the state sync and versioning (described below). It will the supported DB engines to ones which efficiently implement snapshots. In a final section we will discuss evaluated DBs.
 
-New snapshot will be created in every `EndBlocker`. The number of snapshots should be configurable by user (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks).
-
-Pruning old snapshots is effectively done by DB. If DB allows to configure max number of snapshots, then we are done. Otherwise, we need to hook this mechanism into `EndBlocker`.
-
-### Versioning
-
-At minimum SC doesn't need to keep old versions. However we need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Only when we commit on a root store, all changes are written to the the SMT.
-
-We can use the same approach for SM Storage.
-
-#### Accessing old, committed state versions
-
-One of the functional requirements is to access old state. This is done with `abci.Query` structure.  The version is specified by a block height (so we query for an object by key `K` at a version committed in block height `H`). The number of old versions supported for `abci.Query` is configurable. Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to a not deterministic execution.
-
-We validated the Snapshot mechanism for querying old state versions.
-
-Pruning custom versions could be done using a Garbage Collector: once per defined period, a GC will start, and remove old snapshots. This will require encoding a version mechanism in a KV store.
-
-
-### Managing versions and pruning
-
-Number of historical versions for `abci.Query` and snapshots for fast sync is part of a node configuration, not a chain configuration.
-As outlined above, snapshot and versioning feature is fully offloaded to the underlying DB engine. However, we still need to have a process to instrument the DB engine to create or remove a version.
-The `rootmulti.Store` keeps track of the version number. The `Store.Commit` function increments the version on each call, and checks if it needs to remove old versions. We need to add support for not `IAVL` store types there.
-
+New snapshot will be created in every `EndBlocker`. The `rootmulti.Store` keeps track of the version number and implements the `MultiStore` interface. `MultiStore` encapsulates a `Commiter` interface, which has the `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `Store.Commit` function increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Commiter` interface.
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
+NOTE: For the SDK storage, we may consider splitting that interface into `Committer` and `PrunningCommiter` - only the multiroot should implement `PrunningCommiter` (cache and prefix store don't need pruning).
 
-TODO: It seams we don't need to update the `MultiStore` interface - it encapsulates a `Commiter` interface, which has the `Commit`, `SetPruning`, `GetPruning` functions. However, we may consider splitting that interface into `Committer` and `PrunningCommiter` - only the multiroot should implement `PrunningCommiter`.
+Number of historical versions (snapshots) for `abci.Query` and fast sync is part of a node configuration, not a chain configuration. A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all snapshots.
+
+Pruning old snapshots is effectively done by DB. Whenever we update a record in SC, SMT will create a new one without removing the old one. Since we are using a snapshot for each block, we must update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
+
+To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height.
+
+#### Accessing old state versions
+
+One of the functional requirements is to access old state. This is done through `abci.Query` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
+`abci.Query` doesn't need old state of SC. So, for efficiency, we should keep SC and SM Storage in different databases (however using the same DB engine). We will only create snapshots for
+
+Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to a not deterministic execution.
+
+We positively validated a snapshot mechanism for querying old state with regards to the database we evaluated.
+
+
+### Rollbacks
+
+We need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`,  we commit a root store - at that time, all changes are written to the SMT and to the SM Storage and a snapshot is created.
 
 
 ## Consequences
@@ -131,7 +127,18 @@ We change a storage layout, so storage migration and a blockchain reboot is requ
 + Deprecating IAVL, which is one of the core proposals of Cosmos Whitepaper.
 
 
+## Alternative designs.
+
+Most of the alternative designs were evaluated in [state commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h).
+
+Ethereum research published [Verkle Tire](https://notes.ethereum.org/_N1mutVERDKtqGIEYc-Flw#fnref1) - an idea of combining polynomial commitments with merkle tree in order to reduce the tree height. This concept has a very good potential, but we think it's too early to implement it. The current, SMT based design could be easily updated to the Verkle Tire once other research implement all necessary libraries. The main advantage of the design described in this ADR is the separation of state commitments from the data storage and designing a more powerful interface.
+
+
 ## Further Discussions
+
+### Evaluated KV Databases
+
+We verified existing databases KV databases for evaluating snapshot support. The following DBs provide efficient snapshot mechanism: Badger, RocksDB, [Pebbe](https://github.com/cockroachdb/pebble). DB which don't provide such support or are not production ready: boltdb, leveldb, goleveldb, membdb, lmdb.
 
 ### RDBMS
 
@@ -146,3 +153,4 @@ Use of RDBMS instead of simple KV store for state. Use of RDBMS will require an 
 + [LazyLedger SMT](https://github.com/lazyledger/smt)
 + Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 + [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
++ Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).

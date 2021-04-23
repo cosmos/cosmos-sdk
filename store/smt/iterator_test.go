@@ -12,6 +12,9 @@ import (
 )
 
 func TestIteration(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
 	pairs := []struct{ key, val []byte }{
 		{[]byte("foo"), []byte("bar")},
 		{[]byte("lorem"), []byte("ipsum")},
@@ -35,47 +38,47 @@ func TestIteration(t *testing.T) {
 
 	iter := s.Iterator([]byte("alpha"), []byte("omega"))
 	for _, p := range pairs {
-		require.True(t, iter.Valid())
-		assert.Equal(t, p.key, iter.Key())
-		assert.Equal(t, p.val, iter.Value())
+		require.True(iter.Valid())
+		require.Equal(p.key, iter.Key())
+		require.Equal(p.val, iter.Value())
 		iter.Next()
 	}
-	assert.False(t, iter.Valid())
-	assert.NoError(t, iter.Error())
-	assert.NoError(t, iter.Close())
+	assert.False(iter.Valid())
+	assert.NoError(iter.Error())
+	assert.NoError(iter.Close())
 
 	iter = s.Iterator(nil, nil)
 	for _, p := range pairs {
-		require.True(t, iter.Valid())
-		assert.Equal(t, p.key, iter.Key())
-		assert.Equal(t, p.val, iter.Value())
+		require.True(iter.Valid())
+		require.Equal(p.key, iter.Key())
+		require.Equal(p.val, iter.Value())
 		iter.Next()
 	}
-	assert.False(t, iter.Valid())
-	assert.NoError(t, iter.Error())
-	assert.NoError(t, iter.Close())
+	assert.False(iter.Valid())
+	assert.NoError(iter.Error())
+	assert.NoError(iter.Close())
 
 	iter = s.Iterator([]byte("epsilon"), []byte("gamma"))
 	for _, p := range pairs[1:4] {
-		require.True(t, iter.Valid())
-		assert.Equal(t, p.key, iter.Key())
-		assert.Equal(t, p.val, iter.Value())
+		require.True(iter.Valid())
+		require.Equal(p.key, iter.Key())
+		require.Equal(p.val, iter.Value())
 		iter.Next()
 	}
-	assert.False(t, iter.Valid())
-	assert.NoError(t, iter.Error())
-	assert.NoError(t, iter.Close())
+	assert.False(iter.Valid())
+	assert.NoError(iter.Error())
+	assert.NoError(iter.Close())
 
 	rIter := s.ReverseIterator(nil, nil)
 	for i := len(pairs) - 1; i >= 0; i-- {
-		require.True(t, rIter.Valid())
-		assert.Equal(t, pairs[i].key, rIter.Key())
-		assert.Equal(t, pairs[i].val, rIter.Value())
+		require.True(rIter.Valid())
+		require.Equal(pairs[i].key, rIter.Key())
+		require.Equal(pairs[i].val, rIter.Value())
 		rIter.Next()
 	}
-	assert.False(t, rIter.Valid())
-	assert.NoError(t, rIter.Error())
-	assert.NoError(t, rIter.Close())
+	assert.False(rIter.Valid())
+	assert.NoError(rIter.Error())
+	assert.NoError(rIter.Close())
 
 	// delete something, and ensure that iteration still works
 	s.Delete([]byte("eta"))
@@ -83,27 +86,28 @@ func TestIteration(t *testing.T) {
 	iter = s.Iterator(nil, nil)
 	for _, p := range pairs {
 		if !bytes.Equal([]byte("eta"), p.key) {
-			require.True(t, iter.Valid())
-			assert.Equal(t, p.key, iter.Key())
-			assert.Equal(t, p.val, iter.Value())
+			require.True(iter.Valid())
+			require.Equal(p.key, iter.Key())
+			require.Equal(p.val, iter.Value())
 			iter.Next()
 		}
 	}
-	assert.False(t, iter.Valid())
-	assert.NoError(t, iter.Error())
-	assert.NoError(t, iter.Close())
+	assert.False(iter.Valid())
+	assert.NoError(iter.Error())
+	assert.NoError(iter.Close())
 }
 
 func TestDomain(t *testing.T) {
+	assert := assert.New(t)
 	s := smt.NewStore(dbm.NewMemDB())
 
 	iter := s.Iterator(nil, nil)
 	start, end := iter.Domain()
-	assert.Nil(t, start)
-	assert.Nil(t, end)
+	assert.Nil(start)
+	assert.Nil(end)
 
 	iter = s.Iterator([]byte("foo"), []byte("bar"))
 	start, end = iter.Domain()
-	assert.Equal(t, []byte("foo"), start)
-	assert.Equal(t, []byte("bar"), end)
+	assert.Equal([]byte("foo"), start)
+	assert.Equal([]byte("bar"), end)
 }

@@ -6,7 +6,7 @@ order: 2
 
 ## AuthorizationGrant
 
-Authorizations are identified by combining granter address (the address bytes of the granter), grantee address (the address bytes of the grantee) and ServiceMsg type (its method name).
+Grants are identified by combining granter address (the address bytes of the granter), grantee address (the address bytes of the grantee) and Msg type (its URL). Hence we only allow one grant for the (granter, grantee, msg type) triple.
 
 - AuthorizationGrant: `0x01 | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes |  msgType_bytes-> ProtocolBuffer(AuthorizationGrant)`
 

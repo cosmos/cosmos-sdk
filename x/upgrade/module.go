@@ -120,6 +120,9 @@ func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONMarshaler) json.R
 	return am.DefaultGenesis(cdc)
 }
 
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
 // BeginBlock calls the upgrade module hooks
 //
 // CONTRACT: this is registered in BeginBlocker *before* all other modules' BeginBlock functions

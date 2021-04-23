@@ -17,6 +17,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type SimTestSuite struct {
@@ -72,15 +73,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200000)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+		suite.Require().NoError(simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins))
 	}
 
 	return accounts
@@ -132,12 +132,12 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 			AppHash: suite.app.LastCommitID().Hash,
 		}})
 
-	initAmt := sdk.TokensFromConsensusPower(200000)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	authorization := types.NewSendAuthorization(initCoins)
+	authorization := banktypes.NewSendAuthorization(initCoins)
 
 	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
@@ -153,7 +153,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-	suite.Require().Equal(types.SendAuthorization{}.MethodName(), msg.MethodName)
+	suite.Require().Equal(banktypes.SendAuthorization{}.MethodName(), msg.MethodName)
 	suite.Require().Len(futureOperations, 0)
 
 }
@@ -167,12 +167,12 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
-	initAmt := sdk.TokensFromConsensusPower(200000)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
 	granter := accounts[0]
 	grantee := accounts[1]
-	authorization := types.NewSendAuthorization(initCoins)
+	authorization := banktypes.NewSendAuthorization(initCoins)
 
 	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)

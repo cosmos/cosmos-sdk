@@ -22,6 +22,7 @@ func populate(mgr *CommitKVStoreCacheManager) {
 }
 
 func BenchmarkReset(b *testing.B) {
+	b.ReportAllocs()
 	mgr := freshMgr()
 
 	b.ResetTimer()

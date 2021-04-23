@@ -44,7 +44,7 @@ Before starting the chain, you need to populate the state with at least one acco
 Now that you have created a local account, go ahead and grant it some `stake` tokens in your chain's genesis file. Doing so will also make sure your chain is aware of this account's existence:
 
 ```bash
-simd add-genesis-account $MY_VALIDATOR_ADDRESS 100000000stake
+simd add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000stake
 ```
 
 Recall that `$MY_VALIDATOR_ADDRESS` is a variable that holds the address of the `my_validator` key in the [keyring](./keyring.md#adding-keys-to-the-keyring). Also note that the tokens in the SDK have the `{amount}{denom}` format: `amount` is is a 18-digit-precision decimal number, and `denom` is the unique token identifier with its denomination key (e.g. `atom` or `uatom`). Here, we are granting `stake` tokens, as `stake` is the token identifier used for staking in [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc3/simapp). For your own chain with its own staking denom, that token identifier should be used instead.
@@ -53,7 +53,7 @@ Now that your account has some tokens, you need to add a validator to your chain
 
 ```bash
 # Create a gentx.
-simd gentx my_validator 100000stake --chain-id my-test-chain --keyring-backend test
+simd gentx my_validator 100000000stake --chain-id my-test-chain --keyring-backend test
 
 # Add the gentx to the genesis file.
 simd collect-gentxs

@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
@@ -16,9 +17,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -60,6 +65,14 @@ func TestStoreMount(t *testing.T) {
 	require.Panics(t, func() { store.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
 	require.Panics(t, func() { store.MountStoreWithDB(nil, types.StoreTypeIAVL, db) })
 	require.Panics(t, func() { store.MountStoreWithDB(dup1, types.StoreTypeIAVL, db) })
+}
+
+func TestCacheMultiStore(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.PruneNothing)
+
+	cacheMulti := ms.CacheMultiStore()
+	require.IsType(t, cachemulti.Store{}, cacheMulti)
 }
 
 func TestCacheMultiStoreWithVersion(t *testing.T) {
@@ -672,6 +685,125 @@ func TestSetInitialVersion(t *testing.T) {
 	require.True(t, iavlStore.VersionExists(5))
 }
 
+func TestAddListenersAndListeningEnabled(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+	testKey := types.NewKVStoreKey("listening_test_key")
+	enabled := multi.ListeningEnabled(testKey)
+	require.False(t, enabled)
+
+	multi.AddListeners(testKey, []types.WriteListener{})
+	enabled = multi.ListeningEnabled(testKey)
+	require.False(t, enabled)
+
+	mockListener := types.NewStoreKVPairWriteListener(nil, nil)
+	multi.AddListeners(testKey, []types.WriteListener{mockListener})
+	wrongTestKey := types.NewKVStoreKey("wrong_listening_test_key")
+	enabled = multi.ListeningEnabled(wrongTestKey)
+	require.False(t, enabled)
+
+	enabled = multi.ListeningEnabled(testKey)
+	require.True(t, enabled)
+}
+
+var (
+	interfaceRegistry = codecTypes.NewInterfaceRegistry()
+	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
+	testKey1          = []byte{1, 2, 3, 4, 5}
+	testValue1        = []byte{5, 4, 3, 2, 1}
+	testKey2          = []byte{2, 3, 4, 5, 6}
+	testValue2        = []byte{6, 5, 4, 3, 2}
+)
+
+func TestGetListenWrappedKVStore(t *testing.T) {
+	buf := new(bytes.Buffer)
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, types.PruneNothing)
+	ms.LoadLatestVersion()
+	mockListeners := []types.WriteListener{types.NewStoreKVPairWriteListener(buf, testMarshaller)}
+	ms.AddListeners(testStoreKey1, mockListeners)
+	ms.AddListeners(testStoreKey2, mockListeners)
+
+	listenWrappedStore1 := ms.GetKVStore(testStoreKey1)
+	require.IsType(t, &listenkv.Store{}, listenWrappedStore1)
+
+	listenWrappedStore1.Set(testKey1, testValue1)
+	expectedOutputKVPairSet1, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey1,
+		Value:    testValue1,
+		StoreKey: testStoreKey1.Name(),
+		Delete:   false,
+	})
+	require.Nil(t, err)
+	kvPairSet1Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairSet1, kvPairSet1Bytes)
+
+	listenWrappedStore1.Delete(testKey1)
+	expectedOutputKVPairDelete1, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey1,
+		Value:    nil,
+		StoreKey: testStoreKey1.Name(),
+		Delete:   true,
+	})
+	require.Nil(t, err)
+	kvPairDelete1Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairDelete1, kvPairDelete1Bytes)
+
+	listenWrappedStore2 := ms.GetKVStore(testStoreKey2)
+	require.IsType(t, &listenkv.Store{}, listenWrappedStore2)
+
+	listenWrappedStore2.Set(testKey2, testValue2)
+	expectedOutputKVPairSet2, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey2,
+		Value:    testValue2,
+		StoreKey: testStoreKey2.Name(),
+		Delete:   false,
+	})
+	kvPairSet2Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairSet2, kvPairSet2Bytes)
+
+	listenWrappedStore2.Delete(testKey2)
+	expectedOutputKVPairDelete2, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+		Key:      testKey2,
+		Value:    nil,
+		StoreKey: testStoreKey2.Name(),
+		Delete:   true,
+	})
+	kvPairDelete2Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, expectedOutputKVPairDelete2, kvPairDelete2Bytes)
+
+	unwrappedStore := ms.GetKVStore(testStoreKey3)
+	require.IsType(t, &iavl.Store{}, unwrappedStore)
+
+	unwrappedStore.Set(testKey2, testValue2)
+	kvPairSet3Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, []byte{}, kvPairSet3Bytes)
+
+	unwrappedStore.Delete(testKey2)
+	kvPairDelete3Bytes := buf.Bytes()
+	buf.Reset()
+	require.Equal(t, []byte{}, kvPairDelete3Bytes)
+}
+
+func TestCacheWraps(t *testing.T) {
+	db := dbm.NewMemDB()
+	multi := newMultiStoreWithMounts(db, types.PruneNothing)
+
+	cacheWrapper := multi.CacheWrap()
+	require.IsType(t, cachemulti.Store{}, cacheWrapper)
+
+	cacheWrappedWithTrace := multi.CacheWrapWithTrace(nil, nil)
+	require.IsType(t, cachemulti.Store{}, cacheWrappedWithTrace)
+
+	cacheWrappedWithListeners := multi.CacheWrapWithListeners(nil, nil)
+	require.IsType(t, cachemulti.Store{}, cacheWrappedWithListeners)
+}
+
 func BenchmarkMultistoreSnapshot100K(b *testing.B) {
 	benchmarkMultistoreSnapshot(b, 10, 10000)
 }
@@ -689,6 +821,9 @@ func BenchmarkMultistoreSnapshotRestore1M(b *testing.B) {
 }
 
 func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
+	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
+
+	b.ReportAllocs()
 	b.StopTimer()
 	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
 	version := source.LastCommitID().Version
@@ -716,6 +851,9 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 }
 
 func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys uint64) {
+	b.Skip("Noisy with slow setup time, please see https://github.com/cosmos/cosmos-sdk/issues/8855.")
+
+	b.ReportAllocs()
 	b.StopTimer()
 	source := newMultiStoreWithGeneratedData(dbm.NewMemDB(), stores, storeKeys)
 	version := uint64(source.LastCommitID().Version)
@@ -742,13 +880,19 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 //-----------------------------------------------------------------------
 // utils
 
+var (
+	testStoreKey1 = types.NewKVStoreKey("store1")
+	testStoreKey2 = types.NewKVStoreKey("store2")
+	testStoreKey3 = types.NewKVStoreKey("store3")
+)
+
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store {
 	store := NewStore(db)
 	store.pruningOpts = pruningOpts
 
-	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("store2"), types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(types.NewKVStoreKey("store3"), types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey2, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
 
 	return store
 }

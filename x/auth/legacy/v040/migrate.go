@@ -11,8 +11,7 @@ import (
 // convertBaseAccount converts a 0.39 BaseAccount to a 0.40 BaseAccount.
 func convertBaseAccount(old *v039auth.BaseAccount) *v040auth.BaseAccount {
 	var any *codectypes.Any
-	// If the old genesis had a pubkey, we pack it inside an Any. Or else, we
-	// just leave it nil.
+
 	if old.PubKey != nil {
 		var err error
 		any, err = codectypes.NewAnyWithValue(old.PubKey)

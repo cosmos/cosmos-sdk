@@ -28,3 +28,53 @@ func BenchmarkParseCoin(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkUintMarshal(b *testing.B) {
+	var values = []uint64{
+		0,
+		1,
+		1 << 10,
+		1<<10 - 3,
+		1<<63 - 1,
+		1<<32 - 7,
+		1<<22 - 8,
+	}
+
+	var scratch [20]byte
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		for _, value := range values {
+			u := types.NewUint(value)
+			n, err := u.MarshalTo(scratch[:])
+			if err != nil {
+				b.Fatal(err)
+			}
+			b.SetBytes(int64(n))
+		}
+	}
+}
+
+func BenchmarkIntMarshal(b *testing.B) {
+	var values = []int64{
+		0,
+		1,
+		1 << 10,
+		1<<10 - 3,
+		1<<63 - 1,
+		1<<32 - 7,
+		1<<22 - 8,
+	}
+
+	var scratch [20]byte
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		for _, value := range values {
+			in := types.NewInt(value)
+			n, err := in.MarshalTo(scratch[:])
+			if err != nil {
+				b.Fatal(err)
+			}
+			b.SetBytes(int64(n))
+		}
+	}
+}

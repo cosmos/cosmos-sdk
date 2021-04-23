@@ -60,6 +60,10 @@ var _ AccountKeeperI = &AccountKeeper{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
+// `maccPerms` is a map that takes accounts' addresses as keys, and their respective permissions as values. This map is used to construct
+// types.PermissionsForAddress and is used in keeper.ValidatePermissions. Permissions are plain strings,
+// and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
+// may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
 	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
 	maccPerms map[string][]string,
@@ -202,7 +206,7 @@ func (ak AccountKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) typ
 }
 
 // SetModuleAccount sets the module account to the auth account store
-func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) { //nolint:interfacer
+func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) {
 	ak.SetAccount(ctx, macc)
 }
 

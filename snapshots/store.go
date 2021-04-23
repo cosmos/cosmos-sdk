@@ -91,7 +91,7 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 
 // Get fetches the latest snapshot from the database, if any.
 func (s *Store) GetLatest() (*types.Snapshot, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to find latest snapshot")
 	}
@@ -111,7 +111,7 @@ func (s *Store) GetLatest() (*types.Snapshot, error) {
 
 // List lists snapshots, in reverse order (newest first).
 func (s *Store) List() ([]*types.Snapshot, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to list snapshots")
 	}
@@ -181,7 +181,7 @@ func (s *Store) loadChunkFile(height uint64, format uint32, chunk uint32) (io.Re
 
 // Prune removes old snapshots. The given number of most recent heights (regardless of format) are retained.
 func (s *Store) Prune(retain uint32) (uint64, error) {
-	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(math.MaxUint64, math.MaxUint32))
+	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {
 		return 0, sdkerrors.Wrap(err, "failed to prune snapshots")
 	}

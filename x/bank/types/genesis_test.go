@@ -28,6 +28,8 @@ func TestGenesisStateValidate(t *testing.T) {
 				Supply: sdk.Coins{sdk.NewInt64Coin("uatom", 1)},
 				DenomMetadata: []Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},
@@ -70,7 +72,7 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid balance",
+			"0  balance",
 			GenesisState{
 				Balances: []Balance{
 					{
@@ -78,13 +80,15 @@ func TestGenesisStateValidate(t *testing.T) {
 					},
 				},
 			},
-			true,
+			false,
 		},
 		{
 			"dup Metadata",
 			GenesisState{
 				DenomMetadata: []Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},
@@ -95,6 +99,8 @@ func TestGenesisStateValidate(t *testing.T) {
 						Display: "atom",
 					},
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},
@@ -113,6 +119,8 @@ func TestGenesisStateValidate(t *testing.T) {
 			GenesisState{
 				DenomMetadata: []Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*DenomUnit{
 							{"uatom", uint32(0), []string{"microatom"}},

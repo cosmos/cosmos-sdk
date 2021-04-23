@@ -42,11 +42,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.cfg = network.DefaultConfig()
+	s.cfg.NumValidators = 2
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -58,11 +56,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = stakingtestutil.MsgRedelegateExec(val.ClientCtx, val.Address, val.ValAddress, val2.ValAddress, unbond)
+	_, err = stakingtestutil.MsgRedelegateExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		val2.ValAddress,
+		unbond,
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 202954), //  202954 is the required
+	)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
 	// unbonding
 	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
@@ -76,17 +80,18 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
+	require := s.Require()
 	val := s.network.Validators[0]
 
 	consPrivKey := ed25519.GenPrivKey()
-	consPubKey, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeConsPub, consPrivKey.PubKey())
-	s.Require().NoError(err)
+	consPubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(consPrivKey.PubKey())
+	require.NoError(err)
+	require.NotNil(consPubKeyBz)
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
-	s.Require().NoError(err)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
@@ -95,7 +100,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	)
-	s.Require().NoError(err)
+	require.NoError(err)
 
 	testCases := []struct {
 		name         string
@@ -125,7 +130,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing pubkey)",
 			[]string{
-				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
 				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
@@ -144,8 +149,8 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"invalid transaction (missing moniker)",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
-				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
 				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
@@ -164,8 +169,8 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		{
 			"valid transaction",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKey),
-				fmt.Sprintf("--%s=100stake", cli.FlagAmount),
+				fmt.Sprintf("--%s=%s", cli.FlagPubKey, consPubKeyBz),
+				fmt.Sprintf("--%s=%dstake", cli.FlagAmount, 100),
 				fmt.Sprintf("--%s=NewValidator", cli.FlagMoniker),
 				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
 				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
@@ -193,13 +198,15 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				s.Require().Error(err)
+				require.Error(err)
 			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				require.NoError(err, "test: %s\noutput: %s", tc.name, out.String())
+				err = clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType)
+				require.NoError(err, out.String(), "test: %s, output\n:", tc.name, out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				require.Equal(tc.expectedCode, txResp.Code,
+					"test: %s, output\n:", tc.name, out.String())
 			}
 		})
 	}
@@ -861,12 +868,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
+power_reduction: "1000000"
 unbonding_time: 1814400s`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","power_reduction":"1000000"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -1037,7 +1045,7 @@ func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
 func (s *IntegrationTestSuite) TestNewCmdDelegate() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
@@ -1277,7 +1285,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 

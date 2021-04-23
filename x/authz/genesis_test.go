@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type GenesisTestSuite struct {
@@ -41,7 +41,7 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
 
 	now := suite.ctx.BlockHeader().Time
-	grant := &types.SendAuthorization{SpendLimit: coins}
+	grant := &bank.SendAuthorization{SpendLimit: coins}
 	err := suite.keeper.Grant(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
 	suite.Require().NoError(err)
 	genesis := authz.ExportGenesis(suite.ctx, suite.keeper)

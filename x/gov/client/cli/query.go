@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -74,7 +73,7 @@ $ %s query gov proposal 1
 
 			// Query the proposal
 			res, err := queryClient.Proposal(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -149,7 +148,7 @@ $ %s query gov proposals --page=2 --limit=100
 			}
 
 			res, err := queryClient.Proposals(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryProposalsRequest{
 					ProposalStatus: proposalStatus,
 					Voter:          bechVoterAddr,
@@ -208,8 +207,9 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			_, err = queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -222,7 +222,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			res, err := queryClient.Vote(
-				context.Background(),
+				ctx,
 				&types.QueryVoteRequest{ProposalId: proposalID, Voter: args[1]},
 			)
 			if err != nil {
@@ -282,8 +282,9 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			proposalRes, err := queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -315,7 +316,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 			}
 
 			res, err := queryClient.Votes(
-				context.Background(),
+				ctx,
 				&types.QueryVotesRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
 
@@ -364,8 +365,9 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			_, err = queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -378,7 +380,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			res, err := queryClient.Deposit(
-				context.Background(),
+				ctx,
 				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: args[1]},
 			)
 			if err != nil {
@@ -434,8 +436,9 @@ $ %s query gov deposits 1
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			proposalRes, err := queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -464,7 +467,7 @@ $ %s query gov deposits 1
 			}
 
 			res, err := queryClient.Deposits(
-				context.Background(),
+				ctx,
 				&types.QueryDepositsRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
 
@@ -512,8 +515,9 @@ $ %s query gov tally 1
 			}
 
 			// check to see if the proposal is in the store
+			ctx := cmd.Context()
 			_, err = queryClient.Proposal(
-				context.Background(),
+				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -522,7 +526,7 @@ $ %s query gov tally 1
 
 			// Query store
 			res, err := queryClient.TallyResult(
-				context.Background(),
+				ctx,
 				&types.QueryTallyResultRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -561,8 +565,9 @@ $ %s query gov params
 			queryClient := types.NewQueryClient(clientCtx)
 
 			// Query store for all 3 params
+			ctx := cmd.Context()
 			votingRes, err := queryClient.Params(
-				context.Background(),
+				ctx,
 				&types.QueryParamsRequest{ParamsType: "voting"},
 			)
 			if err != nil {
@@ -570,7 +575,7 @@ $ %s query gov params
 			}
 
 			tallyRes, err := queryClient.Params(
-				context.Background(),
+				ctx,
 				&types.QueryParamsRequest{ParamsType: "tallying"},
 			)
 			if err != nil {
@@ -578,7 +583,7 @@ $ %s query gov params
 			}
 
 			depositRes, err := queryClient.Params(
-				context.Background(),
+				ctx,
 				&types.QueryParamsRequest{ParamsType: "deposit"},
 			)
 			if err != nil {
@@ -626,7 +631,7 @@ $ %s query gov param deposit
 
 			// Query store
 			res, err := queryClient.Params(
-				context.Background(),
+				cmd.Context(),
 				&types.QueryParamsRequest{ParamsType: args[0]},
 			)
 			if err != nil {

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -18,7 +20,7 @@ type MsgRequest interface {
 }
 
 // ServiceMsg is the struct into which an Any whose typeUrl matches a service
-// method format (ex. `/cosmos.gov.Msg/SubmitProposal`) unpacks.
+// method format (ex. `/cosmos.gov.v1beta1.Msg/SubmitProposal`) unpacks.
 type ServiceMsg struct {
 	// MethodName is the fully-qualified service method name.
 	MethodName string
@@ -44,7 +46,17 @@ func (msg ServiceMsg) ValidateBasic() error {
 
 // GetSignBytes implements Msg.GetSignBytes method.
 func (msg ServiceMsg) GetSignBytes() []byte {
-	panic("ServiceMsg does not have a GetSignBytes method")
+	// Here, we're gracefully supporting Amino JSON for service
+	// Msgs.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/8346
+	// If `msg` is a service Msg, then we cast its `Request` to a sdk.Msg
+	// and call GetSignBytes on the `Request`.
+	msgRequest, ok := msg.Request.(Msg)
+	if !ok {
+		panic(fmt.Errorf("cannot convert ServiceMsg request to sdk.Msg, got %T", msgRequest))
+	}
+
+	return msgRequest.GetSignBytes()
 }
 
 // GetSigners implements Msg.GetSigners method.

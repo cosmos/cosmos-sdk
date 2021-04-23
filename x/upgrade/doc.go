@@ -1,7 +1,7 @@
 /*
 Package upgrade provides a Cosmos SDK module that can be used for smoothly upgrading a live Cosmos chain to a
 new software version. It accomplishes this by providing a BeginBlocker hook that prevents the blockchain state
-machine from proceeding once a pre-defined upgrade block time or height has been reached. The module does not prescribe
+machine from proceeding once a pre-defined upgrade block height has been reached. The module does not prescribe
 anything regarding how governance decides to do an upgrade, but just the mechanism for coordinating the upgrade safely.
 Without software support for upgrades, upgrading a live chain is risky because all of the validators need to pause
 their state machines at exactly the same point in the process. If this is not done correctly, there can be state
@@ -21,9 +21,9 @@ perform a migration, but also to identify if this is the old or new version (eg.
 a handler registered for the named upgrade).
 
 Once the release candidate along with an appropriate upgrade handler is frozen,
-we can have a governance vote to approve this upgrade at some future block time
-or block height (e.g. 200000). This is known as an upgrade.Plan. The v0.38.0 code will not know of this
-handler, but will continue to run until block 200000, when the plan kicks in at BeginBlock. It will check
+we can have a governance vote to approve this upgrade at some future block height (e.g. 200000).
+This is known as an upgrade.Plan. The v0.38.0 code will not know of this handler, but will
+continue to run until block 200000, when the plan kicks in at BeginBlock. It will check
 for existence of the handler, and finding it missing, know that it is running the obsolete software,
 and gracefully exit.
 
@@ -54,7 +54,7 @@ should call ScheduleUpgrade to schedule an upgrade and ClearUpgradePlan to cance
 
 Performing Upgrades
 
-Upgrades can be scheduled at either a predefined block height or time. Once this block height or time is reached, the
+Upgrades can be scheduled at a predefined block height. Once this block height is reached, the
 existing software will cease to process ABCI messages and a new version with code that handles the upgrade must be deployed.
 All upgrades are coordinated by a unique upgrade name that cannot be reused on the same blockchain. In order for the upgrade
 module to know that the upgrade has been safely applied, a handler with the name of the upgrade must be installed.

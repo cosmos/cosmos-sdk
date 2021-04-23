@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -19,7 +20,13 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
-	tempdir := t.TempDir()
+	// ioutil.TempDir() is used instead of testing.T.TempDir()
+	// see https://github.com/cosmos/cosmos-sdk/pull/8475 for
+	// this change's rationale.
+	tempdir, err := ioutil.TempDir("", "")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
+
 	store, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 	require.NoError(t, err)
 

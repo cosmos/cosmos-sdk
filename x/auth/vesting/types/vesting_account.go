@@ -6,6 +6,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -19,7 +20,6 @@ var (
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
 )
 
-//-----------------------------------------------------------------------------
 // Base Vesting Account
 
 // NewBaseVestingAccount creates a new BaseVestingAccount object. It is the
@@ -188,35 +188,19 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    bva.AccountNumber,
+		PubKey:           getPKString(bva),
 		Sequence:         bva.Sequence,
 		OriginalVesting:  bva.OriginalVesting,
 		DelegatedFree:    bva.DelegatedFree,
 		DelegatedVesting: bva.DelegatedVesting,
 		EndTime:          bva.EndTime,
 	}
-
-	pk := bva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Continuous Vesting Account
 
 var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
@@ -277,7 +261,8 @@ func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coi
 	return cva.OriginalVesting.Sub(cva.GetVestedCoins(blockTime))
 }
 
-// LockedCoins returns the set of coins that are not spendable (i.e. locked).
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
 func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return cva.BaseVestingAccount.LockedCoinsFromVesting(cva.GetVestingCoins(blockTime))
 }
@@ -316,9 +301,10 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    cva.AccountNumber,
+		PubKey:           getPKString(cva),
 		Sequence:         cva.Sequence,
 		OriginalVesting:  cva.OriginalVesting,
 		DelegatedFree:    cva.DelegatedFree,
@@ -326,26 +312,9 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 		EndTime:          cva.EndTime,
 		StartTime:        cva.StartTime,
 	}
-
-	pk := cva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Periodic Vesting Account
 
 var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
@@ -418,7 +387,8 @@ func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins
 	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime))
 }
 
-// LockedCoins returns the set of coins that are not spendable (i.e. locked).
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
 func (pva PeriodicVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return pva.BaseVestingAccount.LockedCoinsFromVesting(pva.GetVestingCoins(blockTime))
 }
@@ -474,9 +444,10 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	alias := vestingAccountYAML{
+	out := vestingAccountYAML{
 		Address:          accAddr,
 		AccountNumber:    pva.AccountNumber,
+		PubKey:           getPKString(pva),
 		Sequence:         pva.Sequence,
 		OriginalVesting:  pva.OriginalVesting,
 		DelegatedFree:    pva.DelegatedFree,
@@ -485,26 +456,9 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 		StartTime:        pva.StartTime,
 		VestingPeriods:   pva.VestingPeriods,
 	}
-
-	pk := pva.GetPubKey()
-	if pk != nil {
-		pks, err := sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		alias.PubKey = pks
-	}
-
-	bz, err := yaml.Marshal(alias)
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
+	return marshalYaml(out)
 }
 
-//-----------------------------------------------------------------------------
 // Delayed Vesting Account
 
 var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
@@ -544,7 +498,8 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 	return dva.OriginalVesting.Sub(dva.GetVestedCoins(blockTime))
 }
 
-// LockedCoins returns the set of coins that are not spendable (i.e. locked).
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
 func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(blockTime))
 }
@@ -569,4 +524,90 @@ func (dva DelayedVestingAccount) Validate() error {
 func (dva DelayedVestingAccount) String() string {
 	out, _ := dva.MarshalYAML()
 	return out.(string)
+}
+
+//-----------------------------------------------------------------------------
+// Permanent Locked Vesting Account
+
+var _ vestexported.VestingAccount = (*PermanentLockedAccount)(nil)
+var _ authtypes.GenesisAccount = (*PermanentLockedAccount)(nil)
+
+// NewPermanentLockedAccount returns a PermanentLockedAccount
+func NewPermanentLockedAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) *PermanentLockedAccount {
+	baseVestingAcc := &BaseVestingAccount{
+		BaseAccount:     baseAcc,
+		OriginalVesting: coins,
+		EndTime:         0, // ensure EndTime is set to 0, as PermanentLockedAccount's do not have an EndTime
+	}
+
+	return &PermanentLockedAccount{baseVestingAcc}
+}
+
+// GetVestedCoins returns the total amount of vested coins for a permanent locked vesting
+// account. All coins are only vested once the schedule has elapsed.
+func (plva PermanentLockedAccount) GetVestedCoins(_ time.Time) sdk.Coins {
+	return nil
+}
+
+// GetVestingCoins returns the total number of vesting coins for a permanent locked
+// vesting account.
+func (plva PermanentLockedAccount) GetVestingCoins(_ time.Time) sdk.Coins {
+	return plva.OriginalVesting
+}
+
+// LockedCoins returns the set of coins that are not spendable (i.e. locked),
+// defined as the vesting coins that are not delegated.
+func (plva PermanentLockedAccount) LockedCoins(_ time.Time) sdk.Coins {
+	return plva.BaseVestingAccount.LockedCoinsFromVesting(plva.OriginalVesting)
+}
+
+// TrackDelegation tracks a desired delegation amount by setting the appropriate
+// values for the amount of delegated vesting, delegated free, and reducing the
+// overall amount of base coins.
+func (plva *PermanentLockedAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+	plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
+}
+
+// GetStartTime returns zero since a permanent locked vesting account has no start time.
+func (plva PermanentLockedAccount) GetStartTime() int64 {
+	return 0
+}
+
+// GetEndTime returns a vesting account's end time, we return 0 to denote that
+// a permanently locked vesting account has no end time.
+func (plva PermanentLockedAccount) GetEndTime() int64 {
+	return 0
+}
+
+// Validate checks for errors on the account fields
+func (plva PermanentLockedAccount) Validate() error {
+	if plva.EndTime > 0 {
+		return errors.New("permanently vested accounts cannot have an end-time")
+	}
+
+	return plva.BaseVestingAccount.Validate()
+}
+
+func (plva PermanentLockedAccount) String() string {
+	out, _ := plva.MarshalYAML()
+	return out.(string)
+}
+
+type getPK interface {
+	GetPubKey() cryptotypes.PubKey
+}
+
+func getPKString(g getPK) string {
+	if pk := g.GetPubKey(); pk != nil {
+		return pk.String()
+	}
+	return ""
+}
+
+func marshalYaml(i interface{}) (interface{}, error) {
+	bz, err := yaml.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	return string(bz), nil
 }

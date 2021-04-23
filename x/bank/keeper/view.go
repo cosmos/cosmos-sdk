@@ -97,9 +97,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // GetBalance returns the balance of a specific denomination for a given account
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(ctx, addr)
 
 	bz := accountStore.Get([]byte(denom))
 	if bz == nil {
@@ -116,9 +114,7 @@ func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom s
 // provides the token balance to a callback. If true is returned from the
 // callback, iteration is halted.
 func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(sdk.Coin) bool) {
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
-	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	accountStore := k.getAccountStore(ctx, addr)
 
 	iterator := accountStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -144,7 +140,13 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		address := types.AddressFromBalancesStore(iterator.Key())
+		address, err := types.AddressFromBalancesStore(iterator.Key())
+		if err != nil {
+			k.Logger(ctx).With("key", iterator.Key(), "err", err).Error("failed to get address from balances store")
+			// TODO: revisit, for now, panic here to keep same behavior as in 0.42
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/7409
+			panic(err)
+		}
 
 		var balance sdk.Coin
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
@@ -175,15 +177,23 @@ func (k BaseViewKeeper) LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Co
 // by address. If the account has no spendable coins, an empty Coins slice is
 // returned.
 func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	balances := k.GetAllBalances(ctx, addr)
+	spendable, _ := k.spendableCoins(ctx, addr)
+	return spendable
+}
+
+// spendableCoins returns the coins the given address can spend alongside the total amount of coins it holds.
+// It exists for gas efficiency, in order to avoid to have to get balance multiple times.
+func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (spendable, total sdk.Coins) {
+	total = k.GetAllBalances(ctx, addr)
 	locked := k.LockedCoins(ctx, addr)
 
-	spendable, hasNeg := balances.SafeSub(locked)
+	spendable, hasNeg := total.SafeSub(locked)
 	if hasNeg {
-		return sdk.NewCoins()
+		spendable = sdk.NewCoins()
+		return
 	}
 
-	return spendable
+	return
 }
 
 // ValidateBalance validates all balances for a given account address returning
@@ -213,4 +223,11 @@ func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) er
 	}
 
 	return nil
+}
+
+// getAccountStore gets the account store of the given address.
+func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) prefix.Store {
+	store := ctx.KVStore(k.storeKey)
+
+	return prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
 }

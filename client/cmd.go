@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -94,9 +93,9 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		clientCtx = clientCtx.WithOutputFormat(output)
 	}
 
-	if clientCtx.HomeDir == "" || flagSet.Changed(flags.FlagHome) {
-		homeDir, _ := flagSet.GetString(flags.FlagHome)
-		clientCtx = clientCtx.WithHomeDir(homeDir)
+	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
+		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
+		clientCtx = clientCtx.WithSimulation(dryRun)
 	}
 
 	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
@@ -120,7 +119,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
 		if keyringBackend != "" {
-			kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+			kr, err := NewKeyringFromBackend(clientCtx, keyringBackend)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -134,7 +133,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		if rpcURI != "" {
 			clientCtx = clientCtx.WithNodeURI(rpcURI)
 
-			client, err := rpchttp.New(rpcURI, "/websocket")
+			client, err := NewClientFromNode(rpcURI)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -191,11 +190,6 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		clientCtx = clientCtx.WithGenerateOnly(genOnly)
 	}
 
-	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
-		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
-		clientCtx = clientCtx.WithSimulation(dryRun)
-	}
-
 	if !clientCtx.Offline || flagSet.Changed(flags.FlagOffline) {
 		offline, _ := flagSet.GetBool(flags.FlagOffline)
 		clientCtx = clientCtx.WithOffline(offline)
@@ -221,6 +215,19 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		clientCtx = clientCtx.WithSignModeStr(signModeStr)
 	}
 
+	if clientCtx.FeeGranter == nil || flagSet.Changed(flags.FlagFeeAccount) {
+		granter, _ := flagSet.GetString(flags.FlagFeeAccount)
+
+		if granter != "" {
+			granterAcc, err := sdk.AccAddressFromBech32(granter)
+			if err != nil {
+				return clientCtx, err
+			}
+
+			clientCtx = clientCtx.WithFeeGranterAddress(granterAcc)
+		}
+	}
+
 	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
 		fromAddr, fromName, keyType, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
@@ -240,6 +247,21 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	}
 
 	return clientCtx, nil
+}
+
+// ReadHomeFlag checks if home flag is changed.
+// If this is a case, we update HomeDir field of Client Context
+/* Discovered a bug with Cory
+./build/simd init andrei --home ./test
+cd test/config there is no client.toml configuration file
+*/
+func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
+	if cmd.Flags().Changed(flags.FlagHome) {
+		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+		clientCtx = clientCtx.WithHomeDir(rootDir)
+	}
+
+	return clientCtx
 }
 
 // GetClientQueryContext returns a Context from a command with fields set based on flags

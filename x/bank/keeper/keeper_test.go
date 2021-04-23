@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -39,7 +40,8 @@ var (
 	multiPermAcc  = authtypes.NewEmptyModuleAccount(multiPerm, authtypes.Burner, authtypes.Minter, authtypes.Staking)
 	randomPermAcc = authtypes.NewEmptyModuleAccount(randomPerm, "random")
 
-	initTokens = sdk.TokensFromConsensusPower(initialPower)
+	// The default power validators are initialized to have within tests
+	initTokens = sdk.TokensFromConsensusPower(initialPower, sdk.DefaultPowerReduction)
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
@@ -90,7 +92,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	app, ctx := suite.app, suite.ctx
 
 	initialPower := int64(100)
-	initTokens := sdk.TokensFromConsensusPower(initialPower)
+	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, initialPower)
 
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 	suite.NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))

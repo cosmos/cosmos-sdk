@@ -156,8 +156,8 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			},
-			&sdk.TxResponse{}, 29,
-			false,
+			nil, 0,
+			true,
 		},
 		{
 			"failed with error both validators not allowed",

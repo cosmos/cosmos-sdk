@@ -2,6 +2,7 @@ package conv
 
 import (
 	"runtime"
+	"strconv"
 	"testing"
 	"time"
 
@@ -43,5 +44,11 @@ func (s *StringSuite) TestUnsafeBytesToStr() {
 		runtime.GC()
 		<-time.NewTimer(2 * time.Millisecond).C
 		s.Equal("abc", str)
+	}
+}
+
+func BenchmarkUnsafeStrToBytes(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		UnsafeStrToBytes(strconv.Itoa(i))
 	}
 }

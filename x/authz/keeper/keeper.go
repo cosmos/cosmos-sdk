@@ -87,7 +87,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
-			updated, del, err := authorization.Accept(serviceMsg, ctx.BlockHeader())
+			updated, del, err := authorization.Accept(ctx, serviceMsg)
 			if err != nil {
 				return nil, err
 			}

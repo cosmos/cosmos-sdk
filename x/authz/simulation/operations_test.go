@@ -73,7 +73,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200000)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
 	// add coins to the accounts
@@ -132,7 +132,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 			AppHash: suite.app.LastCommitID().Hash,
 		}})
 
-	initAmt := sdk.TokensFromConsensusPower(200000)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
 	granter := accounts[0]
@@ -167,7 +167,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
-	initAmt := sdk.TokensFromConsensusPower(200000)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
 	initCoins := sdk.NewCoins(sdk.NewCoin("foo", initAmt))
 
 	granter := accounts[0]

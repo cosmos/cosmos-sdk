@@ -47,17 +47,22 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
-	return a.GetFeeGrant().ValidateBasic()
+	f, err := a.GetFeeGrant()
+	if err != nil {
+		return err
+	}
+
+	return f.ValidateBasic()
 }
 
 // GetFeeGrant unpacks allowance
-func (a FeeAllowanceGrant) GetFeeGrant() FeeAllowanceI {
+func (a FeeAllowanceGrant) GetFeeGrant() (FeeAllowanceI, error) {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
-		return nil
+		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
 	}
 
-	return allowance
+	return allowance, nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -69,7 +74,12 @@ func (a FeeAllowanceGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // PrepareForExport will make all needed changes to the allowance to prepare to be
 // re-imported at height 0, and return a copy of this grant.
 func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
-	feegrant := a.GetFeeGrant().PrepareForExport(dumpTime, dumpHeight)
+	f, err := a.GetFeeGrant()
+	if err != nil {
+		return FeeAllowanceGrant{}
+	}
+
+	feegrant := f.PrepareForExport(dumpTime, dumpHeight)
 	if feegrant == nil {
 		return FeeAllowanceGrant{}
 	}

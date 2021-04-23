@@ -356,7 +356,7 @@ type VersionMap map[string]uint64
 // - make a diff of `fromVM` and `udpatedVM`, and for each module:
 //    - if the module's `fromVM` version is less than its `updatedVM` version,
 //      then run in-place store migrations for that module between those versions.
-//    - if the module's `fromVM` is 0 (which means that it's a new module,
+//    - if the module does not exist in the `fromVM` (which means that it's a new module,
 //      because it was not in the previous x/upgrade's store), then run
 //      `InitGenesis` on that module.
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
@@ -372,7 +372,7 @@ type VersionMap map[string]uint64
 //   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //       // Assume "foo" is a new module.
 //       // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
-//       // before this upgrade, `fromVM["foo"] == 0`, and RunMigration will by default
+//       // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default
 //       // run InitGenesis on foo.
 //       // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
 //       // consensus version:
@@ -390,19 +390,18 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 
 	updatedVM := make(VersionMap)
 	for moduleName, module := range m.Modules {
-		fromVersion := fromVM[moduleName]
+		fromVersion, exists := fromVM[moduleName]
 		toVersion := module.ConsensusVersion()
 
-		// Only run migrations when the fromVersion is > 0, or run InitGenesis
-		// if fromVersion == 0.
+		// Only run migrations when the module exists in the fromVM.
+		// Run InitGenesis otherwise.
 		//
-		// fromVersion will be 0 in two cases:
-		// 1. If a new module is added. In this case we run InitGenesis with an
+		// the module won't exist in the fromVM in two cases:
+		// 1. A new module is added. In this case we run InitGenesis with an
 		// empty genesis state.
-		// 2. If the app developer is running in-place store migrations for the
-		// first time. In this case, it is the app developer's responsibility
-		// to set their module's fromVersions to a version that suits them.
-		if fromVersion > 0 {
+		// 2. An existing chain is upgrading to v043 for the first time. In this case,
+		// all modules have yet to be added to x/upgrade's VersionMap store.
+		if exists {
 			err := c.runModuleMigrations(ctx, moduleName, fromVersion, toVersion)
 			if err != nil {
 				return nil, err

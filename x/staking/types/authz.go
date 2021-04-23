@@ -1,18 +1,21 @@
 package types
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
+// TODO: Revisit this once we have propoer gas fee framework.
+// Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
+const gasCostPerIteration = uint64(10)
+
 var (
-	_                   authz.Authorization = &StakeAuthorization{}
-	TypeDelegate                            = "/cosmos.staking.v1beta1.Msg/Delegate"
-	TypeUndelegate                          = "/cosmos.staking.v1beta1.Msg/Undelegate"
-	TypeBeginRedelegate                     = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
+	_ authz.Authorization = &StakeAuthorization{}
+
+	TypeDelegate        = "/cosmos.staking.v1beta1.Msg/Delegate"
+	TypeUndelegate      = "/cosmos.staking.v1beta1.Msg/Undelegate"
+	TypeBeginRedelegate = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
@@ -46,8 +49,19 @@ func (authorization StakeAuthorization) MethodName() string {
 	return authzType
 }
 
+func (authorization StakeAuthorization) ValidateBasic() error {
+	if authorization.MaxTokens != nil && authorization.MaxTokens.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", authorization.MaxTokens)
+	}
+	if authorization.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type")
+	}
+
+	return nil
+}
+
 // Accept implements Authorization.Accept.
-func (authorization StakeAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated authz.Authorization, delete bool, err error) {
+func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (updated authz.Authorization, delete bool, err error) {
 	var validatorAddress string
 	var amount sdk.Coin
 
@@ -68,13 +82,16 @@ func (authorization StakeAuthorization) Accept(msg sdk.ServiceMsg, block tmproto
 	isValidatorExists := false
 	allowedList := authorization.GetAllowList().GetAddress()
 	for _, validator := range allowedList {
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
 		if validator == validatorAddress {
 			isValidatorExists = true
 			break
 		}
 	}
+
 	denyList := authorization.GetDenyList().GetAddress()
 	for _, validator := range denyList {
+		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "stake authorization")
 		if validator == validatorAddress {
 			return nil, false, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, " cannot delegate/undelegate to %s validator", validator)
 		}

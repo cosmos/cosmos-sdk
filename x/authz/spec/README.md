@@ -16,6 +16,7 @@ granting arbitrary privileges from one account (the granter) to another account 
 1. **[Concept](01_concepts.md)**
     - [Authorization](01_concepts.md#Authorization)
     - [Built-in Authorizations](01_concepts.md#Built-in-Authorization)
+    - [Gas](01_concepts.md#gas)
 2. **[State](02_state.md)**
 3. **[Messages](03_messages.md)**
     - [Msg/GrantAuthorization](03_messages.md#MsgGrantAuthorization)

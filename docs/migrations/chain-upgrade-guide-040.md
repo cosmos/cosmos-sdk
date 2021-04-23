@@ -2,9 +2,13 @@
 order: 2
 -->
 
-# Chain Upgrade Guide to v0.40
+# Chain Upgrade Guide to v0.42
 
-This document explains how to perform a chain upgrade from v0.39 to v0.40. {synopsis}
+This document explains how to perform a chain upgrade from v0.39 to v0.42. {synopsis}
+
+::: tip
+Please note that the three SDK versions v0.40, v0.41 and v0.42 are functionally equivalent, together called the "Stargate" series. The version bumps are consequences of post-release state-breaking bugfixes.
+:::
 
 ## Risks
 
@@ -60,12 +64,12 @@ software and restore to their latest snapshot before restarting their nodes.
 1. Migrate the exported state to `github.com/cosmos/cosmos-sdk@0.40.*` compatible genesis state.
 
    ```shell
-   simd migrate v0.40 v039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v040_genesis.json
+   simd migrate v0.42 v039_exported_state.json --chain-id <new_chain_id> --genesis-time <new_genesis_time_in_utc> > new_v042_genesis.json
    ```
 
-   **Note:** The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` will be as mentioned in the governance proposal.
+   **Note:** The migrate command takes an input genesis state and migrates it to a targeted version. New `genesis-time` is usually mentioned in the governance proposal, and should be passed as flag argument. If the flag is omitted, then the genesis time of the upgraded chain will be the same as the old one, which may cause confusion.
 
-1. All the necessary state changes are handled in the `simd migrate v0.40` migration command. However, Tendermint parameters are **not** handled in this command. You might need to update these parameters manually.
+1. All the necessary state changes are handled in the `simd migrate v0.42` migration command. However, Tendermint parameters are **not** handled in this command. You might need to update these parameters manually.
 
    In the recent versions of Tendermint, the following changes have been made:
 
@@ -77,8 +81,8 @@ software and restore to their latest snapshot before restarting their nodes.
 1. Verify the SHA256 of the migrated genesis file with other validators to make sure there are no manual errors in the process.
 
    ```shell
-   $ jq -S -c -M '' new_v040_genesis.json | shasum -a 256
-   [SHASUM_PLACEHOLDER]  new_v040_genesis.json
+   $ jq -S -c -M '' new_v042_genesis.json | shasum -a 256
+   [SHASUM_PLACEHOLDER]  new_v042_genesis.json
    ```
 
 1. Make sure to update the genesis parameters in the new genesis if any. All these details will be generally present in
@@ -87,7 +91,7 @@ software and restore to their latest snapshot before restarting their nodes.
 1) If your chain is using IBC, make sure to add IBC initial genesis state to the genesis file. You can use the following command to add IBC initial genesis state to the genesis file.
 
    ```shell
-   cat new_v040_genesis.json | jq '.app_state |= . + {"ibc":{"client_genesis":{"clients":[],"clients_consensus":[],"create_localhost":false},"connection_genesis":{"connections":[],"client_connection_paths":[]},"channel_genesis":{"channels":[],"acknowledgements":[],"commitments":[],"receipts":[],"send_sequences":[],"recv_sequences":[],"ack_sequences":[]}},"transfer":{"port_id":"transfer","denom_traces":[],"params":{"send_enabled":false,"receive_enabled":false}},"capability":{"index":"1","owners":[]}}' > tmp_genesis.json && mv tmp_genesis.json new_v040_genesis.json
+   cat new_v042_genesis.json | jq '.app_state |= . + {"ibc":{"client_genesis":{"clients":[],"clients_consensus":[],"create_localhost":false},"connection_genesis":{"connections":[],"client_connection_paths":[]},"channel_genesis":{"channels":[],"acknowledgements":[],"commitments":[],"receipts":[],"send_sequences":[],"recv_sequences":[],"ack_sequences":[]}},"transfer":{"port_id":"transfer","denom_traces":[],"params":{"send_enabled":false,"receive_enabled":false}},"capability":{"index":"1","owners":[]}}' > tmp_genesis.json && mv tmp_genesis.json new_v042_genesis.json
    ```
 
    **Note:** This would add IBC state with IBC's `send_enabled: false` and `receive_enabled: false`. Make sure to update them to `true` in the above command if are planning to enable IBC transactions with chain upgrade. Otherwise you can do it via a governance proposal.
@@ -104,10 +108,10 @@ software and restore to their latest snapshot before restarting their nodes.
 1) Move the new genesis.json to your daemon config directory. Ex
 
    ```shell
-   cp new_v040_genesis.json ~/.simd/config/genesis.json
+   cp new_v042_genesis.json ~/.simd/config/genesis.json
    ```
 
-1) Update `~/.simd/config/app.toml` to include latest app configurations. [Here is the link](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/server/config/toml.go#L11-L164) to the default template for v0.40's `app.toml`. Make sure to
+1) Update `~/.simd/config/app.toml` to include latest app configurations. [Here is the link](https://github.com/cosmos/cosmos-sdk/blob/v0.42.0-rc6/server/config/toml.go#L11-L164) to the default template for v0.42's `app.toml`. Make sure to
    update your custom configurations as per your validator design, e.g. `gas_price`.
 
    Compared to v0.39, some notable updates to `app.toml` are:

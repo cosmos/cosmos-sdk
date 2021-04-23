@@ -195,7 +195,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 }
 
 // Test that the protocol version successfully increments after an
-// upgrade and is succesfully set on BaseApp's appVersion.
+// upgrade and is successfully set on BaseApp's appVersion.
 func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	oldProtocolVersion := s.app.BaseApp.AppVersion()
 	s.app.UpgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })

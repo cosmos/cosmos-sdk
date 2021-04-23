@@ -245,7 +245,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := sdk.TokensFromConsensusPower(30)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
 	val1, found := app.StakingKeeper.GetValidator(ctx, valAddrs[0])
 	require.True(t, found)
 
@@ -281,7 +281,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := sdk.TokensFromConsensusPower(30)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
 	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
 	require.True(t, found)
 
@@ -316,7 +316,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	val1, found := app.StakingKeeper.GetValidator(ctx, vals[0])
 	require.True(t, found)
 	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
@@ -358,7 +358,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, vals[1])
 	require.True(t, found)
 	val3, found := app.StakingKeeper.GetValidator(ctx, vals[2])
@@ -397,7 +397,7 @@ func TestTallyJailedValidator(t *testing.T) {
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{25, 6, 7})
 
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
 	require.True(t, found)
 	val3, found := app.StakingKeeper.GetValidator(ctx, valAddrs[2])
@@ -440,7 +440,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
 
-	delTokens := sdk.TokensFromConsensusPower(10)
+	delTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	val2, found := app.StakingKeeper.GetValidator(ctx, valAddrs[1])
 	require.True(t, found)
 
@@ -465,10 +465,10 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	require.True(t, passes)
 	require.False(t, burnDeposits)
 
-	expectedYes := sdk.TokensFromConsensusPower(30)
-	expectedAbstain := sdk.TokensFromConsensusPower(0)
-	expectedNo := sdk.TokensFromConsensusPower(10)
-	expectedNoWithVeto := sdk.TokensFromConsensusPower(0)
+	expectedYes := app.StakingKeeper.TokensFromConsensusPower(ctx, 30)
+	expectedAbstain := app.StakingKeeper.TokensFromConsensusPower(ctx, 0)
+	expectedNo := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+	expectedNoWithVeto := app.StakingKeeper.TokensFromConsensusPower(ctx, 0)
 	expectedTallyResult := types.NewTallyResult(expectedYes, expectedAbstain, expectedNo, expectedNoWithVeto)
 
 	require.True(t, tallyResults.Equals(expectedTallyResult))

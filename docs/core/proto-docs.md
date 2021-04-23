@@ -307,6 +307,7 @@
     - [Msg](#cosmos.evidence.v1beta1.Msg)
   
 - [cosmos/feegrant/v1beta1/feegrant.proto](#cosmos/feegrant/v1beta1/feegrant.proto)
+    - [AllowedMsgFeeAllowance](#cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance)
     - [BasicFeeAllowance](#cosmos.feegrant.v1beta1.BasicFeeAllowance)
     - [Duration](#cosmos.feegrant.v1beta1.Duration)
     - [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt)
@@ -583,6 +584,7 @@
     - [DelayedVestingAccount](#cosmos.vesting.v1beta1.DelayedVestingAccount)
     - [Period](#cosmos.vesting.v1beta1.Period)
     - [PeriodicVestingAccount](#cosmos.vesting.v1beta1.PeriodicVestingAccount)
+    - [PermanentLockedAccount](#cosmos.vesting.v1beta1.PermanentLockedAccount)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -4547,6 +4549,22 @@ Msg defines the evidence Msg service.
 
 
 
+<a name="cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance"></a>
+
+### AllowedMsgFeeAllowance
+AllowedMsgFeeAllowance creates allowance only for specified message types.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance. |
+| `allowed_messages` | [string](#string) | repeated | allowed_messages are the messages for which the grantee has the access. |
+
+
+
+
+
+
 <a name="cosmos.feegrant.v1beta1.BasicFeeAllowance"></a>
 
 ### BasicFeeAllowance
@@ -6412,6 +6430,7 @@ Params defines the parameters for the staking module.
 | `max_entries` | [uint32](#uint32) |  | max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio). |
 | `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
 | `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
+| `power_reduction` | [string](#string) |  | power_reduction is the amount of staking tokens required for 1 unit of consensus-engine power |
 
 
 
@@ -8222,6 +8241,23 @@ periodically vests by unlocking coins during each specified period.
 | `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 | `start_time` | [int64](#int64) |  |  |
 | `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.PermanentLockedAccount"></a>
+
+### PermanentLockedAccount
+PermanentLockedAccount implements the VestingAccount interface. It does
+not ever release coins, locking them indefinitely. Coins in this account can
+still be used for delegating and for governance votes even while locked.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `base_vesting_account` | [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount) |  |  |
 
 
 

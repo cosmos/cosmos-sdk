@@ -71,8 +71,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, "grantee and granter cannot be same"), nil, nil
 		}
 
-		f := k.GetFeeAllowance(ctx, granter.Address, grantee.Address)
-		if f != nil {
+		if f, _ := k.GetFeeAllowance(ctx, granter.Address, grantee.Address); f != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, "fee allowance exists"), nil, nil
 		}
 

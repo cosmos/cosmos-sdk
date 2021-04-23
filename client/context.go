@@ -227,8 +227,10 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 
 // WithViper returns the context with Viper field. This Viper instance is used to read
 // client-side config from the config file.
-func (ctx Context) WithViper() Context {
+func (ctx Context) WithViper(prefix string) Context {
 	v := viper.New()
+	v.SetEnvPrefix(prefix)
+	v.AutomaticEnv()
 	ctx.Viper = v
 	return ctx
 }

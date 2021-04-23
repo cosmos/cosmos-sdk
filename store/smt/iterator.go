@@ -11,17 +11,12 @@ type Iterator struct {
 	iter  dbm.Iterator
 }
 
-var (
-	indexPrefix = []byte("smt-ordering-idx-")
-	afterIndex  = []byte("smt-ordering-idx.") // '.' is next after '-' in ASCII
-)
-
 func indexKey(key []byte) []byte {
 	return append(indexPrefix, key...)
 }
 
 func plainKey(key []byte) []byte {
-	return key[len(indexPrefix):]
+	return key[prefixLen:]
 }
 
 func startKey(key []byte) []byte {

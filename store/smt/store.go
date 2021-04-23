@@ -26,7 +26,10 @@ var (
 )
 
 var (
-	versionsPrefix = []byte("smt-versions-")
+	prefixLen      = 1
+	versionsPrefix = []byte{0}
+	indexPrefix    = []byte{1}
+	afterIndex     = []byte{2}
 )
 
 // Store Implements types.KVStore and CommitKVStore.

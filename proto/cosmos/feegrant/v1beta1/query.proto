@@ -1,7 +1,6 @@
 syntax = "proto3";
 package cosmos.feegrant.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "cosmos/feegrant/v1beta1/feegrant.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
@@ -24,7 +23,10 @@ service Query {
 
 // QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
 message QueryFeeAllowanceRequest {
+  // granter is the address of the user granting an allowance of their funds.
   string granter = 1;
+
+  // grantee is the address of the user being granted an allowance of another user's funds.
   string grantee = 2;
 }
 

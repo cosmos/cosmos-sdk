@@ -4565,7 +4565,7 @@ AllowedMsgFeeAllowance creates allowance only for specified message types.
 
 ### BasicFeeAllowance
 BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
-that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+that optionally expires. The grantee can use up to SpendLimit to cover fees.
 
 
 | Field | Type | Label | Description |
@@ -4620,9 +4620,9 @@ FeeAllowanceGrant is stored in the KVStore to record a grant with full context
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `granter` | [string](#string) |  | granter is the address of the user granting an allowance of their funds. |
+| `grantee` | [string](#string) |  | grantee is the address of the user being granted an allowance of another user's funds. |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance. |
 
 
 
@@ -4704,8 +4704,8 @@ QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC meth
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
+| `granter` | [string](#string) |  | granter is the address of the user granting an allowance of their funds. |
+| `grantee` | [string](#string) |  | grantee is the address of the user being granted an allowance of another user's funds. |
 
 
 
@@ -4795,9 +4795,9 @@ of fees from the account of Granter.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
-| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `granter` | [string](#string) |  | granter is the address of the user granting an allowance of their funds. |
+| `grantee` | [string](#string) |  | grantee is the address of the user being granted an allowance of another user's funds. |
+| `allowance` | [google.protobuf.Any](#google.protobuf.Any) |  | allowance can be any of basic and filtered fee allowance. |
 
 
 
@@ -4822,8 +4822,8 @@ MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `granter` | [string](#string) |  |  |
-| `grantee` | [string](#string) |  |  |
+| `granter` | [string](#string) |  | granter is the address of the user granting an allowance of their funds. |
+| `grantee` | [string](#string) |  | grantee is the address of the user being granted an allowance of another user's funds. |
 
 
 

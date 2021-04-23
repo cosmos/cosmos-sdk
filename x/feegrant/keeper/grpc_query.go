@@ -58,6 +58,7 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 	}, nil
 }
 
+// FeeAllowances queries all the allowances granted to the given grantee.
 func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRequest) (*types.QueryFeeAllowancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

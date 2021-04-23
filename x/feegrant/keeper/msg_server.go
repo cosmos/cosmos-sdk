@@ -23,6 +23,7 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// GrantFeeAllowance grants an allowance from the granter's funds to be used by the grantee.
 func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantFeeAllowance) (*types.MsgGrantFeeAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -54,6 +55,7 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 	return &types.MsgGrantFeeAllowanceResponse{}, nil
 }
 
+// RevokeFeeAllowance revokes a fee allowance between a granter and grantee.
 func (k msgServer) RevokeFeeAllowance(goCtx context.Context, msg *types.MsgRevokeFeeAllowance) (*types.MsgRevokeFeeAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

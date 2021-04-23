@@ -33,7 +33,7 @@ var _ = time.Kitchen
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
-// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
+// that optionally expires. The grantee can use up to SpendLimit to cover fees.
 type BasicFeeAllowance struct {
 	// spend_limit specifies the maximum amount of tokens that can be spent
 	// by this allowance and will be updated as tokens are spent. If it is
@@ -398,8 +398,11 @@ func (*ExpiresAt) XXX_OneofWrappers() []interface{} {
 
 // FeeAllowanceGrant is stored in the KVStore to record a grant with full context
 type FeeAllowanceGrant struct {
-	Granter   string      `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
-	Grantee   string      `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
+	// granter is the address of the user granting an allowance of their funds.
+	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
+	// grantee is the address of the user being granted an allowance of another user's funds.
+	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
+	// allowance can be any of basic and filtered fee allowance.
 	Allowance *types1.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 

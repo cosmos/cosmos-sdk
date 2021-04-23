@@ -58,6 +58,8 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
+// GetSigners returns the address of the granter associated with the
+// allowance message
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
@@ -82,6 +84,7 @@ func (msg MsgGrantFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) err
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
+// NewMsgRevokeFeeAllowance creates a new MsgGrantRevokeFeeAllowance.
 //nolint:interfacer
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {
 	return MsgRevokeFeeAllowance{Granter: granter.String(), Grantee: grantee.String()}
@@ -98,6 +101,8 @@ func (msg MsgRevokeFeeAllowance) ValidateBasic() error {
 	return nil
 }
 
+// GetSigners returns the address of the granter associated with the
+// revoke allowance message
 func (msg MsgRevokeFeeAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {

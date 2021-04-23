@@ -154,6 +154,9 @@ func TestBasicFeeAllowTime(t *testing.T) {
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 
+	now := time.Now()
+	oneHour := now.Add(1 * time.Hour)
+
 	cases := map[string]struct {
 		allow *types.BasicFeeAllowance
 		// all other checks are ignored if valid=false
@@ -199,11 +202,11 @@ func TestBasicFeeAllowTime(t *testing.T) {
 		"non-expired": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(time.Now().AddDate(1, 0, 0).Unix()),
+				Expiration: types.ExpiresAtTime(oneHour),
 			},
 			valid:     true,
 			fee:       smallAtom,
-			blockTime: time.Now(),
+			blockTime: now,
 			accept:    true,
 			remove:    false,
 			remains:   leftAtom,
@@ -211,40 +214,40 @@ func TestBasicFeeAllowTime(t *testing.T) {
 		"expired": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtTime(time.Now()),
+				Expiration: types.ExpiresAtTime(now),
 			},
 			valid:     true,
 			fee:       smallAtom,
-			blockTime: time.Now().AddDate(2, 0, 0),
+			blockTime: oneHour,
 			accept:    false,
 			remove:    true,
 		},
 		"fee more than allowed": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtTime(time.Now().AddDate(1, 0, 0)),
+				Expiration: types.ExpiresAtTime(oneHour),
 			},
 			valid:     true,
 			fee:       bigAtom,
-			blockTime: time.Now(),
+			blockTime: now,
 			accept:    false,
 		},
 		"with out spend limit": {
 			allow: &types.BasicFeeAllowance{
-				Expiration: types.ExpiresAtTime(time.Now().AddDate(1, 0, 0)),
+				Expiration: types.ExpiresAtTime(oneHour),
 			},
 			valid:     true,
 			fee:       bigAtom,
-			blockTime: time.Now(),
+			blockTime: now,
 			accept:    true,
 		},
 		"expired no spend limit": {
 			allow: &types.BasicFeeAllowance{
-				Expiration: types.ExpiresAtTime(time.Now().AddDate(1, 0, 0)),
+				Expiration: types.ExpiresAtTime(now),
 			},
 			valid:     true,
 			fee:       bigAtom,
-			blockTime: time.Now().AddDate(2, 0, 0),
+			blockTime: oneHour,
 			accept:    false,
 		},
 	}

@@ -62,14 +62,14 @@ func (s *TestSuite) TestKeeper() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
 	x := &banktypes.SendAuthorization{SpendLimit: newCoins}
-	err := app.AuthzKeeper.GrantX(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
+	err := app.AuthzKeeper.SaveGrant(ctx, granterAddr, granteeAddr, x, now.Add(-1*time.Hour))
 	s.Require().NoError(err)
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify if authorization is accepted")
 	x = &banktypes.SendAuthorization{SpendLimit: newCoins}
-	err = app.AuthzKeeper.GrantX(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
+	err = app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, x, now.Add(time.Hour))
 	s.Require().NoError(err)
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)
@@ -84,13 +84,13 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke fails with wrong information")
-	err = app.AuthzKeeper.RevokeX(ctx, recipientAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
+	err = app.AuthzKeeper.DeleteGrant(ctx, recipientAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
 	s.Require().Error(err)
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, recipientAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify revoke executes with correct information")
-	err = app.AuthzKeeper.RevokeX(ctx, granteeAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
+	err = app.AuthzKeeper.DeleteGrant(ctx, granteeAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
 	s.Require().NoError(err)
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
 	s.Require().Nil(authorization)
@@ -113,7 +113,7 @@ func (s *TestSuite) TestKeeperIter() {
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	s.T().Log("verify if expired authorization is rejected")
 	x := &banktypes.SendAuthorization{SpendLimit: newCoins}
-	err := app.AuthzKeeper.GrantX(ctx, granteeAddr, granterAddr, x, now.Add(-1*time.Hour))
+	err := app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, x, now.Add(-1*time.Hour))
 	s.Require().NoError(err)
 	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, "abcd")
 	s.Require().Nil(authorization)
@@ -162,7 +162,7 @@ func (s *TestSuite) TestKeeperFees() {
 
 	s.T().Log("verify dispatch executes with correct information")
 	// grant authorization
-	err = app.AuthzKeeper.GrantX(s.ctx, granteeAddr, granterAddr, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now)
+	err = app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now)
 	s.Require().NoError(err)
 	authorization, _ := app.AuthzKeeper.GetOrRevokeAuthorization(s.ctx, granteeAddr, granterAddr, banktypes.SendAuthorization{}.MethodName())
 	s.Require().NotNil(authorization)

@@ -28,7 +28,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrantRequest) (*types
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", authorization.MethodName())
 	}
 
-	err = k.GrantX(ctx, grantee, granter, authorization, msg.Expiration)
+	err = k.SaveGrant(ctx, grantee, granter, authorization, msg.Expiration)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevokeRequest) (*typ
 		return nil, err
 	}
 
-	err = k.RevokeX(ctx, grantee, granter, msg.MsgTypeUrl)
+	err = k.DeleteGrant(ctx, grantee, granter, msg.MsgTypeUrl)
 	if err != nil {
 		return nil, err
 	}

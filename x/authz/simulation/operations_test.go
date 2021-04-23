@@ -139,7 +139,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	grantee := accounts[1]
 	authorization := banktypes.NewSendAuthorization(initCoins)
 
-	err := suite.app.AuthzKeeper.GrantX(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation
@@ -174,7 +174,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	grantee := accounts[1]
 	authorization := banktypes.NewSendAuthorization(initCoins)
 
-	err := suite.app.AuthzKeeper.GrantX(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation

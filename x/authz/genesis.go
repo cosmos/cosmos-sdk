@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState
 			panic("expected authorization")
 		}
 
-		err = keeper.GrantX(ctx, grantee, granter, authorization, entry.Expiration)
+		err = keeper.SaveGrant(ctx, grantee, granter, authorization, entry.Expiration)
 		if err != nil {
 			panic(err)
 		}

@@ -42,12 +42,12 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 
 	now := suite.ctx.BlockHeader().Time
 	grant := &bank.SendAuthorization{SpendLimit: coins}
-	err := suite.keeper.GrantX(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
+	err := suite.keeper.SaveGrant(suite.ctx, granteeAddr, granterAddr, grant, now.Add(time.Hour))
 	suite.Require().NoError(err)
 	genesis := authz.ExportGenesis(suite.ctx, suite.keeper)
 
 	// Clear keeper
-	suite.keeper.RevokeX(suite.ctx, granteeAddr, granterAddr, grant.MethodName())
+	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MethodName())
 
 	authz.InitGenesis(suite.ctx, suite.keeper, genesis)
 	newGenesis := authz.ExportGenesis(suite.ctx, suite.keeper)

@@ -371,10 +371,11 @@ devdoc-update:
 
 proto-all: proto-format proto-lint proto-gen
 
-protoContainer=cosmos-proto-gen
+protoContainerVer=v0.1
+protoContainer=cosmos-proto-gen-$(protoContainerVer)
 proto-gen:
 	@echo "Generating Protobuf files"
-	if docker ps -a --format '{{.Names}}' | grep -Eq "^${protoContainer}$$"; then docker start $(protoContainer); else docker run -a --name $(protoContainer) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.1 sh ./scripts/protocgen.sh; fi
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${protoContainer}$$"; then docker start -a $(protoContainer); else docker run --name $(protoContainer) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:$(protoContainerVer) sh ./scripts/protocgen.sh; fi
 #	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:v0.1 sh ./scripts/protocgen.sh
 
 proto-format:

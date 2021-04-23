@@ -93,7 +93,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 				return nil, err
 			}
 			if resp.Delete {
-				k.RevokeX(ctx, grantee, granter, serviceMsg.Type())
+				k.DeleteGrant(ctx, grantee, granter, serviceMsg.Type())
 			} else if resp.Updated != nil {
 				err = k.update(ctx, grantee, granter, resp.Updated)
 				if err != nil {
@@ -119,11 +119,10 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 	return msgResult, nil
 }
 
-// Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
-// time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
-// overwrites that.
-// TODO: rename
-func (k Keeper) GrantX(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization exported.Authorization, expiration time.Time) error {
+// SaveGrant method grants the provided authorization to the grantee on the granter's account
+// with the provided expiration time. If there is an existing authorization grant for the
+// same `sdk.Msg` type, this grant overwrites that.
+func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization exported.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
 	grant, err := types.NewGrant(authorization, expiration)
@@ -142,8 +141,9 @@ func (k Keeper) GrantX(ctx sdk.Context, grantee, granter sdk.AccAddress, authori
 	})
 }
 
-// Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
-func (k Keeper) RevokeX(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
+// DeleteGrant revokes any authorization for the provided message type granted to the grantee
+// by the granter.
+func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, msgType)
 	_, found := k.getAuthorizationGrant(ctx, grantStoreKey)
@@ -182,7 +182,7 @@ func (k Keeper) GetOrRevokeAuthorization(ctx sdk.Context, grantee sdk.AccAddress
 		return nil, time.Time{}
 	}
 	if grant.Expiration.Before(ctx.BlockHeader().Time) {
-		k.RevokeX(ctx, grantee, granter, msgType)
+		k.DeleteGrant(ctx, grantee, granter, msgType)
 		return nil, time.Time{}
 	}
 

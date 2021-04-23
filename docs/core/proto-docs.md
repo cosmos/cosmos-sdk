@@ -934,7 +934,7 @@ EventGrant is emitted on Msg/Grant
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module` | [string](#string) |  | Module which invokes the authorizaiton grant TODO: not sure if this is needed. It's always have the same value |
+| `module` | [string](#string) |  | Module which invokes the authorizaiton grant TODO: not sure if this is needed. It always has the same value |
 | `msg` | [string](#string) |  | Msg type for which an autorization is granted |
 | `granter` | [string](#string) |  | Granter account address |
 | `grantee` | [string](#string) |  | Grantee account address |

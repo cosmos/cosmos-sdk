@@ -12,7 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
 // EventGrant is emitted on Msg/Grant
 message EventGrant {
   // Module which invokes the authorizaiton grant
-  // TODO: not sure if this is needed. It's always have the same value
+  // TODO: not sure if this is needed. It always has the same value
   string module = 1;
   // Msg type for which an autorization is granted
   string msg = 2;

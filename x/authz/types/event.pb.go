@@ -25,7 +25,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // EventGrant is emitted on Msg/Grant
 type EventGrant struct {
 	// Module which invokes the authorizaiton grant
-	// TODO: not sure if this is needed. It's always have the same value
+	// TODO: not sure if this is needed. It always has the same value
 	Module string `protobuf:"bytes,1,opt,name=module,proto3" json:"module,omitempty"`
 	// Msg type for which an autorization is granted
 	Msg string `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`

@@ -138,7 +138,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 				grantee.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			"no allowance",
+			"fee-grant not found",
 			true, nil, nil,
 		},
 		{

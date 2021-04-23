@@ -26,6 +26,7 @@ type UpgradeTestSuite struct {
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.app = simapp.Setup(false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.UpgradeKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)

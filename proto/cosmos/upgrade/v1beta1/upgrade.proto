@@ -52,7 +52,7 @@ message SoftwareUpgradeProposal {
   Plan   plan        = 3 [(gogoproto.nullable) = false];
 }
 
-// CancelSoftwareUpgradeProposalx is a gov Content type for cancelling a software
+// CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
 // upgrade.
 message CancelSoftwareUpgradeProposal {
   option (gogoproto.equal)            = true;

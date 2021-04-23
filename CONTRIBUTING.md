@@ -20,7 +20,7 @@
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
 
-Contributing to this repo can mean many things such as participated in
+Contributing to this repo can mean many things such as participating in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
@@ -51,9 +51,6 @@ not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a github issue, that PR runs a high likelihood of being rejected.
 
-Take a peek at our [coding repo](https://github.com/tendermint/coding) for
-overall information on repository workflow and standards. Note, we use `make tools` for installing the linting tools.
-
 Other notes:
 
 - Looking for a good place to start contributing? How about checking out some
@@ -69,7 +66,7 @@ Other notes:
 When proposing an architecture decision for the SDK, please create an [ADR](./docs/architecture/README.md)
 so further discussions can be made. We are following this process so all involved parties are in
 agreement before any party begins coding the proposed implementation. If you would like to see some examples
-of how these are written refer to [Tendermint ADRs](https://github.com/tendermint/tendermint/tree/master/docs/architecture)
+of how these are written refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture)
 
 ## Pull Requests
 
@@ -169,12 +166,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 ## Testing
 
-All repos should be hooked up to [CircleCI](https://circleci.com/).
-
-If they have `.go` files in the root directory, they will be automatically
-tested by circle using `go test -v -race ./...`. If not, they will need a
-`circle.yml`. Ideally, every repo has a `Makefile` that defines `make test` and
-includes its continuous integration status using a badge in the `README.md`.
+Tests can be ran by running `make test` at the top level of the SDK repository. 
 
 We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
 unless there is a reason to do otherwise.
@@ -212,8 +204,7 @@ The SDK utilizes [semantic versioning](https://semver.org/).
 Ensure that you base and target your PR on the `master` branch.
 
 All feature additions should be targeted against `master`. Bug fixes for an outstanding release candidate
-should be targeted against the release candidate branch. Release candidate branches themselves should be the
-only pull requests targeted directly against master.
+should be targeted against the release candidate branch. 
 
 ### Development Procedure
 
@@ -239,7 +230,6 @@ only pull requests targeted directly against master.
   - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
 - On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
   - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
-  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
 - Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `master`
   and create a new `RC` branch (making sure to increment the `rcN`)
@@ -284,7 +274,6 @@ Finally, when a point release is ready to be made:
 
 1. Create `release/v0.38.N` branch
 2. Ensure changelog entries are verified
-   1. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
 3. Add release version date to the changelog
 4. Push release branch along with the annotated tag: **git tag -a**
 5. Create a PR into `master` containing ONLY `CHANGELOG.md` updates

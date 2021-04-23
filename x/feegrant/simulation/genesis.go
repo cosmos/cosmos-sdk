@@ -14,7 +14,7 @@ import (
 // Simulation parameter constants
 const feegrant = "feegrant"
 
-// genFeeGrants returns an empty slice of allowances.
+// genFeeGrants returns a slice of randomly generated allowances.
 func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []types.FeeAllowanceGrant {
 	allowances := make([]types.FeeAllowanceGrant, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {

@@ -73,8 +73,6 @@ func (s *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cac
 // Get returns nil iff key doesn't exist. Panics on nil key.
 func (s *Store) Get(key []byte) []byte {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "get")
-	s.mtx.RLock()
-	defer s.mtx.RUnlock()
 	val, err := s.tree.Get(key)
 	if err != nil {
 		panic(err)
@@ -85,8 +83,6 @@ func (s *Store) Get(key []byte) []byte {
 // Has checks if a key exists. Panics on nil key.
 func (s *Store) Has(key []byte) bool {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "has")
-	s.mtx.RLock()
-	defer s.mtx.RUnlock()
 	has, err := s.db.Has(indexKey(key))
 	return err == nil && has
 }
@@ -94,6 +90,7 @@ func (s *Store) Has(key []byte) bool {
 // Set sets the key. Panics on nil key or value.
 func (s *Store) Set(key []byte, value []byte) {
 	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	_, err := s.tree.Update(key, value)
 	if err != nil {
 		panic(err.Error())
@@ -102,16 +99,15 @@ func (s *Store) Set(key []byte, value []byte) {
 	if err != nil {
 		panic(err.Error())
 	}
-	s.mtx.Unlock()
 }
 
 // Delete deletes the key. Panics on nil key.
 func (s *Store) Delete(key []byte) {
 	defer telemetry.MeasureSince(time.Now(), "store", "smt", "delete")
 	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	_, _ = s.tree.Delete(key)
 	_ = s.db.Delete(indexKey(key))
-	s.mtx.Unlock()
 }
 
 // Iterator over a domain of keys in ascending order. End is exclusive.

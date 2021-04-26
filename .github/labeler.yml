@@ -1,0 +1,44 @@
+x/auth:
+  - x/auth/**/*
+x/authz:
+  - x/authz/**/*
+x/bank:
+  - x/bank/**/*
+x/capability:
+  - x/capability/**/*
+x/crisis:
+  - x/crisis/**/*
+x/distribution:
+  - x/distribution/**/*
+x/evidence:
+  - x/evidence/**/*
+x/feegrant:
+  - x/feegrant/**/*
+x/genutil:
+  - x/genutil/**/*
+x/gov:
+  - x/gov/**/*
+x/mint:
+  - x/mint/**/*
+x/params:
+  - x/params/**/*
+simulation:
+  - x/simulation/**/*
+  - x/*/simulation/**/*
+x/slashing:
+  - x/slashing/**/*
+x/staking:
+  - x/staking/**/*
+build:
+  - Makefile
+  - Dockerfile
+  - docker-compose.yml
+  - scripts/*
+CI:
+  - .github/**/*.yml
+  - buf.yaml
+  - .mergify.yml
+  - .golangci.yml
+CLI:
+  - client/**/*
+  - x/*/client/**/*

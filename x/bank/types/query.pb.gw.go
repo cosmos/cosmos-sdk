@@ -708,19 +708,19 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Balance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "bank", "v1beta1", "balances", "address", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Balance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "bank", "v1beta1", "balances", "address", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllBalances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "balances", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AllBalances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "balances", "address"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_TotalSupply_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "supply"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TotalSupply_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "supply"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_SupplyOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "supply", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_SupplyOf_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "supply", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DenomMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_DenomsMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomsMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "bank", "v1beta1", "denoms_metadata"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

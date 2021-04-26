@@ -4,19 +4,14 @@
 package types
 
 import (
-	context "context"
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	types2 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/gogo/protobuf/types"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
 	_ "github.com/regen-network/cosmos-proto"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -107,7 +102,7 @@ func (m *MsgGrantAuthorizationRequest) GetExpiration() time.Time {
 
 // MsgExecAuthorizedResponse defines the Msg/MsgExecAuthorizedResponse response type.
 type MsgExecAuthorizedResponse struct {
-	Result *types1.Result `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+	Result *types2.Result `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
 }
 
 func (m *MsgExecAuthorizedResponse) Reset()         { *m = MsgExecAuthorizedResponse{} }
@@ -143,7 +138,7 @@ func (m *MsgExecAuthorizedResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExecAuthorizedResponse proto.InternalMessageInfo
 
-func (m *MsgExecAuthorizedResponse) GetResult() *types1.Result {
+func (m *MsgExecAuthorizedResponse) GetResult() *types2.Result {
 	if m != nil {
 		return m.Result
 	}
@@ -387,172 +382,6 @@ var fileDescriptor_3ceddab7d8589ad1 = []byte{
 	0x25, 0x72, 0x54, 0xc6, 0x64, 0xc0, 0x53, 0x73, 0x01, 0x99, 0xc7, 0xbe, 0x18, 0x9e, 0x86, 0x63,
 	0x73, 0x9f, 0xc9, 0x49, 0x0e, 0x22, 0xde, 0x56, 0xe7, 0xf1, 0xf0, 0x57, 0x00, 0x00, 0x00, 0xff,
 	0xff, 0xff, 0x9d, 0x19, 0xe1, 0xec, 0x04, 0x00, 0x00,
-}
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// MsgClient is the client API for Msg service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type MsgClient interface {
-	// GrantAuthorization grants the provided authorization to the grantee on the granter's
-	// account with the provided expiration time.
-	GrantAuthorization(ctx context.Context, in *MsgGrantAuthorizationRequest, opts ...grpc.CallOption) (*MsgGrantAuthorizationResponse, error)
-	// ExecAuthorized attempts to execute the provided messages using
-	// authorizations granted to the grantee. Each message should have only
-	// one signer corresponding to the granter of the authorization.
-	ExecAuthorized(ctx context.Context, in *MsgExecAuthorizedRequest, opts ...grpc.CallOption) (*MsgExecAuthorizedResponse, error)
-	// RevokeAuthorization revokes any authorization corresponding to the provided method name on the
-	// granter's account that has been granted to the grantee.
-	RevokeAuthorization(ctx context.Context, in *MsgRevokeAuthorizationRequest, opts ...grpc.CallOption) (*MsgRevokeAuthorizationResponse, error)
-}
-
-type msgClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewMsgClient(cc grpc1.ClientConn) MsgClient {
-	return &msgClient{cc}
-}
-
-func (c *msgClient) GrantAuthorization(ctx context.Context, in *MsgGrantAuthorizationRequest, opts ...grpc.CallOption) (*MsgGrantAuthorizationResponse, error) {
-	out := new(MsgGrantAuthorizationResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/GrantAuthorization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) ExecAuthorized(ctx context.Context, in *MsgExecAuthorizedRequest, opts ...grpc.CallOption) (*MsgExecAuthorizedResponse, error) {
-	out := new(MsgExecAuthorizedResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/ExecAuthorized", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) RevokeAuthorization(ctx context.Context, in *MsgRevokeAuthorizationRequest, opts ...grpc.CallOption) (*MsgRevokeAuthorizationResponse, error) {
-	out := new(MsgRevokeAuthorizationResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/RevokeAuthorization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// MsgServer is the server API for Msg service.
-type MsgServer interface {
-	// GrantAuthorization grants the provided authorization to the grantee on the granter's
-	// account with the provided expiration time.
-	GrantAuthorization(context.Context, *MsgGrantAuthorizationRequest) (*MsgGrantAuthorizationResponse, error)
-	// ExecAuthorized attempts to execute the provided messages using
-	// authorizations granted to the grantee. Each message should have only
-	// one signer corresponding to the granter of the authorization.
-	ExecAuthorized(context.Context, *MsgExecAuthorizedRequest) (*MsgExecAuthorizedResponse, error)
-	// RevokeAuthorization revokes any authorization corresponding to the provided method name on the
-	// granter's account that has been granted to the grantee.
-	RevokeAuthorization(context.Context, *MsgRevokeAuthorizationRequest) (*MsgRevokeAuthorizationResponse, error)
-}
-
-// UnimplementedMsgServer can be embedded to have forward compatible implementations.
-type UnimplementedMsgServer struct {
-}
-
-func (*UnimplementedMsgServer) GrantAuthorization(ctx context.Context, req *MsgGrantAuthorizationRequest) (*MsgGrantAuthorizationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GrantAuthorization not implemented")
-}
-func (*UnimplementedMsgServer) ExecAuthorized(ctx context.Context, req *MsgExecAuthorizedRequest) (*MsgExecAuthorizedResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExecAuthorized not implemented")
-}
-func (*UnimplementedMsgServer) RevokeAuthorization(ctx context.Context, req *MsgRevokeAuthorizationRequest) (*MsgRevokeAuthorizationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RevokeAuthorization not implemented")
-}
-
-func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
-	s.RegisterService(&_Msg_serviceDesc, srv)
-}
-
-func _Msg_GrantAuthorization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgGrantAuthorizationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).GrantAuthorization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.authz.v1beta1.Msg/GrantAuthorization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).GrantAuthorization(ctx, req.(*MsgGrantAuthorizationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_ExecAuthorized_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExecAuthorizedRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).ExecAuthorized(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.authz.v1beta1.Msg/ExecAuthorized",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExecAuthorized(ctx, req.(*MsgExecAuthorizedRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_RevokeAuthorization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRevokeAuthorizationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).RevokeAuthorization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.authz.v1beta1.Msg/RevokeAuthorization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RevokeAuthorization(ctx, req.(*MsgRevokeAuthorizationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Msg_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.authz.v1beta1.Msg",
-	HandlerType: (*MsgServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GrantAuthorization",
-			Handler:    _Msg_GrantAuthorization_Handler,
-		},
-		{
-			MethodName: "ExecAuthorized",
-			Handler:    _Msg_ExecAuthorized_Handler,
-		},
-		{
-			MethodName: "RevokeAuthorization",
-			Handler:    _Msg_RevokeAuthorization_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/authz/v1beta1/tx.proto",
 }
 
 func (m *MsgGrantAuthorizationRequest) Marshal() (dAtA []byte, err error) {
@@ -1134,7 +963,7 @@ func (m *MsgExecAuthorizedResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Result == nil {
-				m.Result = &types1.Result{}
+				m.Result = &types2.Result{}
 			}
 			if err := m.Result.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

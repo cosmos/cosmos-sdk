@@ -430,17 +430,17 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_ReflectionService_GetAuthnDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "authn"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetAuthnDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "authn"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ReflectionService_GetChainDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "chain"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetChainDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "chain"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ReflectionService_GetCodecDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "codec"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetCodecDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "codec"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ReflectionService_GetConfigurationDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "configuration"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetConfigurationDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "configuration"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ReflectionService_GetQueryServicesDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "query_services"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetQueryServicesDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "query_services"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ReflectionService_GetTxDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "tx_descriptor"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_GetTxDescriptor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "reflection", "v1beta1", "app_descriptor", "tx_descriptor"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

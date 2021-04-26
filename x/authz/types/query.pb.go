@@ -4,15 +4,10 @@
 package types
 
 import (
-	context "context"
 	fmt "fmt"
 	query "github.com/cosmos/cosmos-sdk/types/query"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -293,128 +288,6 @@ var fileDescriptor_376d714ffdeb1545 = []byte{
 	0x4b, 0xa7, 0xf5, 0xf2, 0x38, 0x8c, 0x65, 0x54, 0x04, 0xde, 0x90, 0x27, 0xa5, 0x8f, 0x7e, 0x3c,
 	0x14, 0xa3, 0xd7, 0xf4, 0xad, 0x31, 0x95, 0xd3, 0x0c, 0x44, 0x70, 0x5d, 0xfd, 0x10, 0x1e, 0xff,
 	0x0d, 0x00, 0x00, 0xff, 0xff, 0x91, 0xf5, 0x18, 0x65, 0xb6, 0x04, 0x00, 0x00,
-}
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// QueryClient is the client API for Query service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type QueryClient interface {
-	// Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
-	// provided msg type.
-	Authorization(ctx context.Context, in *QueryAuthorizationRequest, opts ...grpc.CallOption) (*QueryAuthorizationResponse, error)
-	// Returns list of `Authorization`, granted to the grantee by the granter.
-	Authorizations(ctx context.Context, in *QueryAuthorizationsRequest, opts ...grpc.CallOption) (*QueryAuthorizationsResponse, error)
-}
-
-type queryClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewQueryClient(cc grpc1.ClientConn) QueryClient {
-	return &queryClient{cc}
-}
-
-func (c *queryClient) Authorization(ctx context.Context, in *QueryAuthorizationRequest, opts ...grpc.CallOption) (*QueryAuthorizationResponse, error) {
-	out := new(QueryAuthorizationResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Query/Authorization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) Authorizations(ctx context.Context, in *QueryAuthorizationsRequest, opts ...grpc.CallOption) (*QueryAuthorizationsResponse, error) {
-	out := new(QueryAuthorizationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Query/Authorizations", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// QueryServer is the server API for Query service.
-type QueryServer interface {
-	// Returns any `Authorization` (or `nil`), with the expiration time, granted to the grantee by the granter for the
-	// provided msg type.
-	Authorization(context.Context, *QueryAuthorizationRequest) (*QueryAuthorizationResponse, error)
-	// Returns list of `Authorization`, granted to the grantee by the granter.
-	Authorizations(context.Context, *QueryAuthorizationsRequest) (*QueryAuthorizationsResponse, error)
-}
-
-// UnimplementedQueryServer can be embedded to have forward compatible implementations.
-type UnimplementedQueryServer struct {
-}
-
-func (*UnimplementedQueryServer) Authorization(ctx context.Context, req *QueryAuthorizationRequest) (*QueryAuthorizationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Authorization not implemented")
-}
-func (*UnimplementedQueryServer) Authorizations(ctx context.Context, req *QueryAuthorizationsRequest) (*QueryAuthorizationsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Authorizations not implemented")
-}
-
-func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
-	s.RegisterService(&_Query_serviceDesc, srv)
-}
-
-func _Query_Authorization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAuthorizationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).Authorization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.authz.v1beta1.Query/Authorization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Authorization(ctx, req.(*QueryAuthorizationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_Authorizations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAuthorizationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).Authorizations(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.authz.v1beta1.Query/Authorizations",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Authorizations(ctx, req.(*QueryAuthorizationsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Query_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.authz.v1beta1.Query",
-	HandlerType: (*QueryServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Authorization",
-			Handler:    _Query_Authorization_Handler,
-		},
-		{
-			MethodName: "Authorizations",
-			Handler:    _Query_Authorizations_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/authz/v1beta1/query.proto",
 }
 
 func (m *QueryAuthorizationRequest) Marshal() (dAtA []byte, err error) {

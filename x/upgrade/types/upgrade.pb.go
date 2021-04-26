@@ -8,7 +8,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
+	_ "github.com/gogo/protobuf/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"

@@ -4,16 +4,11 @@
 package types
 
 import (
-	context "context"
 	fmt "fmt"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -280,126 +275,6 @@ var fileDescriptor_59efc303945de53f = []byte{
 	0xbd, 0x5c, 0xc4, 0xc1, 0x4c, 0x9c, 0xda, 0xb2, 0xe6, 0x71, 0x28, 0x5f, 0xbc, 0xa2, 0x6f, 0xeb,
 	0x1e, 0xea, 0x3c, 0x07, 0x19, 0x5f, 0xd1, 0x77, 0x78, 0xf2, 0x3b, 0x00, 0x00, 0xff, 0xff, 0xb8,
 	0x46, 0x4c, 0xba, 0x8b, 0x04, 0x00, 0x00,
-}
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// QueryClient is the client API for Query service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type QueryClient interface {
-	// FeeAllowance returns fee granted to the grantee by the granter.
-	FeeAllowance(ctx context.Context, in *QueryFeeAllowanceRequest, opts ...grpc.CallOption) (*QueryFeeAllowanceResponse, error)
-	// FeeAllowances returns all the grants for address.
-	FeeAllowances(ctx context.Context, in *QueryFeeAllowancesRequest, opts ...grpc.CallOption) (*QueryFeeAllowancesResponse, error)
-}
-
-type queryClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewQueryClient(cc grpc1.ClientConn) QueryClient {
-	return &queryClient{cc}
-}
-
-func (c *queryClient) FeeAllowance(ctx context.Context, in *QueryFeeAllowanceRequest, opts ...grpc.CallOption) (*QueryFeeAllowanceResponse, error) {
-	out := new(QueryFeeAllowanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/FeeAllowance", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) FeeAllowances(ctx context.Context, in *QueryFeeAllowancesRequest, opts ...grpc.CallOption) (*QueryFeeAllowancesResponse, error) {
-	out := new(QueryFeeAllowancesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/FeeAllowances", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// QueryServer is the server API for Query service.
-type QueryServer interface {
-	// FeeAllowance returns fee granted to the grantee by the granter.
-	FeeAllowance(context.Context, *QueryFeeAllowanceRequest) (*QueryFeeAllowanceResponse, error)
-	// FeeAllowances returns all the grants for address.
-	FeeAllowances(context.Context, *QueryFeeAllowancesRequest) (*QueryFeeAllowancesResponse, error)
-}
-
-// UnimplementedQueryServer can be embedded to have forward compatible implementations.
-type UnimplementedQueryServer struct {
-}
-
-func (*UnimplementedQueryServer) FeeAllowance(ctx context.Context, req *QueryFeeAllowanceRequest) (*QueryFeeAllowanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FeeAllowance not implemented")
-}
-func (*UnimplementedQueryServer) FeeAllowances(ctx context.Context, req *QueryFeeAllowancesRequest) (*QueryFeeAllowancesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FeeAllowances not implemented")
-}
-
-func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
-	s.RegisterService(&_Query_serviceDesc, srv)
-}
-
-func _Query_FeeAllowance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFeeAllowanceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).FeeAllowance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.feegrant.v1beta1.Query/FeeAllowance",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).FeeAllowance(ctx, req.(*QueryFeeAllowanceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_FeeAllowances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFeeAllowancesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).FeeAllowances(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.feegrant.v1beta1.Query/FeeAllowances",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).FeeAllowances(ctx, req.(*QueryFeeAllowancesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Query_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.feegrant.v1beta1.Query",
-	HandlerType: (*QueryServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "FeeAllowance",
-			Handler:    _Query_FeeAllowance_Handler,
-		},
-		{
-			MethodName: "FeeAllowances",
-			Handler:    _Query_FeeAllowances_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/feegrant/v1beta1/query.proto",
 }
 
 func (m *QueryFeeAllowanceRequest) Marshal() (dAtA []byte, err error) {

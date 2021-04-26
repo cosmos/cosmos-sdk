@@ -4,14 +4,9 @@
 package types
 
 import (
-	context "context"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -176,93 +171,6 @@ func (this *MsgUnjailResponse) Equal(that interface{}) bool {
 	}
 	return true
 }
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// MsgClient is the client API for Msg service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type MsgClient interface {
-	// Unjail defines a method for unjailing a jailed validator, thus returning
-	// them into the bonded validator set, so they can begin receiving provisions
-	// and rewards again.
-	Unjail(ctx context.Context, in *MsgUnjail, opts ...grpc.CallOption) (*MsgUnjailResponse, error)
-}
-
-type msgClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewMsgClient(cc grpc1.ClientConn) MsgClient {
-	return &msgClient{cc}
-}
-
-func (c *msgClient) Unjail(ctx context.Context, in *MsgUnjail, opts ...grpc.CallOption) (*MsgUnjailResponse, error) {
-	out := new(MsgUnjailResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.Msg/Unjail", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// MsgServer is the server API for Msg service.
-type MsgServer interface {
-	// Unjail defines a method for unjailing a jailed validator, thus returning
-	// them into the bonded validator set, so they can begin receiving provisions
-	// and rewards again.
-	Unjail(context.Context, *MsgUnjail) (*MsgUnjailResponse, error)
-}
-
-// UnimplementedMsgServer can be embedded to have forward compatible implementations.
-type UnimplementedMsgServer struct {
-}
-
-func (*UnimplementedMsgServer) Unjail(ctx context.Context, req *MsgUnjail) (*MsgUnjailResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Unjail not implemented")
-}
-
-func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
-	s.RegisterService(&_Msg_serviceDesc, srv)
-}
-
-func _Msg_Unjail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUnjail)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).Unjail(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.slashing.v1beta1.Msg/Unjail",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Unjail(ctx, req.(*MsgUnjail))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Msg_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.slashing.v1beta1.Msg",
-	HandlerType: (*MsgServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Unjail",
-			Handler:    _Msg_Unjail_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/slashing/v1beta1/tx.proto",
-}
-
 func (m *MsgUnjail) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)

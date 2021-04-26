@@ -4,14 +4,9 @@
 package reflection
 
 import (
-	context "context"
 	fmt "fmt"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -242,130 +237,6 @@ var fileDescriptor_d48c054165687f5c = []byte{
 	0x7e, 0x2e, 0xcc, 0x42, 0x08, 0xa5, 0x5b, 0x9c, 0x92, 0xad, 0x9f, 0x9c, 0x93, 0x99, 0x9a, 0x57,
 	0xa2, 0x9f, 0x5e, 0x54, 0x90, 0x8c, 0xe4, 0x84, 0x24, 0x36, 0x70, 0xc6, 0x30, 0x06, 0x04, 0x00,
 	0x00, 0xff, 0xff, 0x32, 0x5b, 0x2b, 0x51, 0x89, 0x03, 0x00, 0x00,
-}
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// ReflectionServiceClient is the client API for ReflectionService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type ReflectionServiceClient interface {
-	// ListAllInterfaces lists all the interfaces registered in the interface
-	// registry.
-	ListAllInterfaces(ctx context.Context, in *ListAllInterfacesRequest, opts ...grpc.CallOption) (*ListAllInterfacesResponse, error)
-	// ListImplementations list all the concrete types that implement a given
-	// interface.
-	ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error)
-}
-
-type reflectionServiceClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewReflectionServiceClient(cc grpc1.ClientConn) ReflectionServiceClient {
-	return &reflectionServiceClient{cc}
-}
-
-func (c *reflectionServiceClient) ListAllInterfaces(ctx context.Context, in *ListAllInterfacesRequest, opts ...grpc.CallOption) (*ListAllInterfacesResponse, error) {
-	out := new(ListAllInterfacesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/ListAllInterfaces", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *reflectionServiceClient) ListImplementations(ctx context.Context, in *ListImplementationsRequest, opts ...grpc.CallOption) (*ListImplementationsResponse, error) {
-	out := new(ListImplementationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/ListImplementations", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ReflectionServiceServer is the server API for ReflectionService service.
-type ReflectionServiceServer interface {
-	// ListAllInterfaces lists all the interfaces registered in the interface
-	// registry.
-	ListAllInterfaces(context.Context, *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error)
-	// ListImplementations list all the concrete types that implement a given
-	// interface.
-	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
-}
-
-// UnimplementedReflectionServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedReflectionServiceServer struct {
-}
-
-func (*UnimplementedReflectionServiceServer) ListAllInterfaces(ctx context.Context, req *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAllInterfaces not implemented")
-}
-func (*UnimplementedReflectionServiceServer) ListImplementations(ctx context.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListImplementations not implemented")
-}
-
-func RegisterReflectionServiceServer(s grpc1.Server, srv ReflectionServiceServer) {
-	s.RegisterService(&_ReflectionService_serviceDesc, srv)
-}
-
-func _ReflectionService_ListAllInterfaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAllInterfacesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ReflectionServiceServer).ListAllInterfaces(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/ListAllInterfaces",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReflectionServiceServer).ListAllInterfaces(ctx, req.(*ListAllInterfacesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ReflectionService_ListImplementations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListImplementationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ReflectionServiceServer).ListImplementations(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.base.reflection.v1beta1.ReflectionService/ListImplementations",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReflectionServiceServer).ListImplementations(ctx, req.(*ListImplementationsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _ReflectionService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.base.reflection.v1beta1.ReflectionService",
-	HandlerType: (*ReflectionServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "ListAllInterfaces",
-			Handler:    _ReflectionService_ListAllInterfaces_Handler,
-		},
-		{
-			MethodName: "ListImplementations",
-			Handler:    _ReflectionService_ListImplementations_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/base/reflection/v1beta1/reflection.proto",
 }
 
 func (m *ListAllInterfacesRequest) Marshal() (dAtA []byte, err error) {

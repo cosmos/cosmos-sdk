@@ -4,18 +4,13 @@
 package types
 
 import (
-	context "context"
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_tendermint_tendermint_libs_bytes "github.com/tendermint/tendermint/libs/bytes"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -270,126 +265,6 @@ var fileDescriptor_07043de1a84d215a = []byte{
 	0xde, 0xae, 0x2d, 0xbd, 0x95, 0x31, 0x9f, 0xb6, 0xec, 0xbd, 0x26, 0xc3, 0x99, 0xa6, 0x2a, 0x32,
 	0x26, 0xc3, 0x4b, 0x7a, 0xf4, 0x47, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x50, 0xfb, 0x8a, 0x39,
 	0x18, 0x04, 0x00, 0x00,
-}
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// QueryClient is the client API for Query service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type QueryClient interface {
-	// Evidence queries evidence based on evidence hash.
-	Evidence(ctx context.Context, in *QueryEvidenceRequest, opts ...grpc.CallOption) (*QueryEvidenceResponse, error)
-	// AllEvidence queries all evidence.
-	AllEvidence(ctx context.Context, in *QueryAllEvidenceRequest, opts ...grpc.CallOption) (*QueryAllEvidenceResponse, error)
-}
-
-type queryClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewQueryClient(cc grpc1.ClientConn) QueryClient {
-	return &queryClient{cc}
-}
-
-func (c *queryClient) Evidence(ctx context.Context, in *QueryEvidenceRequest, opts ...grpc.CallOption) (*QueryEvidenceResponse, error) {
-	out := new(QueryEvidenceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.Query/Evidence", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) AllEvidence(ctx context.Context, in *QueryAllEvidenceRequest, opts ...grpc.CallOption) (*QueryAllEvidenceResponse, error) {
-	out := new(QueryAllEvidenceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.Query/AllEvidence", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// QueryServer is the server API for Query service.
-type QueryServer interface {
-	// Evidence queries evidence based on evidence hash.
-	Evidence(context.Context, *QueryEvidenceRequest) (*QueryEvidenceResponse, error)
-	// AllEvidence queries all evidence.
-	AllEvidence(context.Context, *QueryAllEvidenceRequest) (*QueryAllEvidenceResponse, error)
-}
-
-// UnimplementedQueryServer can be embedded to have forward compatible implementations.
-type UnimplementedQueryServer struct {
-}
-
-func (*UnimplementedQueryServer) Evidence(ctx context.Context, req *QueryEvidenceRequest) (*QueryEvidenceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Evidence not implemented")
-}
-func (*UnimplementedQueryServer) AllEvidence(ctx context.Context, req *QueryAllEvidenceRequest) (*QueryAllEvidenceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AllEvidence not implemented")
-}
-
-func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
-	s.RegisterService(&_Query_serviceDesc, srv)
-}
-
-func _Query_Evidence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryEvidenceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).Evidence(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.evidence.v1beta1.Query/Evidence",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).Evidence(ctx, req.(*QueryEvidenceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_AllEvidence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryAllEvidenceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).AllEvidence(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.evidence.v1beta1.Query/AllEvidence",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).AllEvidence(ctx, req.(*QueryAllEvidenceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Query_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.evidence.v1beta1.Query",
-	HandlerType: (*QueryServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Evidence",
-			Handler:    _Query_Evidence_Handler,
-		},
-		{
-			MethodName: "AllEvidence",
-			Handler:    _Query_AllEvidence_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/evidence/v1beta1/query.proto",
 }
 
 func (m *QueryEvidenceRequest) Marshal() (dAtA []byte, err error) {

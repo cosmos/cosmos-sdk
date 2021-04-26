@@ -234,9 +234,9 @@ func RegisterReflectionServiceHandlerClient(ctx context.Context, mux *runtime.Se
 }
 
 var (
-	pattern_ReflectionService_ListAllInterfaces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_ListAllInterfaces_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ReflectionService_ListImplementations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces", "interface_name", "implementations"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_ReflectionService_ListImplementations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"cosmos", "base", "reflection", "v1beta1", "interfaces", "interface_name", "implementations"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

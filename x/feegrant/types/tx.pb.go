@@ -4,16 +4,11 @@
 package types
 
 import (
-	context "context"
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/regen-network/cosmos-proto"
-	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -252,130 +247,6 @@ var fileDescriptor_dd44ad7946dad783 = []byte{
 	0xbd, 0xe4, 0xfc, 0x5c, 0x68, 0xaa, 0x82, 0x52, 0xba, 0xc5, 0x29, 0xd9, 0xfa, 0x15, 0x88, 0xb4,
 	0x5d, 0x52, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x4e, 0x03, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff,
 	0xff, 0x7b, 0xbe, 0x24, 0x15, 0xfb, 0x02, 0x00, 0x00,
-}
-
-// Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
-
-// MsgClient is the client API for Msg service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type MsgClient interface {
-	// GrantFeeAllowance grants fee allowance to the grantee on the granter's
-	// account with the provided expiration time.
-	GrantFeeAllowance(ctx context.Context, in *MsgGrantFeeAllowance, opts ...grpc.CallOption) (*MsgGrantFeeAllowanceResponse, error)
-	// RevokeFeeAllowance revokes any fee allowance of granter's account that
-	// has been granted to the grantee.
-	RevokeFeeAllowance(ctx context.Context, in *MsgRevokeFeeAllowance, opts ...grpc.CallOption) (*MsgRevokeFeeAllowanceResponse, error)
-}
-
-type msgClient struct {
-	cc grpc1.ClientConn
-}
-
-func NewMsgClient(cc grpc1.ClientConn) MsgClient {
-	return &msgClient{cc}
-}
-
-func (c *msgClient) GrantFeeAllowance(ctx context.Context, in *MsgGrantFeeAllowance, opts ...grpc.CallOption) (*MsgGrantFeeAllowanceResponse, error) {
-	out := new(MsgGrantFeeAllowanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) RevokeFeeAllowance(ctx context.Context, in *MsgRevokeFeeAllowance, opts ...grpc.CallOption) (*MsgRevokeFeeAllowanceResponse, error) {
-	out := new(MsgRevokeFeeAllowanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Msg/RevokeFeeAllowance", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// MsgServer is the server API for Msg service.
-type MsgServer interface {
-	// GrantFeeAllowance grants fee allowance to the grantee on the granter's
-	// account with the provided expiration time.
-	GrantFeeAllowance(context.Context, *MsgGrantFeeAllowance) (*MsgGrantFeeAllowanceResponse, error)
-	// RevokeFeeAllowance revokes any fee allowance of granter's account that
-	// has been granted to the grantee.
-	RevokeFeeAllowance(context.Context, *MsgRevokeFeeAllowance) (*MsgRevokeFeeAllowanceResponse, error)
-}
-
-// UnimplementedMsgServer can be embedded to have forward compatible implementations.
-type UnimplementedMsgServer struct {
-}
-
-func (*UnimplementedMsgServer) GrantFeeAllowance(ctx context.Context, req *MsgGrantFeeAllowance) (*MsgGrantFeeAllowanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GrantFeeAllowance not implemented")
-}
-func (*UnimplementedMsgServer) RevokeFeeAllowance(ctx context.Context, req *MsgRevokeFeeAllowance) (*MsgRevokeFeeAllowanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RevokeFeeAllowance not implemented")
-}
-
-func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
-	s.RegisterService(&_Msg_serviceDesc, srv)
-}
-
-func _Msg_GrantFeeAllowance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgGrantFeeAllowance)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).GrantFeeAllowance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).GrantFeeAllowance(ctx, req.(*MsgGrantFeeAllowance))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_RevokeFeeAllowance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRevokeFeeAllowance)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).RevokeFeeAllowance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/cosmos.feegrant.v1beta1.Msg/RevokeFeeAllowance",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RevokeFeeAllowance(ctx, req.(*MsgRevokeFeeAllowance))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Msg_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.feegrant.v1beta1.Msg",
-	HandlerType: (*MsgServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GrantFeeAllowance",
-			Handler:    _Msg_GrantFeeAllowance_Handler,
-		},
-		{
-			MethodName: "RevokeFeeAllowance",
-			Handler:    _Msg_RevokeFeeAllowance_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/feegrant/v1beta1/tx.proto",
 }
 
 func (m *MsgGrantFeeAllowance) Marshal() (dAtA []byte, err error) {

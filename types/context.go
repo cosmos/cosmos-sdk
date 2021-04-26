@@ -38,6 +38,18 @@ type Context struct {
 	eventManager  *EventManager
 }
 
+func (c Context) Deadline() (deadline time.Time, ok bool) {
+	return c.ctx.Deadline()
+}
+
+func (c Context) Done() <-chan struct{} {
+	return c.ctx.Done()
+}
+
+func (c Context) Err() error {
+	return c.ctx.Err()
+}
+
 // Proposed rename, not done to avoid API breakage
 type Request = Context
 

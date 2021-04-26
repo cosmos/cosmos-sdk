@@ -8,7 +8,12 @@ import (
 // TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
 const TypeMsgCreateVestingAccount = "msg_create_vesting_account"
 
+// TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
+const TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
+
 var _ sdk.Msg = &MsgCreateVestingAccount{}
+
+var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
 //nolint:interfacer
@@ -74,4 +79,56 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{from}
+}
+
+// NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
+//nolint:interfacer
+func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, periods []Period) *MsgCreatePeriodicVestingAccount {
+	return &MsgCreatePeriodicVestingAccount{
+		FromAddress:    fromAddr.String(),
+		ToAddress:      toAddr.String(),
+		VestingPeriods: periods,
+	}
+}
+
+// Route returns the message route for a MsgCreateVestingAccount.
+func (msg MsgCreatePeriodicVestingAccount) Route() string { return RouterKey }
+
+// Type returns the message type for a MsgCreateVestingAccount.
+func (msg MsgCreatePeriodicVestingAccount) Type() string { return TypeMsgCreatePeriodicVestingAccount }
+
+// GetSigners returns the expected signers for a MsgCreateVestingAccount.
+func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{from}
+}
+
+// GetSignBytes returns the bytes all expected signers must sign over for a
+// MsgCreateVestingAccount.
+func (msg MsgCreatePeriodicVestingAccount) GetSignBytes() []byte {
+	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+}
+
+// ValidateBasic Implements Msg.
+func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return err
+	}
+	if err := sdk.VerifyAddressFormat(from); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
+	}
+
+	if err := sdk.VerifyAddressFormat(to); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+	}
+
+	return nil
 }

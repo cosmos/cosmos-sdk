@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -29,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(
 		NewMsgCreateVestingAccountCmd(),
+		NewMsgCreatePeriodicVestingAccountCmd(),
 	)
 
 	return txCmd
@@ -69,6 +72,84 @@ timestamp.`,
 			delayed, _ := cmd.Flags().GetBool(FlagDelayed)
 
 			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, endTime, delayed)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().Bool(FlagDelayed, false, "Create a delayed vesting account if true")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+type InputPeriod struct {
+	Coins string `json:"coins"`
+	Time  int64  `json:"unix_time"`
+}
+
+// NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
+// MsgCreateVestingAccount transaction.
+func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
+		Short: "Create a new vesting account funded with an allocation of tokens.",
+		Long: `Create a new vesting account funded with an allocation of tokens. This takes a destingation address and 
+		a period json file. 
+		Where periods.json contains:
+
+		An array of coin strings and unix epoch times for coins to vest
+
+[
+{
+  "coins": "10test",
+  "unix_time":1620016673
+ },
+ {
+	"coins": "10test",
+	"unix_time":1620026673
+   },
+]
+		`,
+		Args: cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			contents, err := ioutil.ReadFile(args[1])
+			if err != nil {
+				return err
+			}
+
+			var inputPeriods []InputPeriod
+
+			err = json.Unmarshal(contents, inputPeriods)
+			if err != nil {
+				return err
+			}
+
+			var periods []types.Period
+
+			for _, p := range inputPeriods {
+
+				amount, err := sdk.ParseCoinsNormalized(p.Coins)
+				if err != nil {
+					return err
+				}
+				period := types.Period{Length: p.Time, Amount: amount}
+				periods = append(periods, period)
+			}
+
+			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, periods)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

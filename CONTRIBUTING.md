@@ -230,6 +230,7 @@ should be targeted against the release candidate branch.
   - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
 - On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
   - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
 - Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `master`
   and create a new `RC` branch (making sure to increment the `rcN`)
@@ -274,6 +275,7 @@ Finally, when a point release is ready to be made:
 
 1. Create `release/v0.38.N` branch
 2. Ensure changelog entries are verified
+  1. Be sure changelog entries are added to `RELEASE_CHANGELOG.md`
 3. Add release version date to the changelog
 4. Push release branch along with the annotated tag: **git tag -a**
 5. Create a PR into `master` containing ONLY `CHANGELOG.md` updates

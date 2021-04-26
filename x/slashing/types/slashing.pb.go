@@ -35,21 +35,17 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // liveness activity.
 type ValidatorSigningInfo struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// Height at which validator was first a candidate OR was un-jailed
-	StartHeight int64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty"`
-	// DEPRECATED: Index which is incremented every time a validator is bonded in a block and
-	// _may_ have signed a pre-commit or not. This in conjunction with the
-	// signed_blocks_window param determines the index in the missed block bitmap.
-	IndexOffset int64 `protobuf:"varint,3,opt,name=index_offset,json=indexOffset,proto3" json:"index_offset,omitempty"` // Deprecated: Do not use.
-	// Timestamp until which the validator is jailed due to liveness downtime.
-	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
-	// Whether or not a validator has been tombstoned (killed out of validator
-	// set). It is set once the validator commits an equivocation or for any other
-	// configured misbehavior.
+	// height at which validator was first a candidate OR was unjailed
+	StartHeight int64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty" yaml:"start_height"`
+	// index offset into signed block bit array
+	IndexOffset int64 `protobuf:"varint,3,opt,name=index_offset,json=indexOffset,proto3" json:"index_offset,omitempty" yaml:"index_offset"`
+	// timestamp validator cannot be unjailed until
+	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until" yaml:"jailed_until"`
+	// whether or not a validator has been tombstoned (killed out of validator
+	// set)
 	Tombstoned bool `protobuf:"varint,5,opt,name=tombstoned,proto3" json:"tombstoned,omitempty"`
-	// A counter of missed (unsigned) blocks. It is used to avoid unnecessary
-	// reads in the missed block bitmap.
-	MissedBlocksCounter int64 `protobuf:"varint,6,opt,name=missed_blocks_counter,json=missedBlocksCounter,proto3" json:"missed_blocks_counter,omitempty"`
+	// missed blocks counter (to avoid scanning the array every time)
+	MissedBlocksCounter int64 `protobuf:"varint,6,opt,name=missed_blocks_counter,json=missedBlocksCounter,proto3" json:"missed_blocks_counter,omitempty" yaml:"missed_blocks_counter"`
 }
 
 func (m *ValidatorSigningInfo) Reset()         { *m = ValidatorSigningInfo{} }

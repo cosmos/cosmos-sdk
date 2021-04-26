@@ -35,19 +35,16 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // liveness activity.
 type ValidatorSigningInfo struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	// Height at which validator was first a candidate OR was unjailed
+	// height at which validator was first a candidate OR was unjailed
 	StartHeight int64 `protobuf:"varint,2,opt,name=start_height,json=startHeight,proto3" json:"start_height,omitempty" yaml:"start_height"`
-	// Index which is incremented each time the validator was a bonded
-	// in a block and may have signed a precommit or not. This in conjunction with the
-	// `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
+	// index offset into signed block bit array
 	IndexOffset int64 `protobuf:"varint,3,opt,name=index_offset,json=indexOffset,proto3" json:"index_offset,omitempty" yaml:"index_offset"`
-	// Timestamp until which the validator is jailed due to liveness downtime.
+	// timestamp validator cannot be unjailed until
 	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until" yaml:"jailed_until"`
-	// Whether or not a validator has been tombstoned (killed out of validator set). It is set
-	// once the validator commits an equivocation or for any other configured misbehiavor.
+	// whether or not a validator has been tombstoned (killed out of validator
+	// set)
 	Tombstoned bool `protobuf:"varint,5,opt,name=tombstoned,proto3" json:"tombstoned,omitempty"`
-	// A counter kept to avoid unnecessary array reads.
-	// Note that `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
+	// missed blocks counter (to avoid scanning the array every time)
 	MissedBlocksCounter int64 `protobuf:"varint,6,opt,name=missed_blocks_counter,json=missedBlocksCounter,proto3" json:"missed_blocks_counter,omitempty" yaml:"missed_blocks_counter"`
 }
 

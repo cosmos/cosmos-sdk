@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"strconv"
 
@@ -91,38 +90,33 @@ timestamp.`,
 	return cmd
 }
 
-type VestingData struct {
-	StartTime int64         `json:"start_time"`
-	Periods   []InputPeriod `json:"periods"`
-}
-
 type InputPeriod struct {
-	Coins  string `json:"coins"`
-	Length int64  `json:"length_seconds"`
+	Coins string `json:"coins"`
+	Time  int64  `json:"unix_time"`
 }
 
-// NewMsgCreatePeriodicVestingAccountCmd returns a CLI command handler for creating a
-// MsgCreatePeriodicVestingAccountCmd transaction.
+// NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
+// MsgCreateVestingAccount transaction.
 func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
-		Long: `A sequence of coins and period length in seconds. Periods are sequential, in that the duration of of a period only starts at the end of the previous period. The duration of the first period starts upon account creation. For instance, the following periods.json file shows 20 "test" coins vesting 30 days apart from each other.
+		Long: `Create a new vesting account funded with an allocation of tokens. This takes a destingation address and 
+		a period json file. 
 		Where periods.json contains:
 
 		An array of coin strings and unix epoch times for coins to vest
-{ "start_time": 1625204910,
-"period":[
- {
+
+[
+{
   "coins": "10test",
-  "length_seconds":2592000 //30 days
+  "unix_time":1620016673
  },
  {
 	"coins": "10test",
-	"length_seconds":2592000 //30 days
- },
+	"unix_time":1620026673
+   },
 ]
-	}
 		`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -130,7 +124,6 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			toAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
@@ -141,30 +134,26 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				return err
 			}
 
-			var vestingData VestingData
+			var inputPeriods []InputPeriod
 
-			err = json.Unmarshal(contents, &vestingData)
+			err = json.Unmarshal(contents, inputPeriods)
 			if err != nil {
 				return err
 			}
 
 			var periods []types.Period
 
-			for i, p := range vestingData.Periods {
+			for _, p := range inputPeriods {
 
 				amount, err := sdk.ParseCoinsNormalized(p.Coins)
 				if err != nil {
 					return err
 				}
-
-				if p.Length < 1 {
-					return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
-				}
-				period := types.Period{Length: p.Length, Amount: amount}
+				period := types.Period{Length: p.Time, Amount: amount}
 				periods = append(periods, period)
 			}
 
-			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, vestingData.StartTime, periods)
+			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, periods)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -173,6 +162,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().Bool(FlagDelayed, false, "Create a delayed vesting account if true")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

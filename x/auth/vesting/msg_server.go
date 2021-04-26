@@ -121,7 +121,6 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	if acc := ak.GetAccount(ctx, to); acc != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
-
 	var totalCoins sdk.Coins
 
 	for _, period := range msg.VestingPeriods {
@@ -130,7 +129,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 
 	baseAccount := ak.NewAccountWithAddress(ctx, to)
 
-	types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+	types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), ctx.BlockTime().Unix(), msg.VestingPeriods)
 
 	err = bk.SendCoins(ctx, from, to, totalCoins)
 	if err != nil {

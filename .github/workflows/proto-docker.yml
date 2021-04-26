@@ -12,21 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      # - name: Prepare
-      #   id: prep
-      #   run: |
-      #     DOCKER_IMAGE=tendermintdev/sdk-proto-gen
-      #     VERSION=noop
-      #     if [[ $GITHUB_REF == refs/tags/* ]]; then
-      #       VERSION=${GITHUB_REF#refs/tags/}
-      #     elif [[ $GITHUB_REF == refs/heads/* ]]; then
-      #       VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
-      #       if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
-      #         VERSION=latest
-      #       fi
-      #     fi
-      #     TAGS="${DOCKER_IMAGE}:${VERSION}"
-      #     echo ::set-output name=tags::${TAGS}
+      - name: Prepare
+        id: prep
+        run: |
+          DOCKER_IMAGE=tendermintdev/sdk-proto-gen
+          VERSION=noop
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ $GITHUB_REF == refs/heads/* ]]; then
+            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
+            if [ "${{ github.event.repository.default_branch }}" = "$VERSION" ]; then
+              VERSION=latest
+            fi
+          fi
+          TAGS="${DOCKER_IMAGE}:${VERSION}"
+          echo ::set-output name=tags::${TAGS}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@master
@@ -37,7 +37,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        # if: true
+        if: ${{ github.event_name != 'pull_request' }}
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUBTM_USERNAME }}
@@ -49,6 +49,5 @@ jobs:
           context: ./contrib/devtools
           file: ./contrib/devtools/dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
-          tags: tendermintdev/sdk-proto-gen:v0.2
-          # tags: ${{ steps.prep.outputs.tags }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.prep.outputs.tags }}

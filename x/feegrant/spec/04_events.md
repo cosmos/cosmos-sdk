@@ -6,7 +6,7 @@ order: 4
 
 The feegrant module emits the following events:
 
-# Message Servers
+# Msg Server
 
 ### MsgGrantFeeAllowance
 

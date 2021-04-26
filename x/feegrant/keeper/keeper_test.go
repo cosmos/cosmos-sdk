@@ -39,12 +39,12 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	basic := &types.BasicFeeAllowance{
+	basic := &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(334455),
 	}
 
-	basic2 := &types.BasicFeeAllowance{
+	basic2 := &types.BasicAllowance{
 		SpendLimit: eth,
 		Expiration: types.ExpiresAtHeight(172436),
 	}
@@ -119,32 +119,31 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 			suite.Equal(tc.allowance, allow)
 		})
 	}
-
-	grant1, err := types.NewFeeAllowanceGrant(suite.addrs[3], suite.addrs[0], basic2)
+	grant1, err := types.NewGrant(suite.addrs[3], suite.addrs[0], basic2)
 	suite.NoError(err)
 
-	grant2, err := types.NewFeeAllowanceGrant(suite.addrs[1], suite.addrs[2], basic2)
+	grant2, err := types.NewGrant(suite.addrs[1], suite.addrs[2], basic2)
 	suite.NoError(err)
 
-	grant3, err := types.NewFeeAllowanceGrant(suite.addrs[0], suite.addrs[2], basic)
+	grant3, err := types.NewGrant(suite.addrs[0], suite.addrs[2], basic)
 	suite.NoError(err)
 
 	allCases := map[string]struct {
 		grantee sdk.AccAddress
-		grants  []types.FeeAllowanceGrant
+		grants  []types.Grant
 	}{
 		"addr2 has none": {
 			grantee: suite.addrs[1],
 		},
 		"addr has one": {
 			grantee: suite.addrs[0],
-			grants: []types.FeeAllowanceGrant{
+			grants: []types.Grant{
 				grant1,
 			},
 		},
 		"addr3 has two": {
 			grantee: suite.addrs[2],
-			grants: []types.FeeAllowanceGrant{
+			grants: []types.Grant{
 				grant3,
 				grant2,
 			},
@@ -154,8 +153,8 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	for name, tc := range allCases {
 		tc := tc
 		suite.Run(name, func() {
-			var grants []types.FeeAllowanceGrant
-			err := k.IterateAllGranteeFeeAllowances(ctx, tc.grantee, func(grant types.FeeAllowanceGrant) bool {
+			var grants []types.Grant
+			err := k.IterateAllGranteeFeeAllowances(ctx, tc.grantee, func(grant types.Grant) bool {
 				grants = append(grants, grant)
 				return false
 			})
@@ -172,12 +171,12 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
-	future := &types.BasicFeeAllowance{
+	future := &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(5678),
 	}
 
-	expired := &types.BasicFeeAllowance{
+	expired := &types.BasicAllowance{
 		SpendLimit: eth,
 		Expiration: types.ExpiresAtHeight(55),
 	}
@@ -187,7 +186,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	_ = hugeAtom
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
 	_ = smallAtom
-	futureAfterSmall := &types.BasicFeeAllowance{
+	futureAfterSmall := &types.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
 		Expiration: types.ExpiresAtHeight(5678),
 	}

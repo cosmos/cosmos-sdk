@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ FeeAllowanceI = (*PeriodicFeeAllowance)(nil)
+var _ FeeAllowanceI = (*PeriodicAllowance)(nil)
 
 // Accept can use fee payment requested as well as timestamp/height of the current block
 // to determine whether or not to process this. This is checked in
@@ -19,7 +19,7 @@ var _ FeeAllowanceI = (*PeriodicFeeAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
-func (a *PeriodicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+func (a *PeriodicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
 
@@ -54,7 +54,7 @@ func (a *PeriodicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Ms
 // It will also update the PeriodReset. If we are within one Period, it will update from the
 // last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
 // If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
-func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight int64) {
+func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time, blockHeight int64) {
 	if !a.PeriodReset.Undefined() && !a.PeriodReset.IsExpired(&blockTime, blockHeight) {
 		return
 	}
@@ -77,9 +77,9 @@ func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight i
 // it will subtract the dumpHeight from any height-based expiration to ensure that
 // the elapsed number of blocks this allowance is valid for is fixed.
 // (For PeriodReset and Basic.Expiration)
-func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	return &PeriodicFeeAllowance{
-		Basic: BasicFeeAllowance{
+func (a *PeriodicAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
+	return &PeriodicAllowance{
+		Basic: BasicAllowance{
 			SpendLimit: a.Basic.SpendLimit,
 			Expiration: a.Basic.Expiration.PrepareForExport(dumpTime, dumpHeight),
 		},
@@ -91,7 +91,7 @@ func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight i
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
-func (a PeriodicFeeAllowance) ValidateBasic() error {
+func (a PeriodicAllowance) ValidateBasic() error {
 	if err := a.Basic.ValidateBasic(); err != nil {
 		return err
 	}

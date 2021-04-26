@@ -14,13 +14,13 @@ import (
 const feegrant = "feegrant"
 
 // GenFeeGrants returns an empty slice of evidences.
-func GenFeeGrants(_ *rand.Rand, _ []simtypes.Account) []types.FeeAllowanceGrant {
-	return []types.FeeAllowanceGrant{}
+func GenFeeGrants(_ *rand.Rand, _ []simtypes.Account) []types.Grant {
+	return []types.Grant{}
 }
 
 // RandomizedGenState generates a random GenesisState for feegrant
 func RandomizedGenState(simState *module.SimulationState) {
-	var feegrants []types.FeeAllowanceGrant
+	var feegrants []types.Grant
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, feegrant, &feegrants, simState.Rand,

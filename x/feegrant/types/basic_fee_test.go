@@ -22,7 +22,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 
 	cases := map[string]struct {
-		allow *types.BasicFeeAllowance
+		allow *types.BasicAllowance
 		// all other checks are ignored if valid=false
 		fee         sdk.Coins
 		blockHeight int64
@@ -32,12 +32,12 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		remains     sdk.Coins
 	}{
 		"empty": {
-			allow:  &types.BasicFeeAllowance{},
+			allow:  &types.BasicAllowance{},
 			valid:  true,
 			accept: true,
 		},
 		"small fee without expire": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				SpendLimit: atom,
 			},
 			valid:   true,
@@ -47,7 +47,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains: leftAtom,
 		},
 		"all fee without expire": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
 			valid:  true,
@@ -56,7 +56,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove: true,
 		},
 		"wrong fee": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
 			valid:  true,
@@ -64,7 +64,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept: false,
 		},
 		"non-expired": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: types.ExpiresAtHeight(100),
 			},
@@ -76,7 +76,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains:     leftAtom,
 		},
 		"expired": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: types.ExpiresAtHeight(100),
 			},
@@ -87,7 +87,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove:      true,
 		},
 		"fee more than allowed": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: types.ExpiresAtHeight(100),
 			},
@@ -97,7 +97,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:      false,
 		},
 		"with out spend limit": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				Expiration: types.ExpiresAtHeight(100),
 			},
 			valid:       true,
@@ -106,7 +106,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:      true,
 		},
 		"expired no spend limit": {
-			allow: &types.BasicFeeAllowance{
+			allow: &types.BasicAllowance{
 				Expiration: types.ExpiresAtHeight(100),
 			},
 			valid:       true,

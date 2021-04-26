@@ -19,31 +19,31 @@ func TestGrant(t *testing.T) {
 	require.NoError(t, err)
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 
-	goodGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
+	goodGrant, err := types.NewGrant(addr2, addr, &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(100),
 	})
 	require.NoError(t, err)
 
-	noGranteeGrant, err := types.NewFeeAllowanceGrant(addr2, nil, &types.BasicFeeAllowance{
+	noGranteeGrant, err := types.NewGrant(addr2, nil, &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(100),
 	})
 	require.NoError(t, err)
 
-	noGranterGrant, err := types.NewFeeAllowanceGrant(nil, addr, &types.BasicFeeAllowance{
+	noGranterGrant, err := types.NewGrant(nil, addr, &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(100),
 	})
 	require.NoError(t, err)
 
-	selfGrant, err := types.NewFeeAllowanceGrant(addr2, addr2, &types.BasicFeeAllowance{
+	selfGrant, err := types.NewGrant(addr2, addr2, &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(100),
 	})
 	require.NoError(t, err)
 
-	badAllowanceGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
+	badAllowanceGrant, err := types.NewGrant(addr2, addr, &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: types.ExpiresAtHeight(-1),
 	})
@@ -53,7 +53,7 @@ func TestGrant(t *testing.T) {
 	// RegisterLegacyAminoCodec(cdc)
 
 	cases := map[string]struct {
-		grant types.FeeAllowanceGrant
+		grant types.Grant
 		valid bool
 	}{
 		"good": {
@@ -87,7 +87,7 @@ func TestGrant(t *testing.T) {
 			// if it is valid, let's try to serialize, deserialize, and make sure it matches
 			bz, err := cdc.MarshalBinaryBare(&tc.grant)
 			require.NoError(t, err)
-			var loaded types.FeeAllowanceGrant
+			var loaded types.Grant
 			err = cdc.UnmarshalBinaryBare(bz, &loaded)
 			require.NoError(t, err)
 

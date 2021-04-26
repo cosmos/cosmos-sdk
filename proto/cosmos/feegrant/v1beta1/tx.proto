@@ -10,18 +10,18 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
 // Msg defines the feegrant msg service.
 service Msg {
 
-  // GrantFeeAllowance grants fee allowance to the grantee on the granter's
+  // GrantAllowance grants fee allowance to the grantee on the granter's
   // account with the provided expiration time.
-  rpc GrantFeeAllowance(MsgGrantFeeAllowance) returns (MsgGrantFeeAllowanceResponse);
+  rpc GrantAllowance(MsgGrantAllowance) returns (MsgGrantAllowanceResponse);
 
-  // RevokeFeeAllowance revokes any fee allowance of granter's account that
+  // RevokeAllowance revokes any fee allowance of granter's account that
   // has been granted to the grantee.
-  rpc RevokeFeeAllowance(MsgRevokeFeeAllowance) returns (MsgRevokeFeeAllowanceResponse);
+  rpc RevokeAllowance(MsgRevokeAllowance) returns (MsgRevokeAllowanceResponse);
 }
 
-// MsgGrantFeeAllowance adds permission for Grantee to spend up to Allowance
+// MsgGrantAllowance adds permission for Grantee to spend up to Allowance
 // of fees from the account of Granter.
-message MsgGrantFeeAllowance {
+message MsgGrantAllowance {
   // granter is the address of the user granting an allowance of their funds.
   string              granter   = 1;
 
@@ -32,11 +32,11 @@ message MsgGrantFeeAllowance {
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }
 
-// MsgGrantFeeAllowanceResponse defines the Msg/GrantFeeAllowanceResponse response type.
-message MsgGrantFeeAllowanceResponse {}
+// MsgGrantAllowanceResponse defines the Msg/GrantAllowanceResponse response type.
+message MsgGrantAllowanceResponse {}
 
-// MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
-message MsgRevokeFeeAllowance {
+// MsgRevokeAllowance removes any existing Allowance from Granter to Grantee.
+message MsgRevokeAllowance {
   // granter is the address of the user granting an allowance of their funds.
   string granter = 1;
 
@@ -44,5 +44,5 @@ message MsgRevokeFeeAllowance {
   string grantee = 2;
 }
 
-// MsgRevokeFeeAllowanceResponse defines the Msg/RevokeFeeAllowanceResponse response type.
-message MsgRevokeFeeAllowanceResponse {}
+// MsgRevokeAllowanceResponse defines the Msg/RevokeAllowanceResponse response type.
+message MsgRevokeAllowanceResponse {}

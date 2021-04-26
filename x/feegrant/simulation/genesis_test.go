@@ -36,5 +36,5 @@ func TestRandomizedGenState(t *testing.T) {
 	var feegrantGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &feegrantGenesis)
 
-	require.Len(t, feegrantGenesis.FeeAllowances, 0)
+	require.Len(t, feegrantGenesis.Allowances, 0)
 }

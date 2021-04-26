@@ -97,7 +97,7 @@ Examples:
 				return err
 			}
 
-			basic := types.BasicFeeAllowance{
+			basic := types.BasicAllowance{
 				SpendLimit: limit,
 			}
 
@@ -131,7 +131,7 @@ Examples:
 						return fmt.Errorf("period(%d) cannot be greater than the expiration(%d)", periodClock, exp)
 					}
 
-					periodic := types.PeriodicFeeAllowance{
+					periodic := types.PeriodicAllowance{
 						Basic:            basic,
 						Period:           types.ClockDuration(time.Duration(periodClock) * time.Second),
 						PeriodReset:      types.ExpiresAtTime(time.Now().Add(time.Duration(periodClock) * time.Second)),
@@ -152,20 +152,20 @@ Examples:
 			}
 
 			if len(allowedMsgs) > 0 {
-				grant, err = types.NewAllowedMsgFeeAllowance(grant, allowedMsgs)
+				grant, err = types.NewAllowedMsgAllowance(grant, allowedMsgs)
 				if err != nil {
 					return err
 				}
 			}
 
-			msg, err := types.NewMsgGrantFeeAllowance(grant, granter, grantee)
+			msg, err := types.NewMsgGrantAllowance(grant, granter, grantee)
 			if err != nil {
 				return err
 			}
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.GrantFeeAllowance(cmd.Context(), msg)
+			_, err = msgClient.GrantAllowance(cmd.Context(), msg)
 			if err != nil {
 				return err
 			}
@@ -210,10 +210,10 @@ Example:
 				return err
 			}
 
-			msg := types.NewMsgRevokeFeeAllowance(clientCtx.GetFromAddress(), grantee)
+			msg := types.NewMsgRevokeAllowance(clientCtx.GetFromAddress(), grantee)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.RevokeFeeAllowance(cmd.Context(), &msg)
+			_, err = msgClient.RevokeAllowance(cmd.Context(), &msg)
 			if err != nil {
 				return err
 			}

@@ -70,43 +70,43 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowance() {
 		expectErr bool
 		errorMsg  string
 		preRun    func()
-		postRun   func(_ types.QueryFeeAllowanceResponse)
+		postRun   func(_ types.QueryAllowanceResponse)
 	}{
 		{
 			"fail: invalid granter",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, "invalid_granter", s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/allowance/%s/%s", baseURL, "invalid_granter", s.grantee.String()),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
-			func(types.QueryFeeAllowanceResponse) {},
+			func(types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: invalid grantee",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, val.Address.String(), "invalid_grantee"),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/allowance/%s/%s", baseURL, val.Address.String(), "invalid_grantee"),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
-			func(types.QueryFeeAllowanceResponse) {},
+			func(types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: no grants",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/allowance/%s/%s", baseURL, val.Address.String(), s.grantee.String()),
 			true,
 			"no allowance",
 			func() {},
-			func(types.QueryFeeAllowanceResponse) {},
+			func(types.QueryAllowanceResponse) {},
 		},
 		{
 			"valid query: expect single grant",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowance/%s/%s", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/allowance/%s/%s", baseURL, val.Address.String(), s.grantee.String()),
 			false,
 			"",
 			func() {
 				execFeeAllowance(val, s)
 			},
-			func(allowance types.QueryFeeAllowanceResponse) {
-				s.Require().Equal(allowance.FeeAllowance.Granter, val.Address.String())
-				s.Require().Equal(allowance.FeeAllowance.Grantee, s.grantee.String())
+			func(query types.QueryAllowanceResponse) {
+				s.Require().Equal(query.Allowance.Granter, val.Address.String())
+				s.Require().Equal(query.Allowance.Grantee, s.grantee.String())
 			},
 		},
 	}
@@ -117,7 +117,7 @@ func (s *IntegrationTestSuite) TestQueryFeeAllowance() {
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
-				var allowance types.QueryFeeAllowanceResponse
+				var allowance types.QueryAllowanceResponse
 				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &allowance)
 				s.Require().NoError(err)
 				tc.postRun(allowance)
@@ -135,38 +135,38 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowances() {
 		expectErr bool
 		errorMsg  string
 		preRun    func()
-		postRun   func(_ types.QueryFeeAllowancesResponse)
+		postRun   func(_ types.QueryAllowancesResponse)
 	}{
 		{
 			"fail: invalid grantee",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowances/%s", baseURL, "invalid_grantee"),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/allowances/%s", baseURL, "invalid_grantee"),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
-			func(types.QueryFeeAllowancesResponse) {},
+			func(types.QueryAllowancesResponse) {},
 		},
 		{
 			"success: no grants",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowances/%s?pagination.offset=1", baseURL, s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/allowances/%s?pagination.offset=1", baseURL, s.grantee.String()),
 			false,
 			"",
 			func() {},
-			func(allowances types.QueryFeeAllowancesResponse) {
-				s.Require().Equal(len(allowances.FeeAllowances), 0)
+			func(allowances types.QueryAllowancesResponse) {
+				s.Require().Equal(len(allowances.Allowances), 0)
 			},
 		},
 		{
 			"valid query: expect single grant",
-			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/fee_allowances/%s", baseURL, s.grantee.String()),
+			fmt.Sprintf("%s/cosmos/feegrant/v1beta1/allowances/%s", baseURL, s.grantee.String()),
 			false,
 			"",
 			func() {
 				execFeeAllowance(val, s)
 			},
-			func(allowances types.QueryFeeAllowancesResponse) {
-				s.Require().Equal(len(allowances.FeeAllowances), 1)
-				s.Require().Equal(allowances.FeeAllowances[0].Granter, val.Address.String())
-				s.Require().Equal(allowances.FeeAllowances[0].Grantee, s.grantee.String())
+			func(query types.QueryAllowancesResponse) {
+				s.Require().Equal(len(query.Allowances), 1)
+				s.Require().Equal(query.Allowances[0].Granter, val.Address.String())
+				s.Require().Equal(query.Allowances[0].Grantee, s.grantee.String())
 			},
 		},
 	}
@@ -177,7 +177,7 @@ func (s *IntegrationTestSuite) TestQueryGranteeAllowances() {
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
-				var allowance types.QueryFeeAllowancesResponse
+				var allowance types.QueryAllowancesResponse
 				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &allowance)
 				s.Require().NoError(err)
 				tc.postRun(allowance)

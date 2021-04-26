@@ -7,12 +7,12 @@ import (
 )
 
 // GenesisState contains a set of fee allowances, persisted from the store
-type GenesisState []types.FeeAllowanceGrant
+type GenesisState []types.Grant
 
 // ValidateBasic ensures all grants in the genesis state are valid
 func (g GenesisState) ValidateBasic() error {
 	for _, f := range g {
-		grant, err := f.GetFeeGrant()
+		grant, err := f.GetGrant()
 		if err != nil {
 			return err
 		}
@@ -26,7 +26,7 @@ func (g GenesisState) ValidateBasic() error {
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
-	for _, f := range data.FeeAllowances {
+	for _, f := range data.Allowances {
 		granter, err := sdk.AccAddressFromBech32(f.Granter)
 		if err != nil {
 			panic(err)
@@ -36,7 +36,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
 			panic(err)
 		}
 
-		grant, err := f.GetFeeGrant()
+		grant, err := f.GetGrant()
 		if err != nil {
 			panic(err)
 		}
@@ -57,14 +57,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
 // them to perform any changes needed prior to export.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) (*types.GenesisState, error) {
 	time, height := ctx.BlockTime(), ctx.BlockHeight()
-	var grants []types.FeeAllowanceGrant
+	var grants []types.Grant
 
-	err := k.IterateAllFeeAllowances(ctx, func(grant types.FeeAllowanceGrant) bool {
+	err := k.IterateAllFeeAllowances(ctx, func(grant types.Grant) bool {
 		grants = append(grants, grant.PrepareForExport(time, height))
 		return false
 	})
 
 	return &types.GenesisState{
-		FeeAllowances: grants,
+		Allowances: grants,
 	}, err
 }

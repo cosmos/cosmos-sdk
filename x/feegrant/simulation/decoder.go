@@ -15,7 +15,7 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.FeeAllowanceKeyPrefix):
-			var grantA, grantB types.FeeAllowanceGrant
+			var grantA, grantB types.Grant
 			cdc.MustUnmarshalBinaryBare(kvA.Value, &grantA)
 			cdc.MustUnmarshalBinaryBare(kvB.Value, &grantB)
 			return fmt.Sprintf("%v\n%v", grantA, grantB)

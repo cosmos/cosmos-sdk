@@ -377,18 +377,8 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-<<<<<<< HEAD
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen sh ./scripts/protocgen.sh
-
-proto-format:
-	@echo "Formatting Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace \
-	--workdir /workspace tendermintdev/docker-build-proto \
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
-=======
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+	@if $(DOCKER) ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then $(DOCKER) start -a $(containerProtoGen); else $(DOCKER) run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 		sh ./scripts/protocgen.sh; fi
->>>>>>> 71b7fb829... setup: reuses proto container (#9192)
 
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
@@ -396,18 +386,14 @@ proto-gen-any:
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
 
 proto-swagger-gen:
-<<<<<<< HEAD
-	@./scripts/protoc-swagger-gen.sh
-=======
 	@echo "Generating Protobuf Swagger"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+	@if $(DOCKER) ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then $(DOCKER) start -a $(containerProtoGenSwagger); else $(DOCKER) run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 		sh ./scripts/protoc-swagger-gen.sh; fi
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+	@if $(DOCKER) ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then $(DOCKER) start -a $(containerProtoFmt); else $(DOCKER) run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
 		find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {}; fi
->>>>>>> 71b7fb829... setup: reuses proto container (#9192)
 
 proto-lint:
 	@$(DOCKER_BUF) check lint --error-format=json

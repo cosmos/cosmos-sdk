@@ -1,15 +1,12 @@
-package cli_test
+package testutil
 
 import (
-	"context"
 	"fmt"
-	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -17,7 +14,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -28,15 +24,16 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
-
+	genesisState := s.cfg.GenesisState
 	var bankGenesis types.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
+	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
 
 	bankGenesis.DenomMetadata = []types.Metadata{
 		{
@@ -78,13 +75,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		},
 	}
 
-	bankGenesisBz, err := cfg.Codec.MarshalJSON(&bankGenesis)
+	bankGenesisBz, err := s.cfg.Codec.MarshalJSON(&bankGenesis)
 	s.Require().NoError(err)
 	genesisState[types.ModuleName] = bankGenesisBz
-	cfg.GenesisState = genesisState
+	s.cfg.GenesisState = genesisState
 
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -199,7 +195,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			respType: &sdk.Coin{},
-			expected: &sdk.Coin{s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))},
+			expected: &sdk.Coin{
+				Denom:  s.cfg.BondDenom,
+				Amount: s.cfg.StakingTokens.Add(sdk.NewInt(10)),
+			},
 		},
 		{
 			name: "total supply of a bogus denom",
@@ -209,7 +208,10 @@ func (s *IntegrationTestSuite) TestGetCmdQueryTotalSupply() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			respType: &sdk.Coin{},
-			expected: &sdk.Coin{"foobar", sdk.ZeroInt()},
+			expected: &sdk.Coin{
+				Denom:  "foobar",
+				Amount: sdk.ZeroInt(),
+			},
 		},
 	}
 
@@ -364,9 +366,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 
 	clientCtx := val.ClientCtx
 
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-
 	from := val.Address
 	to := val.Address
 	amount := sdk.NewCoins(
@@ -380,7 +379,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
 	}
 
-	bz, err := banktestutil.MsgSendExec(clientCtx, from, to, amount, args...)
+	bz, err := MsgSendExec(clientCtx, from, to, amount, args...)
 	s.Require().NoError(err)
 	tx, err := s.cfg.TxConfig.TxJSONDecoder()(bz.Bytes())
 	s.Require().NoError(err)
@@ -399,8 +398,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		amount       sdk.Coins
 		args         []string
 		expectErr    bool
-		respType     proto.Message
 		expectedCode uint32
+		respType     proto.Message
 	}{
 		{
 			"valid transaction",
@@ -415,9 +414,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false,
-			&sdk.TxResponse{},
-			0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"not enough fees",
@@ -433,8 +430,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1))).String()),
 			},
 			false,
-			&sdk.TxResponse{},
 			sdkerrors.ErrInsufficientFee.ABCICode(),
+			&sdk.TxResponse{},
 		},
 		{
 			"not enough gas",
@@ -451,8 +448,8 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 				"--gas=10",
 			},
 			false,
-			&sdk.TxResponse{},
 			sdkerrors.ErrOutOfGas.ABCICode(),
+			&sdk.TxResponse{},
 		},
 	}
 
@@ -462,7 +459,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			bz, err := banktestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -476,8 +473,60 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+// TestBankMsgService does a basic test of whether or not service Msg's as defined
+// in ADR 031 work in the most basic end-to-end case.
+func (s *IntegrationTestSuite) TestBankMsgService() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name           string
+		from, to       sdk.AccAddress
+		amount         sdk.Coins
+		args           []string
+		expectErr      bool
+		expectedCode   uint32
+		respType       proto.Message
+		rawLogContains string
+	}{
+		{
+			"valid transaction",
+			val.Address,
+			val.Address,
+			sdk.NewCoins(
+				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+			),
+			[]string{
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false,
+			0,
+			&sdk.TxResponse{},
+			"/cosmos.bank.v1beta1.Msg/Send", // indicates we are using ServiceMsg and not a regular Msg
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code)
+				s.Require().Contains(txResp.RawLog, tc.rawLogContains)
+			}
+		})
+	}
 }
 
 func NewCoin(denom string, amount sdk.Int) *sdk.Coin {

@@ -1,6 +1,4 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"context"
@@ -31,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -44,14 +41,14 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.New(s.T(), s.cfg)
 
 	kb := s.network.Validators[0].ClientCtx.Keyring
 	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -88,14 +85,15 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 	// write  unsigned tx to file
 	unsignedTx := testutil.WriteToNewTempFile(s.T(), res.String())
-	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
+	res, err = TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
 	s.Require().NoError(err)
 	signedTx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
 	s.Require().NoError(err)
 
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), res.String())
 	txBuilder, err := val.ClientCtx.TxConfig.WrapTxBuilder(signedTx)
-	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
+	s.Require().NoError(err)
+	_, err = TxValidateSignaturesExec(val.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	txBuilder.SetMemo("MODIFIED TX")
@@ -104,7 +102,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 	modifiedTxFile := testutil.WriteToNewTempFile(s.T(), string(bz))
 
-	res, err = authtest.TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
+	_, err = TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
 }
 
@@ -123,30 +121,30 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
 	// sign-batch file - offline is set but account-number and sequence are not
-	res, err := authtest.TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// sign-batch file
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	res, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// sign-batch file
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
+	res, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// Sign batch malformed tx file.
 	malformedFile := testutil.WriteToNewTempFile(s.T(), fmt.Sprintf("%smalformed", generatedStd))
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().Error(err)
 
 	// Sign batch malformed tx file signature only.
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
 }
 
-func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
+func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
@@ -168,13 +166,13 @@ func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
 	require.NoError(err)
 
 	// query account info
-	queryResJSON, err := authtest.QueryAccountExec(val1.ClientCtx, val1.Address)
+	queryResJSON, err := QueryAccountExec(val1.ClientCtx, val1.Address)
 	require.NoError(err)
 	var account authtypes.AccountI
 	require.NoError(val1.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	/****  test signature-only  ****/
-	res, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
+	res, err := TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
 		sigOnlyFlag, signModeAminoFlag)
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
@@ -184,7 +182,7 @@ func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
 	require.Equal(account.GetSequence(), sigs[0].Sequence)
 
 	/****  test full output  ****/
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, signModeAminoFlag)
+	res, err = TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, signModeAminoFlag)
 	require.NoError(err)
 
 	// txCfg.UnmarshalSignatureJSON can't unmarshal a fragment of the signature, so we create this structure.
@@ -199,14 +197,14 @@ func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
 	/****  test file output  ****/
 	filenameSigned := filepath.Join(s.T().TempDir(), "test_sign_out.json")
 	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
-	_, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
+	_, err = TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
 	require.NoError(err)
 	fContent, err := ioutil.ReadFile(filenameSigned)
 	require.NoError(err)
 	require.Equal(res.String(), string(fContent))
 
 	/****  try to append to the previously signed transaction  ****/
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
+	res, err = TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		sigOnlyFlag, signModeAminoFlag)
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey(), valInfo.GetPubKey())
@@ -217,12 +215,13 @@ func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
 	// account. Changing the file is too much hacking, because TxDecoder returns sdk.Tx, which doesn't
 	// provide functionality to check / manage `auth_info`.
 	// Cases with different keys are are covered in unit tests of `tx.Sign`.
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
+	res, err = TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		sigOnlyFlag, "--overwrite", signModeAminoFlag)
+	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 
 	/****  test flagAmino  ****/
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
+	res, err = TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
 		"--amino=true", signModeAminoFlag)
 	require.NoError(err)
 
@@ -393,23 +392,23 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), finalGeneratedTx.String())
 
 	// Test validate-signatures
-	res, err := authtest.TxValidateSignaturesExec(val1.ClientCtx, unsignedTxFile.Name())
+	res, err := TxValidateSignaturesExec(val1.ClientCtx, unsignedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
 	s.Require().True(strings.Contains(res.String(), fmt.Sprintf("Signers:\n  0: %v\n\nSignatures:\n\n", val1.Address.String())))
 
 	// Test sign
 
 	// Does not work in offline mode
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline")
+	_, err = TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
 	// But works offline if we set account number and sequence
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	res, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
+	_, err = TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name(), "--offline", "--account-number", "1", "--sequence", "1")
 	s.Require().NoError(err)
 
 	// Sign transaction
-	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
+	signedTx, err := TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
 	s.Require().NoError(err)
 	signedFinalTx, err := txCfg.TxJSONDecoder()(signedTx.Bytes())
 	s.Require().NoError(err)
@@ -425,7 +424,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
 	// validate Signature
-	res, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
+	res, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 	s.Require().True(strings.Contains(res.String(), "[OK]"))
 
@@ -440,14 +439,14 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	// Test broadcast
 
 	// Does not work in offline mode
-	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
+	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name(), "--offline")
 	s.Require().EqualError(err, "cannot broadcast tx during offline mode")
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Broadcast correct transaction.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
-	res, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -510,18 +509,18 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 
 	// Multisign, sign with one signature
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account1Signature, err := TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-	multiSigWith1Signature, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name())
+	multiSigWith1Signature, err := TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name())
 	s.Require().NoError(err)
 
 	// Save tx to file
 	multiSigWith1SignatureFile := testutil.WriteToNewTempFile(s.T(), multiSigWith1Signature.String())
 
-	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, multiSigWith1SignatureFile.Name())
+	_, err = TxValidateSignaturesExec(val1.ClientCtx, multiSigWith1SignatureFile.Name())
 	s.Require().Error(err)
 }
 
@@ -540,12 +539,12 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 	savedTxFile := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())
 
 	// Encode
-	encodeExec, err := authtest.TxEncodeExec(val1.ClientCtx, savedTxFile.Name())
+	encodeExec, err := TxEncodeExec(val1.ClientCtx, savedTxFile.Name())
 	s.Require().NoError(err)
 	trimmedBase64 := strings.Trim(encodeExec.String(), "\"\n")
 
 	// Check that the transaction decodes as expected
-	decodedTx, err := authtest.TxDecodeExec(val1.ClientCtx, trimmedBase64)
+	decodedTx, err := TxDecodeExec(val1.ClientCtx, trimmedBase64)
 	s.Require().NoError(err)
 
 	txCfg := val1.ClientCtx.TxConfig
@@ -616,28 +615,28 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	// Sign with account1
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account1Signature, err := TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
 	// Sign with account1
-	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account2Signature, err := TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
-	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), multiSigWith2Signatures.String())
 
-	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
+	_, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
-	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -662,7 +661,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 		val1, multisigInfo.GetAddress(),
 		sdk.NewCoins(sendTokens),
 	)
-
+	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
@@ -693,33 +692,33 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	// Sign with account1
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account1Signature, err := TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
 	// Sign with account1
-	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account2Signature, err := TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
 	// Does not work in offline mode.
-	_, err = authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
+	_, err = TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
 	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", account1.GetAddress()))
 
 	val1.ClientCtx.Offline = false
-	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// Write the output to disk
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), multiSigWith2Signatures.String())
 
-	_, err = authtest.TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
+	_, err = TxValidateSignaturesExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	val1.ClientCtx.BroadcastMode = flags.BroadcastBlock
-	_, err = authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	_, err = TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -734,6 +733,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
@@ -764,20 +764,20 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
 	// sign-batch file
-	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	res, err := TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
 	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
 
 	// sign-batch file with account2
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	res, err = TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// write sigs to file2
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
-	res, err = authtest.TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name())
+	_, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
 }
 
@@ -790,6 +790,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
@@ -819,26 +820,26 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	filename := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	queryResJSON, err := authtest.QueryAccountExec(val.ClientCtx, multisigInfo.GetAddress())
+	queryResJSON, err := QueryAccountExec(val.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 	var account authtypes.AccountI
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	// sign-batch file
-	res, err := authtest.TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err := TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
 	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
 
 	// sign-batch file with account2
-	res, err = authtest.TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err = TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// multisign the file
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
-	res, err = authtest.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
+	res, err = TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
 
@@ -846,7 +847,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	for _, signedTx := range signedTxs {
 		signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx)
 		val.ClientCtx.BroadcastMode = flags.BroadcastBlock
-		res, err = authtest.TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
+		_, err = TxBroadcastExec(val.ClientCtx, signedTxFile.Name())
 		s.Require().NoError(err)
 		s.Require().NoError(s.network.WaitForNextBlock())
 	}
@@ -878,7 +879,7 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
 
-			out, err := authtest.QueryAccountExec(clientCtx, tc.address)
+			out, err := QueryAccountExec(clientCtx, tc.address)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
@@ -905,7 +906,7 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 	s.Require().NotEmpty(res.Accounts)
 }
 
-func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
+func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
 	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
 
@@ -916,7 +917,7 @@ func TestGetBroadcastCommand_OfflineFlag(t *testing.T) {
 	require.EqualError(t, cmd.Execute(), "cannot broadcast tx during offline mode")
 }
 
-func TestGetBroadcastCommand_WithoutOfflineFlag(t *testing.T) {
+func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}
 	txCfg := simapp.MakeTestEncodingConfig().TxConfig
 	clientCtx = clientCtx.WithTxConfig(txCfg)
@@ -1019,7 +1020,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 
 	// Sign the file with the unsignedTx.
-	signedTx, err := authtest.TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
+	signedTx, err := TxSignExec(val1.ClientCtx, val1.Address, unsignedTxFile.Name())
 	s.Require().NoError(err)
 
 	// Remove the signerInfo's `public_key` field manually from the signedTx.
@@ -1037,14 +1038,14 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 
 	// Broadcast tx, test that it shouldn't panic.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
-	out, err := authtest.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	out, err := TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 	var res sdk.TxResponse
 	s.Require().NoError(val1.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &res))
 	s.Require().NotEqual(0, res.Code)
 }
 
-func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
+func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	// test case:
 	// Create a transaction with 2 messages which has to be signed with 2 different keys
 	// Sign and append the signatures using the CLI with Amino signing mode.
@@ -1075,14 +1076,14 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	unsignedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 
 	// Let val0 sign first the file with the unsignedTx.
-	signedByVal0, err := authtest.TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite", "--sign-mode=amino-json")
+	signedByVal0, err := TxSignExec(val0.ClientCtx, val0.Address, unsignedTxFile.Name(), "--overwrite", "--sign-mode=amino-json")
 	require.NoError(err)
 	signedByVal0File := testutil.WriteToNewTempFile(s.T(), signedByVal0.String())
 
 	// Then let val1 sign the file with signedByVal0.
 	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
 	require.NoError(err)
-	signedTx, err := authtest.TxSignExec(
+	signedTx, err := TxSignExec(
 		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
 		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq), "--sign-mode=amino-json",
 	)
@@ -1090,7 +1091,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
 	// Now let's try to send this tx.
-	res, err := authtest.TxBroadcastExec(
+	res, err := TxBroadcastExec(
 		val0.ClientCtx,
 		signedTxFile.Name(),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -1119,8 +1120,4 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 
 	flags = append(flags, extraFlags...)
 	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

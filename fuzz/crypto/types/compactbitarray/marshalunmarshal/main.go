@@ -12,5 +12,11 @@ func Fuzz(data []byte) int {
 	if cba == nil {
 		panic("Inconsistency, no error, yet BitArray is nil")
 	}
+	if cba.SetIndex(-1, true) {
+		panic("Set negative index success")
+	}
+	if cba.GetIndex(-1) {
+		panic("Get negative index success")
+	}
 	return 1
 }

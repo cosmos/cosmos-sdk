@@ -3,10 +3,6 @@
 # NOTE: Order is important; the last matching pattern takes the 
 # most precedence.
 
-# Secondary repo maintainers, substitutes of the primary
-# maintainers when they become MIA
-*       @cwgoes @marbar3778 @ebuchman @robert-zaremba @amaurym @fedekunze @odeke-em
-
 # Primary repo maintainers
-*       @aaronc @alexanderbez @zmanian @sunnya97
+*       @aaronc @alexanderbez
 

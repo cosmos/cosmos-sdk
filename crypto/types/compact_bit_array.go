@@ -54,7 +54,7 @@ func (bA *CompactBitArray) GetIndex(i int) bool {
 	if bA == nil {
 		return false
 	}
-	if i >= bA.Count() {
+	if i < 0 || i >= bA.Count() {
 		return false
 	}
 
@@ -68,7 +68,7 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 		return false
 	}
 
-	if i >= bA.Count() {
+	if i < 0 || i >= bA.Count() {
 		return false
 	}
 
@@ -262,6 +262,9 @@ func CompactUnmarshal(bz []byte) (*CompactBitArray, error) {
 	}
 
 	size, n := binary.Uvarint(bz)
+	if n < 0 || n >= len(bz) {
+		return nil, fmt.Errorf("compact bit array: n=%d is out of range of len(bz)=%d", n, len(bz))
+	}
 	bz = bz[n:]
 
 	if len(bz) != int(size+7)/8 {

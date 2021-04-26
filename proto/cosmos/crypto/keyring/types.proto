@@ -49,7 +49,7 @@ message OfflineInfo {
   option (gogoproto.goproto_stringer) = false;
 
   string name = 1;
-  bytes key = 2; [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
+  bytes key = 2 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
   PubKeyType algo = 3;
 }
 
@@ -58,14 +58,12 @@ message MultiInfo {
   option (gogoproto.goproto_stringer) = false;
 
   string name = 1;
-  bytes key = 2; [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
+  bytes key = 2 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
   uint32 threshold = 3;
   repeated MultisigPubKeyInfo keys = 4;
 }
 
 message MultisigPubKeyInfo {
-  bytes key = 1; [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
+  bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
   uint32 weight = 2;
-
-
 }

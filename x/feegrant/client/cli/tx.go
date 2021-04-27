@@ -55,9 +55,9 @@ func NewCmdFeeGrant() *cobra.Command {
 				ignored as it is implied from [granter].
 
 Examples:
-%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 36000 or
+%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z or
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --period 3600 --period-limit 10stake --expiration 36000 or
-%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 36000 
+%s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z 
 	--allowed-messages "/cosmos.gov.v1beta1.Msg/SubmitProposal,/cosmos.gov.v1beta1.Msg/Vote"
 				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
@@ -92,7 +92,7 @@ Examples:
 				return err
 			}
 
-			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			exp, err := cmd.Flags().GetString(FlagExpiration)
 			if err != nil {
 				return err
 			}
@@ -101,9 +101,13 @@ Examples:
 				SpendLimit: limit,
 			}
 
-			if exp != 0 {
-				expDuration := time.Now().Add(time.Duration(exp) * time.Second)
-				basic.Expiration = &expDuration
+			var expiresAtTime time.Time
+			if exp != "" {
+				expiresAtTime, err = time.Parse(time.RFC3339, exp)
+				if err != nil {
+					return err
+				}
+				basic.Expiration = &expiresAtTime
 			}
 
 			var grant types.FeeAllowanceI
@@ -127,8 +131,9 @@ Examples:
 				}
 
 				if periodClock > 0 && periodLimit != nil {
-					if exp > 0 && periodClock > exp {
-						return fmt.Errorf("period(%d) cannot be greater than the expiration(%d)", periodClock, exp)
+					periodReset := time.Now().Add(time.Duration(periodClock) * time.Second)
+					if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
+						return fmt.Errorf("period(%d) cannot reset after expiration(%v)", periodClock, exp)
 					}
 
 					periodic := types.PeriodicFeeAllowance{
@@ -176,7 +181,7 @@ Examples:
 
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().StringSlice(FlagAllowedMsgs, []string{}, "Set of allowed messages for fee allowance")
-	cmd.Flags().Int64(FlagExpiration, 0, "The second unit of time duration which the grant is active for the user")
+	cmd.Flags().String(FlagExpiration, "", "The RFC 3339 timestamp after which the grant expires for the user")
 	cmd.Flags().String(FlagSpendLimit, "", "Spend limit specifies the max limit can be used, if not mentioned there is no limit")
 	cmd.Flags().Int64(FlagPeriod, 0, "period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset")
 	cmd.Flags().String(FlagPeriodLimit, "", "period limit specifies the maximum number of coins that can be spent in the period")
@@ -187,11 +192,11 @@ Examples:
 // NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeFeeAllowance transaction.
 func NewCmdRevokeFeegrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [granter_address] [grantee_address]",
+		Use:   "revoke [granter] [grantee]",
 		Short: "revoke fee-grant",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the'--from' flag is
-			ignored as it is implied from [granter_address].
+			ignored as it is implied from [granter].
 
 Example:
  $ %s tx %s revoke cosmos1skj.. cosmos1skj..

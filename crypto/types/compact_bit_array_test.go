@@ -184,6 +184,17 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 	}
 }
 
+// Ensure that CompactUnmarshal does not blindly try to slice using
+// a negative/out of bounds index of size returned from binary.Uvarint.
+// See issue https://github.com/cosmos/cosmos-sdk/issues/9165
+func TestCompactMarshalUnmarshalReturnsErrorOnInvalidSize(t *testing.T) {
+	malicious := []byte{0xd7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x24, 0x28}
+	cba, err := CompactUnmarshal(malicious)
+	require.Error(t, err)
+	require.Nil(t, cba)
+	require.Contains(t, err.Error(), "n=-11 is out of range of len(bz)=13")
+}
+
 func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 	testCases := []struct {
 		marshalledBA   string
@@ -227,6 +238,15 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 			val := (r.Int63() % 2) == 0
 			bA.SetIndex(index, val)
 			require.Equal(t, val, bA.GetIndex(index), "bA.SetIndex(%d, %v) failed on bit array: %s", index, val, copy)
+
+			// Ensure that passing in negative indices to .SetIndex and .GetIndex do not
+			// panic. See issue https://github.com/cosmos/cosmos-sdk/issues/9164.
+			// To intentionally use negative indices, We want only values that aren't 0.
+			if index == 0 {
+				continue
+			}
+			require.False(t, bA.SetIndex(-index, val))
+			require.False(t, bA.GetIndex(-index))
 		}
 	}
 }

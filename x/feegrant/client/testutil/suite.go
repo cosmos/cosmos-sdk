@@ -1,6 +1,4 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"fmt"
@@ -40,6 +38,10 @@ type IntegrationTestSuite struct {
 	addedGrant   types.FeeAllowanceGrant
 }
 
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
+
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
@@ -47,11 +49,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 3
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.New(s.T(), s.cfg)
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -261,8 +259,8 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     proto.Message
 		expectedCode uint32
+		respType     proto.Message
 	}{
 		{
 			"wrong granter address",
@@ -275,7 +273,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			true, nil, 0,
+			true, 0, nil,
 		},
 		{
 			"wrong grantee address",
@@ -288,7 +286,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			true, nil, 0,
+			true, 0, nil,
 		},
 		{
 			"valid basic fee grant",
@@ -301,7 +299,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant without spend limit",
@@ -313,7 +311,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant without expiration",
@@ -326,7 +324,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid basic fee grant without spend-limit and expiration",
@@ -338,7 +336,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"try to add existed grant",
@@ -351,7 +349,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 18,
+			false, 18, &sdk.TxResponse{},
 		},
 		{
 			"invalid number of args(periodic fee grant)",
@@ -366,7 +364,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			true, nil, 0,
+			true, 0, nil,
 		},
 		{
 			"period mentioned and period limit omitted, invalid periodic grant",
@@ -381,7 +379,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			true, nil, 0,
+			true, 0, nil,
 		},
 		{
 			"period cannot be greater than the actual expiration(periodic fee grant)",
@@ -397,7 +395,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			true, nil, 0,
+			true, 0, nil,
 		},
 		{
 			"valid periodic fee grant",
@@ -413,7 +411,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid periodic fee grant without spend-limit",
@@ -428,7 +426,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid periodic fee grant without expiration",
@@ -443,7 +441,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"valid periodic fee grant without spend-limit and expiration",
@@ -457,7 +455,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			false, &sdk.TxResponse{}, 0,
+			false, 0, &sdk.TxResponse{},
 		},
 		{
 			"invalid expiration",
@@ -472,7 +470,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				},
 				commonFlags...,
 			),
-			true, nil, 0,
+			true, 0, nil,
 		},
 	}
 
@@ -512,8 +510,8 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 		name         string
 		args         []string
 		expectErr    bool
-		respType     proto.Message
 		expectedCode uint32
+		respType     proto.Message
 	}{
 		{
 			"invalid grantee",
@@ -525,9 +523,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			true,
-			nil,
-			0,
+			true, 0, nil,
 		},
 		{
 			"invalid grantee",
@@ -539,9 +535,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			true,
-			nil,
-			0,
+			true, 0, nil,
 		},
 		{
 			"Non existed grant",
@@ -553,9 +547,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false,
-			&sdk.TxResponse{},
-			4,
+			false, 4, &sdk.TxResponse{},
 		},
 		{
 			"Valid revoke",
@@ -567,9 +559,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				},
 				commonFlags...,
 			),
-			false,
-			&sdk.TxResponse{},
-			0,
+			false, 0, &sdk.TxResponse{},
 		},
 	}
 
@@ -815,10 +805,6 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }
 
 func getFormattedExpiration(duration int64) string {

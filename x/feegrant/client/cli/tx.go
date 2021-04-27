@@ -196,7 +196,7 @@ func NewCmdRevokeFeegrant() *cobra.Command {
 		Short: "revoke fee-grant",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`revoke fee grant from a granter to a grantee. Note, the'--from' flag is
-			ignored as it is implied from [granter_address].
+			ignored as it is implied from [granter].
 
 Example:
  $ %s tx %s revoke cosmos1skj.. cosmos1skj..

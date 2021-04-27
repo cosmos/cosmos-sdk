@@ -43,7 +43,7 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) typ
 	periodicAllowance, err := types.NewFeeAllowanceGrant(granter, grantee, &types.PeriodicFeeAllowance{
 		Basic:            basic,
 		PeriodSpendLimit: periodSpendLimit,
-		Period:           types.ClockDuration(time.Hour),
+		Period:           time.Hour,
 	})
 	if err != nil {
 		panic(err)

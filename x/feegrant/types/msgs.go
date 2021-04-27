@@ -13,12 +13,6 @@ var (
 	_    types.UnpackInterfacesMessage = &MsgGrantFeeAllowance{}
 )
 
-// feegrant message types
-const (
-	TypeMsgGrantFeeAllowance  = "grant_fee_allowance"
-	TypeMsgRevokeFeeAllowance = "revoke_fee_allowance"
-)
-
 // NewMsgGrantFeeAllowance creates a new MsgGrantFeeAllowance.
 //nolint:interfacer
 func NewMsgGrantFeeAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantFeeAllowance, error) {

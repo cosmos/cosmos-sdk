@@ -44,3 +44,12 @@ CI:
 CLI:
   - client/**/*
   - x/*/client/**/*
+docs:
+  - docs/**/*
+  - x/*/spec/**/*
+cosmovisor:
+  - cosmovisor/**/*
+rosetta:
+  - contrib/rosetta/**/*
+keys:
+  - client/keys/**/*

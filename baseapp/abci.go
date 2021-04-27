@@ -798,8 +798,6 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 }
 
 func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
-	var resp abci.ResponseQuery
-
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
 		return sdkerrors.QueryResult(
@@ -808,6 +806,8 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 			),
 		)
 	}
+
+	var resp abci.ResponseQuery
 
 	cmd, typ, arg := path[1], path[2], path[3]
 	switch cmd {

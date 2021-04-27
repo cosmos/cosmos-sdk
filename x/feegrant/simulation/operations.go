@@ -68,11 +68,11 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
 		if grantee.Address.String() == granter.Address.String() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, "grantee and granter cannot be same"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, "grantee and granter cannot be same"), nil, nil
 		}
 
 		if f, _ := k.GetFeeAllowance(ctx, granter.Address, grantee.Address); f != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, "fee allowance exists"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, "fee allowance exists"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, granter.Address)
@@ -80,12 +80,12 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}
 
 		spendableCoins = spendableCoins.Sub(fees)
 		if spendableCoins.Empty() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
 		}
 
 		msg, err := types.NewMsgGrantAllowance(&types.BasicAllowance{
@@ -94,14 +94,14 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		}, granter.Address, grantee.Address)
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.GrantAllowance(context.Background(), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}
 		tx, err := helpers.GenTx(
 			txGen,
@@ -175,7 +175,7 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.RevokeAllowance(context.Background(), &msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}
 
 		tx, err := helpers.GenTx(

@@ -13,14 +13,7 @@ var (
 	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 
-// feegrant message types
-const (
-	TypeMsgGrantFeeAllowance  = "grant_allowance"
-	TypeMsgRevokeFeeAllowance = "revoke_allowance"
-)
-
 // NewMsgGrantAllowance creates a new MsgGrantFeeAllowance.
-//nolint:interfacer
 func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
@@ -85,7 +78,6 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 }
 
 // NewMsgRevokeAllowance creates a new MsgGrantRevokeFeeAllowance.
-//nolint:interfacer
 func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }

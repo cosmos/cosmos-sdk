@@ -47,6 +47,8 @@ CLI:
 docs:
   - docs/**/*
   - x/*/spec/**/*
+ ADR:
+ - docs/architecture/**/*
 cosmovisor:
   - cosmovisor/**/*
 rosetta:

@@ -802,7 +802,7 @@ func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 
 	// "/p2p" prefix for p2p queries
 	if len(path) < 4 {
-		resp = sdkerrors.QueryResult(
+		return sdkerrors.QueryResult(
 			sdkerrors.Wrap(
 				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
 			),

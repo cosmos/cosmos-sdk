@@ -1,0 +1,57 @@
+"Scope: x/auth":
+  - x/auth/**/*
+"Scope: x/authz":
+  - x/authz/**/*
+"Scope: x/bank":
+  - x/bank/**/*
+"Scope: x/capability":
+  - x/capability/**/*
+"Scope: x/crisis":
+  - x/crisis/**/*
+"Scope: x/distribution":
+  - x/distribution/**/*
+"Scope: x/evidence":
+  - x/evidence/**/*
+"Scope: x/feegrant":
+  - x/feegrant/**/*
+"Scope: x/genutil":
+  - x/genutil/**/*
+"Scope: x/gov":
+  - x/gov/**/*
+"Scope: x/mint":
+  - x/mint/**/*
+"Scope: x/params":
+  - x/params/**/*
+"Scope: Simulations":
+  - x/simulation/**/*
+  - x/*/simulation/**/*
+"Scope: x/slashing":
+  - x/slashing/**/*
+"Scope: x/staking":
+  - x/staking/**/*
+"Scope: x/upgrade":
+  - x/upgrade/**/*
+"Scope: Cosmovisor":
+  - cosmovisor/**/*
+"Scope: Rosetta":
+  - contrib/rosetta/**/*
+"Scope: Keys":
+  - client/keys/**/*
+"Type: Build":
+  - Makefile
+  - Dockerfile
+  - docker-compose.yml
+  - scripts/*
+"Type: CI":
+  - .github/**/*.yml
+  - buf.yaml
+  - .mergify.yml
+  - .golangci.yml
+"Scope: CLI":
+  - client/**/*
+  - x/*/client/**/*
+"Type: Docs":
+  - docs/**/*
+  - x/*/spec/**/*
+"Type: ADR":
+    - docs/architecture/**/*

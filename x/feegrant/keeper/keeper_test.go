@@ -39,14 +39,15 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	exp := ctx.BlockTime().AddDate(1, 0, 0)
 	basic := &types.BasicFeeAllowance{
 		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(334455),
+		Expiration: &exp,
 	}
 
 	basic2 := &types.BasicFeeAllowance{
 		SpendLimit: eth,
-		Expiration: types.ExpiresAtHeight(172436),
+		Expiration: &exp,
 	}
 
 	// let's set up some initial state here
@@ -172,14 +173,16 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// some helpers
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+
+	exp := ctx.BlockTime().AddDate(1, 0, 0)
 	future := &types.BasicFeeAllowance{
 		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(5678),
+		Expiration: &exp,
 	}
 
 	expired := &types.BasicFeeAllowance{
 		SpendLimit: eth,
-		Expiration: types.ExpiresAtHeight(55),
+		Expiration: &exp,
 	}
 
 	// for testing limits of the contract
@@ -189,7 +192,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	_ = smallAtom
 	futureAfterSmall := &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
-		Expiration: types.ExpiresAtHeight(5678),
+		Expiration: &exp,
 	}
 
 	// then lots of queries

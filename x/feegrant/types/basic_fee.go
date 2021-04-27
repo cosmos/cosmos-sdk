@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -38,16 +36,6 @@ func (a *BasicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) 
 	}
 
 	return false, nil
-}
-
-// PrepareForExport will adjust the expiration based on export time. In particular,
-// it will subtract the dumpHeight from any height-based expiration to ensure that
-// the elapsed number of blocks this allowance is valid for is fixed.
-func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	return &BasicFeeAllowance{
-		SpendLimit: a.SpendLimit,
-		Expiration: a.Expiration.PrepareForExport(dumpTime, dumpHeight),
-	}
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks

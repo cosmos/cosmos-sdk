@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,11 +18,6 @@ type FeeAllowanceI interface {
 	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 	// (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
 	Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
-
-	// If we export fee allowances the timing info will be quite off (eg. go from height 100000 to 0)
-	// This callback allows the fee-allowance to change it's state and return a copy that is adjusted
-	// given the time and height of the actual dump (may safely return self if no changes needed)
-	PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI
 
 	// ValidateBasic should evaluate this FeeAllowance for internal consistency.
 	// Don't allow negative amounts, or negative periods for example.

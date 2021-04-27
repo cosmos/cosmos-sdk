@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,39 +19,34 @@ func TestGrant(t *testing.T) {
 	addr2, err := sdk.AccAddressFromBech32("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")
 	require.NoError(t, err)
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
+	now := time.Now()
+	oneYear := now.AddDate(1, 0, 0)
 
 	goodGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
 		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
+		Expiration: &oneYear,
 	})
 	require.NoError(t, err)
 
 	noGranteeGrant, err := types.NewFeeAllowanceGrant(addr2, nil, &types.BasicFeeAllowance{
 		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
+		Expiration: &oneYear,
 	})
 	require.NoError(t, err)
 
 	noGranterGrant, err := types.NewFeeAllowanceGrant(nil, addr, &types.BasicFeeAllowance{
 		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
+		Expiration: &oneYear,
 	})
 	require.NoError(t, err)
 
 	selfGrant, err := types.NewFeeAllowanceGrant(addr2, addr2, &types.BasicFeeAllowance{
 		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
-	})
-	require.NoError(t, err)
-
-	badAllowanceGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
-		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(-1),
+		Expiration: &oneYear,
 	})
 	require.NoError(t, err)
 
 	cdc := app.AppCodec()
-	// RegisterLegacyAminoCodec(cdc)
 
 	cases := map[string]struct {
 		grant types.FeeAllowanceGrant
@@ -68,9 +64,6 @@ func TestGrant(t *testing.T) {
 		},
 		"self-grant": {
 			grant: selfGrant,
-		},
-		"bad allowance": {
-			grant: badAllowanceGrant,
 		},
 	}
 
@@ -94,7 +87,15 @@ func TestGrant(t *testing.T) {
 			err = loaded.ValidateBasic()
 			require.NoError(t, err)
 
-			assert.Equal(t, tc.grant, loaded)
+			require.Equal(t, loaded.Grantee, tc.grant.Grantee)
+			require.Equal(t, loaded.Granter, tc.grant.Granter)
+			expected, err := loaded.GetFeeGrant()
+			require.NoError(t, err)
+			actual, err := tc.grant.GetFeeGrant()
+			allowance := expected.(*types.BasicFeeAllowance)
+			allowance1 := actual.(*types.BasicFeeAllowance)
+			require.NoError(t, err)
+			assert.Equal(t, allowance.String(), allowance1.String())
 		})
 	}
 }

@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -87,23 +85,6 @@ func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.
 	}
 
 	return true
-}
-
-// PrepareForExport will adjust the expiration based on export time. In particular,
-// it will subtract the dumpHeight from any height-based expiration to ensure that
-// the elapsed number of blocks this allowance is valid for is fixed.
-func (a *AllowedMsgFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	allowance, err := a.GetAllowance()
-	if err != nil {
-		panic("failed to get allowance")
-	}
-
-	f, err := NewAllowedMsgFeeAllowance(allowance.PrepareForExport(dumpTime, dumpHeight), a.AllowedMessages)
-	if err != nil {
-		panic("failed to export filtered fee allowance")
-	}
-
-	return f
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks

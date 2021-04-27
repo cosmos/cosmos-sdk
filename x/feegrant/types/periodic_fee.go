@@ -73,23 +73,6 @@ func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight i
 	}
 }
 
-// PrepareForExport will adjust the expiration based on export time. In particular,
-// it will subtract the dumpHeight from any height-based expiration to ensure that
-// the elapsed number of blocks this allowance is valid for is fixed.
-// (For PeriodReset and Basic.Expiration)
-func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	return &PeriodicFeeAllowance{
-		Basic: BasicFeeAllowance{
-			SpendLimit: a.Basic.SpendLimit,
-			Expiration: a.Basic.Expiration.PrepareForExport(dumpTime, dumpHeight),
-		},
-		PeriodSpendLimit: a.PeriodSpendLimit,
-		PeriodCanSpend:   a.PeriodCanSpend,
-		Period:           a.Period,
-		PeriodReset:      a.PeriodReset.PrepareForExport(dumpTime, dumpHeight),
-	}
-}
-
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
 func (a PeriodicFeeAllowance) ValidateBasic() error {
 	if err := a.Basic.ValidateBasic(); err != nil {

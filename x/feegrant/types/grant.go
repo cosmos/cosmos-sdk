@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	proto "github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -69,35 +67,4 @@ func (a FeeAllowanceGrant) GetFeeGrant() (FeeAllowanceI, error) {
 func (a FeeAllowanceGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
-}
-
-// PrepareForExport will make all needed changes to the allowance to prepare to be
-// re-imported at height 0, and return a copy of this grant.
-func (a FeeAllowanceGrant) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceGrant {
-	f, err := a.GetFeeGrant()
-	if err != nil {
-		return FeeAllowanceGrant{}
-	}
-
-	feegrant := f.PrepareForExport(dumpTime, dumpHeight)
-	if feegrant == nil {
-		return FeeAllowanceGrant{}
-	}
-
-	granter, err := sdk.AccAddressFromBech32(a.Granter)
-	if err != nil {
-		return FeeAllowanceGrant{}
-	}
-
-	grantee, err := sdk.AccAddressFromBech32(a.Grantee)
-	if err != nil {
-		return FeeAllowanceGrant{}
-	}
-
-	grant, err := NewFeeAllowanceGrant(granter, grantee, feegrant)
-	if err != nil {
-		return FeeAllowanceGrant{}
-	}
-
-	return grant
 }

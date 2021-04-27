@@ -209,7 +209,7 @@ channel, as well as how they will encode/decode it. This process is not specifie
 to each application module to determine how to implement this agreement. However, for most
 applications this will happen as a version negotiation during the channel handshake. While more
 complex version negotiation is possible to implement inside the channel opening handshake, a very
-simple version negotation is implemented in the [ibc-transfer module](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc-transfer/module.go).
+simple version negotation is implemented in the [ibc-transfer module](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/applications/transfer/module.go).
 
 Thus, a module must define its a custom packet data structure, along with a well-defined way to
 encode and decode it to and from `[]byte`.
@@ -336,7 +336,7 @@ not want the packet processing to revert. Instead, we may want to encode this fa
 acknowledgement and finish processing the packet. This will ensure the packet cannot be replayed,
 and will also allow the sender module to potentially remediate the situation upon receiving the
 acknowledgement. An example of this technique is in the `ibc-transfer` module's
-[`OnRecvPacket`](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc-transfer/module.go).
+[`OnRecvPacket`](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/applications/transfer/module.go).
 :::
 
 ### Acknowledgements
@@ -360,7 +360,7 @@ example above. [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-c
 specifies a recommended format for acknowledgements. This acknowledgement type can be imported from
 [channel types](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/core/04-channel/types).
 
-While modules may choose arbitrary acknowledgement structs, a default acknowledgement types is provided by IBC [here](https://github.com/cosmos/cosmos-sdk/blob/master/proto/ibc/core/channel/v1/channel.proto):
+While modules may choose arbitrary acknowledgement structs, a default acknowledgement types is provided by IBC [here](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/proto/ibc/core/channel/v1/channel.proto):
 
 ```proto
 // Acknowledgement is the recommended acknowledgement format to be used by
@@ -455,13 +455,13 @@ which implements everything discussed above.
 Here are the useful parts of the module to look at:
 
 [Binding to transfer
-port](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/genesis.go)
+port](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/applications/transfer/genesis.go)
 
 [Sending transfer
-packets](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/keeper/relay.go)
+packets](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/applications/transfer/keeper/relay.go)
 
 [Implementing IBC
-callbacks](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/module.go)
+callbacks](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/applications/transfer/module.go)
 
 ## Next {hide}
 

@@ -25,7 +25,7 @@ Integrating the IBC module to your SDK-based application is straighforward. The 
 ### Module `BasicManager` and `ModuleAccount` permissions
 
 The first step is to add the following modules to the `BasicManager`: `x/capability`, `x/ibc`,
-`x/evidence` and `x/ibc-transfer`. After that, we need to grant `Minter` and `Burner` permissions to
+`x/evidence` and `x/ibc/applications/transfer`. After that, we need to grant `Minter` and `Burner` permissions to
 the `ibc-transfer` `ModuleAccount` to mint and burn relayed tokens.
 
 ```go
@@ -75,7 +75,7 @@ type App struct {
 ### Configure the `Keepers`
 
 During initialization, besides initializing the IBC `Keepers` (for the  `x/ibc`, and
-`x/ibc-transfer` modules), we need to grant specific capabilities through the capability module
+`x/ibc/applications/transfer` modules), we need to grant specific capabilities through the capability module
 `ScopedKeepers` so that we can authenticate the object-capability permissions for each of the IBC
 channels.
 
@@ -204,7 +204,7 @@ past historical info at any given height in order to verify the light client `Co
 connection handhake.
 
 The IBC module also has
-[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc/core/02-client/abci.go) logic as
+[`BeginBlock`](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/core/02-client/abci.go) logic as
 well. This is optional as it is only required if your application uses the [localhost
 client](https://github.com/cosmos/ics/blob/master/spec/ics-009-loopback-client) to connect two
 different modules from the same chain.
@@ -245,7 +245,7 @@ func NewApp(...args) *App {
 
 That's it! You have now wired up the IBC module and are now able to send fungible tokens across
 different chains. If you want to have a broader view of the changes take a look into the SDK's
-[`SimApp`](https://github.com/cosmos/cosmos-sdk/blob/master/simapp/app.go).
+[`SimApp`](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/simapp/app.go).
 
 ## Next {hide}
 

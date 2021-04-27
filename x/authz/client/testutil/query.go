@@ -1,6 +1,4 @@
-// +build norace
-
-package cli_test
+package testutil
 
 import (
 	"fmt"
@@ -14,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
@@ -24,7 +21,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := authztestutil.ExecGrantAuthorization(
+	_, err := ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),
@@ -102,7 +99,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	grantee := s.grantee
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := authztestutil.ExecGrantAuthorization(
+	_, err := ExecGrantAuthorization(
 		val,
 		[]string{
 			grantee.String(),

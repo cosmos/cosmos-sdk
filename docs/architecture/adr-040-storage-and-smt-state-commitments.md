@@ -35,16 +35,18 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 We propose separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedger SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2 as  well).
 
+The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible about data serialization.
 
 ### Decouple state commitment from storage
 
+
 Separation of storage and commitment (by the SMT) will allow to optimize the different components according to their usage and access patterns.
 
-SMT will use it's own storage (could use the same database underneath) from the state machine store. For every `(key, value)` pair, the SMT will store `hash(key)` in a path and `hash(key, value)` in a leaf.
+SMT will use it's own storage (could use the same database underneath) from the state machine store. For every `(key, value)` pair, the SMT will store `hash(key)` in a path (needed to evenly distribute keys in the tree) and `hash(key, value)` in a leaf (to bind the (key, value) pair stored in the `SS`). Since we don't know a structure of a value (in particular if it contains the key) we hash both the key and the value in the `SC` leaf.
 
 For data access we propose 2 additional KV buckets:
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
-2. B2: `hash(key, value) → key`: an index needed to extract a value (through: B2 -> B1) having a only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
+2. B2: `hash(key, value) → key`: an index needed to extract a value (through: SMT → B2 → B1) having a only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
 3. we could use more buckets to optimize the app usage if needed.
 
 Above, we propose to use KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
@@ -83,14 +85,14 @@ NOTE: For the SDK storage, we may consider splitting that interface into `Commit
 
 Number of historical versions (snapshots) for `abci.Query` and fast sync is part of a node configuration, not a chain configuration. A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all snapshots.
 
-Pruning old snapshots is effectively done by DB. Whenever we update a record in SC, SMT will create a new one without removing the old one. Since we are using a snapshot for each block, we must update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
+Pruning old snapshots is effectively done by DB. Whenever we update a record in `SC`, SMT will create a new one without removing the old one. Since we are using a snapshot for each block, we must update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
 
 To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height.
 
 #### Accessing old state versions
 
 One of the functional requirements is to access old state. This is done through `abci.Query` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
-`abci.Query` doesn't need old state of SC. So, for efficiency, we should keep SC and SM Storage in different databases (however using the same DB engine). We will only create snapshots for
+`abci.Query` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine). We will only create snapshots for
 
 Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to a not deterministic execution.
 
@@ -99,7 +101,7 @@ We positively validated a snapshot mechanism for querying old state with regards
 
 ### Rollbacks
 
-We need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`,  we commit a root store - at that time, all changes are written to the SMT and to the SM Storage and a snapshot is created.
+We need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`,  we commit a root store - at that time, all changes are written to the SMT and to the `SS` and a snapshot is created.
 
 
 ## Consequences

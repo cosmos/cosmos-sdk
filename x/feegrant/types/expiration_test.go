@@ -14,28 +14,28 @@ func TestExpiresAt(t *testing.T) {
 	now := time.Now()
 
 	cases := map[string]struct {
-		example types.ExpiresAt
+		expires types.ExpiresAt
 		zero    bool
 		before  types.ExpiresAt
 		after   types.ExpiresAt
 	}{
 		"basic": {
-			example: types.ExpiresAtHeight(100),
+			expires: types.ExpiresAtHeight(100),
 			before:  types.ExpiresAtHeight(50),
 			after:   types.ExpiresAtHeight(122),
 		},
 		"zero": {
-			example: types.ExpiresAt{},
+			expires: types.ExpiresAt{},
 			zero:    true,
 			before:  types.ExpiresAtHeight(1),
 		},
 		"match height": {
-			example: types.ExpiresAtHeight(1000),
+			expires: types.ExpiresAtHeight(1000),
 			before:  types.ExpiresAtHeight(999),
 			after:   types.ExpiresAtHeight(1000),
 		},
 		"match time": {
-			example: types.ExpiresAtTime(now),
+			expires: types.ExpiresAtTime(now),
 			before:  types.ExpiresAtTime(now.Add(-1 * time.Second)),
 			after:   types.ExpiresAtTime(now.Add(1 * time.Second)),
 		},
@@ -44,15 +44,15 @@ func TestExpiresAt(t *testing.T) {
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
-			err := tc.example.ValidateBasic()
-			assert.Equal(t, tc.zero, tc.example.Undefined())
+			err := tc.expires.ValidateBasic()
+			assert.Equal(t, tc.zero, tc.expires.Undefined())
 			require.NoError(t, err)
 
 			if !tc.before.Undefined() {
-				assert.Equal(t, false, tc.example.IsExpired(tc.before.GetTime(), tc.before.GetHeight()))
+				assert.Equal(t, false, tc.expires.IsExpired(tc.before.GetTime(), tc.before.GetHeight()))
 			}
 			if !tc.after.Undefined() {
-				assert.Equal(t, true, tc.example.IsExpired(tc.after.GetTime(), tc.after.GetHeight()))
+				assert.Equal(t, true, tc.expires.IsExpired(tc.after.GetTime(), tc.after.GetHeight()))
 			}
 		})
 	}

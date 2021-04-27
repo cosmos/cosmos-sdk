@@ -22,7 +22,7 @@
   - x/mint/**/*
 "Scope: x/params":
   - x/params/**/*
-simulation:
+"Scope: Simulations":
   - x/simulation/**/*
   - x/*/simulation/**/*
 "Scope: x/slashing":

@@ -29,27 +29,27 @@ simulation:
   - x/slashing/**/*
 "Scope: x/staking":
   - x/staking/**/*
-x/upgrade:
+"Scope: x/upgrade":
   - x/upgrade/**/*
-build:
+"Type: Build":
   - Makefile
   - Dockerfile
   - docker-compose.yml
   - scripts/*
-CI:
+"Type: CI":
   - .github/**/*.yml
   - buf.yaml
   - .mergify.yml
   - .golangci.yml
-CLI:
+"Scope: CLI":
   - client/**/*
   - x/*/client/**/*
-docs:
+"Type: Docs":
   - docs/**/*
   - x/*/spec/**/*
-cosmovisor:
+"Scope; Cosmovisor":
   - cosmovisor/**/*
-rosetta:
+"Scope: Rosetta":
   - contrib/rosetta/**/*
-keys:
+"Scope: Keys":
   - client/keys/**/*

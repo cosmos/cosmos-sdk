@@ -29,6 +29,8 @@ x/slashing:
   - x/slashing/**/*
 x/staking:
   - x/staking/**/*
+x/upgrade:
+  - x/upgrade/**/*
 build:
   - Makefile
   - Dockerfile

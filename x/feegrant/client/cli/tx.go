@@ -102,8 +102,8 @@ Examples:
 			}
 
 			if exp != 0 {
-				expDuration := time.Duration(exp) * time.Second
-				basic.Expiration = types.ExpiresAtTime(time.Now().Add(expDuration))
+				expDuration := time.Now().Add(time.Duration(exp) * time.Second)
+				basic.Expiration = &expDuration
 			}
 
 			var grant types.FeeAllowanceI
@@ -133,8 +133,8 @@ Examples:
 
 					periodic := types.PeriodicFeeAllowance{
 						Basic:            basic,
-						Period:           types.ClockDuration(time.Duration(periodClock) * time.Second),
-						PeriodReset:      types.ExpiresAtTime(time.Now().Add(time.Duration(periodClock) * time.Second)),
+						Period:           time.Duration(periodClock) * time.Second,
+						PeriodReset:      time.Now().Add(time.Duration(periodClock) * time.Second),
 						PeriodSpendLimit: periodLimit,
 						PeriodCanSpend:   periodLimit,
 					}

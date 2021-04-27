@@ -3,7 +3,6 @@ package simulation_test
 import (
 	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -139,13 +138,14 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
+	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 	err := app.FeeGrantKeeper.GrantFeeAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,
 		&types.BasicFeeAllowance{
 			SpendLimit: feeCoins,
-			Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(30 * time.Hour)),
+			Expiration: &oneYear,
 		},
 	)
 	require.NoError(err)

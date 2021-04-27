@@ -3,7 +3,7 @@
 export FUZZ_ROOT="github.com/cosmos/cosmos-sdk"
 
 compile_go_fuzzer "$FUZZ_ROOT"/fuzz/crypto/hd/deriveprivatekeyforpath Fuzz fuzz_crypto_hd_deriveprivatekeyforpath fuzz
-
+compile_go_fuzzer "$FUZZ_ROOT"/fuzz/crypto/hd/newparamsfrompath Fuzz fuzz_crypto_hd_newparamsfrompath fuzz
 compile_go_fuzzer "$FUZZ_ROOT"/fuzz/crypto/types/compactbitarray/marshalunmarshal Fuzz fuzz_crypto_types_compactbitarray_marshalunmarshal fuzz
 
 compile_go_fuzzer "$FUZZ_ROOT"/fuzz/store/internal/proofs/createnonmembershipproof Fuzz fuzz_store_internal_proofs_createnonmembershipproof fuzz

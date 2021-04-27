@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 var (

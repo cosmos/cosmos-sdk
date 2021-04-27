@@ -7,11 +7,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // NewGrant returns new AuthrizationGrant
-func NewGrant(authorization exported.Authorization, expiration time.Time) (Grant, error) {
+func NewGrant(authorization authz.Authorization, expiration time.Time) (Grant, error) {
 	auth := Grant{
 		Expiration: expiration,
 	}
@@ -36,13 +36,13 @@ var (
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (auth Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var authorization exported.Authorization
+	var authorization authz.Authorization
 	return unpacker.UnpackAny(auth.Authorization, &authorization)
 }
 
 // GetAuthorization returns the cached value from the Grant.Authorization if present.
-func (auth Grant) GetAuthorization() exported.Authorization {
-	authorization, ok := auth.Authorization.GetCachedValue().(exported.Authorization)
+func (auth Grant) GetAuthorization() authz.Authorization {
+	authorization, ok := auth.Authorization.GetCachedValue().(authz.Authorization)
 	if !ok {
 		return nil
 	}

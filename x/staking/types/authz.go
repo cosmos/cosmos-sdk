@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // TODO: Revisit this once we have propoer gas fee framework.
@@ -25,19 +25,19 @@ func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, au
 		return nil, err
 	}
 
-	authorization := StakeAuthorization{}
+	a := StakeAuthorization{}
 	if allowedValidators != nil {
-		authorization.Validators = &StakeAuthorization_AllowList{AllowList: &StakeAuthorization_Validators{Address: allowedValidators}}
+		a.Validators = &StakeAuthorization_AllowList{AllowList: &StakeAuthorization_Validators{Address: allowedValidators}}
 	} else {
-		authorization.Validators = &StakeAuthorization_DenyList{DenyList: &StakeAuthorization_Validators{Address: deniedValidators}}
+		a.Validators = &StakeAuthorization_DenyList{DenyList: &StakeAuthorization_Validators{Address: deniedValidators}}
 	}
 
 	if amount != nil {
-		authorization.MaxTokens = amount
+		a.MaxTokens = amount
 	}
-	authorization.AuthorizationType = authzType
+	a.AuthorizationType = authzType
 
-	return &authorization, nil
+	return &a, nil
 }
 
 // MsgTypeURL implements Authorization.MsgTypeURL.

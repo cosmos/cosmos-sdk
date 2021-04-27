@@ -4,7 +4,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -19,7 +19,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 
 	registry.RegisterInterface(
 		"cosmos.authz.v1beta1.Authorization",
-		(*exported.Authorization)(nil),
+		(*authz.Authorization)(nil),
 		&bank.SendAuthorization{},
 		&GenericAuthorization{},
 		&staking.StakeAuthorization{},

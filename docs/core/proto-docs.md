@@ -1293,7 +1293,7 @@ one signer corresponding to the granter of the authorization.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `grantee` | [string](#string) |  |  |
-| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated | MsgService requests to execute. The x/authz will try to find a grant matching (msg.signers[0], grantee, MsgTypeURL(msg)) triple and validate it. |
 
 
 

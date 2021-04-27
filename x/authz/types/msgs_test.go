@@ -6,11 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -74,7 +73,7 @@ func TestMsgGrantAuthorization(t *testing.T) {
 	tests := []struct {
 		title            string
 		granter, grantee sdk.AccAddress
-		authorization    exported.Authorization
+		authorization    authz.Authorization
 		expiration       time.Time
 		expectErr        bool
 		expectPass       bool

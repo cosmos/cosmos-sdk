@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -79,7 +79,7 @@ Examples:
 				return err
 			}
 
-			var authorization exported.Authorization
+			var authorization authz.Authorization
 			switch args[1] {
 			case "send":
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)

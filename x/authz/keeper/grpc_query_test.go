@@ -6,7 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	var (
 		req              *types.QueryGrantsRequest
-		expAuthorization exported.Authorization
+		expAuthorization authz.Authorization
 	)
 	testCases := []struct {
 		msg      string
@@ -70,7 +70,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 			},
 			"",
 			func(require *require.Assertions, res *types.QueryGrantsResponse) {
-				var auth exported.Authorization
+				var auth authz.Authorization
 				require.Equal(1, len(res.Grants))
 				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
 				require.NoError(err)
@@ -99,7 +99,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	var (
 		req              *types.QueryGrantsRequest
-		expAuthorization exported.Authorization
+		expAuthorization authz.Authorization
 	)
 	testCases := []struct {
 		msg      string
@@ -140,7 +140,7 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 			},
 			true,
 			func(res *types.QueryGrantsResponse) {
-				var auth exported.Authorization
+				var auth authz.Authorization
 				suite.Require().Equal(1, len(res.Grants))
 				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
 				suite.Require().NoError(err)

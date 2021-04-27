@@ -1,4 +1,4 @@
-package authz_test
+package keeper_test
 
 import (
 	"testing"
@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -49,7 +48,7 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	// Clear keeper
 	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
 
-	authz.InitGenesis(suite.ctx, suite.keeper, genesis)
+	suite.keeper.InitGenesis(suite.ctx, genesis)
 	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().Equal(genesis, newGenesis)
 }

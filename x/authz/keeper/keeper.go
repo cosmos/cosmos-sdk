@@ -13,7 +13,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
@@ -48,7 +48,7 @@ func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant types.Grant, found
 	return grant, true
 }
 
-func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated exported.Authorization) error {
+func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated authz.Authorization) error {
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
@@ -122,7 +122,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 // SaveGrant method grants the provided authorization to the grantee on the granter's account
 // with the provided expiration time. If there is an existing authorization grant for the
 // same `sdk.Msg` type, this grant overwrites that.
-func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization exported.Authorization, expiration time.Time) error {
+func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
 	grant, err := types.NewGrant(authorization, expiration)
@@ -159,7 +159,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 }
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
-func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) (authorizations []exported.Authorization) {
+func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) (authorizations []authz.Authorization) {
 	store := ctx.KVStore(k.storeKey)
 	key := grantStoreKey(grantee, granter, "")
 	iter := sdk.KVStorePrefixIterator(store, key)
@@ -175,7 +175,7 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 // GetCleanAuthorization returns an `Authorization` and it's expiration time for
 // (grantee, granter, message name) grant. If there is no grant `nil` is returned.
 // If the grant is expired, the grant is revoked, removed from the storage, and `nil` is returned.
-func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap exported.Authorization, expiration time.Time) {
+func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap authz.Authorization, expiration time.Time) {
 	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
 	if !found {
 		return nil, time.Time{}
@@ -221,4 +221,27 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	})
 
 	return types.NewGenesisState(entries)
+}
+
+// InitGenesis new authz genesis
+func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+	for _, entry := range data.Authorization {
+		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
+		if err != nil {
+			panic(err)
+		}
+		granter, err := sdk.AccAddressFromBech32(entry.Granter)
+		if err != nil {
+			panic(err)
+		}
+		a, ok := entry.Authorization.GetCachedValue().(authz.Authorization)
+		if !ok {
+			panic("expected authorization")
+		}
+
+		err = k.SaveGrant(ctx, grantee, granter, a, entry.Expiration)
+		if err != nil {
+			panic(err)
+		}
+	}
 }

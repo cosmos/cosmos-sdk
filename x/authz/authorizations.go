@@ -1,4 +1,4 @@
-package exported
+package authz
 
 import (
 	"github.com/gogo/protobuf/proto"
@@ -6,11 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Authorization represents the interface of various Authorization types.
+// Authorization represents the interface of various Authorization types implemented
+// by other modules.
 type Authorization interface {
 	proto.Message
 
-	// MsgTypeURL returns the fully-qualified Msg service method name as described in ADR 031.
+	// MsgTypeURL returns the fully-qualified Msg service method URL (as described in ADR 031),
+	// which will process and accept or reject a request.
 	MsgTypeURL() string
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if

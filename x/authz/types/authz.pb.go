@@ -69,7 +69,7 @@ func (m *GenericAuthorization) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenericAuthorization proto.InternalMessageInfo
 
-// AuthorizationGrant gives permissions to execute
+// Grant gives permissions to execute
 // the provide method with expiration time.
 type Grant struct {
 	Authorization *types.Any `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`

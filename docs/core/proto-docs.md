@@ -57,11 +57,11 @@
     - [TxResponse](#cosmos.base.abci.v1beta1.TxResponse)
   
 - [cosmos/authz/v1beta1/tx.proto](#cosmos/authz/v1beta1/tx.proto)
-    - [MsgExecRequest](#cosmos.authz.v1beta1.MsgExecRequest)
+    - [MsgExec](#cosmos.authz.v1beta1.MsgExec)
     - [MsgExecResponse](#cosmos.authz.v1beta1.MsgExecResponse)
-    - [MsgGrantRequest](#cosmos.authz.v1beta1.MsgGrantRequest)
+    - [MsgGrant](#cosmos.authz.v1beta1.MsgGrant)
     - [MsgGrantResponse](#cosmos.authz.v1beta1.MsgGrantResponse)
-    - [MsgRevokeRequest](#cosmos.authz.v1beta1.MsgRevokeRequest)
+    - [MsgRevoke](#cosmos.authz.v1beta1.MsgRevoke)
     - [MsgRevokeResponse](#cosmos.authz.v1beta1.MsgRevokeResponse)
   
     - [Msg](#cosmos.authz.v1beta1.Msg)
@@ -896,7 +896,7 @@ the provided method on behalf of the granter's account.
 <a name="cosmos.authz.v1beta1.Grant"></a>
 
 ### Grant
-AuthorizationGrant gives permissions to execute
+Grant gives permissions to execute
 the provide method with expiration time.
 
 
@@ -934,7 +934,6 @@ EventGrant is emitted on Msg/Grant
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module` | [string](#string) |  | Module which invokes the authorizaiton grant TODO: not sure if this is needed. It always has the same value |
 | `msg_type_url` | [string](#string) |  | Msg type URL for which an autorization is granted |
 | `granter` | [string](#string) |  | Granter account address |
 | `grantee` | [string](#string) |  | Grantee account address |
@@ -952,7 +951,6 @@ EventRevoke is emitted on Msg/Revoke
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module` | [string](#string) |  | Module which invokes the authorizaiton revokation |
 | `msg_type_url` | [string](#string) |  | Msg type URL for which an autorization is revoked |
 | `granter` | [string](#string) |  | Granter account address |
 | `grantee` | [string](#string) |  | Grantee account address |
@@ -1284,10 +1282,10 @@ tags are stringified and the log is JSON decoded.
 
 
 
-<a name="cosmos.authz.v1beta1.MsgExecRequest"></a>
+<a name="cosmos.authz.v1beta1.MsgExec"></a>
 
-### MsgExecRequest
-MsgExecRequest attempts to execute the provided messages using
+### MsgExec
+MsgExec attempts to execute the provided messages using
 authorizations granted to the grantee. Each message should have only
 one signer corresponding to the granter of the authorization.
 
@@ -1317,10 +1315,10 @@ MsgExecResponse defines the Msg/MsgExecResponse response type.
 
 
 
-<a name="cosmos.authz.v1beta1.MsgGrantRequest"></a>
+<a name="cosmos.authz.v1beta1.MsgGrant"></a>
 
-### MsgGrantRequest
-MsgGrantRequest grants the provided authorization to the grantee on the granter's
+### MsgGrant
+MsgGrant grants the provided authorization to the grantee on the granter's
 account with the provided expiration time.
 
 
@@ -1346,10 +1344,10 @@ MsgGrantResponse defines the Msg/MsgGrant response type.
 
 
 
-<a name="cosmos.authz.v1beta1.MsgRevokeRequest"></a>
+<a name="cosmos.authz.v1beta1.MsgRevoke"></a>
 
-### MsgRevokeRequest
-MsgRevokeRequest revokes any authorization with the provided sdk.Msg type on the
+### MsgRevoke
+MsgRevoke revokes any authorization with the provided sdk.Msg type on the
 granter's account with that has been granted to the grantee.
 
 
@@ -1387,9 +1385,9 @@ Msg defines the authz Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Grant` | [MsgGrantRequest](#cosmos.authz.v1beta1.MsgGrantRequest) | [MsgGrantResponse](#cosmos.authz.v1beta1.MsgGrantResponse) | Grant grants the provided authorization to the grantee on the granter's account with the provided expiration time. | |
-| `Exec` | [MsgExecRequest](#cosmos.authz.v1beta1.MsgExecRequest) | [MsgExecResponse](#cosmos.authz.v1beta1.MsgExecResponse) | Exec attempts to execute the provided messages using authorizations granted to the grantee. Each message should have only one signer corresponding to the granter of the authorization. | |
-| `Revoke` | [MsgRevokeRequest](#cosmos.authz.v1beta1.MsgRevokeRequest) | [MsgRevokeResponse](#cosmos.authz.v1beta1.MsgRevokeResponse) | Revoke revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
+| `Grant` | [MsgGrant](#cosmos.authz.v1beta1.MsgGrant) | [MsgGrantResponse](#cosmos.authz.v1beta1.MsgGrantResponse) | Grant grants the provided authorization to the grantee on the granter's account with the provided expiration time. | |
+| `Exec` | [MsgExec](#cosmos.authz.v1beta1.MsgExec) | [MsgExecResponse](#cosmos.authz.v1beta1.MsgExecResponse) | Exec attempts to execute the provided messages using authorizations granted to the grantee. Each message should have only one signer corresponding to the granter of the authorization. | |
+| `Revoke` | [MsgRevoke](#cosmos.authz.v1beta1.MsgRevoke) | [MsgRevokeResponse](#cosmos.authz.v1beta1.MsgRevokeResponse) | Revoke revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
 
  <!-- end services -->
 

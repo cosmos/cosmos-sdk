@@ -18,7 +18,7 @@ message GenericAuthorization {
   string msg = 1;
 }
 
-// AuthorizationGrant gives permissions to execute
+// Grant gives permissions to execute
 // the provide method with expiration time.
 message Grant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];

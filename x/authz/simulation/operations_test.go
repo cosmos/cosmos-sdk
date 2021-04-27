@@ -110,7 +110,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgGrantRequest
+	var msg types.MsgGrant
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
@@ -147,7 +147,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgRevokeRequest
+	var msg types.MsgRevoke
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
@@ -182,7 +182,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgExecRequest
+	var msg types.MsgExec
 
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 

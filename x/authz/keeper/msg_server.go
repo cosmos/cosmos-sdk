@@ -11,7 +11,7 @@ import (
 var _ types.MsgServer = Keeper{}
 
 // GrantAuthorization implements the MsgServer.Grant method.
-func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrantRequest) (*types.MsgGrantResponse, error) {
+func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrant) (*types.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -40,7 +40,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrantRequest) (*types
 }
 
 // RevokeAuthorization implements the MsgServer.Revoke method.
-func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevokeRequest) (*types.MsgRevokeResponse, error) {
+func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevoke) (*types.MsgRevokeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -60,7 +60,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevokeRequest) (*typ
 }
 
 // Exec implements the MsgServer.Exec method.
-func (k Keeper) Exec(goCtx context.Context, msg *types.MsgExecRequest) (*types.MsgExecResponse, error) {
+func (k Keeper) Exec(goCtx context.Context, msg *types.MsgExec) (*types.MsgExecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {

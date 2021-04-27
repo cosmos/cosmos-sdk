@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,16 +21,18 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
+	now := time.Now()
+	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {
 		allow *types.BasicFeeAllowance
 		// all other checks are ignored if valid=false
-		fee         sdk.Coins
-		blockHeight int64
-		valid       bool
-		accept      bool
-		remove      bool
-		remains     sdk.Coins
+		fee       sdk.Coins
+		blockTime time.Time
+		valid     bool
+		accept    bool
+		remove    bool
+		remains   sdk.Coins
 	}{
 		"empty": {
 			allow:  &types.BasicFeeAllowance{},
@@ -66,53 +69,53 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		"non-expired": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(100),
+				Expiration: &oneHour,
 			},
-			valid:       true,
-			fee:         smallAtom,
-			blockHeight: 85,
-			accept:      true,
-			remove:      false,
-			remains:     leftAtom,
+			valid:     true,
+			fee:       smallAtom,
+			blockTime: now,
+			accept:    true,
+			remove:    false,
+			remains:   leftAtom,
 		},
 		"expired": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(100),
+				Expiration: &now,
 			},
-			valid:       true,
-			fee:         smallAtom,
-			blockHeight: 121,
-			accept:      false,
-			remove:      true,
+			valid:     true,
+			fee:       smallAtom,
+			blockTime: oneHour,
+			accept:    false,
+			remove:    true,
 		},
 		"fee more than allowed": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtHeight(100),
+				Expiration: &oneHour,
 			},
-			valid:       true,
-			fee:         bigAtom,
-			blockHeight: 85,
-			accept:      false,
+			valid:     true,
+			fee:       bigAtom,
+			blockTime: now,
+			accept:    false,
 		},
 		"with out spend limit": {
 			allow: &types.BasicFeeAllowance{
-				Expiration: types.ExpiresAtHeight(100),
+				Expiration: &oneHour,
 			},
-			valid:       true,
-			fee:         bigAtom,
-			blockHeight: 85,
-			accept:      true,
+			valid:     true,
+			fee:       bigAtom,
+			blockTime: now,
+			accept:    true,
 		},
 		"expired no spend limit": {
 			allow: &types.BasicFeeAllowance{
-				Expiration: types.ExpiresAtHeight(100),
+				Expiration: &now,
 			},
-			valid:       true,
-			fee:         bigAtom,
-			blockHeight: 120,
-			accept:      false,
+			valid:     true,
+			fee:       bigAtom,
+			blockTime: oneHour,
+			accept:    false,
 		},
 	}
 
@@ -126,7 +129,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockHeight(tc.blockHeight)
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime(tc.blockTime)
 
 			// now try to deduct
 			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})

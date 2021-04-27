@@ -14,7 +14,7 @@ order: 4
 Events are emitted for every transaction processed by the base application to indicate the execution
 of some logic clients may want to be aware of. This is extremely useful when relaying IBC packets.
 Any message that uses IBC will emit events for the corresponding TAO logic executed as defined in
-the [IBC events spec](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/spec/06_events.md).
+the [IBC events spec](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/core/spec/06_events.md).
 
 In the SDK, it can be assumed that for every message there is an event emitted with the type `message`,
 attribute key `action`, and an attribute value representing the type of message sent 

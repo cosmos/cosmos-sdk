@@ -7,7 +7,7 @@ order: 2
 Learn how to integrate IBC to your application and send data packets to other chains. {synopsis}
 
 This document outlines the required steps to integrate and configure the [IBC
-module](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc) to your Cosmos SDK application and
+module](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc) to your Cosmos SDK application and
 send fungible token transfers to other chains.
 
 ## Integrating the IBC module
@@ -120,7 +120,7 @@ IBC needs to know which module is bound to which port so that it can route packe
 appropriate module and call the appropriate callbacks. The port to module name mapping is handled by
 IBC's port `Keeper`. However, the mapping from module name to the relevant callbacks is accomplished
 by the port
-[`Router`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc//core/05-port/types/router.go) on the
+[`Router`](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc//core/05-port/types/router.go) on the
 IBC module.
 
 Adding the module routes allows the IBC handler to call the appropriate callback when processing a

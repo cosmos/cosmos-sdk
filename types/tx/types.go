@@ -2,7 +2,6 @@ package tx
 
 import (
 	"fmt"
-	"strings"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -163,12 +162,6 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	}
 
 	return nil
-}
-
-// isServiceMsg checks if a type URL corresponds to a service method name,
-// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
-func isServiceMsg(typeURL string) bool {
-	return strings.Count(typeURL, "/") >= 2
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method

@@ -29,6 +29,8 @@ simulation:
   - x/slashing/**/*
 "Scope: x/staking":
   - x/staking/**/*
+x/upgrade:
+  - x/upgrade/**/*
 build:
   - Makefile
   - Dockerfile
@@ -42,3 +44,12 @@ CI:
 CLI:
   - client/**/*
   - x/*/client/**/*
+docs:
+  - docs/**/*
+  - x/*/spec/**/*
+cosmovisor:
+  - cosmovisor/**/*
+rosetta:
+  - contrib/rosetta/**/*
+keys:
+  - client/keys/**/*

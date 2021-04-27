@@ -31,9 +31,7 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 			}
 
 			registry.RegisterImplementations((*sdk.Msg)(nil), msg)
-			// Support ServiceMsg's custom TypeURL for now.
-			// TODO Remove as part of https://github.com/cosmos/cosmos-sdk/issues/9172.
-			registry.RegisterCustomTypeURL((*sdk.Msg)(nil), fqMethod, msg)
+
 			return nil
 		}, noopInterceptor)
 

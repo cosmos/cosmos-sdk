@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -176,44 +174,11 @@ func isServiceMsg(typeURL string) bool {
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
-		// We gracefully keep support for ServiceMsgs, even though they are
-		// deprecated.
-		// TODO Remove ServiceMsgs in https://github.com/cosmos/cosmos-sdk/issues/9172.
-		if isServiceMsg(any.TypeUrl) {
-			// Recall that a ServiceMsg is packed inside an `Any`, its Any.Value
-			// being the encoded bytes of another `Any` packing the request
-			// parameter (a skd.Msg). So there's an `Any` packed inside another
-			// `Any`.
-			// Our strategy here is to:
-			// - create an `Any` called `requestAny`, will represents the request
-			//   parameter,
-			// - unmarshal the ServiceMsg `Any`'s `Any.Value` into `requestAny`,
-			// - then use the interface registry to unpack `requestAny` into a
-			//   sdk.Msg.
-			//
-			// The initial ServiceMsg `Any` is replaced by the request parameter
-			// `sdk.Msg` `Any`.
-			var requestAny codectypes.Any
-			err := proto.Unmarshal(any.Value, &requestAny)
-			if err != nil {
-				return err
-			}
-
-			var msg sdk.Msg
-			err = unpacker.UnpackAny(&requestAny, &msg)
-			if err != nil {
-				return err
-			}
-
-			*any = requestAny
-		} else {
-			var msg sdk.Msg
-			err := unpacker.UnpackAny(any, &msg)
-			if err != nil {
-				return err
-			}
+		var msg sdk.Msg
+		err := unpacker.UnpackAny(any, &msg)
+		if err != nil {
+			return err
 		}
-
 	}
 
 	return nil

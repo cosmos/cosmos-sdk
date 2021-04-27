@@ -1,33 +1,33 @@
-x/auth:
+"Scope: x/auth":
   - x/auth/**/*
-x/authz:
+"Scope: x/authz":
   - x/authz/**/*
-x/bank:
+"Scope: x/bank":
   - x/bank/**/*
-x/capability:
+"Scope: x/capability":
   - x/capability/**/*
-x/crisis:
+"Scope: x/crisis":
   - x/crisis/**/*
-x/distribution:
+"Scope: x/distribution":
   - x/distribution/**/*
-x/evidence:
+"Scope: x/evidence":
   - x/evidence/**/*
-x/feegrant:
+"Scope: x/feegrant":
   - x/feegrant/**/*
-x/genutil:
+"Scope: x/genutil":
   - x/genutil/**/*
-x/gov:
+"Scope: x/gov":
   - x/gov/**/*
-x/mint:
+"Scope: x/mint":
   - x/mint/**/*
-x/params:
+"Scope: x/params":
   - x/params/**/*
 simulation:
   - x/simulation/**/*
   - x/*/simulation/**/*
-x/slashing:
+"Scope: x/slashing":
   - x/slashing/**/*
-x/staking:
+"Scope: x/staking":
   - x/staking/**/*
 build:
   - Makefile

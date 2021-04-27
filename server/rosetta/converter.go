@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -240,7 +241,7 @@ func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
 // with the message proto name as type, and the raw fields
 // as metadata
 func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
-	opName := sdk.MsgTypeURL(msg)
+	opName := proto.MessageName(msg)
 
 	meta, err := c.Meta(msg)
 	if err != nil {

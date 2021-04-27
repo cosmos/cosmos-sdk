@@ -283,7 +283,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 			"happy case",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-			"cosmos.bank.v1beta1.MsgSend",
+			"/cosmos.bank.v1beta1.MsgSend",
 		},
 	}
 

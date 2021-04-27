@@ -3,6 +3,7 @@ package testutil
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -19,6 +20,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+)
+
+const (
+	oneYear  = 365 * 24 * 60 * 60
+	tenHours = 10 * 60 * 60
+	oneHour  = 60 * 60
 )
 
 type IntegrationTestSuite struct {
@@ -59,7 +66,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	fee := sdk.NewCoin("stake", sdk.NewInt(100))
-	duration := 365 * 24 * 60 * 60
 
 	args := append(
 		[]string{
@@ -67,7 +73,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			grantee.String(),
 			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-			fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
+			fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(oneYear)),
 		},
 		commonFlags...,
 	)
@@ -354,7 +360,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(tenHours)),
 				},
 				commonFlags...,
 			),
@@ -367,9 +373,9 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, tenHours),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(oneHour)),
 				},
 				commonFlags...,
 			),
@@ -382,10 +388,10 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					granter.String(),
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 10*60*60),
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, tenHours),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(oneHour)),
 				},
 				commonFlags...,
 			),
@@ -398,10 +404,10 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					granter.String(),
 					"cosmos1w55kgcf3ltaqdy4ww49nge3klxmrdavrr6frmp",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(tenHours)),
 				},
 				commonFlags...,
 			),
@@ -413,10 +419,10 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos1vevyks8pthkscvgazc97qyfjt40m6g9xe85ry8",
-					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-					fmt.Sprintf("--%s=%d", cli.FlagExpiration, 10*60*60),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(tenHours)),
 				},
 				commonFlags...,
 			),
@@ -429,7 +435,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					granter.String(),
 					"cosmos14cm33pvnrv2497tyt8sp9yavhmw83nwej3m0e8",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
@@ -443,13 +449,28 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				[]string{
 					granter.String(),
 					"cosmos12nyk4pcf4arshznkpz882e4l4ts0lt0ap8ce54",
-					fmt.Sprintf("--%s=%d", cli.FlagPeriod, 60*60),
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
 					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
 				},
 				commonFlags...,
 			),
 			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"invalid expiration",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos1vevyks8pthkscvgazc97qyfjt40m6g9xe85ry8",
+					fmt.Sprintf("--%s=%d", cli.FlagPeriod, oneHour),
+					fmt.Sprintf("--%s=%s", cli.FlagPeriodLimit, "10stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%s", cli.FlagExpiration, "invalid"),
+				},
+				commonFlags...,
+			),
+			true, 0, nil,
 		},
 	}
 
@@ -579,7 +600,6 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	}
 
 	fee := sdk.NewCoin("stake", sdk.NewInt(100))
-	duration := 365 * 24 * 60 * 60
 
 	args := append(
 		[]string{
@@ -587,7 +607,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 			grantee.String(),
 			fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, fee.String()),
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
-			fmt.Sprintf("--%s=%v", cli.FlagExpiration, duration),
+			fmt.Sprintf("--%s=%s", cli.FlagExpiration, getFormattedExpiration(oneYear)),
 		},
 		commonFlags...,
 	)
@@ -785,4 +805,8 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 			}
 		})
 	}
+}
+
+func getFormattedExpiration(duration int64) string {
+	return time.Now().Add(time.Duration(duration) * time.Second).Format(time.RFC3339)
 }

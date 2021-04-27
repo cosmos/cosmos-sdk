@@ -52,7 +52,7 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) typ
 
 	filteredAllowance, err := types.NewFeeAllowanceGrant(granter, grantee, &types.AllowedMsgFeeAllowance{
 		Allowance:       basicAllowance.GetAllowance(),
-		AllowedMessages: []string{"/cosmos.gov.v1beta1.Msg/SubmitProposal"},
+		AllowedMessages: []string{"/cosmos.gov.v1beta1.MsgSubmitProposal"},
 	})
 	if err != nil {
 		panic(err)

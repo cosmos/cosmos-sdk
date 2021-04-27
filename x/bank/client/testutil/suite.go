@@ -470,62 +470,6 @@ func (s *IntegrationTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-// TestBankMsgService does a basic test of whether or not service Msg's as defined
-// in ADR 031 work in the most basic end-to-end case.
-func (s *IntegrationTestSuite) TestBankMsgService() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name           string
-		from, to       sdk.AccAddress
-		amount         sdk.Coins
-		args           []string
-		expectErr      bool
-		expectedCode   uint32
-		respType       proto.Message
-		rawLogContains string
-	}{
-		{
-			"valid transaction",
-			val.Address,
-			val.Address,
-			sdk.NewCoins(
-				sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-			),
-			[]string{
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false,
-			0,
-			&sdk.TxResponse{},
-			"/cosmos.bank.v1beta1.Msg/Send", // indicates we are using ServiceMsg and not a regular Msg
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			clientCtx := val.ClientCtx
-
-			bz, err := MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz.Bytes(), tc.respType), bz.String())
-				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code)
-				s.Require().Contains(txResp.RawLog, tc.rawLogContains)
-			}
-		})
-	}
-}
-
 func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
 	coin := sdk.NewCoin(denom, amount)
 	return &coin

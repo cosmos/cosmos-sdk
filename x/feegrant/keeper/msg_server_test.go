@@ -2,19 +2,11 @@ package keeper_test
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
-	ctx := suite.ctx
-	wrapCtx := sdk.WrapSDKContext(ctx)
-	k := suite.app.FeeGrantKeeper
-	impl := keeper.NewMsgServerImpl(k)
-	atoms := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
-
 	testCases := []struct {
 		name      string
 		req       func() *types.MsgGrantFeeAllowance
@@ -53,8 +45,8 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 			"valid: basic fee allowance",
 			func() *types.MsgGrantFeeAllowance {
 				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{
-					SpendLimit: atoms,
-					Expiration: types.ExpiresAtTime(suite.ctx.BlockTime().AddDate(1, 0, 0)),
+					SpendLimit: suite.atom,
+					Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
 				})
 				suite.Require().NoError(err)
 				return &types.MsgGrantFeeAllowance{
@@ -70,8 +62,8 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 			"fail: fee allowance exists",
 			func() *types.MsgGrantFeeAllowance {
 				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{
-					SpendLimit: atoms,
-					Expiration: types.ExpiresAtTime(suite.ctx.BlockTime().AddDate(1, 0, 0)),
+					SpendLimit: suite.atom,
+					Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
 				})
 				suite.Require().NoError(err)
 				return &types.MsgGrantFeeAllowance{
@@ -88,8 +80,8 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 			func() *types.MsgGrantFeeAllowance {
 				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
 					Basic: types.BasicFeeAllowance{
-						SpendLimit: atoms,
-						Expiration: types.ExpiresAtTime(suite.ctx.BlockTime().AddDate(1, 0, 0)),
+						SpendLimit: suite.atom,
+						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
 					},
 				})
 				suite.Require().NoError(err)
@@ -107,8 +99,8 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 			func() *types.MsgGrantFeeAllowance {
 				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
 					Basic: types.BasicFeeAllowance{
-						SpendLimit: atoms,
-						Expiration: types.ExpiresAtTime(suite.ctx.BlockTime().AddDate(1, 0, 0)),
+						SpendLimit: suite.atom,
+						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
 					},
 				})
 				suite.Require().NoError(err)
@@ -124,7 +116,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 	}
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			_, err := impl.GrantFeeAllowance(wrapCtx, tc.req())
+			_, err := suite.msgSrvr.GrantFeeAllowance(suite.ctx, tc.req())
 			if tc.expectErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.errMsg)
@@ -134,11 +126,6 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
-	ctx := suite.ctx
-	wrapCtx := sdk.WrapSDKContext(ctx)
-	k := suite.app.FeeGrantKeeper
-	impl := keeper.NewMsgServerImpl(k)
-	atoms := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(1000)))
 
 	testCases := []struct {
 		name      string
@@ -185,14 +172,14 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 			},
 			func() {
 				// removing fee allowance from previous tests if exists
-				impl.RevokeFeeAllowance(wrapCtx, &types.MsgRevokeFeeAllowance{
+				suite.msgSrvr.RevokeFeeAllowance(suite.ctx, &types.MsgRevokeFeeAllowance{
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),
 				})
 				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
 					Basic: types.BasicFeeAllowance{
-						SpendLimit: atoms,
-						Expiration: types.ExpiresAtTime(suite.ctx.BlockTime().AddDate(1, 0, 0)),
+						SpendLimit: suite.atom,
+						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
 					},
 				})
 				suite.Require().NoError(err)
@@ -201,7 +188,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
-				_, err = impl.GrantFeeAllowance(wrapCtx, req)
+				_, err = suite.msgSrvr.GrantFeeAllowance(suite.ctx, req)
 				suite.Require().NoError(err)
 			},
 			false,
@@ -222,7 +209,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			_, err := impl.RevokeFeeAllowance(wrapCtx, tc.request)
+			_, err := suite.msgSrvr.RevokeFeeAllowance(suite.ctx, tc.request)
 			if tc.expectErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.errMsg)

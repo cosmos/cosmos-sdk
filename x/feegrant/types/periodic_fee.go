@@ -21,13 +21,12 @@ var _ FeeAllowanceI = (*PeriodicFeeAllowance)(nil)
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
 func (a *PeriodicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
 	blockTime := ctx.BlockTime()
-	blockHeight := ctx.BlockHeight()
 
-	if a.Basic.Expiration.IsExpired(&blockTime, blockHeight) {
+	if a.Basic.Expiration != nil && blockTime.After(*a.Basic.Expiration) {
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "absolute limit")
 	}
 
-	a.tryResetPeriod(blockTime, blockHeight)
+	a.tryResetPeriod(blockTime)
 
 	// deduct from both the current period and the max amount
 	var isNeg bool
@@ -54,8 +53,8 @@ func (a *PeriodicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Ms
 // It will also update the PeriodReset. If we are within one Period, it will update from the
 // last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
 // If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
-func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight int64) {
-	if !a.PeriodReset.Undefined() && !a.PeriodReset.IsExpired(&blockTime, blockHeight) {
+func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time) {
+	if blockTime.Before(a.PeriodReset) {
 		return
 	}
 	// set CanSpend to the lesser of PeriodSpendLimit and the TotalLimit
@@ -67,9 +66,9 @@ func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight i
 
 	// If we are within the period, step from expiration (eg. if you always do one tx per day, it will always reset the same time)
 	// If we are more then one period out (eg. no activity in a week), reset is one period from this time
-	a.PeriodReset = a.PeriodReset.MustStep(a.Period)
-	if a.PeriodReset.IsExpired(&blockTime, blockHeight) {
-		a.PeriodReset = a.PeriodReset.FastForward(blockTime, blockHeight).MustStep(a.Period)
+	a.PeriodReset = a.PeriodReset.Add(a.Period)
+	if blockTime.After(a.PeriodReset) {
+		a.PeriodReset = blockTime.Add(a.Period)
 	}
 }
 
@@ -99,8 +98,9 @@ func (a PeriodicFeeAllowance) ValidateBasic() error {
 	}
 
 	// check times
-	if err := a.Period.ValidateBasic(); err != nil {
-		return err
+	if a.Period.Seconds() < 0 {
+		return sdkerrors.Wrap(ErrInvalidDuration, "negative clock step")
 	}
-	return a.PeriodReset.ValidateBasic()
+
+	return nil
 }

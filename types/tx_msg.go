@@ -77,12 +77,7 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
 
-// MsgName returns the protobuf MessageName of a sdk.Msg.
-func MsgName(msg Msg) string {
-	return proto.MessageName(msg)
-}
-
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`.
 func MsgTypeURL(msg Msg) string {
-	return fmt.Sprintf("/%s", MsgName(msg))
+	return fmt.Sprintf("/%s", proto.MessageName(msg))
 }

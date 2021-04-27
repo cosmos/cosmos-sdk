@@ -240,7 +240,7 @@ func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
 // with the message proto name as type, and the raw fields
 // as metadata
 func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
-	opName := sdk.MsgName(msg)
+	opName := sdk.MsgTypeURL(msg)
 
 	meta, err := c.Meta(msg)
 	if err != nil {

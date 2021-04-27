@@ -31,6 +31,12 @@ simulation:
   - x/staking/**/*
 "Scope: x/upgrade":
   - x/upgrade/**/*
+"Scope: Cosmovisor":
+  - cosmovisor/**/*
+"Scope: Rosetta":
+  - contrib/rosetta/**/*
+"Scope: Keys":
+  - client/keys/**/*
 "Type: Build":
   - Makefile
   - Dockerfile
@@ -47,9 +53,5 @@ simulation:
 "Type: Docs":
   - docs/**/*
   - x/*/spec/**/*
-"Scope; Cosmovisor":
-  - cosmovisor/**/*
-"Scope: Rosetta":
-  - contrib/rosetta/**/*
-"Scope: Keys":
-  - client/keys/**/*
+"Type: ADR":
+    - docs/architecture/**/*

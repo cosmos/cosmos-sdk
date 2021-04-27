@@ -117,8 +117,8 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Granter)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Grantee)
+	require.Equal(accounts[2].Address.String(), msg.Granter)
+	require.Equal(accounts[1].Address.String(), msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 

@@ -267,7 +267,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 	var priv types.PrivKey
 
 	switch linfo := info.(type) {
-	case localInfo:
+	case LocalInfo:
 		if linfo.PrivKeyArmor == "" {
 			err = fmt.Errorf("private key not available")
 			return nil, err
@@ -278,7 +278,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 			return nil, err
 		}
 
-	case ledgerInfo, offlineInfo, multiInfo:
+	case LedgerInfo, OfflineInfo, MultiInfo:
 		return nil, errors.New("only works on local private keys")
 	}
 
@@ -353,7 +353,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	var priv types.PrivKey
 
 	switch i := info.(type) {
-	case localInfo:
+	case LocalInfo:
 		if i.PrivKeyArmor == "" {
 			return nil, nil, fmt.Errorf("private key not available")
 		}
@@ -363,10 +363,10 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 			return nil, nil, err
 		}
 
-	case ledgerInfo:
+	case LedgerInfo:
 		return SignWithLedger(info, msg)
 
-	case offlineInfo, multiInfo:
+	case OfflineInfo, MultiInfo:
 		return nil, info.GetPubKey(), errors.New("cannot sign with offline keys")
 	}
 
@@ -596,7 +596,7 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // not be queried or it returned an error.
 func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err error) {
 	switch info.(type) {
-	case *ledgerInfo, ledgerInfo:
+	case *LedgerInfo, LedgerInfo:
 	default:
 		return nil, nil, errors.New("not a ledger object")
 	}
@@ -769,6 +769,7 @@ func (ks keystore) writeInfo(info Info) error {
 	key := infoKeyBz(info.GetName())
 	serializedInfo := protoMarshalInfo(info)
 
+
 	exists, err := ks.existsInDb(info)
 	if err != nil {
 		return err
@@ -882,22 +883,31 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		if len(item.Data) == 0 {
 			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
-
-		info, err := aminoUnmarshalInfo(item.Data)
+	
+		info, err := protoUnmarshalInfo(item.Data)
 		if err != nil {
 			return err
 		}
-		// TODO:
-		// + marshal as proto
-		// + ks.db.Set(item keyring.Item)
-	}
+
+		var versionBytes = make([]byte, 4)
+		binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
+		ks.db.Set(keyring.Item{
+			Key:         info.GetKey().String(),
+			Data:        versionBytes,
+			Description: "SDK kerying version",
+		})
+
+	return nil
+	
+	/*
 	var versionBytes = make([]byte, 4)
 	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
 	ks.db.Set(keyring.Item{
-		Key:         VERSION_KEY,
+		Key:         "migration",
 		Data:        versionBytes,
 		Description: "SDK kerying version",
 	})
+	*/
 
 }
 

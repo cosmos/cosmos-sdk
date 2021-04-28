@@ -14,7 +14,7 @@ message LocalInfo {
 
   string name = 1;
   bytes key = 2 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
-  string privkeyarmor = 3;
+  string privKeyArmor = 3;
   PubKeyType algo = 4;
 }
 

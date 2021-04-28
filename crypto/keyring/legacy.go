@@ -72,14 +72,15 @@ func (kb dbKeybase) List() ([]Info, error) {
 		key := string(iter.Key())
 
 		// need to include only keys in storage that have an info suffix
-		if strings.HasSuffix(key, infoSuffix) {
-			info, err := aminoUnmarshalInfo(iter.Value())
-			if err != nil {
-				return nil, err
-			}
-
-			res = append(res, info)
+		if !strings.HasSuffix(key, infoSuffix) {
+			continue
 		}
+		info, err := protoUnmarshalInfo(iter.Value())
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, info)
 	}
 
 	return res, nil
@@ -96,7 +97,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 
-	return aminoUnmarshalInfo(bs)
+	return protoUnmarshalInfo(bs)
 }
 
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
@@ -111,7 +112,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 	var priv types.PrivKey
 
 	switch i := info.(type) {
-	case localInfo:
+	case LocalInfo:
 		linfo := i
 		if linfo.PrivKeyArmor == "" {
 			err = fmt.Errorf("private key not available")
@@ -123,7 +124,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 			return nil, err
 		}
 
-	case ledgerInfo, offlineInfo, multiInfo:
+	case LedgerInfo, OfflineInfo, MultiInfo:
 		return nil, errors.New("only works on local private keys")
 	}
 
@@ -155,7 +156,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	info, err := aminoUnmarshalInfo(bz)
+	info, err := protoUnmarshalInfo(bz)
 	if err != nil {
 		return
 	}

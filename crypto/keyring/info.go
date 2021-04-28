@@ -3,288 +3,185 @@ package keyring
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	crypto_ed25519 "crypto/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/gogo/protobuf/proto"
 )
 
 // Info is the publicly exposed information about a keypair
+
+// TODO fix GetPath and GetAlgo in whole codebase
 type Info interface {
 	// Human-readable type for key listing
 	GetType() KeyType
 	// Name of the key
 	GetName() string
 	// Public key
-	GetPubKey() cryptotypes.PubKey
+	GetPubKey() crypto_ed25519.PublicKey
 	// Address
 	GetAddress() types.AccAddress
 	// Bip44 Path
-	GetPath() (*hd.BIP44Params, error)
+	GetPath() (*BIP44Params, error)
 	// Algo
-	GetAlgo() hd.PubKeyType
+	GetAlgo() PubKeyType
 }
 
 var (
-	_ Info = &localInfo{}
-	_ Info = &ledgerInfo{}
-	_ Info = &offlineInfo{}
-	_ Info = &multiInfo{}
+	_ Info = &LocalInfo{}
+	_ Info = &LedgerInfo{}
+	_ Info = &OfflineInfo{}
+	_ Info = &MultiInfo{}
 )
 
-// localInfo is the public information about a locally stored key
-// Note: Algo must be last field in struct for backwards amino compatibility
-type localInfo struct {
-	Name         string             `json:"name"`
-	PubKey       cryptotypes.PubKey `json:"pubkey"`
-	PrivKeyArmor string             `json:"privkey.armor"`
-	Algo         hd.PubKeyType      `json:"algo"`
-}
+// TODO fix errors, GetAddress and GetAlgo
 
-func newLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) Info {
-	return &localInfo{
-		Name:         name,
-		PubKey:       pub,
-		PrivKeyArmor: privArmor,
-		Algo:         algo,
-	}
-}
+//LocalInfo
 
-// GetType implements Info interface
-func (i localInfo) String() KeyType {
+func (i LocalInfo) String() KeyType {
 	return fmt.Sprintf("LocalInfo{%s}", i.Name)
 }
 
 // GetType implements Info interface
-func (i localInfo) GetType() KeyType {
+func (i LocalInfo) GetType() KeyType {
+	// review Type
 	return TypeLocal
 }
 
 // GetType implements Info interface
-func (i localInfo) GetName() string {
+func (i LocalInfo) GetName() string {
 	return i.Name
 }
 
 // GetType implements Info interface
-func (i localInfo) GetPubKey() cryptotypes.PubKey {
-	return i.PubKey
+func (i LocalInfo) GetPubKey() crypto_ed25519.PublicKey {
+	return i.Key
 }
 
 // GetType implements Info interface
-func (i localInfo) GetAddress() types.AccAddress {
-	return i.PubKey.Address().Bytes()
+func (i LocalInfo) GetAddress() types.AccAddress {
+	return i.Key.Address().Bytes()
 }
 
 // GetType implements Info interface
-func (i localInfo) GetAlgo() hd.PubKeyType {
+func (i LocalInfo) GetAlgo() PubKeyType  {
 	return i.Algo
 }
 
 // GetType implements Info interface
-func (i localInfo) GetPath() (*hd.BIP44Params, error) {
+func (i LocalInfo) GetPath() (*BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
-// ledgerInfo is the public information about a Ledger key
-// Note: Algo must be last field in struct for backwards amino compatibility
-type ledgerInfo struct {
-	Name   string             `json:"name"`
-	PubKey cryptotypes.PubKey `json:"pubkey"`
-	Path   hd.BIP44Params     `json:"path"`
-	Algo   hd.PubKeyType      `json:"algo"`
-}
+// LEDGERINFO
 
-func newLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) Info {
-	return &ledgerInfo{
-		Name:   name,
-		PubKey: pub,
-		Path:   path,
-		Algo:   algo,
-	}
-}
-
-// GetType implements Info interface
-func (i ledgerInfo) GetType() KeyType {
+func (i LedgerInfo) GetType() KeyType {
 	return TypeLedger
 }
 
 // GetName implements Info interface
-func (i ledgerInfo) GetName() string {
+func (i LedgerInfo) GetName() string {
 	return i.Name
 }
 
 // GetPubKey implements Info interface
-func (i ledgerInfo) GetPubKey() cryptotypes.PubKey {
-	return i.PubKey
+func (i LedgerInfo) GetPubKey() crypto_ed25519.PublicKey {
+	return i.Key
 }
 
 // GetAddress implements Info interface
-func (i ledgerInfo) GetAddress() types.AccAddress {
-	return i.PubKey.Address().Bytes()
+func (i LedgerInfo) GetAddress() types.AccAddress {
+	return i.Key.Address().Bytes()
 }
 
 // GetPath implements Info interface
-func (i ledgerInfo) GetAlgo() hd.PubKeyType {
+func (i LedgerInfo) GetAlgo() PubKeyType {
 	return i.Algo
 }
 
 // GetPath implements Info interface
-func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
+func (i LedgerInfo) GetPath() (*BIP44Params, error) {
 	tmp := i.Path
 	return &tmp, nil
 }
 
-// offlineInfo is the public information about an offline key
-// Note: Algo must be last field in struct for backwards amino compatibility
-type offlineInfo struct {
-	Name   string             `json:"name"`
-	PubKey cryptotypes.PubKey `json:"pubkey"`
-	Algo   hd.PubKeyType      `json:"algo"`
-}
 
-func newOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) Info {
-	return &offlineInfo{
-		Name:   name,
-		PubKey: pub,
-		Algo:   algo,
-	}
-}
+// OFFLINEINFO
 
-// GetType implements Info interface
-func (i offlineInfo) GetType() KeyType {
+func (i OfflineInfo) GetType() KeyType {
 	return TypeOffline
 }
 
 // GetName implements Info interface
-func (i offlineInfo) GetName() string {
+func (i OfflineInfo) GetName() string {
 	return i.Name
 }
 
 // GetPubKey implements Info interface
-func (i offlineInfo) GetPubKey() cryptotypes.PubKey {
-	return i.PubKey
+func (i OfflineInfo) GetPubKey() crypto_ed25519.PublicKey {
+	return i.Key
 }
 
 // GetAlgo returns the signing algorithm for the key
-func (i offlineInfo) GetAlgo() hd.PubKeyType {
+func (i OfflineInfo) GetAlgo() PubKeyType {
 	return i.Algo
 }
 
 // GetAddress implements Info interface
-func (i offlineInfo) GetAddress() types.AccAddress {
-	return i.PubKey.Address().Bytes()
+func (i OfflineInfo) GetAddress() types.AccAddress {
+	return i.Key.Address().Bytes()
 }
 
 // GetPath implements Info interface
-func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
+func (i OfflineInfo) GetPath() (*BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
-// Deprecated: this structure is not used anymore and it's here only to allow
-// decoding old multiInfo records from keyring.
-// The problem with legacy.Cdc.UnmarshalBinaryLengthPrefixed - the legacy codec doesn't
-// tolerate extensibility.
-type multisigPubKeyInfo struct {
-	PubKey cryptotypes.PubKey `json:"pubkey"`
-	Weight uint               `json:"weight"`
-}
-
-// multiInfo is the public information about a multisig key
-type multiInfo struct {
-	Name      string               `json:"name"`
-	PubKey    cryptotypes.PubKey   `json:"pubkey"`
-	Threshold uint                 `json:"threshold"`
-	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
-}
-
-// NewMultiInfo creates a new multiInfo instance
-func NewMultiInfo(name string, pub cryptotypes.PubKey) (Info, error) {
-	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
-		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
-	}
-	return &multiInfo{
-		Name:   name,
-		PubKey: pub,
-	}, nil
-}
+// MULTIINFO
 
 // GetType implements Info interface
-func (i multiInfo) GetType() KeyType {
+func (i MultiInfo) GetType() KeyType {
 	return TypeMulti
 }
 
 // GetName implements Info interface
-func (i multiInfo) GetName() string {
+func (i MultiInfo) GetName() string {
 	return i.Name
 }
 
 // GetPubKey implements Info interface
-func (i multiInfo) GetPubKey() cryptotypes.PubKey {
-	return i.PubKey
+func (i MultiInfo) GetPubKey() crypto_ed25519.PublicKey {
+	return i.Key
 }
 
 // GetAddress implements Info interface
-func (i multiInfo) GetAddress() types.AccAddress {
-	return i.PubKey.Address().Bytes()
+func (i MultiInfo) GetAddress() types.AccAddress {
+	return i.Key.Address().Bytes()
 }
 
 // GetPath implements Info interface
-func (i multiInfo) GetAlgo() hd.PubKeyType {
-	return hd.MultiType
+func (i MultiInfo) GetAlgo() PubKeyType {
+	return PubKeyType_MultiType
 }
 
 // GetPath implements Info interface
-func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
+func (i MultiInfo) GetPath() (*BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
-}
-
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
-
-	return codectypes.UnpackInterfaces(multiPK, unpacker)
-}
-
-// encoding info
-// TODO: remove
-func aminoMarshalInfo(i Info) []byte {
-	return legacy.Cdc.MustMarshalBinaryLengthPrefixed(i)
-}
-
-// decoding info
-func aminoUnmarshalInfo(bz []byte) (info Info, err error) {
-	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
-	if err != nil {
-		return nil, err
-	}
-
-	// After unmarshalling into &info, if we notice that the info is a
-	// multiInfo, then we unmarshal again, explicitly in a multiInfo this time.
-	// Since multiInfo implements UnpackInterfacesMessage, this will correctly
-	// unpack the underlying anys inside the multiInfo.
-	//
-	// This is a workaround, as go cannot check that an interface (Info)
-	// implements another interface (UnpackInterfacesMessage).
-	_, ok := info.(multiInfo)
-	if ok {
-		var multi multiInfo
-		err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
-
-		return multi, err
-	}
-
-	return
 }
 
 // encoding info
 func protoMarshalInfo(i Info) []byte {
-	// TODO
-	// Convert pub key to a proto keyring.Item structure Item.Data
+	bz, _ := proto.Marshal(i.(proto.Message))
+	return bz
 }
 
 // decoding info
-func protoUnmarshalInfo(bz []byte) (item Info, err error) {
-	// TODO
+func protoUnmarshalInfo(bz []byte) (info Info, err error) {
+	if err := proto.Unmarshal(bz, info.(proto.Message)); err != nil {
+		return nil, sdkerrors.Wrap(err, "failed to unmarshal bytes to Info")
+	}
+
+	return
 }

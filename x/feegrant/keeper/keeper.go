@@ -36,7 +36,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GrantFeeAllowance creates a new grant
+// GrantAllowance creates a new grant
 func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance types.FeeAllowanceI) error {
 
 	// create the account if it is not in account state
@@ -71,7 +71,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	return nil
 }
 
-// revokeFeeAllowance removes an existing grant
+// revokeAllowance removes an existing grant
 func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
 	_, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
@@ -104,7 +104,7 @@ func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (
 	return grant.GetGrant()
 }
 
-// getFeeGrant returns entire grant between both accounts
+// getGrant returns entire grant between both accounts
 func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*types.Grant, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)

@@ -14,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
 type Keeper struct {
@@ -34,11 +33,11 @@ func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router *baseapp
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", authz.ModuleName))
 }
 
 // getGrant returns grant stored at skey.
-func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant types.Grant, found bool) {
+func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(skey)
 	if bz == nil {
@@ -125,7 +124,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
-	grant, err := types.NewGrant(authorization, expiration)
+	grant, err := authz.NewGrant(authorization, expiration)
 	if err != nil {
 		return err
 	}
@@ -134,7 +133,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	bz := k.cdc.MustMarshalBinaryBare(&grant)
 	skey := grantStoreKey(grantee, granter, authorization.MsgTypeURL())
 	store.Set(skey, bz)
-	return ctx.EventManager().EmitTypedEvent(&types.EventGrant{
+	return ctx.EventManager().EmitTypedEvent(&authz.EventGrant{
 		MsgTypeUrl: authorization.MsgTypeURL(),
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
@@ -151,7 +150,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 		return sdkerrors.ErrNotFound.Wrap("authorization not found")
 	}
 	store.Delete(skey)
-	return ctx.EventManager().EmitTypedEvent(&types.EventRevoke{
+	return ctx.EventManager().EmitTypedEvent(&authz.EventRevoke{
 		MsgTypeUrl: msgType,
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
@@ -164,7 +163,7 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	key := grantStoreKey(grantee, granter, "")
 	iter := sdk.KVStorePrefixIterator(store, key)
 	defer iter.Close()
-	var authorization types.Grant
+	var authorization authz.Grant
 	for ; iter.Valid(); iter.Next() {
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &authorization)
 		authorizations = append(authorizations, authorization.GetAuthorization())
@@ -192,12 +191,12 @@ func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, g
 // This function should be used with caution because it can involve significant IO operations.
 // It should not be used in query or msg services without charging additional gas.
 func (k Keeper) IterateGrants(ctx sdk.Context,
-	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant types.Grant) bool) {
+	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.GrantKey)
+	iter := sdk.KVStorePrefixIterator(store, authz.GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var grant types.Grant
+		var grant authz.Grant
 		granterAddr, granteeAddr := addressesFromGrantStoreKey(iter.Key())
 		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
 		if handler(granterAddr, granteeAddr, grant) {
@@ -207,11 +206,11 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	var entries []types.GrantAuthorization
-	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
+	var entries []authz.GrantAuthorization
+	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		exp := grant.Expiration
-		entries = append(entries, types.GrantAuthorization{
+		entries = append(entries, authz.GrantAuthorization{
 			Granter:       granter.String(),
 			Grantee:       grantee.String(),
 			Expiration:    exp,
@@ -220,11 +219,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	return types.NewGenesisState(entries)
+	return authz.NewGenesisState(entries)
 }
 
 // InitGenesis new authz genesis
-func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 	for _, entry := range data.Authorization {
 		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
 		if err != nil {

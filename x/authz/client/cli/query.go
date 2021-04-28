@@ -10,14 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	authorizationQueryCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        authz.ModuleName,
 		Short:                      "Querying commands for the authz module",
 		Long:                       "",
 		DisableFlagParsing:         true,
@@ -45,15 +45,15 @@ Examples:
 $ %s query %s grants cosmos1skj.. cosmos1skjwj..
 $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 `,
-				version.AppName, types.ModuleName,
-				version.AppName, types.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
+				version.AppName, authz.ModuleName,
+				version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := authz.NewQueryClient(clientCtx)
 
 			granter, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -74,7 +74,7 @@ $ %s query %s grants cosmos1skjw.. cosmos1skjwj.. %s
 
 			res, err := queryClient.Grants(
 				cmd.Context(),
-				&types.QueryGrantsRequest{
+				&authz.QueryGrantsRequest{
 					Granter:    granter.String(),
 					Grantee:    grantee.String(),
 					MsgTypeUrl: msgAuthorized,

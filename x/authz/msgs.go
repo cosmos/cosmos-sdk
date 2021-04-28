@@ -1,14 +1,13 @@
-package types
+package authz
 
 import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 var (
@@ -16,13 +15,13 @@ var (
 	_ sdk.MsgRequest = &MsgRevoke{}
 	_ sdk.MsgRequest = &MsgExec{}
 
-	_ types.UnpackInterfacesMessage = &MsgGrant{}
-	_ types.UnpackInterfacesMessage = &MsgExec{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}
 )
 
 // NewMsgGrant creates a new MsgGrant
 //nolint:interfacer
-func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a authz.Authorization, expiration time.Time) (*MsgGrant, error) {
+func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
@@ -64,16 +63,16 @@ func (msg MsgGrant) ValidateBasic() error {
 	}
 
 	av := msg.Authorization.GetCachedValue()
-	a, ok := av.(authz.Authorization)
+	a, ok := av.(Authorization)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (authz.Authorization)(nil), av)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (Authorization)(nil), av)
 	}
 	return a.ValidateBasic()
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
-func (msg *MsgGrant) GetAuthorization() authz.Authorization {
-	a, ok := msg.Authorization.GetCachedValue().(authz.Authorization)
+func (msg *MsgGrant) GetAuthorization() Authorization {
+	a, ok := msg.Authorization.GetCachedValue().(Authorization)
 	if !ok {
 		return nil
 	}
@@ -81,12 +80,12 @@ func (msg *MsgGrant) GetAuthorization() authz.Authorization {
 }
 
 // SetAuthorization converts Authorization to any and adds it to MsgGrant.Authorization.
-func (msg *MsgGrant) SetAuthorization(a authz.Authorization) error {
+func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 	m, ok := a.(proto.Message)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "can't proto marshal %T", m)
 	}
-	any, err := types.NewAnyWithValue(m)
+	any, err := cdctypes.NewAnyWithValue(m)
 	if err != nil {
 		return err
 	}
@@ -95,7 +94,7 @@ func (msg *MsgGrant) SetAuthorization(a authz.Authorization) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgExec) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (msg MsgExec) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
 		var msgExecAuthorized sdk.MsgRequest
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
@@ -108,8 +107,8 @@ func (msg MsgExec) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var a authz.Authorization
+func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var a Authorization
 	return unpacker.UnpackAny(msg.Authorization, &a)
 }
 
@@ -157,14 +156,14 @@ func (msg MsgRevoke) ValidateBasic() error {
 // NewMsgExec creates a new MsgExecAuthorized
 //nolint:interfacer
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec {
-	msgsAny := make([]*types.Any, len(msgs))
+	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
 		bz, err := proto.Marshal(msg.Request)
 		if err != nil {
 			panic(err)
 		}
 
-		anyMsg := &types.Any{
+		anyMsg := &cdctypes.Any{
 			TypeUrl: msg.MethodName,
 			Value:   bz,
 		}

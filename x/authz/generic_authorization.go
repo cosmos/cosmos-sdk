@@ -1,14 +1,13 @@
-package types
+package authz
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 var (
-	_ authz.Authorization = &GenericAuthorization{}
+	_ Authorization = &GenericAuthorization{}
 )
 
 // NewGenericAuthorization creates a new GenericAuthorization object.
@@ -24,8 +23,8 @@ func (a GenericAuthorization) MsgTypeURL() string {
 }
 
 // Accept implements Authorization.Accept.
-func (a GenericAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (authz.AcceptResponse, error) {
-	return authz.AcceptResponse{Accept: true}, nil
+func (a GenericAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (AcceptResponse, error) {
+	return AcceptResponse{Accept: true}, nil
 }
 
 // ValidateBasic implements Authorization.ValidateBasic.

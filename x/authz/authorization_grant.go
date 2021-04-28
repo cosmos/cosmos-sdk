@@ -1,17 +1,16 @@
-package types
+package authz
 
 import (
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // NewGrant returns new AuthrizationGrant
-func NewGrant(authorization authz.Authorization, expiration time.Time) (Grant, error) {
+func NewGrant(authorization Authorization, expiration time.Time) (Grant, error) {
 	auth := Grant{
 		Expiration: expiration,
 	}
@@ -20,7 +19,7 @@ func NewGrant(authorization authz.Authorization, expiration time.Time) (Grant, e
 		return Grant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", authorization)
 	}
 
-	any, err := types.NewAnyWithValue(msg)
+	any, err := cdctypes.NewAnyWithValue(msg)
 	if err != nil {
 		return Grant{}, err
 	}
@@ -31,18 +30,18 @@ func NewGrant(authorization authz.Authorization, expiration time.Time) (Grant, e
 }
 
 var (
-	_ types.UnpackInterfacesMessage = &Grant{}
+	_ cdctypes.UnpackInterfacesMessage = &Grant{}
 )
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (auth Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var authorization authz.Authorization
+func (auth Grant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var authorization Authorization
 	return unpacker.UnpackAny(auth.Authorization, &authorization)
 }
 
 // GetAuthorization returns the cached value from the Grant.Authorization if present.
-func (auth Grant) GetAuthorization() authz.Authorization {
-	authorization, ok := auth.Authorization.GetCachedValue().(authz.Authorization)
+func (auth Grant) GetAuthorization() Authorization {
+	authorization, ok := auth.Authorization.GetCachedValue().(Authorization)
 	if !ok {
 		return nil
 	}

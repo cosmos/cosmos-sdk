@@ -1,8 +1,7 @@
-package types
+package authz
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // NewGenesisState creates new GenesisState object
@@ -22,10 +21,10 @@ func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
 }
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ cdctypes.UnpackInterfacesMessage = GenesisState{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (data GenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	for _, a := range data.Authorization {
 		err := a.UnpackInterfaces(unpacker)
 		if err != nil {
@@ -36,7 +35,7 @@ func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg GrantAuthorization) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var a authz.Authorization
+func (msg GrantAuthorization) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var a Authorization
 	return unpacker.UnpackAny(msg.Authorization, &a)
 }

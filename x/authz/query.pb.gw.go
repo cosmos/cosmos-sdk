@@ -2,11 +2,11 @@
 // source: cosmos/authz/v1beta1/query.proto
 
 /*
-Package types is a reverse proxy.
+Package authz is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package types
+package authz
 
 import (
 	"context"

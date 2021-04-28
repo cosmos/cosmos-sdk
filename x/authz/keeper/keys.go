@@ -3,13 +3,13 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // grantStoreKey - return authorization store key
 func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
 	return append(append(append(
-		types.GrantKey,
+		authz.GrantKey,
 		address.MustLengthPrefix(granter)...),
 		address.MustLengthPrefix(grantee)...),
 		[]byte(msgType)...,

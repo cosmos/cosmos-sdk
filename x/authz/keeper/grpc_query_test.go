@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 )
@@ -15,44 +14,44 @@ import (
 func (suite *TestSuite) TestGRPCQueryAuthorization() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	var (
-		req              *types.QueryGrantsRequest
+		req              *authz.QueryGrantsRequest
 		expAuthorization authz.Authorization
 	)
 	testCases := []struct {
 		msg      string
 		malleate func(require *require.Assertions)
 		expError string
-		postTest func(require *require.Assertions, res *types.QueryGrantsResponse)
+		postTest func(require *require.Assertions, res *authz.QueryGrantsResponse)
 	}{
 		{
 			"fail invalid granter addr",
 			func(require *require.Assertions) {
-				req = &types.QueryGrantsRequest{}
+				req = &authz.QueryGrantsRequest{}
 			},
 			"empty address string is not allowed",
-			func(require *require.Assertions, res *types.QueryGrantsResponse) {},
+			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
 		},
 		{
 			"fail invalid grantee addr",
 			func(require *require.Assertions) {
-				req = &types.QueryGrantsRequest{
+				req = &authz.QueryGrantsRequest{
 					Granter: addrs[0].String(),
 				}
 			},
 			"empty address string is not allowed",
-			func(require *require.Assertions, res *types.QueryGrantsResponse) {},
+			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
 		},
 		{
 			"fail invalid msg-type",
 			func(require *require.Assertions) {
-				req = &types.QueryGrantsRequest{
+				req = &authz.QueryGrantsRequest{
 					Granter:    addrs[0].String(),
 					Grantee:    addrs[1].String(),
 					MsgTypeUrl: "unknown",
 				}
 			},
 			"no authorization found for unknown type",
-			func(require *require.Assertions, res *types.QueryGrantsResponse) {},
+			func(require *require.Assertions, res *authz.QueryGrantsResponse) {},
 		},
 		{
 			"Success",
@@ -62,14 +61,14 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 				expAuthorization = &banktypes.SendAuthorization{SpendLimit: newCoins}
 				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				require.NoError(err)
-				req = &types.QueryGrantsRequest{
+				req = &authz.QueryGrantsRequest{
 					Granter:    addrs[1].String(),
 					Grantee:    addrs[0].String(),
 					MsgTypeUrl: expAuthorization.MsgTypeURL(),
 				}
 			},
 			"",
-			func(require *require.Assertions, res *types.QueryGrantsResponse) {
+			func(require *require.Assertions, res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				require.Equal(1, len(res.Grants))
 				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)
@@ -98,32 +97,32 @@ func (suite *TestSuite) TestGRPCQueryAuthorization() {
 func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
 	var (
-		req              *types.QueryGrantsRequest
+		req              *authz.QueryGrantsRequest
 		expAuthorization authz.Authorization
 	)
 	testCases := []struct {
 		msg      string
 		malleate func()
 		expPass  bool
-		postTest func(res *types.QueryGrantsResponse)
+		postTest func(res *authz.QueryGrantsResponse)
 	}{
 		{
 			"fail invalid granter addr",
 			func() {
-				req = &types.QueryGrantsRequest{}
+				req = &authz.QueryGrantsRequest{}
 			},
 			false,
-			func(res *types.QueryGrantsResponse) {},
+			func(res *authz.QueryGrantsResponse) {},
 		},
 		{
 			"fail invalid grantee addr",
 			func() {
-				req = &types.QueryGrantsRequest{
+				req = &authz.QueryGrantsRequest{
 					Granter: addrs[0].String(),
 				}
 			},
 			false,
-			func(res *types.QueryGrantsResponse) {},
+			func(res *authz.QueryGrantsResponse) {},
 		},
 		{
 			"Success",
@@ -133,13 +132,13 @@ func (suite *TestSuite) TestGRPCQueryAuthorizations() {
 				expAuthorization = &banktypes.SendAuthorization{SpendLimit: newCoins}
 				err := app.AuthzKeeper.SaveGrant(ctx, addrs[0], addrs[1], expAuthorization, now.Add(time.Hour))
 				suite.Require().NoError(err)
-				req = &types.QueryGrantsRequest{
+				req = &authz.QueryGrantsRequest{
 					Granter: addrs[1].String(),
 					Grantee: addrs[0].String(),
 				}
 			},
 			true,
-			func(res *types.QueryGrantsResponse) {
+			func(res *authz.QueryGrantsResponse) {
 				var auth authz.Authorization
 				suite.Require().Equal(1, len(res.Grants))
 				err := suite.app.InterfaceRegistry().UnpackAny(res.Grants[0].Authorization, &auth)

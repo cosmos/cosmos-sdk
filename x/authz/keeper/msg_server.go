@@ -5,13 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-var _ types.MsgServer = Keeper{}
+var _ authz.MsgServer = Keeper{}
 
 // GrantAuthorization implements the MsgServer.Grant method.
-func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrant) (*types.MsgGrantResponse, error) {
+func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -36,11 +36,11 @@ func (k Keeper) Grant(goCtx context.Context, msg *types.MsgGrant) (*types.MsgGra
 		return nil, err
 	}
 
-	return &types.MsgGrantResponse{}, nil
+	return &authz.MsgGrantResponse{}, nil
 }
 
 // RevokeAuthorization implements the MsgServer.Revoke method.
-func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevoke) (*types.MsgRevokeResponse, error) {
+func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -56,11 +56,11 @@ func (k Keeper) Revoke(goCtx context.Context, msg *types.MsgRevoke) (*types.MsgR
 		return nil, err
 	}
 
-	return &types.MsgRevokeResponse{}, nil
+	return &authz.MsgRevokeResponse{}, nil
 }
 
 // Exec implements the MsgServer.Exec method.
-func (k Keeper) Exec(goCtx context.Context, msg *types.MsgExec) (*types.MsgExecResponse, error) {
+func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -74,5 +74,5 @@ func (k Keeper) Exec(goCtx context.Context, msg *types.MsgExec) (*types.MsgExecR
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgExecResponse{Result: result}, nil
+	return &authz.MsgExecResponse{Result: result}, nil
 }

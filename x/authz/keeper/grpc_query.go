@@ -13,13 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ authz.QueryServer = Keeper{}
 
 // Authorizations implements the Query/Grants gRPC method.
-func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types.QueryGrantsResponse, error) {
+func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -48,15 +48,15 @@ func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
-		return &types.QueryGrantsResponse{
-			Grants: []*types.Grant{{
+		return &authz.QueryGrantsResponse{
+			Grants: []*authz.Grant{{
 				Authorization: authorizationAny,
 				Expiration:    expiration,
 			}},
 		}, nil
 	}
 
-	var authorizations []*types.Grant
+	var authorizations []*authz.Grant
 	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
@@ -73,7 +73,7 @@ func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types
 			if err != nil {
 				return false, status.Errorf(codes.Internal, err.Error())
 			}
-			authorizations = append(authorizations, &types.Grant{
+			authorizations = append(authorizations, &authz.Grant{
 				Authorization: authorizationAny,
 				Expiration:    auth.Expiration,
 			})
@@ -84,14 +84,14 @@ func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types
 		return nil, err
 	}
 
-	return &types.QueryGrantsResponse{
+	return &authz.QueryGrantsResponse{
 		Grants:     authorizations,
 		Pagination: pageRes,
 	}, nil
 }
 
 // unmarshal an authorization from a store value
-func unmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v types.Grant, err error) {
+func unmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v authz.Grant, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &v)
 	return v, err
 }

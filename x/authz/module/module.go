@@ -16,12 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
-
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzcdc "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
 )
 
@@ -38,14 +37,14 @@ type AppModuleBasic struct {
 
 // Name returns the authz module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return authz.ModuleName
 }
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	authz.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	authz.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.
@@ -53,23 +52,23 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the authz module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
+	authzcdc.RegisterInterfaces(registry)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the authz
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(authz.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the authz module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
+	var data authz.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", types.ModuleName)
+		return sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", authz.ModuleName)
 	}
 
-	return types.ValidateGenesis(data)
+	return authz.ValidateGenesis(data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the authz module.
@@ -78,7 +77,7 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Rou
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	authz.RegisterQueryHandlerClient(context.Background(), mux, authz.NewQueryClient(clientCtx))
 }
 
 // GetQueryCmd returns the cli query commands for the authz module
@@ -95,13 +94,13 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	accountKeeper authz.AccountKeeper
+	bankKeeper    authz.BankKeeper
 	registry      cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, ak authz.AccountKeeper, bk authz.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -113,7 +112,7 @@ func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, ak types.AccountKee
 
 // Name returns the authz module's name.
 func (AppModule) Name() string {
-	return types.ModuleName
+	return authz.ModuleName
 }
 
 // RegisterInvariants does nothing, there are no invariants to enforce
@@ -121,7 +120,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the staking module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
+	return sdk.NewRoute(authz.RouterKey, nil)
 }
 
 func (am AppModule) NewHandler() sdk.Handler {
@@ -139,7 +138,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the authz module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState types.GenesisState
+	var genesisState authz.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	am.keeper.InitGenesis(ctx, &genesisState)
 	return []abci.ValidatorUpdate{}
@@ -184,7 +183,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for authz module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[authz.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

@@ -5,17 +5,14 @@ import (
 	"time"
 
 	proto "github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/stretchr/testify/suite"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -27,7 +24,7 @@ type TestSuite struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	addrs       []sdk.AccAddress
-	queryClient types.QueryClient
+	queryClient authz.QueryClient
 }
 
 func (s *TestSuite) SetupTest() {
@@ -36,8 +33,8 @@ func (s *TestSuite) SetupTest() {
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.AuthzKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+	authz.RegisterQueryServer(queryHelper, app.AuthzKeeper)
+	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
 	s.app = app
@@ -120,7 +117,7 @@ func (s *TestSuite) TestKeeperIter() {
 	authorization, _ = app.AuthzKeeper.GetCleanAuthorization(ctx, granteeAddr, granterAddr, "abcd")
 	s.Require().Nil(authorization)
 
-	app.AuthzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.Grant) bool {
+	app.AuthzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		s.Require().Equal(granter, granterAddr)
 		s.Require().Equal(grantee, granteeAddr)
 		return true
@@ -141,7 +138,7 @@ func (s *TestSuite) TestKeeperFees() {
 	smallCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 20))
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
 
-	msgs := types.NewMsgExec(granteeAddr, []sdk.ServiceMsg{
+	msgs := authz.NewMsgExec(granteeAddr, []sdk.ServiceMsg{
 		{
 			MethodName: bankSendAuthMsgType,
 			Request: &banktypes.MsgSend{
@@ -184,7 +181,7 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch fails with overlimit")
 	// grant authorization
 
-	msgs = types.NewMsgExec(granteeAddr, []sdk.ServiceMsg{
+	msgs = authz.NewMsgExec(granteeAddr, []sdk.ServiceMsg{
 		{
 			MethodName: bankSendAuthMsgType,
 			Request: &banktypes.MsgSend{

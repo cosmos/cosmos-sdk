@@ -16,24 +16,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const FlagSpendLimit = "spend-limit"
-const FlagMsgType = "msg-type"
-const FlagExpiration = "expiration"
-const FlagAllowedValidators = "allowed-validators"
-const FlagDenyValidators = "deny-validators"
-const delegate = "delegate"
-const redelegate = "redelegate"
-const unbond = "unbond"
+// Flag names and values
+const (
+	FlagSpendLimit        = "spend-limit"
+	FlagMsgType           = "msg-type"
+	FlagExpiration        = "expiration"
+	FlagAllowedValidators = "allowed-validators"
+	FlagDenyValidators    = "deny-validators"
+	delegate              = "delegate"
+	redelegate            = "redelegate"
+	unbond                = "unbond"
+)
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
 	AuthorizationTxCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        authz.ModuleName,
 		Short:                      "Authorization transactions subcommands",
 		Long:                       "Authorize and revoke access to execute transactions on behalf of your address",
 		DisableFlagParsing:         true,
@@ -60,7 +62,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
-	`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, types.ModuleName),
+	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -103,7 +105,7 @@ Examples:
 					return err
 				}
 
-				authorization = types.NewGenericAuthorization(msgType)
+				authorization = authz.NewGenericAuthorization(msgType)
 			case delegate, unbond, redelegate:
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
 				if err != nil {
@@ -159,13 +161,13 @@ Examples:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			msg, err := types.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
 			if err != nil {
 				return err
 			}
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
+			msgClient := authz.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.Grant(cmd.Context(), msg)
 			if err != nil {
 				return err
@@ -191,7 +193,7 @@ func NewCmdRevokeAuthorization() *cobra.Command {
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
 Example:
  $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-			`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
+			`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -207,10 +209,10 @@ Example:
 
 			granter := clientCtx.GetFromAddress()
 			msgAuthorized := args[1]
-			msg := types.NewMsgRevoke(granter, grantee, msgAuthorized)
+			msg := authz.NewMsgRevoke(granter, grantee, msgAuthorized)
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
+			msgClient := authz.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.Revoke(cmd.Context(), &msg)
 			if err != nil {
 				return err
@@ -232,7 +234,7 @@ func NewCmdExecAuthorization() *cobra.Command {
 Example:
  $ %s tx %s exec tx.json --from grantee
  $ %s tx bank send <granter> <recipient> --from <granter> --chain-id <chain-id> --generate-only > tx.json && %s tx %s exec tx.json --from grantee
-			`, version.AppName, types.ModuleName, version.AppName, version.AppName, types.ModuleName),
+			`, version.AppName, authz.ModuleName, version.AppName, version.AppName, authz.ModuleName),
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -261,9 +263,9 @@ Example:
 				serviceMsgs[i] = srvMsg
 			}
 
-			msg := types.NewMsgExec(grantee, serviceMsgs)
+			msg := authz.NewMsgExec(grantee, serviceMsgs)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
+			msgClient := authz.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.Exec(cmd.Context(), &msg)
 			if err != nil {
 				return err

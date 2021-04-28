@@ -15,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	types "github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -134,7 +134,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
-				var authorization types.QueryAuthorizationResponse
+				var authorization authz.QueryAuthorizationResponse
 				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &authorization)
 				s.Require().NoError(err)
 				authorization.Authorization.UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
@@ -154,7 +154,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 		expectErr bool
 		errMsg    string
 		preRun    func()
-		postRun   func(*types.QueryAuthorizationsResponse)
+		postRun   func(*authz.QueryAuthorizationsResponse)
 	}{
 		{
 			"fail invalid granter address",
@@ -162,7 +162,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
-			func(_ *types.QueryAuthorizationsResponse) {},
+			func(_ *authz.QueryAuthorizationsResponse) {},
 		},
 		{
 			"fail invalid grantee address",
@@ -170,7 +170,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
-			func(_ *types.QueryAuthorizationsResponse) {},
+			func(_ *authz.QueryAuthorizationsResponse) {},
 		},
 		{
 			"fail empty grantee address",
@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			true,
 			"Not Implemented",
 			func() {},
-			func(_ *types.QueryAuthorizationsResponse) {},
+			func(_ *authz.QueryAuthorizationsResponse) {},
 		},
 		{
 			"valid query: expect single grant",
@@ -187,7 +187,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			"",
 			func() {
 			},
-			func(authorizations *types.QueryAuthorizationsResponse) {
+			func(authorizations *authz.QueryAuthorizationsResponse) {
 				s.Require().Equal(len(authorizations.Authorizations), 1)
 			},
 		},
@@ -209,7 +209,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 				})
 				s.Require().NoError(err)
 			},
-			func(authorizations *types.QueryAuthorizationsResponse) {
+			func(authorizations *authz.QueryAuthorizationsResponse) {
 				s.Require().Equal(len(authorizations.Authorizations), 2)
 			},
 		},
@@ -219,7 +219,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {},
-			func(authorizations *types.QueryAuthorizationsResponse) {
+			func(authorizations *authz.QueryAuthorizationsResponse) {
 				s.Require().Equal(len(authorizations.Authorizations), 1)
 			},
 		},
@@ -229,7 +229,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {},
-			func(authorizations *types.QueryAuthorizationsResponse) {
+			func(authorizations *authz.QueryAuthorizationsResponse) {
 				s.Require().Equal(len(authorizations.Authorizations), 2)
 			},
 		},
@@ -242,7 +242,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
-				var authorizations types.QueryAuthorizationsResponse
+				var authorizations authz.QueryAuthorizationsResponse
 				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &authorizations)
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)

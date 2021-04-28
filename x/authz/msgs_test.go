@@ -1,4 +1,4 @@
-package types_test
+package authz_test
 
 import (
 	"testing"
@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -39,7 +38,7 @@ func TestMsgExecAuthorized(t *testing.T) {
 		}, true},
 	}
 	for i, tc := range tests {
-		msg := types.NewMsgExec(tc.grantee, tc.msgs)
+		msg := authz.NewMsgExec(tc.grantee, tc.msgs)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -60,7 +59,7 @@ func TestMsgRevokeAuthorization(t *testing.T) {
 		{"valid test case", granter, grantee, "hello", true},
 	}
 	for i, tc := range tests {
-		msg := types.NewMsgRevoke(tc.granter, tc.grantee, tc.msgType)
+		msg := authz.NewMsgRevoke(tc.granter, tc.grantee, tc.msgType)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -86,7 +85,7 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
 	}
 	for i, tc := range tests {
-		msg, err := types.NewMsgGrant(
+		msg, err := authz.NewMsgGrant(
 			tc.granter, tc.grantee, tc.authorization, tc.expiration,
 		)
 		if !tc.expectErr {

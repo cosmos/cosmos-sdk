@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/authz/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 option (gogoproto.goproto_getters_all) = false;
 
 // GenericAuthorization gives the grantee unrestricted permissions to execute

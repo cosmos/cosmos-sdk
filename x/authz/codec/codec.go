@@ -12,18 +12,18 @@ import (
 // RegisterInterfaces registers the interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.MsgRequest)(nil),
-		&MsgGrant{},
-		&MsgRevoke{},
-		&MsgExec{},
+		&authz.MsgGrant{},
+		&authz.MsgRevoke{},
+		&authz.MsgExec{},
 	)
 
 	registry.RegisterInterface(
 		"cosmos.authz.v1beta1.Authorization",
 		(*authz.Authorization)(nil),
 		&bank.SendAuthorization{},
-		&GenericAuthorization{},
+		&authz.GenericAuthorization{},
 		&staking.StakeAuthorization{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, authz.MsgServiceDesc())
 }

@@ -10,9 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
 func (s *IntegrationTestSuite) TestQueryAuthorizations() {
@@ -85,7 +84,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 				s.Require().Contains(string(resp.Bytes()), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				var grants types.QueryGrantsResponse
+				var grants authz.QueryGrantsResponse
 				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &grants)
 				s.Require().NoError(err)
 			}

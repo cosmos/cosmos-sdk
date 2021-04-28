@@ -10,13 +10,14 @@ import (
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const gasCostPerIteration = uint64(10)
 
+// Normalized Msg type URLs
 var (
-	_ authz.Authorization = &StakeAuthorization{}
-
 	TypeDelegate        = "/cosmos.staking.v1beta1.Msg/Delegate"
 	TypeUndelegate      = "/cosmos.staking.v1beta1.Msg/Undelegate"
 	TypeBeginRedelegate = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
+
+var _ authz.Authorization = &StakeAuthorization{}
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
 func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
@@ -61,7 +62,6 @@ func (a StakeAuthorization) ValidateBasic() error {
 }
 
 // Accept implements Authorization.Accept.
-// func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (updated authz.Authorization, delete bool, err error) {
 func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (authz.AcceptResponse, error) {
 	var validatorAddress string
 	var amount sdk.Coin

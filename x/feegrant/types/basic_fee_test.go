@@ -26,7 +26,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {
-		allow *types.BasicFeeAllowance
+		allowance *types.BasicFeeAllowance
 		// all other checks are ignored if valid=false
 		fee       sdk.Coins
 		blockTime time.Time
@@ -36,39 +36,35 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		remains   sdk.Coins
 	}{
 		"empty": {
-			allow:  &types.BasicFeeAllowance{},
-			valid:  true,
-			accept: true,
+			allowance: &types.BasicFeeAllowance{},
+			accept:    true,
 		},
 		"small fee without expire": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				SpendLimit: atom,
 			},
-			valid:   true,
 			fee:     smallAtom,
 			accept:  true,
 			remove:  false,
 			remains: leftAtom,
 		},
 		"all fee without expire": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				SpendLimit: smallAtom,
 			},
-			valid:  true,
 			fee:    smallAtom,
 			accept: true,
 			remove: true,
 		},
 		"wrong fee": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				SpendLimit: smallAtom,
 			},
-			valid:  true,
 			fee:    eth,
 			accept: false,
 		},
 		"non-expired": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
@@ -80,7 +76,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains:   leftAtom,
 		},
 		"expired": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				SpendLimit: atom,
 				Expiration: &now,
 			},
@@ -91,7 +87,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove:    true,
 		},
 		"fee more than allowed": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
@@ -101,7 +97,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:    false,
 		},
 		"with out spend limit": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				Expiration: &oneHour,
 			},
 			valid:     true,
@@ -110,7 +106,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:    true,
 		},
 		"expired no spend limit": {
-			allow: &types.BasicFeeAllowance{
+			allowance: &types.BasicFeeAllowance{
 				Expiration: &now,
 			},
 			valid:     true,
@@ -123,26 +119,22 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
-			err := tc.allow.ValidateBasic()
-			if !tc.valid {
-				require.Error(t, err)
-				return
-			}
+			err := tc.allowance.ValidateBasic()
 			require.NoError(t, err)
 
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime(tc.blockTime)
 
 			// now try to deduct
-			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})
+			removed, err := tc.allowance.Accept(ctx, tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
 
-			require.Equal(t, tc.remove, remove)
-			if !remove {
-				assert.Equal(t, tc.allow.SpendLimit, tc.remains)
+			require.Equal(t, tc.remove, removed)
+			if !removed {
+				assert.Equal(t, tc.allowance.SpendLimit, tc.remains)
 			}
 		})
 	}

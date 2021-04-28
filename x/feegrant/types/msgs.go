@@ -14,6 +14,7 @@ var (
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantFeeAllowance.
+//nolint:interfacer
 func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
@@ -51,8 +52,7 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
-// GetSigners returns the address of the granter associated with the
-// allowance message
+// GetSigners gets the granter account associated with an allowance
 func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
@@ -77,11 +77,14 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
-// NewMsgRevokeAllowance creates a new MsgGrantRevokeFeeAllowance.
+// NewMsgRevokeAllowance returns a message to revoke a fee allowance for a given
+// granter and grantee
+//nolint:interfacer
 func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeAllowance {
 	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }
 
+// ValidateBasic implements the sdk.Msg interface.
 func (msg MsgRevokeAllowance) ValidateBasic() error {
 	if msg.Granter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
@@ -89,12 +92,15 @@ func (msg MsgRevokeAllowance) ValidateBasic() error {
 	if msg.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
+	if msg.Grantee == msg.Granter {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
+	}
 
 	return nil
 }
 
-// GetSigners returns the address of the granter associated with the
-// revoke allowance message
+// GetSigners gets the granter address associated with an Allowance
+// to revoke.
 func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {

@@ -53,7 +53,7 @@ func TestPeriodicFeeValidAllowTime(t *testing.T) {
 			valid: false,
 		},
 		"empty basic": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Period:           time.Duration(10) * time.Minute,
 				PeriodSpendLimit: smallAtom,
 				PeriodReset:      now.Add(30 * time.Minute),
@@ -186,11 +186,11 @@ func TestPeriodicFeeValidAllowTime(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			require.Equal(t, tc.remove, remove)
-			if !remove {
-				assert.Equal(t, tc.remains, tc.allow.Basic.SpendLimit)
-				assert.Equal(t, tc.remainsPeriod, tc.allow.PeriodCanSpend)
-				assert.Equal(t, tc.periodReset.String(), tc.allow.PeriodReset.String())
+			require.Equal(t, tc.remove, removed)
+			if !removed {
+				assert.Equal(t, tc.remains, tc.allowance.Basic.SpendLimit)
+				assert.Equal(t, tc.remainsPeriod, tc.allowance.PeriodCanSpend)
+				assert.Equal(t, tc.periodReset.String(), tc.allowance.PeriodReset.String())
 			}
 		})
 	}

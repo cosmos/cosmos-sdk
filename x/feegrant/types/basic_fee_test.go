@@ -15,13 +15,14 @@ import (
 
 func TestBasicFeeValidAllow(t *testing.T) {
 	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	bigAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1000))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
-	now := time.Now()
+	now := ctx.BlockTime()
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {

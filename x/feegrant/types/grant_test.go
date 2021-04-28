@@ -2,10 +2,10 @@ package types_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +19,8 @@ func TestGrant(t *testing.T) {
 	addr2, err := sdk.AccAddressFromBech32("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")
 	require.NoError(t, err)
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
-	now := time.Now()
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	now := ctx.BlockTime()
 	oneYear := now.AddDate(1, 0, 0)
 
 	goodGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
@@ -92,10 +93,8 @@ func TestGrant(t *testing.T) {
 			expected, err := loaded.GetFeeGrant()
 			require.NoError(t, err)
 			actual, err := tc.grant.GetFeeGrant()
-			allowance := expected.(*types.BasicFeeAllowance)
-			allowance1 := actual.(*types.BasicFeeAllowance)
 			require.NoError(t, err)
-			assert.Equal(t, allowance.String(), allowance1.String())
+			assert.Equal(t, expected.(*types.BasicFeeAllowance).String(), actual.(*types.BasicFeeAllowance).String())
 		})
 	}
 }

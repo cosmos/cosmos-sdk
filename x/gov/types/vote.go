@@ -58,7 +58,7 @@ func (v Vote) Empty() bool {
 func VoteOptionFromString(str string) (VoteOption, error) {
 	option, ok := VoteOption_value[str]
 	if !ok {
-		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/no_with_veto/abstain", str)
 	}
 	return VoteOption(option), nil
 }

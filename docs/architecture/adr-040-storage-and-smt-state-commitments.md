@@ -35,7 +35,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 We propose separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedger SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2 as  well).
 
-The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible about data serialization.
+The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible for data serialization.
 
 ### Decouple state commitment from storage
 
@@ -46,7 +46,7 @@ SMT will use it's own storage (could use the same database underneath) from the 
 
 For data access we propose 2 additional KV buckets:
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
-2. B2: `hash(key, value) → key`: an index needed to extract a value (through: SMT → B2 → B1) having a only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
+2. B2: `hash(key, value) → key`: an index needed to extract a value (through: SMT → B2 → B1) having only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
 3. we could use more buckets to optimize the app usage if needed.
 
 Above, we propose to use KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
@@ -73,7 +73,6 @@ A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intrac
 
 
 ### Snapshots for storage sync and versioning
-s
 One of the Stargate core features are snapshots and fast sync delivered in the `/snapshot` package. This feature is implemented in SDK and requires a storage support. Currently the only supported is IAVL.
 
 Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big), usually a snapshot mechanism is based on a _copy on write_ and it allows to efficiently deliver DB state at a certain stage.

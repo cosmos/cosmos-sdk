@@ -762,15 +762,15 @@ func (s *IntegrationTestSuite) TestQueryHistoricalInfoGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			var historical_info types.QueryHistoricalInfoResponse
+			var historicalInfo types.QueryHistoricalInfoResponse
 
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &historical_info)
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &historicalInfo)
 
 			if tc.error {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NotNil(historical_info)
+				s.Require().NotNil(historicalInfo)
 			}
 		})
 	}

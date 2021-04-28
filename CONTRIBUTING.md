@@ -369,14 +369,12 @@ should convene to rectify the situation by either:
 
 **Approval Committee & Decision Making**
 
-In absense of general consensus, decision making requires ⅔ vote from the three members
+In absense of general consensus, decision making requires 1/2 vote from the two members
 of the **Concept Approval Committee**.
 
 **Committee Members**
 
-* Core Members: **Aaron** (Regen), **Bez** (Fission), **Alessio** (AiB)
-* Secondary pool of candidates to replace / substitute:
-    * **Chris Goes** (IG), **Sunny** (Sikka)
+* Core Members: **Aaron** (Regen), **Bez** (IG)
 
 **Committee Criteria**
 
@@ -406,8 +404,7 @@ well as for PRs made as part of a release process:
 
 * Code reviewers should ensure the PR does exactly what the ADR said it should
 * Code reviewers should have more senior engineering capability
-* ⅔ approval is required from the **primary repo maintainers** in `CODEOWNERS`
-  * Secondary pool of candidates to replace / substitute are listed as **secondary repo maintainers** in `CODEOWNERS`
+* 1/2 approval is required from the **primary repo maintainers** in `CODEOWNERS`
  
 *Note: For any major or minor release series denoted as a "Stable Release" (e.g. v0.39 "Launchpad"), a separate release
 committee is often established. Stable Releases, and their corresponding release committees are documented

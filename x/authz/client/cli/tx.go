@@ -187,7 +187,7 @@ Examples:
 
 func NewCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [grantee_address] [msg_type] --from=[granter_address]",
+		Use:   "revoke [grantee] [msg_type] --from=[granter]",
 		Short: "revoke authorization",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:

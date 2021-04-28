@@ -40,7 +40,7 @@ The storage model presented here doesn't deal with data structure nor serializat
 ### Decouple state commitment from storage
 
 
-Separation of storage and commitment (by the SMT) will allow to optimize the different components according to their usage and access patterns.
+Separation of storage and commitment (by the SMT) will allow the optimization of different components according to their usage and access patterns.
 
 SMT will use it's own storage (could use the same database underneath) from the state machine store. For every `(key, value)` pair, the SMT will store `hash(key)` in a path (needed to evenly distribute keys in the tree) and `hash(key, value)` in a leaf (to bind the (key, value) pair stored in the `SS`). Since we don't know a structure of a value (in particular if it contains the key) we hash both the key and the value in the `SC` leaf.
 
@@ -49,7 +49,7 @@ For data access we propose 2 additional KV buckets:
 2. B2: `hash(key, value) → key`: an index needed to extract a value (through: SMT → B2 → B1) having only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
 3. we could use more buckets to optimize the app usage if needed.
 
-Above, we propose to use KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
+Above, we propose to use a KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
 
 
 ### Requirements
@@ -73,7 +73,7 @@ A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intrac
 
 
 ### Snapshots for storage sync and versioning
-One of the Stargate core features are snapshots and fast sync delivered in the `/snapshot` package. This feature is implemented in SDK and requires a storage support. Currently the only supported is IAVL.
+One of the Stargate core features are snapshots and state sync delivered in the `/snapshot` package. This feature is implemented in SDK and requires storage support. Currently IAVL is the only supported backend.
 
 Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big), usually a snapshot mechanism is based on a _copy on write_ and it allows to efficiently deliver DB state at a certain stage.
 Some DB engines support snapshotting. Hence, we propose to reuse that functionality for the state sync and versioning (described below). It will the supported DB engines to ones which efficiently implement snapshots. In a final section we will discuss evaluated DBs.
@@ -84,7 +84,7 @@ NOTE: For the SDK storage, we may consider splitting that interface into `Commit
 
 Number of historical versions (snapshots) for `abci.Query` and fast sync is part of a node configuration, not a chain configuration. A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all snapshots.
 
-Pruning old snapshots is effectively done by DB. Whenever we update a record in `SC`, SMT will create a new one without removing the old one. Since we are using a snapshot for each block, we must update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
+Pruning old snapshots is effectively done by the database. Whenever we update a record in `SC`, SMT will create a new one without removing the old one. Since we are snapshoting each block, we update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
 
 To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height.
 
@@ -93,14 +93,14 @@ To manage the active snapshots we will either us a DB _max number of snapshots_ 
 One of the functional requirements is to access old state. This is done through `abci.Query` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
 `abci.Query` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine). We will only create snapshots for
 
-Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to a not deterministic execution.
+Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
 We positively validated a snapshot mechanism for querying old state with regards to the database we evaluated.
 
 
 ### Rollbacks
 
-We need to be able to process transactions and roll-back state updates if transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`,  we commit a root store - at that time, all changes are written to the SMT and to the `SS` and a snapshot is created.
+We need to be able to process transactions and roll-back state updates if a transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`,  we commit a root store - at that time, all changes are written to the SMT and to the `SS` and a snapshot is created.
 
 
 ## Consequences
@@ -110,7 +110,7 @@ We need to be able to process transactions and roll-back state updates if transa
 
 This ADR doesn't introduce any SDK level API changes.
 
-We change a storage layout, so storage migration and a blockchain reboot is required.
+We change the storage layout of the state machine, a storage migration and network upgrade is required to incorporate these changes.
 
 ### Positive
 
@@ -139,7 +139,7 @@ Ethereum research published [Verkle Tire](https://notes.ethereum.org/_N1mutVERDK
 
 ### Evaluated KV Databases
 
-We verified existing databases KV databases for evaluating snapshot support. The following DBs provide efficient snapshot mechanism: Badger, RocksDB, [Pebbe](https://github.com/cockroachdb/pebble). DB which don't provide such support or are not production ready: boltdb, leveldb, goleveldb, membdb, lmdb.
+We verified existing databases KV databases for evaluating snapshot support. The following databases provide efficient snapshot mechanism: Badger, RocksDB, [Pebble](https://github.com/cockroachdb/pebble). Databases which don't provide such support or are not production ready: boltdb, leveldb, goleveldb, membdb, lmdb.
 
 ### RDBMS
 

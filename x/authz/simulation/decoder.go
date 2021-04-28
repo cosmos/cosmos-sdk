@@ -16,8 +16,8 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.GrantKey):
 			var grantA, grantB types.AuthorizationGrant
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &grantA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &grantB)
+			cdc.MustUnmarshal(kvA.Value, &grantA)
+			cdc.MustUnmarshal(kvB.Value, &grantB)
 			return fmt.Sprintf("%v\n%v", grantA, grantB)
 		default:
 			panic(fmt.Sprintf("invalid authz key %X", kvA.Key))

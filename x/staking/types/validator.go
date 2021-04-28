@@ -143,7 +143,7 @@ func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 
 // return the redelegation
 func MustMarshalValidator(cdc codec.BinaryCodec, validator *Validator) []byte {
-	return cdc.MustMarshalBinaryBare(validator)
+	return cdc.MustMarshal(validator)
 }
 
 // unmarshal a redelegation from a store value
@@ -158,7 +158,7 @@ func MustUnmarshalValidator(cdc codec.BinaryCodec, value []byte) Validator {
 
 // unmarshal a redelegation from a store value
 func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (v Validator, err error) {
-	err = cdc.UnmarshalBinaryBare(value, &v)
+	err = cdc.Unmarshal(value, &v)
 	return v, err
 }
 

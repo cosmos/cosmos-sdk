@@ -92,7 +92,7 @@ Example:
     // ...
   }
 
-  bz := cdc.MustMarshalBinaryBare(ts)
+  bz := cdc.MustMarshal(ts)
 ```
 
 However, modules can vary greatly in purpose and design and so we must support the ability for modules

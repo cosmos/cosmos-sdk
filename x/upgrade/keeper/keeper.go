@@ -138,7 +138,7 @@ func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {
 		k.ClearIBCState(ctx, oldPlan.Height)
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(&plan)
+	bz := k.cdc.MustMarshal(&plan)
 	store.Set(types.PlanKey(), bz)
 
 	return nil
@@ -226,7 +226,7 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 		return plan, false
 	}
 
-	k.cdc.MustUnmarshalBinaryBare(bz, &plan)
+	k.cdc.MustUnmarshal(bz, &plan)
 	return plan, true
 }
 

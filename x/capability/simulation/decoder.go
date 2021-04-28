@@ -22,8 +22,8 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 
 		case bytes.HasPrefix(kvA.Key, types.KeyPrefixIndexCapability):
 			var capOwnersA, capOwnersB types.CapabilityOwners
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &capOwnersA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &capOwnersB)
+			cdc.MustUnmarshal(kvA.Value, &capOwnersA)
+			cdc.MustUnmarshal(kvB.Value, &capOwnersB)
 			return fmt.Sprintf("CapabilityOwners A: %v\nCapabilityOwners B: %v\n", capOwnersA, capOwnersB)
 
 		default:

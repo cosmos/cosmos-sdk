@@ -82,7 +82,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	}
 
 	ip := sdk.IntProto{}
-	k.cdc.MustUnmarshalBinaryBare(bz, &ip)
+	k.cdc.MustUnmarshal(bz, &ip)
 
 	return ip.Int
 }
@@ -90,6 +90,6 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 // Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&sdk.IntProto{Int: power})
+	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)
 }

@@ -53,7 +53,7 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 		return err
 	}
 
-	bz, err := k.cdc.MarshalBinaryBare(&grant)
+	bz, err := k.cdc.Marshal(&grant)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 	}
 
 	var feegrant types.FeeAllowanceGrant
-	if err := k.cdc.UnmarshalBinaryBare(bz, &feegrant); err != nil {
+	if err := k.cdc.Unmarshal(bz, &feegrant); err != nil {
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
 		var feeGrant types.FeeAllowanceGrant
-		if err := k.cdc.UnmarshalBinaryBare(bz, &feeGrant); err != nil {
+		if err := k.cdc.Unmarshal(bz, &feeGrant); err != nil {
 			return err
 		}
 

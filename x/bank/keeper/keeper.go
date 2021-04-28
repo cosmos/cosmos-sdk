@@ -222,7 +222,7 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 	}
 
 	var metadata types.Metadata
-	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
+	k.cdc.MustUnmarshal(bz, &metadata)
 
 	return metadata, true
 }
@@ -250,7 +250,7 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 
 	for ; iterator.Valid(); iterator.Next() {
 		var metadata types.Metadata
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &metadata)
+		k.cdc.MustUnmarshal(iterator.Value(), &metadata)
 
 		if cb(metadata) {
 			break
@@ -263,7 +263,7 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 	store := ctx.KVStore(k.storeKey)
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataKey(denomMetaData.Base))
 
-	m := k.cdc.MustMarshalBinaryBare(&denomMetaData)
+	m := k.cdc.MustMarshal(&denomMetaData)
 	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
 }
 

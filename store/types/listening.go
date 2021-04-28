@@ -36,7 +36,7 @@ func (wl *StoreKVPairWriteListener) OnWrite(storeKey StoreKey, key []byte, value
 	kvPair.Delete = delete
 	kvPair.Key = key
 	kvPair.Value = value
-	by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair)
+	by, err := wl.marshaller.MarshalLengthPrefixed(kvPair)
 	if err != nil {
 		return err
 	}

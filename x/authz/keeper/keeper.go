@@ -44,7 +44,7 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (gr
 	if bz == nil {
 		return grant, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(bz, &grant)
+	k.cdc.MustUnmarshal(bz, &grant)
 	return grant, true
 }
 
@@ -67,7 +67,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
-	store.Set(grantStoreKey, k.cdc.MustMarshalBinaryBare(&grant))
+	store.Set(grantStoreKey, k.cdc.MustMarshal(&grant))
 	return nil
 }
 
@@ -126,7 +126,7 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 		return err
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(&grant)
+	bz := k.cdc.MustMarshal(&grant)
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, authorization.MethodName())
 	store.Set(grantStoreKey, bz)
 
@@ -172,7 +172,7 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	defer iter.Close()
 	var authorization types.AuthorizationGrant
 	for ; iter.Valid(); iter.Next() {
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &authorization)
+		k.cdc.MustUnmarshal(iter.Value(), &authorization)
 		authorizations = append(authorizations, authorization.GetAuthorizationGrant())
 	}
 	return authorizations
@@ -203,7 +203,7 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	for ; iter.Valid(); iter.Next() {
 		var grant types.AuthorizationGrant
 		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
+		k.cdc.MustUnmarshal(iter.Value(), &grant)
 		if handler(granterAddr, granteeAddr, grant) {
 			break
 		}

@@ -201,7 +201,7 @@ func ExampleFilteredPaginate() {
 	var balResult sdk.Coins
 	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
-		err := appCodec.UnmarshalBinaryBare(value, &bal)
+		err := appCodec.Unmarshal(value, &bal)
 		if err != nil {
 			return false, err
 		}
@@ -233,7 +233,7 @@ func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec 
 	var balResult sdk.Coins
 	res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
-		err := appCodec.UnmarshalBinaryBare(value, &bal)
+		err := appCodec.Unmarshal(value, &bal)
 		if err != nil {
 			return false, err
 		}

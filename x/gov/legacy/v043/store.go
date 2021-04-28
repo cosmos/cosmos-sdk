@@ -48,13 +48,13 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var oldVote v040gov.Vote
-		err := cdc.UnmarshalBinaryBare(iterator.Value(), &oldVote)
+		err := cdc.Unmarshal(iterator.Value(), &oldVote)
 		if err != nil {
 			return err
 		}
 
 		newVote := migrateVote(oldVote)
-		bz, err := cdc.MarshalBinaryBare(&newVote)
+		bz, err := cdc.Marshal(&newVote)
 		if err != nil {
 			return err
 		}

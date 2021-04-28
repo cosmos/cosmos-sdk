@@ -20,17 +20,17 @@ type (
 	}
 
 	BinaryCodec interface {
-		MarshalBinaryBare(o ProtoMarshaler) ([]byte, error)
-		MustMarshalBinaryBare(o ProtoMarshaler) []byte
+		Marshal(o ProtoMarshaler) ([]byte, error)
+		MustMarshal(o ProtoMarshaler) []byte
 
-		MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, error)
-		MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte
+		MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error)
+		MustMarshalLengthPrefixed(o ProtoMarshaler) []byte
 
-		UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error
-		MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler)
+		Unmarshal(bz []byte, ptr ProtoMarshaler) error
+		MustUnmarshal(bz []byte, ptr ProtoMarshaler)
 
-		UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
-		MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler)
+		UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
+		MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 
 		MarshalInterface(i proto.Message) ([]byte, error)
 		UnmarshalInterface(bz []byte, ptr interface{}) error

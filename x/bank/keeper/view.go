@@ -105,7 +105,7 @@ func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom s
 	}
 
 	var balance sdk.Coin
-	k.cdc.MustUnmarshalBinaryBare(bz, &balance)
+	k.cdc.MustUnmarshal(bz, &balance)
 
 	return balance
 }
@@ -121,7 +121,7 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 
 	for ; iterator.Valid(); iterator.Next() {
 		var balance sdk.Coin
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
+		k.cdc.MustUnmarshal(iterator.Value(), &balance)
 
 		if cb(balance) {
 			break
@@ -149,7 +149,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 		}
 
 		var balance sdk.Coin
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &balance)
+		k.cdc.MustUnmarshal(iterator.Value(), &balance)
 
 		if cb(address, balance) {
 			break

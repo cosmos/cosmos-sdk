@@ -39,7 +39,7 @@ func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, s
 
 // MustMarshalDelegation returns the delegation bytes. Panics if fails
 func MustMarshalDelegation(cdc codec.BinaryCodec, delegation Delegation) []byte {
-	return cdc.MustMarshalBinaryBare(&delegation)
+	return cdc.MustMarshal(&delegation)
 }
 
 // MustUnmarshalDelegation return the unmarshaled delegation from bytes.
@@ -55,7 +55,7 @@ func MustUnmarshalDelegation(cdc codec.BinaryCodec, value []byte) Delegation {
 
 // return the delegation
 func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delegation, err error) {
-	err = cdc.UnmarshalBinaryBare(value, &delegation)
+	err = cdc.Unmarshal(value, &delegation)
 	return delegation, err
 }
 
@@ -140,7 +140,7 @@ func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 
 // return the unbonding delegation
 func MustMarshalUBD(cdc codec.BinaryCodec, ubd UnbondingDelegation) []byte {
-	return cdc.MustMarshalBinaryBare(&ubd)
+	return cdc.MustMarshal(&ubd)
 }
 
 // unmarshal a unbonding delegation from a store value
@@ -155,7 +155,7 @@ func MustUnmarshalUBD(cdc codec.BinaryCodec, value []byte) UnbondingDelegation {
 
 // unmarshal a unbonding delegation from a store value
 func UnmarshalUBD(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation, err error) {
-	err = cdc.UnmarshalBinaryBare(value, &ubd)
+	err = cdc.Unmarshal(value, &ubd)
 	return ubd, err
 }
 
@@ -235,7 +235,7 @@ func (red *Redelegation) RemoveEntry(i int64) {
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.
 func MustMarshalRED(cdc codec.BinaryCodec, red Redelegation) []byte {
-	return cdc.MustMarshalBinaryBare(&red)
+	return cdc.MustMarshal(&red)
 }
 
 // MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.
@@ -250,7 +250,7 @@ func MustUnmarshalRED(cdc codec.BinaryCodec, value []byte) Redelegation {
 
 // UnmarshalRED unmarshals a redelegation from a store value
 func UnmarshalRED(cdc codec.BinaryCodec, value []byte) (red Redelegation, err error) {
-	err = cdc.UnmarshalBinaryBare(value, &red)
+	err = cdc.Unmarshal(value, &red)
 	return red, err
 }
 

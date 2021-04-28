@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"container/list"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -20,13 +19,12 @@ var _ types.DelegationSet = Keeper{}
 
 // keeper of the staking store
 type Keeper struct {
-	storeKey           sdk.StoreKey
-	cdc                codec.BinaryMarshaler
-	authKeeper         types.AccountKeeper
-	bankKeeper         types.BankKeeper
-	hooks              types.StakingHooks
-	paramstore         paramtypes.Subspace
-	validatorCacheList *list.List
+	storeKey   sdk.StoreKey
+	cdc        codec.BinaryMarshaler
+	authKeeper types.AccountKeeper
+	bankKeeper types.BankKeeper
+	hooks      types.StakingHooks
+	paramstore paramtypes.Subspace
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -49,13 +47,12 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:           key,
-		cdc:                cdc,
-		authKeeper:         ak,
-		bankKeeper:         bk,
-		paramstore:         ps,
-		hooks:              nil,
-		validatorCacheList: list.New(),
+		storeKey:   key,
+		cdc:        cdc,
+		authKeeper: ak,
+		bankKeeper: bk,
+		paramstore: ps,
+		hooks:      nil,
 	}
 }
 

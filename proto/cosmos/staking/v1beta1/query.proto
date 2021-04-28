@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option java_multiple_files = true;
 
 // Query defines the gRPC querier service.
 service Query {

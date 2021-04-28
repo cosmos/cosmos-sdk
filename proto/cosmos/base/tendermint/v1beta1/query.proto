@@ -10,6 +10,7 @@ import "tendermint/types/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/tmservice";
+option java_multiple_files = true;
 
 // Service defines the gRPC querier service for tendermint queries.
 service Service {

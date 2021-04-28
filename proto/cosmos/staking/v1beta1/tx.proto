@@ -10,6 +10,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option java_multiple_files = true;
 
 // Msg defines the staking Msg service.
 service Msg {

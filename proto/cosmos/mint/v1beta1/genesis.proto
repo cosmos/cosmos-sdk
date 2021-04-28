@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/mint/v1beta1/mint.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
+option java_multiple_files = true;
 
 // GenesisState defines the mint module's genesis state.
 message GenesisState {

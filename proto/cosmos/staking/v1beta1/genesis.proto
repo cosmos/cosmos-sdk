@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.staking.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos/staking/v1beta1/staking.proto";

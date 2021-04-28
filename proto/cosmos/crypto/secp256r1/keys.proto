@@ -4,6 +4,7 @@ package cosmos.crypto.secp256r1;
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1";
+option java_multiple_files = true;
 option (gogoproto.messagename_all) = true;
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.goproto_getters_all) = false;

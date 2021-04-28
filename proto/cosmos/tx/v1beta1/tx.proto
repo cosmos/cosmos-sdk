@@ -8,6 +8,7 @@ import "cosmos/tx/signing/v1beta1/signing.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx";
+option java_multiple_files = true;
 
 // Tx is the standard type used for broadcasting transactions.
 message Tx {

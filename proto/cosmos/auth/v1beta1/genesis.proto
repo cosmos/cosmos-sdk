@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+option java_multiple_files = true;
 
 // GenesisState defines the auth module's genesis state.
 message GenesisState {

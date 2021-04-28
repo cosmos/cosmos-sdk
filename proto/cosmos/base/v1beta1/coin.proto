@@ -4,6 +4,7 @@ package cosmos.base.v1beta1;
 import "gogoproto/gogo.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
+option java_multiple_files = true;
 option (gogoproto.goproto_stringer_all) = false;
 option (gogoproto.stringer_all)         = false;
 

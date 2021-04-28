@@ -9,6 +9,7 @@ import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+option java_multiple_files = true;
 
 // Query defines the gRPC querier service.
 service Query {

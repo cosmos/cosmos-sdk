@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
+option java_multiple_files = true;
 
 // BaseAccount defines a base account type. It contains all the necessary fields
 // for basic account functionality. Any custom account type should extend this

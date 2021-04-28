@@ -4,6 +4,7 @@ package cosmos.base.reflection.v2alpha1;
 import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1";
+option java_multiple_files = true;
 
 // AppDescriptor describes a cosmos-sdk based application
 message AppDescriptor {

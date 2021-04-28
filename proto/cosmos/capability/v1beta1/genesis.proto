@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/capability/v1beta1/capability.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/capability/types";
+option java_multiple_files = true;
 
 // GenesisOwners defines the capability owners with their corresponding index.
 message GenesisOwners {

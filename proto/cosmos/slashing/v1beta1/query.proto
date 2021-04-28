@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/slashing/v1beta1/slashing.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
+option java_multiple_files = true;
 
 // Query provides defines the gRPC querier service
 service Query {

@@ -5,6 +5,7 @@ import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
+option java_multiple_files = true;
 
 // SignMode represents a signing mode with its own security guarantees.
 enum SignMode {

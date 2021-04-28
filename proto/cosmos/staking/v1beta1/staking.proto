@@ -11,6 +11,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "tendermint/types/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option java_multiple_files = true;
 
 // HistoricalInfo contains header and validator information for a given block.
 // It is stored as part of staking module's state, which persists the `n` most

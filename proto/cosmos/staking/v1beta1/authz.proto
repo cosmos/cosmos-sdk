@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
+option java_multiple_files = true;
 
 // StakeAuthorization defines authorization for delegate/undelegate/redelegate.
 message StakeAuthorization {

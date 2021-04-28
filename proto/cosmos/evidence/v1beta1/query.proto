@@ -7,6 +7,7 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/evidence/types";
+option java_multiple_files = true;
 
 // Query defines the gRPC querier service.
 service Query {

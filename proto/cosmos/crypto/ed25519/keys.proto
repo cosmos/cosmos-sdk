@@ -4,6 +4,7 @@ package cosmos.crypto.ed25519;
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519";
+option java_multiple_files = true;
 
 // PubKey is an ed25519 public key for handling Tendermint keys in SDK.
 // It's needed for Any serialization and SDK compatibility.

@@ -4,6 +4,7 @@ package cosmos.base.kv.v1beta1;
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/kv";
+option java_multiple_files = true;
 
 // Pairs defines a repeated slice of Pair objects.
 message Pairs {

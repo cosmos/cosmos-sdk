@@ -5,6 +5,7 @@ import "google/protobuf/any.proto";
 import "testdata.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
+option java_multiple_files = true;
 
 // Query tests the protobuf Query service as defined in
 // https://github.com/cosmos/cosmos-sdk/issues/5921.

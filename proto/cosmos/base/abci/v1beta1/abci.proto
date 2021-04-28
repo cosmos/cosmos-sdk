@@ -6,6 +6,7 @@ import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
+option java_multiple_files = true;
 option (gogoproto.goproto_stringer_all) = false;
 
 // TxResponse defines a structure containing relevant tx data and metadata. The

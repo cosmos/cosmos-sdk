@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option java_multiple_files = true;
 
 // Query defines the gRPC querier service for distribution module.
 service Query {

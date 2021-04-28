@@ -4,6 +4,7 @@ package cosmos_proto;
 import "google/protobuf/descriptor.proto";
 
 option go_package = "github.com/regen-network/cosmos-proto";
+option java_multiple_files = true;
 
 extend google.protobuf.MessageOptions {
     string interface_type = 93001;

@@ -4,6 +4,7 @@ package cosmos.crypto.multisig.v1beta1;
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/types";
+option java_multiple_files = true;
 
 // MultiSignature wraps the signatures from a multisig.LegacyAminoPubKey.
 // See cosmos.tx.v1betata1.ModeInfo.Multi for how to specify which signers

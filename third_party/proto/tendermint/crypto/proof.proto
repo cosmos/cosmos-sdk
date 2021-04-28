@@ -2,6 +2,7 @@ syntax = "proto3";
 package tendermint.crypto;
 
 option go_package = "github.com/tendermint/tendermint/proto/tendermint/crypto";
+option java_multiple_files = true;
 
 import "gogoproto/gogo.proto";
 

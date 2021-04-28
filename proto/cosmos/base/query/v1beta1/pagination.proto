@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.base.query.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/query";
+option java_multiple_files = true;
 
 // PageRequest is to be embedded in gRPC request messages for efficient
 // pagination. Ex:

@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/feegrant/v1beta1/feegrant.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
+option java_multiple_files = true;
 
 // GenesisState contains a set of fee allowances, persisted from the store
 message GenesisState {

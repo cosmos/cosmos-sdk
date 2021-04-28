@@ -22,7 +22,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
 
 	cases := map[string]struct {
-		allow types.PeriodicFeeAllowance
+		allowance types.PeriodicFeeAllowance
 		// all other checks are ignored if valid=false
 		fee           sdk.Coins
 		blockHeight   int64
@@ -34,11 +34,11 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		periodReset   types.ExpiresAt
 	}{
 		"empty": {
-			allow: types.PeriodicFeeAllowance{},
+			allowance: types.PeriodicFeeAllowance{},
 			valid: false,
 		},
 		"only basic": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -47,7 +47,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			valid: false,
 		},
 		"empty basic": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Period:           types.BlockDuration(10),
 				PeriodSpendLimit: smallAtom,
 				PeriodReset:      types.ExpiresAtHeight(70),
@@ -59,7 +59,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset: types.ExpiresAtHeight(80),
 		},
 		"mismatched currencies": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -70,7 +70,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			valid: false,
 		},
 		"first time": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -88,7 +88,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   types.ExpiresAtHeight(85),
 		},
 		"same period": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -108,7 +108,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   types.ExpiresAtHeight(80),
 		},
 		"step one period": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -127,7 +127,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   types.ExpiresAtHeight(80), // one step from last reset, not now
 		},
 		"step limited by global allowance": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: smallAtom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -146,7 +146,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   types.ExpiresAtHeight(80), // one step from last reset, not now
 		},
 		"expired": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -161,7 +161,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:      true,
 		},
 		"over period limit": {
-			allow: types.PeriodicFeeAllowance{
+			allowance: types.PeriodicFeeAllowance{
 				Basic: types.BasicFeeAllowance{
 					SpendLimit: atom,
 					Expiration: types.ExpiresAtHeight(100),
@@ -182,7 +182,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	for name, stc := range cases {
 		tc := stc // to make scopelint happy
 		t.Run(name, func(t *testing.T) {
-			err := tc.allow.ValidateBasic()
+			err := tc.allowance.ValidateBasic()
 			if !tc.valid {
 				require.Error(t, err)
 				return
@@ -191,18 +191,18 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockHeight(tc.blockHeight)
 			// now try to deduct
-			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})
+			removed, err := tc.allowance.Accept(ctx, tc.fee, []sdk.Msg{})
 			if !tc.accept {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
 
-			require.Equal(t, tc.remove, remove)
-			if !remove {
-				assert.Equal(t, tc.remains, tc.allow.Basic.SpendLimit)
-				assert.Equal(t, tc.remainsPeriod, tc.allow.PeriodCanSpend)
-				assert.Equal(t, tc.periodReset, tc.allow.PeriodReset)
+			require.Equal(t, tc.remove, removed)
+			if !removed {
+				assert.Equal(t, tc.remains, tc.allowance.Basic.SpendLimit)
+				assert.Equal(t, tc.remainsPeriod, tc.allowance.PeriodCanSpend)
+				assert.Equal(t, tc.periodReset, tc.allowance.PeriodReset)
 			}
 		})
 	}

@@ -316,14 +316,29 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	votes := make([]types.Vote, 20)
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	addr := make(sdk.AccAddress, 20)
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	addrMap := make(map[string]struct{})
+	genAddr := func() string {
+		addr := make(sdk.AccAddress, 20)
+		for {
+			random.Read(addr)
+			addrStr := addr.String()
+			if _, ok := addrMap[addrStr]; !ok {
+				addrMap[addrStr] = struct{}{}
+				return addrStr
+			}
+		}
+	}
 	for i := range votes {
-		rand.Read(addr)
 		vote := types.Vote{
 			ProposalId: proposal.ProposalId,
+<<<<<<< HEAD
 			Voter:      addr.String(),
 			Option:     types.OptionYes,
+=======
+			Voter:      genAddr(),
+			Options:    types.NewNonSplitVoteOption(types.OptionYes),
+>>>>>>> 6ad84c506... x/gov/keeper: fix flaky TestPaginatedVotesQuery (#9223)
 		}
 		votes[i] = vote
 		app.GovKeeper.SetVote(ctx, vote)

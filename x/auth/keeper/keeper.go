@@ -48,7 +48,7 @@ type AccountKeeperI interface {
 // encoding/decoding library.
 type AccountKeeper struct {
 	key           sdk.StoreKey
-	cdc           codec.BinaryMarshaler
+	cdc           codec.BinaryCodec
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
@@ -65,7 +65,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
 	maccPerms map[string][]string,
 ) AccountKeeper {
 
@@ -232,4 +232,4 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 }
 
 // GetCodec return codec.Marshaler object used by the keeper
-func (ak AccountKeeper) GetCodec() codec.BinaryMarshaler { return ak.cdc }
+func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }

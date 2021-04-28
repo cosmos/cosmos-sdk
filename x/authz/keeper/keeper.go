@@ -19,12 +19,12 @@ import (
 
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      codec.BinaryMarshaler
+	cdc      codec.BinaryCodec
 	router   *baseapp.MsgServiceRouter
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router *baseapp.MsgServiceRouter) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,

@@ -18,11 +18,11 @@ type WriteListener interface {
 // protobuf encoded StoreKVPairs to an underlying io.Writer
 type StoreKVPairWriteListener struct {
 	writer     io.Writer
-	marshaller codec.BinaryMarshaler
+	marshaller codec.BinaryCodec
 }
 
 // NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryMarshaler
-func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryMarshaler) *StoreKVPairWriteListener {
+func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer:     w,
 		marshaller: m,

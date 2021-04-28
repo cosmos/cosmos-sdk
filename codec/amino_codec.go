@@ -10,7 +10,7 @@ type AminoCodec struct {
 	*LegacyAmino
 }
 
-var _ Marshaler = &AminoCodec{}
+var _ Codec = &AminoCodec{}
 
 // NewAminoCodec returns a reference to a new AminoCodec
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {

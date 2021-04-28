@@ -27,7 +27,7 @@ func NewHistoricalInfo(header tmproto.Header, valSet Validators, powerReduction 
 }
 
 // MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
-func MustUnmarshalHistoricalInfo(cdc codec.BinaryMarshaler, value []byte) HistoricalInfo {
+func MustUnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) HistoricalInfo {
 	hi, err := UnmarshalHistoricalInfo(cdc, value)
 	if err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func MustUnmarshalHistoricalInfo(cdc codec.BinaryMarshaler, value []byte) Histor
 }
 
 // UnmarshalHistoricalInfo will unmarshal historical info and return any error
-func UnmarshalHistoricalInfo(cdc codec.BinaryMarshaler, value []byte) (hi HistoricalInfo, err error) {
+func UnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) (hi HistoricalInfo, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &hi)
 	return hi, err
 }

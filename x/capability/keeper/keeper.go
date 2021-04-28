@@ -27,7 +27,7 @@ type (
 	// The keeper allows the ability to create scoped sub-keepers which are tied to
 	// a single specific module.
 	Keeper struct {
-		cdc           codec.BinaryMarshaler
+		cdc           codec.BinaryCodec
 		storeKey      sdk.StoreKey
 		memKey        sdk.StoreKey
 		capMap        map[uint64]*types.Capability
@@ -42,7 +42,7 @@ type (
 	// by name, in addition to creating new capabilities & authenticating capabilities
 	// passed by other modules.
 	ScopedKeeper struct {
-		cdc      codec.BinaryMarshaler
+		cdc      codec.BinaryCodec
 		storeKey sdk.StoreKey
 		memKey   sdk.StoreKey
 		capMap   map[uint64]*types.Capability
@@ -52,7 +52,7 @@ type (
 
 // NewKeeper constructs a new CapabilityKeeper instance and initializes maps
 // for capability map and scopedModules map.
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey, memKey sdk.StoreKey) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,

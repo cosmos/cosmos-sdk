@@ -15,7 +15,7 @@ import (
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
 // binary and JSON encoding.
 type ProtoCodecMarshaler interface {
-	Marshaler
+	Codec
 	InterfaceRegistry() types.InterfaceRegistry
 }
 
@@ -25,7 +25,7 @@ type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
 }
 
-var _ Marshaler = &ProtoCodec{}
+var _ Codec = &ProtoCodec{}
 var _ ProtoCodecMarshaler = &ProtoCodec{}
 
 // NewProtoCodec returns a reference to a new ProtoCodec

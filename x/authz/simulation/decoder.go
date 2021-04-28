@@ -11,7 +11,7 @@ import (
 
 // NewDecodeStore returns a decoder function closure that umarshals the KVPair's
 // Value to the corresponding authz type.
-func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.GrantKey):

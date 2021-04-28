@@ -74,7 +74,7 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 }
 
 // unmarshal an authorization from a store value
-func unmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v types.AuthorizationGrant, err error) {
+func unmarshalAuthorization(cdc codec.BinaryCodec, value []byte) (v types.AuthorizationGrant, err error) {
 	err = cdc.UnmarshalBinaryBare(value, &v)
 	return v, err
 }

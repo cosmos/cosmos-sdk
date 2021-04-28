@@ -13,7 +13,7 @@ import (
 
 type AuthUnmarshaler interface {
 	UnmarshalAccount([]byte) (types.AccountI, error)
-	GetCodec() codec.BinaryMarshaler
+	GetCodec() codec.BinaryCodec
 }
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

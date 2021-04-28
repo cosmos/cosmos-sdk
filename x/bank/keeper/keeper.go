@@ -50,7 +50,7 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	cdc        codec.BinaryMarshaler
+	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 }
@@ -85,7 +85,7 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 // to receive funds through direct and explicit actions, for example, by using a MsgSend or
 // by using a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
 	ak types.AccountKeeper,
 	paramSpace paramtypes.Subspace,

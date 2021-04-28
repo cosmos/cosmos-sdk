@@ -6,8 +6,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestFeeAllowance() {
-	ctx := suite.ctx
-	k := suite.app.FeeGrantKeeper
 
 	testCases := []struct {
 		name      string
@@ -21,7 +19,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			nil,
 			true,
 			func() {},
-			func(response *types.QueryAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: invalid granter",
@@ -31,7 +29,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			},
 			true,
 			func() {},
-			func(response *types.QueryAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: invalid grantee",
@@ -41,7 +39,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			},
 			true,
 			func() {},
-			func(response *types.QueryAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: no grants",
@@ -51,7 +49,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			},
 			true,
 			func() {},
-			func(response *types.QueryAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"valid query: expect single grant",
@@ -73,7 +71,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := k.Allowance(sdk.WrapSDKContext(ctx), tc.req)
+			resp, err := suite.keeper.Allowance(suite.ctx, tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
@@ -85,9 +83,6 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowances() {
-	ctx := suite.ctx
-	k := suite.app.FeeGrantKeeper
-
 	testCases := []struct {
 		name      string
 		req       *types.QueryAllowancesRequest
@@ -142,7 +137,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := k.Allowances(sdk.WrapSDKContext(ctx), tc.req)
+			resp, err := suite.keeper.Allowances(suite.ctx, tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
@@ -154,7 +149,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 }
 
 func grantFeeAllowance(suite *KeeperTestSuite) {
-	err := suite.app.FeeGrantKeeper.GrantFeeAllowance(suite.ctx, suite.addrs[0], suite.addrs[1], &types.BasicAllowance{
+	err := suite.app.FeeGrantKeeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], &types.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
 		Expiration: types.ExpiresAtHeight(334455),
 	})

@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +14,7 @@ var (
 	_ types.UnpackInterfacesMessage = &Grant{}
 )
 
-// NewGrant creates a new Grant.
+// NewGrant creates a new FeeAllowanceGrant.
 //nolint:interfacer
 func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
 	msg, ok := feeAllowance.(proto.Message)
@@ -35,7 +35,7 @@ func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Gran
 }
 
 // ValidateBasic performs basic validation on
-// Grant
+// FeeAllowanceGrant
 func (a Grant) ValidateBasic() error {
 	if a.Granter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")

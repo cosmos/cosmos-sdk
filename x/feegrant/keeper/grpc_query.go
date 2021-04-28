@@ -34,7 +34,7 @@ func (q Keeper) Allowance(c context.Context, req *types.QueryAllowanceRequest) (
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	feeAllowance, err := q.GetFeeAllowance(ctx, granterAddr, granteeAddr)
+	feeAllowance, err := q.GetAllowance(ctx, granterAddr, granteeAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

@@ -139,7 +139,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
-	err := app.FeeGrantKeeper.GrantFeeAllowance(
+	err := app.FeeGrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,

@@ -38,7 +38,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 	}
 
 	// Checking for duplicate entry
-	if f, _ := k.Keeper.GetFeeAllowance(ctx, granter, grantee); f != nil {
+	if f, _ := k.Keeper.GetAllowance(ctx, granter, grantee); f != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
@@ -47,7 +47,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *types.MsgGrantAllo
 		return nil, err
 	}
 
-	err = k.Keeper.GrantFeeAllowance(ctx, granter, grantee, allowance)
+	err = k.Keeper.GrantAllowance(ctx, granter, grantee, allowance)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (k msgServer) RevokeAllowance(goCtx context.Context, msg *types.MsgRevokeAl
 		return nil, err
 	}
 
-	err = k.Keeper.RevokeFeeAllowance(ctx, granter, grantee)
+	err = k.Keeper.revokeAllowance(ctx, granter, grantee)
 	if err != nil {
 		return nil, err
 	}

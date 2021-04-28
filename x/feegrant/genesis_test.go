@@ -39,18 +39,23 @@ var (
 func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	coins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000)))
 	now := suite.ctx.BlockHeader().Time
+	msgSrvr := keeper.NewMsgServerImpl(suite.keeper)
 
 	allowance := &types.BasicAllowance{SpendLimit: coins, Expiration: types.ExpiresAtTime(now.AddDate(1, 0, 0))}
-	err := suite.keeper.GrantFeeAllowance(suite.ctx, granterAddr, granteeAddr, allowance)
+	err := suite.keeper.GrantAllowance(suite.ctx, granterAddr, granteeAddr, allowance)
 	suite.Require().NoError(err)
 
 	genesis, err := feegrant.ExportGenesis(suite.ctx, suite.keeper)
 	suite.Require().NoError(err)
-	// Clear keeper
-	err = suite.keeper.RevokeFeeAllowance(suite.ctx, granterAddr, granteeAddr)
+	// revoke fee allowance
+	_, err = msgSrvr.RevokeAllowance(sdk.WrapSDKContext(suite.ctx), &types.MsgRevokeAllowance{
+		Granter: granterAddr.String(),
+		Grantee: granteeAddr.String(),
+	})
 	suite.Require().NoError(err)
 	err = feegrant.InitGenesis(suite.ctx, suite.keeper, genesis)
 	suite.Require().NoError(err)
+
 	newGenesis, err := feegrant.ExportGenesis(suite.ctx, suite.keeper)
 	suite.Require().NoError(err)
 	suite.Require().Equal(genesis, newGenesis)

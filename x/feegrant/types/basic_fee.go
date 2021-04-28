@@ -7,7 +7,7 @@ import (
 
 var _ FeeAllowanceI = (*BasicFeeAllowance)(nil)
 
-// Accept can use fee payment requested as well as timestamp/height of the current block
+// Accept can use fee payment requested as well as timestamp of the current block
 // to determine whether or not to process this. This is checked in
 // Keeper.UseGrantedFees and the return values should match how it is handled there.
 //

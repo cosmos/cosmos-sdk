@@ -232,7 +232,7 @@ func TestBasicFeeAllowTime(t *testing.T) {
 			blockTime: now,
 			accept:    false,
 		},
-		"with out spend limit": {
+		"without spend limit": {
 			allow: &types.BasicFeeAllowance{
 				Expiration: types.ExpiresAtTime(oneHour),
 			},

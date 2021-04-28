@@ -33,7 +33,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 ## Decision
 
-We propose separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedger SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2 as  well).
+We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedgers' SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2 as  well).
 
 The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible for data serialization.
 
@@ -44,7 +44,7 @@ Separation of storage and commitment (by the SMT) will allow the optimization of
 
 SMT will use it's own storage (could use the same database underneath) from the state machine store. For every `(key, value)` pair, the SMT will store `hash(key)` in a path (needed to evenly distribute keys in the tree) and `hash(key, value)` in a leaf (to bind the (key, value) pair stored in the `SS`). Since we don't know a structure of a value (in particular if it contains the key) we hash both the key and the value in the `SC` leaf.
 
-For data access we propose 2 additional KV buckets:
+For data access we propose 2 additional KV buckets (namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
 2. B2: `hash(key, value) → key`: an index needed to extract a value (through: SMT → B2 → B1) having only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
 3. we could use more buckets to optimize the app usage if needed.
@@ -73,6 +73,7 @@ A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intrac
 
 
 ### Snapshots for storage sync and versioning
+
 One of the Stargate core features are snapshots and state sync delivered in the `/snapshot` package. This feature is implemented in SDK and requires storage support. Currently IAVL is the only supported backend.
 
 Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big), usually a snapshot mechanism is based on a _copy on write_ and it allows to efficiently deliver DB state at a certain stage.
@@ -82,21 +83,24 @@ New snapshot will be created in every `EndBlocker`. The `rootmulti.Store` keeps 
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the SDK storage, we may consider splitting that interface into `Committer` and `PrunningCommiter` - only the multiroot should implement `PrunningCommiter` (cache and prefix store don't need pruning).
 
-Number of historical versions (snapshots) for `abci.Query` and fast sync is part of a node configuration, not a chain configuration. A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all snapshots.
+Number of historical versions (snapshots) for `abci.Query` and fast sync is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all snapshots.
 
-Pruning old snapshots is effectively done by the database. Whenever we update a record in `SC`, SMT will create a new one without removing the old one. Since we are snapshoting each block, we update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
+Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT will create a new one without removing the old one. Since we are snapshoting each block, we update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
 
 To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height.
 
 #### Accessing old state versions
 
 One of the functional requirements is to access old state. This is done through `abci.Query` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
-`abci.Query` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine). We will only create snapshots for
+`abci.Query` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine).
 
 Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
-We positively validated a snapshot mechanism for querying old state with regards to the database we evaluated.
+We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a snapshot mechanism for querying old state with regards to the database we evaluated.
 
+### State Proofs
+
+For any object stored in State Store (SS), we have corresponding object in `SC`. A proof for object `V` identified by a key `K` is a branch of `SC`, where the path corresponds to the key `hash(K)`, and the leaf is `hash(K, V)`.
 
 ### Rollbacks
 

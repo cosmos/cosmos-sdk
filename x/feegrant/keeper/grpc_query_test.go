@@ -6,8 +6,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestFeeAllowance() {
-	ctx := suite.ctx
-	k := suite.app.FeeGrantKeeper
 
 	testCases := []struct {
 		name      string
@@ -73,7 +71,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := k.FeeAllowance(sdk.WrapSDKContext(ctx), tc.req)
+			resp, err := suite.keeper.FeeAllowance(suite.ctx, tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
@@ -85,9 +83,6 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestFeeAllowances() {
-	ctx := suite.ctx
-	k := suite.app.FeeGrantKeeper
-
 	testCases := []struct {
 		name      string
 		req       *types.QueryFeeAllowancesRequest
@@ -142,7 +137,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := k.FeeAllowances(sdk.WrapSDKContext(ctx), tc.req)
+			resp, err := suite.keeper.FeeAllowances(suite.ctx, tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {

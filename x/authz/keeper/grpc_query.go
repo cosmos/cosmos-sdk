@@ -49,7 +49,7 @@ func (k Keeper) Grants(c context.Context, req *types.QueryGrantsRequest) (*types
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 		return &types.QueryGrantsResponse{
-			Grants: []*types.Grant{&types.Grant{
+			Grants: []*types.Grant{{
 				Authorization: authorizationAny,
 				Expiration:    expiration,
 			}},

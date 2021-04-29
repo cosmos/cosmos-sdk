@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
@@ -97,6 +98,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
 		grpc.Header(&header),
 	)
+	s.Require().NoError(err)
 	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
 	s.Require().NotEmpty(blockHeight[0]) // blockHeight is []string, first element is block height.
 }

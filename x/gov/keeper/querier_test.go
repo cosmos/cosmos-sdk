@@ -332,13 +332,8 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	for i := range votes {
 		vote := types.Vote{
 			ProposalId: proposal.ProposalId,
-<<<<<<< HEAD
-			Voter:      addr.String(),
-			Option:     types.OptionYes,
-=======
 			Voter:      genAddr(),
-			Options:    types.NewNonSplitVoteOption(types.OptionYes),
->>>>>>> 6ad84c506... x/gov/keeper: fix flaky TestPaginatedVotesQuery (#9223)
+			Option:     types.OptionYes,
 		}
 		votes[i] = vote
 		app.GovKeeper.SetVote(ctx, vote)

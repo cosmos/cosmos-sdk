@@ -26,7 +26,7 @@ const (
 )
 
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONMarshaler,
+	appParams simtypes.AppParams, cdc codec.JSONCodec,
 	ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper,
 	protoCdc *codec.ProtoCodec,
 ) simulation.WeightedOperations {

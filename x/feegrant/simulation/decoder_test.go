@@ -31,7 +31,7 @@ func TestDecodeStore(t *testing.T) {
 
 	require.NoError(t, err)
 
-	grantBz, err := cdc.MarshalBinaryBare(&grant)
+	grantBz, err := cdc.Marshal(&grant)
 	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{

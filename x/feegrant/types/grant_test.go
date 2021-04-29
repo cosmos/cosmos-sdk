@@ -89,10 +89,10 @@ func TestGrant(t *testing.T) {
 			require.NoError(t, err)
 
 			// if it is valid, let's try to serialize, deserialize, and make sure it matches
-			bz, err := cdc.MarshalBinaryBare(&grant)
+			bz, err := cdc.Marshal(&grant)
 			require.NoError(t, err)
 			var loaded types.Grant
-			err = cdc.UnmarshalBinaryBare(bz, &loaded)
+			err = cdc.Unmarshal(bz, &loaded)
 			require.NoError(t, err)
 
 			err = loaded.ValidateBasic()

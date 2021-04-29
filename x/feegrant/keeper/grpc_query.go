@@ -79,7 +79,7 @@ func (q Keeper) Allowances(c context.Context, req *types.QueryAllowancesRequest)
 	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
 		var grant types.Grant
 
-		if err := q.cdc.UnmarshalBinaryBare(value, &grant); err != nil {
+		if err := q.cdc.Unmarshal(value, &grant); err != nil {
 			return err
 		}
 

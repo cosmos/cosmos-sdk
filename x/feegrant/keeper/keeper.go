@@ -15,7 +15,7 @@ import (
 // Keeper manages state of all fee grants, as well as calculating approval.
 // It must have a codec with all available allowances registered.
 type Keeper struct {
-	cdc        codec.BinaryMarshaler
+	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
 	authKeeper types.AccountKeeper
 }
@@ -23,7 +23,7 @@ type Keeper struct {
 var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a fee grant Keeper
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak types.AccountKeeper) Keeper {
 	return Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
@@ -53,7 +53,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 		return err
 	}
 
-	bz, err := k.cdc.MarshalBinaryBare(&grant)
+	bz, err := k.cdc.Marshal(&grant)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 	}
 
 	var feegrant types.Grant
-	if err := k.cdc.UnmarshalBinaryBare(bz, &feegrant); err != nil {
+	if err := k.cdc.Unmarshal(bz, &feegrant); err != nil {
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant types.Gra
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
 		var feeGrant types.Grant
-		if err := k.cdc.UnmarshalBinaryBare(bz, &feeGrant); err != nil {
+		if err := k.cdc.Unmarshal(bz, &feeGrant); err != nil {
 			return err
 		}
 

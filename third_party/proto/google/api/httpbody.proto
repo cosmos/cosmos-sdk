@@ -22,7 +22,6 @@ import "google/protobuf/any.proto";
 option cc_enable_arenas = true;
 option go_package = "google.golang.org/genproto/googleapis/api/httpbody;httpbody";
 option java_multiple_files = true;
-option java_multiple_files = true;
 option java_outer_classname = "HttpBodyProto";
 option java_package = "com.google.api";
 option objc_class_prefix = "GAPI";

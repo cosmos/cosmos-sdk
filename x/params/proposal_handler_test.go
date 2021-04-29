@@ -12,6 +12,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type HandlerTestSuite struct {
@@ -36,50 +37,56 @@ func testProposal(changes ...proposal.ParamChange) *proposal.ParameterChangeProp
 	return proposal.NewParameterChangeProposal("title", "description", changes)
 }
 
-func (suite *HandlerTestSuite) TestProposalHandlerPassed() {
-	// tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "1"))
-	// suite.Require().NoError(suite.govHandler(suite.ctx, tp))
+func (suite *HandlerTestSuite) TestProposalHandler() {
+	testCases := []struct {
+		name     string
+		proposal *proposal.ParameterChangeProposal
+		onHandle func()
+		expErr   bool
+	}{
+		{
+			"all fields",
+			testProposal(proposal.NewParamChange(stakingtypes.ModuleName, string(stakingtypes.KeyMaxValidators), "1")),
+			func() {
+				maxVals := suite.app.StakingKeeper.MaxValidators(suite.ctx)
+				suite.Require().Equal(uint32(1), maxVals)
+			},
+			false,
+		},
+		{
+			"invalid type",
+			testProposal(proposal.NewParamChange(stakingtypes.ModuleName, string(stakingtypes.KeyMaxValidators), "-")),
+			func() {},
+			true,
+		},
+		{
+			"omit empty fields",
+			testProposal(proposal.ParamChange{
+				Subspace: govtypes.ModuleName,
+				Key:      string(govtypes.ParamStoreKeyDepositParams),
+				Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
+			}),
+			func() {
+				depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
+				suite.Require().Equal(govtypes.DepositParams{
+					MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
+					MaxDepositPeriod: govtypes.DefaultPeriod,
+				}, depositParams)
+			},
+			false,
+		},
+	}
 
-	// var param uint16
-	// ss.Get(suite.ctx, []byte(keyMaxValidators), &param)
-	// suite.Require().Equal(param, uint16(1))
-}
-
-func (suite *HandlerTestSuite) TestProposalHandlerFailed() {
-
-	// tp := testProposal(proposal.NewParamChange(testSubspace, keyMaxValidators, "invalidType"))
-	// suite.Require().Error(suite.govHandler(suite.ctx, tp))
-
-	// suite.Require().False(ss.Has(suite.ctx, []byte(keyMaxValidators)))
-}
-
-func (suite *HandlerTestSuite) TestProposalHandlerUpdateOmitempty() {
-
-	// var param testParamsSlashingRate
-
-	// tp := testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"downtime": 7}`))
-	// suite.Require().NoError(suite.govHandler(suite.ctx, tp))
-
-	// ss.Get(suite.ctx, []byte(keySlashingRate), &param)
-	// suite.Require().Equal(testParamsSlashingRate{0, 7}, param)
-
-	// tp = testProposal(proposal.NewParamChange(testSubspace, keySlashingRate, `{"double_sign": 10}`))
-	// suite.Require().NoError(suite.govHandler(suite.ctx, tp))
-
-	// ss.Get(suite.ctx, []byte(keySlashingRate), &param)
-	// suite.Require().Equal(testParamsSlashingRate{10, 7}, param)
-
-	tp := testProposal(proposal.ParamChange{
-		Subspace: "gov",
-		Key:      "depositparams",
-		Value:    `{"min_deposit": [{"denom": "uatom","amount": "64000000"}]}`,
-	})
-
-	suite.Require().NoError(suite.govHandler(suite.ctx, tp))
-
-	depositParams := suite.app.GovKeeper.GetDepositParams(suite.ctx)
-	suite.Require().Equal(govtypes.DepositParams{
-		MinDeposit:       sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(64000000))),
-		MaxDepositPeriod: govtypes.DefaultPeriod,
-	}, depositParams)
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			err := suite.govHandler(suite.ctx, tc.proposal)
+			if tc.expErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				tc.onHandle()
+			}
+		})
+	}
 }

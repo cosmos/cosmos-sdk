@@ -127,7 +127,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 		}, nil
 	}
 	var multiSig multisig.AminoMultisignature
-	err := cdc.UnmarshalBinaryBare(sig, &multiSig)
+	err := cdc.Unmarshal(sig, &multiSig)
 	if err != nil {
 		return nil, err
 	}

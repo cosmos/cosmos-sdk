@@ -276,12 +276,12 @@ func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
 	pubkeys := generatePubKeys(5)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
-	ab, err := legacy.Cdc.MarshalBinaryLengthPrefixed(multisigKey)
+	ab, err := legacy.Cdc.MarshalLengthPrefixed(multisigKey)
 	require.NoError(t, err)
 	// like other cryptotypes.Pubkey implementations (e.g. ed25519.PubKey),
 	// LegacyAminoPubKey should be deserializable into a cryptotypes.LegacyAminoPubKey:
 	var pubKey kmultisig.LegacyAminoPubKey
-	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(ab, &pubKey)
+	err = legacy.Cdc.UnmarshalLengthPrefixed(ab, &pubKey)
 	require.NoError(t, err)
 
 	require.Equal(t, multisigKey.Equals(&pubKey), true)
@@ -365,10 +365,10 @@ func TestAminoBinary(t *testing.T) {
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
 	// Do a round-trip key->bytes->key.
-	bz, err := legacy.Cdc.MarshalBinaryBare(msig)
+	bz, err := legacy.Cdc.Marshal(msig)
 	require.NoError(t, err)
 	var newMsig cryptotypes.PubKey
-	err = legacy.Cdc.UnmarshalBinaryBare(bz, &newMsig)
+	err = legacy.Cdc.Unmarshal(bz, &newMsig)
 	require.NoError(t, err)
 	require.Equal(t, msig.Threshold, newMsig.(*kmultisig.LegacyAminoPubKey).Threshold)
 }

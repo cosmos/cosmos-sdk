@@ -60,11 +60,11 @@ message StoreKVPair {
 // protobuf encoded StoreKVPairs to an underlying io.Writer
 type StoreKVPairWriteListener struct {
 	writer io.Writer
-	marshaller codec.BinaryMarshaler
+	marshaller codec.BinaryCodec
 }
 
-// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryMarshaler
-func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryMarshaler) *StoreKVPairWriteListener {
+// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryCodec
+func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer: w,
 		marshaller: m,
@@ -248,7 +248,7 @@ type FileStreamingService struct {
 	filePrefix string // optional prefix for each of the generated files
 	writeDir string // directory to write files into
 	dstFile *os.File // the current write output file
-	marshaller codec.BinaryMarshaler // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	marshaller codec.BinaryCodec // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	stateCache [][]byte // cache the protobuf binary encoded StoreKVPairs in the order they are received
 }
 ```
@@ -279,7 +279,7 @@ func (iw *intermediateWriter) Write(b []byte) (int, error) {
 }
 
 // NewFileStreamingService creates a new FileStreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewFileStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, m codec.BinaryMarshaler) (*FileStreamingService, error) {
+func NewFileStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, m codec.BinaryCodec) (*FileStreamingService, error) {
 	listenChan := make(chan []byte, 0)
 	iw := NewIntermediateWriter(listenChan)
 	listener := listen.NewStoreKVPairWriteListener(iw, m)

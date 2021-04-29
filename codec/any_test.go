@@ -84,11 +84,11 @@ func TestMarshalProtoPubKey(t *testing.T) {
 
 	// **** test binary serialization ****
 
-	bz, err = ccfg.Marshaler.MarshalBinaryBare(pkAny)
+	bz, err = ccfg.Marshaler.Marshal(pkAny)
 	require.NoError(err)
 
 	var pkAny3 codectypes.Any
-	err = ccfg.Marshaler.UnmarshalBinaryBare(bz, &pkAny3)
+	err = ccfg.Marshaler.Unmarshal(bz, &pkAny3)
 	require.NoError(err)
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny3, &pkI)
 	require.NoError(err)

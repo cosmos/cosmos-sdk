@@ -59,8 +59,8 @@ Where there is no protobuf-based type definition for a module (see below), Amino
 is used to encode and decode raw wire bytes to the concrete type or interface:
 
 ```go
-bz := keeper.cdc.MustMarshalBinaryBare(typeOrInterface)
-keeper.cdc.MustUnmarshalBinaryBare(bz, &typeOrInterface)
+bz := keeper.cdc.MustMarshal(typeOrInterface)
+keeper.cdc.MustUnmarshal(bz, &typeOrInterface)
 ```
 
 Note, there are length-prefixed variants of the above functionality and this is
@@ -150,7 +150,7 @@ profile := Profile {
 }
 
 // We can then marshal the profile as usual.
-bz, err := cdc.MarshalBinaryBare(profile)
+bz, err := cdc.Marshal(profile)
 jsonBz, err := cdc.MarshalJSON(profile)
 ```
 
@@ -162,7 +162,7 @@ The reverse operation of retrieving the concrete Go type from inside an `Any`, c
 profileBz := ... // The proto-encoded bytes of a Profile, e.g. retrieved through gRPC.
 var myProfile Profile
 // Unmarshal the bytes into the myProfile struct.
-err := cdc.UnmarshalBinaryBare(profilebz, &myProfile)
+err := cdc.Unmarshal(profilebz, &myProfile)
 
 // Let's see the types of the Account field.
 fmt.Printf("%T\n", myProfile.Account)                  // Prints "Any"
@@ -241,7 +241,7 @@ message MsgSubmitEvidence {
 }
 ```
 
-The SDK `codec.Marshaler` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
+The SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 

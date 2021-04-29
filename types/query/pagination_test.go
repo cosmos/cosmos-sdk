@@ -320,7 +320,7 @@ func ExamplePaginate() {
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
 		var tempRes sdk.Coin
-		err := app.AppCodec().UnmarshalBinaryBare(value, &tempRes)
+		err := app.AppCodec().Unmarshal(value, &tempRes)
 		if err != nil {
 			return err
 		}
@@ -335,7 +335,7 @@ func ExamplePaginate() {
 	// balances:<denom:"foo0denom" amount:"100" > pagination:<next_key:"foo1denom" total:2 >
 }
 
-func setupTest() (*simapp.SimApp, sdk.Context, codec.Marshaler) {
+func setupTest() (*simapp.SimApp, sdk.Context, codec.Codec) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
 	appCodec := app.AppCodec()

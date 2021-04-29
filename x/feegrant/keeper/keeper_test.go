@@ -233,6 +233,8 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// verify: feegrant is revoked
 	_, err = suite.keeper.GetFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
 	suite.Error(err)
+	suite.Contains(err.Error(), "fee-grant not found")
+
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {

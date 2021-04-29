@@ -30,7 +30,7 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding.
-	cdc codec.BinaryMarshaler
+	cdc codec.BinaryCodec
 
 	// Proposal router
 	router types.Router
@@ -44,7 +44,7 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, paramSpace types.ParamSubspace,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace types.ParamSubspace,
 	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper, rtr types.Router,
 ) Keeper {
 

@@ -86,7 +86,7 @@ func (e Equivocation) String() string {
 
 // Hash returns the hash of an Equivocation object.
 func (e Equivocation) Hash() tmbytes.HexBytes {
-	return tmhash.Sum(ModuleCdc.LegacyAmino.MustMarshalBinaryBare(e))
+	return tmhash.Sum(ModuleCdc.LegacyAmino.MustMarshal(e))
 }
 
 // ValidateBasic performs basic stateless validation checks on an Equivocation object.

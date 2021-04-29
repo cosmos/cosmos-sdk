@@ -16,7 +16,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 		return deposit, false
 	}
 
-	keeper.cdc.MustUnmarshalBinaryBare(bz, &deposit)
+	keeper.cdc.MustUnmarshal(bz, &deposit)
 
 	return deposit, true
 }
@@ -24,7 +24,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 // SetDeposit sets a Deposit to the gov store
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryBare(&deposit)
+	bz := keeper.cdc.MustMarshal(&deposit)
 	depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
 	if err != nil {
 		panic(err)
@@ -82,7 +82,7 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.D
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
 
-		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &deposit)
+		keeper.cdc.MustUnmarshal(iterator.Value(), &deposit)
 
 		if cb(deposit) {
 			break
@@ -100,7 +100,7 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 	for ; iterator.Valid(); iterator.Next() {
 		var deposit types.Deposit
 
-		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &deposit)
+		keeper.cdc.MustUnmarshal(iterator.Value(), &deposit)
 
 		if cb(deposit) {
 			break

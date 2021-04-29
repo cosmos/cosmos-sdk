@@ -67,7 +67,9 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 		if err != nil {
 			return fmt.Errorf("unable to convert amount string to Int %v", err)
 		}
-		supply = append(supply, sdk.NewCoin(string(key), amount))
+
+		// `Add` omits the 0 coins addition to the `supply`.
+		supply = supply.Add(sdk.NewCoin(string(key), amount))
 		return nil
 	})
 
@@ -426,14 +428,20 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 }
 
 func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
-	store := ctx.KVStore(k.storeKey)
-	supplyStore := prefix.NewStore(store, types.SupplyKey)
-
 	intBytes, err := coin.Amount.Marshal()
 	if err != nil {
 		panic(fmt.Errorf("unable to marshal amount value %v", err))
 	}
-	supplyStore.Set([]byte(coin.GetDenom()), intBytes)
+
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	// incase of `coin` is zero remove it from `supplyStore` (this case can be possible when burning all coins).
+	if coin.IsZero() {
+		supplyStore.Delete([]byte(coin.Denom))
+	} else {
+		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
+	}
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {

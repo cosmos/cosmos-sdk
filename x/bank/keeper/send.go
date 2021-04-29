@@ -266,8 +266,13 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 	accountStore := k.getAccountStore(ctx, addr)
 
-	bz := k.cdc.MustMarshalBinaryBare(&balance)
-	accountStore.Set([]byte(balance.Denom), bz)
+	// if the balance is zero, we can delete the corresponding denom form store.
+	if balance.IsZero() {
+		accountStore.Delete([]byte(balance.Denom))
+	} else {
+		bz := k.cdc.MustMarshalBinaryBare(&balance)
+		accountStore.Set([]byte(balance.Denom), bz)
+	}
 
 	return nil
 }

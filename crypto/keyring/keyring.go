@@ -495,7 +495,7 @@ func (ks keystore) List() ([]Info, error) {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 			}
 
-			info, err := protoUnmarshalKeyringEntry(rawInfo.Data)
+			info, err := protoUnmarshalInfo(rawInfo.Data)
 			if err != nil {
 				return nil, err
 			}
@@ -578,7 +578,7 @@ func (ks keystore) key(infoKey string) (Info, error) {
 	if len(bs.Data) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
-	return protoUnmarshalKeyringEntry(bs.Data)
+	return protoUnmarshalInfo(bs.Data)
 }
 
 func (ks keystore) Key(uid string) (Info, error) {
@@ -767,7 +767,7 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKey
 
 func (ks keystore) writeInfo(info Info) error {
 	key := infoKeyBz(info.GetName())
-	serializedInfo := protoMarshalKeyringEntry(info)
+	serializedInfo := protoMarshalInfo(info)
 
 
 	exists, err := ks.existsInDb(info)
@@ -884,7 +884,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
 	
-		info, err := protoUnmarshalKeyringEntry(item.Data)
+		info, err := protoUnmarshalInfo(item.Data)
 		if err != nil {
 			return err
 		}

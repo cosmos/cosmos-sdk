@@ -25,7 +25,11 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	anys := t.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
-		res[i] = any.GetCachedValue().(sdk.Msg)
+		cached := any.GetCachedValue()
+		if cached == nil {
+			panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
+		}
+		res[i] = cached.(sdk.Msg)
 	}
 	return res
 }

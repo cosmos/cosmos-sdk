@@ -704,19 +704,23 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		var (
-			msgResult      *sdk.Result
-			msgEventAction string // name to use as value in event `message.action`
-			err            error
+			msgResult    *sdk.Result
+			eventMsgName string // name to use as value in event `message.action`
+			err          error
 		)
 
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
-			msgEventAction = sdk.MsgTypeURL(msg)
+			eventMsgName = sdk.MsgTypeURL(msg)
 		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 			// legacy sdk.Msg routing
+			// Assuming that the app developer has migrated all their Msgs to
+			// proto messages and has registered all `Msg services`, then this
+			// path should never be called, because all those Msgs should be
+			// registered within the `msgServiceRouter` already.
 			msgRoute := legacyMsg.Route()
-			msgEventAction = legacyMsg.Type()
+			eventMsgName = legacyMsg.Type()
 			handler := app.router.Route(ctx, msgRoute)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
@@ -732,7 +736,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		msgEvents := sdk.Events{
-			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, msgEventAction)),
+			sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName)),
 		}
 		msgEvents = msgEvents.AppendEvents(msgResult.GetEvents())
 

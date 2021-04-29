@@ -60,7 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * CLI: removed `--text` flag from `show-node-id` command; the text format for public keys is not used any more - instead we use ProtoJSON.
 * (types) [\#9079](https://github.com/cosmos/cosmos-sdk/issues/9079) Add `AddAmount`/`SubAmount` methods to `sdk.Coin`.
 * [\#8628](https://github.com/cosmos/cosmos-sdk/issues/8628) Commands no longer print outputs using `stderr` by default
-* [\#9139](https://github.com/cosmos/cosmos-sdk/pull/9139) Querying events via `ServiceMsg` TypeURLs (e.g. `/cosmos.bank.v1beta1.Msg/Send`) does not work anymore, please use concrete `Msg` TypeURLs instead (e.g. `/cosmos.bank.v1beta1/MsgSend`).
+* [\#9139](https://github.com/cosmos/cosmos-sdk/pull/9139) Querying events via `ServiceMsg` TypeURLs (e.g. `/cosmos.bank.v1beta1.Msg/Send`) does not work anymore, please use concrete `Msg` TypeURLs instead (e.g. `/cosmos.bank.v1beta1.MsgSend`).
 
 ### API Breaking Changes
 

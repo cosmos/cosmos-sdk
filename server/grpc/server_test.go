@@ -27,7 +27,6 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -164,32 +163,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 	val0 := s.network.Validators[0]
 
-	// prepare txBuilder with msg
-	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
-	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	gasLimit := testdata.NewTestGasLimit()
-
-	// This sets a legacy Proto MsgSend.
-	err := txBuilder.SetMsgs(&types.MsgSend{
-		FromAddress: val0.Address.String(),
-		ToAddress:   val0.Address.String(),
-		Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
-	})
-	s.Require().NoError(err)
-
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
-
-	// setup txFactory
-	txFactory := clienttx.Factory{}.
-		WithChainID(val0.ClientCtx.ChainID).
-		WithKeybase(val0.ClientCtx.Keyring).
-		WithTxConfig(val0.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
-	// Sign Tx.
-	err = authclient.SignTx(txFactory, val0.ClientCtx, val0.Moniker, txBuilder, false, true)
-	s.Require().NoError(err)
+	txBuilder := s.mkTxBuilder()
 
 	txBytes, err := val0.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
@@ -235,6 +209,40 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 			require.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
+}
+
+// mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.
+func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+	val := s.network.Validators[0]
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// prepare txBuilder with msg
+	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+	gasLimit := testdata.NewTestGasLimit()
+	s.Require().NoError(
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
+	)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo("foobar")
+
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val.ClientCtx.ChainID).
+		WithKeybase(val.ClientCtx.Keyring).
+		WithTxConfig(val.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	// Sign Tx.
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	s.Require().NoError(err)
+
+	return txBuilder
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

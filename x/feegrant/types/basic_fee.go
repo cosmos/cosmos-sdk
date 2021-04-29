@@ -21,7 +21,6 @@ func (a *BasicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) 
 	if a.Expiration != nil && a.Expiration.Before(ctx.BlockTime()) {
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
-	}
 
 	if a.SpendLimit != nil {
 		left, invalid := a.SpendLimit.SafeSub(fee)

@@ -50,7 +50,7 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	cdc        codec.BinaryMarshaler
+	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 }
@@ -87,7 +87,7 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 // to receive funds through direct and explicit actions, for example, by using a MsgSend or
 // by using a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
 	ak types.AccountKeeper,
 	paramSpace paramtypes.Subspace,
@@ -224,7 +224,7 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 	}
 
 	var metadata types.Metadata
-	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
+	k.cdc.MustUnmarshal(bz, &metadata)
 
 	return metadata, true
 }
@@ -252,7 +252,7 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 
 	for ; iterator.Valid(); iterator.Next() {
 		var metadata types.Metadata
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &metadata)
+		k.cdc.MustUnmarshal(iterator.Value(), &metadata)
 
 		if cb(metadata) {
 			break
@@ -265,7 +265,7 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 	store := ctx.KVStore(k.storeKey)
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataKey(denomMetaData.Base))
 
-	m := k.cdc.MustMarshalBinaryBare(&denomMetaData)
+	m := k.cdc.MustMarshal(&denomMetaData)
 	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
 }
 

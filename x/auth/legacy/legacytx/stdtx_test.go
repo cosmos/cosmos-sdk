@@ -172,7 +172,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 	tx := NewStdTx(msgs, fee, sigs, "")
 
-	cdcBytes, err := cdc.MarshalBinaryBare(tx)
+	cdcBytes, err := cdc.Marshal(tx)
 
 	require.NoError(t, err)
 	encoderBytes, err := encoder(tx)
@@ -251,7 +251,7 @@ func TestGetSignaturesV2(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, len(sigs), 1)
 
-	require.Equal(t, cdc.MustMarshalBinaryBare(sigs[0].PubKey), cdc.MustMarshalBinaryBare(sig.GetPubKey()))
+	require.Equal(t, cdc.MustMarshal(sigs[0].PubKey), cdc.MustMarshal(sig.GetPubKey()))
 	require.Equal(t, sigs[0].Data, &signing.SingleSignatureData{
 		SignMode:  signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		Signature: sig.GetSignature(),

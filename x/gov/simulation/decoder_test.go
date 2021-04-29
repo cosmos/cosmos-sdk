@@ -37,9 +37,9 @@ func TestDecodeStore(t *testing.T) {
 	deposit := types.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
 	vote := types.NewVote(1, delAddr1, types.NewNonSplitVoteOption(types.OptionYes))
 
-	proposalBzA, err := cdc.MarshalBinaryBare(&proposalA)
+	proposalBzA, err := cdc.Marshal(&proposalA)
 	require.NoError(t, err)
-	proposalBzB, err := cdc.MarshalBinaryBare(&proposalB)
+	proposalBzB, err := cdc.Marshal(&proposalB)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -62,14 +62,14 @@ func TestDecodeStore(t *testing.T) {
 		},
 		{
 			"deposits",
-			kv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&deposit)},
-			kv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&deposit)},
+			kv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshal(&deposit)},
+			kv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshal(&deposit)},
 			fmt.Sprintf("%v\n%v", deposit, deposit), false,
 		},
 		{
 			"votes",
-			kv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&vote)},
-			kv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&vote)},
+			kv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshal(&vote)},
+			kv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshal(&vote)},
 			fmt.Sprintf("%v\n%v", vote, vote), false,
 		},
 		{

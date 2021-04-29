@@ -195,7 +195,7 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Propos
 }
 
 func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
-	bz, err := keeper.cdc.MarshalBinaryBare(&proposal)
+	bz, err := keeper.cdc.Marshal(&proposal)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
 }
 
 func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) error {
-	err := keeper.cdc.UnmarshalBinaryBare(bz, proposal)
+	err := keeper.cdc.Unmarshal(bz, proposal)
 	if err != nil {
 		return err
 	}

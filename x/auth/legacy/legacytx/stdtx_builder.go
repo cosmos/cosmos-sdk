@@ -99,7 +99,7 @@ func (s StdTxConfig) TxEncoder() sdk.TxEncoder {
 }
 
 func (s StdTxConfig) TxDecoder() sdk.TxDecoder {
-	return mkDecoder(s.Cdc.UnmarshalBinaryBare)
+	return mkDecoder(s.Cdc.Unmarshal)
 }
 
 func (s StdTxConfig) TxJSONEncoder() sdk.TxEncoder {
@@ -191,6 +191,6 @@ func mkDecoder(unmarshaler Unmarshaler) sdk.TxDecoder {
 // DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.LegacyAmino) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
-		return cdc.MarshalBinaryBare(tx)
+		return cdc.Marshal(tx)
 	}
 }

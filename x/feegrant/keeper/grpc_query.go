@@ -78,7 +78,7 @@ func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRe
 	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
 		var grant types.FeeAllowanceGrant
 
-		if err := q.cdc.UnmarshalBinaryBare(value, &grant); err != nil {
+		if err := q.cdc.Unmarshal(value, &grant); err != nil {
 			return err
 		}
 

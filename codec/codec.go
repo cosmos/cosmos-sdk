@@ -76,7 +76,7 @@ type (
 	}
 
 	// ProtoMarshaler defines an interface a type must implement to serialize itself
-	// as protocol buffer defined message.
+	// as a protocol buffer defined message.
 	ProtoMarshaler interface {
 		proto.Message // for JSON serialization
 

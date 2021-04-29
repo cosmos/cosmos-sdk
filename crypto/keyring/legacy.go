@@ -75,7 +75,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
-		info, err := protoUnmarshalInfo(iter.Value())
+		info, err := protoUnmarshalKeyringEntry(iter.Value())
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +97,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 
-	return protoUnmarshalInfo(bs)
+	return protoUnmarshalKeyringEntry(bs)
 }
 
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
@@ -156,7 +156,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	info, err := protoUnmarshalInfo(bz)
+	info, err := protoUnmarshalKeyringEntry(bz)
 	if err != nil {
 		return
 	}

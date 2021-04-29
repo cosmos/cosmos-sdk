@@ -4,8 +4,8 @@
 package keyring
 
 import (
-	crypto_ed25519 "crypto/ed25519"
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -24,49 +24,128 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type PubKeyType int32
-
-const (
-	PubKeyType_MultiType     PubKeyType = 0
-	PubKeyType_Secp256k1Type PubKeyType = 1
-	PubKeyType_Ed25519Type   PubKeyType = 2
-	PubKeyType_Sr25519Type   PubKeyType = 3
-)
-
-var PubKeyType_name = map[int32]string{
-	0: "MultiType",
-	1: "Secp256k1Type",
-	2: "Ed25519Type",
-	3: "Sr25519Type",
+type KeyringEntry struct {
+	Name   string     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	PubKey *types.Any `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
+	// Types that are valid to be assigned to Item:
+	//	*KeyringEntry_Local
+	//	*KeyringEntry_Ledger
+	//	*KeyringEntry_Offline
+	//	*KeyringEntry_Multi
+	Item isKeyringEntry_Item `protobuf_oneof:"item"`
 }
 
-var PubKeyType_value = map[string]int32{
-	"MultiType":     0,
-	"Secp256k1Type": 1,
-	"Ed25519Type":   2,
-	"Sr25519Type":   3,
-}
-
-func (x PubKeyType) String() string {
-	return proto.EnumName(PubKeyType_name, int32(x))
-}
-
-func (PubKeyType) EnumDescriptor() ([]byte, []int) {
+func (m *KeyringEntry) Reset()         { *m = KeyringEntry{} }
+func (m *KeyringEntry) String() string { return proto.CompactTextString(m) }
+func (*KeyringEntry) ProtoMessage()    {}
+func (*KeyringEntry) Descriptor() ([]byte, []int) {
 	return fileDescriptor_46feab99abea8f51, []int{0}
+}
+func (m *KeyringEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *KeyringEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_KeyringEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *KeyringEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyringEntry.Merge(m, src)
+}
+func (m *KeyringEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *KeyringEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_KeyringEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_KeyringEntry proto.InternalMessageInfo
+
+type isKeyringEntry_Item interface {
+	isKeyringEntry_Item()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type KeyringEntry_Local struct {
+	Local *LocalInfo `protobuf:"bytes,3,opt,name=local,proto3,oneof" json:"local,omitempty"`
+}
+type KeyringEntry_Ledger struct {
+	Ledger *LedgerInfo `protobuf:"bytes,4,opt,name=ledger,proto3,oneof" json:"ledger,omitempty"`
+}
+type KeyringEntry_Offline struct {
+	Offline *OfflineInfo `protobuf:"bytes,5,opt,name=offline,proto3,oneof" json:"offline,omitempty"`
+}
+type KeyringEntry_Multi struct {
+	Multi *MultiInfo `protobuf:"bytes,6,opt,name=multi,proto3,oneof" json:"multi,omitempty"`
+}
+
+func (*KeyringEntry_Local) isKeyringEntry_Item()   {}
+func (*KeyringEntry_Ledger) isKeyringEntry_Item()  {}
+func (*KeyringEntry_Offline) isKeyringEntry_Item() {}
+func (*KeyringEntry_Multi) isKeyringEntry_Item()   {}
+
+func (m *KeyringEntry) GetItem() isKeyringEntry_Item {
+	if m != nil {
+		return m.Item
+	}
+	return nil
+}
+
+func (m *KeyringEntry) GetLocal() *LocalInfo {
+	if x, ok := m.GetItem().(*KeyringEntry_Local); ok {
+		return x.Local
+	}
+	return nil
+}
+
+func (m *KeyringEntry) GetLedger() *LedgerInfo {
+	if x, ok := m.GetItem().(*KeyringEntry_Ledger); ok {
+		return x.Ledger
+	}
+	return nil
+}
+
+func (m *KeyringEntry) GetOffline() *OfflineInfo {
+	if x, ok := m.GetItem().(*KeyringEntry_Offline); ok {
+		return x.Offline
+	}
+	return nil
+}
+
+func (m *KeyringEntry) GetMulti() *MultiInfo {
+	if x, ok := m.GetItem().(*KeyringEntry_Multi); ok {
+		return x.Multi
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*KeyringEntry) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*KeyringEntry_Local)(nil),
+		(*KeyringEntry_Ledger)(nil),
+		(*KeyringEntry_Offline)(nil),
+		(*KeyringEntry_Multi)(nil),
+	}
 }
 
 // Item is a keyring item stored in a keyring backend.
 type LocalInfo struct {
-	Name         string                   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Key          crypto_ed25519.PublicKey `protobuf:"bytes,2,opt,name=key,proto3,casttype=crypto/ed25519.PublicKey" json:"key,omitempty"`
-	PrivKeyArmor string                   `protobuf:"bytes,3,opt,name=privKeyArmor,proto3" json:"privKeyArmor,omitempty"`
-	Algo         PubKeyType               `protobuf:"varint,4,opt,name=algo,proto3,enum=cosmos.crypto.keyring.PubKeyType" json:"algo,omitempty"`
+	PrivKeyArmor *types.Any `protobuf:"bytes,1,opt,name=privKeyArmor,proto3" json:"privKeyArmor,omitempty"`
 }
 
 func (m *LocalInfo) Reset()      { *m = LocalInfo{} }
 func (*LocalInfo) ProtoMessage() {}
 func (*LocalInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_46feab99abea8f51, []int{0}
+	return fileDescriptor_46feab99abea8f51, []int{1}
 }
 func (m *LocalInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -96,16 +175,13 @@ func (m *LocalInfo) XXX_DiscardUnknown() {
 var xxx_messageInfo_LocalInfo proto.InternalMessageInfo
 
 type LedgerInfo struct {
-	Name string                   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Key  crypto_ed25519.PublicKey `protobuf:"bytes,2,opt,name=key,proto3,casttype=crypto/ed25519.PublicKey" json:"key,omitempty"`
-	Path *BIP44Params             `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
-	Algo PubKeyType               `protobuf:"varint,4,opt,name=algo,proto3,enum=cosmos.crypto.keyring.PubKeyType" json:"algo,omitempty"`
+	Path *BIP44Params `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }
 
 func (m *LedgerInfo) Reset()      { *m = LedgerInfo{} }
 func (*LedgerInfo) ProtoMessage() {}
 func (*LedgerInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_46feab99abea8f51, []int{1}
+	return fileDescriptor_46feab99abea8f51, []int{2}
 }
 func (m *LedgerInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -145,7 +221,7 @@ type BIP44Params struct {
 func (m *BIP44Params) Reset()      { *m = BIP44Params{} }
 func (*BIP44Params) ProtoMessage() {}
 func (*BIP44Params) Descriptor() ([]byte, []int) {
-	return fileDescriptor_46feab99abea8f51, []int{2}
+	return fileDescriptor_46feab99abea8f51, []int{3}
 }
 func (m *BIP44Params) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -175,15 +251,12 @@ func (m *BIP44Params) XXX_DiscardUnknown() {
 var xxx_messageInfo_BIP44Params proto.InternalMessageInfo
 
 type OfflineInfo struct {
-	Name string                   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Key  crypto_ed25519.PublicKey `protobuf:"bytes,2,opt,name=key,proto3,casttype=crypto/ed25519.PublicKey" json:"key,omitempty"`
-	Algo PubKeyType               `protobuf:"varint,3,opt,name=algo,proto3,enum=cosmos.crypto.keyring.PubKeyType" json:"algo,omitempty"`
 }
 
 func (m *OfflineInfo) Reset()      { *m = OfflineInfo{} }
 func (*OfflineInfo) ProtoMessage() {}
 func (*OfflineInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_46feab99abea8f51, []int{3}
+	return fileDescriptor_46feab99abea8f51, []int{4}
 }
 func (m *OfflineInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -213,16 +286,13 @@ func (m *OfflineInfo) XXX_DiscardUnknown() {
 var xxx_messageInfo_OfflineInfo proto.InternalMessageInfo
 
 type MultiInfo struct {
-	Name      string                   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Key       crypto_ed25519.PublicKey `protobuf:"bytes,2,opt,name=key,proto3,casttype=crypto/ed25519.PublicKey" json:"key,omitempty"`
-	Threshold uint32                   `protobuf:"varint,3,opt,name=threshold,proto3" json:"threshold,omitempty"`
-	Keys      []*MultisigPubKeyInfo    `protobuf:"bytes,4,rep,name=keys,proto3" json:"keys,omitempty"`
+	Threshold uint32 `protobuf:"varint,1,opt,name=threshold,proto3" json:"threshold,omitempty"`
 }
 
 func (m *MultiInfo) Reset()      { *m = MultiInfo{} }
 func (*MultiInfo) ProtoMessage() {}
 func (*MultiInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_46feab99abea8f51, []int{4}
+	return fileDescriptor_46feab99abea8f51, []int{5}
 }
 func (m *MultiInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -251,94 +321,188 @@ func (m *MultiInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MultiInfo proto.InternalMessageInfo
 
-type MultisigPubKeyInfo struct {
-	Key    crypto_ed25519.PublicKey `protobuf:"bytes,1,opt,name=key,proto3,casttype=crypto/ed25519.PublicKey" json:"key,omitempty"`
-	Weight uint32                   `protobuf:"varint,2,opt,name=weight,proto3" json:"weight,omitempty"`
-}
-
-func (m *MultisigPubKeyInfo) Reset()         { *m = MultisigPubKeyInfo{} }
-func (m *MultisigPubKeyInfo) String() string { return proto.CompactTextString(m) }
-func (*MultisigPubKeyInfo) ProtoMessage()    {}
-func (*MultisigPubKeyInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_46feab99abea8f51, []int{5}
-}
-func (m *MultisigPubKeyInfo) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MultisigPubKeyInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MultisigPubKeyInfo.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MultisigPubKeyInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MultisigPubKeyInfo.Merge(m, src)
-}
-func (m *MultisigPubKeyInfo) XXX_Size() int {
-	return m.Size()
-}
-func (m *MultisigPubKeyInfo) XXX_DiscardUnknown() {
-	xxx_messageInfo_MultisigPubKeyInfo.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MultisigPubKeyInfo proto.InternalMessageInfo
-
 func init() {
-	proto.RegisterEnum("cosmos.crypto.keyring.PubKeyType", PubKeyType_name, PubKeyType_value)
+	proto.RegisterType((*KeyringEntry)(nil), "cosmos.crypto.keyring.KeyringEntry")
 	proto.RegisterType((*LocalInfo)(nil), "cosmos.crypto.keyring.LocalInfo")
 	proto.RegisterType((*LedgerInfo)(nil), "cosmos.crypto.keyring.LedgerInfo")
 	proto.RegisterType((*BIP44Params)(nil), "cosmos.crypto.keyring.BIP44Params")
 	proto.RegisterType((*OfflineInfo)(nil), "cosmos.crypto.keyring.OfflineInfo")
 	proto.RegisterType((*MultiInfo)(nil), "cosmos.crypto.keyring.MultiInfo")
-	proto.RegisterType((*MultisigPubKeyInfo)(nil), "cosmos.crypto.keyring.MultisigPubKeyInfo")
 }
 
 func init() { proto.RegisterFile("cosmos/crypto/keyring/types.proto", fileDescriptor_46feab99abea8f51) }
 
 var fileDescriptor_46feab99abea8f51 = []byte{
-	// 542 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x94, 0x4d, 0x8b, 0xd3, 0x40,
-	0x1c, 0xc6, 0x33, 0xdb, 0xb8, 0x6e, 0xff, 0xd9, 0xfa, 0x32, 0xe8, 0x12, 0x96, 0x25, 0xdb, 0xed,
-	0xa9, 0x2a, 0xa6, 0x6c, 0xdd, 0x2e, 0x28, 0x78, 0xb0, 0xe0, 0xa1, 0x74, 0xc5, 0x92, 0xf5, 0x24,
-	0x5e, 0xd2, 0xc9, 0x34, 0x19, 0x9a, 0x66, 0xc2, 0x4c, 0xa2, 0xe6, 0x4b, 0x88, 0x47, 0x2f, 0x82,
-	0x1f, 0x41, 0xfc, 0x0e, 0xc2, 0x1e, 0xf7, 0xe8, 0x49, 0xb4, 0xfd, 0x16, 0x9e, 0x24, 0x93, 0xc4,
-	0xae, 0x2f, 0x0b, 0xa2, 0x3d, 0x25, 0xcf, 0xc3, 0x33, 0x33, 0xbf, 0x79, 0x06, 0xfe, 0xb0, 0x47,
-	0xb8, 0x9c, 0x71, 0xd9, 0x21, 0x22, 0x8b, 0x13, 0xde, 0x99, 0xd2, 0x4c, 0xb0, 0xc8, 0xef, 0x24,
-	0x59, 0x4c, 0xa5, 0x1d, 0x0b, 0x9e, 0x70, 0x7c, 0xbd, 0x88, 0xd8, 0x45, 0xc4, 0x2e, 0x23, 0xdb,
-	0xd7, 0x7c, 0xee, 0x73, 0x95, 0xe8, 0xe4, 0x7f, 0x45, 0xb8, 0xf5, 0x1e, 0x41, 0xfd, 0x88, 0x13,
-	0x37, 0x1c, 0x44, 0x13, 0x8e, 0x31, 0xe8, 0x91, 0x3b, 0xa3, 0x26, 0x6a, 0xa2, 0x76, 0xdd, 0x51,
-	0xff, 0xd8, 0x86, 0xda, 0x94, 0x66, 0xe6, 0x5a, 0x13, 0xb5, 0x37, 0xfb, 0x3b, 0xdf, 0x3e, 0xef,
-	0x9a, 0xe5, 0xd9, 0xd4, 0xeb, 0xf6, 0x7a, 0xfb, 0x77, 0xed, 0x51, 0x3a, 0x0e, 0x19, 0x19, 0xd2,
-	0xcc, 0xc9, 0x83, 0xb8, 0x05, 0x9b, 0xb1, 0x60, 0xcf, 0x87, 0x34, 0x7b, 0x20, 0x66, 0x5c, 0x98,
-	0x35, 0xb5, 0xd7, 0x4f, 0x1e, 0xee, 0x81, 0xee, 0x86, 0x3e, 0x37, 0xf5, 0x26, 0x6a, 0x5f, 0xea,
-	0xee, 0xd9, 0x7f, 0x24, 0xce, 0x37, 0x1e, 0xd2, 0xec, 0x49, 0x16, 0x53, 0x47, 0xc5, 0xef, 0xe9,
-	0x6f, 0xde, 0xed, 0x6a, 0xad, 0x8f, 0x08, 0xe0, 0x88, 0x7a, 0x3e, 0x15, 0x2b, 0x63, 0x3e, 0x04,
-	0x3d, 0x76, 0x93, 0x40, 0xb1, 0x1a, 0xdd, 0xd6, 0x39, 0x3c, 0xfd, 0xc1, 0xe8, 0xe0, 0x60, 0xe4,
-	0x0a, 0x77, 0x26, 0x1d, 0x95, 0xff, 0xbf, 0x7b, 0xbc, 0x45, 0x60, 0x9c, 0xd9, 0x12, 0x9b, 0x70,
-	0x31, 0x4e, 0x45, 0xcc, 0x65, 0x71, 0x97, 0x86, 0x53, 0x49, 0xbc, 0x0d, 0x1b, 0x84, 0xb3, 0x28,
-	0x7f, 0x64, 0x75, 0xa7, 0x86, 0xf3, 0x43, 0xe7, 0xab, 0x5c, 0x42, 0x78, 0x1a, 0x25, 0x8a, 0xbe,
-	0xe1, 0x54, 0x12, 0x6f, 0xc1, 0x3a, 0x09, 0xdc, 0xc8, 0xa7, 0x0a, 0x6f, 0xc3, 0x29, 0x15, 0x6e,
-	0x82, 0xe1, 0x7a, 0x82, 0x4a, 0xc9, 0x22, 0x8f, 0xbe, 0x34, 0x2f, 0xa8, 0x55, 0x67, 0xad, 0x92,
-	0xef, 0x15, 0x02, 0xe3, 0xf1, 0x64, 0x12, 0xb2, 0x88, 0xae, 0xac, 0xe8, 0xaa, 0xb0, 0xda, 0xbf,
-	0x14, 0xf6, 0x01, 0x41, 0xfd, 0x51, 0x1a, 0x26, 0x6c, 0x65, 0x38, 0x3b, 0x50, 0x4f, 0x02, 0x41,
-	0x65, 0xc0, 0x43, 0xaf, 0xac, 0x6f, 0x69, 0xe0, 0xfb, 0xa0, 0x4f, 0x69, 0x26, 0x4d, 0xbd, 0x59,
-	0x6b, 0x1b, 0xdd, 0x1b, 0xe7, 0xc0, 0x2a, 0x22, 0xc9, 0xfc, 0x02, 0x3a, 0x47, 0x73, 0xd4, 0xb2,
-	0x12, 0xfa, 0x19, 0xe0, 0xdf, 0x13, 0x15, 0x28, 0xfa, 0x5b, 0xd0, 0x2d, 0x58, 0x7f, 0x41, 0x99,
-	0x1f, 0x24, 0xe5, 0xfb, 0x97, 0xea, 0xe6, 0x08, 0x60, 0x59, 0x16, 0x6e, 0x94, 0xfd, 0xe4, 0xe2,
-	0x8a, 0x86, 0xaf, 0x42, 0xe3, 0x98, 0x92, 0xb8, 0xdb, 0x3b, 0x9c, 0xee, 0x2b, 0x0b, 0xe1, 0xcb,
-	0x60, 0x3c, 0x2c, 0x4e, 0x50, 0xc6, 0x5a, 0x6e, 0x1c, 0x8b, 0xa5, 0x51, 0xeb, 0x0f, 0x4e, 0xbe,
-	0x5a, 0xda, 0xc9, 0xdc, 0x42, 0xa7, 0x73, 0x0b, 0x7d, 0x99, 0x5b, 0xe8, 0xf5, 0xc2, 0xd2, 0x4e,
-	0x17, 0x96, 0xf6, 0x69, 0x61, 0x69, 0x4f, 0x6f, 0xf9, 0x2c, 0x09, 0xd2, 0xb1, 0x4d, 0xf8, 0xac,
-	0x53, 0x4d, 0x22, 0xf5, 0xb9, 0x2d, 0xbd, 0xe9, 0x2f, 0x43, 0x69, 0xbc, 0xae, 0x46, 0xcc, 0x9d,
-	0xef, 0x01, 0x00, 0x00, 0xff, 0xff, 0x7c, 0xe7, 0x10, 0x79, 0xb4, 0x04, 0x00, 0x00,
+	// 499 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x93, 0x4f, 0x8b, 0xd3, 0x40,
+	0x18, 0xc6, 0x93, 0x35, 0x9b, 0xdd, 0xbe, 0xdd, 0x5e, 0xc6, 0x55, 0x62, 0x91, 0xd8, 0xed, 0x69,
+	0x41, 0x36, 0x01, 0x5d, 0x64, 0x51, 0x10, 0xb6, 0x20, 0x58, 0xab, 0xb8, 0xe4, 0xe8, 0x45, 0xf2,
+	0x67, 0x9a, 0x84, 0x26, 0x33, 0x61, 0x32, 0x11, 0xe7, 0x5b, 0x78, 0xf4, 0x22, 0xf8, 0x71, 0x16,
+	0x4f, 0x7b, 0xf4, 0xa8, 0xed, 0x17, 0x91, 0xcc, 0x4c, 0xda, 0x2a, 0x76, 0x4f, 0x99, 0x77, 0xe6,
+	0xf9, 0xbd, 0x3c, 0xf3, 0x3e, 0x19, 0x38, 0x89, 0x69, 0x5d, 0xd2, 0xda, 0x8f, 0x99, 0xa8, 0x38,
+	0xf5, 0x17, 0x58, 0xb0, 0x9c, 0xa4, 0x3e, 0x17, 0x15, 0xae, 0xbd, 0x8a, 0x51, 0x4e, 0xd1, 0x3d,
+	0x25, 0xf1, 0x94, 0xc4, 0xd3, 0x92, 0xe1, 0x71, 0x4a, 0x53, 0x2a, 0x15, 0x7e, 0xbb, 0x52, 0xe2,
+	0xe1, 0x83, 0x94, 0xd2, 0xb4, 0xc0, 0xbe, 0xac, 0xa2, 0x66, 0xee, 0x87, 0x44, 0xa8, 0xa3, 0xf1,
+	0x8f, 0x3d, 0x38, 0x9a, 0x29, 0xf8, 0x15, 0xe1, 0x4c, 0x20, 0x04, 0x16, 0x09, 0x4b, 0xec, 0x98,
+	0x23, 0xf3, 0xb4, 0x17, 0xc8, 0x35, 0x3a, 0x83, 0x83, 0xaa, 0x89, 0x3e, 0x2e, 0xb0, 0x70, 0xf6,
+	0x46, 0xe6, 0x69, 0xff, 0xc9, 0xb1, 0xa7, 0x3a, 0x7a, 0x5d, 0x47, 0xef, 0x92, 0x88, 0xc0, 0xae,
+	0x9a, 0x68, 0x86, 0x05, 0xba, 0x80, 0xfd, 0x82, 0xc6, 0x61, 0xe1, 0xdc, 0x91, 0xe2, 0x91, 0xf7,
+	0x5f, 0xaf, 0xde, 0xdb, 0x56, 0x33, 0x25, 0x73, 0xfa, 0xda, 0x08, 0x14, 0x80, 0x5e, 0x80, 0x5d,
+	0xe0, 0x24, 0xc5, 0xcc, 0xb1, 0x24, 0x7a, 0xb2, 0x0b, 0x95, 0x22, 0xcd, 0x6a, 0x04, 0xbd, 0x84,
+	0x03, 0x3a, 0x9f, 0x17, 0x39, 0xc1, 0xce, 0xbe, 0xa4, 0xc7, 0x3b, 0xe8, 0xf7, 0x4a, 0xa5, 0xf1,
+	0x0e, 0x6a, 0x6d, 0x97, 0x4d, 0xc1, 0x73, 0xc7, 0xbe, 0xd5, 0xf6, 0xbb, 0x56, 0xd3, 0xd9, 0x96,
+	0xc0, 0xc4, 0x06, 0x2b, 0xe7, 0xb8, 0x1c, 0xcf, 0xa0, 0xb7, 0xbe, 0x14, 0xba, 0x80, 0xa3, 0x8a,
+	0xe5, 0x9f, 0x66, 0x58, 0x5c, 0xb2, 0x92, 0x32, 0x39, 0xd0, 0x5d, 0x93, 0xfb, 0x4b, 0xf9, 0xdc,
+	0xfa, 0xfa, 0xfd, 0x91, 0x31, 0x7e, 0x03, 0xb0, 0xb9, 0x26, 0x7a, 0x06, 0x56, 0x15, 0xf2, 0x4c,
+	0x77, 0xd9, 0x75, 0xb3, 0xc9, 0xf4, 0xea, 0xfc, 0xfc, 0x2a, 0x64, 0x61, 0x59, 0x07, 0x52, 0xaf,
+	0x7b, 0x7d, 0x33, 0xa1, 0xbf, 0x75, 0x86, 0x9c, 0x36, 0x50, 0x56, 0xd1, 0x5a, 0xe5, 0x3c, 0x08,
+	0xba, 0x12, 0x0d, 0xe1, 0x30, 0xa6, 0x39, 0x69, 0x7f, 0x35, 0x99, 0xf5, 0x20, 0x58, 0xd7, 0x2d,
+	0x15, 0xc6, 0x31, 0x6d, 0x08, 0x97, 0xc9, 0x0e, 0x82, 0xae, 0x44, 0xf7, 0xc1, 0x8e, 0xb3, 0x90,
+	0xa4, 0x58, 0xe6, 0x76, 0x18, 0xe8, 0x0a, 0x8d, 0xa0, 0x1f, 0x26, 0x0c, 0xd7, 0x75, 0x4e, 0x12,
+	0xfc, 0x59, 0xc6, 0x32, 0x08, 0xb6, 0xb7, 0xb4, 0xbf, 0xbb, 0xd0, 0xdf, 0x0a, 0x45, 0x6f, 0xfa,
+	0xd0, 0x5b, 0xcf, 0x1a, 0x3d, 0x84, 0x1e, 0xcf, 0x18, 0xae, 0x33, 0x5a, 0x24, 0xda, 0xf3, 0x66,
+	0x43, 0x01, 0x93, 0xe9, 0xf5, 0x6f, 0xd7, 0xb8, 0x5e, 0xba, 0xe6, 0xcd, 0xd2, 0x35, 0x7f, 0x2d,
+	0x5d, 0xf3, 0xcb, 0xca, 0x35, 0x6e, 0x56, 0xae, 0xf1, 0x73, 0xe5, 0x1a, 0x1f, 0x1e, 0xa7, 0x39,
+	0xcf, 0x9a, 0xc8, 0x8b, 0x69, 0xe9, 0x77, 0xef, 0x4b, 0x7e, 0xce, 0xea, 0x64, 0xf1, 0xcf, 0x53,
+	0x8b, 0x6c, 0x19, 0xcf, 0xd3, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xd7, 0xd3, 0x34, 0xc1, 0x8a,
+	0x03, 0x00, 0x00,
 }
 
+func (m *KeyringEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *KeyringEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *KeyringEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Item != nil {
+		{
+			size := m.Item.Size()
+			i -= size
+			if _, err := m.Item.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	if m.PubKey != nil {
+		{
+			size, err := m.PubKey.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *KeyringEntry_Local) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *KeyringEntry_Local) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Local != nil {
+		{
+			size, err := m.Local.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *KeyringEntry_Ledger) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *KeyringEntry_Ledger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Ledger != nil {
+		{
+			size, err := m.Ledger.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
+func (m *KeyringEntry_Offline) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *KeyringEntry_Offline) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Offline != nil {
+		{
+			size, err := m.Offline.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *KeyringEntry_Multi) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *KeyringEntry_Multi) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Multi != nil {
+		{
+			size, err := m.Multi.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	return len(dAtA) - i, nil
+}
 func (m *LocalInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -359,29 +523,15 @@ func (m *LocalInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Algo != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Algo))
-		i--
-		dAtA[i] = 0x20
-	}
-	if len(m.PrivKeyArmor) > 0 {
-		i -= len(m.PrivKeyArmor)
-		copy(dAtA[i:], m.PrivKeyArmor)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.PrivKeyArmor)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
+	if m.PrivKeyArmor != nil {
+		{
+			size, err := m.PrivKeyArmor.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTypes(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0xa
 	}
@@ -408,11 +558,6 @@ func (m *LedgerInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Algo != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Algo))
-		i--
-		dAtA[i] = 0x20
-	}
 	if m.Path != nil {
 		{
 			size, err := m.Path.MarshalToSizedBuffer(dAtA[:i])
@@ -422,20 +567,6 @@ func (m *LedgerInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i -= size
 			i = encodeVarintTypes(dAtA, i, uint64(size))
 		}
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -515,25 +646,6 @@ func (m *OfflineInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Algo != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Algo))
-		i--
-		dAtA[i] = 0x18
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
 	return len(dAtA) - i, nil
 }
 
@@ -557,73 +669,10 @@ func (m *MultiInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Keys) > 0 {
-		for iNdEx := len(m.Keys) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Keys[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTypes(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x22
-		}
-	}
 	if m.Threshold != 0 {
 		i = encodeVarintTypes(dAtA, i, uint64(m.Threshold))
 		i--
-		dAtA[i] = 0x18
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MultisigPubKeyInfo) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MultisigPubKeyInfo) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MultisigPubKeyInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Weight != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Weight))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -639,7 +688,7 @@ func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *LocalInfo) Size() (n int) {
+func (m *KeyringEntry) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -649,16 +698,73 @@ func (m *LocalInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = len(m.Key)
-	if l > 0 {
+	if m.PubKey != nil {
+		l = m.PubKey.Size()
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = len(m.PrivKeyArmor)
-	if l > 0 {
+	if m.Item != nil {
+		n += m.Item.Size()
+	}
+	return n
+}
+
+func (m *KeyringEntry_Local) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Local != nil {
+		l = m.Local.Size()
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	if m.Algo != 0 {
-		n += 1 + sovTypes(uint64(m.Algo))
+	return n
+}
+func (m *KeyringEntry_Ledger) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Ledger != nil {
+		l = m.Ledger.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+func (m *KeyringEntry_Offline) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Offline != nil {
+		l = m.Offline.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+func (m *KeyringEntry_Multi) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Multi != nil {
+		l = m.Multi.Size()
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	return n
+}
+func (m *LocalInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PrivKeyArmor != nil {
+		l = m.PrivKeyArmor.Size()
+		n += 1 + l + sovTypes(uint64(l))
 	}
 	return n
 }
@@ -669,20 +775,9 @@ func (m *LedgerInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
 	if m.Path != nil {
 		l = m.Path.Size()
 		n += 1 + l + sovTypes(uint64(l))
-	}
-	if m.Algo != 0 {
-		n += 1 + sovTypes(uint64(m.Algo))
 	}
 	return n
 }
@@ -717,17 +812,6 @@ func (m *OfflineInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	if m.Algo != 0 {
-		n += 1 + sovTypes(uint64(m.Algo))
-	}
 	return n
 }
 
@@ -737,38 +821,8 @@ func (m *MultiInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
 	if m.Threshold != 0 {
 		n += 1 + sovTypes(uint64(m.Threshold))
-	}
-	if len(m.Keys) > 0 {
-		for _, e := range m.Keys {
-			l = e.Size()
-			n += 1 + l + sovTypes(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MultisigPubKeyInfo) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
-	if m.Weight != 0 {
-		n += 1 + sovTypes(uint64(m.Weight))
 	}
 	return n
 }
@@ -779,7 +833,7 @@ func sovTypes(x uint64) (n int) {
 func sozTypes(x uint64) (n int) {
 	return sovTypes(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *LocalInfo) Unmarshal(dAtA []byte) error {
+func (m *KeyringEntry) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -802,10 +856,10 @@ func (m *LocalInfo) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: LocalInfo: wiretype end group for non-group")
+			return fmt.Errorf("proto: KeyringEntry: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: LocalInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: KeyringEntry: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -842,9 +896,9 @@ func (m *LocalInfo) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PubKey", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -854,31 +908,33 @@ func (m *LocalInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= int(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
-			if m.Key == nil {
-				m.Key = []byte{}
+			if m.PubKey == nil {
+				m.PubKey = &types.Any{}
+			}
+			if err := m.PubKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PrivKeyArmor", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Local", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -888,29 +944,32 @@ func (m *LocalInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTypes
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTypes
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PrivKeyArmor = string(dAtA[iNdEx:postIndex])
+			v := &LocalInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &KeyringEntry_Local{v}
 			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Algo", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ledger", wireType)
 			}
-			m.Algo = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -920,11 +979,183 @@ func (m *LocalInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Algo |= PubKeyType(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &LedgerInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &KeyringEntry_Ledger{v}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Offline", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &OfflineInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &KeyringEntry_Offline{v}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Multi", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &MultiInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &KeyringEntry_Multi{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTypes(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LocalInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTypes
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LocalInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LocalInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PrivKeyArmor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.PrivKeyArmor == nil {
+				m.PrivKeyArmor = &types.Any{}
+			}
+			if err := m.PrivKeyArmor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])
@@ -977,72 +1208,6 @@ func (m *LedgerInfo) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
-			if m.Key == nil {
-				m.Key = []byte{}
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Path", wireType)
 			}
 			var msglen int
@@ -1077,25 +1242,6 @@ func (m *LedgerInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Algo", wireType)
-			}
-			m.Algo = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Algo |= PubKeyType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])
@@ -1292,91 +1438,6 @@ func (m *OfflineInfo) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: OfflineInfo: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
-			if m.Key == nil {
-				m.Key = []byte{}
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Algo", wireType)
-			}
-			m.Algo = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Algo |= PubKeyType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])
@@ -1428,72 +1489,6 @@ func (m *MultiInfo) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
-			if m.Key == nil {
-				m.Key = []byte{}
-			}
-			iNdEx = postIndex
-		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Threshold", wireType)
 			}
@@ -1508,143 +1503,6 @@ func (m *MultiInfo) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Threshold |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Keys", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Keys = append(m.Keys, &MultisigPubKeyInfo{})
-			if err := m.Keys[len(m.Keys)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MultisigPubKeyInfo) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MultisigPubKeyInfo: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MultisigPubKeyInfo: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
-			if m.Key == nil {
-				m.Key = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Weight", wireType)
-			}
-			m.Weight = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Weight |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

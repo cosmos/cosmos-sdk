@@ -215,13 +215,11 @@
   
 - [cosmos/crypto/keyring/types.proto](#cosmos/crypto/keyring/types.proto)
     - [BIP44Params](#cosmos.crypto.keyring.BIP44Params)
+    - [KeyringEntry](#cosmos.crypto.keyring.KeyringEntry)
     - [LedgerInfo](#cosmos.crypto.keyring.LedgerInfo)
     - [LocalInfo](#cosmos.crypto.keyring.LocalInfo)
     - [MultiInfo](#cosmos.crypto.keyring.MultiInfo)
-    - [MultisigPubKeyInfo](#cosmos.crypto.keyring.MultisigPubKeyInfo)
     - [OfflineInfo](#cosmos.crypto.keyring.OfflineInfo)
-  
-    - [PubKeyType](#cosmos.crypto.keyring.PubKeyType)
   
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
@@ -3326,6 +3324,26 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
+<a name="cosmos.crypto.keyring.KeyringEntry"></a>
+
+### KeyringEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `local` | [LocalInfo](#cosmos.crypto.keyring.LocalInfo) |  |  |
+| `ledger` | [LedgerInfo](#cosmos.crypto.keyring.LedgerInfo) |  |  |
+| `offline` | [OfflineInfo](#cosmos.crypto.keyring.OfflineInfo) |  |  |
+| `multi` | [MultiInfo](#cosmos.crypto.keyring.MultiInfo) |  |  |
+
+
+
+
+
+
 <a name="cosmos.crypto.keyring.LedgerInfo"></a>
 
 ### LedgerInfo
@@ -3334,10 +3352,7 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `key` | [bytes](#bytes) |  |  |
 | `path` | [BIP44Params](#cosmos.crypto.keyring.BIP44Params) |  |  |
-| `algo` | [PubKeyType](#cosmos.crypto.keyring.PubKeyType) |  |  |
 
 
 
@@ -3352,10 +3367,7 @@ Item is a keyring item stored in a keyring backend.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `key` | [bytes](#bytes) |  |  |
-| `privKeyArmor` | [string](#string) |  |  |
-| `algo` | [PubKeyType](#cosmos.crypto.keyring.PubKeyType) |  |  |
+| `privKeyArmor` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
 
 
@@ -3370,26 +3382,7 @@ Item is a keyring item stored in a keyring backend.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `key` | [bytes](#bytes) |  |  |
 | `threshold` | [uint32](#uint32) |  |  |
-| `keys` | [MultisigPubKeyInfo](#cosmos.crypto.keyring.MultisigPubKeyInfo) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.crypto.keyring.MultisigPubKeyInfo"></a>
-
-### MultisigPubKeyInfo
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [bytes](#bytes) |  |  |
-| `weight` | [uint32](#uint32) |  |  |
 
 
 
@@ -3402,31 +3395,10 @@ Item is a keyring item stored in a keyring backend.
 
 
 
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `name` | [string](#string) |  |  |
-| `key` | [bytes](#bytes) |  |  |
-| `algo` | [PubKeyType](#cosmos.crypto.keyring.PubKeyType) |  |  |
-
-
 
 
 
  <!-- end messages -->
-
-
-<a name="cosmos.crypto.keyring.PubKeyType"></a>
-
-### PubKeyType
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| MultiType | 0 |  |
-| Secp256k1Type | 1 |  |
-| Ed25519Type | 2 |  |
-| Sr25519Type | 3 |  |
-
 
  <!-- end enums -->
 

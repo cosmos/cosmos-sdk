@@ -2,36 +2,34 @@ syntax = "proto3";
 package cosmos.crypto.keyring;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
 
-// TODO - define proto structs for all structs in cryto/kerying/info.go and remove the original structs.
+message KeyringEntry {
+  string name = 1;
+  google.protobuf.Any pub_key = 2;
+
+  oneof item {
+    LocalInfo local = 3;
+    LedgerInfo ledger  = 4;
+    OfflineInfo offline  = 5;
+    MultiInfo multi  = 6;
+  }
+}
 
 // Item is a keyring item stored in a keyring backend.
 message LocalInfo {
   option (gogoproto.goproto_stringer) = false;
 
-  string name = 1;
-  bytes key = 2 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
-  string privKeyArmor = 3;
-  PubKeyType algo = 4;
-}
-
-enum PubKeyType{
-  MultiType = 0;
-  Secp256k1Type = 1;
-  Ed25519Type = 2;
-  Sr25519Type = 3;
+  google.protobuf.Any privKeyArmor = 1;
 }
 
 message LedgerInfo {
   option (gogoproto.goproto_stringer) = false;
 
-  string name = 1;
-  bytes key = 2 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
-  BIP44Params path = 3;
-  PubKeyType algo = 4;
+  BIP44Params path = 1;
 }
 
 message BIP44Params {
@@ -44,26 +42,12 @@ message BIP44Params {
 	uint32 adressindex = 5;
 }
 
-
 message OfflineInfo {
   option (gogoproto.goproto_stringer) = false;
-
-  string name = 1;
-  bytes key = 2 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
-  PubKeyType algo = 3;
 }
-
 
 message MultiInfo {
   option (gogoproto.goproto_stringer) = false;
 
-  string name = 1;
-  bytes key = 2 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
-  uint32 threshold = 3;
-  repeated MultisigPubKeyInfo keys = 4;
-}
-
-message MultisigPubKeyInfo {
-  bytes key = 1 [(gogoproto.casttype) = "crypto/ed25519.PublicKey"];
-  uint32 weight = 2;
+  uint32 threshold = 1;
 }

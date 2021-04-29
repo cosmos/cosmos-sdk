@@ -149,16 +149,12 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 
 func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	blockTime := suite.sdkCtx.BlockTime()
+	oneYear := blockTime.AddDate(1, 0, 0)
 
-	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 	future := &types.BasicFeeAllowance{
 		SpendLimit: suite.atom,
-		Expiration: &exp,
-	}
-
-	expired := &types.BasicFeeAllowance{
-		SpendLimit: eth,
-		Expiration: &exp,
+		Expiration: &oneYear,
 	}
 
 	// for testing limits of the contract
@@ -168,7 +164,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	_ = smallAtom
 	futureAfterSmall := &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
-		Expiration: &exp,
+		Expiration: &oneYear,
 	}
 
 	// then lots of queries
@@ -184,13 +180,6 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			grantee: suite.addrs[1],
 			fee:     suite.atom,
 			allowed: true,
-			final:   nil,
-		},
-		"expired and removed": {
-			granter: suite.addrs[0],
-			grantee: suite.addrs[2],
-			fee:     eth,
-			allowed: false,
 			final:   nil,
 		},
 		"too high": {
@@ -212,14 +201,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	for name, tc := range cases {
 		tc := tc
 		suite.Run(name, func() {
-			// let's set up some initial state here
-			// addr -> addr2 (future)
-			// addr -> addr3 (expired)
-
 			err := suite.keeper.GrantFeeAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], future)
-			suite.Require().NoError(err)
-
-			err = suite.keeper.GrantFeeAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[3], expired)
 			suite.Require().NoError(err)
 
 			err = suite.keeper.UseGrantedFees(suite.sdkCtx, tc.granter, tc.grantee, tc.fee, []sdk.Msg{})
@@ -230,10 +212,26 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			}
 
 			loaded, _ := suite.keeper.GetFeeAllowance(suite.sdkCtx, tc.granter, tc.grantee)
-
 			suite.Equal(tc.final, loaded)
 		})
 	}
+
+	expired := &types.BasicFeeAllowance{
+		SpendLimit: eth,
+		Expiration: &blockTime,
+	}
+	// creating expired feegrant
+	ctx := suite.sdkCtx.WithBlockTime(oneYear)
+	err := suite.keeper.GrantFeeAllowance(ctx, suite.addrs[0], suite.addrs[2], expired)
+	suite.Require().NoError(err)
+
+	// expect error: feegrant expired
+	err = suite.keeper.UseGrantedFees(ctx, suite.addrs[0], suite.addrs[2], eth, []sdk.Msg{})
+	suite.Error(err)
+	suite.Contains(err.Error(), "fee allowance expired")
+	// verify: feegrant is revoked
+	_, err = suite.keeper.GetFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
+	suite.Error(err)
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {

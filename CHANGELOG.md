@@ -88,8 +88,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `codec.Marshaler` → `codec.Codec` (this defines objects which serialize other objects)
   * `codec.BinaryMarshaler` → `codec.BinaryCodec`
   * `codec.JSONMarshaler` → `codec.JSONCodec`
-  * Removed `BinaryBare` suffix from `BinarCodec` methods (`MarshalBinaryBare`, `UnmarshalBinaryBare`, ...)
-  * Removed `Binary` infix from `BinarCodec` methods (`MarshalBinaryLengthPrefixed`, `UnmarshalBinaryLengthPrefixed`, ...)
+  * Removed `BinaryBare` suffix from `BinaryCodec` methods (`MarshalBinaryBare`, `UnmarshalBinaryBare`, ...)
+  * Removed `Binary` infix from `BinaryCodec` methods (`MarshalBinaryLengthPrefixed`, `UnmarshalBinaryLengthPrefixed`, ...)
 
 
 

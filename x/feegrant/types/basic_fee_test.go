@@ -197,7 +197,7 @@ func TestBasicFeeAllowTime(t *testing.T) {
 		"non-expired": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtTime(oneHour),
+				Expiration: &oneHour,
 			},
 			valid:     true,
 			fee:       smallAtom,
@@ -209,7 +209,7 @@ func TestBasicFeeAllowTime(t *testing.T) {
 		"expired": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtTime(now),
+				Expiration: &now,
 			},
 			valid:     true,
 			fee:       smallAtom,
@@ -220,7 +220,7 @@ func TestBasicFeeAllowTime(t *testing.T) {
 		"fee more than allowed": {
 			allow: &types.BasicFeeAllowance{
 				SpendLimit: atom,
-				Expiration: types.ExpiresAtTime(oneHour),
+				Expiration: &oneHour,
 			},
 			valid:     true,
 			fee:       bigAtom,
@@ -229,7 +229,7 @@ func TestBasicFeeAllowTime(t *testing.T) {
 		},
 		"without spend limit": {
 			allow: &types.BasicFeeAllowance{
-				Expiration: types.ExpiresAtTime(oneHour),
+				Expiration: &oneHour,
 			},
 			valid:     true,
 			fee:       bigAtom,
@@ -238,7 +238,7 @@ func TestBasicFeeAllowTime(t *testing.T) {
 		},
 		"expired no spend limit": {
 			allow: &types.BasicFeeAllowance{
-				Expiration: types.ExpiresAtTime(now),
+				Expiration: &now,
 			},
 			valid:     true,
 			fee:       bigAtom,
@@ -265,8 +265,8 @@ func TestBasicFeeAllowTime(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+			
 			require.NoError(t, err)
-
 			require.Equal(t, tc.remove, remove)
 			if !remove {
 				assert.Equal(t, tc.allow.SpendLimit, tc.remains)

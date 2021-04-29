@@ -231,5 +231,5 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 	return acc, ak.cdc.UnmarshalInterface(bz, &acc)
 }
 
-// GetCodec return codec.Marshaler object used by the keeper
+// GetCodec return codec.Codec object used by the keeper
 func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }

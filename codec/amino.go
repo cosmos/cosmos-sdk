@@ -139,7 +139,7 @@ func (cdc *LegacyAmino) MustUnmarshalLengthPrefixed(bz []byte, ptr interface{}) 
 	}
 }
 
-// MarshalJSON implements codec.Marshaler interface
+// MarshalJSON implements codec.Codec interface
 func (cdc *LegacyAmino) MarshalJSON(o interface{}) ([]byte, error) {
 	err := cdc.jsonMarshalAnys(o)
 	if err != nil {
@@ -156,7 +156,7 @@ func (cdc *LegacyAmino) MustMarshalJSON(o interface{}) []byte {
 	return bz
 }
 
-// UnmarshalJSON implements codec.Marshaler interface
+// UnmarshalJSON implements codec.Codec interface
 func (cdc *LegacyAmino) UnmarshalJSON(bz []byte, ptr interface{}) error {
 	err := cdc.Amino.UnmarshalJSON(bz, ptr)
 	if err != nil {

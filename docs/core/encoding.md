@@ -241,7 +241,7 @@ message MsgSubmitEvidence {
 }
 ```
 
-The SDK `codec.Marshaler` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
+The SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{})` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 

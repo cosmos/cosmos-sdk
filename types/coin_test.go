@@ -975,10 +975,10 @@ func (s *coinTestSuite) TestCoinAminoEncoding() {
 	cdc := codec.NewLegacyAmino()
 	c := sdk.NewInt64Coin(testDenom1, 5)
 
-	bz1, err := cdc.MarshalBinaryBare(c)
+	bz1, err := cdc.Marshal(c)
 	s.Require().NoError(err)
 
-	bz2, err := cdc.MarshalBinaryLengthPrefixed(c)
+	bz2, err := cdc.MarshalLengthPrefixed(c)
 	s.Require().NoError(err)
 
 	bz3, err := c.Marshal()

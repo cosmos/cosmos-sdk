@@ -45,7 +45,7 @@ func TestOnWrite(t *testing.T) {
 		StoreKey: testStoreKey.Name(),
 		Delete:   false,
 	}
-	testMarshaller.UnmarshalBinaryLengthPrefixed(outputBytes, outputKVPair)
+	testMarshaller.UnmarshalLengthPrefixed(outputBytes, outputKVPair)
 	require.EqualValues(t, expectedOutputKVPair, outputKVPair)
 	testWriter.Reset()
 
@@ -61,6 +61,6 @@ func TestOnWrite(t *testing.T) {
 		StoreKey: testStoreKey.Name(),
 		Delete:   true,
 	}
-	testMarshaller.UnmarshalBinaryLengthPrefixed(outputBytes, outputKVPair)
+	testMarshaller.UnmarshalLengthPrefixed(outputBytes, outputKVPair)
 	require.EqualValues(t, expectedOutputKVPair, outputKVPair)
 }

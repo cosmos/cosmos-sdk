@@ -74,9 +74,9 @@ func (suite *PKSuite) TestMarshalProto() {
 	pk = PubKey{}
 	registry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-	bz, err = cdc.MarshalBinaryBare(suite.pk)
+	bz, err = cdc.Marshal(suite.pk)
 	require.NoError(err)
-	require.NoError(cdc.UnmarshalBinaryBare(bz, &pk))
+	require.NoError(cdc.Unmarshal(bz, &pk))
 	require.True(pk.Equals(suite.pk))
 
 	const bufSize = 100

@@ -126,7 +126,7 @@ func (cgts ConsumeTxSizeGasDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 				PubKey:    pubkey,
 			}
 
-			sigBz := legacy.Cdc.MustMarshalBinaryBare(simSig)
+			sigBz := legacy.Cdc.MustMarshal(simSig)
 			cost := sdk.Gas(len(sigBz) + 6)
 
 			// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
@@ -178,6 +178,12 @@ type (
 		GetTimeoutHeight() uint64
 	}
 )
+
+// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
+// tx height timeout.
+func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
+	return TxTimeoutHeightDecorator{}
+}
 
 // AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
 // type where the current block height is checked against the tx's height timeout.

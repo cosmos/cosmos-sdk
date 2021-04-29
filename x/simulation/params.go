@@ -151,7 +151,7 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 // Param change proposals
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
-func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONMarshaler) *abci.ConsensusParams {
+func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *abci.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {

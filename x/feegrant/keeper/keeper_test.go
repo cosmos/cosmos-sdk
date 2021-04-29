@@ -229,6 +229,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	err = suite.keeper.UseGrantedFees(ctx, suite.addrs[0], suite.addrs[2], eth, []sdk.Msg{})
 	suite.Error(err)
 	suite.Contains(err.Error(), "fee allowance expired")
+
 	// verify: feegrant is revoked
 	_, err = suite.keeper.GetFeeAllowance(ctx, suite.addrs[0], suite.addrs[2])
 	suite.Error(err)

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -165,7 +164,6 @@ func (s *TestSuite) TestKeeperFees() {
 	executeMsgs, err = msgs.GetMessages()
 	s.Require().NoError(err)
 
-	fmt.Println("TEST granteeAddr=", granteeAddr, "executeMsgs=", executeMsgs)
 	result, err = app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	s.Require().NoError(err)
 	s.Require().NotNil(result)

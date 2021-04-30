@@ -11,21 +11,21 @@ DRAFT Not Implemented
 
 ## Abstract
 
-Sparse Merke Tree (SMT) is a version of a Merkle Tree with various storage and performance optimizations. This ADR defines a separation of state commitments from data storage and the SDK transition from IAVL to SMT.
+Sparse Merke Tree ([SMT](https://osf.io/8mcnh/)) is a version of a Merkle Tree with various storage and performance optimizations. This ADR defines a separation of state commitments from data storage and the SDK transition from IAVL to SMT.
 
 
 ## Context
 
-Currently, Cosmos SDK uses IAVL for both state commitments and data storage.
+Currently, Cosmos SDK uses IAVL for both state [commitments](https://cryptography.fandom.com/wiki/Commitment_scheme) and data storage.
 
-IAVL has effectively become an orphaned project within the Cosmos ecosystem and it's proven to be an inefficient state commitment.
+IAVL has effectively become an orphaned project within the Cosmos ecosystem and it's proven to be an inefficient state commitment data structure.
 In the current design, IAVL is used for both data storage and as a Merkle Tree for state commitments. IAVL is meant to be a standalone Merkelized key/value database, however it's using a KV DB engine to store all tree nodes. So, each node is stored in a separate record in the KV DB. This causes many inefficiencies and problems:
 
-+ Each object select requires a tree traversal from the root
-+ Each edge traversal requires a DB query (nodes are not stored in a memory)
++ Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the SDK level.
++ Each edge traversal requires a DB query.
 + Creating snapshots is [expensive](https://github.com/cosmos/cosmos-sdk/issues/7215#issuecomment-684804950). It takes about 30 seconds to export less than 100 MB of state (as of March 2020).
 + Updates in IAVL may trigger tree reorganization and possible O(log(n)) hashes re-computation, which can become a CPU bottleneck.
-+ The leaf structure is pretty expensive: it contains the `(key, value)` pair, additional metadata such as height, version. The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md
++ The node structure is pretty expensive - it contains a standard tree node elements (key, value, left and right element) and additional metadata such as height, version (which is not required by the SDK). The entire node is hashed, and that hash is used as the key in the underlying database, [ref](https://github.com/cosmos/iavl/blob/master/docs/node/node.md
 ).
 
 Moreover, the IAVL project lacks support and a maintainer and we already see better and well-established alternatives. Instead of optimizing the IAVL, we are looking into other solutions for both storage and state commitments.
@@ -33,7 +33,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 ## Decision
 
-We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedgers' SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2 as  well).
+We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedgers' SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
 
 The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible for data serialization.
 
@@ -42,7 +42,9 @@ The storage model presented here doesn't deal with data structure nor serializat
 
 Separation of storage and commitment (by the SMT) will allow the optimization of different components according to their usage and access patterns.
 
-SMT will use it's own storage (could use the same database underneath) from the state machine store. For every `(key, value)` pair, the SMT will store `hash(key)` in a path (needed to evenly distribute keys in the tree) and `hash(key, value)` in a leaf (to bind the (key, value) pair stored in the `SS`). Since we don't know a structure of a value (in particular if it contains the key) we hash both the key and the value in the `SC` leaf.
+`SS` (SMT) is used to commit to a data and compute merkle proofs. `SC` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SC` will store each `(key, value)` pair directly (map key -> value).
+
+SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is stored in a path (we hash a key to evenly distribute keys in the tree) and `hash(key, value)` in a leaf. Since we don't know a structure of a value (in particular if it contains the key) we hash both the key and the value in the `SC` leaf.
 
 For data access we propose 2 additional KV buckets (namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
@@ -85,7 +87,7 @@ NOTE: For the SDK storage, we may consider splitting that interface into `Commit
 
 Number of historical versions (snapshots) for `abci.Query` and fast sync is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all snapshots.
 
-Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT will create a new one without removing the old one. Since we are snapshoting each block, we update the mechanism and immediately remove an orphaned from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
+Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it create new nodes on the update path, without removing the old one. Since we are snapshoting each block, we need to update that mechanism to immediately remove orphaned nodes from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
 
 To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height.
 
@@ -120,7 +122,7 @@ We identified use-cases, where modules will need to save an object commitment wi
 
 This ADR doesn't introduce any SDK level API changes.
 
-We change the storage layout of the state machine, a storage migration and network upgrade is required to incorporate these changes.
+We change the storage layout of the state machine, a storage hard fork and network upgrade is required to incorporate these changes. SMT provides a merkle proof functionality, however it is not compatible with ICS23. Updating the proofs for ICS23 compatibility is required.
 
 ### Positive
 

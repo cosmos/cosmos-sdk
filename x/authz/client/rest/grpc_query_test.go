@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	cfg.NumValidators = 1
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.NewForTesting(s.T(), cfg)
 
 	val := s.network.Validators[0]
 	// Create new account in the keyring.

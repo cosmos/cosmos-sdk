@@ -45,7 +45,7 @@ func (s *GRPCWebTestSuite) SetupSuite() {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 	s.cfg = cfg
-	s.network = network.New(s.T(), s.cfg)
+	s.network = network.NewForTesting(s.T(), s.cfg)
 	s.Require().NotNil(s.network)
 
 	_, err := s.network.WaitForHeight(2)

@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.NewForTesting(s.T(), cfg)
 	s.Require().NotNil(s.network)
 
 	val := s.network.Validators[0]

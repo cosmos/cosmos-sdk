@@ -38,7 +38,7 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = network.New(s.T(), s.cfg)
+	s.network = network.NewForTesting(s.T(), s.cfg)
 
 	val := s.network.Validators[0]
 

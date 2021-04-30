@@ -232,6 +232,12 @@ func NewStandaloneTestnetEnv(cmd *cobra.Command, configDir string) StandaloneTes
 	}
 }
 
+func NewForTesting(t *testing.T, cfg Config) *Network {
+	testnetEnv := TestingT{t}
+	return New(testnetEnv, cfg)
+
+}
+
 // New creates a new Network for integration tests.
 func New(t TestnetEnv, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time

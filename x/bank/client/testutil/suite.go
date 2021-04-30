@@ -80,7 +80,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[types.ModuleName] = bankGenesisBz
 	s.cfg.GenesisState = genesisState
 
-	s.network = network.New(s.T(), s.cfg)
+	s.network = network.NewForTesting(s.T(), s.cfg)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)

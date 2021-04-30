@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 2
 
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+	s.network = network.NewForTesting(s.T(), cfg)
 
 	kb := s.network.Validators[0].ClientCtx.Keyring
 	_, _, err := kb.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)

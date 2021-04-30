@@ -431,6 +431,6 @@ func StartTestnet(cmd *cobra.Command, configDir string, chainID string, minGasPr
 	networkConfig.NumValidators = numValidators
 	testnetEnv := network.NewStandaloneTestnetEnv(cmd, configDir)
 
-	network.New(testnetEnv, networkConfig)
+	network.NewForTesting(testnetEnv, networkConfig)
 	return server.WaitForQuitSignals()
 }

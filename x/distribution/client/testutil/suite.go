@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	genesisState[minttypes.ModuleName] = mintDataBz
 	s.cfg.GenesisState = genesisState
 
-	s.network = network.New(s.T(), s.cfg)
+	s.network = network.NewForTesting(s.T(), s.cfg)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)

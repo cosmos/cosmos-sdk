@@ -13,7 +13,7 @@ func TestAccountRetriever(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
-	network := network.New(t, cfg)
+	network := network.NewForTesting(t, cfg)
 	defer network.Cleanup()
 
 	_, err := network.WaitForHeight(3)

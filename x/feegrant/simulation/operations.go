@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"context"
 	"math/rand"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
@@ -100,15 +98,9 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-		_, err = feegrantMsgClient.GrantFeeAllowance(context.Background(), msg)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
-		}
 		tx, err := helpers.GenTx(
 			txGen,
-			svcMsgClientConn.GetMsgs(),
+			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -124,9 +116,9 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
+		return simtypes.NewOperationMsg(msg, true, "", protoCdc), nil, err
 	}
 }
 
@@ -174,16 +166,10 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 		msg := types.NewMsgRevokeFeeAllowance(granterAddr, granteeAddr)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-		_, err = feegrantMsgClient.RevokeFeeAllowance(context.Background(), &msg)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
-		}
 
 		tx, err := helpers.GenTx(
 			txGen,
-			svcMsgClientConn.GetMsgs(),
+			[]sdk.Msg{&msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -197,6 +183,6 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 		}
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
+		return simtypes.NewOperationMsg(&msg, true, "", protoCdc), nil, err
 	}
 }

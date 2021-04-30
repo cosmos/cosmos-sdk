@@ -149,7 +149,6 @@
     - [QueryMethodDescriptor](#cosmos.base.reflection.v2alpha1.QueryMethodDescriptor)
     - [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor)
     - [QueryServicesDescriptor](#cosmos.base.reflection.v2alpha1.QueryServicesDescriptor)
-    - [ServiceMsgDescriptor](#cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor)
     - [SigningModeDescriptor](#cosmos.base.reflection.v2alpha1.SigningModeDescriptor)
     - [TxDescriptor](#cosmos.base.reflection.v2alpha1.TxDescriptor)
   
@@ -2431,7 +2430,7 @@ MsgDescriptor describes a cosmos-sdk message that can be delivered with a transa
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `service_msg` | [ServiceMsgDescriptor](#cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor) |  | service_msg is used when the message is an sdk.ServiceMsg type |
+| `msg_type_url` | [string](#string) |  | msg_type_url contains the TypeURL of a sdk.Msg. |
 
 
 
@@ -2488,24 +2487,6 @@ QueryServicesDescriptor contains the list of cosmos-sdk queriable services
 
 
 
-<a name="cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor"></a>
-
-### ServiceMsgDescriptor
-ServiceMsgDescriptor describes an sdk.ServiceMsg type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `request_fullname` | [string](#string) |  | request_fullname is the protobuf fullname of the given sdk.ServiceMsg request this is the protobuf message type which should be used as google.protobuf.Any.value when delivering the msg to the DeliverTx endpoint |
-| `request_route` | [string](#string) |  | request_route is the sdk.ServiceMsg route, it is equal to type_url |
-| `request_type_url` | [string](#string) |  | request_type_url is the identifier that should be used as google.protobuf.Any.type_url when delivering the msg to the DeliverTx endpoint |
-| `response_fullname` | [string](#string) |  | response_fullname is the protobuf fullname of the given sdk.ServiceMsg response |
-
-
-
-
-
-
 <a name="cosmos.base.reflection.v2alpha1.SigningModeDescriptor"></a>
 
 ### SigningModeDescriptor
@@ -2535,7 +2516,7 @@ TxDescriptor describes the accepted transaction type
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `fullname` | [string](#string) |  | fullname is the protobuf fullname of the raw transaction type (for instance the tx.Tx type) it is not meant to support polymorphism of transaction types, it is supposed to be used by reflection clients to understand if they can handle a specific transaction type in an application. |
-| `msgs` | [MsgDescriptor](#cosmos.base.reflection.v2alpha1.MsgDescriptor) | repeated | msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg) NOTE: not to be confused with proto.Message types |
+| `msgs` | [MsgDescriptor](#cosmos.base.reflection.v2alpha1.MsgDescriptor) | repeated | msgs lists the accepted application messages (sdk.Msg) |
 
 
 

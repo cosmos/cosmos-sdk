@@ -21,8 +21,11 @@ import (
 const (
 	OpWeightMsgGrantFeeAllowance  = "op_weight_msg_grant_fee_allowance"
 	OpWeightMsgRevokeFeeAllowance = "op_weight_msg_grant_revoke_allowance"
-	TypeMsgGrantFeeAllowance      = "/cosmos.feegrant.v1beta1.Msg/GrantFeeAllowance"
-	TypeMsgRevokeFeeAllowance     = "/cosmos.feegrant.v1beta1.Msg/RevokeFeeAllowance"
+)
+
+var (
+	TypeMsgGrantFeeAllowance  = sdk.MsgTypeURL(&types.MsgGrantFeeAllowance{})
+	TypeMsgRevokeFeeAllowance = sdk.MsgTypeURL(&types.MsgRevokeFeeAllowance{})
 )
 
 func WeightedOperations(
@@ -121,7 +124,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, svcMsgClientConn.GetMsgs()[0].Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
 		}
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, err
 	}

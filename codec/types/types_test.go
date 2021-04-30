@@ -1,18 +1,13 @@
 package types_test
 
 import (
-	"context"
-	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/gogo/protobuf/grpc"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
-	grpc2 "google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
@@ -184,61 +179,4 @@ func TestAny_ProtoJSON(t *testing.T) {
 	err = ha2.UnpackInterfaces(registry)
 	require.NoError(t, err)
 	require.Equal(t, spot, ha2.Animal.GetCachedValue())
-}
-
-// this instance of grpc.ClientConn is used to test packing service method
-// requests into Any's
-type testAnyPackClient struct {
-	any               types.Any
-	interfaceRegistry types.InterfaceRegistry
-}
-
-var _ grpc.ClientConn = &testAnyPackClient{}
-
-func (t *testAnyPackClient) Invoke(_ context.Context, method string, args, _ interface{}, _ ...grpc2.CallOption) error {
-	reqMsg, ok := args.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshal %T", args)
-	}
-
-	// registry the method request type with the interface registry
-	t.interfaceRegistry.RegisterCustomTypeURL((*interface{})(nil), method, reqMsg)
-
-	bz, err := proto.Marshal(reqMsg)
-	if err != nil {
-		return err
-	}
-
-	t.any.TypeUrl = method
-	t.any.Value = bz
-
-	return nil
-}
-
-func (t *testAnyPackClient) NewStream(context.Context, *grpc2.StreamDesc, string, ...grpc2.CallOption) (grpc2.ClientStream, error) {
-	return nil, fmt.Errorf("not supported")
-}
-
-func TestAny_ServiceRequestProtoJSON(t *testing.T) {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	anyPacker := &testAnyPackClient{interfaceRegistry: interfaceRegistry}
-	dogMsgClient := testdata.NewMsgClient(anyPacker)
-	_, err := dogMsgClient.CreateDog(context.Background(), &testdata.MsgCreateDog{Dog: &testdata.Dog{
-		Name: "spot",
-	}})
-	require.NoError(t, err)
-
-	// marshal JSON
-	cdc := codec.NewProtoCodec(interfaceRegistry)
-	bz, err := cdc.MarshalJSON(&anyPacker.any)
-	require.NoError(t, err)
-	require.Equal(t,
-		`{"@type":"/testdata.Msg/CreateDog","dog":{"size":"","name":"spot"}}`,
-		string(bz))
-
-	// unmarshal JSON
-	var any2 types.Any
-	err = cdc.UnmarshalJSON(bz, &any2)
-	require.NoError(t, err)
-	require.Equal(t, anyPacker.any, any2)
 }

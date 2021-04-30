@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	_, _ sdk.MsgRequest                = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	_, _ sdk.Msg                = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
 	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 

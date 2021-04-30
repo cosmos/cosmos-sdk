@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	"github.com/gogo/protobuf/proto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,20 +13,9 @@ type (
 	Msg interface {
 		proto.Message
 
-		// Return the message type.
-		// Must be alphanumeric or empty.
-		Route() string
-
-		// Returns a human-readable string for the message, intended for utilization
-		// within tags
-		Type() string
-
 		// ValidateBasic does a simple validation check that
 		// doesn't require access to any other information.
 		ValidateBasic() error
-
-		// Get the canonical byte representation of the Msg.
-		GetSignBytes() []byte
 
 		// Signers returns the addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
@@ -85,3 +76,8 @@ type TxDecoder func(txBytes []byte) (Tx, error)
 
 // TxEncoder marshals transaction to bytes
 type TxEncoder func(tx Tx) ([]byte, error)
+
+// MsgTypeURL returns the TypeURL of a `sdk.Msg`.
+func MsgTypeURL(msg Msg) string {
+	return fmt.Sprintf("/%s", proto.MessageName(msg))
+}

@@ -53,6 +53,7 @@ func TestMigrateJSON(t *testing.T) {
 		"historical_entries": 10000,
 		"max_entries": 7,
 		"max_validators": 100,
+		"min_commission_rate": "0.000000000000000000",
 		"power_reduction": "1000000",
 		"unbonding_time": "1814400s"
 	},

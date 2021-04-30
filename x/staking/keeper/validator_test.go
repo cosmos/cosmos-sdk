@@ -1041,6 +1041,11 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	app, ctx, _, addrVals := bootstrapValidatorTest(t, 1000, 20)
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Now().UTC()})
 
+	// Set MinCommissionRate to 0.05
+	params := app.StakingKeeper.GetParams(ctx)
+	params.MinCommissionRate = sdk.NewDecWithPrec(5, 2)
+	app.StakingKeeper.SetParams(ctx, params)
+
 	commission1 := types.NewCommissionWithTime(
 		sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1),
 		sdk.NewDecWithPrec(1, 1), time.Now().UTC().Add(time.Duration(-1)*time.Hour),
@@ -1065,6 +1070,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 		{val2, sdk.NewDecWithPrec(-1, 1), true},
 		{val2, sdk.NewDecWithPrec(4, 1), true},
 		{val2, sdk.NewDecWithPrec(3, 1), true},
+		{val2, sdk.NewDecWithPrec(1, 2), true},
 		{val2, sdk.NewDecWithPrec(2, 1), false},
 	}
 

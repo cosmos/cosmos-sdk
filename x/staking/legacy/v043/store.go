@@ -58,12 +58,14 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
 	paramstore.WithKeyTable(types.ParamKeyTable())
 	paramstore.Set(ctx, types.KeyPowerReduction, sdk.DefaultPowerReduction)
+	paramstore.Set(ctx, types.KeyMinCommissionRate, types.DefaultMinCommissionRate)
 }
 
 // MigrateStore performs in-place store migrations from v0.40 to v0.43. The
 // migration includes:
 //
 // - Setting the Power Reduction param in the paramstore
+// - Setting the MinCommissionRate param in the paramstore
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, paramstore paramtypes.Subspace) error {
 	store := ctx.KVStore(storeKey)
 

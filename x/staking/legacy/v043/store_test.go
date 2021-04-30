@@ -141,7 +141,13 @@ func TestStoreMigration(t *testing.T) {
 		})
 	}
 
+	// Make sure that power reduction param is set to default
 	powerReduction := sdk.NewInt(0)
 	paramSubspace.Get(ctx, types.KeyPowerReduction, &powerReduction)
 	require.True(t, powerReduction.Equal(sdk.DefaultPowerReduction))
+
+	// Make sure that min commission rate param is set to default
+	minCommissionRate := sdk.NewDec(1)
+	paramSubspace.Get(ctx, types.KeyMinCommissionRate, &minCommissionRate)
+	require.True(t, minCommissionRate.Equal(types.DefaultMinCommissionRate))
 }

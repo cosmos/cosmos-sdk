@@ -6393,6 +6393,7 @@ Params defines the parameters for the staking module.
 | `historical_entries` | [uint32](#uint32) |  | historical_entries is the number of historical entries to persist. |
 | `bond_denom` | [string](#string) |  | bond_denom defines the bondable coin denomination. |
 | `power_reduction` | [string](#string) |  | power_reduction is the amount of staking tokens required for 1 unit of consensus-engine power |
+| `min_commission_rate` | [string](#string) |  |  |
 
 
 

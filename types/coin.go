@@ -243,6 +243,18 @@ func (coins Coins) Validate() error {
 	}
 }
 
+func (coins Coins) isSorted() bool {
+	if len(coins) < 2 {
+		return true
+	}
+	for i := 1; i < len(coins); i++ {
+		if coins[i-1].Denom >= coins[i].Denom {
+			return false
+		}
+	}
+	return true
+}
+
 // IsValid calls Validate and returns true when the Coins are sorted, have positive amount, with a
 // valid and unique denomination (i.e no duplicates).
 func (coins Coins) IsValid() bool {
@@ -270,6 +282,10 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 func (coins Coins) safeAdd(coinsB Coins) Coins {
+	if !coinsB.isSorted() {
+		panic("coinsB array is not sorted")
+	}
+
 	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)

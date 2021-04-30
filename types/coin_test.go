@@ -18,6 +18,7 @@ var (
 
 type coinTestSuite struct {
 	suite.Suite
+	ca0, ca1, ca2, cm0, cm1, cm2 sdk.Coin
 }
 
 func TestCoinTestSuite(t *testing.T) {
@@ -26,6 +27,11 @@ func TestCoinTestSuite(t *testing.T) {
 
 func (s *coinTestSuite) SetupSuite() {
 	s.T().Parallel()
+	zero := sdk.NewInt(0)
+	one := sdk.OneInt()
+	two := sdk.NewInt(2)
+	s.ca0, s.ca1, s.ca2 = sdk.Coin{testDenom1, zero}, sdk.Coin{testDenom1, one}, sdk.Coin{testDenom1, one}
+	s.cm0, s.cm1, s.cm2 = sdk.Coin{testDenom2, zero}, sdk.Coin{testDenom2, one}, sdk.Coin{testDenom2, two}
 }
 
 // ----------------------------------------------------------------------------
@@ -409,20 +415,16 @@ func (s *coinTestSuite) TestEqualCoins() {
 }
 
 func (s *coinTestSuite) TestAddCoins() {
-	zero := sdk.NewInt(0)
-	one := sdk.OneInt()
-	two := sdk.NewInt(2)
-
 	cases := []struct {
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
 		expected sdk.Coins
 	}{
-		{sdk.Coins{{testDenom1, one}, {testDenom2, one}}, sdk.Coins{{testDenom1, one}, {testDenom2, one}}, sdk.Coins{{testDenom1, two}, {testDenom2, two}}},
-		{sdk.Coins{{testDenom1, zero}, {testDenom2, one}}, sdk.Coins{{testDenom1, zero}, {testDenom2, zero}}, sdk.Coins{{testDenom2, one}}},
-		{sdk.Coins{{testDenom1, two}}, sdk.Coins{{testDenom2, zero}}, sdk.Coins{{testDenom1, two}}},
-		{sdk.Coins{{testDenom1, one}}, sdk.Coins{{testDenom1, one}, {testDenom2, two}}, sdk.Coins{{testDenom1, two}, {testDenom2, two}}},
-		{sdk.Coins{{testDenom1, zero}, {testDenom2, zero}}, sdk.Coins{{testDenom1, zero}, {testDenom2, zero}}, sdk.Coins(nil)},
+		{sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca2, s.cm2}},
+		{sdk.Coins{s.ca0, s.cm1}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.cm1}},
+		{sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}},
+		{sdk.Coins{s.ca1}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca2, s.cm2}},
+		{sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins(nil)},
 	}
 
 	for tcIndex, tc := range cases {
@@ -433,31 +435,29 @@ func (s *coinTestSuite) TestAddCoins() {
 }
 
 func (s *coinTestSuite) TestSubCoins() {
-	zero := sdk.NewInt(0)
-	one := sdk.OneInt()
-	two := sdk.NewInt(2)
-
 	testCases := []struct {
 		inputOne    sdk.Coins
 		inputTwo    sdk.Coins
 		expected    sdk.Coins
 		shouldPanic bool
 	}{
-		{sdk.Coins{{testDenom1, two}}, sdk.Coins{{testDenom1, one}, {testDenom2, two}}, sdk.Coins{{testDenom1, one}, {testDenom2, two}}, true},
-		{sdk.Coins{{testDenom1, two}}, sdk.Coins{{testDenom2, zero}}, sdk.Coins{{testDenom1, two}}, false},
-		{sdk.Coins{{testDenom1, one}}, sdk.Coins{{testDenom2, zero}}, sdk.Coins{{testDenom1, one}}, false},
-		{sdk.Coins{{testDenom1, one}, {testDenom2, one}}, sdk.Coins{{testDenom1, one}}, sdk.Coins{{testDenom2, one}}, false},
-		{sdk.Coins{{testDenom1, one}, {testDenom2, one}}, sdk.Coins{{testDenom1, two}}, sdk.Coins{}, true},
+		{sdk.Coins{s.ca2}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca1, s.cm2}, true},
+		{sdk.Coins{s.ca2}, sdk.Coins{s.cm2, s.ca1}, sdk.Coins{}, true},
+		{sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}, false},
+		{sdk.Coins{s.ca1}, sdk.Coins{s.cm0}, sdk.Coins{s.ca1}, false},
+		{sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1}, sdk.Coins{s.cm1}, false},
+		{sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca2}, sdk.Coins{}, true},
 	}
 
+	assert := s.Assert()
 	for i, tc := range testCases {
 		tc := tc
 		if tc.shouldPanic {
-			s.Require().Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
+			assert.Panics(func() { tc.inputOne.Sub(tc.inputTwo) })
 		} else {
 			res := tc.inputOne.Sub(tc.inputTwo)
-			s.Require().True(res.IsValid())
-			s.Require().Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", i)
+			assert.True(res.IsValid())
+			assert.Equal(tc.expected, res, "sum of coins is incorrect, tc #%d", i)
 		}
 	}
 }

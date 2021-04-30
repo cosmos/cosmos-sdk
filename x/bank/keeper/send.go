@@ -266,7 +266,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 	accountStore := k.getAccountStore(ctx, addr)
 
-	// if the balance is zero, we can delete the corresponding denom from the store.
+	// Bank invariants require to not store zero balances.
 	if balance.IsZero() {
 		accountStore.Delete([]byte(balance.Denom))
 	} else {

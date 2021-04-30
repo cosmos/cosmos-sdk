@@ -30,6 +30,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 		lInfo.GetPubKey().String())
 
 	// Serialize and restore
+	// TODO fix it
 	serialized := protoMarshalInfo(lInfo)
 	restoredInfo, err := protoUnmarshalInfo(serialized)
 	require.NoError(t, err)

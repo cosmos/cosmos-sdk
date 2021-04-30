@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // TODO - should we migrate a legacy as well?
@@ -35,8 +37,8 @@ func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return newDBKeybase(db), nil
+	cdc := simappparams.EncodingConfig.Marshaler
+	return newDBKeybase(db,cdc), nil
 }
 
 var _ LegacyKeybase = dbKeybase{}
@@ -47,13 +49,15 @@ var _ LegacyKeybase = dbKeybase{}
 // Deprecated: dbKeybase will be removed in favor of keyringKeybase.
 type dbKeybase struct {
 	db dbm.DB
+	cdc codec.Marshaler
 }
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB) dbKeybase {
+func newDBKeybase(db dbm.DB, cdc codec.Marshaler) dbKeybase {
 	return dbKeybase{
 		db: db,
+		cdc: cdc,
 	}
 }
 
@@ -75,7 +79,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
-		info, err := protoUnmarshalInfo(iter.Value())
+		info, err := protoUnmarshalInfo(iter.Value(), kb.cdc)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +101,7 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 
-	return protoUnmarshalInfo(bs)
+	return protoUnmarshalInfo(bs, kb.cdc)
 }
 
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
@@ -156,7 +160,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	info, err := protoUnmarshalInfo(bz)
+	info, err := protoUnmarshalInfo(bz, kb.cdc)
 	if err != nil {
 		return
 	}

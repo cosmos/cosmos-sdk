@@ -9,6 +9,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/ptypes"
+	
+
+
 )
 
 var (
@@ -44,7 +47,7 @@ func (ke KeyringEntry) GetAddress() (types.AccAddress, error) {
 	return pk.Address().Bytes(),nil
 }
 
-func (ke *KeyringEntry) GetPath() (*BIP44Params, error) {
+func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
 	switch {
 	case ke.GetLedger() != nil:
 		l := ke.GetLedger() 
@@ -77,18 +80,26 @@ func (ke KeyringEntry) unmarshalAnytoPubKey() (pk cryptotypes.PubKey, err error)
 
 // encoding info
 func protoMarshalInfo(i Info) ([]byte, error) {
-	ke, ok := i.(*KeyringEntry) // address error
-	bz, _ := proto.Marshal(ke) // address error
-	return bz
+	ke, ok := i.(*KeyringEntry)
+	if !ok {
+		return nil, fmt.Errorf("Unable to cast Info to *KeyringEntry")
+	}
 
+	bz, err := proto.Marshal(ke)
+	if err != nil {
+		return nil,sdkerrors.Wrap(err, "Unable to marshal KeyringEntry to bytes")
+	}
+
+	return bz,nil
 }
 
 // decoding info
-func protoUnmarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
-	// first merge master to my branch
+func protoUnmarshalInfo(bz []byte, cdc codec.Marshaler) (Info, error) {
+	
 	var ke KeyringEntry // will not work cause we use any, use InterfaceRegistry
+	// dont forget to merge master to my branch, UnmarshalBinaryBare has been renamed
 	// cdcc.Marshaler.UnmarshalBinaryBare()  // like proto.UnMarshal but works with Any
-	if err := cdc.Unmarshal(bz, &ke); err != nil {
+	if err := cdc.UnmarshalBinaryBare(bz, &ke); err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal bytes to Info")
 	}
 

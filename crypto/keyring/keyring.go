@@ -26,6 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 )
 
 // Backend options for Keyring
@@ -164,7 +166,8 @@ type Options struct {
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
 func NewInMemory(opts ...Option) Keyring {
-	return newKeystore(keyring.NewArrayKeyring(nil), opts...)
+	cdc := simappparams.EncodingConfig.Marshaler
+	return newKeystore(keyring.NewArrayKeyring(nil), cdc, opts...)
 }
 
 // New creates a new instance of a keyring.
@@ -199,15 +202,18 @@ func New(
 		return nil, err
 	}
 
-	return newKeystore(db, opts...), nil
+	cdc := simappparams.EncodingConfig.Marshaler
+
+	return newKeystore(db, cdc, opts...), nil
 }
 
 type keystore struct {
 	db      keyring.Keyring
+	cdc     codec.Marshaler
 	options Options
 }
 
-func newKeystore(kr keyring.Keyring, opts ...Option) keystore {
+func newKeystore(kr keyring.Keyring, cdc codec.Marshaler, opts ...Option) keystore {
 	// Default options for keybase
 	options := Options{
 		SupportedAlgos:       SigningAlgoList{hd.Secp256k1},
@@ -218,7 +224,7 @@ func newKeystore(kr keyring.Keyring, opts ...Option) keystore {
 		optionFn(&options)
 	}
 
-	return keystore{kr, options}
+	return keystore{kr, cdc, options}
 }
 
 func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
@@ -230,8 +236,8 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
-
-	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	// should I use cdc from ks.cdc?
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil 
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -495,7 +501,7 @@ func (ks keystore) List() ([]Info, error) {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 			}
 
-			info, err := protoUnmarshalInfo(rawInfo.Data)
+			info, err := protoUnmarshalInfo(rawInfo.Data, ks.cdc)
 			if err != nil {
 				return nil, err
 			}
@@ -578,7 +584,7 @@ func (ks keystore) key(infoKey string) (Info, error) {
 	if len(bs.Data) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
-	return protoUnmarshalInfo(bs.Data)
+	return protoUnmarshalInfo(bs.Data, ks.cdc)
 }
 
 func (ks keystore) Key(uid string) (Info, error) {
@@ -888,7 +894,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
 	
-		info, err := protoUnmarshalInfo(item.Data)
+		info, err := protoUnmarshalInfo(item.Data, ks.cdc)
 		if err != nil {
 			return err
 		}

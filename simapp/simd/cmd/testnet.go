@@ -55,7 +55,7 @@ If --setup-config-only flag is provided, it will not launch a testnet, but inste
 "v" number of directories and populate each with
 necessary files (private validator, genesis, config, etc.).
 
-The following flags are only required if --setup-config-only flag is present, and ignored otherwise:
+The following flags are only intended for use if --setup-config-only flag is present, and ignored otherwise:
 --keyring-backend, --algo, --node-dir-prefix, --node-daemon-home, --starting-ip-address
 
 Note, strict routability for addresses is turned off in the config file.

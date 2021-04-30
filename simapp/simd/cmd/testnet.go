@@ -6,6 +6,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net"
+	"os"
+	"path/filepath"
+
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
@@ -13,9 +17,6 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
-	"net"
-	"os"
-	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -89,11 +90,8 @@ Example:
 					clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
 					nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 				)
-
-			} else {
-				return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators)
-
 			}
+			return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators)
 
 		},
 	}
@@ -417,7 +415,6 @@ func writeFile(name string, dir string, contents []byte) error {
 	return nil
 }
 
-
 func StartTestnet(cmd *cobra.Command, configDir string, chainID string, minGasPrices string, algo string, numValidators int) error {
 	networkConfig := network.DefaultConfig()
 
@@ -431,6 +428,6 @@ func StartTestnet(cmd *cobra.Command, configDir string, chainID string, minGasPr
 	networkConfig.NumValidators = numValidators
 	testnetEnv := network.NewStandaloneTestnetEnv(cmd, configDir)
 
-	network.NewForTesting(testnetEnv, networkConfig)
+	network.New(testnetEnv, networkConfig)
 	return server.WaitForQuitSignals()
 }

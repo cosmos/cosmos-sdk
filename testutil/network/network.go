@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -16,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
@@ -173,7 +173,6 @@ type TestnetEnv interface {
 	AssertNoError(err error)
 }
 
-
 var _ TestnetEnv = (*TestingT)(nil)
 
 type TestingT struct {
@@ -184,11 +183,11 @@ func (t TestingT) AssertNoError(err error) {
 	require.NoError(t.T, err)
 }
 
-func (t TestingT) Log(args ...interface{}){
+func (t TestingT) Log(args ...interface{}) {
 	t.T.Log(args...)
 }
 
-func (t TestingT) Logf(format string, args ...interface{}){
+func (t TestingT) Logf(format string, args ...interface{}) {
 	t.T.Logf(format, args...)
 }
 
@@ -199,16 +198,16 @@ func (t TestingT) ConfigDir(chainID string) (string, error) {
 var _ TestnetEnv = (*StandaloneTestnet)(nil)
 
 type StandaloneTestnet struct {
-	cmd *cobra.Command
+	cmd           *cobra.Command
 	baseConfigDir string
 }
 
 func (s StandaloneTestnet) Log(args ...interface{}) {
-	s.cmd.Println(args)
+	s.cmd.Println(args...)
 }
 
 func (s StandaloneTestnet) Logf(format string, args ...interface{}) {
-	s.cmd.Printf(format, args)
+	s.cmd.Printf(format, args...)
 }
 
 func (s StandaloneTestnet) AssertNoError(err error) {
@@ -220,7 +219,7 @@ func (s StandaloneTestnet) AssertNoError(err error) {
 func (s StandaloneTestnet) ConfigDir(chainID string) (string, error) {
 	configDir := fmt.Sprintf("%s/%s", s.baseConfigDir, chainID)
 	if _, err := os.Stat(configDir); !os.IsNotExist(err) {
-		return "", errors.New(fmt.Sprintf("config directory already exists: %s", configDir))
+		return "", fmt.Errorf("config directory already exists: %s", configDir)
 	}
 	return configDir, nil
 }

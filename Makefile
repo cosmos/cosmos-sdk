@@ -475,7 +475,7 @@ localnet-start: build-linux localnet-stop
 		-v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro \
 		-v /etc/shadow:/etc/shadow:ro \
-		cosmossdk/simd-env testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+		cosmossdk/simd-env testnet --setup-config-only --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:

@@ -40,7 +40,7 @@ var (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagSetupConfigOnly   = "--setup-config-only"
+	flagSetupConfigOnly   = "setup-config-only"
 )
 
 // get cmd to initialize all files for tendermint testnet and application
@@ -99,7 +99,7 @@ Example:
 	}
 
 	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
-	cmd.Flags().StringP(flagOutputDir, "o", "./.testnet_data", "Directory to store initialization data for the testnet")
+	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
 	cmd.Flags().Bool(flagSetupConfigOnly, false, "Initialize data for separately running validator nodes manually, does not start in-process testnet")

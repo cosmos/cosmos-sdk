@@ -42,19 +42,19 @@ func migrateVote(oldVote v040gov.Vote) types.Vote {
 }
 
 // migrateStoreWeightedVotes migrates in-place all legacy votes to ADR-037 weighted votes.
-func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
+func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	iterator := sdk.KVStorePrefixIterator(store, v040gov.VotesKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var oldVote v040gov.Vote
-		err := cdc.UnmarshalBinaryBare(iterator.Value(), &oldVote)
+		err := cdc.Unmarshal(iterator.Value(), &oldVote)
 		if err != nil {
 			return err
 		}
 
 		newVote := migrateVote(oldVote)
-		bz, err := cdc.MarshalBinaryBare(&newVote)
+		bz, err := cdc.Marshal(&newVote)
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryMarshaler) err
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	migratePrefixProposalAddress(store, v040gov.DepositsKeyPrefix)
 	migratePrefixProposalAddress(store, v040gov.VotesKeyPrefix)

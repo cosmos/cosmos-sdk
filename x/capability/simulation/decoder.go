@@ -12,7 +12,7 @@ import (
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding capability type.
-func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key, types.KeyIndex):
@@ -22,8 +22,8 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 
 		case bytes.HasPrefix(kvA.Key, types.KeyPrefixIndexCapability):
 			var capOwnersA, capOwnersB types.CapabilityOwners
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &capOwnersA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &capOwnersB)
+			cdc.MustUnmarshal(kvA.Value, &capOwnersA)
+			cdc.MustUnmarshal(kvB.Value, &capOwnersB)
 			return fmt.Sprintf("CapabilityOwners A: %v\nCapabilityOwners B: %v\n", capOwnersA, capOwnersB)
 
 		default:

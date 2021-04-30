@@ -64,7 +64,7 @@ func SignatureDataToAminoSignature(cdc *codec.LegacyAmino, data signingtypes.Sig
 			return nil, err
 		}
 
-		return cdc.MarshalBinaryBare(aminoMSig)
+		return cdc.Marshal(aminoMSig)
 	default:
 		return nil, fmt.Errorf("unexpected signature data %T", data)
 	}

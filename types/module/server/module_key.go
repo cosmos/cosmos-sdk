@@ -10,7 +10,7 @@ type ModuleKey interface {
 	ModuleID() types.ModuleID
 	Address() types.AccAddress
 }
-w
+
 type InvokerFactory func(callInfo CallInfo) (types.Invoker, error)
 
 type CallInfo struct {

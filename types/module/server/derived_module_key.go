@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/regen-network/regen-ledger/types"
+	"github.com/cosmos/cosmos-sdk/types"
 
 	"google.golang.org/grpc"
 )

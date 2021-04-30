@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -659,4 +660,14 @@ func cacheBech32Addr(prefix string, addr []byte, cache *simplelru.LRU, cacheKey 
 	}
 	cache.Add(cacheKey, bech32Addr)
 	return bech32Addr
+}
+
+func AddressHash(prefix string, contents []byte) []byte {
+	preImage := []byte(prefix)
+	if len(contents) != 0 {
+		preImage = append(preImage, 0)
+		preImage = append(preImage, contents...)
+	}
+	sum := sha256.Sum256(preImage)
+	return sum[:20]
 }

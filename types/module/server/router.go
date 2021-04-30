@@ -101,9 +101,8 @@ func (rtr *router) invoker(methodName string, writeCondition func(context.Contex
 			// see https://github.com/cosmos/cosmos-sdk/issues/8030
 			sdkCtx := types.UnwrapSDKContext(ctx)
 			cacheMs := sdkCtx.MultiStore().CacheMultiStore()
-			ctx = types.Context{Context: sdkCtx.WithMultiStore(cacheMs)}
-
-			err = handler.f(ctx, request, response)
+			sdkCtx.WithMultiStore(cacheMs)
+			err = handler.f(sdkCtx, request, response)
 			if err != nil {
 				return err
 			}
@@ -120,9 +119,9 @@ func (rtr *router) invoker(methodName string, writeCondition func(context.Contex
 		// cache wrap the multistore so that writes are batched
 		sdkCtx := types.UnwrapSDKContext(ctx)
 		cacheMs := sdkCtx.MultiStore().CacheMultiStore()
-		ctx = types.Context{Context: sdkCtx.WithMultiStore(cacheMs)}
+		sdkCtx.WithMultiStore(cacheMs)
 
-		err := handler.f(ctx, request, response)
+		err := handler.f(sdkCtx, request, response)
 		if err != nil {
 			return err
 		}

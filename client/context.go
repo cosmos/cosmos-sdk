@@ -25,7 +25,7 @@ type Context struct {
 	FromAddress       sdk.AccAddress
 	Client            rpcclient.Client
 	ChainID           string
-	JSONMarshaler     codec.JSONMarshaler
+	JSONMarshaler     codec.JSONCodec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
 	Keyring           keyring.Keyring
@@ -73,7 +73,7 @@ func (ctx Context) WithInput(r io.Reader) Context {
 }
 
 // WithJSONMarshaler returns a copy of the Context with an updated JSONMarshaler.
-func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
+func (ctx Context) WithJSONMarshaler(m codec.JSONCodec) Context {
 	ctx.JSONMarshaler = m
 	return ctx
 }

@@ -36,7 +36,7 @@ var (
 
 // AppModuleBasic defines the basic application module used by the feegrant module.
 type AppModuleBasic struct {
-	cdc codec.Marshaler
+	cdc codec.Codec
 }
 
 // Name returns the feegrant module's name.
@@ -67,12 +67,12 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
 // module.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.
-func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
+func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
 		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", types.ModuleName)
@@ -113,7 +113,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Marshaler, ak types.AccountKeeper, bk types.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, ak types.AccountKeeper, bk types.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -148,17 +148,20 @@ func (AppModule) QuerierRoute() string {
 
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, bz json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
 	var gs types.GenesisState
 	cdc.MustUnmarshalJSON(bz, &gs)
 
-	InitGenesis(ctx, am.keeper, &gs)
+	err := InitGenesis(ctx, am.keeper, &gs)
+	if err != nil {
+		panic(err)
+	}
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant
 // module.
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs, err := ExportGenesis(ctx, am.keeper)
 	if err != nil {
 		panic(err)

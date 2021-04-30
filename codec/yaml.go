@@ -10,7 +10,7 @@ import (
 // MarshalYAML marshals toPrint using jsonMarshaler to leverage specialized MarshalJSON methods
 // (usually related to serialize data with protobuf or amin depending on a configuration).
 // This involves additional roundtrip through JSON.
-func MarshalYAML(jsonMarshaler JSONMarshaler, toPrint proto.Message) ([]byte, error) {
+func MarshalYAML(jsonMarshaler JSONCodec, toPrint proto.Message) ([]byte, error) {
 	// We are OK with the performance hit of the additional JSON roundtip. MarshalYAML is not
 	// used in any critical parts of the system.
 	bz, err := jsonMarshaler.MarshalJSON(toPrint)

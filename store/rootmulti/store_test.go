@@ -728,7 +728,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 	require.IsType(t, &listenkv.Store{}, listenWrappedStore1)
 
 	listenWrappedStore1.Set(testKey1, testValue1)
-	expectedOutputKVPairSet1, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+	expectedOutputKVPairSet1, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
 		Key:      testKey1,
 		Value:    testValue1,
 		StoreKey: testStoreKey1.Name(),
@@ -740,7 +740,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 	require.Equal(t, expectedOutputKVPairSet1, kvPairSet1Bytes)
 
 	listenWrappedStore1.Delete(testKey1)
-	expectedOutputKVPairDelete1, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+	expectedOutputKVPairDelete1, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
 		Key:      testKey1,
 		Value:    nil,
 		StoreKey: testStoreKey1.Name(),
@@ -755,7 +755,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 	require.IsType(t, &listenkv.Store{}, listenWrappedStore2)
 
 	listenWrappedStore2.Set(testKey2, testValue2)
-	expectedOutputKVPairSet2, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+	expectedOutputKVPairSet2, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
 		Key:      testKey2,
 		Value:    testValue2,
 		StoreKey: testStoreKey2.Name(),
@@ -766,7 +766,7 @@ func TestGetListenWrappedKVStore(t *testing.T) {
 	require.Equal(t, expectedOutputKVPairSet2, kvPairSet2Bytes)
 
 	listenWrappedStore2.Delete(testKey2)
-	expectedOutputKVPairDelete2, err := testMarshaller.MarshalBinaryLengthPrefixed(&types.StoreKVPair{
+	expectedOutputKVPairDelete2, err := testMarshaller.MarshalLengthPrefixed(&types.StoreKVPair{
 		Key:      testKey2,
 		Value:    nil,
 		StoreKey: testStoreKey2.Name(),

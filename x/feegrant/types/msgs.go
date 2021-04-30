@@ -13,12 +13,6 @@ var (
 	_    types.UnpackInterfacesMessage = &MsgGrantFeeAllowance{}
 )
 
-// feegrant message types
-const (
-	TypeMsgGrantFeeAllowance  = "grant_fee_allowance"
-	TypeMsgRevokeFeeAllowance = "revoke_fee_allowance"
-)
-
 // NewMsgGrantFeeAllowance creates a new MsgGrantFeeAllowance.
 //nolint:interfacer
 func NewMsgGrantFeeAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantFeeAllowance, error) {
@@ -58,6 +52,7 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 	return allowance.ValidateBasic()
 }
 
+// GetSigners gets the granter account associated with an allowance
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
@@ -82,6 +77,8 @@ func (msg MsgGrantFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) err
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
+// NewMsgRevokeFeeAllowance returns a message to revoke a fee allowance for a given
+// granter and grantee
 //nolint:interfacer
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {
 	return MsgRevokeFeeAllowance{Granter: granter.String(), Grantee: grantee.String()}
@@ -94,10 +91,15 @@ func (msg MsgRevokeFeeAllowance) ValidateBasic() error {
 	if msg.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
+	if msg.Grantee == msg.Granter {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
+	}
 
 	return nil
 }
 
+// GetSigners gets the granter address associated with an Allowance
+// to revoke.
 func (msg MsgRevokeFeeAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {

@@ -268,8 +268,18 @@ func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 
+<<<<<<< HEAD
 	bz := k.cdc.MustMarshalBinaryBare(&balance)
 	accountStore.Set([]byte(balance.Denom), bz)
+=======
+	// Bank invariants require to not store zero balances.
+	if balance.IsZero() {
+		accountStore.Delete([]byte(balance.Denom))
+	} else {
+		bz := k.cdc.MustMarshal(&balance)
+		accountStore.Set([]byte(balance.Denom), bz)
+	}
+>>>>>>> f04b5dcb9... fix zero coins (#9229)
 
 	return nil
 }

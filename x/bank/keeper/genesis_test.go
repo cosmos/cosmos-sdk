@@ -28,7 +28,11 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0)
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
+<<<<<<< HEAD
 	suite.Require().Equal(totalSupply.GetTotal(), exportGenesis.Supply)
+=======
+	suite.Require().Equal(totalSupply, exportGenesis.Supply)
+>>>>>>> f04b5dcb9... fix zero coins (#9229)
 	suite.Require().Equal(expectedBalances, exportGenesis.Balances)
 	suite.Require().Equal(expectedMetadata, exportGenesis.DenomMetadata)
 }

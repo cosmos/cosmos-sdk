@@ -57,6 +57,40 @@ type BaseKeeper struct {
 	paramSpace paramtypes.Subspace
 }
 
+<<<<<<< HEAD
+=======
+func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	supply := sdk.NewCoins()
+
+	pageRes, err := query.Paginate(supplyStore, pagination, func(key, value []byte) error {
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
+		if err != nil {
+			return fmt.Errorf("unable to convert amount string to Int %v", err)
+		}
+
+		// `Add` omits the 0 coins addition to the `supply`.
+		supply = supply.Add(sdk.NewCoin(string(key), amount))
+		return nil
+	})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return supply, pageRes, nil
+}
+
+// NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated
+// store key, an AccountKeeper implementation, and a parameter Subspace used to
+// store and fetch module parameters. The BaseKeeper also accepts a
+// blocklist map. This blocklist describes the set of addresses that are not allowed
+// to receive funds through direct and explicit actions, for example, by using a MsgSend or
+// by using a SendCoinsFromModuleToAccount execution.
+>>>>>>> f04b5dcb9... fix zero coins (#9229)
 func NewBaseKeeper(
 	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
@@ -94,7 +128,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 	balances := sdk.NewCoins()
 
 	for _, coin := range amt {
-		balance := k.GetBalance(ctx, delegatorAddr, coin.Denom)
+		balance := k.GetBalance(ctx, delegatorAddr, coin.GetDenom())
 		if balance.IsLT(coin) {
 			return sdkerrors.Wrapf(
 				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s is smaller than %s", balance, amt,
@@ -382,7 +416,28 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins)
 	return nil
 }
 
+<<<<<<< HEAD
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, blockTime time.Time, balance, amt sdk.Coins) error {
+=======
+func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
+	intBytes, err := coin.Amount.Marshal()
+	if err != nil {
+		panic(fmt.Errorf("unable to marshal amount value %v", err))
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	// Bank invariants and IBC requires to remove zero coins.
+	if coin.IsZero() {
+		supplyStore.Delete([]byte(coin.GetDenom()))
+	} else {
+		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
+	}
+}
+
+func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
+>>>>>>> f04b5dcb9... fix zero coins (#9229)
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)

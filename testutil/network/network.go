@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -133,7 +134,7 @@ type (
 	// to create networks. In addition, only the first validator will have a valid
 	// RPC and API server/client.
 	Network struct {
-		T          *testing.T
+		T          TestnetEnv
 		BaseDir    string
 		Validators []*Validator
 
@@ -165,15 +166,81 @@ type (
 	}
 )
 
+type TestnetEnv interface {
+	Log(args ...interface{})
+	Logf(format string, args ...interface{})
+	ConfigDir(chainID string) (string, error)
+	AssertNoError(err error)
+}
+
+
+var _ TestnetEnv = (*TestingT)(nil)
+
+type TestingT struct {
+	*testing.T
+}
+
+func (t TestingT) AssertNoError(err error) {
+	require.NoError(t.T, err)
+}
+
+func (t TestingT) Log(args ...interface{}){
+	t.T.Log(args...)
+}
+
+func (t TestingT) Logf(format string, args ...interface{}){
+	t.T.Logf(format, args...)
+}
+
+func (t TestingT) ConfigDir(chainID string) (string, error) {
+	return ioutil.TempDir(t.TempDir(), chainID)
+}
+
+var _ TestnetEnv = (*StandaloneTestnet)(nil)
+
+type StandaloneTestnet struct {
+	cmd *cobra.Command
+	baseConfigDir string
+}
+
+func (s StandaloneTestnet) Log(args ...interface{}) {
+	s.cmd.Println(args)
+}
+
+func (s StandaloneTestnet) Logf(format string, args ...interface{}) {
+	s.cmd.Printf(format, args)
+}
+
+func (s StandaloneTestnet) AssertNoError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s StandaloneTestnet) ConfigDir(chainID string) (string, error) {
+	configDir := fmt.Sprintf("%s/%s", s.baseConfigDir, chainID)
+	if _, err := os.Stat(configDir); !os.IsNotExist(err) {
+		return "", errors.New(fmt.Sprintf("config directory already exists: %s", configDir))
+	}
+	return configDir, nil
+}
+
+func NewStandaloneTestnetEnv(cmd *cobra.Command, configDir string) StandaloneTestnet {
+	return StandaloneTestnet{
+		cmd,
+		configDir,
+	}
+}
+
 // New creates a new Network for integration tests.
-func New(t *testing.T, cfg Config) *Network {
+func New(t TestnetEnv, cfg Config) *Network {
 	// only one caller/test can create and use a network at a time
 	t.Log("acquiring test network lock")
 	lock.Lock()
 
-	baseDir, err := ioutil.TempDir(t.TempDir(), cfg.ChainID)
-	require.NoError(t, err)
-	t.Logf("created temporary directory: %s", baseDir)
+	baseDir, err := t.ConfigDir(cfg.ChainID)
+	t.AssertNoError(err)
+	t.Logf("created temporary directory: %s\n", baseDir)
 
 	network := &Network{
 		T:          t,
@@ -217,24 +284,24 @@ func New(t *testing.T, cfg Config) *Network {
 		appCfg.GRPCWeb.Enable = false
 		if i == 0 {
 			apiListenAddr, _, err := server.FreeTCPAddr()
-			require.NoError(t, err)
+			t.AssertNoError(err)
 			appCfg.API.Address = apiListenAddr
 
 			apiURL, err := url.Parse(apiListenAddr)
-			require.NoError(t, err)
+			t.AssertNoError(err)
 			apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
 
 			rpcAddr, _, err := server.FreeTCPAddr()
-			require.NoError(t, err)
+			t.AssertNoError(err)
 			tmCfg.RPC.ListenAddress = rpcAddr
 
 			_, grpcPort, err := server.FreeTCPAddr()
-			require.NoError(t, err)
+			t.AssertNoError(err)
 			appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			appCfg.GRPC.Enable = true
 
 			_, grpcWebPort, err := server.FreeTCPAddr()
-			require.NoError(t, err)
+			t.AssertNoError(err)
 			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
 			appCfg.GRPCWeb.Enable = true
 		}
@@ -252,44 +319,44 @@ func New(t *testing.T, cfg Config) *Network {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		require.NoError(t, os.MkdirAll(filepath.Join(nodeDir, "config"), 0755))
-		require.NoError(t, os.MkdirAll(clientDir, 0755))
+		t.AssertNoError(os.MkdirAll(filepath.Join(nodeDir, "config"), 0755))
+		t.AssertNoError(os.MkdirAll(clientDir, 0755))
 
 		tmCfg.SetRoot(nodeDir)
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
 		proxyAddr, _, err := server.FreeTCPAddr()
-		require.NoError(t, err)
+		t.AssertNoError(err)
 		tmCfg.ProxyApp = proxyAddr
 
 		p2pAddr, _, err := server.FreeTCPAddr()
-		require.NoError(t, err)
+		t.AssertNoError(err)
 		tmCfg.P2P.ListenAddress = p2pAddr
 		tmCfg.P2P.AddrBookStrict = false
 		tmCfg.P2P.AllowDuplicateIP = true
 
 		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(tmCfg)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 		nodeIDs[i] = nodeID
 		valPubKeys[i] = pubKey
 
 		kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, cfg.KeyringOptions...)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		keyringAlgos, _ := kb.SupportedAlgorithms()
 		algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		info := map[string]string{"secret": secret}
 		infoBz, err := json.Marshal(info)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		// save private key seed words
-		require.NoError(t, writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, infoBz))
+		t.AssertNoError(writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, infoBz))
 
 		balances := sdk.NewCoins(
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), cfg.AccountTokens),
@@ -301,7 +368,7 @@ func New(t *testing.T, cfg Config) *Network {
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		commission, err := sdk.NewDecFromStr("0.5")
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
@@ -311,15 +378,15 @@ func New(t *testing.T, cfg Config) *Network {
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
 		)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		p2pURL, err := url.Parse(p2pAddr)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
 		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdk.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
-		require.NoError(t, txBuilder.SetMsgs(createValMsg))
+		t.AssertNoError(txBuilder.SetMsgs(createValMsg))
 		txBuilder.SetFeeAmount(fee)    // Arbitrary fee
 		txBuilder.SetGasLimit(1000000) // Need at least 100386
 		txBuilder.SetMemo(memo)
@@ -332,11 +399,11 @@ func New(t *testing.T, cfg Config) *Network {
 			WithTxConfig(cfg.TxConfig)
 
 		err = tx.Sign(txFactory, nodeDirName, txBuilder, true)
-		require.NoError(t, err)
+		t.AssertNoError(err)
 
 		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-		require.NoError(t, err)
-		require.NoError(t, writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz))
+		t.AssertNoError(err)
+		t.AssertNoError(writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz))
 
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), appCfg)
 
@@ -367,12 +434,12 @@ func New(t *testing.T, cfg Config) *Network {
 		}
 	}
 
-	require.NoError(t, initGenFiles(cfg, genAccounts, genBalances, genFiles))
-	require.NoError(t, collectGenFiles(cfg, network.Validators, network.BaseDir))
+	t.AssertNoError(initGenFiles(cfg, genAccounts, genBalances, genFiles))
+	t.AssertNoError(collectGenFiles(cfg, network.Validators, network.BaseDir))
 
 	t.Log("starting test network...")
 	for _, v := range network.Validators {
-		require.NoError(t, startInProcess(cfg, v))
+		t.AssertNoError(startInProcess(cfg, v))
 	}
 
 	t.Log("started test network")

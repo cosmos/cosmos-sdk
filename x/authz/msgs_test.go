@@ -21,19 +21,16 @@ func TestMsgExecAuthorized(t *testing.T) {
 	tests := []struct {
 		title      string
 		grantee    sdk.AccAddress
-		msgs       []sdk.ServiceMsg
+		msgs       []sdk.Msg
 		expectPass bool
 	}{
-		{"nil grantee address", nil, []sdk.ServiceMsg{}, false},
-		{"zero-messages test: should fail", grantee, []sdk.ServiceMsg{}, false},
-		{"valid test: msg type", grantee, []sdk.ServiceMsg{
-			{
-				MethodName: banktypes.SendAuthorization{}.MsgTypeURL(),
-				Request: &banktypes.MsgSend{
-					Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-					FromAddress: granter.String(),
-					ToAddress:   grantee.String(),
-				},
+		{"nil grantee address", nil, []sdk.Msg{}, false},
+		{"zero-messages test: should fail", grantee, []sdk.Msg{}, false},
+		{"valid test: msg type", grantee, []sdk.Msg{
+			&banktypes.MsgSend{
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+				FromAddress: granter.String(),
+				ToAddress:   grantee.String(),
 			},
 		}, true},
 	}

@@ -91,7 +91,7 @@ func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz
 }
 
 // unmarshal an authorization from a store value
-func unmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v authz.Grant, err error) {
-	err = cdc.UnmarshalBinaryBare(value, &v)
+func unmarshalAuthorization(cdc codec.BinaryCodec, value []byte) (v authz.Grant, err error) {
+	err = cdc.Unmarshal(value, &v)
 	return v, err
 }

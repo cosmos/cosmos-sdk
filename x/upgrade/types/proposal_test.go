@@ -59,10 +59,10 @@ func TestContentAccessors(t *testing.T) {
 
 			// try to encode and decode type to ensure codec works
 			wrap := ProposalWrapper{tc.p}
-			bz, err := cdc.MarshalBinaryBare(&wrap)
+			bz, err := cdc.Marshal(&wrap)
 			require.NoError(t, err)
 			unwrap := ProposalWrapper{}
-			err = cdc.UnmarshalBinaryBare(bz, &unwrap)
+			err = cdc.Unmarshal(bz, &unwrap)
 			require.NoError(t, err)
 
 			// all methods should look the same

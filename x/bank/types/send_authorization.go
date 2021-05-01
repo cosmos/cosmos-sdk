@@ -17,13 +17,13 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 	}
 }
 
-// MsgTypeURL implements Authorization.MsgTypeURL.
-func (a SendAuthorization) MsgTypeURL() string {
-	return "/cosmos.bank.v1beta1.Msg/Send"
+// MethodName implements Authorization.MsgTypeURL.
+func (authorization SendAuthorization) MsgTypeURL() string {
+	return sdk.MsgTypeURL(&MsgSend{})
 }
 
 // Accept implements Authorization.Accept.
-func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (authz.AcceptResponse, error) {
+func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
 	msgR, ok := msg.Request.(*MsgSend)
 	if !ok {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")

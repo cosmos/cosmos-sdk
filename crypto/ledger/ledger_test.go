@@ -235,7 +235,7 @@ func TestRealDeviceSecp256k1(t *testing.T) {
 	require.True(t, valid)
 
 	// make sure pubkeys serialize properly as well
-	bs = legacy.Cdc.MustMarshalBinaryBare(pub)
+	bs = legacy.Cdc.MustMarshal(pub)
 	bpub, err := legacy.PubKeyFromBytes(bs)
 	require.NoError(t, err)
 	require.Equal(t, pub, bpub)

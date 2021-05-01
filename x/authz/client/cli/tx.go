@@ -61,8 +61,8 @@ func NewCmdGrantAuthorization() *cobra.Command {
 
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
- $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
-	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
+ $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.MsgVote --from=cosmos1sk..
+	`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, types.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -253,17 +253,7 @@ Example:
 			if err != nil {
 				return err
 			}
-			msgs := theTx.GetMsgs()
-			serviceMsgs := make([]sdk.ServiceMsg, len(msgs))
-			for i, msg := range msgs {
-				srvMsg, ok := msg.(sdk.ServiceMsg)
-				if !ok {
-					return fmt.Errorf("tx contains %T which is not a sdk.ServiceMsg", msg)
-				}
-				serviceMsgs[i] = srvMsg
-			}
-
-			msg := authz.NewMsgExec(grantee, serviceMsgs)
+			msg := types.NewMsgExecAuthorized(grantee, theTx.GetMsgs())
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := authz.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.Exec(cmd.Context(), &msg)

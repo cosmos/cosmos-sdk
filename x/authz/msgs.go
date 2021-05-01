@@ -6,14 +6,15 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
-	_ sdk.MsgRequest = &MsgGrant{}
-	_ sdk.MsgRequest = &MsgRevoke{}
-	_ sdk.MsgRequest = &MsgExec{}
+	_ sdk.Msg = &MsgGrantRequest{}
+	_ sdk.Msg = &MsgRevokeRequest{}
+	_ sdk.Msg = &MsgExecRequest{}
 
 	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
 	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}
@@ -96,7 +97,7 @@ func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgExec) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
-		var msgExecAuthorized sdk.MsgRequest
+		var msgExecAuthorized sdk.Msg
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
 		if err != nil {
 			return err
@@ -155,20 +156,15 @@ func (msg MsgRevoke) ValidateBasic() error {
 
 // NewMsgExec creates a new MsgExecAuthorized
 //nolint:interfacer
-func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec {
-	msgsAny := make([]*cdctypes.Any, len(msgs))
+func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecRequest {
+	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
-		bz, err := proto.Marshal(msg.Request)
+		any, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
 
-		anyMsg := &cdctypes.Any{
-			TypeUrl: msg.MethodName,
-			Value:   bz,
-		}
-
-		msgsAny[i] = anyMsg
+		msgsAny[i] = any
 	}
 
 	return MsgExec{
@@ -177,20 +173,15 @@ func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec {
 	}
 }
 
-// GetServiceMsgs returns the cache values from the MsgExecAuthorized.Msgs if present.
-func (msg MsgExec) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
-	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
+// GetMessages returns the cache values from the MsgExecAuthorized.Msgs if present.
+func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
+	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		msgReq, ok := msgAny.GetCachedValue().(sdk.MsgRequest)
+		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
 		if !ok {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.MsgRequest", msgAny)
 		}
-		srvMsg := sdk.ServiceMsg{
-			MethodName: msgAny.TypeUrl,
-			Request:    msgReq,
-		}
-
-		msgs[i] = srvMsg
+		msgs[i] = msg
 	}
 
 	return msgs, nil

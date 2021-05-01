@@ -248,7 +248,7 @@ func (coins Coins) isSorted() bool {
 		return true
 	}
 	for i := 1; i < len(coins); i++ {
-		if coins[i-1].Denom >= coins[i].Denom {
+		if coins[i-1].Denom > coins[i].Denom {
 			return false
 		}
 	}

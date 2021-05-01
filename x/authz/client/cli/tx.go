@@ -62,7 +62,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
  $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.MsgVote --from=cosmos1sk..
-	`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, types.ModuleName),
+	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -253,7 +253,7 @@ Example:
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgExecAuthorized(grantee, theTx.GetMsgs())
+			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := authz.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.Exec(cmd.Context(), &msg)

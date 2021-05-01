@@ -18,17 +18,17 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 }
 
 // MethodName implements Authorization.MsgTypeURL.
-func (authorization SendAuthorization) MsgTypeURL() string {
+func (a SendAuthorization) MsgTypeURL() string {
 	return sdk.MsgTypeURL(&MsgSend{})
 }
 
 // Accept implements Authorization.Accept.
 func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
-	msgR, ok := msg.Request.(*MsgSend)
+	mSend, ok := msg.(*MsgSend)
 	if !ok {
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
-	limitLeft, isNegative := a.SpendLimit.SafeSub(msgR.Amount)
+	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount)
 	if isNegative {
 		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
 	}

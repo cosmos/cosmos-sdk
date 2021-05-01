@@ -23,9 +23,9 @@ import (
 var (
 	// TODO Remove `Request` suffix
 	// https://github.com/cosmos/cosmos-sdk/issues/9114
-	TypeMsgGrantAuthorization  = sdk.MsgTypeURL(&authz.MsgGrantRequest{})
-	TypeMsgRevokeAuthorization = sdk.MsgTypeURL(&authz.MsgRevokeRequest{})
-	TypeMsgExecDelegated       = sdk.MsgTypeURL(&authz.MsgExecRequest{})
+	TypeMsgGrantAuthorization  = sdk.MsgTypeURL(&authz.MsgGrant{})
+	TypeMsgRevokeAuthorization = sdk.MsgTypeURL(&authz.MsgRevoke{})
+	TypeMsgExecDelegated       = sdk.MsgTypeURL(&authz.MsgExec{})
 )
 
 // Simulation operation weights constants

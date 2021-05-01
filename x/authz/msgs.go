@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	_ sdk.Msg = &MsgGrantRequest{}
-	_ sdk.Msg = &MsgRevokeRequest{}
-	_ sdk.Msg = &MsgExecRequest{}
+	_ sdk.Msg = &MsgGrant{}
+	_ sdk.Msg = &MsgRevoke{}
+	_ sdk.Msg = &MsgExec{}
 
 	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
 	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}
@@ -156,7 +156,7 @@ func (msg MsgRevoke) ValidateBasic() error {
 
 // NewMsgExec creates a new MsgExecAuthorized
 //nolint:interfacer
-func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecRequest {
+func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
 		any, err := types.NewAnyWithValue(msg)

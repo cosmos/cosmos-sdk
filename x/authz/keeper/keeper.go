@@ -129,7 +129,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 		return err
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(&grant)
+	bz := k.cdc.MustMarshal(&grant)
 	skey := grantStoreKey(grantee, granter, authorization.MsgTypeURL())
 	store.Set(skey, bz)
 	return ctx.EventManager().EmitTypedEvent(&authz.EventGrant{

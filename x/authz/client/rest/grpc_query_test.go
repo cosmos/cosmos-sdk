@@ -190,7 +190,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			"",
 			func() {},
 			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Len(authorizations.Authorizations), 1)
+				s.Require().Len(authorizations.Authorizations, 1)
 			},
 		},
 		{
@@ -212,7 +212,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 				s.Require().NoError(err)
 			},
 			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Equal(len(authorizations.Authorizations), 2)
+				s.Require().Len(authorizations.Authorizations, 2)
 			},
 		},
 		{
@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			"",
 			func() {},
 			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Equal(len(authorizations.Authorizations), 1)
+				s.Require().Len(authorizations.Authorizations, 1)
 			},
 		},
 		{
@@ -232,7 +232,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			"",
 			func() {},
 			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Equal(len(authorizations.Authorizations), 2)
+				s.Require().Len(authorizations.Authorizations, 2)
 			},
 		},
 	}

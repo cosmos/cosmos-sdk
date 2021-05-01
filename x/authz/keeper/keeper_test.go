@@ -136,7 +136,7 @@ func (s *TestSuite) TestKeeperFees() {
 	smallCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 20))
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
 
-	msgs := types.NewMsgExec(granteeAddr, []sdk.Msg{
+	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{
 		&banktypes.MsgSend{
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
 			FromAddress: granterAddr.String(),

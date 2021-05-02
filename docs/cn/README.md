@@ -5,6 +5,12 @@ parent:
 
 # Cosmos SDK 文档
 
+::: warning
+**DEPRECATED**
+This documentation is not complete and it's outdated. Please use the English version.
+:::
+
+
 ## 开始
 
 - **[SDK 介绍](./intro/README.md)**：Cosmos SDK 的总体概览

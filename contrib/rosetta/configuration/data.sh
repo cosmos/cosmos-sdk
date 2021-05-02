@@ -45,7 +45,7 @@ sleep 10
 
 # send transaction to deterministic address
 echo sending transaction with addr $addr
-simd tx bank send "$addr" cosmos1wjmt63j4fv9nqda92nsrp2jp2vsukcke4va3pt 100stake --yes --keyring-backend=test --broadcast-mode=block --chain-id=testing
+simd tx bank send "$addr" cosmos19g9cm8ymzchq2qkcdv3zgqtwayj9asv3hjv5u5 100stake --yes --keyring-backend=test --broadcast-mode=block --chain-id=testing
 
 sleep 10
 

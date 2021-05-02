@@ -2,7 +2,7 @@
 order: 3
 -->
 
-# AnthHandlers
+# AnteHandlers
 
 ## Handlers
 

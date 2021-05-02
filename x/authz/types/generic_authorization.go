@@ -1,13 +1,12 @@
 package types
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ Authorization = &GenericAuthorization{}
+	_ exported.Authorization = &GenericAuthorization{}
 )
 
 // NewGenericAuthorization creates a new GenericAuthorization object.
@@ -18,11 +17,16 @@ func NewGenericAuthorization(methodName string) *GenericAuthorization {
 }
 
 // MethodName implements Authorization.MethodName.
-func (cap GenericAuthorization) MethodName() string {
-	return cap.MessageName
+func (authorization GenericAuthorization) MethodName() string {
+	return authorization.MessageName
 }
 
 // Accept implements Authorization.Accept.
-func (cap GenericAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (allow bool, updated Authorization, delete bool) {
-	return true, &cap, false
+func (authorization GenericAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (updated exported.Authorization, delete bool, err error) {
+	return &authorization, false, nil
+}
+
+// ValidateBasic implements Authorization.ValidateBasic.
+func (authorization GenericAuthorization) ValidateBasic() error {
+	return nil
 }

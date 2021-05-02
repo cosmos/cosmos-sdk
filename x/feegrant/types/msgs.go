@@ -1,21 +1,16 @@
 package types
 
 import (
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/gogo/protobuf/proto"
 )
 
 var (
-	_, _ sdk.MsgRequest                = &MsgGrantFeeAllowance{}, &MsgRevokeFeeAllowance{}
+	_, _ sdk.Msg                       = &MsgGrantFeeAllowance{}, &MsgRevokeFeeAllowance{}
 	_    types.UnpackInterfacesMessage = &MsgGrantFeeAllowance{}
-)
-
-// feegrant message types
-const (
-	TypeMsgGrantFeeAllowance  = "grant_fee_allowance"
-	TypeMsgRevokeFeeAllowance = "revoke_fee_allowance"
 )
 
 // NewMsgGrantFeeAllowance creates a new MsgGrantFeeAllowance.
@@ -49,9 +44,15 @@ func (msg MsgGrantFeeAllowance) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
-	return msg.GetFeeAllowanceI().ValidateBasic()
+	allowance, err := msg.GetFeeAllowanceI()
+	if err != nil {
+		return err
+	}
+
+	return allowance.ValidateBasic()
 }
 
+// GetSigners gets the granter account associated with an allowance
 func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
@@ -61,13 +62,13 @@ func (msg MsgGrantFeeAllowance) GetSigners() []sdk.AccAddress {
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
-func (msg MsgGrantFeeAllowance) GetFeeAllowanceI() FeeAllowanceI {
+func (msg MsgGrantFeeAllowance) GetFeeAllowanceI() (FeeAllowanceI, error) {
 	allowance, ok := msg.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
-		return nil
+		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
 	}
 
-	return allowance
+	return allowance, nil
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -76,6 +77,8 @@ func (msg MsgGrantFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) err
 	return unpacker.UnpackAny(msg.Allowance, &allowance)
 }
 
+// NewMsgRevokeFeeAllowance returns a message to revoke a fee allowance for a given
+// granter and grantee
 //nolint:interfacer
 func NewMsgRevokeFeeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeFeeAllowance {
 	return MsgRevokeFeeAllowance{Granter: granter.String(), Grantee: grantee.String()}
@@ -88,10 +91,15 @@ func (msg MsgRevokeFeeAllowance) ValidateBasic() error {
 	if msg.Grantee == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing grantee address")
 	}
+	if msg.Grantee == msg.Granter {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
+	}
 
 	return nil
 }
 
+// GetSigners gets the granter address associated with an Allowance
+// to revoke.
 func (msg MsgRevokeFeeAllowance) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {

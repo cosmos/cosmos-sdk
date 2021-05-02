@@ -9,6 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
@@ -22,19 +23,16 @@ func TestMsgExecAuthorized(t *testing.T) {
 	tests := []struct {
 		title      string
 		grantee    sdk.AccAddress
-		msgs       []sdk.ServiceMsg
+		msgs       []sdk.Msg
 		expectPass bool
 	}{
-		{"nil grantee address", nil, []sdk.ServiceMsg{}, false},
-		{"zero-messages test: should fail", grantee, []sdk.ServiceMsg{}, false},
-		{"valid test: msg type", grantee, []sdk.ServiceMsg{
-			{
-				MethodName: types.SendAuthorization{}.MethodName(),
-				Request: &banktypes.MsgSend{
-					Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-					FromAddress: granter.String(),
-					ToAddress:   grantee.String(),
-				},
+		{"nil grantee address", nil, []sdk.Msg{}, false},
+		{"zero-messages test: should fail", grantee, []sdk.Msg{}, false},
+		{"valid test: msg type", grantee, []sdk.Msg{
+			&banktypes.MsgSend{
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+				FromAddress: granter.String(),
+				ToAddress:   grantee.String(),
 			},
 		}, true},
 	}
@@ -73,17 +71,17 @@ func TestMsgGrantAuthorization(t *testing.T) {
 	tests := []struct {
 		title            string
 		granter, grantee sdk.AccAddress
-		authorization    types.Authorization
+		authorization    exported.Authorization
 		expiration       time.Time
 		expectErr        bool
 		expectPass       bool
 	}{
-		{"nil granter address", nil, grantee, &types.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
-		{"nil grantee address", granter, nil, &types.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
-		{"nil granter and grantee address", nil, nil, &types.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
+		{"nil granter address", nil, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
+		{"nil grantee address", granter, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
+		{"nil granter and grantee address", nil, nil, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now(), false, false},
 		{"nil authorization", granter, grantee, nil, time.Now(), true, false},
-		{"valid test case", granter, grantee, &types.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 1, 0), false, true},
-		{"past time", granter, grantee, &types.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
+		{"valid test case", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 1, 0), false, true},
+		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
 	}
 	for i, tc := range tests {
 		msg, err := types.NewMsgGrantAuthorization(

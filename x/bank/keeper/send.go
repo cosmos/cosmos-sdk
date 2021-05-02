@@ -17,12 +17,6 @@ type SendKeeper interface {
 	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
-	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error
-
-	SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error
-	SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error
-
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
@@ -39,7 +33,7 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	cdc        codec.BinaryMarshaler
+	cdc        codec.BinaryCodec
 	ak         types.AccountKeeper
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
@@ -49,7 +43,7 @@ type BaseSendKeeper struct {
 }
 
 func NewBaseSendKeeper(
-	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
+	cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -89,7 +83,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 			return err
 		}
 
-		err = k.SubtractCoins(ctx, inAddress, in.Coins)
+		err = k.subUnlockedCoins(ctx, inAddress, in.Coins)
 		if err != nil {
 			return err
 		}
@@ -107,7 +101,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
-		err = k.AddCoins(ctx, outAddress, out.Coins)
+		err = k.addCoins(ctx, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
@@ -150,12 +144,12 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		),
 	})
 
-	err := k.SubtractCoins(ctx, fromAddr, amt)
+	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
 	}
 
-	err = k.AddCoins(ctx, toAddr, amt)
+	err = k.addCoins(ctx, toAddr, amt)
 	if err != nil {
 		return err
 	}
@@ -173,9 +167,10 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	return nil
 }
 
-// SubtractCoins removes amt coins the account by the given address. An error is
+// subUnlockedCoins removes the unlocked amt coins of the given account. An error is
 // returned if the resulting balance is negative or the initial amount is invalid.
-func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+// A coin_spent event is emitted after.
+func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -194,19 +189,22 @@ func (k BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 		newBalance := balance.Sub(coin)
 
-		err := k.SetBalance(ctx, addr, newBalance)
+		err := k.setBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
 		}
 	}
 
+	// emit coin spent event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinSpentEvent(addr, amt),
+	)
 	return nil
 }
 
-// AddCoins adds amt to the account balance given by the provided address. An
-// error is returned if the initial amount is invalid or if any resulting new
-// balance is negative.
-func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+// addCoins increase the addr balance by the given amt. Fails if the provided amt is invalid.
+// It emits a coin received event.
+func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
@@ -215,17 +213,22 @@ func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
 
-		err := k.SetBalance(ctx, addr, newBalance)
+		err := k.setBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
 		}
 	}
 
+	// emit coin received event
+	ctx.EventManager().EmitEvent(
+		types.NewCoinReceivedEvent(addr, amt),
+	)
+
 	return nil
 }
 
-// ClearBalances removes all balances for a given account by address.
-func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
+// clearBalances removes all balances for a given account by address.
+func (k BaseSendKeeper) clearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 	keys := [][]byte{}
 	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
 		keys = append(keys, []byte(balance.Denom))
@@ -239,14 +242,14 @@ func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 	}
 }
 
-// SetBalances sets the balance (multiple coins) for an account by address. It will
+// setBalances sets the balance (multiple coins) for an account by address. It will
 // clear out all balances prior to setting the new coins as to set existing balances
 // to zero if they don't exist in amt. An error is returned upon failure.
-func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	k.ClearBalances(ctx, addr)
+func (k BaseSendKeeper) setBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
+	k.clearBalances(ctx, addr)
 
 	for _, balance := range balances {
-		err := k.SetBalance(ctx, addr, balance)
+		err := k.setBalance(ctx, addr, balance)
 		if err != nil {
 			return err
 		}
@@ -255,16 +258,21 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 	return nil
 }
 
-// SetBalance sets the coin balance for an account by address.
-func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
+// setBalance sets the coin balance for an account by address.
+func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}
 
 	accountStore := k.getAccountStore(ctx, addr)
 
-	bz := k.cdc.MustMarshalBinaryBare(&balance)
-	accountStore.Set([]byte(balance.Denom), bz)
+	// Bank invariants require to not store zero balances.
+	if balance.IsZero() {
+		accountStore.Delete([]byte(balance.Denom))
+	} else {
+		bz := k.cdc.MustMarshal(&balance)
+		accountStore.Set([]byte(balance.Denom), bz)
+	}
 
 	return nil
 }

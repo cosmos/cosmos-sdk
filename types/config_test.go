@@ -17,6 +17,18 @@ func TestConfigTestSuite(t *testing.T) {
 	suite.Run(t, new(configTestSuite))
 }
 
+func (s *contextTestSuite) TestConfig_SetPurpose() {
+	config := sdk.NewConfig()
+	config.SetPurpose(44)
+	s.Require().Equal(uint32(44), config.GetPurpose())
+
+	config.SetPurpose(0)
+	s.Require().Equal(uint32(0), config.GetPurpose())
+
+	config.Seal()
+	s.Require().Panics(func() { config.SetPurpose(10) })
+}
+
 func (s *configTestSuite) TestConfig_SetCoinType() {
 	config := sdk.NewConfig()
 	config.SetCoinType(1)

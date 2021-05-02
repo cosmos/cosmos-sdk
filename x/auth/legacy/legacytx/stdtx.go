@@ -1,10 +1,6 @@
 package legacytx
 
 import (
-	"fmt"
-
-	"gopkg.in/yaml.v2"
-
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -16,9 +12,12 @@ import (
 
 // Interface implementation checks
 var (
-	_ sdk.Tx         = (*StdTx)(nil)
-	_ sdk.TxWithMemo = (*StdTx)(nil)
-	_ sdk.FeeTx      = (*StdTx)(nil)
+	_ sdk.Tx                             = (*StdTx)(nil)
+	_ sdk.TxWithMemo                     = (*StdTx)(nil)
+	_ sdk.FeeTx                          = (*StdTx)(nil)
+	_ codectypes.UnpackInterfacesMessage = (*StdTx)(nil)
+
+	_ codectypes.UnpackInterfacesMessage = (*StdSignature)(nil)
 )
 
 // StdFee includes the amount of coins paid in fees and the maximum
@@ -69,51 +68,6 @@ func (fee StdFee) Bytes() []byte {
 // as fee = ceil(gasWanted * gasPrices).
 func (fee StdFee) GasPrices() sdk.DecCoins {
 	return sdk.NewDecCoinsFromCoins(fee.Amount...).QuoDec(sdk.NewDec(int64(fee.Gas)))
-}
-
-// Deprecated
-func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
-	return StdSignature{PubKey: pk, Signature: sig}
-}
-
-// GetSignature returns the raw signature bytes.
-func (ss StdSignature) GetSignature() []byte {
-	return ss.Signature
-}
-
-// GetPubKey returns the public key of a signature as a cryptotypes.PubKey using the
-// Amino codec.
-func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
-	return ss.PubKey
-}
-
-// MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
-	var (
-		bz     []byte
-		pubkey string
-		err    error
-	)
-
-	if ss.PubKey != nil {
-		pubkey, err = sdk.Bech32ifyPubKey(sdk.Bech32PubKeyTypeAccPub, ss.GetPubKey())
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	bz, err = yaml.Marshal(struct {
-		PubKey    string
-		Signature string
-	}{
-		PubKey:    pubkey,
-		Signature: fmt.Sprintf("%X", ss.Signature),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bz), err
 }
 
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
@@ -239,14 +193,14 @@ func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
 
 // GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
-func (tx StdTx) GetPubKeys() []cryptotypes.PubKey {
+func (tx StdTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	pks := make([]cryptotypes.PubKey, len(tx.Signatures))
 
 	for i, stdSig := range tx.Signatures {
 		pks[i] = stdSig.GetPubKey()
 	}
 
-	return pks
+	return pks, nil
 }
 
 // GetGas returns the Gas in StdFee
@@ -277,5 +231,14 @@ func (tx StdTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 			return err
 		}
 	}
+
+	// Signatures contain PubKeys, which need to be unpacked.
+	for _, s := range tx.Signatures {
+		err := s.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

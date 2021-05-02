@@ -34,9 +34,9 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	feeAllowance := q.GetFeeAllowance(ctx, granterAddr, granteeAddr)
-	if feeAllowance == nil {
-		return nil, status.Errorf(codes.NotFound, "no fee allowance found")
+	feeAllowance, err := q.GetFeeAllowance(ctx, granterAddr, granteeAddr)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	msg, ok := feeAllowance.(proto.Message)
@@ -78,7 +78,7 @@ func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRe
 	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
 		var grant types.FeeAllowanceGrant
 
-		if err := q.cdc.UnmarshalBinaryBare(value, &grant); err != nil {
+		if err := q.cdc.Unmarshal(value, &grant); err != nil {
 			return err
 		}
 

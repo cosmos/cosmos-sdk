@@ -4,7 +4,7 @@
 
 - 2019-11-06: Initial Draft
 - 2020-10-12: Updated Draft
-- 2021-11-13: Accepted
+- 2020-11-13: Accepted
 
 ## Status
 
@@ -55,7 +55,7 @@ type Authorization interface {
 	MethodName() string
 
 	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
-	// so provides an upgraded authorization instance. 
+	// so provides an upgraded authorization instance.
 	// Returns:
 	// + allow: true if msg is authorized
 	// + updated: new Authorization instance which should overwrite the current one with new state
@@ -146,7 +146,7 @@ to the router based on `Authorization` grants:
 ```go
 type Keeper interface {
 	// DispatchActions routes the provided msgs to their respective handlers if the grantee was granted an authorization
-	// to send those messages by the first (and only) signer of each msg. 
+	// to send those messages by the first (and only) signer of each msg.
     DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.ServiceMsg) sdk.Result`
 }
 ```
@@ -216,7 +216,7 @@ message GenericAuthorization {
 - Users will be able to authorize arbitrary actions on behalf of their accounts to other
 users, improving key management for many use cases
 - The solution is more generic than previously considered approaches and the
-`Authorization` interface approach can be extended to cover other use cases by 
+`Authorization` interface approach can be extended to cover other use cases by
 SDK users
 
 ### Negative

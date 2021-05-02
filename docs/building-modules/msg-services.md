@@ -26,7 +26,7 @@ When possible, the existing module's [`Keeper`](keeper.md) should implement `Msg
 
 `msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L27
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/x/bank/keeper/msg_server.go#L27-L28
 
 `Msg` processing usually follows these 2 steps:
 
@@ -48,11 +48,15 @@ These events are relayed back to the underlying consensus engine and can be used
 
 The invoked `msgServer` method returns a `proto.Message` response and an `error`. These return values are then wrapped into an `*sdk.Result` or an `error` using `sdk.WrapServiceResult(ctx sdk.Context, res proto.Message, err error)`:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/baseapp/msg_service_router.go#L104
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/baseapp/msg_service_router.go#L104-L104
 
 This method takes care of marshaling the `res` parameter to protobuf and attaching any events on the `ctx.EventManager()` to the `sdk.Result`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
+
+This diagram shows a typical structure of an `Msg` Service, and how the message propagates through the module.
+
+![Transaction flow](../uml/svg/transaction_flow.svg)
 
 ## Legacy Amino `Msg`s
 
@@ -62,7 +66,7 @@ The `handler` type defined in the Cosmos SDK will be deprecated in favor of [`Ms
 
 Here is the typical structure of a `handler` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/types/handler.go#L4
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc2/types/handler.go#L4-L4
 
 Let us break it down:
 

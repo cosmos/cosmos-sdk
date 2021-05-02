@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -97,7 +98,7 @@ func GetCmdQueryAuthorization() *cobra.Command {
 			fmt.Sprintf(`Query authorization for a granter-grantee pair that matches the given msg-type:
 Example:
 $ %s query %s authorization cosmos1skjw.. cosmos1skjwj.. %s
-`, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName()),
+`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName()),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

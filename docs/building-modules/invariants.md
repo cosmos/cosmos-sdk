@@ -74,7 +74,7 @@ At its core, the `InvariantRegistry` is defined in the SDK as an interface:
 
 Typically, this interface is implemented in the `keeper` of a specific module. The most used implementation of an `InvariantRegistry` can be found in the `crisis` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/master/x/crisis/keeper/keeper.go#L50-L54
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/crisis/keeper/keeper.go#L50-L54
 
  The `InvariantRegistry` is therefore typically instantiated by instantiating the `keeper` of the `crisis` module in the [application's constructor function](../basics/app-anatomy.md#constructor-function).
 

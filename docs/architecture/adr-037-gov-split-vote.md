@@ -6,7 +6,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Abstract
 
@@ -35,7 +35,7 @@ type Vote struct {
 }
 ```
 
-And for backwards compatibility, we introduce `MsgWeightedVote` while keeping `MsgVote`.
+And for backwards compatibility, we introduce `MsgVoteWeighted` while keeping `MsgVote`.
 ```
 type MsgVote struct {
   ProposalID int64
@@ -43,14 +43,14 @@ type MsgVote struct {
   Option     Option
 }
 
-type MsgWeightedVote struct {
+type MsgVoteWeighted struct {
   ProposalID int64
   Voter      sdk.Address
   Options    []WeightedVoteOption
 }
 ```
 
-The `ValidateBasic` of a `MsgWeightedVote` struct would require that
+The `ValidateBasic` of a `MsgVoteWeighted` struct would require that
 1. The sum of all the Rates is equal to 1.0
 2. No Option is repeated
 

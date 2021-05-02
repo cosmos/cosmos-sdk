@@ -64,14 +64,17 @@ type Keyring interface {
 	Delete(uid string) error
 	DeleteByAddress(address sdk.Address) error
 
-	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic
-	// key from that, and persists it to the storage. Returns the generated mnemonic and the key
-	// Info. It returns an error if it fails to generate a key for the given algo type, or if
-	// another key is already stored under the same name.
-	NewMnemonic(uid string, language Language, hdPath string, algo SignatureAlgo) (Info, string, error)
+	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from it, and
+	// persists the key to storage. Returns the generated mnemonic and the key Info.
+	// It returns an error if it fails to generate a key for the given algo type, or if
+	// another key is already stored under the same name or address.
+	//
+	// A passphrase set to the empty string will set the passphrase to the DefaultBIP39Passphrase value.
+	NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (Info, string, error)
 
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
-	NewAccount(uid, mnemonic, bip39Passwd, hdPath string, algo SignatureAlgo) (Info, error)
+	// It fails if there is an existing key Info with the same address.
+	NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (Info, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error)
@@ -108,8 +111,16 @@ type Signer interface {
 type Importer interface {
 	// ImportPrivKey imports ASCII armored passphrase-encrypted private keys.
 	ImportPrivKey(uid, armor, passphrase string) error
+
 	// ImportPubKey imports ASCII armored public keys.
 	ImportPubKey(uid string, armor string) error
+}
+
+// LegacyInfoImporter is implemented by key stores that support import of Info types.
+type LegacyInfoImporter interface {
+	// ImportInfo import a keyring.Info into the current keyring.
+	// It is used to migrate multisig, ledger, and public key Info structure.
+	ImportInfo(oldInfo Info) error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -118,7 +129,7 @@ type Exporter interface {
 	ExportPubKeyArmor(uid string) (string, error)
 	ExportPubKeyArmorByAddress(address sdk.Address) (string, error)
 
-	// ExportPrivKey returns a private key in ASCII armored format.
+	// ExportPrivKeyArmor returns a private key in ASCII armored format.
 	// It returns an error if the key does not exist or a wrong encryption passphrase is supplied.
 	ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
@@ -213,7 +224,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -317,6 +328,15 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	return nil
 }
 
+// ImportInfo implements Importer.MigrateInfo.
+func (ks keystore) ImportInfo(oldInfo Info) error {
+	if _, err := ks.Key(oldInfo.GetName()); err == nil {
+		return fmt.Errorf("cannot overwrite key: %s", oldInfo.GetName())
+	}
+
+	return ks.writeInfo(oldInfo)
+}
+
 func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	info, err := ks.Key(uid)
 	if err != nil {
@@ -417,7 +437,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(string(infoKey(uid)))
+	err = ks.db.Remove(infoKey(uid))
 	if err != nil {
 		return err
 	}
@@ -428,19 +448,20 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (Info, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, err
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, fmt.Errorf("key with address %s not found", address)
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
 	}
+	return ks.key(string(ik.Data))
+}
 
-	bs, err := ks.db.Get(string(ik.Data))
-	if err != nil {
-		return nil, err
+func wrapKeyNotFound(err error, msg string) error {
+	if err == keyring.ErrKeyNotFound {
+		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, msg)
 	}
-
-	return unmarshalInfo(bs.Data)
+	return err
 }
 
 func (ks keystore) List() ([]Info, error) {
@@ -476,7 +497,7 @@ func (ks keystore) List() ([]Info, error) {
 	return res, nil
 }
 
-func (ks keystore) NewMnemonic(uid string, language Language, hdPath string, algo SignatureAlgo) (Info, string, error) {
+func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (Info, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
@@ -497,15 +518,19 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath string, alg
 		return nil, "", err
 	}
 
-	info, err := ks.NewAccount(uid, mnemonic, DefaultBIP39Passphrase, hdPath, algo)
+	if bip39Passphrase == "" {
+		bip39Passphrase = DefaultBIP39Passphrase
+	}
+
+	info, err := ks.NewAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return info, mnemonic, err
+	return info, mnemonic, nil
 }
 
-func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (Info, error) {
+func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (Info, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
@@ -518,26 +543,33 @@ func (ks keystore) NewAccount(uid string, mnemonic string, bip39Passphrase strin
 
 	privKey := algo.Generate()(derivedPriv)
 
-	return ks.writeLocalKey(uid, privKey, algo.Name())
+	// check if the a key already exists with the same address and return an error
+	// if found
+	address := sdk.AccAddress(privKey.PubKey().Address())
+	if _, err := ks.KeyByAddress(address); err == nil {
+		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
+	}
+
+	return ks.writeLocalKey(name, privKey, algo.Name())
 }
 
 func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 	return ks.options.SupportedAlgos.Contains(algo)
 }
 
-func (ks keystore) Key(uid string) (Info, error) {
-	key := infoKey(uid)
-
-	bs, err := ks.db.Get(string(key))
+func (ks keystore) key(infoKey string) (Info, error) {
+	bs, err := ks.db.Get(infoKey)
 	if err != nil {
-		return nil, err
+		return nil, wrapKeyNotFound(err, infoKey)
 	}
-
 	if len(bs.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
-
 	return unmarshalInfo(bs.Data)
+}
+
+func (ks keystore) Key(uid string) (Info, error) {
+	return ks.key(infoKey(uid))
 }
 
 // SupportedAlgorithms returns the keystore Options' supported signing algorithm.
@@ -576,9 +608,10 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err er
 
 func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Config {
 	return keyring.Config{
-		ServiceName:      appName,
-		FileDir:          dir,
-		FilePasswordFunc: newRealPrompt(dir, buf),
+		ServiceName:              appName,
+		FileDir:                  dir,
+		KeychainTrustApplication: true,
+		FilePasswordFunc:         newRealPrompt(dir, buf),
 	}
 }
 
@@ -710,8 +743,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
-
-	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshalBinaryBare(priv)), algo)
+	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshal(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
@@ -720,17 +752,15 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKey
 }
 
 func (ks keystore) writeInfo(info Info) error {
-	// write the info by key
-	key := infoKey(info.GetName())
+	key := infoKeyBz(info.GetName())
 	serializedInfo := marshalInfo(info)
 
 	exists, err := ks.existsInDb(info)
-	if exists {
-		return errors.New("public key already exist in keybase")
-	}
-
 	if err != nil {
 		return err
+	}
+	if exists {
+		return errors.New("public key already exist in keybase")
 	}
 
 	err = ks.db.Set(keyring.Item{
@@ -752,6 +782,8 @@ func (ks keystore) writeInfo(info Info) error {
 	return nil
 }
 
+// existsInDb returns true if key is in DB. Error is returned only when we have error
+// different thant ErrKeyNotFound
 func (ks keystore) existsInDb(info Info) (bool, error) {
 	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
 		return true, nil // address lookup succeeds - info exists
@@ -759,7 +791,7 @@ func (ks keystore) existsInDb(info Info) (bool, error) {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(string(infoKey(info.GetName()))); err == nil {
+	if _, err := ks.db.Get(infoKey(info.GetName())); err == nil {
 		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
@@ -780,9 +812,11 @@ func (ks keystore) writeOfflineKey(name string, pub types.PubKey, algo hd.PubKey
 }
 
 func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error) {
-	info := NewMultiInfo(name, pub)
-	err := ks.writeInfo(info)
+	info, err := NewMultiInfo(name, pub)
 	if err != nil {
+		return nil, err
+	}
+	if err = ks.writeInfo(info); err != nil {
 		return nil, err
 	}
 

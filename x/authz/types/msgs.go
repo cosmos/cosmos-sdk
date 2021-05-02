@@ -8,12 +8,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ sdk.MsgRequest = &MsgGrantAuthorizationRequest{}
-	_ sdk.MsgRequest = &MsgRevokeAuthorizationRequest{}
-	_ sdk.MsgRequest = &MsgExecAuthorizedRequest{}
+	_ sdk.Msg = &MsgGrantAuthorizationRequest{}
+	_ sdk.Msg = &MsgRevokeAuthorizationRequest{}
+	_ sdk.Msg = &MsgExecAuthorizedRequest{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAuthorizationRequest{}
 	_ types.UnpackInterfacesMessage = &MsgExecAuthorizedRequest{}
@@ -21,7 +22,7 @@ var (
 
 // NewMsgGrantAuthorization creates a new MsgGrantAuthorization
 //nolint:interfacer
-func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization Authorization, expiration time.Time) (*MsgGrantAuthorizationRequest, error) {
+func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization exported.Authorization, expiration time.Time) (*MsgGrantAuthorizationRequest, error) {
 	m := &MsgGrantAuthorizationRequest{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
@@ -62,12 +63,16 @@ func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
 	}
 
-	return nil
+	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
+	if !ok {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (exported.Authorization)(nil), msg.Authorization.GetCachedValue())
+	}
+	return authorization.ValidateBasic()
 }
 
 // GetGrantAuthorization returns the cache value from the MsgGrantAuthorization.Authorization if present.
-func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() Authorization {
-	authorization, ok := msg.Authorization.GetCachedValue().(Authorization)
+func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() exported.Authorization {
+	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
 	if !ok {
 		return nil
 	}
@@ -75,7 +80,7 @@ func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() Authorization {
 }
 
 // SetAuthorization converts Authorization to any and adds it to MsgGrantAuthorization.Authorization.
-func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization Authorization) error {
+func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization exported.Authorization) error {
 	m, ok := authorization.(proto.Message)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "can't proto marshal %T", m)
@@ -91,7 +96,7 @@ func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization Authoriz
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgExecAuthorizedRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
-		var msgExecAuthorized sdk.MsgRequest
+		var msgExecAuthorized sdk.Msg
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
 		if err != nil {
 			return err
@@ -103,7 +108,7 @@ func (msg MsgExecAuthorizedRequest) UnpackInterfaces(unpacker types.AnyUnpacker)
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgGrantAuthorizationRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var authorization Authorization
+	var authorization exported.Authorization
 	return unpacker.UnpackAny(msg.Authorization, &authorization)
 }
 
@@ -150,20 +155,15 @@ func (msg MsgRevokeAuthorizationRequest) ValidateBasic() error {
 
 // NewMsgExecAuthorized creates a new MsgExecAuthorized
 //nolint:interfacer
-func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExecAuthorizedRequest {
+func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthorizedRequest {
 	msgsAny := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
-		bz, err := proto.Marshal(msg.Request)
+		any, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
 
-		anyMsg := &types.Any{
-			TypeUrl: msg.MethodName,
-			Value:   bz,
-		}
-
-		msgsAny[i] = anyMsg
+		msgsAny[i] = any
 	}
 
 	return MsgExecAuthorizedRequest{
@@ -172,20 +172,15 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.ServiceMsg) MsgExec
 	}
 }
 
-// GetServiceMsgs returns the cache values from the MsgExecAuthorized.Msgs if present.
-func (msg MsgExecAuthorizedRequest) GetServiceMsgs() ([]sdk.ServiceMsg, error) {
-	msgs := make([]sdk.ServiceMsg, len(msg.Msgs))
+// GetMessages returns the cache values from the MsgExecAuthorized.Msgs if present.
+func (msg MsgExecAuthorizedRequest) GetMessages() ([]sdk.Msg, error) {
+	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
-		msgReq, ok := msgAny.GetCachedValue().(sdk.MsgRequest)
+		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
 		if !ok {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.MsgRequest", msgAny)
 		}
-		srvMsg := sdk.ServiceMsg{
-			MethodName: msgAny.TypeUrl,
-			Request:    msgReq,
-		}
-
-		msgs[i] = srvMsg
+		msgs[i] = msg
 	}
 
 	return msgs, nil

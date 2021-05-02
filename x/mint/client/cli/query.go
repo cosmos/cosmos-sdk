@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -45,7 +44,7 @@ func GetCmdQueryParams() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryParamsRequest{}
-			res, err := queryClient.Params(context.Background(), params)
+			res, err := queryClient.Params(cmd.Context(), params)
 
 			if err != nil {
 				return err
@@ -75,7 +74,7 @@ func GetCmdQueryInflation() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryInflationRequest{}
-			res, err := queryClient.Inflation(context.Background(), params)
+			res, err := queryClient.Inflation(cmd.Context(), params)
 
 			if err != nil {
 				return err
@@ -105,7 +104,7 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryAnnualProvisionsRequest{}
-			res, err := queryClient.AnnualProvisions(context.Background(), params)
+			res, err := queryClient.AnnualProvisions(cmd.Context(), params)
 
 			if err != nil {
 				return err

@@ -37,19 +37,15 @@ func (suite *SimTestSuite) SetupTest() {
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
-	app, ctx := suite.app, suite.ctx
 	accounts := simtypes.RandomAccounts(r, n)
-	require := suite.Require()
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		err := app.BankKeeper.SetBalances(ctx, account.Address, initCoins)
-		require.NoError(err)
+		err := simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
+		suite.Require().NoError(err)
 	}
 
 	return accounts
@@ -122,8 +118,8 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Granter)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Grantee)
+	require.Equal(accounts[2].Address.String(), msg.Granter)
+	require.Equal(accounts[1].Address.String(), msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 
@@ -138,7 +134,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 	// begin a new block
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
-	feeAmt := sdk.TokensFromConsensusPower(200000)
+	feeAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200000)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))
 
 	granter, grantee := accounts[0], accounts[1]

@@ -52,6 +52,18 @@ message PeriodicFeeAllowance {
   ExpiresAt period_reset = 5 [(gogoproto.nullable) = false];
 }
 
+// AllowedMsgFeeAllowance creates allowance only for specified message types.
+message AllowedMsgFeeAllowance {
+  option (gogoproto.goproto_getters)         = false;
+  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+
+  // allowance can be any of basic and filtered fee allowance.
+  google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
+
+  // allowed_messages are the messages for which the grantee has the access.
+  repeated string allowed_messages = 2;
+}
+
 // Duration is a span of a clock time or number of blocks.
 // This is designed to be added to an ExpiresAt struct.
 message Duration {

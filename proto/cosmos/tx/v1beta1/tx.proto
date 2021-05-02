@@ -64,7 +64,7 @@ message SignDoc {
 }
 
 // SignDocTextual is the type used for generating sign bytes for SIGN_MODE_TEXTUAL. It is designed to be serialized
-// as proto3 JSON following the rules defined Here: https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
+// as proto3 JSON following the rules defined here: https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
 message SignDocTextual {
   // body is the processable content of the transaction
   TxBody body = 1;
@@ -73,12 +73,12 @@ message SignDocTextual {
   // specifically signers, signer modes and fee
   AuthInfo auth_info = 2;
 
-  // chain_id is the unique identifier of the chain this transaction targets.
+  // chain_id is the identifier of the chain this transaction targets.
   // It prevents signed transactions from being used on another chain by an
   // attacker
   string chain_id = 3;
 
-  // account_number is the account number of the account in state
+  // account_number is the account number of the signing account in state
   uint64 account_number = 4;
 
   // sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to reduce the malleability attack

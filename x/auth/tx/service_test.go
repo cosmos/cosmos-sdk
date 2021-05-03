@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
 	)
 	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &s.txRes))
+	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &s.txRes))
 	s.Require().Equal(uint32(0), s.txRes.Code)
 
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -151,7 +151,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
+			req, err := val.ClientCtx.JSONCodec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/simulate", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
@@ -159,7 +159,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.SimulateResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Equal(len(result.GetResult().GetEvents()), 6) // 1 coin recv, 1 coin spent,1 transfer, 3 messages.
@@ -313,7 +313,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetTxsEventResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(result.Txs), 1)
 				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
@@ -382,7 +382,7 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.GetTxResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal("foobar", result.Tx.Body.Memo)
 				s.Require().NotZero(result.TxResponse.Height)
@@ -459,7 +459,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
+			req, err := val.ClientCtx.JSONCodec.MarshalJSON(tc.req)
 			s.Require().NoError(err)
 			res, err := rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
@@ -467,7 +467,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tx.BroadcastTxResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(res, &result)
+				err = val.ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint32(0), result.TxResponse.Code, "rawlog", result.TxResponse.RawLog)
 			}

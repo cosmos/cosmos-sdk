@@ -32,6 +32,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
+var bankMsgSendEventAction = fmt.Sprintf("message.action='%s'", sdk.MsgTypeURL(&banktypes.MsgSend{}))
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -192,7 +194,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"request with order-by",
 			&tx.GetTxsEventRequest{
-				Events:  []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
+				Events:  []string{bankMsgSendEventAction},
 				OrderBy: tx.OrderBy_ORDER_BY_ASC,
 			},
 			false, "",
@@ -200,14 +202,14 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"without pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
+				Events: []string{bankMsgSendEventAction},
 			},
 			false, "",
 		},
 		{
 			"with pagination",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'"},
+				Events: []string{bankMsgSendEventAction},
 				Pagination: &query.PageRequest{
 					CountTotal: false,
 					Offset:     0,
@@ -219,7 +221,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		{
 			"with multi events",
 			&tx.GetTxsEventRequest{
-				Events: []string{"message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"},
+				Events: []string{bankMsgSendEventAction, "message.module='bank'"},
 			},
 			false, "",
 		},
@@ -262,43 +264,43 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 		{
 			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, bankMsgSendEventAction),
 			false,
 			"",
 		},
 		{
 			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", 0, 10),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&pagination.offset=%d&pagination.limit=%d", val.APIAddress, bankMsgSendEventAction, 0, 10),
 			false,
 			"",
 		},
 		{
 			"valid request: order by asc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"",
 		},
 		{
 			"valid request: order by desc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"",
 		},
 		{
 			"invalid request: invalid order by",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			true,
 			"is not a valid tx.OrderBy",
 		},
 		{
 			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, "message.action='/cosmos.bank.v1beta1.Msg/Send'", "message.module='bank'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s&events=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
 			false,
 			"",
 		},
 		{
 			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'%2Fcosmos.bank.v1beta1.Msg%2FSend'"),
+			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?events=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
 			false,
 			"",
 		},
@@ -584,6 +586,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	)
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo("foobar")
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.

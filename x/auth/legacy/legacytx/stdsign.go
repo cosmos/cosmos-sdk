@@ -16,6 +16,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+// LegacyMsg defines the old interface a message must fulfill, containing
+// Amino signing method and legacy router info.
+// Deprecated: Please use `Msg` instead.
+type LegacyMsg interface {
+	sdk.Msg
+
+	// Get the canonical byte representation of the Msg.
+	GetSignBytes() []byte
+
+	// Return the message type.
+	// Must be alphanumeric or empty.
+	Route() string
+
+	// Returns a human-readable string for the message, intended for utilization
+	// within tags
+	Type() string
+}
+
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
 // as well as the ChainID (prevent cross chain replay)
@@ -38,7 +56,7 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 		// If msg is a legacy Msg, then GetSignBytes is implemented.
 		// If msg is a ServiceMsg, then GetSignBytes has graceful support of
 		// calling GetSignBytes from its underlying Msg.
-		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
+		msgsBytes = append(msgsBytes, json.RawMessage(msg.(LegacyMsg).GetSignBytes()))
 	}
 
 	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{

@@ -33,9 +33,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) err
 
 // ExportGenesis will dump the contents of the keeper into a serializable GenesisState.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) (*types.GenesisState, error) {
-	var grants []types.FeeAllowanceGrant
+	var grants []types.Grant
 
-	err := k.IterateAllFeeAllowances(ctx, func(grant types.FeeAllowanceGrant) bool {
+	err := k.IterateAllFeeAllowances(ctx, func(grant types.Grant) bool {
 		grants = append(grants, grant)
 		return false
 	})

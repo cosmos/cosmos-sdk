@@ -42,8 +42,8 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	oneYear := now.AddDate(1, 0, 0)
 	msgSrvr := keeper.NewMsgServerImpl(suite.keeper)
 
-	allowance := &types.BasicFeeAllowance{SpendLimit: coins, Expiration: &oneYear}
-	err := suite.keeper.GrantFeeAllowance(suite.ctx, granterAddr, granteeAddr, allowance)
+	allowance := &types.BasicAllowance{SpendLimit: coins, Expiration: &oneYear}
+	err := suite.keeper.GrantAllowance(suite.ctx, granterAddr, granteeAddr, allowance)
 	suite.Require().NoError(err)
 
 	genesis, err := feegrant.ExportGenesis(suite.ctx, suite.keeper)

@@ -7,7 +7,6 @@ import (
 	context "context"
 	fmt "fmt"
 	query "github.com/cosmos/cosmos-sdk/types/query"
-	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -30,24 +29,26 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
-type QueryFeeAllowanceRequest struct {
+// QueryAllowanceRequest is the request type for the Query/Allowance RPC method.
+type QueryAllowanceRequest struct {
+	// granter is the address of the user granting an allowance of their funds.
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
+	// grantee is the address of the user being granted an allowance of another user's funds.
 	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
 }
 
-func (m *QueryFeeAllowanceRequest) Reset()         { *m = QueryFeeAllowanceRequest{} }
-func (m *QueryFeeAllowanceRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryFeeAllowanceRequest) ProtoMessage()    {}
-func (*QueryFeeAllowanceRequest) Descriptor() ([]byte, []int) {
+func (m *QueryAllowanceRequest) Reset()         { *m = QueryAllowanceRequest{} }
+func (m *QueryAllowanceRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllowanceRequest) ProtoMessage()    {}
+func (*QueryAllowanceRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_59efc303945de53f, []int{0}
 }
-func (m *QueryFeeAllowanceRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllowanceRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryFeeAllowanceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllowanceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryFeeAllowanceRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllowanceRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -57,50 +58,50 @@ func (m *QueryFeeAllowanceRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryFeeAllowanceRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFeeAllowanceRequest.Merge(m, src)
+func (m *QueryAllowanceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllowanceRequest.Merge(m, src)
 }
-func (m *QueryFeeAllowanceRequest) XXX_Size() int {
+func (m *QueryAllowanceRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryFeeAllowanceRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFeeAllowanceRequest.DiscardUnknown(m)
+func (m *QueryAllowanceRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllowanceRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryFeeAllowanceRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllowanceRequest proto.InternalMessageInfo
 
-func (m *QueryFeeAllowanceRequest) GetGranter() string {
+func (m *QueryAllowanceRequest) GetGranter() string {
 	if m != nil {
 		return m.Granter
 	}
 	return ""
 }
 
-func (m *QueryFeeAllowanceRequest) GetGrantee() string {
+func (m *QueryAllowanceRequest) GetGrantee() string {
 	if m != nil {
 		return m.Grantee
 	}
 	return ""
 }
 
-// QueryFeeAllowanceResponse is the response type for the Query/FeeAllowance RPC method.
-type QueryFeeAllowanceResponse struct {
-	// fee_allowance is a fee_allowance granted for grantee by granter.
-	FeeAllowance *FeeAllowanceGrant `protobuf:"bytes,1,opt,name=fee_allowance,json=feeAllowance,proto3" json:"fee_allowance,omitempty"`
+// QueryAllowanceResponse is the response type for the Query/Allowance RPC method.
+type QueryAllowanceResponse struct {
+	// allowance is a allowance granted for grantee by granter.
+	Allowance *Grant `protobuf:"bytes,1,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
-func (m *QueryFeeAllowanceResponse) Reset()         { *m = QueryFeeAllowanceResponse{} }
-func (m *QueryFeeAllowanceResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryFeeAllowanceResponse) ProtoMessage()    {}
-func (*QueryFeeAllowanceResponse) Descriptor() ([]byte, []int) {
+func (m *QueryAllowanceResponse) Reset()         { *m = QueryAllowanceResponse{} }
+func (m *QueryAllowanceResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllowanceResponse) ProtoMessage()    {}
+func (*QueryAllowanceResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_59efc303945de53f, []int{1}
 }
-func (m *QueryFeeAllowanceResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllowanceResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryFeeAllowanceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllowanceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryFeeAllowanceResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllowanceResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -110,44 +111,44 @@ func (m *QueryFeeAllowanceResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryFeeAllowanceResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFeeAllowanceResponse.Merge(m, src)
+func (m *QueryAllowanceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllowanceResponse.Merge(m, src)
 }
-func (m *QueryFeeAllowanceResponse) XXX_Size() int {
+func (m *QueryAllowanceResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryFeeAllowanceResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFeeAllowanceResponse.DiscardUnknown(m)
+func (m *QueryAllowanceResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllowanceResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryFeeAllowanceResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllowanceResponse proto.InternalMessageInfo
 
-func (m *QueryFeeAllowanceResponse) GetFeeAllowance() *FeeAllowanceGrant {
+func (m *QueryAllowanceResponse) GetAllowance() *Grant {
 	if m != nil {
-		return m.FeeAllowance
+		return m.Allowance
 	}
 	return nil
 }
 
-// QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
-type QueryFeeAllowancesRequest struct {
+// QueryAllowancesRequest is the request type for the Query/Allowances RPC method.
+type QueryAllowancesRequest struct {
 	Grantee string `protobuf:"bytes,1,opt,name=grantee,proto3" json:"grantee,omitempty"`
 	// pagination defines an pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryFeeAllowancesRequest) Reset()         { *m = QueryFeeAllowancesRequest{} }
-func (m *QueryFeeAllowancesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryFeeAllowancesRequest) ProtoMessage()    {}
-func (*QueryFeeAllowancesRequest) Descriptor() ([]byte, []int) {
+func (m *QueryAllowancesRequest) Reset()         { *m = QueryAllowancesRequest{} }
+func (m *QueryAllowancesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllowancesRequest) ProtoMessage()    {}
+func (*QueryAllowancesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_59efc303945de53f, []int{2}
 }
-func (m *QueryFeeAllowancesRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllowancesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryFeeAllowancesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllowancesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryFeeAllowancesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllowancesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -157,52 +158,52 @@ func (m *QueryFeeAllowancesRequest) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryFeeAllowancesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFeeAllowancesRequest.Merge(m, src)
+func (m *QueryAllowancesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllowancesRequest.Merge(m, src)
 }
-func (m *QueryFeeAllowancesRequest) XXX_Size() int {
+func (m *QueryAllowancesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryFeeAllowancesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFeeAllowancesRequest.DiscardUnknown(m)
+func (m *QueryAllowancesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllowancesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryFeeAllowancesRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllowancesRequest proto.InternalMessageInfo
 
-func (m *QueryFeeAllowancesRequest) GetGrantee() string {
+func (m *QueryAllowancesRequest) GetGrantee() string {
 	if m != nil {
 		return m.Grantee
 	}
 	return ""
 }
 
-func (m *QueryFeeAllowancesRequest) GetPagination() *query.PageRequest {
+func (m *QueryAllowancesRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
-type QueryFeeAllowancesResponse struct {
-	// fee_allowances are fee_allowance's granted for grantee by granter.
-	FeeAllowances []*FeeAllowanceGrant `protobuf:"bytes,1,rep,name=fee_allowances,json=feeAllowances,proto3" json:"fee_allowances,omitempty"`
+// QueryAllowancesResponse is the response type for the Query/Allowances RPC method.
+type QueryAllowancesResponse struct {
+	// allowances are allowance's granted for grantee by granter.
+	Allowances []*Grant `protobuf:"bytes,1,rep,name=allowances,proto3" json:"allowances,omitempty"`
 	// pagination defines an pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryFeeAllowancesResponse) Reset()         { *m = QueryFeeAllowancesResponse{} }
-func (m *QueryFeeAllowancesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryFeeAllowancesResponse) ProtoMessage()    {}
-func (*QueryFeeAllowancesResponse) Descriptor() ([]byte, []int) {
+func (m *QueryAllowancesResponse) Reset()         { *m = QueryAllowancesResponse{} }
+func (m *QueryAllowancesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllowancesResponse) ProtoMessage()    {}
+func (*QueryAllowancesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_59efc303945de53f, []int{3}
 }
-func (m *QueryFeeAllowancesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryAllowancesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryFeeAllowancesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryAllowancesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryFeeAllowancesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryAllowancesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -212,26 +213,26 @@ func (m *QueryFeeAllowancesResponse) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *QueryFeeAllowancesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryFeeAllowancesResponse.Merge(m, src)
+func (m *QueryAllowancesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllowancesResponse.Merge(m, src)
 }
-func (m *QueryFeeAllowancesResponse) XXX_Size() int {
+func (m *QueryAllowancesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryFeeAllowancesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryFeeAllowancesResponse.DiscardUnknown(m)
+func (m *QueryAllowancesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllowancesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryFeeAllowancesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryAllowancesResponse proto.InternalMessageInfo
 
-func (m *QueryFeeAllowancesResponse) GetFeeAllowances() []*FeeAllowanceGrant {
+func (m *QueryAllowancesResponse) GetAllowances() []*Grant {
 	if m != nil {
-		return m.FeeAllowances
+		return m.Allowances
 	}
 	return nil
 }
 
-func (m *QueryFeeAllowancesResponse) GetPagination() *query.PageResponse {
+func (m *QueryAllowancesResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
@@ -239,10 +240,10 @@ func (m *QueryFeeAllowancesResponse) GetPagination() *query.PageResponse {
 }
 
 func init() {
-	proto.RegisterType((*QueryFeeAllowanceRequest)(nil), "cosmos.feegrant.v1beta1.QueryFeeAllowanceRequest")
-	proto.RegisterType((*QueryFeeAllowanceResponse)(nil), "cosmos.feegrant.v1beta1.QueryFeeAllowanceResponse")
-	proto.RegisterType((*QueryFeeAllowancesRequest)(nil), "cosmos.feegrant.v1beta1.QueryFeeAllowancesRequest")
-	proto.RegisterType((*QueryFeeAllowancesResponse)(nil), "cosmos.feegrant.v1beta1.QueryFeeAllowancesResponse")
+	proto.RegisterType((*QueryAllowanceRequest)(nil), "cosmos.feegrant.v1beta1.QueryAllowanceRequest")
+	proto.RegisterType((*QueryAllowanceResponse)(nil), "cosmos.feegrant.v1beta1.QueryAllowanceResponse")
+	proto.RegisterType((*QueryAllowancesRequest)(nil), "cosmos.feegrant.v1beta1.QueryAllowancesRequest")
+	proto.RegisterType((*QueryAllowancesResponse)(nil), "cosmos.feegrant.v1beta1.QueryAllowancesResponse")
 }
 
 func init() {
@@ -250,36 +251,34 @@ func init() {
 }
 
 var fileDescriptor_59efc303945de53f = []byte{
-	// 455 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0x31, 0x8f, 0xd3, 0x30,
-	0x14, 0xc7, 0xeb, 0x22, 0x40, 0xf8, 0xae, 0x0c, 0x16, 0x12, 0x21, 0x42, 0xd1, 0x29, 0x48, 0x07,
-	0x3a, 0xe9, 0x62, 0x35, 0x9d, 0x40, 0x2c, 0xdc, 0x70, 0xdd, 0x80, 0xcb, 0xc8, 0x82, 0x9c, 0xf2,
-	0x6a, 0x22, 0x72, 0x71, 0x2e, 0x76, 0x81, 0x13, 0xea, 0xc2, 0x27, 0x40, 0xe2, 0xa3, 0xb0, 0xc0,
-	0x37, 0x60, 0x3c, 0x89, 0x85, 0x11, 0xb5, 0x7c, 0x09, 0x36, 0x14, 0x3b, 0x6e, 0x52, 0x91, 0x00,
-	0x99, 0xe2, 0xe4, 0xfd, 0xdf, 0x7b, 0xbf, 0xf7, 0xcf, 0x33, 0xbe, 0x33, 0x13, 0xf2, 0x54, 0x48,
-	0x3a, 0x07, 0xe0, 0x05, 0xcb, 0x14, 0x7d, 0x3d, 0x8e, 0x41, 0xb1, 0x31, 0x3d, 0x5b, 0x40, 0x71,
-	0x1e, 0xe4, 0x85, 0x50, 0x82, 0xdc, 0x34, 0xa2, 0xc0, 0x8a, 0x82, 0x4a, 0xe4, 0xde, 0xe0, 0x82,
-	0x0b, 0xad, 0xa1, 0xe5, 0xc9, 0xc8, 0xdd, 0xfd, 0xae, 0x9a, 0x9b, 0x7c, 0xa3, 0x3b, 0xa8, 0x74,
-	0x31, 0x93, 0x60, 0xfa, 0x6d, 0x94, 0x39, 0xe3, 0x49, 0xc6, 0x54, 0x22, 0xb2, 0x4a, 0x7b, 0x9b,
-	0x0b, 0xc1, 0x53, 0xa0, 0x2c, 0x4f, 0x28, 0xcb, 0x32, 0xa1, 0x74, 0x50, 0x9a, 0xa8, 0xff, 0x18,
-	0x3b, 0x27, 0x65, 0xfe, 0x31, 0xc0, 0xa3, 0x34, 0x15, 0x6f, 0x58, 0x36, 0x83, 0x08, 0xce, 0x16,
-	0x20, 0x15, 0x71, 0xf0, 0x55, 0xdd, 0x14, 0x0a, 0x07, 0xed, 0xa1, 0x7b, 0xd7, 0x22, 0xfb, 0x5a,
-	0x47, 0xc0, 0x19, 0x36, 0x23, 0xe0, 0xa7, 0xf8, 0x56, 0x4b, 0x3d, 0x99, 0x8b, 0x4c, 0x02, 0x79,
-	0x82, 0x47, 0x73, 0x80, 0xe7, 0xcc, 0x06, 0x74, 0xd9, 0x9d, 0xf0, 0x20, 0xe8, 0x70, 0x29, 0x68,
-	0x56, 0x99, 0x96, 0x91, 0x68, 0x77, 0xde, 0xf8, 0xe4, 0x2f, 0x5b, 0xba, 0xc9, 0x3f, 0xf0, 0x61,
-	0x1b, 0x1f, 0xc8, 0x31, 0xc6, 0xb5, 0x4d, 0x7a, 0x82, 0x9d, 0x70, 0xdf, 0x42, 0x94, 0x9e, 0x06,
-	0xe6, 0x1f, 0x5a, 0x8c, 0xa7, 0x8c, 0x5b, 0x53, 0xa2, 0x46, 0xa6, 0xff, 0x19, 0x61, 0xb7, 0xad,
-	0x7f, 0x35, 0xee, 0x09, 0xbe, 0xbe, 0x35, 0xae, 0x74, 0xd0, 0xde, 0xa5, 0x9e, 0xf3, 0x8e, 0x9a,
-	0xf3, 0x4a, 0x32, 0x6d, 0x21, 0xbf, 0xfb, 0x4f, 0x72, 0xc3, 0xd3, 0x44, 0x0f, 0x7f, 0x0d, 0xf1,
-	0x65, 0x8d, 0x4e, 0xbe, 0x20, 0xbc, 0xdb, 0xec, 0x4b, 0xc6, 0x9d, 0x78, 0x5d, 0x9b, 0xe2, 0x86,
-	0x7d, 0x52, 0x0c, 0x8d, 0x7f, 0xf4, 0xfe, 0xdb, 0xcf, 0x8f, 0xc3, 0x87, 0xe4, 0x01, 0xfd, 0xcb,
-	0xd2, 0xd7, 0xe6, 0xd1, 0x77, 0xd5, 0xf2, 0x2d, 0xed, 0x09, 0x96, 0xe4, 0x13, 0xc2, 0xa3, 0x2d,
-	0xef, 0x49, 0x0f, 0x12, 0xbb, 0x28, 0xee, 0xa4, 0x57, 0x4e, 0x85, 0x7f, 0x5f, 0xe3, 0x4f, 0xc8,
-	0xf8, 0xff, 0xf0, 0x65, 0x4d, 0x7d, 0x34, 0xfd, 0xba, 0xf2, 0xd0, 0xc5, 0xca, 0x43, 0x3f, 0x56,
-	0x1e, 0xfa, 0xb0, 0xf6, 0x06, 0x17, 0x6b, 0x6f, 0xf0, 0x7d, 0xed, 0x0d, 0x9e, 0x1d, 0xf2, 0x44,
-	0xbd, 0x5c, 0xc4, 0xc1, 0x4c, 0x9c, 0xda, 0xb2, 0xe6, 0x71, 0x28, 0x5f, 0xbc, 0xa2, 0x6f, 0xeb,
-	0x1e, 0xea, 0x3c, 0x07, 0x19, 0x5f, 0xd1, 0x77, 0x78, 0xf2, 0x3b, 0x00, 0x00, 0xff, 0xff, 0xb8,
-	0x46, 0x4c, 0xba, 0x8b, 0x04, 0x00, 0x00,
+	// 432 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xc1, 0xca, 0xd3, 0x40,
+	0x10, 0xc7, 0xbb, 0x15, 0x95, 0x6e, 0x6f, 0x0b, 0xda, 0x10, 0x24, 0x94, 0x08, 0x55, 0x84, 0xee,
+	0xda, 0x8a, 0xe2, 0x41, 0x0a, 0x7a, 0xb0, 0x07, 0x2f, 0x9a, 0x83, 0x07, 0x6f, 0x9b, 0x3a, 0xc6,
+	0x60, 0x9b, 0x4d, 0xb3, 0x5b, 0xb5, 0x4a, 0x2f, 0x3e, 0x81, 0xe0, 0x1b, 0x78, 0xf0, 0xe4, 0x83,
+	0x78, 0x2c, 0x78, 0xf1, 0xe6, 0x47, 0xfb, 0x3d, 0xc8, 0x47, 0x37, 0xd9, 0x24, 0x5f, 0xdb, 0xd0,
+	0x9c, 0x92, 0xcd, 0xfc, 0xe7, 0x3f, 0xbf, 0x99, 0xd9, 0xe0, 0xdb, 0x13, 0x21, 0x67, 0x42, 0xb2,
+	0x77, 0x00, 0x41, 0xc2, 0x23, 0xc5, 0x3e, 0x0e, 0x7c, 0x50, 0x7c, 0xc0, 0xe6, 0x0b, 0x48, 0x96,
+	0x34, 0x4e, 0x84, 0x12, 0xa4, 0x93, 0x8a, 0xa8, 0x11, 0xd1, 0x4c, 0x64, 0xf7, 0xaa, 0xb2, 0x73,
+	0xa5, 0x36, 0xb0, 0xef, 0x65, 0x3a, 0x9f, 0x4b, 0x48, 0x9d, 0x73, 0x65, 0xcc, 0x83, 0x30, 0xe2,
+	0x2a, 0x14, 0x51, 0xa6, 0xbd, 0x15, 0x08, 0x11, 0x4c, 0x81, 0xf1, 0x38, 0x64, 0x3c, 0x8a, 0x84,
+	0xd2, 0x41, 0x99, 0x46, 0xdd, 0x17, 0xf8, 0xc6, 0xab, 0x5d, 0xfe, 0xd3, 0xe9, 0x54, 0x7c, 0xe2,
+	0xd1, 0x04, 0x3c, 0x98, 0x2f, 0x40, 0x2a, 0x62, 0xe1, 0xeb, 0xba, 0x22, 0x24, 0x16, 0xea, 0xa2,
+	0xbb, 0x2d, 0xcf, 0x1c, 0x8b, 0x08, 0x58, 0xcd, 0x72, 0x04, 0xdc, 0xd7, 0xf8, 0xe6, 0xbe, 0x99,
+	0x8c, 0x45, 0x24, 0x81, 0x3c, 0xc1, 0x2d, 0x6e, 0x3e, 0x6a, 0xbf, 0xf6, 0xd0, 0xa1, 0x15, 0x53,
+	0xa0, 0xe3, 0xdd, 0xc9, 0x2b, 0x12, 0xdc, 0x2f, 0xfb, 0xbe, 0xf2, 0x80, 0x12, 0x2e, 0x53, 0x02,
+	0x79, 0x8e, 0x71, 0x31, 0x0a, 0x0d, 0xda, 0x1e, 0xf6, 0x4c, 0xc9, 0xdd, 0xdc, 0x68, 0xba, 0x11,
+	0x53, 0xf4, 0x25, 0x0f, 0x4c, 0xef, 0x5e, 0x29, 0xd3, 0xfd, 0x89, 0x70, 0xe7, 0xa0, 0x78, 0xd6,
+	0xd5, 0x08, 0xe3, 0x1c, 0x52, 0x5a, 0xa8, 0x7b, 0xa5, 0x46, 0x5b, 0xa5, 0x0c, 0x32, 0x3e, 0xc2,
+	0x78, 0xe7, 0x24, 0x63, 0x5a, 0xbc, 0x0c, 0x39, 0xfc, 0xdf, 0xc4, 0x57, 0x35, 0x24, 0xf9, 0x8d,
+	0x70, 0x2b, 0x27, 0x25, 0xb4, 0x12, 0xe6, 0xe8, 0xd2, 0x6d, 0x56, 0x5b, 0x9f, 0x42, 0xb8, 0xa3,
+	0x6f, 0x7f, 0xcf, 0x7f, 0x34, 0x1f, 0x93, 0x47, 0xac, 0xea, 0xe6, 0xe6, 0xed, 0xb2, 0xaf, 0xd9,
+	0x05, 0x5a, 0x99, 0x37, 0x58, 0x91, 0x5f, 0x08, 0xe3, 0x62, 0xb0, 0xa4, 0x6e, 0x7d, 0xb3, 0x7f,
+	0xfb, 0x7e, 0xfd, 0x84, 0x8c, 0xf8, 0xa1, 0x26, 0x66, 0xa4, 0x7f, 0x9a, 0x58, 0x16, 0xa0, 0xcf,
+	0xc6, 0x7f, 0x36, 0x0e, 0x5a, 0x6f, 0x1c, 0x74, 0xb6, 0x71, 0xd0, 0xf7, 0xad, 0xd3, 0x58, 0x6f,
+	0x9d, 0xc6, 0xbf, 0xad, 0xd3, 0x78, 0xd3, 0x0f, 0x42, 0xf5, 0x7e, 0xe1, 0xd3, 0x89, 0x98, 0x19,
+	0xcb, 0xf4, 0xd1, 0x97, 0x6f, 0x3f, 0xb0, 0xcf, 0x85, 0xbf, 0x5a, 0xc6, 0x20, 0xfd, 0x6b, 0xfa,
+	0xbf, 0x7b, 0x70, 0x11, 0x00, 0x00, 0xff, 0xff, 0x86, 0xb1, 0x57, 0xa8, 0x29, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -294,10 +293,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// FeeAllowance returns fee granted to the grantee by the granter.
-	FeeAllowance(ctx context.Context, in *QueryFeeAllowanceRequest, opts ...grpc.CallOption) (*QueryFeeAllowanceResponse, error)
-	// FeeAllowances returns all the grants for address.
-	FeeAllowances(ctx context.Context, in *QueryFeeAllowancesRequest, opts ...grpc.CallOption) (*QueryFeeAllowancesResponse, error)
+	// Allowance returns fee granted to the grantee by the granter.
+	Allowance(ctx context.Context, in *QueryAllowanceRequest, opts ...grpc.CallOption) (*QueryAllowanceResponse, error)
+	// Allowances returns all the grants for address.
+	Allowances(ctx context.Context, in *QueryAllowancesRequest, opts ...grpc.CallOption) (*QueryAllowancesResponse, error)
 }
 
 type queryClient struct {
@@ -308,18 +307,18 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) FeeAllowance(ctx context.Context, in *QueryFeeAllowanceRequest, opts ...grpc.CallOption) (*QueryFeeAllowanceResponse, error) {
-	out := new(QueryFeeAllowanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/FeeAllowance", in, out, opts...)
+func (c *queryClient) Allowance(ctx context.Context, in *QueryAllowanceRequest, opts ...grpc.CallOption) (*QueryAllowanceResponse, error) {
+	out := new(QueryAllowanceResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/Allowance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) FeeAllowances(ctx context.Context, in *QueryFeeAllowancesRequest, opts ...grpc.CallOption) (*QueryFeeAllowancesResponse, error) {
-	out := new(QueryFeeAllowancesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/FeeAllowances", in, out, opts...)
+func (c *queryClient) Allowances(ctx context.Context, in *QueryAllowancesRequest, opts ...grpc.CallOption) (*QueryAllowancesResponse, error) {
+	out := new(QueryAllowancesResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/Allowances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -328,59 +327,59 @@ func (c *queryClient) FeeAllowances(ctx context.Context, in *QueryFeeAllowancesR
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// FeeAllowance returns fee granted to the grantee by the granter.
-	FeeAllowance(context.Context, *QueryFeeAllowanceRequest) (*QueryFeeAllowanceResponse, error)
-	// FeeAllowances returns all the grants for address.
-	FeeAllowances(context.Context, *QueryFeeAllowancesRequest) (*QueryFeeAllowancesResponse, error)
+	// Allowance returns fee granted to the grantee by the granter.
+	Allowance(context.Context, *QueryAllowanceRequest) (*QueryAllowanceResponse, error)
+	// Allowances returns all the grants for address.
+	Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) FeeAllowance(ctx context.Context, req *QueryFeeAllowanceRequest) (*QueryFeeAllowanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FeeAllowance not implemented")
+func (*UnimplementedQueryServer) Allowance(ctx context.Context, req *QueryAllowanceRequest) (*QueryAllowanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Allowance not implemented")
 }
-func (*UnimplementedQueryServer) FeeAllowances(ctx context.Context, req *QueryFeeAllowancesRequest) (*QueryFeeAllowancesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FeeAllowances not implemented")
+func (*UnimplementedQueryServer) Allowances(ctx context.Context, req *QueryAllowancesRequest) (*QueryAllowancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Allowances not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_FeeAllowance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFeeAllowanceRequest)
+func _Query_Allowance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllowanceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).FeeAllowance(ctx, in)
+		return srv.(QueryServer).Allowance(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.feegrant.v1beta1.Query/FeeAllowance",
+		FullMethod: "/cosmos.feegrant.v1beta1.Query/Allowance",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).FeeAllowance(ctx, req.(*QueryFeeAllowanceRequest))
+		return srv.(QueryServer).Allowance(ctx, req.(*QueryAllowanceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_FeeAllowances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryFeeAllowancesRequest)
+func _Query_Allowances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllowancesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).FeeAllowances(ctx, in)
+		return srv.(QueryServer).Allowances(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.feegrant.v1beta1.Query/FeeAllowances",
+		FullMethod: "/cosmos.feegrant.v1beta1.Query/Allowances",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).FeeAllowances(ctx, req.(*QueryFeeAllowancesRequest))
+		return srv.(QueryServer).Allowances(ctx, req.(*QueryAllowancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -390,19 +389,19 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "FeeAllowance",
-			Handler:    _Query_FeeAllowance_Handler,
+			MethodName: "Allowance",
+			Handler:    _Query_Allowance_Handler,
 		},
 		{
-			MethodName: "FeeAllowances",
-			Handler:    _Query_FeeAllowances_Handler,
+			MethodName: "Allowances",
+			Handler:    _Query_Allowances_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "cosmos/feegrant/v1beta1/query.proto",
 }
 
-func (m *QueryFeeAllowanceRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllowanceRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -412,12 +411,12 @@ func (m *QueryFeeAllowanceRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryFeeAllowanceRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllowanceRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryFeeAllowanceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllowanceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -439,7 +438,7 @@ func (m *QueryFeeAllowanceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryFeeAllowanceResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllowanceResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -449,19 +448,19 @@ func (m *QueryFeeAllowanceResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryFeeAllowanceResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllowanceResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryFeeAllowanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllowanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.FeeAllowance != nil {
+	if m.Allowance != nil {
 		{
-			size, err := m.FeeAllowance.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.Allowance.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -474,7 +473,7 @@ func (m *QueryFeeAllowanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryFeeAllowancesRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllowancesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -484,12 +483,12 @@ func (m *QueryFeeAllowancesRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryFeeAllowancesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllowancesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryFeeAllowancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllowancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -516,7 +515,7 @@ func (m *QueryFeeAllowancesRequest) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryFeeAllowancesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryAllowancesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -526,12 +525,12 @@ func (m *QueryFeeAllowancesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryFeeAllowancesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryAllowancesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryFeeAllowancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryAllowancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -548,10 +547,10 @@ func (m *QueryFeeAllowancesResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.FeeAllowances) > 0 {
-		for iNdEx := len(m.FeeAllowances) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Allowances) > 0 {
+		for iNdEx := len(m.Allowances) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.FeeAllowances[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Allowances[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -576,7 +575,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryFeeAllowanceRequest) Size() (n int) {
+func (m *QueryAllowanceRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -593,20 +592,20 @@ func (m *QueryFeeAllowanceRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryFeeAllowanceResponse) Size() (n int) {
+func (m *QueryAllowanceResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.FeeAllowance != nil {
-		l = m.FeeAllowance.Size()
+	if m.Allowance != nil {
+		l = m.Allowance.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *QueryFeeAllowancesRequest) Size() (n int) {
+func (m *QueryAllowancesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -623,14 +622,14 @@ func (m *QueryFeeAllowancesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryFeeAllowancesResponse) Size() (n int) {
+func (m *QueryAllowancesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.FeeAllowances) > 0 {
-		for _, e := range m.FeeAllowances {
+	if len(m.Allowances) > 0 {
+		for _, e := range m.Allowances {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -648,7 +647,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryFeeAllowanceRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryAllowanceRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -671,10 +670,10 @@ func (m *QueryFeeAllowanceRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFeeAllowanceRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllowanceRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFeeAllowanceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllowanceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -762,7 +761,7 @@ func (m *QueryFeeAllowanceRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryFeeAllowanceResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAllowanceResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -785,15 +784,15 @@ func (m *QueryFeeAllowanceResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFeeAllowanceResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllowanceResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFeeAllowanceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllowanceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FeeAllowance", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Allowance", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -820,10 +819,10 @@ func (m *QueryFeeAllowanceResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.FeeAllowance == nil {
-				m.FeeAllowance = &FeeAllowanceGrant{}
+			if m.Allowance == nil {
+				m.Allowance = &Grant{}
 			}
-			if err := m.FeeAllowance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Allowance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -848,7 +847,7 @@ func (m *QueryFeeAllowanceResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryFeeAllowancesRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryAllowancesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -871,10 +870,10 @@ func (m *QueryFeeAllowancesRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFeeAllowancesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllowancesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFeeAllowancesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllowancesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -966,7 +965,7 @@ func (m *QueryFeeAllowancesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryFeeAllowancesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryAllowancesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -989,15 +988,15 @@ func (m *QueryFeeAllowancesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryFeeAllowancesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryAllowancesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryFeeAllowancesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryAllowancesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FeeAllowances", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Allowances", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1024,8 +1023,8 @@ func (m *QueryFeeAllowancesResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FeeAllowances = append(m.FeeAllowances, &FeeAllowanceGrant{})
-			if err := m.FeeAllowances[len(m.FeeAllowances)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Allowances = append(m.Allowances, &Grant{})
+			if err := m.Allowances[len(m.Allowances)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

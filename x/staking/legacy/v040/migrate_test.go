@@ -20,7 +20,7 @@ func TestMigrate(t *testing.T) {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONMarshaler(encodingConfig.Marshaler)
+		WithJSONCodec(encodingConfig.Marshaler)
 
 	consPubKey := ed25519.GenPrivKeyFromSecret([]byte("val0")).PubKey()
 	stakingGenState := v038staking.GenesisState{
@@ -32,7 +32,7 @@ func TestMigrate(t *testing.T) {
 
 	migrated := v040staking.Migrate(stakingGenState)
 
-	bz, err := clientCtx.JSONMarshaler.MarshalJSON(migrated)
+	bz, err := clientCtx.JSONCodec.MarshalJSON(migrated)
 	require.NoError(t, err)
 
 	// Indent the JSON bz correctly.

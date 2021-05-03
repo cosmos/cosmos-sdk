@@ -47,7 +47,7 @@ func queryEvidenceHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		params := types.NewQueryEvidenceRequest(decodedHash)
-		bz, err := clientCtx.JSONMarshaler.MarshalJSON(params)
+		bz, err := clientCtx.JSONCodec.MarshalJSON(params)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to marshal query params: %s", err))
 			return

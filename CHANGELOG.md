@@ -93,7 +93,7 @@ if input key is empty, or input data contains empty key.
 * (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 * (x/bank) [\#8798](https://github.com/cosmos/cosmos-sdk/pull/8798) `GetTotalSupply` is removed in favour of `GetPaginatedTotalSupply`
 * (x/bank/types) [\#9061](https://github.com/cosmos/cosmos-sdk/pull/9061) `AddressFromBalancesStore` now returns an error for invalid key instead of panic.
-* (codec) [\#9061](https://github.com/cosmos/cosmos-sdk/pull/9226) Rename codec interfaces and methods, to follow a general Go interfaces:
+* (codec) [\#9226](https://github.com/cosmos/cosmos-sdk/pull/9226) Rename codec interfaces and methods, to follow a general Go interfaces:
   * `codec.Marshaler` → `codec.Codec` (this defines objects which serialize other objects)
   * `codec.BinaryMarshaler` → `codec.BinaryCodec`
   * `codec.JSONMarshaler` → `codec.JSONCodec`
@@ -103,7 +103,7 @@ if input key is empty, or input data contains empty key.
   * The `sdk.ServiceMsg` struct has been removed.
   * `sdk.Msg` now only contains `ValidateBasic` and `GetSigners` methods. The remaining methods `GetSignBytes`, `Route` and `Type` are moved to `legacytx.LegacyMsg`.
   * The `RegisterCustomTypeURL` function and the `cosmos.base.v1beta1.ServiceMsg` interface have been removed from the interface registry.
-
+* (codec) [\#9251](https://github.com/cosmos/cosmos-sdk/pull/9251) Rename `clientCtx.JSONMarshaler` to `clientCtx.JSONCodec` as per #9226.
 
 
 ### State Machine Breaking

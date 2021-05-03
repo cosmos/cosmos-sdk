@@ -266,8 +266,13 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 	accountStore := k.getAccountStore(ctx, addr)
 
-	bz := k.cdc.MustMarshal(&balance)
-	accountStore.Set([]byte(balance.Denom), bz)
+	// Bank invariants require to not store zero balances.
+	if balance.IsZero() {
+		accountStore.Delete([]byte(balance.Denom))
+	} else {
+		bz := k.cdc.MustMarshal(&balance)
+		accountStore.Set([]byte(balance.Denom), bz)
+	}
 
 	return nil
 }

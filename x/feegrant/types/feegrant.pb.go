@@ -32,9 +32,9 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
-// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
-type BasicFeeAllowance struct {
+// BasicAllowance implements Allowance with a one-time grant of tokens
+// that optionally expires. The grantee can use up to SpendLimit to cover fees.
+type BasicAllowance struct {
 	// spend_limit specifies the maximum amount of tokens that can be spent
 	// by this allowance and will be updated as tokens are spent. If it is
 	// empty, there is no spend limit and any amount of coins can be spent.
@@ -43,18 +43,18 @@ type BasicFeeAllowance struct {
 	Expiration *time.Time `protobuf:"bytes,2,opt,name=expiration,proto3,stdtime" json:"expiration,omitempty"`
 }
 
-func (m *BasicFeeAllowance) Reset()         { *m = BasicFeeAllowance{} }
-func (m *BasicFeeAllowance) String() string { return proto.CompactTextString(m) }
-func (*BasicFeeAllowance) ProtoMessage()    {}
-func (*BasicFeeAllowance) Descriptor() ([]byte, []int) {
+func (m *BasicAllowance) Reset()         { *m = BasicAllowance{} }
+func (m *BasicAllowance) String() string { return proto.CompactTextString(m) }
+func (*BasicAllowance) ProtoMessage()    {}
+func (*BasicAllowance) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7279582900c30aea, []int{0}
 }
-func (m *BasicFeeAllowance) XXX_Unmarshal(b []byte) error {
+func (m *BasicAllowance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *BasicFeeAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BasicAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_BasicFeeAllowance.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BasicAllowance.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -64,37 +64,37 @@ func (m *BasicFeeAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *BasicFeeAllowance) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BasicFeeAllowance.Merge(m, src)
+func (m *BasicAllowance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BasicAllowance.Merge(m, src)
 }
-func (m *BasicFeeAllowance) XXX_Size() int {
+func (m *BasicAllowance) XXX_Size() int {
 	return m.Size()
 }
-func (m *BasicFeeAllowance) XXX_DiscardUnknown() {
-	xxx_messageInfo_BasicFeeAllowance.DiscardUnknown(m)
+func (m *BasicAllowance) XXX_DiscardUnknown() {
+	xxx_messageInfo_BasicAllowance.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_BasicFeeAllowance proto.InternalMessageInfo
+var xxx_messageInfo_BasicAllowance proto.InternalMessageInfo
 
-func (m *BasicFeeAllowance) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *BasicAllowance) GetSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.SpendLimit
 	}
 	return nil
 }
 
-func (m *BasicFeeAllowance) GetExpiration() *time.Time {
+func (m *BasicAllowance) GetExpiration() ExpiresAt {
 	if m != nil {
 		return m.Expiration
 	}
 	return nil
 }
 
-// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+// PeriodicAllowance extends Allowance to allow for both a maximum cap,
 // as well as a limit per time period.
-type PeriodicFeeAllowance struct {
-	// basic specifies a struct of `BasicFeeAllowance`
-	Basic BasicFeeAllowance `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic"`
+type PeriodicAllowance struct {
+	// basic specifies a struct of `BasicAllowance`
+	Basic BasicAllowance `protobuf:"bytes,1,opt,name=basic,proto3" json:"basic"`
 	// period specifies the time duration in which period_spend_limit coins can
 	// be spent before that allowance is reset
 	Period time.Duration `protobuf:"bytes,2,opt,name=period,proto3,stdduration" json:"period"`
@@ -109,18 +109,18 @@ type PeriodicFeeAllowance struct {
 	PeriodReset time.Time `protobuf:"bytes,5,opt,name=period_reset,json=periodReset,proto3,stdtime" json:"period_reset"`
 }
 
-func (m *PeriodicFeeAllowance) Reset()         { *m = PeriodicFeeAllowance{} }
-func (m *PeriodicFeeAllowance) String() string { return proto.CompactTextString(m) }
-func (*PeriodicFeeAllowance) ProtoMessage()    {}
-func (*PeriodicFeeAllowance) Descriptor() ([]byte, []int) {
+func (m *PeriodicAllowance) Reset()         { *m = PeriodicAllowance{} }
+func (m *PeriodicAllowance) String() string { return proto.CompactTextString(m) }
+func (*PeriodicAllowance) ProtoMessage()    {}
+func (*PeriodicAllowance) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7279582900c30aea, []int{1}
 }
-func (m *PeriodicFeeAllowance) XXX_Unmarshal(b []byte) error {
+func (m *PeriodicAllowance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PeriodicFeeAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PeriodicAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PeriodicFeeAllowance.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PeriodicAllowance.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -130,73 +130,73 @@ func (m *PeriodicFeeAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *PeriodicFeeAllowance) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PeriodicFeeAllowance.Merge(m, src)
+func (m *PeriodicAllowance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PeriodicAllowance.Merge(m, src)
 }
-func (m *PeriodicFeeAllowance) XXX_Size() int {
+func (m *PeriodicAllowance) XXX_Size() int {
 	return m.Size()
 }
-func (m *PeriodicFeeAllowance) XXX_DiscardUnknown() {
-	xxx_messageInfo_PeriodicFeeAllowance.DiscardUnknown(m)
+func (m *PeriodicAllowance) XXX_DiscardUnknown() {
+	xxx_messageInfo_PeriodicAllowance.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PeriodicFeeAllowance proto.InternalMessageInfo
+var xxx_messageInfo_PeriodicAllowance proto.InternalMessageInfo
 
-func (m *PeriodicFeeAllowance) GetBasic() BasicFeeAllowance {
+func (m *PeriodicAllowance) GetBasic() BasicAllowance {
 	if m != nil {
 		return m.Basic
 	}
-	return BasicFeeAllowance{}
+	return BasicAllowance{}
 }
 
-func (m *PeriodicFeeAllowance) GetPeriod() time.Duration {
+func (m *PeriodicAllowance) GetPeriod() Duration {
 	if m != nil {
 		return m.Period
 	}
 	return 0
 }
 
-func (m *PeriodicFeeAllowance) GetPeriodSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *PeriodicAllowance) GetPeriodSpendLimit() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.PeriodSpendLimit
 	}
 	return nil
 }
 
-func (m *PeriodicFeeAllowance) GetPeriodCanSpend() github_com_cosmos_cosmos_sdk_types.Coins {
+func (m *PeriodicAllowance) GetPeriodCanSpend() github_com_cosmos_cosmos_sdk_types.Coins {
 	if m != nil {
 		return m.PeriodCanSpend
 	}
 	return nil
 }
 
-func (m *PeriodicFeeAllowance) GetPeriodReset() time.Time {
+func (m *PeriodicAllowance) GetPeriodReset() ExpiresAt {
 	if m != nil {
 		return m.PeriodReset
 	}
 	return time.Time{}
 }
 
-// AllowedMsgFeeAllowance creates allowance only for specified message types.
-type AllowedMsgFeeAllowance struct {
+// AllowedMsgAllowance creates allowance only for specified message types.
+type AllowedMsgAllowance struct {
 	// allowance can be any of basic and filtered fee allowance.
 	Allowance *types1.Any `protobuf:"bytes,1,opt,name=allowance,proto3" json:"allowance,omitempty"`
 	// allowed_messages are the messages for which the grantee has the access.
 	AllowedMessages []string `protobuf:"bytes,2,rep,name=allowed_messages,json=allowedMessages,proto3" json:"allowed_messages,omitempty"`
 }
 
-func (m *AllowedMsgFeeAllowance) Reset()         { *m = AllowedMsgFeeAllowance{} }
-func (m *AllowedMsgFeeAllowance) String() string { return proto.CompactTextString(m) }
-func (*AllowedMsgFeeAllowance) ProtoMessage()    {}
-func (*AllowedMsgFeeAllowance) Descriptor() ([]byte, []int) {
+func (m *AllowedMsgAllowance) Reset()         { *m = AllowedMsgAllowance{} }
+func (m *AllowedMsgAllowance) String() string { return proto.CompactTextString(m) }
+func (*AllowedMsgAllowance) ProtoMessage()    {}
+func (*AllowedMsgAllowance) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7279582900c30aea, []int{2}
 }
-func (m *AllowedMsgFeeAllowance) XXX_Unmarshal(b []byte) error {
+func (m *AllowedMsgAllowance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AllowedMsgFeeAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AllowedMsgAllowance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AllowedMsgFeeAllowance.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AllowedMsgAllowance.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -206,37 +206,218 @@ func (m *AllowedMsgFeeAllowance) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *AllowedMsgFeeAllowance) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AllowedMsgFeeAllowance.Merge(m, src)
+func (m *AllowedMsgAllowance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AllowedMsgAllowance.Merge(m, src)
 }
-func (m *AllowedMsgFeeAllowance) XXX_Size() int {
+func (m *AllowedMsgAllowance) XXX_Size() int {
 	return m.Size()
 }
-func (m *AllowedMsgFeeAllowance) XXX_DiscardUnknown() {
-	xxx_messageInfo_AllowedMsgFeeAllowance.DiscardUnknown(m)
+func (m *AllowedMsgAllowance) XXX_DiscardUnknown() {
+	xxx_messageInfo_AllowedMsgAllowance.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AllowedMsgFeeAllowance proto.InternalMessageInfo
+var xxx_messageInfo_AllowedMsgAllowance proto.InternalMessageInfo
 
-// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
-type FeeAllowanceGrant struct {
-	Granter   string      `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
-	Grantee   string      `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
+// Duration is a span of a clock time or number of blocks.
+// This is designed to be added to an ExpiresAt struct.
+type Duration struct {
+	// sum is the oneof that represents either duration or block
+	//
+	// Types that are valid to be assigned to Sum:
+	//	*Duration_Duration
+	//	*Duration_Blocks
+	Sum isDuration_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *Duration) Reset()         { *m = Duration{} }
+func (m *Duration) String() string { return proto.CompactTextString(m) }
+func (*Duration) ProtoMessage()    {}
+func (*Duration) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7279582900c30aea, []int{3}
+}
+func (m *Duration) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Duration) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Duration.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Duration) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Duration.Merge(m, src)
+}
+func (m *Duration) XXX_Size() int {
+	return m.Size()
+}
+func (m *Duration) XXX_DiscardUnknown() {
+	xxx_messageInfo_Duration.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Duration proto.InternalMessageInfo
+
+type isDuration_Sum interface {
+	isDuration_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Duration_Duration struct {
+	Duration *time.Duration `protobuf:"bytes,1,opt,name=duration,proto3,oneof,stdduration" json:"duration,omitempty"`
+}
+type Duration_Blocks struct {
+	Blocks uint64 `protobuf:"varint,2,opt,name=blocks,proto3,oneof" json:"blocks,omitempty"`
+}
+
+func (*Duration_Duration) isDuration_Sum() {}
+func (*Duration_Blocks) isDuration_Sum()   {}
+
+func (m *Duration) GetSum() isDuration_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *Duration) GetDuration() *time.Duration {
+	if x, ok := m.GetSum().(*Duration_Duration); ok {
+		return x.Duration
+	}
+	return nil
+}
+
+func (m *Duration) GetBlocks() uint64 {
+	if x, ok := m.GetSum().(*Duration_Blocks); ok {
+		return x.Blocks
+	}
+	return 0
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Duration) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*Duration_Duration)(nil),
+		(*Duration_Blocks)(nil),
+	}
+}
+
+// ExpiresAt is a point in time where something expires.
+// It may be *either* block time or block height
+type ExpiresAt struct {
+	// sum is the oneof that represents either time or height
+	//
+	// Types that are valid to be assigned to Sum:
+	//	*ExpiresAt_Time
+	//	*ExpiresAt_Height
+	Sum isExpiresAt_Sum `protobuf_oneof:"sum"`
+}
+
+func (m *ExpiresAt) Reset()         { *m = ExpiresAt{} }
+func (m *ExpiresAt) String() string { return proto.CompactTextString(m) }
+func (*ExpiresAt) ProtoMessage()    {}
+func (*ExpiresAt) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7279582900c30aea, []int{4}
+}
+func (m *ExpiresAt) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ExpiresAt) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ExpiresAt.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ExpiresAt) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExpiresAt.Merge(m, src)
+}
+func (m *ExpiresAt) XXX_Size() int {
+	return m.Size()
+}
+func (m *ExpiresAt) XXX_DiscardUnknown() {
+	xxx_messageInfo_ExpiresAt.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ExpiresAt proto.InternalMessageInfo
+
+type isExpiresAt_Sum interface {
+	isExpiresAt_Sum()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type ExpiresAt_Time struct {
+	Time *time.Time `protobuf:"bytes,1,opt,name=time,proto3,oneof,stdtime" json:"time,omitempty"`
+}
+type ExpiresAt_Height struct {
+	Height int64 `protobuf:"varint,2,opt,name=height,proto3,oneof" json:"height,omitempty"`
+}
+
+func (*ExpiresAt_Time) isExpiresAt_Sum()   {}
+func (*ExpiresAt_Height) isExpiresAt_Sum() {}
+
+func (m *ExpiresAt) GetSum() isExpiresAt_Sum {
+	if m != nil {
+		return m.Sum
+	}
+	return nil
+}
+
+func (m *ExpiresAt) GetTime() *time.Time {
+	if x, ok := m.GetSum().(*ExpiresAt_Time); ok {
+		return x.Time
+	}
+	return nil
+}
+
+func (m *ExpiresAt) GetHeight() int64 {
+	if x, ok := m.GetSum().(*ExpiresAt_Height); ok {
+		return x.Height
+	}
+	return 0
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*ExpiresAt) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*ExpiresAt_Time)(nil),
+		(*ExpiresAt_Height)(nil),
+	}
+}
+
+// Grant is stored in the KVStore to record a grant with full context
+type Grant struct {
+	// granter is the address of the user granting an allowance of their funds.
+	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
+	// grantee is the address of the user being granted an allowance of another user's funds.
+	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
+	// allowance can be any of basic and filtered fee allowance.
 	Allowance *types1.Any `protobuf:"bytes,3,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
-func (m *FeeAllowanceGrant) Reset()         { *m = FeeAllowanceGrant{} }
-func (m *FeeAllowanceGrant) String() string { return proto.CompactTextString(m) }
-func (*FeeAllowanceGrant) ProtoMessage()    {}
-func (*FeeAllowanceGrant) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7279582900c30aea, []int{3}
+func (m *Grant) Reset()         { *m = Grant{} }
+func (m *Grant) String() string { return proto.CompactTextString(m) }
+func (*Grant) ProtoMessage()    {}
+func (*Grant) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7279582900c30aea, []int{5}
 }
-func (m *FeeAllowanceGrant) XXX_Unmarshal(b []byte) error {
+func (m *Grant) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *FeeAllowanceGrant) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Grant) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_FeeAllowanceGrant.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Grant.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -246,33 +427,33 @@ func (m *FeeAllowanceGrant) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *FeeAllowanceGrant) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FeeAllowanceGrant.Merge(m, src)
+func (m *Grant) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Grant.Merge(m, src)
 }
-func (m *FeeAllowanceGrant) XXX_Size() int {
+func (m *Grant) XXX_Size() int {
 	return m.Size()
 }
-func (m *FeeAllowanceGrant) XXX_DiscardUnknown() {
-	xxx_messageInfo_FeeAllowanceGrant.DiscardUnknown(m)
+func (m *Grant) XXX_DiscardUnknown() {
+	xxx_messageInfo_Grant.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_FeeAllowanceGrant proto.InternalMessageInfo
+var xxx_messageInfo_Grant proto.InternalMessageInfo
 
-func (m *FeeAllowanceGrant) GetGranter() string {
+func (m *Grant) GetGranter() string {
 	if m != nil {
 		return m.Granter
 	}
 	return ""
 }
 
-func (m *FeeAllowanceGrant) GetGrantee() string {
+func (m *Grant) GetGrantee() string {
 	if m != nil {
 		return m.Grantee
 	}
 	return ""
 }
 
-func (m *FeeAllowanceGrant) GetAllowance() *types1.Any {
+func (m *Grant) GetAllowance() *types1.Any {
 	if m != nil {
 		return m.Allowance
 	}
@@ -280,10 +461,12 @@ func (m *FeeAllowanceGrant) GetAllowance() *types1.Any {
 }
 
 func init() {
-	proto.RegisterType((*BasicFeeAllowance)(nil), "cosmos.feegrant.v1beta1.BasicFeeAllowance")
-	proto.RegisterType((*PeriodicFeeAllowance)(nil), "cosmos.feegrant.v1beta1.PeriodicFeeAllowance")
-	proto.RegisterType((*AllowedMsgFeeAllowance)(nil), "cosmos.feegrant.v1beta1.AllowedMsgFeeAllowance")
-	proto.RegisterType((*FeeAllowanceGrant)(nil), "cosmos.feegrant.v1beta1.FeeAllowanceGrant")
+	proto.RegisterType((*BasicAllowance)(nil), "cosmos.feegrant.v1beta1.BasicAllowance")
+	proto.RegisterType((*PeriodicAllowance)(nil), "cosmos.feegrant.v1beta1.PeriodicAllowance")
+	proto.RegisterType((*AllowedMsgAllowance)(nil), "cosmos.feegrant.v1beta1.AllowedMsgAllowance")
+	proto.RegisterType((*Duration)(nil), "cosmos.feegrant.v1beta1.Duration")
+	proto.RegisterType((*ExpiresAt)(nil), "cosmos.feegrant.v1beta1.ExpiresAt")
+	proto.RegisterType((*Grant)(nil), "cosmos.feegrant.v1beta1.Grant")
 }
 
 func init() {
@@ -291,46 +474,51 @@ func init() {
 }
 
 var fileDescriptor_7279582900c30aea = []byte{
-	// 569 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x3f, 0x6f, 0xd3, 0x40,
-	0x14, 0x8f, 0x9b, 0xb4, 0x90, 0x0b, 0x7f, 0x1a, 0x2b, 0x80, 0x93, 0xc1, 0x89, 0x3a, 0xa0, 0x80,
-	0x94, 0x33, 0x2d, 0x5b, 0x59, 0xa8, 0x0b, 0x8d, 0x90, 0xa8, 0x84, 0x0c, 0x13, 0x4b, 0x74, 0x76,
-	0x5e, 0xcd, 0x89, 0xd8, 0x67, 0xf9, 0x2e, 0xd0, 0x7c, 0x03, 0x26, 0xd4, 0x91, 0x11, 0x56, 0x66,
-	0x3e, 0x44, 0xc5, 0x54, 0x31, 0x20, 0x26, 0x8a, 0x92, 0x89, 0x6f, 0x81, 0x7c, 0x77, 0x4e, 0x42,
-	0xc2, 0x1f, 0xa9, 0xea, 0x14, 0xdf, 0xbb, 0xf7, 0xfb, 0xf7, 0xde, 0x29, 0xe8, 0x66, 0xc0, 0x78,
-	0xc4, 0xb8, 0x73, 0x00, 0x10, 0xa6, 0x24, 0x16, 0xce, 0xab, 0x4d, 0x1f, 0x04, 0xd9, 0x9c, 0x16,
-	0x70, 0x92, 0x32, 0xc1, 0xcc, 0x1b, 0xaa, 0x0f, 0x4f, 0xcb, 0xba, 0xaf, 0x51, 0x0b, 0x59, 0xc8,
-	0x64, 0x8f, 0x93, 0x7d, 0xa9, 0xf6, 0x46, 0x3d, 0x64, 0x2c, 0x1c, 0x80, 0x23, 0x4f, 0xfe, 0xf0,
-	0xc0, 0x21, 0xf1, 0x28, 0xbf, 0x52, 0x4c, 0x3d, 0x85, 0xd1, 0xb4, 0xea, 0xca, 0xd6, 0x66, 0x7c,
-	0xc2, 0x61, 0x6a, 0x24, 0x60, 0x34, 0xd6, 0xf7, 0xcd, 0x45, 0x56, 0x41, 0x23, 0xe0, 0x82, 0x44,
-	0x49, 0x4e, 0xb0, 0xd8, 0xd0, 0x1f, 0xa6, 0x44, 0x50, 0xa6, 0x09, 0x36, 0xbe, 0x1a, 0xa8, 0xea,
-	0x12, 0x4e, 0x83, 0x3d, 0x80, 0x9d, 0xc1, 0x80, 0xbd, 0x26, 0x71, 0x00, 0xe6, 0x00, 0x55, 0x78,
-	0x02, 0x71, 0xbf, 0x37, 0xa0, 0x11, 0x15, 0x96, 0xd1, 0x2a, 0xb6, 0x2b, 0x5b, 0x75, 0xac, 0xad,
-	0x65, 0x66, 0xf2, 0xb4, 0x78, 0x97, 0xd1, 0xd8, 0xbd, 0x73, 0xfc, 0xbd, 0x59, 0xf8, 0x78, 0xda,
-	0x6c, 0x87, 0x54, 0xbc, 0x18, 0xfa, 0x38, 0x60, 0x91, 0xce, 0xa1, 0x7f, 0x3a, 0xbc, 0xff, 0xd2,
-	0x11, 0xa3, 0x04, 0xb8, 0x04, 0x70, 0x0f, 0x49, 0xfe, 0xc7, 0x19, 0xbd, 0x79, 0x1f, 0x21, 0x38,
-	0x4c, 0xa8, 0xf2, 0x65, 0xad, 0xb4, 0x8c, 0x76, 0x65, 0xab, 0x81, 0x95, 0x71, 0x9c, 0x1b, 0xc7,
-	0xcf, 0xf2, 0x64, 0x6e, 0xe9, 0xe8, 0xb4, 0x69, 0x78, 0x73, 0x98, 0xed, 0xea, 0x97, 0x4f, 0x9d,
-	0xcb, 0xf3, 0x09, 0x1e, 0x6d, 0xfc, 0x2c, 0xa2, 0xda, 0x13, 0x48, 0x29, 0xeb, 0x2f, 0x64, 0xdb,
-	0x43, 0xab, 0x7e, 0x16, 0xd8, 0x32, 0xa4, 0xd0, 0x6d, 0xfc, 0x97, 0x3d, 0xe2, 0xa5, 0xb1, 0xb8,
-	0xa5, 0x2c, 0xa6, 0xa7, 0xe0, 0xe6, 0x3d, 0xb4, 0x96, 0x48, 0x7e, 0xed, 0xb8, 0xbe, 0xe4, 0xf8,
-	0x81, 0x1e, 0xb5, 0x7b, 0x31, 0xc3, 0xbd, 0xcb, 0x4c, 0x6b, 0x88, 0x39, 0x42, 0xa6, 0xfa, 0xea,
-	0xcd, 0xcf, 0xb9, 0x78, 0xfe, 0x73, 0x5e, 0x57, 0x32, 0x4f, 0x67, 0xd3, 0x1e, 0x22, 0x5d, 0xeb,
-	0x05, 0x24, 0x56, 0xf2, 0x56, 0xe9, 0xfc, 0x85, 0xaf, 0x28, 0x91, 0x5d, 0x12, 0x4b, 0x6d, 0xb3,
-	0x8b, 0x2e, 0x69, 0xd9, 0x14, 0x38, 0x08, 0x6b, 0xf5, 0xbf, 0x6b, 0x96, 0x53, 0x93, 0xab, 0xae,
-	0x28, 0xa4, 0x97, 0x01, 0xff, 0xb4, 0xeb, 0x0f, 0x06, 0xba, 0x2e, 0x8f, 0xd0, 0xdf, 0xe7, 0xe1,
-	0x6f, 0xdb, 0x7e, 0x88, 0xca, 0x24, 0x3f, 0xe8, 0x8d, 0xd7, 0x96, 0x34, 0x77, 0xe2, 0x91, 0x5b,
-	0xfd, 0xbc, 0x48, 0xeb, 0xcd, 0x90, 0xe6, 0x2d, 0xb4, 0x4e, 0x94, 0x40, 0x2f, 0x02, 0xce, 0x49,
-	0x08, 0xdc, 0x5a, 0x69, 0x15, 0xdb, 0x65, 0xef, 0xaa, 0xae, 0xef, 0xeb, 0xf2, 0xf6, 0xb5, 0x37,
-	0xef, 0x9b, 0x85, 0x65, 0x8f, 0x6f, 0x0d, 0x54, 0x9d, 0xaf, 0x74, 0xb3, 0xb7, 0x66, 0x5a, 0xe8,
-	0x82, 0x7c, 0x74, 0x90, 0x4a, 0x73, 0x65, 0x2f, 0x3f, 0xce, 0x6e, 0x40, 0xbe, 0xaf, 0xe9, 0xcd,
-	0x42, 0xa4, 0xe2, 0x59, 0x23, 0xb9, 0xdd, 0xe3, 0xb1, 0x6d, 0x9c, 0x8c, 0x6d, 0xe3, 0xc7, 0xd8,
-	0x36, 0x8e, 0x26, 0x76, 0xe1, 0x64, 0x62, 0x17, 0xbe, 0x4d, 0xec, 0xc2, 0xf3, 0xce, 0x3f, 0x97,
-	0x7c, 0x38, 0xfb, 0x67, 0x94, 0xfb, 0xf6, 0xd7, 0xa4, 0xe8, 0xdd, 0x5f, 0x01, 0x00, 0x00, 0xff,
-	0xff, 0xd7, 0x46, 0x01, 0xf9, 0x39, 0x05, 0x00, 0x00,
+	// 645 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xbf, 0x6f, 0xd3, 0x40,
+	0x14, 0xb6, 0xeb, 0xa4, 0x34, 0x17, 0x28, 0xed, 0x51, 0x84, 0xdb, 0xc1, 0x29, 0x19, 0x20, 0x0c,
+	0xb5, 0x69, 0x91, 0x18, 0x2a, 0x21, 0x54, 0x97, 0xd2, 0x22, 0xa8, 0x84, 0x0c, 0x13, 0x4b, 0x74,
+	0xb6, 0xaf, 0xae, 0xa9, 0xed, 0xb3, 0x7c, 0x17, 0x68, 0x56, 0x26, 0xc6, 0x8e, 0x4c, 0x88, 0x99,
+	0x99, 0x3f, 0xa2, 0x62, 0xaa, 0x98, 0x90, 0x90, 0x28, 0x6a, 0x46, 0xfe, 0x09, 0xe4, 0xbb, 0xb3,
+	0x1d, 0x12, 0x82, 0x04, 0xea, 0x64, 0xbf, 0x7b, 0xef, 0xfb, 0xbe, 0xf7, 0xeb, 0x0e, 0xdc, 0xf0,
+	0x08, 0x8d, 0x09, 0xb5, 0xf6, 0x30, 0x0e, 0x32, 0x94, 0x30, 0xeb, 0xd5, 0xaa, 0x8b, 0x19, 0x5a,
+	0x2d, 0x0f, 0xcc, 0x34, 0x23, 0x8c, 0xc0, 0x6b, 0x22, 0xce, 0x2c, 0x8f, 0x65, 0xdc, 0xd2, 0x42,
+	0x40, 0x02, 0xc2, 0x63, 0xac, 0xfc, 0x4f, 0x84, 0x2f, 0x2d, 0x06, 0x84, 0x04, 0x11, 0xb6, 0xb8,
+	0xe5, 0xf6, 0xf6, 0x2c, 0x94, 0xf4, 0x0b, 0x97, 0x60, 0xea, 0x0a, 0x8c, 0xa4, 0x15, 0x2e, 0x43,
+	0x26, 0xe3, 0x22, 0x8a, 0xcb, 0x44, 0x3c, 0x12, 0x26, 0xd2, 0xdf, 0x1a, 0x65, 0x65, 0x61, 0x8c,
+	0x29, 0x43, 0x71, 0x5a, 0x10, 0x8c, 0x06, 0xf8, 0xbd, 0x0c, 0xb1, 0x90, 0x48, 0x82, 0xf6, 0x37,
+	0x15, 0xcc, 0xda, 0x88, 0x86, 0xde, 0x46, 0x14, 0x91, 0xd7, 0x28, 0xf1, 0x30, 0x8c, 0x40, 0x93,
+	0xa6, 0x38, 0xf1, 0xbb, 0x51, 0x18, 0x87, 0x4c, 0x57, 0x97, 0xb5, 0x4e, 0x73, 0x6d, 0xd1, 0x94,
+	0x79, 0xe5, 0x99, 0x14, 0xa5, 0x9a, 0x9b, 0x24, 0x4c, 0xec, 0xdb, 0xc7, 0xdf, 0x5b, 0xca, 0xc7,
+	0xd3, 0x56, 0x27, 0x08, 0xd9, 0x7e, 0xcf, 0x35, 0x3d, 0x12, 0xcb, 0x22, 0xe4, 0x67, 0x85, 0xfa,
+	0x07, 0x16, 0xeb, 0xa7, 0x98, 0x72, 0x00, 0x75, 0x00, 0xe7, 0x7f, 0x92, 0xd3, 0xc3, 0x1d, 0x00,
+	0xf0, 0x61, 0x1a, 0x8a, 0xa4, 0xf4, 0xa9, 0x65, 0xb5, 0xd3, 0x5c, 0x6b, 0x9b, 0x13, 0x7a, 0x6b,
+	0x6e, 0xe5, 0xa1, 0x98, 0x6e, 0x30, 0xbb, 0x96, 0xab, 0x3a, 0x43, 0xd8, 0xf5, 0xf9, 0x2f, 0x9f,
+	0x56, 0x2e, 0x3d, 0xc4, 0xb8, 0xac, 0xe4, 0x51, 0xfb, 0xa7, 0x06, 0xe6, 0x9f, 0xe2, 0x2c, 0x24,
+	0xfe, 0x70, 0x81, 0x9b, 0xa0, 0xee, 0xe6, 0x25, 0xeb, 0x2a, 0x57, 0xbb, 0x39, 0x51, 0xed, 0xf7,
+	0xc6, 0x48, 0x49, 0x81, 0x85, 0xf7, 0xc1, 0x74, 0xca, 0x99, 0x65, 0xce, 0xd7, 0x27, 0xb2, 0x3c,
+	0x90, 0x1d, 0x97, 0x78, 0x09, 0x83, 0x7d, 0x00, 0xc5, 0x5f, 0x77, 0xb8, 0xdb, 0xda, 0xf9, 0x77,
+	0x7b, 0x4e, 0xc8, 0x3c, 0xab, 0x7a, 0xde, 0x03, 0xf2, 0xac, 0xeb, 0xa1, 0x44, 0xc8, 0xeb, 0xb5,
+	0xf3, 0x17, 0x9e, 0x15, 0x22, 0x9b, 0x28, 0xe1, 0xda, 0xf0, 0x31, 0xb8, 0x28, 0x65, 0x33, 0x4c,
+	0x31, 0xd3, 0xeb, 0xff, 0x38, 0xec, 0xa6, 0x40, 0x3b, 0x39, 0xf8, 0x4f, 0xd3, 0x7e, 0xaf, 0x82,
+	0x2b, 0xdc, 0xc4, 0xfe, 0x2e, 0x0d, 0xaa, 0x79, 0x6f, 0x81, 0x06, 0x2a, 0x0c, 0x39, 0xf3, 0x05,
+	0x53, 0xdc, 0x0b, 0xb3, 0xb8, 0x17, 0xe6, 0x46, 0xd2, 0xb7, 0xe7, 0x3f, 0x8f, 0x72, 0x3a, 0x15,
+	0x12, 0xde, 0x02, 0x73, 0x48, 0xb0, 0x77, 0x63, 0x4c, 0x29, 0x0a, 0x30, 0xd5, 0xa7, 0x96, 0xb5,
+	0x4e, 0xc3, 0xb9, 0x2c, 0xcf, 0x77, 0xe5, 0xf1, 0xfa, 0xd5, 0xb7, 0x1f, 0x5a, 0xca, 0x78, 0x82,
+	0x2f, 0xc1, 0x4c, 0xb1, 0x0c, 0xf0, 0x1e, 0x98, 0x29, 0xae, 0xa2, 0xcc, 0x69, 0x71, 0x2c, 0xa7,
+	0x6a, 0x73, 0xde, 0x9d, 0xb6, 0xd4, 0x1d, 0xc5, 0x29, 0x21, 0x50, 0x07, 0xd3, 0x6e, 0x44, 0xbc,
+	0x03, 0xca, 0xd7, 0xaf, 0xb6, 0xa3, 0x38, 0xd2, 0xb6, 0xeb, 0x40, 0xa3, 0xbd, 0xb8, 0xed, 0x83,
+	0x46, 0xd9, 0x3f, 0x78, 0x17, 0xd4, 0xf2, 0x87, 0x41, 0x0a, 0x2d, 0x8d, 0x09, 0x3d, 0x2f, 0x5e,
+	0x0d, 0xbb, 0x76, 0x24, 0x94, 0x78, 0x7c, 0xae, 0xb2, 0x8f, 0xc3, 0x60, 0x9f, 0x71, 0x15, 0x2d,
+	0x57, 0x11, 0x76, 0xa1, 0xf2, 0x46, 0x05, 0xf5, 0xed, 0x7c, 0x68, 0x50, 0x07, 0x17, 0xf8, 0xf4,
+	0x70, 0xc6, 0x55, 0x1a, 0x4e, 0x61, 0x56, 0x1e, 0xcc, 0x59, 0x4a, 0xcf, 0xc8, 0x60, 0xb4, 0xff,
+	0x1d, 0x8c, 0xbd, 0x7d, 0x7c, 0x66, 0xa8, 0x27, 0x67, 0x86, 0xfa, 0xe3, 0xcc, 0x50, 0x8f, 0x06,
+	0x86, 0x72, 0x32, 0x30, 0x94, 0xaf, 0x03, 0x43, 0x79, 0xb1, 0xf2, 0xd7, 0x5d, 0x3d, 0xac, 0xde,
+	0x78, 0xbe, 0xb6, 0xee, 0x34, 0x17, 0xbd, 0xf3, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x5a, 0x4c, 0xb0,
+	0x35, 0x03, 0x06, 0x00, 0x00,
 }
 
-func (m *BasicFeeAllowance) Marshal() (dAtA []byte, err error) {
+func (m *BasicAllowance) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -340,12 +528,12 @@ func (m *BasicFeeAllowance) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *BasicFeeAllowance) MarshalTo(dAtA []byte) (int, error) {
+func (m *BasicAllowance) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BasicFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BasicAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -377,7 +565,7 @@ func (m *BasicFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PeriodicFeeAllowance) Marshal() (dAtA []byte, err error) {
+func (m *PeriodicAllowance) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -387,12 +575,12 @@ func (m *PeriodicFeeAllowance) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PeriodicFeeAllowance) MarshalTo(dAtA []byte) (int, error) {
+func (m *PeriodicAllowance) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PeriodicFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PeriodicAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -454,7 +642,7 @@ func (m *PeriodicFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *AllowedMsgFeeAllowance) Marshal() (dAtA []byte, err error) {
+func (m *AllowedMsgAllowance) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -464,12 +652,12 @@ func (m *AllowedMsgFeeAllowance) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AllowedMsgFeeAllowance) MarshalTo(dAtA []byte) (int, error) {
+func (m *AllowedMsgAllowance) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AllowedMsgFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AllowedMsgAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -498,7 +686,7 @@ func (m *AllowedMsgFeeAllowance) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *FeeAllowanceGrant) Marshal() (dAtA []byte, err error) {
+func (m *Duration) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -508,12 +696,138 @@ func (m *FeeAllowanceGrant) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FeeAllowanceGrant) MarshalTo(dAtA []byte) (int, error) {
+func (m *Duration) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *FeeAllowanceGrant) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Duration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Duration_Duration) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Duration_Duration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Duration != nil {
+		n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(*m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(*m.Duration):])
+		if err6 != nil {
+			return 0, err6
+		}
+		i -= n6
+		i = encodeVarintFeegrant(dAtA, i, uint64(n6))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *Duration_Blocks) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Duration_Blocks) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	i = encodeVarintFeegrant(dAtA, i, uint64(m.Blocks))
+	i--
+	dAtA[i] = 0x10
+	return len(dAtA) - i, nil
+}
+func (m *ExpiresAt) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExpiresAt) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ExpiresAt) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Sum != nil {
+		{
+			size := m.Sum.Size()
+			i -= size
+			if _, err := m.Sum.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ExpiresAt_Time) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ExpiresAt_Time) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Time != nil {
+		n7, err7 := github_com_gogo_protobuf_types.StdTimeMarshalTo(*m.Time, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(*m.Time):])
+		if err7 != nil {
+			return 0, err7
+		}
+		i -= n7
+		i = encodeVarintFeegrant(dAtA, i, uint64(n7))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *ExpiresAt_Height) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ExpiresAt_Height) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	i = encodeVarintFeegrant(dAtA, i, uint64(m.Height))
+	i--
+	dAtA[i] = 0x10
+	return len(dAtA) - i, nil
+}
+func (m *Grant) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Grant) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Grant) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -558,7 +872,7 @@ func encodeVarintFeegrant(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *BasicFeeAllowance) Size() (n int) {
+func (m *BasicAllowance) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -577,7 +891,7 @@ func (m *BasicFeeAllowance) Size() (n int) {
 	return n
 }
 
-func (m *PeriodicFeeAllowance) Size() (n int) {
+func (m *PeriodicAllowance) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -604,7 +918,7 @@ func (m *PeriodicFeeAllowance) Size() (n int) {
 	return n
 }
 
-func (m *AllowedMsgFeeAllowance) Size() (n int) {
+func (m *AllowedMsgAllowance) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -623,7 +937,73 @@ func (m *AllowedMsgFeeAllowance) Size() (n int) {
 	return n
 }
 
-func (m *FeeAllowanceGrant) Size() (n int) {
+func (m *Duration) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *Duration_Duration) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Duration != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdDuration(*m.Duration)
+		n += 1 + l + sovFeegrant(uint64(l))
+	}
+	return n
+}
+func (m *Duration_Blocks) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovFeegrant(uint64(m.Blocks))
+	return n
+}
+func (m *ExpiresAt) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Sum != nil {
+		n += m.Sum.Size()
+	}
+	return n
+}
+
+func (m *ExpiresAt_Time) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Time != nil {
+		l = github_com_gogo_protobuf_types.SizeOfStdTime(*m.Time)
+		n += 1 + l + sovFeegrant(uint64(l))
+	}
+	return n
+}
+func (m *ExpiresAt_Height) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovFeegrant(uint64(m.Height))
+	return n
+}
+func (m *Grant) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -650,7 +1030,7 @@ func sovFeegrant(x uint64) (n int) {
 func sozFeegrant(x uint64) (n int) {
 	return sovFeegrant(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *BasicFeeAllowance) Unmarshal(dAtA []byte) error {
+func (m *BasicAllowance) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -673,10 +1053,10 @@ func (m *BasicFeeAllowance) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: BasicFeeAllowance: wiretype end group for non-group")
+			return fmt.Errorf("proto: BasicAllowance: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BasicFeeAllowance: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BasicAllowance: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -770,7 +1150,7 @@ func (m *BasicFeeAllowance) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PeriodicFeeAllowance) Unmarshal(dAtA []byte) error {
+func (m *PeriodicAllowance) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -793,10 +1173,10 @@ func (m *PeriodicFeeAllowance) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PeriodicFeeAllowance: wiretype end group for non-group")
+			return fmt.Errorf("proto: PeriodicAllowance: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PeriodicFeeAllowance: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PeriodicAllowance: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -987,7 +1367,7 @@ func (m *PeriodicFeeAllowance) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AllowedMsgFeeAllowance) Unmarshal(dAtA []byte) error {
+func (m *AllowedMsgAllowance) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1010,10 +1390,10 @@ func (m *AllowedMsgFeeAllowance) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AllowedMsgFeeAllowance: wiretype end group for non-group")
+			return fmt.Errorf("proto: AllowedMsgAllowance: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AllowedMsgFeeAllowance: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AllowedMsgAllowance: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1105,7 +1485,7 @@ func (m *AllowedMsgFeeAllowance) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *FeeAllowanceGrant) Unmarshal(dAtA []byte) error {
+func (m *Duration) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1128,10 +1508,220 @@ func (m *FeeAllowanceGrant) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FeeAllowanceGrant: wiretype end group for non-group")
+			return fmt.Errorf("proto: Duration: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FeeAllowanceGrant: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Duration: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFeegrant
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFeegrant
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthFeegrant
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := new(time.Duration)
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(v, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &Duration_Duration{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Blocks", wireType)
+			}
+			var v uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFeegrant
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Sum = &Duration_Blocks{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFeegrant(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthFeegrant
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExpiresAt) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFeegrant
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExpiresAt: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExpiresAt: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFeegrant
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFeegrant
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthFeegrant
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := new(time.Time)
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(v, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Sum = &ExpiresAt_Time{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			var v int64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFeegrant
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Sum = &ExpiresAt_Height{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFeegrant(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthFeegrant
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Grant) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFeegrant
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Grant: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Grant: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

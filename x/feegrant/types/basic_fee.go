@@ -5,7 +5,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ FeeAllowanceI = (*BasicFeeAllowance)(nil)
+var _ FeeAllowanceI = (*BasicAllowance)(nil)
 
 // Accept can use fee payment requested as well as timestamp of the current block
 // to determine whether or not to process this. This is checked in
@@ -17,7 +17,7 @@ var _ FeeAllowanceI = (*BasicFeeAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
-func (a *BasicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
 	if a.Expiration != nil && a.Expiration.Before(ctx.BlockTime()) {
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
@@ -36,7 +36,7 @@ func (a *BasicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) 
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
-func (a BasicFeeAllowance) ValidateBasic() error {
+func (a BasicAllowance) ValidateBasic() error {
 	if a.SpendLimit != nil {
 		if !a.SpendLimit.IsValid() {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)

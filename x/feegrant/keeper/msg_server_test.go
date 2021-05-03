@@ -11,16 +11,16 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 
 	testCases := []struct {
 		name      string
-		req       func() *types.MsgGrantFeeAllowance
+		req       func() *types.MsgGrantAllowance
 		expectErr bool
 		errMsg    string
 	}{
 		{
 			"invalid granter address",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{})
+			func() *types.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&types.BasicAllowance{})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &types.MsgGrantAllowance{
 					Granter:   "invalid-granter",
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
@@ -31,10 +31,10 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"invalid grantee address",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{})
+			func() *types.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&types.BasicAllowance{})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &types.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   "invalid-grantee",
 					Allowance: any,
@@ -45,13 +45,13 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"valid: basic fee allowance",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{
+			func() *types.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&types.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &types.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
@@ -62,13 +62,13 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"fail: fee allowance exists",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{
+			func() *types.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&types.BasicAllowance{
 					SpendLimit: suite.atom,
 					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &types.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
@@ -79,15 +79,15 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"valid: periodic fee allowance",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
-					Basic: types.BasicFeeAllowance{
+			func() *types.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&types.PeriodicAllowance{
+					Basic: types.BasicAllowance{
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &types.MsgGrantAllowance{
 					Granter:   suite.addrs[1].String(),
 					Grantee:   suite.addrs[2].String(),
 					Allowance: any,
@@ -98,15 +98,15 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"error: fee allowance exists",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
-					Basic: types.BasicFeeAllowance{
+			func() *types.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&types.PeriodicAllowance{
+					Basic: types.BasicAllowance{
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &types.MsgGrantAllowance{
 					Granter:   suite.addrs[1].String(),
 					Grantee:   suite.addrs[2].String(),
 					Allowance: any,
@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 	}
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			_, err := suite.msgSrvr.GrantFeeAllowance(suite.ctx, tc.req())
+			_, err := suite.msgSrvr.GrantAllowance(suite.ctx, tc.req())
 			if tc.expectErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.errMsg)
@@ -132,14 +132,14 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 
 	testCases := []struct {
 		name      string
-		request   *types.MsgRevokeFeeAllowance
+		request   *types.MsgRevokeAllowance
 		preRun    func()
 		expectErr bool
 		errMsg    string
 	}{
 		{
 			"error: invalid granter",
-			&types.MsgRevokeFeeAllowance{
+			&types.MsgRevokeAllowance{
 				Granter: "invalid-granter",
 				Grantee: suite.addrs[1].String(),
 			},
@@ -149,7 +149,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"error: invalid grantee",
-			&types.MsgRevokeFeeAllowance{
+			&types.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: "invalid-grantee",
 			},
@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"error: fee allowance not found",
-			&types.MsgRevokeFeeAllowance{
+			&types.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
@@ -169,29 +169,29 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"success: revoke fee allowance",
-			&types.MsgRevokeFeeAllowance{
+			&types.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
 			func() {
 				// removing fee allowance from previous tests if exists
-				suite.msgSrvr.RevokeFeeAllowance(suite.ctx, &types.MsgRevokeFeeAllowance{
+				suite.msgSrvr.RevokeAllowance(suite.ctx, &types.MsgRevokeAllowance{
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),
 				})
-				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
-					Basic: types.BasicFeeAllowance{
+				any, err := codectypes.NewAnyWithValue(&types.PeriodicAllowance{
+					Basic: types.BasicAllowance{
 						SpendLimit: suite.atom,
 						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
-				req := &types.MsgGrantFeeAllowance{
+				req := &types.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
-				_, err = suite.msgSrvr.GrantFeeAllowance(suite.ctx, req)
+				_, err = suite.msgSrvr.GrantAllowance(suite.ctx, req)
 				suite.Require().NoError(err)
 			},
 			false,
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"error: check fee allowance revoked",
-			&types.MsgRevokeFeeAllowance{
+			&types.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
@@ -212,7 +212,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			_, err := suite.msgSrvr.RevokeFeeAllowance(suite.ctx, tc.request)
+			_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, tc.request)
 			if tc.expectErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.errMsg)

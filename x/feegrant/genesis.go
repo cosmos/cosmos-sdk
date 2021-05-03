@@ -8,7 +8,7 @@ import (
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) error {
-	for _, f := range data.FeeAllowances {
+	for _, f := range data.Allowances {
 		granter, err := sdk.AccAddressFromBech32(f.Granter)
 		if err != nil {
 			return err
@@ -18,12 +18,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) err
 			return err
 		}
 
-		grant, err := f.GetFeeGrant()
+		grant, err := f.GetGrant()
 		if err != nil {
 			return err
 		}
 
-		err = k.GrantFeeAllowance(ctx, granter, grantee, grant)
+		err = k.GrantAllowance(ctx, granter, grantee, grant)
 		if err != nil {
 			return err
 		}
@@ -41,6 +41,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) (*types.GenesisState, error
 	})
 
 	return &types.GenesisState{
-		FeeAllowances: grants,
+		Allowances: grants,
 	}, err
 }

@@ -13,17 +13,17 @@ const (
 	gasCostPerIteration = uint64(10)
 )
 
-var _ FeeAllowanceI = (*AllowedMsgFeeAllowance)(nil)
-var _ types.UnpackInterfacesMessage = (*AllowedMsgFeeAllowance)(nil)
+var _ FeeAllowanceI = (*AllowedMsgAllowance)(nil)
+var _ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a *AllowedMsgFeeAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
 // NewAllowedMsgFeeAllowance creates new filtered fee allowance.
-func NewAllowedMsgFeeAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgFeeAllowance, error) {
+func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
@@ -33,14 +33,14 @@ func NewAllowedMsgFeeAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*
 		return nil, err
 	}
 
-	return &AllowedMsgFeeAllowance{
+	return &AllowedMsgAllowance{
 		Allowance:       any,
 		AllowedMessages: allowedMsgs,
 	}, nil
 }
 
 // GetAllowance returns allowed fee allowance.
-func (a *AllowedMsgFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
+func (a *AllowedMsgAllowance) GetAllowance() (FeeAllowanceI, error) {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
 		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
@@ -50,7 +50,7 @@ func (a *AllowedMsgFeeAllowance) GetAllowance() (FeeAllowanceI, error) {
 }
 
 // Accept method checks for the filtered messages has valid expiry
-func (a *AllowedMsgFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
+func (a *AllowedMsgAllowance) Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (bool, error) {
 	if !a.allMsgTypesAllowed(ctx, msgs) {
 		return false, sdkerrors.Wrap(ErrMessageNotAllowed, "message does not exist in allowed messages")
 	}
@@ -63,7 +63,7 @@ func (a *AllowedMsgFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, msgs []s
 	return allowance.Accept(ctx, fee, msgs)
 }
 
-func (a *AllowedMsgFeeAllowance) allowedMsgsToMap(ctx sdk.Context) map[string]bool {
+func (a *AllowedMsgAllowance) allowedMsgsToMap(ctx sdk.Context) map[string]bool {
 	msgsMap := make(map[string]bool, len(a.AllowedMessages))
 	for _, msg := range a.AllowedMessages {
 		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "check msg")
@@ -73,7 +73,7 @@ func (a *AllowedMsgFeeAllowance) allowedMsgsToMap(ctx sdk.Context) map[string]bo
 	return msgsMap
 }
 
-func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.Msg) bool {
+func (a *AllowedMsgAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.Msg) bool {
 	msgsMap := a.allowedMsgsToMap(ctx)
 
 	for _, msg := range msgs {
@@ -87,7 +87,7 @@ func (a *AllowedMsgFeeAllowance) allMsgTypesAllowed(ctx sdk.Context, msgs []sdk.
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
-func (a *AllowedMsgFeeAllowance) ValidateBasic() error {
+func (a *AllowedMsgAllowance) ValidateBasic() error {
 	if a.Allowance == nil {
 		return sdkerrors.Wrap(ErrNoAllowance, "allowance should not be empty")
 	}

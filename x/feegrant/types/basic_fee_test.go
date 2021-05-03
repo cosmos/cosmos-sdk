@@ -28,7 +28,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {
-		allowance *types.BasicFeeAllowance
+		allowance *types.BasicAllowance
 		// all other checks are ignored if valid=false
 		fee       sdk.Coins
 		blockTime time.Time
@@ -38,11 +38,11 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		remains   sdk.Coins
 	}{
 		"empty": {
-			allowance: &types.BasicFeeAllowance{},
+			allowance: &types.BasicAllowance{},
 			accept:    true,
 		},
 		"small fee without expire": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				SpendLimit: atom,
 			},
 			fee:     smallAtom,
@@ -51,7 +51,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains: leftAtom,
 		},
 		"all fee without expire": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
 			fee:    smallAtom,
@@ -59,14 +59,14 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove: true,
 		},
 		"wrong fee": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
 			fee:    eth,
 			accept: false,
 		},
 		"non-expired": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
@@ -78,7 +78,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains:   leftAtom,
 		},
 		"expired": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: &now,
 			},
@@ -89,7 +89,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove:    true,
 		},
 		"fee more than allowed": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
@@ -99,7 +99,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:    false,
 		},
 		"with out spend limit": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				Expiration: &oneHour,
 			},
 			valid:     true,
@@ -108,7 +108,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:    true,
 		},
 		"expired no spend limit": {
-			allowance: &types.BasicFeeAllowance{
+			allowance: &types.BasicAllowance{
 				Expiration: &now,
 			},
 			valid:     true,

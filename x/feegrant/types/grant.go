@@ -1,7 +1,7 @@
 package types
 
 import (
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,23 +9,23 @@ import (
 )
 
 var (
-	_ types.UnpackInterfacesMessage = &FeeAllowanceGrant{}
+	_ types.UnpackInterfacesMessage = &Grant{}
 )
 
-// NewFeeAllowanceGrant creates a new FeeAllowanceGrant.
+// NewGrant creates a new FeeAllowanceGrant.
 //nolint:interfacer
-func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (FeeAllowanceGrant, error) {
+func NewGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllowanceI) (Grant, error) {
 	msg, ok := feeAllowance.(proto.Message)
 	if !ok {
-		return FeeAllowanceGrant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", feeAllowance)
+		return Grant{}, sdkerrors.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", feeAllowance)
 	}
 
 	any, err := types.NewAnyWithValue(msg)
 	if err != nil {
-		return FeeAllowanceGrant{}, err
+		return Grant{}, err
 	}
 
-	return FeeAllowanceGrant{
+	return Grant{
 		Granter:   granter.String(),
 		Grantee:   grantee.String(),
 		Allowance: any,
@@ -34,7 +34,7 @@ func NewFeeAllowanceGrant(granter, grantee sdk.AccAddress, feeAllowance FeeAllow
 
 // ValidateBasic performs basic validation on
 // FeeAllowanceGrant
-func (a FeeAllowanceGrant) ValidateBasic() error {
+func (a Grant) ValidateBasic() error {
 	if a.Granter == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing granter address")
 	}
@@ -45,7 +45,7 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "cannot self-grant fee authorization")
 	}
 
-	f, err := a.GetFeeGrant()
+	f, err := a.GetGrant()
 	if err != nil {
 		return err
 	}
@@ -53,8 +53,8 @@ func (a FeeAllowanceGrant) ValidateBasic() error {
 	return f.ValidateBasic()
 }
 
-// GetFeeGrant unpacks allowance
-func (a FeeAllowanceGrant) GetFeeGrant() (FeeAllowanceI, error) {
+// GetGrant unpacks allowance
+func (a Grant) GetGrant() (FeeAllowanceI, error) {
 	allowance, ok := a.Allowance.GetCachedValue().(FeeAllowanceI)
 	if !ok {
 		return nil, sdkerrors.Wrap(ErrNoAllowance, "failed to get allowance")
@@ -64,7 +64,7 @@ func (a FeeAllowanceGrant) GetFeeGrant() (FeeAllowanceI, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (a FeeAllowanceGrant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (a Grant) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var allowance FeeAllowanceI
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }

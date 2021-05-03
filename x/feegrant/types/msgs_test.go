@@ -17,7 +17,7 @@ func TestMsgGrantFeeAllowance(t *testing.T) {
 	addr2, _ := sdk.AccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	threeHours := time.Now().Add(3 * time.Hour)
-	basic := &types.BasicFeeAllowance{
+	basic := &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: &threeHours,
 	}
@@ -25,7 +25,7 @@ func TestMsgGrantFeeAllowance(t *testing.T) {
 	cases := map[string]struct {
 		grantee sdk.AccAddress
 		granter sdk.AccAddress
-		grant   *types.BasicFeeAllowance
+		grant   *types.BasicAllowance
 		valid   bool
 	}{
 		"valid": {
@@ -55,7 +55,7 @@ func TestMsgGrantFeeAllowance(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		msg, err := types.NewMsgGrantFeeAllowance(tc.grant, tc.granter, tc.grantee)
+		msg, err := types.NewMsgGrantAllowance(tc.grant, tc.granter, tc.grantee)
 		require.NoError(t, err)
 		err = msg.ValidateBasic()
 
@@ -83,14 +83,14 @@ func TestMsgRevokeFeeAllowance(t *testing.T) {
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	threeHours := time.Now().Add(3 * time.Hour)
 
-	basic := &types.BasicFeeAllowance{
+	basic := &types.BasicAllowance{
 		SpendLimit: atom,
 		Expiration: &threeHours,
 	}
 	cases := map[string]struct {
 		grantee sdk.AccAddress
 		granter sdk.AccAddress
-		grant   *types.BasicFeeAllowance
+		grant   *types.BasicAllowance
 		valid   bool
 	}{
 		"valid": {
@@ -120,7 +120,7 @@ func TestMsgRevokeFeeAllowance(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		msg := types.NewMsgRevokeFeeAllowance(tc.granter, tc.grantee)
+		msg := types.NewMsgRevokeAllowance(tc.granter, tc.grantee)
 		err := msg.ValidateBasic()
 		if tc.valid {
 			require.NoError(t, err)

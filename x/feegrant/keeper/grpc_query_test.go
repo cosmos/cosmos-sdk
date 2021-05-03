@@ -9,51 +9,51 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 
 	testCases := []struct {
 		name      string
-		req       *types.QueryFeeAllowanceRequest
+		req       *types.QueryAllowanceRequest
 		expectErr bool
 		preRun    func()
-		postRun   func(_ *types.QueryFeeAllowanceResponse)
+		postRun   func(_ *types.QueryAllowanceResponse)
 	}{
 		{
 			"nil request",
 			nil,
 			true,
 			func() {},
-			func(*types.QueryFeeAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: invalid granter",
-			&types.QueryFeeAllowanceRequest{
+			&types.QueryAllowanceRequest{
 				Granter: "invalid_granter",
 				Grantee: suite.addrs[0].String(),
 			},
 			true,
 			func() {},
-			func(*types.QueryFeeAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: invalid grantee",
-			&types.QueryFeeAllowanceRequest{
+			&types.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
 				Grantee: "invalid_grantee",
 			},
 			true,
 			func() {},
-			func(*types.QueryFeeAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: no grants",
-			&types.QueryFeeAllowanceRequest{
+			&types.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
 			true,
 			func() {},
-			func(*types.QueryFeeAllowanceResponse) {},
+			func(*types.QueryAllowanceResponse) {},
 		},
 		{
 			"valid query: expect single grant",
-			&types.QueryFeeAllowanceRequest{
+			&types.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
@@ -61,9 +61,9 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			func() {
 				grantFeeAllowance(suite)
 			},
-			func(allowance *types.QueryFeeAllowanceResponse) {
-				suite.Require().Equal(allowance.FeeAllowance.Granter, suite.addrs[0].String())
-				suite.Require().Equal(allowance.FeeAllowance.Grantee, suite.addrs[1].String())
+			func(response *types.QueryAllowanceResponse) {
+				suite.Require().Equal(response.Allowance.Granter, suite.addrs[0].String())
+				suite.Require().Equal(response.Allowance.Grantee, suite.addrs[1].String())
 			},
 		},
 	}
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := suite.keeper.FeeAllowance(suite.ctx, tc.req)
+			resp, err := suite.keeper.Allowance(suite.ctx, tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
@@ -85,51 +85,51 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 func (suite *KeeperTestSuite) TestFeeAllowances() {
 	testCases := []struct {
 		name      string
-		req       *types.QueryFeeAllowancesRequest
+		req       *types.QueryAllowancesRequest
 		expectErr bool
 		preRun    func()
-		postRun   func(_ *types.QueryFeeAllowancesResponse)
+		postRun   func(_ *types.QueryAllowancesResponse)
 	}{
 		{
 			"nil request",
 			nil,
 			true,
 			func() {},
-			func(*types.QueryFeeAllowancesResponse) {},
+			func(*types.QueryAllowancesResponse) {},
 		},
 		{
 			"fail: invalid grantee",
-			&types.QueryFeeAllowancesRequest{
+			&types.QueryAllowancesRequest{
 				Grantee: "invalid_grantee",
 			},
 			true,
 			func() {},
-			func(*types.QueryFeeAllowancesResponse) {},
+			func(*types.QueryAllowancesResponse) {},
 		},
 		{
 			"no grants",
-			&types.QueryFeeAllowancesRequest{
+			&types.QueryAllowancesRequest{
 				Grantee: suite.addrs[1].String(),
 			},
 			false,
 			func() {},
-			func(resp *types.QueryFeeAllowancesResponse) {
-				suite.Require().Equal(len(resp.FeeAllowances), 0)
+			func(resp *types.QueryAllowancesResponse) {
+				suite.Require().Equal(len(resp.Allowances), 0)
 			},
 		},
 		{
 			"valid query: expect single grant",
-			&types.QueryFeeAllowancesRequest{
+			&types.QueryAllowancesRequest{
 				Grantee: suite.addrs[1].String(),
 			},
 			false,
 			func() {
 				grantFeeAllowance(suite)
 			},
-			func(resp *types.QueryFeeAllowancesResponse) {
-				suite.Require().Equal(len(resp.FeeAllowances), 1)
-				suite.Require().Equal(resp.FeeAllowances[0].Granter, suite.addrs[0].String())
-				suite.Require().Equal(resp.FeeAllowances[0].Grantee, suite.addrs[1].String())
+			func(resp *types.QueryAllowancesResponse) {
+				suite.Require().Equal(len(resp.Allowances), 1)
+				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
+				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
 			},
 		},
 	}
@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			resp, err := suite.keeper.FeeAllowances(suite.ctx, tc.req)
+			resp, err := suite.keeper.Allowances(suite.ctx, tc.req)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 
 func grantFeeAllowance(suite *KeeperTestSuite) {
 	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
-	err := suite.app.FeeGrantKeeper.GrantFeeAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], &types.BasicFeeAllowance{
+	err := suite.app.FeeGrantKeeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], &types.BasicFeeAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
 		Expiration: &exp,
 	})

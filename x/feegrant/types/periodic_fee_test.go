@@ -31,7 +31,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	tenMinutes := time.Duration(10) * time.Minute
 
 	cases := map[string]struct {
-		allow types.PeriodicFeeAllowance
+		allow types.PeriodicAllowance
 		// all other checks are ignored if valid=false
 		fee           sdk.Coins
 		blockTime     time.Time
@@ -43,12 +43,12 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		periodReset   time.Time
 	}{
 		"empty": {
-			allow: types.PeriodicFeeAllowance{},
+			allow: types.PeriodicAllowance{},
 			valid: false,
 		},
 		"only basic": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &oneHour,
 				},
@@ -56,7 +56,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			valid: false,
 		},
 		"empty basic": {
-			allow: types.PeriodicFeeAllowance{
+			allow: types.PeriodicAllowance{
 				Period:           tenMinutes,
 				PeriodSpendLimit: smallAtom,
 				PeriodReset:      now.Add(30 * time.Minute),
@@ -68,8 +68,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset: now.Add(30 * time.Minute),
 		},
 		"mismatched currencies": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &oneHour,
 				},
@@ -79,8 +79,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			valid: false,
 		},
 		"same period": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &twoHours,
 				},
@@ -99,8 +99,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   now.Add(1 * time.Hour),
 		},
 		"step one period": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &twoHours,
 				},
@@ -118,8 +118,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
 		},
 		"step limited by global allowance": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: smallAtom,
 					Expiration: &twoHours,
 				},
@@ -137,8 +137,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
 		},
 		"expired": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &now,
 				},
@@ -152,8 +152,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:    true,
 		},
 		"over period limit": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &now,
 				},

@@ -46,5 +46,9 @@ func (a BasicFeeAllowance) ValidateBasic() error {
 		}
 	}
 
+	if a.Expiration != nil && a.Expiration.Unix() < 0 {
+		return sdkerrors.Wrap(ErrInvalidDuration, "expiration time cannot be negative")
+	}
+
 	return nil
 }

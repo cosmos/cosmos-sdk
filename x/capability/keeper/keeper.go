@@ -27,7 +27,7 @@ type (
 	// The keeper allows the ability to create scoped sub-keepers which are tied to
 	// a single specific module.
 	Keeper struct {
-		cdc           codec.BinaryMarshaler
+		cdc           codec.BinaryCodec
 		storeKey      sdk.StoreKey
 		memKey        sdk.StoreKey
 		capMap        map[uint64]*types.Capability
@@ -42,7 +42,7 @@ type (
 	// by name, in addition to creating new capabilities & authenticating capabilities
 	// passed by other modules.
 	ScopedKeeper struct {
-		cdc      codec.BinaryMarshaler
+		cdc      codec.BinaryCodec
 		storeKey sdk.StoreKey
 		memKey   sdk.StoreKey
 		capMap   map[uint64]*types.Capability
@@ -52,7 +52,7 @@ type (
 
 // NewKeeper constructs a new CapabilityKeeper instance and initializes maps
 // for capability map and scopedModules map.
-func NewKeeper(cdc codec.BinaryMarshaler, storeKey, memKey sdk.StoreKey) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
@@ -116,7 +116,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 
 		var capOwners types.CapabilityOwners
 
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
+		k.cdc.MustUnmarshal(iterator.Value(), &capOwners)
 		k.InitializeCapability(ctx, index, capOwners)
 	}
 
@@ -153,7 +153,7 @@ func (k Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.Capability
 	indexKey := types.IndexToKey(index)
 
 	// set owners in persistent store
-	prefixStore.Set(indexKey, k.cdc.MustMarshalBinaryBare(&owners))
+	prefixStore.Set(indexKey, k.cdc.MustMarshal(&owners))
 }
 
 // GetOwners returns the capability owners with a given index.
@@ -167,7 +167,7 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 		return types.CapabilityOwners{}, false
 	}
 	var owners types.CapabilityOwners
-	k.cdc.MustUnmarshalBinaryBare(ownerBytes, &owners)
+	k.cdc.MustUnmarshal(ownerBytes, &owners)
 	return owners, true
 }
 
@@ -332,7 +332,7 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 		delete(sk.capMap, cap.GetIndex())
 	} else {
 		// update capability owner set
-		prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
+		prefixStore.Set(indexKey, sk.cdc.MustMarshal(capOwners))
 	}
 
 	return nil
@@ -401,7 +401,7 @@ func (sk ScopedKeeper) GetOwners(ctx sdk.Context, name string) (*types.Capabilit
 		return nil, false
 	}
 
-	sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
+	sk.cdc.MustUnmarshal(bz, &capOwners)
 
 	return &capOwners, true
 }
@@ -443,7 +443,7 @@ func (sk ScopedKeeper) addOwner(ctx sdk.Context, cap *types.Capability, name str
 	}
 
 	// update capability owner set
-	prefixStore.Set(indexKey, sk.cdc.MustMarshalBinaryBare(capOwners))
+	prefixStore.Set(indexKey, sk.cdc.MustMarshal(capOwners))
 
 	return nil
 }
@@ -459,7 +459,7 @@ func (sk ScopedKeeper) getOwners(ctx sdk.Context, cap *types.Capability) *types.
 	}
 
 	var capOwners types.CapabilityOwners
-	sk.cdc.MustUnmarshalBinaryBare(bz, &capOwners)
+	sk.cdc.MustUnmarshal(bz, &capOwners)
 	return &capOwners
 }
 

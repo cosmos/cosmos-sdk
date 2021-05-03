@@ -59,9 +59,9 @@ $ %s query feegrant grant [granter] [grantee]
 				return err
 			}
 
-			res, err := queryClient.FeeAllowance(
+			res, err := queryClient.Allowance(
 				cmd.Context(),
-				&types.QueryFeeAllowanceRequest{
+				&types.QueryAllowanceRequest{
 					Granter: granterAddr.String(),
 					Grantee: granteeAddr.String(),
 				},
@@ -71,7 +71,7 @@ $ %s query feegrant grant [granter] [grantee]
 				return err
 			}
 
-			return clientCtx.PrintProto(res.FeeAllowance)
+			return clientCtx.PrintProto(res.Allowance)
 		},
 	}
 
@@ -107,9 +107,9 @@ $ %s query feegrant grants [grantee]
 				return err
 			}
 
-			res, err := queryClient.FeeAllowances(
+			res, err := queryClient.Allowances(
 				cmd.Context(),
-				&types.QueryFeeAllowancesRequest{
+				&types.QueryAllowancesRequest{
 					Grantee:    granteeAddr.String(),
 					Pagination: pageReq,
 				},

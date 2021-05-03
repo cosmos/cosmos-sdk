@@ -16,7 +16,9 @@ import (
 	"google.golang.org/grpc/metadata"
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -24,7 +26,8 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -95,6 +98,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
 		grpc.Header(&header),
 	)
+	s.Require().NoError(err)
 	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
 	s.Require().NotEmpty(blockHeight[0]) // blockHeight is []string, first element is block height.
 }
@@ -161,9 +165,20 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 	val0 := s.network.Validators[0]
 
-	grpcRes, err := banktestutil.LegacyGRPCProtoMsgSend(val0.ClientCtx,
-		val0.Moniker, val0.Address, val0.Address,
-		sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}, sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+	txBuilder := s.mkTxBuilder()
+
+	txBytes, err := val0.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+
+	// Broadcast the tx via gRPC.
+	queryClient := txtypes.NewServiceClient(s.conn)
+
+	grpcRes, err := queryClient.BroadcastTx(
+		context.Background(),
+		&txtypes.BroadcastTxRequest{
+			Mode:    txtypes.BroadcastMode_BROADCAST_MODE_SYNC,
+			TxBytes: txBytes,
+		},
 	)
 	s.Require().NoError(err)
 	s.Require().Equal(uint32(0), grpcRes.TxResponse.Code)
@@ -174,7 +189,6 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 // See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
 func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	t := s.T()
-	val0 := s.network.Validators[0]
 
 	// We should reject connections with invalid block heights off the bat.
 	invalidHeightStrs := []struct {
@@ -189,13 +203,7 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	}
 	for _, tt := range invalidHeightStrs {
 		t.Run(tt.value, func(t *testing.T) {
-			conn, err := grpc.Dial(
-				val0.AppConfig.GRPC.Address,
-				grpc.WithInsecure(), // Or else we get "no transport security set"
-			)
-			defer conn.Close()
-
-			testClient := testdata.NewQueryClient(conn)
+			testClient := testdata.NewQueryClient(s.conn)
 			ctx := metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, tt.value)
 			testRes, err := testClient.Echo(ctx, &testdata.EchoRequest{Message: "hello"})
 			require.Error(t, err)
@@ -203,6 +211,40 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 			require.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
+}
+
+// mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.
+func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+	val := s.network.Validators[0]
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// prepare txBuilder with msg
+	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+	gasLimit := testdata.NewTestGasLimit()
+	s.Require().NoError(
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
+	)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	txBuilder.SetMemo("foobar")
+
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val.ClientCtx.ChainID).
+		WithKeybase(val.ClientCtx.Keyring).
+		WithTxConfig(val.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
+
+	// Sign Tx.
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	s.Require().NoError(err)
+
+	return txBuilder
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

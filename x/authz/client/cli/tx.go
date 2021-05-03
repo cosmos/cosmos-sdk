@@ -60,7 +60,7 @@ func NewCmdGrantAuthorization() *cobra.Command {
 
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
- $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
+ $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.MsgVote --from=cosmos1sk..
 	`, version.AppName, types.ModuleName, bank.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
@@ -186,7 +186,7 @@ Examples:
 
 func NewCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [grantee_address] [msg_type] --from=[granter_address]",
+		Use:   "revoke [grantee] [msg_type] --from=[granter]",
 		Short: "revoke authorization",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
@@ -254,17 +254,7 @@ Example:
 			if err != nil {
 				return err
 			}
-			msgs := theTx.GetMsgs()
-			serviceMsgs := make([]sdk.ServiceMsg, len(msgs))
-			for i, msg := range msgs {
-				srvMsg, ok := msg.(sdk.ServiceMsg)
-				if !ok {
-					return fmt.Errorf("tx contains %T which is not a sdk.ServiceMsg", msg)
-				}
-				serviceMsgs[i] = srvMsg
-			}
-
-			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
+			msg := types.NewMsgExecAuthorized(grantee, theTx.GetMsgs())
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.ExecAuthorized(context.Background(), &msg)

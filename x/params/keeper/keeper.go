@@ -11,7 +11,7 @@ import (
 
 // Keeper of the global paramstore
 type Keeper struct {
-	cdc         codec.BinaryMarshaler
+	cdc         codec.BinaryCodec
 	legacyAmino *codec.LegacyAmino
 	key         sdk.StoreKey
 	tkey        sdk.StoreKey
@@ -19,7 +19,7 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc codec.BinaryMarshaler, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) Keeper {
 	return Keeper{
 		cdc:         cdc,
 		legacyAmino: legacyAmino,

@@ -236,7 +236,7 @@ func validateMinCommissionRate(i interface{}) error {
 		return fmt.Errorf("minimum commission rate cannot be negative: %s", v)
 	}
 	if v.GT(sdk.OneDec()) {
-		return fmt.Errorf("minimum commission rate cannot be greater than 100%%")
+		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
 	}
 
 	return nil

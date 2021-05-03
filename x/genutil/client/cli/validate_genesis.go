@@ -24,7 +24,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			cdc := clientCtx.JSONMarshaler
+			cdc := clientCtx.JSONCodec
 
 			// Load default if passed no args, otherwise load passed file
 			var genesis string

@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -84,7 +85,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	msgs := tx.GetMsgs()
 	s.Require().Len(msgs, 1)
 
-	s.Require().Equal(types.TypeMsgCreateValidator, msgs[0].Type())
+	s.Require().Equal(types.TypeMsgCreateValidator, msgs[0].(legacytx.LegacyMsg).Type())
 	s.Require().Equal([]sdk.AccAddress{val.Address}, msgs[0].GetSigners())
 	s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
 	err = tx.ValidateBasic()

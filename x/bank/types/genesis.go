@@ -46,10 +46,6 @@ func (gs GenesisState) Validate() error {
 		seenMetadatas[metadata.Base] = true
 	}
 
-<<<<<<< HEAD
-	// NOTE: this errors if supply for any given coin is zero
-	return NewSupply(gs.Supply).ValidateBasic()
-=======
 	if !gs.Supply.Empty() {
 		// NOTE: this errors if supply for any given coin is zero
 		err := gs.Supply.Validate()
@@ -63,7 +59,6 @@ func (gs GenesisState) Validate() error {
 	}
 
 	return nil
->>>>>>> e9e978d54... Fix genesis supply handling (#8930)
 }
 
 // NewGenesisState creates a new genesis state.

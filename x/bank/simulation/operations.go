@@ -263,18 +263,11 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 
 		var totalSentCoins sdk.Coins
 		for i := range inputs {
-
-			// Sender
-			simAcc := accs[i]
-
-			// set signer privkey
+			sender := accs[i]
 			privs[i] = simAcc.PrivKey
-
-			spendable := bk.SpendableCoins(ctx, simAcc.Address)
+			spendable := bk.SpendableCoins(ctx, sender.Address)
 			coins := simtypes.RandSubsetCoins(r, spendable)
-
-			// set next input and accumulate total sent coins
-			inputs[i] = types.NewInput(simAcc.Address, coins)
+			inputs[i] = types.NewInput(sender.Address, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 

@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &s.txRes))
@@ -529,7 +529,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=foobar", flags.FlagMemo),
+		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
 	s.Require().NoError(err)
 

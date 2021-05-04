@@ -515,7 +515,7 @@ func (s *IntegrationTestSuite) TestCLIEncode() {
 		val1, val1.Address,
 		sdk.NewCoins(sendTokens),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=deadbeef", flags.FlagMemo),
+		fmt.Sprintf("--%s=deadbeef", flags.FlagNote),
 	)
 	s.Require().NoError(err)
 	savedTxFile := testutil.WriteToNewTempFile(s.T(), normalGeneratedTx.String())

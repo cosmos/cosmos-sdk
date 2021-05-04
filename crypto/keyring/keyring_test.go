@@ -33,10 +33,10 @@ func TestNewKeyring(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 
-	kr, err := New("cosmos", BackendFile, dir, mockIn)
+	kr, err := New("cosmos", BackendFile, dir, codec.Codec, mockIn)
 	require.NoError(t, err)
 
-	nilKr, err := New("cosmos", "fuzzy", dir, mockIn)
+	nilKr, err := New("cosmos", "fuzzy", dir, codec.Codec, mockIn)
 	require.Error(t, err)
 	require.Nil(t, nilKr)
 	require.Equal(t, "unknown keyring backend fuzzy", err.Error())
@@ -48,7 +48,7 @@ func TestNewKeyring(t *testing.T) {
 }
 
 func TestKeyManagementKeyRing(t *testing.T) {
-	kb, err := New("keybasename", "test", t.TempDir(), nil)
+	kb, err := New("keybasename", "test", t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	algo := hd.Secp256k1
@@ -130,7 +130,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
 
-	kb, err := New("keybasename", "test", dir, nil)
+	kb, err := New("keybasename", "test", dir, codec.Codec, nil)
 	require.NoError(t, err)
 	algo := hd.Secp256k1
 
@@ -206,7 +206,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 }
 
 func TestExportImportKeyRing(t *testing.T) {
-	kb, err := New("keybasename", "test", t.TempDir(), nil)
+	kb, err := New("keybasename", "test", t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	info, _, err := kb.NewMnemonic("john", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
@@ -238,7 +238,7 @@ func TestExportImportKeyRing(t *testing.T) {
 }
 
 func TestExportImportPubKeyKeyRing(t *testing.T) {
-	kb, err := New("keybasename", "test", t.TempDir(), nil)
+	kb, err := New("keybasename", "test", t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 	algo := hd.Secp256k1
 
@@ -278,7 +278,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir := t.TempDir()
 
-	kb, err := New("keybasename", "test", dir, nil)
+	kb, err := New("keybasename", "test", dir, codec.Codec, nil)
 	require.NoError(t, err)
 
 	algo := hd.Secp256k1
@@ -313,7 +313,7 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 func TestSeedPhraseKeyRing(t *testing.T) {
 	dir := t.TempDir()
 
-	kb, err := New("keybasename", "test", dir, nil)
+	kb, err := New("keybasename", "test", dir, codec.Codec, nil)
 	require.NoError(t, err)
 
 	algo := hd.Secp256k1
@@ -342,7 +342,7 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 }
 
 func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
-	kb, err := New("keybasename", "test", t.TempDir(), nil)
+	kb, err := New("keybasename", "test", t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	_, _, err = kb.NewMnemonic("john", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
@@ -378,7 +378,7 @@ func TestInMemoryLanguage(t *testing.T) {
 }
 
 func TestInMemoryCreateMultisig(t *testing.T) {
-	kb, err := New("keybasename", "memory", "", nil)
+	kb, err := New("keybasename", "memory", "", codec.Codec, nil)
 	require.NoError(t, err)
 	multi := multisig.NewLegacyAminoPubKey(
 		1, []types.PubKey{
@@ -720,7 +720,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 }
 
 func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
-	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	kr, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	// Given we create a mnemonic
@@ -740,7 +740,7 @@ func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	cstore := NewInMemory()
+	cstore := NewInMemory(codec.Codec)
 
 	sec := hd.Secp256k1
 
@@ -791,7 +791,7 @@ func ExampleNew() {
 func TestAltKeyring_List(t *testing.T) {
 	dir := t.TempDir()
 
-	keyring, err := New(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, codec.Codec, nil)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -822,7 +822,7 @@ func TestAltKeyring_List(t *testing.T) {
 }
 
 func TestAltKeyring_NewAccount(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	entropy, err := bip39.NewEntropy(defaultEntropySize)
@@ -848,7 +848,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 }
 
 func TestAltKeyring_Get(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -861,7 +861,7 @@ func TestAltKeyring_Get(t *testing.T) {
 }
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -874,7 +874,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_Delete(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -894,7 +894,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 }
 
 func TestAltKeyring_DeleteByAddress(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -914,7 +914,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_SavePubKey(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -937,7 +937,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 }
 
 func TestAltKeyring_SaveMultisig(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	mnemonic1, _, err := keyring.NewMnemonic("key1", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
@@ -965,7 +965,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 }
 
 func TestAltKeyring_Sign(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := "jack"
@@ -981,7 +981,7 @@ func TestAltKeyring_Sign(t *testing.T) {
 }
 
 func TestAltKeyring_SignByAddress(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := "jack"
@@ -997,7 +997,7 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1023,7 +1023,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1050,7 +1050,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPubKey(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1072,7 +1072,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1094,7 +1094,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec nil)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1117,7 +1117,7 @@ func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 }
 
 func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
-	keyring, err := New(t.Name(), BackendTest, t.TempDir(), nil)
+	keyring, err := New(t.Name(), BackendTest, t.TempDir(), codec.Codec, nil)
 	require.NoError(t, err)
 
 	// should fail when using unsupported signing algorythm.
@@ -1129,7 +1129,7 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	require.NoError(t, err)
 
 	// but we can create a new keybase with our provided algos.
-	keyring2, err := New(t.Name(), BackendTest, t.TempDir(), nil, func(options *Options) {
+	keyring2, err := New(t.Name(), BackendTest, t.TempDir(), nil, codec.Codec,func(options *Options) {
 		options.SupportedAlgos = SigningAlgoList{
 			notSupportedAlgo{},
 		}

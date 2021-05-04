@@ -10,10 +10,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/types"
+
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
-	kb := NewInMemory()
+	kb := NewInMemory(codec.Codec)
 
 	ledger, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 
@@ -49,7 +50,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	dir := t.TempDir()
 
-	kb, err := New("keybasename", "test", dir, nil)
+	kb, err := New("keybasename", "test", dir, codec.Codec, nil)
 	require.NoError(t, err)
 
 	i1, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
@@ -86,7 +87,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	dir := t.TempDir()
 
-	keyring, err := New(t.Name(), BackendTest, dir, nil)
+	keyring, err := New(t.Name(), BackendTest, dir, codec.Codec, nil)
 	require.NoError(t, err)
 
 	// Test unsupported Algo

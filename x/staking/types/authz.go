@@ -15,8 +15,6 @@ var (
 	_ authz.Authorization = &StakeAuthorization{}
 )
 
-var _ authz.Authorization = &StakeAuthorization{}
-
 // NewStakeAuthorization creates a new StakeAuthorization object.
 func NewStakeAuthorization(allowed []sdk.ValAddress, denied []sdk.ValAddress, authzType AuthorizationType, amount *sdk.Coin) (*StakeAuthorization, error) {
 	allowedValidators, deniedValidators, err := validateAndBech32fy(allowed, denied)

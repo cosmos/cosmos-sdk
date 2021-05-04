@@ -11,8 +11,6 @@ on behalf of one account to other accounts. The design is defined in the [ADR 03
 Grant is an allowance to execute an Msg by grantee address on behalf of the granter.
 Authorization is an interface which must be implemented by a concrete authorization logic to validate and execute grants. They are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example below for more details.
 
-Authorizations use the new `Msg` type from [ADR 031](../../../architecture/adr-031-msg-service.md).
-
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/x/authz/types/authorizations.go#L15-L24
 

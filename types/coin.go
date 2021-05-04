@@ -272,6 +272,7 @@ func (coins Coins) IsValid() bool {
 //
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
+// The function panics if `coinsB` are not sorted (ascending).
 func (coins Coins) Add(coinsB ...Coin) Coins {
 	return coins.safeAdd(coinsB)
 }
@@ -281,9 +282,10 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
+// The function panics if `coinsB` are not sorted (ascending).
 func (coins Coins) safeAdd(coinsB Coins) Coins {
 	if !coinsB.isSorted() {
-		panic("coinsB array is not sorted")
+		panic("Wrong argument: coins must be sorted")
 	}
 
 	sum := ([]Coin)(nil)
@@ -370,6 +372,7 @@ func (coins Coins) Sub(coinsB Coins) Coins {
 
 // SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
+// The function panics if `coinsB` are not sorted (ascending).
 func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 	diff := coins.safeAdd(coinsB.negative())
 	return diff, diff.IsAnyNegative()

@@ -196,13 +196,17 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		// Propagate the event history.
+		em := sdk.NewEventManagerWithHistory(app.deliverState.eventHistory)
+		res = app.endBlocker(app.deliverState.ctx.WithEventManager(em), req)
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
 	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
 		res.ConsensusParamUpdates = cp
 	}
+
+	app.deliverState.eventHistory = []abci.Event{}
 
 	return res
 }
@@ -267,12 +271,14 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
 	}
 
+	events := sdk.MarkEventsToIndex(result.Events, app.indexEvents)
+	app.deliverState.eventHistory = append(app.deliverState.eventHistory, events...)
 	return abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		Events:    events,
 	}
 }
 

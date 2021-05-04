@@ -374,8 +374,9 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 func (app *BaseApp) setCheckState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
+		ms:           ms,
+		ctx:          sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
+		eventHistory: []abci.Event{},
 	}
 }
 
@@ -386,8 +387,9 @@ func (app *BaseApp) setCheckState(header tmproto.Header) {
 func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+		ms:           ms,
+		ctx:          sdk.NewContext(ms, header, false, app.logger),
+		eventHistory: []abci.Event{},
 	}
 }
 
@@ -678,6 +680,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		if len(events) > 0 {
 			// append the events in the order of occurrence
 			result.Events = append(events.ToABCIEvents(), result.Events...)
+			app.deliverState.eventHistory = append(app.deliverState.eventHistory, result.Events...)
 		}
 	}
 
@@ -692,6 +695,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdk.EmptyEvents()
+	historicalEvents := ctx.EventManager().GetABCIEventHistory()
 	txMsgData := &sdk.TxMsgData{
 		Data: make([]*sdk.MsgData, 0, len(msgs)),
 	}
@@ -709,9 +713,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			err          error
 		)
 
+		msgCtx := ctx.WithEventManager(sdk.NewEventManagerWithHistory(historicalEvents))
 		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
-			msgResult, err = handler(ctx, msg)
+			msgResult, err = handler(msgCtx, msg)
 			eventMsgName = sdk.MsgTypeURL(msg)
 		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 			// legacy sdk.Msg routing
@@ -721,12 +726,12 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 			// registered within the `msgServiceRouter` already.
 			msgRoute := legacyMsg.Route()
 			eventMsgName = legacyMsg.Type()
-			handler := app.router.Route(ctx, msgRoute)
+			handler := app.router.Route(msgCtx, msgRoute)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 			}
 
-			msgResult, err = handler(ctx, msg)
+			msgResult, err = handler(msgCtx, msg)
 		} else {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
@@ -745,6 +750,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		// Note: Each message result's data must be length-prefixed in order to
 		// separate each result.
 		events = events.AppendEvents(msgEvents)
+		historicalEvents = append(historicalEvents, msgEvents.ToABCIEvents()...)
 
 		txMsgData.Data = append(txMsgData.Data, &sdk.MsgData{MsgType: sdk.MsgTypeURL(msg), Data: msgResult.Data})
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))

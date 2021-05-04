@@ -202,8 +202,6 @@ func New(
 		return nil, err
 	}
 
-	cdc := simappparams.EncodingConfig.Marshaler
-
 	return newKeystore(db, cdc, opts...), nil
 }
 

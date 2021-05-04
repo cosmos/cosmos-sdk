@@ -6,13 +6,16 @@ order: 4
 
 ## MsgSetWithdrawAddress
 
-By default a withdrawal address is delegator address. If a delegator wants to change it's
-withdrawal address it must send `MsgSetWithdrawAddress`.
+By default, the withdraw address is the delegator address. To change its withdraw address, a delegator must send a `MsgSetWithdrawAddress` message.
+Changing the withdraw address is possible only if the parameter `WithdrawAddrEnabled` is set to `true`.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/distribution/v1beta1/tx.proto#L29-L37
+The withdraw address cannot be any of the module accounts. These accounts are blocked from being withdraw addresses by being added to the distribution keeper's `blockedAddrs` array at initialization.
+
+Response:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L29-L37
 
 ```go
-
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error 
 	if k.blockedAddrs[withdrawAddr.String()] {
 		fail with "`{withdrawAddr}` is not allowed to receive external funds"
@@ -27,163 +30,93 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 
 ## MsgWithdrawDelegatorReward
 
-under special circumstances a delegator may wish to withdraw rewards from only
-a single validator. 
+A delegator can withdraw its rewards.
+Internally in the distribution module, this transaction simultaneously removes the previous delegation with associated rewards, the same as if the delegator simply started a new delegation of the same value.
+The rewards are sent immediately from the distribution `ModuleAccount` to the withdraw address.
+Any remainder (truncated decimals) are sent to the community pool.
+The starting height of the delegation is set to the current validator period, and the reference count for the previous period is decremented.
+The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/distribution/v1beta1/tx.proto#L42-L50
+In the F1 distribution, the total rewards are calculated per validator period, and a delegator receives a piece of those rewards in proportion to their stake in the validator.
+In basic F1, the total rewards that all the delegators are entitled to between to periods is calculated the following way.
+Let `R(X)` be the total accumulated rewards up to period `X` divided by the tokens staked at that time. The delegator allocation is `R(X) * delegator_stake`.
+Then the rewards for all the delegators for staking between periods `A` and `B` are `(R(B) - R(A)) * total stake`.
+However, these calculated rewards don't account for slashing.
 
-```go
-func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.AccAddress) 
-    height = GetHeight()
-    
-    // get all distribution scenarios
-    pool = staking.GetPool() 
-    feePool = GetFeePool() 
-    delInfo = GetDelegationDistInfo(delegatorAddr,
-                    validatorAddr)
-    valInfo = GetValidatorDistInfo(validatorAddr)
-    validator = GetValidator(validatorAddr)
-
-    feePool, withdraw = delInfo.WithdrawRewards(feePool, valInfo, height, pool.BondedTokens, 
-               validator.Tokens, validator.DelegatorShares, validator.Commission)
-
-    SetFeePool(feePool) 
-    SendCoins(distributionModuleAcc, withdrawAddr, withdraw.TruncateDecimal())
-```
-
-
-### Withdraw Validator Rewards All
-
-When a validator wishes to withdraw their rewards it must send
-array of `MsgWithdrawDelegatorReward`. Note that parts of this transaction logic are also
-triggered each with any change in individual delegations, such as an unbond,
-redelegation, or delegation of additional tokens to a specific validator. This
-transaction withdraws the validators commission fee, as well as any rewards
-earning on their self-delegation.
-
-```go
-
-func WithdrawValidatorRewardsAll(operatorAddr, withdrawAddr sdk.AccAddress)
-
-    height = GetHeight()
-    feePool = GetFeePool() 
-    pool = GetPool() 
-    ValInfo = GetValidatorDistInfo(delegation.ValidatorAddr)
-    validator = GetValidator(delegation.ValidatorAddr)
-
-    // withdraw self-delegation
-    withdraw = GetDelegatorRewardsAll(validator.OperatorAddr, height)
-
-    // withdrawal validator commission rewards
-    feePool, commission = valInfo.WithdrawCommission(feePool, valInfo, height, pool.BondedTokens, 
-               validator.Tokens, validator.Commission)
-    withdraw += commission
-    SetFeePool(feePool) 
-
-    SendCoins(distributionModuleAcc, withdrawAddr, withdraw.TruncateDecimal())
-```
-
-## Common calculations 
-
-### Update total validator accum
-
-The total amount of validator accum must be calculated in order to determine
-the amount of pool tokens which a validator is entitled to at a particular
-block. The accum is always additive to the existing accum. This term is to be
-updated each time rewards are withdrawn from the system. 
-
-```go
-func (g FeePool) UpdateTotalValAccum(height int64, totalBondedTokens Dec) FeePool
-    blocks = height - g.TotalValAccumUpdateHeight
-    g.TotalValAccum += totalDelShares * blocks
-    g.TotalValAccumUpdateHeight = height
-    return g
-```
-
-### Update validator's accums
-
-The total amount of delegator accum must be updated in order to determine the
-amount of pool tokens which each delegator is entitled to, relative to the
-other delegators for that validator. The accum is always additive to
-the existing accum. This term is to be updated each time a
-withdrawal is made from a validator. 
-
-``` go
-func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares Dec) ValidatorDistInfo
-    blocks = height - vi.TotalDelAccumUpdateHeight
-    vi.TotalDelAccum += totalDelShares * blocks
-    vi.TotalDelAccumUpdateHeight = height
-    return vi
-```
-
-### FeePool pool to validator pool
-
-Every time a validator or delegator executes a withdrawal or the validator is
-the proposer and receives new tokens, the relevant validator must move tokens
-from the passive global pool to their own pool. It is at this point that the
-commission is withdrawn
-
-```go
-func (vi ValidatorDistInfo) TakeFeePoolRewards(g FeePool, height int64, totalBonded, vdTokens, commissionRate Dec) (
-                                vi ValidatorDistInfo, g FeePool)
-
-    g.UpdateTotalValAccum(height, totalBondedShares)
-    
-    // update the validators pool
-    blocks = height - vi.FeePoolWithdrawalHeight
-    vi.FeePoolWithdrawalHeight = height
-    accum = blocks * vdTokens
-    withdrawalTokens := g.Pool * accum / g.TotalValAccum 
-    commission := withdrawalTokens * commissionRate
-    
-    g.TotalValAccum -= accumm
-    vi.PoolCommission += commission
-    vi.PoolCommissionFree += withdrawalTokens - commission
-    g.Pool -= withdrawalTokens
-
-    return vi, g
-```
-
-
-### Delegation reward withdrawal
-
-For delegations (including validator's self-delegation) all rewards from reward
-pool have already had the validator's commission taken away.
-
-```go
-func (di DelegationDistInfo) WithdrawRewards(g FeePool, vi ValidatorDistInfo,
-    height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (
-    di DelegationDistInfo, g FeePool, withdrawn DecCoins)
-
-    vi.UpdateTotalDelAccum(height, totalDelShares) 
-    g = vi.TakeFeePoolRewards(g, height, totalBonded, vdTokens, commissionRate) 
-    
-    blocks = height - di.WithdrawalHeight
-    di.WithdrawalHeight = height
-    accum = delegatorShares * blocks 
-     
-    withdrawalTokens := vi.Pool * accum / vi.TotalDelAccum
-    vi.TotalDelAccum -= accum
-
-    vi.Pool -= withdrawalTokens
-    vi.TotalDelAccum -= accum
-    return di, g, withdrawalTokens
+Taking the slashes into account requires iteration.
+Let `F(X)` be the fraction a validator is to be slashed for a slashing event that happened at period `X`.
+If the validator was slashed at periods `P1, ..., PN`, where `A < P1`, `PN < B`, the distribution module calculates the individual delegator's rewards, `T(A, B)`, as follows:
 
 ```
+stake := initial stake
+rewards := 0
+previous := A
+for P in P1, ..., PN`:
+    rewards = (R(P) - previous) * stake
+    stake = stake * F(P)
+    previous = P
+rewards = rewards + (R(B) - R(PN)) * stake
+```
 
-### Validator commission withdrawal
+The historical rewards are calculated retroactively by playing back all the slashes and then attenuating the delegator's stake at each step.
+The final calculated stake is equivalent to the actual staked coins in the delegation with a margin of error due to rounding errors.
 
-Commission is calculated each time rewards enter into the validator.
+Response:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L42-L50
+
+## WithdrawValidatorCommission
+
+The validator can send the WithdrawValidatorCommission message to withdraw their accumulated commission.
+The commission is calculated in every block during `BeginBlock`, so no iteration is required to withdraw.
+The amount withdrawn is deducted from the `ValidatorOutstandingRewards` variable for the validator.
+Only integer amounts can be sent. If the accumulated awards have decimals, the amount is truncated before the withdrawal is sent, and the remainder is left to be withdrawn later.
+
+## FundCommunityPool
+
+This message sends coins directly from the sender to the community pool.
+
+The transaction fails if the amount cannot be transferred from the sender to the distribution module account.
 
 ```go
-func (vi ValidatorDistInfo) WithdrawCommission(g FeePool, height int64, 
-          totalBonded, vdTokens, commissionRate Dec) (
-          vi ValidatorDistInfo, g FeePool, withdrawn DecCoins)
+func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error {
+    if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount); err != nil {
+        return err
+    }
 
-    g = vi.TakeFeePoolRewards(g, height, totalBonded, vdTokens, commissionRate) 
-    
-    withdrawalTokens := vi.PoolCommission 
-    vi.PoolCommission = 0
+	feePool := k.GetFeePool(ctx)
+	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
+	k.SetFeePool(ctx, feePool)
 
-    return vi, g, withdrawalTokens
+	return nil
+}
+```
+
+## Common distribution operations
+
+These operations take place during many different messages.
+
+### Initialize delegation
+
+Each time a delegation is changed, the rewards are withdrawn and the delegation is reinitialized.
+Initializing a delegation increments the validator period and keeps track of the starting period of the delegation.
+
+```go
+// initialize starting info for a new delegation
+func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
+    // period has already been incremented - we want to store the period ended by this delegation action
+    previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
+
+	// increment reference count for the period we're going to track
+	k.incrementReferenceCount(ctx, val, previousPeriod)
+
+	validator := k.stakingKeeper.Validator(ctx, val)
+	delegation := k.stakingKeeper.Delegation(ctx, del, val)
+
+	// calculate delegation stake in tokens
+	// we don't store directly, so multiply delegation shares * (tokens per share)
+	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+	stake := validator.TokensFromSharesTruncated(delegation.GetShares())
+	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
+}
 ```

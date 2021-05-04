@@ -19,9 +19,9 @@ type Info interface {
 	// Human-readable type for key listing
 	GetName() string
 	// Public key
-	GetPubKey(cdc codec.AminoCodec) (cryptotypes.PubKey, error)
+	GetPubKey(cdc codec.Codec) (cryptotypes.PubKey, error)
 	// Address
-	GetAddress(cdc codec.AminoCodec) (types.AccAddress, error)
+	GetAddress(cdc codec.Codec) (types.AccAddress, error)
 	// Bip44 Path
 	GetPath() (*BIP44Params, error)
 }
@@ -30,12 +30,12 @@ func (ke KeyringEntry) GetName() string {
 	return ke.Name
 }
 
-func (ke KeyringEntry) GetPubKey(cdc codec.AminoCodec) (pk cryptotypes.PubKey, err error) {
+func (ke KeyringEntry) GetPubKey(cdc codec.Codec) (pk cryptotypes.PubKey, err error) {
 	return ke.unmarshalAnytoPubKey(cdc)
 }
 
 // GetType implements Info interface
-func (ke KeyringEntry) GetAddress(cdc codec.AminoCodec) (types.AccAddress, error) {
+func (ke KeyringEntry) GetAddress(cdc codec.Codec) (types.AccAddress, error) {
 	pk, err := ke.unmarshalAnytoPubKey(cdc)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal any to Pubkey")
@@ -54,7 +54,7 @@ func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
 	}
 }
 
-func (ke KeyringEntry) unmarshalAnytoPubKey(cdc codec.AminoCodec) (pk cryptotypes.PubKey, err error) {
+func (ke KeyringEntry) unmarshalAnytoPubKey(cdc codec.Codec) (pk cryptotypes.PubKey, err error) {
 	if err := cdc.UnmarshalInterface(ke.PubKey, &pk); err != nil{
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func protoMarshalInfo(i Info) ([]byte, error) {
 }
 
 // decoding info
-func protoUnmarshalInfo(bz []byte, cdc codec.AminoCodec) (Info, error) {
+func protoUnmarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
 	
 	var ke KeyringEntry // will not work cause we use any, use InterfaceRegistry
 	// dont forget to merge master to my branch, UnmarshalBinaryBare has been renamed

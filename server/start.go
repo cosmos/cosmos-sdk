@@ -347,7 +347,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			Retries:       config.Rosetta.Retries,
 			Offline:       offlineMode,
 		}
-		conf.WithCodec(clientCtx.InterfaceRegistry, clientCtx.JSONMarshaler.(*codec.ProtoCodec))
+		conf.WithCodec(clientCtx.InterfaceRegistry, clientCtx.JSONCodec.(*codec.ProtoCodec))
 
 		rosettaSrv, err = rosetta.ServerFromConfig(conf)
 		if err != nil {

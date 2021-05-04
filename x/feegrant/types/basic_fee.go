@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ FeeAllowanceI = (*BasicFeeAllowance)(nil)
+var _ FeeAllowanceI = (*BasicAllowance)(nil)
 
 // Accept can use fee payment requested as well as timestamp/height of the current block
 // to determine whether or not to process this. This is checked in
@@ -19,7 +19,7 @@ var _ FeeAllowanceI = (*BasicFeeAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
-func (a *BasicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
 
@@ -43,15 +43,15 @@ func (a *BasicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) 
 // PrepareForExport will adjust the expiration based on export time. In particular,
 // it will subtract the dumpHeight from any height-based expiration to ensure that
 // the elapsed number of blocks this allowance is valid for is fixed.
-func (a *BasicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	return &BasicFeeAllowance{
+func (a *BasicAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
+	return &BasicAllowance{
 		SpendLimit: a.SpendLimit,
 		Expiration: a.Expiration.PrepareForExport(dumpTime, dumpHeight),
 	}
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
-func (a BasicFeeAllowance) ValidateBasic() error {
+func (a BasicAllowance) ValidateBasic() error {
 	if a.SpendLimit != nil {
 		if !a.SpendLimit.IsValid() {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "send amount is invalid: %s", a.SpendLimit)

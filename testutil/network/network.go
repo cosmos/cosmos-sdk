@@ -418,7 +418,7 @@ func New(t TestnetEnv, cfg Config) *Network {
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).
 			WithInterfaceRegistry(cfg.InterfaceRegistry).
-			WithJSONMarshaler(cfg.Codec).
+			WithJSONCodec(cfg.Codec).
 			WithLegacyAmino(cfg.LegacyAmino).
 			WithTxConfig(cfg.TxConfig).
 			WithAccountRetriever(cfg.AccountRetriever)

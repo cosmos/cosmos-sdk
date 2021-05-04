@@ -441,8 +441,11 @@ func (s *coinTestSuite) TestSubCoins() {
 		expected    sdk.Coins
 		shouldPanic bool
 	}{
-		{sdk.Coins{s.ca2}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca1, s.cm2}, true},
+		// denoms are not sorted - should panic
 		{sdk.Coins{s.ca2}, sdk.Coins{s.cm2, s.ca1}, sdk.Coins{}, true},
+		{sdk.Coins{s.cm2, s.ca2}, sdk.Coins{s.ca1}, sdk.Coins{}, true},
+		// test cases for sorted denoms
+		{sdk.Coins{s.ca2}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca1, s.cm2}, true},
 		{sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}, false},
 		{sdk.Coins{s.ca1}, sdk.Coins{s.cm0}, sdk.Coins{s.ca1}, false},
 		{sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1}, sdk.Coins{s.cm1}, false},

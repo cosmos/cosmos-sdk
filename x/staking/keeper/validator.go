@@ -253,7 +253,7 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 	}
 
 	intV := gogotypes.Int64Value{}
-	k.cdc.MustUnmarshalBinaryBare(bz, &intV)
+	k.cdc.MustUnmarshal(bz, &intV)
 
 	return intV.GetValue()
 }
@@ -261,7 +261,7 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 // Set the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power int64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.Int64Value{Value: power})
+	bz := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: power})
 	store.Set(types.GetLastValidatorPowerKey(operator), bz)
 }
 
@@ -290,7 +290,7 @@ func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operato
 		addr := sdk.ValAddress(types.AddressFromLastValidatorPowerKey(iter.Key()))
 		intV := &gogotypes.Int64Value{}
 
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), intV)
+		k.cdc.MustUnmarshal(iter.Value(), intV)
 
 		if handler(addr, intV.GetValue()) {
 			break
@@ -337,7 +337,7 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 	}
 
 	addrs := types.ValAddresses{}
-	k.cdc.MustUnmarshalBinaryBare(bz, &addrs)
+	k.cdc.MustUnmarshal(bz, &addrs)
 
 	return addrs.Addresses
 }
@@ -346,7 +346,7 @@ func (k Keeper) GetUnbondingValidators(ctx sdk.Context, endTime time.Time, endHe
 // the unbonding validator queue by a given height and time.
 func (k Keeper) SetUnbondingValidatorsQueue(ctx sdk.Context, endTime time.Time, endHeight int64, addrs []string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&types.ValAddresses{Addresses: addrs})
+	bz := k.cdc.MustMarshal(&types.ValAddresses{Addresses: addrs})
 	store.Set(types.GetValidatorQueueKey(endTime, endHeight), bz)
 }
 
@@ -419,7 +419,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 		// and time.
 		if keyHeight <= blockHeight && (keyTime.Before(blockTime) || keyTime.Equal(blockTime)) {
 			addrs := types.ValAddresses{}
-			k.cdc.MustUnmarshalBinaryBare(unbondingValIterator.Value(), &addrs)
+			k.cdc.MustUnmarshal(unbondingValIterator.Value(), &addrs)
 
 			for _, valAddr := range addrs.Addresses {
 				addr, err := sdk.ValAddressFromBech32(valAddr)

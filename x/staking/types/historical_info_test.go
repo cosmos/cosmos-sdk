@@ -32,7 +32,7 @@ func TestHistoricalInfo(t *testing.T) {
 
 	var value []byte
 	require.NotPanics(t, func() {
-		value = types.ModuleCdc.MustMarshalBinaryBare(&hi)
+		value = types.ModuleCdc.MustMarshal(&hi)
 	})
 	require.NotNil(t, value, "Marshalled HistoricalInfo is nil")
 

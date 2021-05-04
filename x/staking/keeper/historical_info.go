@@ -22,7 +22,7 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.Historic
 func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.HistoricalInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
-	value := k.cdc.MustMarshalBinaryBare(hi)
+	value := k.cdc.MustMarshal(hi)
 	store.Set(key, value)
 }
 

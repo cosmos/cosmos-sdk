@@ -40,8 +40,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONMarshaler
-			cdc := depCdc.(codec.Marshaler)
+			depCdc := clientCtx.JSONCodec
+			cdc := depCdc.(codec.Codec)
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config

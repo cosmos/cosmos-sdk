@@ -114,12 +114,12 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgGrantFeeAllowance
+	var msg types.MsgGrantAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Granter)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Grantee)
+	require.Equal(accounts[2].Address.String(), msg.Granter)
+	require.Equal(accounts[1].Address.String(), msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 
@@ -139,11 +139,11 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
-	err := app.FeeGrantKeeper.GrantFeeAllowance(
+	err := app.FeeGrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,
-		&types.BasicFeeAllowance{
+		&types.BasicAllowance{
 			SpendLimit: feeCoins,
 			Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(30 * time.Hour)),
 		},
@@ -155,7 +155,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgRevokeFeeAllowance
+	var msg types.MsgRevokeAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)

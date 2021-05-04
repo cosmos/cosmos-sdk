@@ -12,10 +12,6 @@ const gasCostPerIteration = uint64(10)
 
 var (
 	_ authz.Authorization = &StakeAuthorization{}
-
-	TypeDelegate        = "/cosmos.staking.v1beta1.Msg/Delegate"
-	TypeUndelegate      = "/cosmos.staking.v1beta1.Msg/Undelegate"
-	TypeBeginRedelegate = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
 )
 
 // NewStakeAuthorization creates a new StakeAuthorization object.
@@ -61,11 +57,11 @@ func (authorization StakeAuthorization) ValidateBasic() error {
 }
 
 // Accept implements Authorization.Accept.
-func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.ServiceMsg) (updated authz.Authorization, delete bool, err error) {
+func (authorization StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (updated authz.Authorization, delete bool, err error) {
 	var validatorAddress string
 	var amount sdk.Coin
 
-	switch msg := msg.Request.(type) {
+	switch msg := msg.(type) {
 	case *MsgDelegate:
 		validatorAddress = msg.ValidatorAddress
 		amount = msg.Amount
@@ -142,11 +138,11 @@ func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]s
 func normalizeAuthzType(authzType AuthorizationType) (string, error) {
 	switch authzType {
 	case AuthorizationType_AUTHORIZATION_TYPE_DELEGATE:
-		return TypeDelegate, nil
+		return sdk.MsgTypeURL(&MsgDelegate{}), nil
 	case AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE:
-		return TypeUndelegate, nil
+		return sdk.MsgTypeURL(&MsgUndelegate{}), nil
 	case AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE:
-		return TypeBeginRedelegate, nil
+		return sdk.MsgTypeURL(&MsgBeginRedelegate{}), nil
 	default:
 		return "", sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type %T", authzType)
 	}

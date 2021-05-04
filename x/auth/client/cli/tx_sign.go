@@ -140,7 +140,6 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 func setOutputFile(cmd *cobra.Command) (func(), error) {
 	outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 	if outputDoc == "" {
-		cmd.SetOut(cmd.OutOrStdout())
 		return func() {}, nil
 	}
 

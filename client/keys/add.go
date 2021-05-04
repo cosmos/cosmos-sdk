@@ -79,9 +79,6 @@ Example:
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation")
 	f.String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
-	cmd.SetOut(cmd.OutOrStdout())
-	cmd.SetErr(cmd.ErrOrStderr())
-
 	return cmd
 }
 
@@ -176,7 +173,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
 		var pk cryptotypes.PubKey
-		err = ctx.JSONMarshaler.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
+		err = ctx.JSONCodec.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
 		if err != nil {
 			return err
 		}

@@ -23,7 +23,7 @@ Cosmos-SDK `x/authz` module comes with following authorization types
 
 ### SendAuthorization
 
-`SendAuthorization` implements `Authorization` interface for the `cosmos.bank.v1beta1.Msg/Send` Msg, that takes a `SpendLimit` and updates it down to zero.
+`SendAuthorization` implements `Authorization` interface for the `cosmos.bank.v1beta1.MsgSend` Msg, that takes a `SpendLimit` and updates it down to zero.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/proto/cosmos/authz/v1beta1/authz.proto#L12-L19
 
@@ -40,7 +40,7 @@ Cosmos-SDK `x/authz` module comes with following authorization types
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/x/authz/types/generic_authorization.go#L20-L28
 
-- `method_name` stores Msg type URL.
+- `msg` stores Msg type URL.
 
 ## Gas
 

@@ -19,7 +19,7 @@ service Query {
 message QueryGrantsRequest {
   string granter = 1;
   string grantee = 2;
-  // Optional, msg_type_url, when set, will query only grants matching give msg type.
+  // Optional, msg_type_url, when set, will query only grants matching given msg type.
   string msg_type_url = 3;
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;

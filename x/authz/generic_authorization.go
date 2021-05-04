@@ -9,9 +9,9 @@ var (
 )
 
 // NewGenericAuthorization creates a new GenericAuthorization object.
-func NewGenericAuthorization(methodName string) *GenericAuthorization {
+func NewGenericAuthorization(msgTypeURL string) *GenericAuthorization {
 	return &GenericAuthorization{
-		Msg: methodName,
+		Msg: msgTypeURL,
 	}
 }
 

@@ -33,11 +33,43 @@ var _ EventManagerI = (*EventManager)(nil)
 // EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.
 type EventManager struct {
-	events Events
+	events  Events
+	history []abci.Event
+}
+
+func NewEventManagerWithHistory(history []abci.Event) *EventManager {
+	return &EventManager{
+		events:  EmptyEvents(),
+		history: history,
+	}
 }
 
 func NewEventManager() *EventManager {
-	return &EventManager{EmptyEvents()}
+	return NewEventManagerWithHistory([]abci.Event{})
+}
+
+// GetEventHistory returns a deep copy of the ABCI events that have been
+// committed to thus far.
+func (em *EventManager) GetABCIEventHistory() []abci.Event {
+	history := make([]abci.Event, len(em.history))
+	for i, event := range em.history {
+		history[i].Type = event.Type
+		attrs := make([]abci.EventAttribute, len(event.Attributes))
+		history[i].Attributes = attrs
+		for j, attr := range event.Attributes {
+			attrKey := make([]byte, len(attr.Key))
+			copy(attrKey, attr.Key)
+			attrValue := make([]byte, len(attr.Value))
+			copy(attrValue, attr.Value)
+			attrs[j] = abci.EventAttribute{
+				Index: attr.Index,
+				Key:   attrKey,
+				Value: attrValue,
+			}
+		}
+	}
+	copy(history, em.history)
+	return history
 }
 
 func (em *EventManager) Events() Events { return em.events }

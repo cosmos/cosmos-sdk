@@ -479,44 +479,23 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // multi-store branch, and provided header.
 func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
-	headerInfo := header.Info{
-		Height:  h.Height,
-		Time:    h.Time,
-		ChainID: h.ChainID,
-		AppHash: h.AppHash,
-	}
-	baseState := &state{
-		ms: ms,
-		ctx: sdk.NewContext(ms, false, app.logger).
-			WithStreamingManager(app.streamingManager).
-			WithBlockHeader(h).
-			WithHeaderInfo(headerInfo),
-	}
-
-	switch mode {
-	case execModeCheck:
-		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
-		app.checkState = baseState
-
-	case execModePrepareProposal:
-		app.prepareProposalState = baseState
-
-	case execModeProcessProposal:
-		app.processProposalState = baseState
-
-	case execModeFinalize:
-		app.finalizeBlockState = baseState
-
-	default:
-		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
+	app.checkState = &state{
+		ms:           ms,
+		ctx:          sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
+		eventHistory: []abci.Event{},
 	}
 }
 
-// SetCircuitBreaker sets the circuit breaker for the BaseApp.
-// The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
-func (app *BaseApp) SetCircuitBreaker(cb CircuitBreaker) {
-	if app.msgServiceRouter == nil {
-		panic("cannot set circuit breaker with no msg service router set")
+// setDeliverState sets the BaseApp's deliverState with a branched multi-store
+// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
+// and provided header. It is set on InitChain and BeginBlock and set to nil on
+// Commit.
+func (app *BaseApp) setDeliverState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.deliverState = &state{
+		ms:           ms,
+		ctx:          sdk.NewContext(ms, header, false, app.logger),
+		eventHistory: []abci.Event{},
 	}
 	app.msgServiceRouter.SetCircuit(cb)
 }
@@ -999,7 +978,8 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {
 			// append the events in the order of occurrence
-			result.Events = append(anteEvents, result.Events...)
+			result.Events = append(events.ToABCIEvents(), result.Events...)
+			app.deliverState.eventHistory = append(app.deliverState.eventHistory, result.Events...)
 		}
 	}
 
@@ -1013,7 +993,10 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 // Result is returned. The caller must not commit state if an error is returned.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []protoreflect.Message, mode execMode) (*sdk.Result, error) {
 	events := sdk.EmptyEvents()
-	msgResponses := make([]*codectypes.Any, 0, len(msgs))
+	historicalEvents := ctx.EventManager().GetABCIEventHistory()
+	txMsgData := &sdk.TxMsgData{
+		Data: make([]*sdk.MsgData, 0, len(msgs)),
+	}
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -1021,9 +1004,33 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 			break
 		}
 
-		handler := app.msgServiceRouter.Handler(msg)
-		if handler == nil {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
+		var (
+			msgResult    *sdk.Result
+			eventMsgName string // name to use as value in event `message.action`
+			err          error
+		)
+
+		msgCtx := ctx.WithEventManager(sdk.NewEventManagerWithHistory(historicalEvents))
+		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
+			// ADR 031 request type routing
+			msgResult, err = handler(msgCtx, msg)
+			eventMsgName = sdk.MsgTypeURL(msg)
+		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
+			// legacy sdk.Msg routing
+			// Assuming that the app developer has migrated all their Msgs to
+			// proto messages and has registered all `Msg services`, then this
+			// path should never be called, because all those Msgs should be
+			// registered within the `msgServiceRouter` already.
+			msgRoute := legacyMsg.Route()
+			eventMsgName = legacyMsg.Type()
+			handler := app.router.Route(msgCtx, msgRoute)
+			if handler == nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+			}
+
+			msgResult, err = handler(msgCtx, msg)
+		} else {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
 
 		// ADR 031 request type routing
@@ -1048,6 +1055,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, reflectMsgs []proto
 		}
 
 		events = events.AppendEvents(msgEvents)
+		historicalEvents = append(historicalEvents, msgEvents.ToABCIEvents()...)
 
 		// Each individual sdk.Result that went through the MsgServiceRouter
 		// (which should represent 99% of the Msgs now, since everyone should

@@ -158,7 +158,282 @@ func (app *BaseApp) Info(_ *abci.InfoRequest) (*abci.InfoResponse, error) {
 		AppVersion:       appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
-	}, nil
+	}
+}
+
+// SetOption implements the ABCI interface.
+func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
+	// TODO: Implement!
+	return
+}
+
+// FilterPeerByAddrPort filters peers by address/port.
+func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
+	if app.addrPeerFilter != nil {
+		return app.addrPeerFilter(info)
+	}
+
+	return abci.ResponseQuery{}
+}
+
+// FilterPeerByID filters peers by node ID.
+func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
+	if app.idPeerFilter != nil {
+		return app.idPeerFilter(info)
+	}
+
+	return abci.ResponseQuery{}
+}
+
+// BeginBlock implements the ABCI application interface.
+func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
+
+	if app.cms.TracingEnabled() {
+		app.cms.SetTracingContext(sdk.TraceContext(
+			map[string]interface{}{"blockHeight": req.Header.Height},
+		))
+	}
+
+	if err := app.validateHeight(req); err != nil {
+		panic(err)
+	}
+
+	// Initialize the DeliverTx state. If this is the first block, it should
+	// already be initialized in InitChain. Otherwise app.deliverState will be
+	// nil, since it is reset on Commit.
+	if app.deliverState == nil {
+		app.setDeliverState(req.Header)
+	} else {
+		// In the first block, app.deliverState.ctx will already be initialized
+		// by InitChain. Context is now updated with Header information.
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockHeader(req.Header).
+			WithBlockHeight(req.Header.Height).
+			WithHeaderHash(req.Hash)
+	}
+
+	// add block gas meter
+	var gasMeter sdk.GasMeter
+	if maxGas := app.getMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
+		gasMeter = sdk.NewGasMeter(maxGas)
+	} else {
+		gasMeter = sdk.NewInfiniteGasMeter()
+	}
+
+	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
+
+	if app.beginBlocker != nil {
+		res = app.beginBlocker(app.deliverState.ctx, req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+	}
+	// set the signed validators for addition to context in deliverTx
+	app.voteInfos = req.LastCommitInfo.GetVotes()
+	return res
+}
+
+// EndBlock implements the ABCI interface.
+func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "end_block")
+
+	if app.deliverState.ms.TracingEnabled() {
+		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
+	}
+
+	if app.endBlocker != nil {
+		// Propagate the event history.
+		em := sdk.NewEventManagerWithHistory(app.deliverState.eventHistory)
+		res = app.endBlocker(app.deliverState.ctx.WithEventManager(em), req)
+		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
+	}
+
+	if cp := app.GetConsensusParams(app.deliverState.ctx); cp != nil {
+		res.ConsensusParamUpdates = cp
+	}
+
+	app.deliverState.eventHistory = []abci.Event{}
+
+	return res
+}
+
+// CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
+// CheckTx mode, messages are not executed. This means messages are only validated
+// and only the AnteHandler is executed. State is persisted to the BaseApp's
+// internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
+// will contain releveant error information. Regardless of tx execution outcome,
+// the ResponseCheckTx will contain relevant gas execution context.
+func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+	defer telemetry.MeasureSince(time.Now(), "abci", "check_tx")
+
+	var mode runTxMode
+
+	switch {
+	case req.Type == abci.CheckTxType_New:
+		mode = runTxModeCheck
+
+	case req.Type == abci.CheckTxType_Recheck:
+		mode = runTxModeReCheck
+
+	default:
+		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
+	}
+
+	gInfo, result, err := app.runTx(mode, req.Tx)
+	if err != nil {
+		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
+	}
+
+	return abci.ResponseCheckTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	}
+}
+
+// DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
+// State only gets persisted if all messages are valid and get executed successfully.
+// Otherwise, the ResponseDeliverTx will contain releveant error information.
+// Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
+// gas execution context.
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
+	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
+
+	gInfo := sdk.GasInfo{}
+	resultStr := "successful"
+
+	defer func() {
+		telemetry.IncrCounter(1, "tx", "count")
+		telemetry.IncrCounter(1, "tx", resultStr)
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+	}()
+
+	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
+	if err != nil {
+		resultStr = "failed"
+		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
+	}
+
+	events := sdk.MarkEventsToIndex(result.Events, app.indexEvents)
+	app.deliverState.eventHistory = append(app.deliverState.eventHistory, events...)
+	return abci.ResponseDeliverTx{
+		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+		Log:       result.Log,
+		Data:      result.Data,
+		Events:    events,
+	}
+}
+
+// Commit implements the ABCI interface. It will commit all state that exists in
+// the deliver state's multi-store and includes the resulting commit ID in the
+// returned abci.ResponseCommit. Commit will set the check state based on the
+// latest header and reset the deliver state. Also, if a non-zero halt height is
+// defined in config, Commit will execute a deferred function call to check
+// against that height and gracefully halt if it matches the latest committed
+// height.
+func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
+
+	header := app.deliverState.ctx.BlockHeader()
+	retainHeight := app.GetBlockRetentionHeight(header.Height)
+
+	// Write the DeliverTx state into branched storage and commit the MultiStore.
+	// The write to the DeliverTx state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called is persists those values.
+	app.deliverState.ms.Write()
+	commitID := app.cms.Commit()
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
+
+	// Reset the Check state to the latest committed.
+	//
+	// NOTE: This is safe because Tendermint holds a lock on the mempool for
+	// Commit. Use the header from this latest block.
+	app.setCheckState(header)
+
+	// empty/reset the deliver state
+	app.deliverState = nil
+
+	var halt bool
+
+	switch {
+	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
+		halt = true
+
+	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
+		halt = true
+	}
+
+	if halt {
+		// Halt the binary and allow Tendermint to receive the ResponseCommit
+		// response with the commit ID hash. This will allow the node to successfully
+		// restart and process blocks assuming the halt configuration has been
+		// reset or moved to a more distant value.
+		app.halt()
+	}
+
+	if app.snapshotInterval > 0 && uint64(header.Height)%app.snapshotInterval == 0 {
+		go app.snapshot(header.Height)
+	}
+
+	return abci.ResponseCommit{
+		Data:         commitID.Hash,
+		RetainHeight: retainHeight,
+	}
+}
+
+// halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
+// back on os.Exit if both fail.
+func (app *BaseApp) halt() {
+	app.logger.Info("halting node per configuration", "height", app.haltHeight, "time", app.haltTime)
+
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		sigIntErr := p.Signal(syscall.SIGINT)
+		sigTermErr := p.Signal(syscall.SIGTERM)
+
+		if sigIntErr == nil || sigTermErr == nil {
+			return
+		}
+	}
+
+	// Resort to exiting immediately if the process could not be found or killed
+	// via SIGINT/SIGTERM signals.
+	app.logger.Info("failed to send SIGINT/SIGTERM; exiting...")
+	os.Exit(0)
+}
+
+// snapshot takes a snapshot of the current state and prunes any old snapshottypes.
+func (app *BaseApp) snapshot(height int64) {
+	if app.snapshotManager == nil {
+		app.logger.Info("snapshot manager not configured")
+		return
+	}
+
+	app.logger.Info("creating state snapshot", "height", height)
+
+	snapshot, err := app.snapshotManager.Create(uint64(height))
+	if err != nil {
+		app.logger.Error("failed to create state snapshot", "height", height, "err", err)
+		return
+	}
+
+	app.logger.Info("completed state snapshot", "height", height, "format", snapshot.Format)
+
+	if app.snapshotKeepRecent > 0 {
+		app.logger.Debug("pruning state snapshots")
+
+		pruned, err := app.snapshotManager.Prune(app.snapshotKeepRecent)
+		if err != nil {
+			app.logger.Error("Failed to prune state snapshots", "err", err)
+			return
+		}
+
+		app.logger.Debug("pruned state snapshots", "pruned", pruned)
+	}
 }
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it

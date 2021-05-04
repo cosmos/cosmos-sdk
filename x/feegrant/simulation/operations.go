@@ -24,8 +24,8 @@ const (
 )
 
 var (
-	TypeMsgGrantFeeAllowance  = sdk.MsgTypeURL(&types.MsgGrantFeeAllowance{})
-	TypeMsgRevokeFeeAllowance = sdk.MsgTypeURL(&types.MsgRevokeFeeAllowance{})
+	TypeMsgGrantFeeAllowance  = sdk.MsgTypeURL(&types.MsgGrantAllowance{})
+	TypeMsgRevokeFeeAllowance = sdk.MsgTypeURL(&types.MsgRevokeAllowance{})
 )
 
 func WeightedOperations(
@@ -74,7 +74,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, "grantee and granter cannot be same"), nil, nil
 		}
 
-		if f, _ := k.GetFeeAllowance(ctx, granter.Address, grantee.Address); f != nil {
+		if f, _ := k.GetAllowance(ctx, granter.Address, grantee.Address); f != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, "fee allowance exists"), nil, nil
 		}
 
@@ -91,7 +91,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
 		}
 
-		msg, err := types.NewMsgGrantFeeAllowance(&types.BasicFeeAllowance{
+		msg, err := types.NewMsgGrantAllowance(&types.BasicAllowance{
 			SpendLimit: spendableCoins,
 			Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(30 * time.Hour)),
 		}, granter.Address, grantee.Address)
@@ -102,7 +102,7 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-		_, err = feegrantMsgClient.GrantFeeAllowance(context.Background(), msg)
+		_, err = feegrantMsgClient.GrantAllowance(context.Background(), msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}
@@ -139,7 +139,7 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 		hasGrant := false
 		var granterAddr sdk.AccAddress
 		var granteeAddr sdk.AccAddress
-		k.IterateAllFeeAllowances(ctx, func(grant types.FeeAllowanceGrant) bool {
+		k.IterateAllFeeAllowances(ctx, func(grant types.Grant) bool {
 
 			granter, err := sdk.AccAddressFromBech32(grant.Granter)
 			if err != nil {
@@ -171,12 +171,12 @@ func SimulateMsgRevokeFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, 
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgRevokeFeeAllowance, err.Error()), nil, err
 		}
 
-		msg := types.NewMsgRevokeFeeAllowance(granterAddr, granteeAddr)
+		msg := types.NewMsgRevokeAllowance(granterAddr, granteeAddr)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		feegrantMsgClient := types.NewMsgClient(svcMsgClientConn)
-		_, err = feegrantMsgClient.RevokeFeeAllowance(context.Background(), &msg)
+		_, err = feegrantMsgClient.RevokeAllowance(context.Background(), &msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
 		}

@@ -19,11 +19,5 @@ pays the fees.
 The fee allowance that a grantee receives is specified by an implementation of
 the FeeAllowance interface. Two FeeAllowance implementations are provided in
 this package: BasicFeeAllowance and PeriodicFeeAllowance.
-
-In order to integrate this into an application, we must use the DeductGrantedFeeDecorator
-ante handler from this package instead of the default DeductFeeDecorator from x/auth.
-
-To allow handling txs from empty accounts (with fees paid from an existing account),
-we have to re-order the decorators as well.
 */
 package feegrant

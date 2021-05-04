@@ -26,7 +26,7 @@ func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.JSONCodec) 
 
 	cmd := genutilcli.InitCmd(testMbm, home)
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(cdc).WithHomeDir(home)
+	clientCtx := client.Context{}.WithJSONCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)
 	clientCtx = clientCtx.WithOutput(out)

@@ -23,7 +23,7 @@ message KeyringEntry {
 message LocalInfo {
   option (gogoproto.goproto_stringer) = false;
 
-  google.protobuf.Any privKeyArmor = 1;
+  google.protobuf.Any privKey = 1;
 }
 
 message LedgerInfo {
@@ -48,6 +48,4 @@ message OfflineInfo {
 
 message MultiInfo {
   option (gogoproto.goproto_stringer) = false;
-
-  uint32 threshold = 1;  //delete
 }

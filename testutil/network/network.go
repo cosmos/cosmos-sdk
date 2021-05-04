@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,7 +15,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
@@ -134,7 +132,7 @@ type (
 	// to create networks. In addition, only the first validator will have a valid
 	// RPC and API server/client.
 	Network struct {
-		T          TestnetEnv
+		Logger     Logger
 		BaseDir    string
 		Validators []*Validator
 
@@ -166,95 +164,44 @@ type (
 	}
 )
 
-type TestnetEnv interface {
+type Logger interface {
 	Log(args ...interface{})
 	Logf(format string, args ...interface{})
-	ConfigDir(chainID string) (string, error)
-	AssertNoError(err error)
 }
 
-var _ TestnetEnv = (*TestingT)(nil)
+var _ Logger = (*testing.T)(nil)
+var _ Logger = (*CLILogger)(nil)
 
-type TestingT struct {
-	*testing.T
-}
-
-func (t TestingT) AssertNoError(err error) {
-	require.NoError(t.T, err)
-}
-
-func (t TestingT) Log(args ...interface{}) {
-	t.T.Log(args...)
-}
-
-func (t TestingT) Logf(format string, args ...interface{}) {
-	t.T.Logf(format, args...)
-}
-
-func (t TestingT) ConfigDir(chainID string) (string, error) {
-	return ioutil.TempDir(t.TempDir(), chainID)
-}
-
-var _ TestnetEnv = (*StandaloneTestnet)(nil)
-
-type StandaloneTestnet struct {
+type CLILogger struct {
 	cmd           *cobra.Command
-	baseConfigDir string
 }
 
-func (s StandaloneTestnet) Log(args ...interface{}) {
+func (s CLILogger) Log(args ...interface{}) {
 	s.cmd.Println(args...)
 }
 
-func (s StandaloneTestnet) Logf(format string, args ...interface{}) {
+func (s CLILogger) Logf(format string, args ...interface{}) {
 	s.cmd.Printf(format, args...)
 }
 
-func (s StandaloneTestnet) AssertNoError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (s StandaloneTestnet) ConfigDir(chainID string) (string, error) {
-	configDir := fmt.Sprintf("%s/%s", s.baseConfigDir, chainID)
-	if _, err := os.Stat(configDir); !os.IsNotExist(err) {
-		return "", fmt.Errorf("config directory already exists: %s", configDir)
-	}
-	return configDir, nil
-}
-
-func NewStandaloneTestnetEnv(cmd *cobra.Command, configDir string) StandaloneTestnet {
-	return StandaloneTestnet{
-		cmd,
-		configDir,
-	}
-}
-
-func NewForTesting(t *testing.T, cfg Config) *Network {
-	testnetEnv := TestingT{t}
-	return New(testnetEnv, cfg)
-
+func NewCLILogger(cmd *cobra.Command) CLILogger {
+	return CLILogger{ cmd }
 }
 
 // New creates a new Network for integration tests.
-func New(t TestnetEnv, cfg Config) *Network {
+func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	// only one caller/test can create and use a network at a time
-	t.Log("acquiring test network lock")
+	l.Log("acquiring test network lock")
 	lock.Lock()
 
-	baseDir, err := t.ConfigDir(cfg.ChainID)
-	t.AssertNoError(err)
-	t.Logf("created temporary directory: %s\n", baseDir)
-
 	network := &Network{
-		T:          t,
+		Logger:          l,
 		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),
 		Config:     cfg,
 	}
 
-	t.Log("preparing test network...")
+	l.Log("preparing test network...")
 
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
@@ -289,24 +236,34 @@ func New(t TestnetEnv, cfg Config) *Network {
 		appCfg.GRPCWeb.Enable = false
 		if i == 0 {
 			apiListenAddr, _, err := server.FreeTCPAddr()
-			t.AssertNoError(err)
+			if err != nil {
+				return nil, err
+			}
 			appCfg.API.Address = apiListenAddr
 
 			apiURL, err := url.Parse(apiListenAddr)
-			t.AssertNoError(err)
+			if err != nil {
+				return nil, err
+			}
 			apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
 
 			rpcAddr, _, err := server.FreeTCPAddr()
-			t.AssertNoError(err)
+			if err != nil {
+				return nil, err
+			}
 			tmCfg.RPC.ListenAddress = rpcAddr
 
 			_, grpcPort, err := server.FreeTCPAddr()
-			t.AssertNoError(err)
+			if err != nil {
+				return nil, err
+			}
 			appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			appCfg.GRPC.Enable = true
 
 			_, grpcWebPort, err := server.FreeTCPAddr()
-			t.AssertNoError(err)
+			if err != nil {
+				return nil, err
+			}
 			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
 			appCfg.GRPCWeb.Enable = true
 		}
@@ -324,44 +281,68 @@ func New(t TestnetEnv, cfg Config) *Network {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		t.AssertNoError(os.MkdirAll(filepath.Join(nodeDir, "config"), 0755))
-		t.AssertNoError(os.MkdirAll(clientDir, 0755))
+		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0755)
+		if err != nil {
+			return nil, err
+		}
+
+		err = os.MkdirAll(clientDir, 0755)
+		if err != nil {
+			return nil, err
+		}
 
 		tmCfg.SetRoot(nodeDir)
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
 		proxyAddr, _, err := server.FreeTCPAddr()
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 		tmCfg.ProxyApp = proxyAddr
 
 		p2pAddr, _, err := server.FreeTCPAddr()
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 		tmCfg.P2P.ListenAddress = p2pAddr
 		tmCfg.P2P.AddrBookStrict = false
 		tmCfg.P2P.AllowDuplicateIP = true
 
 		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(tmCfg)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 		nodeIDs[i] = nodeID
 		valPubKeys[i] = pubKey
 
 		kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, cfg.KeyringOptions...)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		keyringAlgos, _ := kb.SupportedAlgorithms()
 		algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		info := map[string]string{"secret": secret}
 		infoBz, err := json.Marshal(info)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		// save private key seed words
-		t.AssertNoError(writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, infoBz))
+		err = writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, infoBz)
+		if err != nil {
+			return nil, err
+		}
 
 		balances := sdk.NewCoins(
 			sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), cfg.AccountTokens),
@@ -373,7 +354,9 @@ func New(t TestnetEnv, cfg Config) *Network {
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
 		commission, err := sdk.NewDecFromStr("0.5")
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
@@ -383,15 +366,22 @@ func New(t TestnetEnv, cfg Config) *Network {
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
 		)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		p2pURL, err := url.Parse(p2pAddr)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
 		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdk.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
-		t.AssertNoError(txBuilder.SetMsgs(createValMsg))
+		err = txBuilder.SetMsgs(createValMsg)
+		if err != nil {
+			return nil, err
+		}
 		txBuilder.SetFeeAmount(fee)    // Arbitrary fee
 		txBuilder.SetGasLimit(1000000) // Need at least 100386
 		txBuilder.SetMemo(memo)
@@ -404,11 +394,18 @@ func New(t TestnetEnv, cfg Config) *Network {
 			WithTxConfig(cfg.TxConfig)
 
 		err = tx.Sign(txFactory, nodeDirName, txBuilder, true)
-		t.AssertNoError(err)
+		if err != nil {
+			return nil, err
+		}
 
 		txBz, err := cfg.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
-		t.AssertNoError(err)
-		t.AssertNoError(writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz))
+		if err != nil {
+			return nil, err
+		}
+		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz)
+		if err != nil {
+			return nil, err
+		}
 
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), appCfg)
 
@@ -439,21 +436,30 @@ func New(t TestnetEnv, cfg Config) *Network {
 		}
 	}
 
-	t.AssertNoError(initGenFiles(cfg, genAccounts, genBalances, genFiles))
-	t.AssertNoError(collectGenFiles(cfg, network.Validators, network.BaseDir))
-
-	t.Log("starting test network...")
-	for _, v := range network.Validators {
-		t.AssertNoError(startInProcess(cfg, v))
+	err := initGenFiles(cfg, genAccounts, genBalances, genFiles)
+	if err != nil {
+		return nil, err
+	}
+	err = collectGenFiles(cfg, network.Validators, network.BaseDir)
+	if err != nil {
+		return nil, err
 	}
 
-	t.Log("started test network")
+	l.Log("starting test network...")
+	for _, v := range network.Validators {
+		err := startInProcess(cfg, v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	l.Log("started test network")
 
 	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
 	server.TrapSignal(network.Cleanup)
 
-	return network
+	return network, nil
 }
 
 // LatestHeight returns the latest height of the network or an error if the
@@ -531,10 +537,10 @@ func (n *Network) WaitForNextBlock() error {
 func (n *Network) Cleanup() {
 	defer func() {
 		lock.Unlock()
-		n.T.Log("released test network lock")
+		n.Logger.Log("released test network lock")
 	}()
 
-	n.T.Log("cleaning up test network...")
+	n.Logger.Log("cleaning up test network...")
 
 	for _, v := range n.Validators {
 		if v.tmNode != nil && v.tmNode.IsRunning() {
@@ -557,5 +563,5 @@ func (n *Network) Cleanup() {
 		_ = os.RemoveAll(n.BaseDir)
 	}
 
-	n.T.Log("finished cleaning up test network")
+	n.Logger.Log("finished cleaning up test network")
 }

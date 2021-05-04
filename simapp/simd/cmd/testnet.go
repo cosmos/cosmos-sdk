@@ -415,7 +415,7 @@ func writeFile(name string, dir string, contents []byte) error {
 	return nil
 }
 
-func StartTestnet(cmd *cobra.Command, configDir string, chainID string, minGasPrices string, algo string, numValidators int) error {
+func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,numValidators int) error {
 	networkConfig := network.DefaultConfig()
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
@@ -426,8 +426,19 @@ func StartTestnet(cmd *cobra.Command, configDir string, chainID string, minGasPr
 	networkConfig.SigningAlgo = algo
 	networkConfig.MinGasPrices = minGasPrices
 	networkConfig.NumValidators = numValidators
-	testnetEnv := network.NewStandaloneTestnetEnv(cmd, configDir)
+	networkLogger := network.NewCLILogger(cmd)
 
-	network.New(testnetEnv, networkConfig)
+	baseDir := fmt.Sprintf("%s/%s", testnetsDir, networkConfig.ChainID)
+	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
+		return fmt.Errorf(
+			"Testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
+			networkConfig.ChainID, baseDir)
+	}
+
+	_, err := network.New(networkLogger, baseDir, networkConfig)
+	if err != nil {
+		return err
+	}
+
 	return server.WaitForQuitSignals()
 }

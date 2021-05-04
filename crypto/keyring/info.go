@@ -8,10 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
-	"github.com/gogo/protobuf/ptypes"
-	
-
-
 )
 
 var (
@@ -23,9 +19,9 @@ type Info interface {
 	// Human-readable type for key listing
 	GetName() string
 	// Public key
-	GetPubKey() (cryptotypes.PubKey, error)
+	GetPubKey(cdc codec.AminoCodec) (cryptotypes.PubKey, error)
 	// Address
-	GetAddress() (types.AccAddress, error)
+	GetAddress(cdc codec.AminoCodec) (types.AccAddress, error)
 	// Bip44 Path
 	GetPath() (*BIP44Params, error)
 }
@@ -34,13 +30,13 @@ func (ke KeyringEntry) GetName() string {
 	return ke.Name
 }
 
-func (ke KeyringEntry) GetPubKey() (pk cryptotypes.PubKey, err error) {
-	return ke.unmarshalAnytoPubKey()
+func (ke KeyringEntry) GetPubKey(cdc codec.AminoCodec) (pk cryptotypes.PubKey, err error) {
+	return ke.unmarshalAnytoPubKey(cdc)
 }
 
 // GetType implements Info interface
-func (ke KeyringEntry) GetAddress() (types.AccAddress, error) {
-	pk, err := ke.unmarshalAnytoPubKey()
+func (ke KeyringEntry) GetAddress(cdc codec.AminoCodec) (types.AccAddress, error) {
+	pk, err := ke.unmarshalAnytoPubKey(cdc)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal any to Pubkey")
 	}
@@ -48,31 +44,18 @@ func (ke KeyringEntry) GetAddress() (types.AccAddress, error) {
 }
 
 func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
+	l := ke.GetLedger()
 	switch {
-	case ke.GetLedger() != nil:
-		l := ke.GetLedger() 
+	case l != nil:
 		tmp := l.Path
 		return tmp, nil
-	case ke.GetOffline() != nil, ke.GetLocal() != nil, ke.GetMulti() != nil:               
+	default:               
 		return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 	}
-	/* 
-		should I handle this case? or just the better approach is:
-		if ke.GetLedger() != nil {
-			l := ke.GetLedger() 
-			tmp := l.Path
-			return tmp, nil
-		}
-		return nil, fmt.Errorf("BIP44 Paths are not available for this type")
-
-	*/
-
-	return nil, fmt.Errorf("some error")  
 }
 
-
-func (ke KeyringEntry) unmarshalAnytoPubKey() (pk cryptotypes.PubKey, err error) {
-	if err := ptypes.UnmarshalAny(ke.PubKey, &pk); err != nil {
+func (ke KeyringEntry) unmarshalAnytoPubKey(cdc codec.AminoCodec) (pk cryptotypes.PubKey, err error) {
+	if err := cdc.UnmarshalInterface(ke.PubKey, &pk); err != nil{
 		return nil, err
 	}
 	return
@@ -94,12 +77,12 @@ func protoMarshalInfo(i Info) ([]byte, error) {
 }
 
 // decoding info
-func protoUnmarshalInfo(bz []byte, cdc codec.Marshaler) (Info, error) {
+func protoUnmarshalInfo(bz []byte, cdc codec.AminoCodec) (Info, error) {
 	
 	var ke KeyringEntry // will not work cause we use any, use InterfaceRegistry
 	// dont forget to merge master to my branch, UnmarshalBinaryBare has been renamed
 	// cdcc.Marshaler.UnmarshalBinaryBare()  // like proto.UnMarshal but works with Any
-	if err := cdc.UnmarshalBinaryBare(bz, &ke); err != nil {
+	if err := cdc.UnmarshalInterface(bz, &ke); err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to unmarshal bytes to Info")
 	}
 

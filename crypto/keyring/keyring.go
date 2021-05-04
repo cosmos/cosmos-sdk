@@ -165,8 +165,7 @@ type Options struct {
 // NewInMemory creates a transient keyring useful for testing
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
-func NewInMemory(opts ...Option) Keyring {
-	cdc := simappparams.EncodingConfig.Marshaler
+func NewInMemory(cdc codec.AminoCodec, opts ...Option) Keyring {
 	return newKeystore(keyring.NewArrayKeyring(nil), cdc, opts...)
 }
 
@@ -180,10 +179,11 @@ func New(
 		db  keyring.Keyring
 		err error
 	)
+	cdc := codec.NewAminoCodec(codec.NewLegacyAmino()) //?
 
 	switch backend {
 	case BackendMemory:
-		return NewInMemory(opts...), err
+		return NewInMemory(cdc, opts...), err
 	case BackendTest:
 		db, err = keyring.Open(newTestBackendKeyringConfig(appName, rootDir))
 	case BackendFile:

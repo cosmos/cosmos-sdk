@@ -284,6 +284,8 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // the coin is simply added to the sum assuming it's not zero.
 // The function panics if `coinsB` are not sorted (ascending).
 func (coins Coins) safeAdd(coinsB Coins) Coins {
+	// probably the best way will be to make Coins and interface and hide the structure
+	// definition (type alias)
 	if !coins.isSorted() {
 		panic("Coins (self) must be sorted")
 	}

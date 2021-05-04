@@ -1035,7 +1035,7 @@ QueryGrantsRequest is the request type for the Query/Grants RPC method.
 | ----- | ---- | ----- | ----------- |
 | `granter` | [string](#string) |  |  |
 | `grantee` | [string](#string) |  |  |
-| `msg_type_url` | [string](#string) |  | Optional, msg_type_url, when set, will query only grants matching give msg type. |
+| `msg_type_url` | [string](#string) |  | Optional, msg_type_url, when set, will query only grants matching given msg type. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
 
 

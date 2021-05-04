@@ -161,7 +161,6 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	hugeAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 9999))
 	_ = hugeAtom
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
-	_ = smallAtom
 	futureAfterSmall := &types.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
 		Expiration: &oneYear,

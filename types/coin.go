@@ -244,9 +244,6 @@ func (coins Coins) Validate() error {
 }
 
 func (coins Coins) isSorted() bool {
-	if len(coins) < 2 {
-		return true
-	}
 	for i := 1; i < len(coins); i++ {
 		if coins[i-1].Denom > coins[i].Denom {
 			return false
@@ -272,7 +269,7 @@ func (coins Coins) IsValid() bool {
 //
 // CONTRACT: Add will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
-// The function panics if `coinsB` are not sorted (ascending).
+// The function panics if `coins` or  `coinsB` are not sorted (ascending).
 func (coins Coins) Add(coinsB ...Coin) Coins {
 	return coins.safeAdd(coinsB)
 }
@@ -282,7 +279,7 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
-// The function panics if `coinsB` are not sorted (ascending).
+// The function panics if `coins` or  `coinsB` are not sorted (ascending).
 func (coins Coins) safeAdd(coinsB Coins) Coins {
 	// probably the best way will be to make Coins and interface and hide the structure
 	// definition (type alias)
@@ -377,7 +374,7 @@ func (coins Coins) Sub(coinsB Coins) Coins {
 
 // SafeSub performs the same arithmetic as Sub but returns a boolean if any
 // negative coin amount was returned.
-// The function panics if `coinsB` are not sorted (ascending).
+// The function panics if `coins` or  `coinsB` are not sorted (ascending).
 func (coins Coins) SafeSub(coinsB Coins) (Coins, bool) {
 	diff := coins.safeAdd(coinsB.negative())
 	return diff, diff.IsAnyNegative()

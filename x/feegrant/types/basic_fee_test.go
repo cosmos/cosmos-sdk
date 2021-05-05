@@ -15,10 +15,17 @@ import (
 
 func TestBasicFeeValidAllow(t *testing.T) {
 	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	badTime := ctx.BlockTime().AddDate(0, 0, -1)
+	allowace := &types.BasicAllowance{
+		Expiration: &badTime,
+	}
+	require.Error(t, allowace.ValidateBasic())
+
+	ctx = app.BaseApp.NewContext(false, tmproto.Header{
 		Time: time.Now(),
 	})
-
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 10))
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))

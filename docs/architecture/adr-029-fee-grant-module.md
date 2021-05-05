@@ -3,6 +3,7 @@
 ## Changelog
 
 - 2020/08/18: Initial Draft
+- 2021/05/05: Update `FeeAllowanceI` interface and fee allowances.  
 
 ## Status
 
@@ -38,21 +39,21 @@ Fee allowances are defined by the extensible `FeeAllowanceI` interface:
 
 ```go
 type FeeAllowanceI {
-    // Accept can use fee payment requested as well as timestamp of the current block
- 	// to determine whether or not to process this. This is checked in
- 	// Keeper.UseGrantedFees and the return values should match how it is handled there.
- 	//
- 	// If it returns an error, the fee payment is rejected, otherwise it is accepted.
- 	// The FeeAllowance implementation is expected to update it's internal state
- 	// and will be saved again after an acceptance.
- 	//
- 	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
- 	// (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
- 	Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
+  // Accept can use fee payment requested as well as timestamp of the current block
+  // to determine whether or not to process this. This is checked in
+  // Keeper.UseGrantedFees and the return values should match how it is handled there.
+  //
+  // If it returns an error, the fee payment is rejected, otherwise it is accepted.
+  // The FeeAllowance implementation is expected to update it's internal state
+  // and will be saved again after an acceptance.
+  //
+  // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
+  // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
+  Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
 
-   // ValidateBasic should evaluate this FeeAllowance for internal consistency.
-	// Don't allow negative amounts, or negative periods for example.
-	ValidateBasic() error
+  // ValidateBasic should evaluate this FeeAllowance for internal consistency.
+  // Don't allow negative amounts, or negative periods for example.
+  ValidateBasic() error
 }
 ```
 
@@ -62,35 +63,35 @@ Two basic fee allowance types, `BasicAllowance` and `PeriodicAllowance` are defi
 // BasicAllowance implements FeeAllowanceI with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
 message BasicAllowance {
-	// spend_limit specifies the maximum amount of tokens that can be spent
-	// by this allowance and will be updated as tokens are spent. If it is
-	// empty, there is no spend limit and any amount of coins can be spent.
-    repeated cosmos_sdk.v1.Coin spend_limit = 1;
+  // spend_limit specifies the maximum amount of tokens that can be spent
+  // by this allowance and will be updated as tokens are spent. If it is
+  // empty, there is no spend limit and any amount of coins can be spent.
+  repeated cosmos_sdk.v1.Coin spend_limit = 1;
 
-    // expiration specifies an optional time when this allowance expires
-    google.protobuf.Timestamp expiration = 2;
+  // expiration specifies an optional time when this allowance expires
+  google.protobuf.Timestamp expiration = 2;
 }
 
 // PeriodicAllowance extends FeeAllowanceI to allow for both a maximum cap,
 // as well as a limit per time period.
 message PeriodicAllowance {
-     BasicAllowance basic = 1;
+  BasicAllowance basic = 1;
 
-     // period specifies the time duration in which period_spend_limit coins can
-     // be spent before that allowance is reset
-     google.protobuf.Duration period = 2;
- 
-     // period_spend_limit specifies the maximum number of coins that can be spent
-     // in the period
-     repeated cosmos_sdk.v1.Coin period_spend_limit = 3;
+  // period specifies the time duration in which period_spend_limit coins can
+  // be spent before that allowance is reset
+  google.protobuf.Duration period = 2;
 
-     // period_can_spend is the number of coins left to be spent before the period_reset time
-     repeated cosmos_sdk.v1.Coin period_can_spend = 4;
- 
-     // period_reset is the time at which this period resets and a new one begins,
-     // it is calculated from the start time of the first transaction after the
-     // last period ended
-     google.protobuf.Timestamp period_reset = 5;
+  // period_spend_limit specifies the maximum number of coins that can be spent
+  // in the period
+  repeated cosmos_sdk.v1.Coin period_spend_limit = 3;
+
+  // period_can_spend is the number of coins left to be spent before the period_reset time
+  repeated cosmos_sdk.v1.Coin period_can_spend = 4;
+
+  // period_reset is the time at which this period resets and a new one begins,
+  // it is calculated from the start time of the first transaction after the
+  // last period ended
+  google.protobuf.Timestamp period_reset = 5;
 }
 
 ```

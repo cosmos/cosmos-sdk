@@ -190,7 +190,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			"",
 			func() {},
 			func(authorizations *types.QueryAuthorizationsResponse) {
-				s.Require().Len(authorizations.Authorizations), 1)
+				s.Require().Equal(len(authorizations.Authorizations), 1)
 			},
 		},
 		{

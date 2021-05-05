@@ -31,19 +31,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) err
 	return nil
 }
 
-// ExportGenesis will dump the contents of the keeper into a serializable GenesisState
-//
-// All expiration heights will be thrown off if we dump state and start at a new
-// chain at height 0. Thus, we allow the Allowances to "prepare themselves"
-// for export, like if they have expiry at 5000 and current is 4000, they export with
-// expiry of 1000. Every FeeAllowance has a method `PrepareForExport` that allows
-// them to perform any changes needed prior to export.
+// ExportGenesis will dump the contents of the keeper into a serializable GenesisState.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) (*types.GenesisState, error) {
-	time, height := ctx.BlockTime(), ctx.BlockHeight()
 	var grants []types.Grant
 
 	err := k.IterateAllFeeAllowances(ctx, func(grant types.Grant) bool {
-		grants = append(grants, grant.PrepareForExport(time, height))
+		grants = append(grants, grant)
 		return false
 	})
 

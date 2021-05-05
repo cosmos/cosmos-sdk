@@ -50,6 +50,10 @@ ignored as it is implied from [from_key_or_address].`,
 			}
 
 			msg := types.NewMsgSend(clientCtx.GetFromAddress(), toAddr, coins)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
 			_, err = msgClient.Send(cmd.Context(), msg)

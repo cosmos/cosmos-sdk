@@ -75,7 +75,7 @@ func TestGrant(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			grant, err := types.NewFeeAllowanceGrant(tc.granter, tc.grantee, &types.BasicFeeAllowance{
+			grant, err := types.NewGrant(tc.granter, tc.grantee, &types.BasicAllowance{
 				SpendLimit: tc.limit,
 				Expiration: tc.expires,
 			})
@@ -91,7 +91,7 @@ func TestGrant(t *testing.T) {
 			// if it is valid, let's try to serialize, deserialize, and make sure it matches
 			bz, err := cdc.Marshal(&grant)
 			require.NoError(t, err)
-			var loaded types.FeeAllowanceGrant
+			var loaded types.Grant
 			err = cdc.Unmarshal(bz, &loaded)
 			require.NoError(t, err)
 

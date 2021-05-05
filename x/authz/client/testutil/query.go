@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 			} else {
 				s.Require().NoError(err)
 				var grants types.QueryAuthorizationsResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &grants)
+				err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &grants)
 				s.Require().NoError(err)
 			}
 		})

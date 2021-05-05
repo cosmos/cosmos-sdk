@@ -41,14 +41,14 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 	now := suite.ctx.BlockHeader().Time
 	msgSrvr := keeper.NewMsgServerImpl(suite.keeper)
 
-	allowance := &types.BasicFeeAllowance{SpendLimit: coins, Expiration: types.ExpiresAtTime(now.AddDate(1, 0, 0))}
-	err := suite.keeper.GrantFeeAllowance(suite.ctx, granterAddr, granteeAddr, allowance)
+	allowance := &types.BasicAllowance{SpendLimit: coins, Expiration: types.ExpiresAtTime(now.AddDate(1, 0, 0))}
+	err := suite.keeper.GrantAllowance(suite.ctx, granterAddr, granteeAddr, allowance)
 	suite.Require().NoError(err)
 
 	genesis, err := feegrant.ExportGenesis(suite.ctx, suite.keeper)
 	suite.Require().NoError(err)
 	// revoke fee allowance
-	_, err = msgSrvr.RevokeFeeAllowance(sdk.WrapSDKContext(suite.ctx), &types.MsgRevokeFeeAllowance{
+	_, err = msgSrvr.RevokeAllowance(sdk.WrapSDKContext(suite.ctx), &types.MsgRevokeAllowance{
 		Granter: granterAddr.String(),
 		Grantee: granteeAddr.String(),
 	})
@@ -67,11 +67,11 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 
 	testCases := []struct {
 		name          string
-		feeAllowances []types.FeeAllowanceGrant
+		feeAllowances []types.Grant
 	}{
 		{
 			"invalid granter",
-			[]types.FeeAllowanceGrant{
+			[]types.Grant{
 				{
 					Granter: "invalid granter",
 					Grantee: granteeAddr.String(),
@@ -80,7 +80,7 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 		},
 		{
 			"invalid grantee",
-			[]types.FeeAllowanceGrant{
+			[]types.Grant{
 				{
 					Granter: granterAddr.String(),
 					Grantee: "invalid grantee",
@@ -89,7 +89,7 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 		},
 		{
 			"invalid allowance",
-			[]types.FeeAllowanceGrant{
+			[]types.Grant{
 				{
 					Granter:   granterAddr.String(),
 					Grantee:   granteeAddr.String(),
@@ -102,7 +102,7 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.name, func() {
-			err := feegrant.InitGenesis(suite.ctx, suite.keeper, &types.GenesisState{FeeAllowances: tc.feeAllowances})
+			err := feegrant.InitGenesis(suite.ctx, suite.keeper, &types.GenesisState{Allowances: tc.feeAllowances})
 			suite.Require().Error(err)
 		})
 	}

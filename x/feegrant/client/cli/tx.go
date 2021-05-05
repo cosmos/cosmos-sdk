@@ -58,7 +58,7 @@ Examples:
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z or
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --period 3600 --period-limit 10stake --expiration 36000 or
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z 
-	--allowed-messages "/cosmos.gov.v1beta1.Msg/SubmitProposal,/cosmos.gov.v1beta1.Msg/Vote"
+	--allowed-messages "/cosmos.gov.v1beta1.MsgSubmitProposal,/cosmos.gov.v1beta1.MsgVote"
 				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
@@ -97,7 +97,7 @@ Examples:
 				return err
 			}
 
-			basic := types.BasicFeeAllowance{
+			basic := types.BasicAllowance{
 				SpendLimit: limit,
 			}
 
@@ -136,7 +136,7 @@ Examples:
 						return fmt.Errorf("period(%d) cannot reset after expiration(%v)", periodClock, exp)
 					}
 
-					periodic := types.PeriodicFeeAllowance{
+					periodic := types.PeriodicAllowance{
 						Basic:            basic,
 						Period:           types.ClockDuration(time.Duration(periodClock) * time.Second),
 						PeriodReset:      types.ExpiresAtTime(periodReset),
@@ -157,20 +157,20 @@ Examples:
 			}
 
 			if len(allowedMsgs) > 0 {
-				grant, err = types.NewAllowedMsgFeeAllowance(grant, allowedMsgs)
+				grant, err = types.NewAllowedMsgAllowance(grant, allowedMsgs)
 				if err != nil {
 					return err
 				}
 			}
 
-			msg, err := types.NewMsgGrantFeeAllowance(grant, granter, grantee)
+			msg, err := types.NewMsgGrantAllowance(grant, granter, grantee)
 			if err != nil {
 				return err
 			}
 
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.GrantFeeAllowance(cmd.Context(), msg)
+			_, err = msgClient.GrantAllowance(cmd.Context(), msg)
 			if err != nil {
 				return err
 			}
@@ -215,10 +215,10 @@ Example:
 				return err
 			}
 
-			msg := types.NewMsgRevokeFeeAllowance(clientCtx.GetFromAddress(), grantee)
+			msg := types.NewMsgRevokeAllowance(clientCtx.GetFromAddress(), grantee)
 			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.RevokeFeeAllowance(cmd.Context(), &msg)
+			_, err = msgClient.RevokeAllowance(cmd.Context(), &msg)
 			if err != nil {
 				return err
 			}

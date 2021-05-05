@@ -15,8 +15,8 @@ import (
 const feegrant = "feegrant"
 
 // genFeeGrants returns a slice of randomly generated allowances.
-func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []types.FeeAllowanceGrant {
-	allowances := make([]types.FeeAllowanceGrant, len(accounts)-1)
+func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []types.Grant {
+	allowances := make([]types.Grant, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
 		granter := accounts[i].Address
 		grantee := accounts[i+1].Address
@@ -25,22 +25,22 @@ func genFeeGrants(r *rand.Rand, accounts []simtypes.Account) []types.FeeAllowanc
 	return allowances
 }
 
-func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) types.FeeAllowanceGrant {
-	allowances := make([]types.FeeAllowanceGrant, 3)
+func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) types.Grant {
+	allowances := make([]types.Grant, 3)
 	spendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
 	periodSpendLimit := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10)))
 
-	basic := types.BasicFeeAllowance{
+	basic := types.BasicAllowance{
 		SpendLimit: spendLimit,
 	}
 
-	basicAllowance, err := types.NewFeeAllowanceGrant(granter, grantee, &basic)
+	basicAllowance, err := types.NewGrant(granter, grantee, &basic)
 	if err != nil {
 		panic(err)
 	}
 	allowances[0] = basicAllowance
 
-	periodicAllowance, err := types.NewFeeAllowanceGrant(granter, grantee, &types.PeriodicFeeAllowance{
+	periodicAllowance, err := types.NewGrant(granter, grantee, &types.PeriodicAllowance{
 		Basic:            basic,
 		PeriodSpendLimit: periodSpendLimit,
 		Period:           types.ClockDuration(time.Hour),
@@ -50,9 +50,9 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) typ
 	}
 	allowances[1] = periodicAllowance
 
-	filteredAllowance, err := types.NewFeeAllowanceGrant(granter, grantee, &types.AllowedMsgFeeAllowance{
+	filteredAllowance, err := types.NewGrant(granter, grantee, &types.AllowedMsgAllowance{
 		Allowance:       basicAllowance.GetAllowance(),
-		AllowedMessages: []string{"/cosmos.gov.v1beta1.Msg/SubmitProposal"},
+		AllowedMessages: []string{"/cosmos.gov.v1beta1.MsgSubmitProposal"},
 	})
 	if err != nil {
 		panic(err)
@@ -64,7 +64,7 @@ func generateRandomAllowances(granter, grantee sdk.AccAddress, r *rand.Rand) typ
 
 // RandomizedGenState generates a random GenesisState for feegrant
 func RandomizedGenState(simState *module.SimulationState) {
-	var feegrants []types.FeeAllowanceGrant
+	var feegrants []types.Grant
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, feegrant, &feegrants, simState.Rand,

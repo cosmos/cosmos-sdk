@@ -16,8 +16,8 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// FeeAllowance returns fee granted to the grantee by the granter.
-func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequest) (*types.QueryFeeAllowanceResponse, error) {
+// Allowance returns fee granted to the grantee by the granter.
+func (q Keeper) Allowance(c context.Context, req *types.QueryAllowanceRequest) (*types.QueryAllowanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -34,7 +34,7 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	feeAllowance, err := q.GetFeeAllowance(ctx, granterAddr, granteeAddr)
+	feeAllowance, err := q.GetAllowance(ctx, granterAddr, granteeAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -49,8 +49,8 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return &types.QueryFeeAllowanceResponse{
-		FeeAllowance: &types.FeeAllowanceGrant{
+	return &types.QueryAllowanceResponse{
+		Allowance: &types.Grant{
 			Granter:   granterAddr.String(),
 			Grantee:   granteeAddr.String(),
 			Allowance: feeAllowanceAny,
@@ -58,7 +58,8 @@ func (q Keeper) FeeAllowance(c context.Context, req *types.QueryFeeAllowanceRequ
 	}, nil
 }
 
-func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRequest) (*types.QueryFeeAllowancesResponse, error) {
+// Allowances queries all the allowances granted to the given grantee.
+func (q Keeper) Allowances(c context.Context, req *types.QueryAllowancesRequest) (*types.QueryAllowancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -70,13 +71,13 @@ func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRe
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var grants []*types.FeeAllowanceGrant
+	var grants []*types.Grant
 
 	store := ctx.KVStore(q.storeKey)
 	grantsStore := prefix.NewStore(store, types.FeeAllowancePrefixByGrantee(granteeAddr))
 
 	pageRes, err := query.Paginate(grantsStore, req.Pagination, func(key []byte, value []byte) error {
-		var grant types.FeeAllowanceGrant
+		var grant types.Grant
 
 		if err := q.cdc.Unmarshal(value, &grant); err != nil {
 			return err
@@ -90,5 +91,5 @@ func (q Keeper) FeeAllowances(c context.Context, req *types.QueryFeeAllowancesRe
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryFeeAllowancesResponse{FeeAllowances: grants, Pagination: pageRes}, nil
+	return &types.QueryAllowancesResponse{Allowances: grants, Pagination: pageRes}, nil
 }

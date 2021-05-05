@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
 	testCases := []struct {
 		name      string
 		url       string
@@ -95,37 +95,37 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	}{
 		{
 			"fail invalid granter address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, "invalid_granter", s.grantee.String(), typeMsgSend),
+			fmt.Sprintf(grantsURL, "invalid_granter", s.grantee.String(), typeMsgSend),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 		},
 		{
 			"fail invalid grantee address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), "invalid_grantee", typeMsgSend),
+			fmt.Sprintf(grantsURL, val.Address.String(), "invalid_grantee", typeMsgSend),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 		},
 		{
 			"fail with empty granter",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, "", s.grantee.String(), typeMsgSend),
+			fmt.Sprintf(grantsURL, "", s.grantee.String(), typeMsgSend),
 			true,
-			"Not Implemented",
+			"empty address string is not allowed: invalid request",
 		},
 		{
 			"fail with empty grantee",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), "", typeMsgSend),
+			fmt.Sprintf(grantsURL, val.Address.String(), "", typeMsgSend),
 			true,
-			"Not Implemented",
+			"empty address string is not allowed: invalid request",
 		},
 		{
 			"fail invalid msg-type",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
+			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
 			true,
 			"rpc error: code = NotFound desc = no authorization found for invalidMsg type: key not found",
 		},
 		{
 			"valid query",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grant?method_name=%s", baseURL, val.Address.String(), s.grantee.String(), typeMsgSend),
+			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String(), typeMsgSend),
 			false,
 			"",
 		},
@@ -141,7 +141,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 				var g authz.QueryGrantsResponse
 				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &g)
 				require.NoError(err)
-				require.Len(g, 1)
+				require.Len(g.Grants, 1)
 				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
 				auth := g.Grants[0].GetAuthorization()
 				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
@@ -152,7 +152,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 
 func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 	val := s.network.Validators[0]
-	baseURL := val.APIAddress
+	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 	testCases := []struct {
 		name      string
 		url       string
@@ -162,32 +162,8 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		postRun   func(*authz.QueryGrantsResponse)
 	}{
 		{
-			"fail invalid granter address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, "invalid_granter", s.grantee.String()),
-			true,
-			"decoding bech32 failed: invalid index of 1: invalid request",
-			func() {},
-			func(_ *authz.QueryGrantsResponse) {},
-		},
-		{
-			"fail invalid grantee address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), "invalid_grantee"),
-			true,
-			"decoding bech32 failed: invalid index of 1: invalid request",
-			func() {},
-			func(_ *authz.QueryGrantsResponse) {},
-		},
-		{
-			"fail empty grantee address",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, "", "invalid_grantee"),
-			true,
-			"Not Implemented",
-			func() {},
-			func(_ *authz.QueryGrantsResponse) {},
-		},
-		{
 			"valid query: expect single grant",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String()),
 			false,
 			"",
 			func() {},
@@ -197,7 +173,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect two grants",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String()),
 			false,
 			"",
 			func() {
@@ -219,7 +195,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect single grant with pagination",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants?pagination.limit=1", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL+"&pagination.limit=1", val.Address.String(), s.grantee.String()),
 			false,
 			"",
 			func() {},
@@ -229,7 +205,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect two grants with pagination",
-			fmt.Sprintf("%s/cosmos/authz/v1beta1/granters/%s/grantees/%s/grants?pagination.limit=2", baseURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL+"&pagination.limit=2", val.Address.String(), s.grantee.String()),
 			false,
 			"",
 			func() {},

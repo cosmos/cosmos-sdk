@@ -32,7 +32,7 @@ func QueryGenesisTxs(clientCtx client.Context, w http.ResponseWriter) {
 		return
 	}
 
-	genState := types.GetGenesisStateFromAppState(clientCtx.JSONMarshaler, appState)
+	genState := types.GetGenesisStateFromAppState(clientCtx.JSONCodec, appState)
 	genTxs := make([]sdk.Tx, len(genState.GenTxs))
 	for i, tx := range genState.GenTxs {
 		err := clientCtx.LegacyAmino.UnmarshalJSON(tx, &genTxs[i])

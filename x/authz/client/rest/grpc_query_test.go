@@ -138,7 +138,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 				s.Require().Contains(string(resp), tc.errorMsg)
 			} else {
 				var authorization authz.QueryAuthorizationResponse
-				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &authorization)
+				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &authorization)
 				s.Require().NoError(err)
 				authorization.Authorization.UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
 				auth := authorization.Authorization.GetAuthorizationGrant()
@@ -245,7 +245,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
 				var authorizations authz.QueryAuthorizationsResponse
-				err := val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &authorizations)
+				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &authorizations)
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)
 			}

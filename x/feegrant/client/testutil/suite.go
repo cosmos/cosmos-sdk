@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	network      *network.Network
 	addedGranter sdk.AccAddress
 	addedGrantee sdk.AccAddress
-	addedGrant   types.FeeAllowanceGrant
+	addedGrant   types.Grant
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.addedGranter = granter
 	s.addedGrantee = grantee
 
-	grant, err := types.NewFeeAllowanceGrant(granter, grantee, &types.BasicFeeAllowance{
+	grant, err := types.NewGrant(granter, grantee, &types.BasicAllowance{
 		SpendLimit: sdk.NewCoins(fee),
 	})
 	s.Require().NoError(err)
@@ -113,8 +113,8 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 		args         []string
 		expectErrMsg string
 		expectErr    bool
-		respType     *types.FeeAllowanceGrant
-		resp         *types.FeeAllowanceGrant
+		respType     *types.Grant
+		resp         *types.Grant
 	}{
 		{
 			"wrong granter",
@@ -155,7 +155,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			},
 			"",
 			false,
-			&types.FeeAllowanceGrant{},
+			&types.Grant{},
 			&s.addedGrant,
 		},
 	}
@@ -172,16 +172,16 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 				s.Require().Contains(err.Error(), tc.expectErrMsg)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().Equal(tc.respType.Grantee, tc.respType.Grantee)
 				s.Require().Equal(tc.respType.Granter, tc.respType.Granter)
-				grant, err := tc.respType.GetFeeGrant()
+				grant, err := tc.respType.GetGrant()
 				s.Require().NoError(err)
-				grant1, err1 := tc.resp.GetFeeGrant()
+				grant1, err1 := tc.resp.GetGrant()
 				s.Require().NoError(err1)
 				s.Require().Equal(
-					grant.(*types.BasicFeeAllowance).SpendLimit,
-					grant1.(*types.BasicFeeAllowance).SpendLimit,
+					grant.(*types.BasicAllowance).SpendLimit,
+					grant1.(*types.BasicAllowance).SpendLimit,
 				)
 			}
 		})
@@ -197,7 +197,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 		name         string
 		args         []string
 		expectErr    bool
-		resp         *types.QueryFeeAllowancesResponse
+		resp         *types.QueryAllowancesResponse
 		expectLength int
 	}{
 		{
@@ -214,7 +214,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, &types.QueryFeeAllowancesResponse{}, 0,
+			false, &types.QueryAllowancesResponse{}, 0,
 		},
 		{
 			"valid req",
@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 				grantee.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, &types.QueryFeeAllowancesResponse{}, 1,
+			false, &types.QueryAllowancesResponse{}, 1,
 		},
 	}
 
@@ -237,8 +237,8 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
-				s.Require().Len(tc.resp.FeeAllowances, tc.expectLength)
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.resp), out.String())
+				s.Require().Len(tc.resp.Allowances, tc.expectLength)
 			}
 		})
 	}
@@ -486,7 +486,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -575,7 +575,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -629,7 +629,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 
 	s.Require().NoError(err)
 	var resp sdk.TxResponse
-	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &resp), out.String())
+	s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().Equal(uint32(0), resp.Code)
 }
 
@@ -714,7 +714,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -733,20 +733,20 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	resp := &types.FeeAllowanceGrant{}
+	resp := &types.Grant{}
 
-	s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), resp), out.String())
+	s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), resp), out.String())
 	s.Require().Equal(resp.Grantee, resp.Grantee)
 	s.Require().Equal(resp.Granter, resp.Granter)
 
-	grant, err := resp.GetFeeGrant()
+	grant, err := resp.GetGrant()
 	s.Require().NoError(err)
 
-	filteredFeeGrant, err := grant.(*types.AllowedMsgFeeAllowance).GetAllowance()
+	filteredFeeGrant, err := grant.(*types.AllowedMsgAllowance).GetAllowance()
 	s.Require().NoError(err)
 
 	s.Require().Equal(
-		filteredFeeGrant.(*types.BasicFeeAllowance).SpendLimit.String(),
+		filteredFeeGrant.(*types.BasicAllowance).SpendLimit.String(),
 		spendLimit.String(),
 	)
 
@@ -804,7 +804,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 		s.Run(tc.name, func() {
 			out, err := tc.malleate()
 			s.Require().NoError(err)
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 			txResp := tc.respType.(*sdk.TxResponse)
 			s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 		})

@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdQueryGrants implements the query authorization command.
 func GetCmdQueryGrants() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "authorizations [granter-addr] [grantee-addr] [msg-type-url]?",
+		Use:   "grants [granter-addr] [grantee-addr] [msg-type-url]?",
 		Args:  cobra.RangeArgs(2, 3),
 		Short: "query grants for a granter-grantee pair and optionally a msg-type-url",
 		Long: strings.TrimSpace(

@@ -1,4 +1,4 @@
-// +build norace
+// x+build norace
 
 package rest_test
 
@@ -30,7 +30,7 @@ type IntegrationTestSuite struct {
 	grantee sdk.AccAddress
 }
 
-var typeMsgSend = banktypes.SendAuthorization{}.MethodName()
+var typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
 var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().Contains(out.String(), `"code":0`)
 
 	// grant authorization
-	out, err = authztestutil.ExecGrantAuthorization(val, []string{
+	out, err = authztestutil.ExecGrant(val, []string{
 		newAddr.String(),
 		"send",
 		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
@@ -84,7 +84,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
+func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
@@ -134,21 +134,23 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationGRPC() {
 		tc := tc
 		s.Run(tc.name, func() {
 			resp, _ := rest.GetRequest(tc.url)
+			require := s.Require()
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errorMsg)
+				require.Contains(string(resp), tc.errorMsg)
 			} else {
-				var authorization authz.QueryAuthorizationResponse
-				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &authorization)
-				s.Require().NoError(err)
-				authorization.Authorization.UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
-				auth := authorization.Authorization.GetAuthorizationGrant()
-				s.Require().Equal(auth.MethodName(), banktypes.SendAuthorization{}.MethodName())
+				var g authz.QueryGrantsResponse
+				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &g)
+				require.NoError(err)
+				require.Len(g, 1)
+				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
+				auth := g.Grants[0].GetAuthorization()
+				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
+func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
@@ -157,7 +159,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 		expectErr bool
 		errMsg    string
 		preRun    func()
-		postRun   func(*authz.QueryAuthorizationsResponse)
+		postRun   func(*authz.QueryGrantsResponse)
 	}{
 		{
 			"fail invalid granter address",
@@ -165,7 +167,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
-			func(_ *authz.QueryAuthorizationsResponse) {},
+			func(_ *authz.QueryGrantsResponse) {},
 		},
 		{
 			"fail invalid grantee address",
@@ -173,7 +175,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 			func() {},
-			func(_ *authz.QueryAuthorizationsResponse) {},
+			func(_ *authz.QueryGrantsResponse) {},
 		},
 		{
 			"fail empty grantee address",
@@ -181,7 +183,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			true,
 			"Not Implemented",
 			func() {},
-			func(_ *authz.QueryAuthorizationsResponse) {},
+			func(_ *authz.QueryGrantsResponse) {},
 		},
 		{
 			"valid query: expect single grant",
@@ -189,8 +191,8 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {},
-			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Len(authorizations.Authorizations, 1)
+			func(g *authz.QueryGrantsResponse) {
+				s.Require().Len(g.Grants, 1)
 			},
 		},
 		{
@@ -199,7 +201,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := authztestutil.ExecGrantAuthorization(val, []string{
+				_, err := authztestutil.ExecGrant(val, []string{
 					s.grantee.String(),
 					"generic",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -211,8 +213,8 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 				})
 				s.Require().NoError(err)
 			},
-			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Len(authorizations.Authorizations, 2)
+			func(g *authz.QueryGrantsResponse) {
+				s.Require().Len(g.Grants, 2)
 			},
 		},
 		{
@@ -221,8 +223,8 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {},
-			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Len(authorizations.Authorizations, 1)
+			func(g *authz.QueryGrantsResponse) {
+				s.Require().Len(g.Grants, 1)
 			},
 		},
 		{
@@ -231,8 +233,8 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			false,
 			"",
 			func() {},
-			func(authorizations *authz.QueryAuthorizationsResponse) {
-				s.Require().Len(authorizations.Authorizations, 2)
+			func(g *authz.QueryGrantsResponse) {
+				s.Require().Len(g.Grants, 2)
 			},
 		},
 	}
@@ -244,7 +246,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			if tc.expectErr {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
-				var authorizations authz.QueryAuthorizationsResponse
+				var authorizations authz.QueryGrantsResponse
 				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &authorizations)
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)

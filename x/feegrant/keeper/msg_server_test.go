@@ -7,6 +7,8 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
+	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
+
 	testCases := []struct {
 		name      string
 		req       func() *types.MsgGrantAllowance
@@ -46,7 +48,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 			func() *types.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&types.BasicAllowance{
 					SpendLimit: suite.atom,
-					Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
 				return &types.MsgGrantAllowance{
@@ -63,7 +65,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 			func() *types.MsgGrantAllowance {
 				any, err := codectypes.NewAnyWithValue(&types.BasicAllowance{
 					SpendLimit: suite.atom,
-					Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
 				return &types.MsgGrantAllowance{
@@ -81,7 +83,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 				any, err := codectypes.NewAnyWithValue(&types.PeriodicAllowance{
 					Basic: types.BasicAllowance{
 						SpendLimit: suite.atom,
-						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
@@ -100,7 +102,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 				any, err := codectypes.NewAnyWithValue(&types.PeriodicAllowance{
 					Basic: types.BasicAllowance{
 						SpendLimit: suite.atom,
-						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
@@ -126,6 +128,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 }
 
 func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
+	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 
 	testCases := []struct {
 		name      string
@@ -179,7 +182,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 				any, err := codectypes.NewAnyWithValue(&types.PeriodicAllowance{
 					Basic: types.BasicAllowance{
 						SpendLimit: suite.atom,
-						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)

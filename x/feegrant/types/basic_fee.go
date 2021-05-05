@@ -1,15 +1,13 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ FeeAllowanceI = (*BasicAllowance)(nil)
 
-// Accept can use fee payment requested as well as timestamp/height of the current block
+// Accept can use fee payment requested as well as timestamp of the current block
 // to determine whether or not to process this. This is checked in
 // Keeper.UseGrantedFees and the return values should match how it is handled there.
 //
@@ -20,10 +18,7 @@ var _ FeeAllowanceI = (*BasicAllowance)(nil)
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
 func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
-	blockTime := ctx.BlockTime()
-	blockHeight := ctx.BlockHeight()
-
-	if a.Expiration.IsExpired(&blockTime, blockHeight) {
+	if a.Expiration != nil && a.Expiration.Before(ctx.BlockTime()) {
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "basic allowance")
 	}
 
@@ -40,16 +35,6 @@ func (a *BasicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bo
 	return false, nil
 }
 
-// PrepareForExport will adjust the expiration based on export time. In particular,
-// it will subtract the dumpHeight from any height-based expiration to ensure that
-// the elapsed number of blocks this allowance is valid for is fixed.
-func (a *BasicAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	return &BasicAllowance{
-		SpendLimit: a.SpendLimit,
-		Expiration: a.Expiration.PrepareForExport(dumpTime, dumpHeight),
-	}
-}
-
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
 func (a BasicAllowance) ValidateBasic() error {
 	if a.SpendLimit != nil {
@@ -60,5 +45,10 @@ func (a BasicAllowance) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "spend limit must be positive")
 		}
 	}
-	return a.Expiration.ValidateBasic()
+
+	if a.Expiration != nil && a.Expiration.Unix() < 0 {
+		return sdkerrors.Wrap(ErrInvalidDuration, "expiration time cannot be negative")
+	}
+
+	return nil
 }

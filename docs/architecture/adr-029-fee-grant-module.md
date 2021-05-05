@@ -3,7 +3,7 @@
 ## Changelog
 
 - 2020/08/18: Initial Draft
-- 2021/05/05: Update `FeeAllowanceI` interface and fee allowances.  
+- 2021/05/05: Removed height based expiration support and simplified naming.
 
 ## Status
 

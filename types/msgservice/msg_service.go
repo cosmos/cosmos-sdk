@@ -3,9 +3,7 @@ package msgservice
 import (
 	"context"
 	"fmt"
-	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -24,7 +22,7 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.
 		// We use a no-op interceptor to avoid actually calling into the handler itself.
 		_, _ = methodHandler(nil, context.Background(), func(i interface{}) error {
-			msg, ok := i.(proto.Message)
+			msg, ok := i.(sdk.Msg)
 			if !ok {
 				// We panic here because there is no other alternative and the app cannot be initialized correctly
 				// this should only happen if there is a problem with code generation in which case the app won't
@@ -32,7 +30,8 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 				panic(fmt.Errorf("can't register request type %T for service method %s", i, fqMethod))
 			}
 
-			registry.RegisterCustomTypeURL((*sdk.MsgRequest)(nil), fqMethod, msg)
+			registry.RegisterImplementations((*sdk.Msg)(nil), msg)
+
 			return nil
 		}, noopInterceptor)
 
@@ -42,10 +41,4 @@ func RegisterMsgServiceDesc(registry codectypes.InterfaceRegistry, sd *grpc.Serv
 // gRPC NOOP interceptor
 func noopInterceptor(_ context.Context, _ interface{}, _ *grpc.UnaryServerInfo, _ grpc.UnaryHandler) (interface{}, error) {
 	return nil, nil
-}
-
-// IsServiceMsg checks if a type URL corresponds to a service method name,
-// i.e. /cosmos.bank.Msg/Send vs /cosmos.bank.MsgSend
-func IsServiceMsg(typeURL string) bool {
-	return strings.Count(typeURL, "/") >= 2
 }

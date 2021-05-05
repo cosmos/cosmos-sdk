@@ -39,7 +39,7 @@ func TestDecodeStore(t *testing.T) {
 			},
 			{
 				Key:   types.GlobalAccountNumberKey,
-				Value: cdc.MustMarshalBinaryBare(&globalAccNumber),
+				Value: cdc.MustMarshal(&globalAccNumber),
 			},
 			{
 				Key:   []byte{0x99},

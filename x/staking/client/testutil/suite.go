@@ -230,7 +230,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 		},
 		{
 			"happy case",
-			[]string{fmt.Sprintf("%s", val.ValAddress), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 		},
 	}

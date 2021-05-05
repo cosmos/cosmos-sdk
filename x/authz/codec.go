@@ -1,25 +1,24 @@
-package types
+package authz
 
 import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // RegisterInterfaces registers the interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&authz.MsgGrant{},
-		&authz.MsgRevoke{},
-		&authz.MsgExec{},
+		&MsgGrant{},
+		&MsgRevoke{},
+		&MsgExec{},
 	)
 
 	registry.RegisterInterface(
-		"cosmos.authz.v1beta1.Authorization",
-		(*authz.Authorization)(nil),
-		&authz.GenericAuthorization{},
+		"cosmos.v1beta1.Authorization",
+		(*Authorization)(nil),
+		&GenericAuthorization{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, authz.MsgServiceDesc())
+	msgservice.RegisterMsgServiceDesc(registry, MsgServiceDesc())
 }

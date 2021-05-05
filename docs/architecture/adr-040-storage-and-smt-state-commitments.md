@@ -48,7 +48,7 @@ SMT is a merkle tree structure: we don't store keys directly. For every `(key, v
 
 For data access we propose 2 additional KV buckets (namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
-2. B2: `hash(key, value) → key`: an index needed to extract a value (through: SMT → B2 → B1) having only a Merkle Path. Recall that SMT will store `hash(key, value)` in it's leafs.
+2. B2: `hash(key, value) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(key, value))`. So, we can get an object value by composing `SMT_path → B2 → B1`.
 3. we could use more buckets to optimize the app usage if needed.
 
 Above, we propose to use a KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
@@ -60,36 +60,37 @@ State Storage requirements:
 + range queries
 + quick (key, value) access
 + creating a snapshot
-+ prunning (garbage collection)
++ historical versioning
++ pruning (garbage collection)
 
 State Commitment requirements:
 + fast updates
 + tree path should be short
-+ creating a snapshot
 + pruning (garbage collection)
 
 
 ### LazyLedger SMT for State Commitment
 
-A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intractable size. The assumption here is that as the size of the tree is intractable, there would only be a few leaf nodes with valid data blocks relative to the tree size, rendering the tree as sparse.
+A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intractable size. The assumption here is that as the size of the tree is intractable, there would only be a few leaf nodes with valid data blocks relative to the tree size, rendering a sparse tree.
 
 
 ### Snapshots for storage sync and versioning
 
-One of the Stargate core features are snapshots and state sync delivered in the `/snapshot` package. This feature is implemented in SDK and requires storage support. Currently IAVL is the only supported backend.
-
 Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big), usually a snapshot mechanism is based on a _copy on write_ and it allows to efficiently deliver DB state at a certain stage.
 Some DB engines support snapshotting. Hence, we propose to reuse that functionality for the state sync and versioning (described below). It will the supported DB engines to ones which efficiently implement snapshots. In a final section we will discuss evaluated DBs.
 
-A new state sync snapshot will be created in every `EndBlocker`. The `rootmulti.Store` keeps track of the version number and implements the `CommitMultiStore` interface. `CommitMultiStore` encapsulates a `Committer` interface, which has the `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `Store.Commit` function increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
+One of the Stargate core features is a _snapshot sync_ delivered in the `/snapshot` package. It provides a way to trustlessly sync a blockchain without repeating all transactions from the genesis. This feature is implemented in SDK and requires storage support. Currently IAVL is the only supported backend. It works by streaming to a client a snapshot of a `SS` at a certain version together with a header chain.
+
+A new `SS` snapshot will be created in every `EndBlocker` and identified by a block height. The `rootmulti.Store` keeps track of the available snapshots to offer `SS` at a certain version. The `rootmulti.Store` implements the `CommitMultiStore` interface, which encapsulates a `Committer` interface. `Committer` has a `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `rootStore.Commit` function creates a new snapshot and increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
 Number of historical versions for `abci.Query` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
 
-Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it create new nodes on the update path, without removing the old one. Since we are snapshoting each block, we need to update that mechanism to immediately remove orphaned nodes from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
+Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it creates new nodes on the update path, without removing the old one. Since we are snapshoting each block, we need to update that mechanism to immediately remove orphaned nodes from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
 
 To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height.
+
 
 #### Accessing old state versions
 
@@ -98,11 +99,13 @@ One of the functional requirements is to access old state. This is done through 
 
 Moreover, SDK could provide a way to directly access the state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
-We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a versioning mechanism for querying old state with regards to the database we evaluated.
+We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a versioning and snapshot mechanism for querying old state with regards to the database we evaluated.
+
 
 ### State Proofs
 
 For any object stored in State Store (SS), we have corresponding object in `SC`. A proof for object `V` identified by a key `K` is a branch of `SC`, where the path corresponds to the key `hash(K)`, and the leaf is `hash(K, V)`.
+
 
 ### Rollbacks
 
@@ -112,7 +115,6 @@ We need to be able to process transactions and roll-back state updates if a tran
 ### Committing to an object without saving it
 
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
-
 
 
 ## Consequences

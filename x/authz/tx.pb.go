@@ -120,7 +120,7 @@ var xxx_messageInfo_MsgExecResponse proto.InternalMessageInfo
 // one signer corresponding to the granter of the authorization.
 type MsgExec struct {
 	Grantee string `protobuf:"bytes,1,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	// MsgService requests to execute. The x/authz will try to find a grant matching
+	// Msg requests to execute. The x/authz will try to find a grant matching
 	// (msg.signers[0], grantee, MsgTypeURL(msg)) triple and validate it.
 	Msgs []*types.Any `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
 }

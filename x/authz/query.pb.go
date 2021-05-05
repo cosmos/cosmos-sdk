@@ -33,7 +33,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type QueryGrantsRequest struct {
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	// Optional, msg_type_url, when set, will query only grants matching give msg type.
+	// Optional, msg_type_url, when set, will query only grants matching given msg type.
 	MsgTypeUrl string `protobuf:"bytes,3,opt,name=msg_type_url,json=msgTypeUrl,proto3" json:"msg_type_url,omitempty"`
 	// pagination defines an pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`

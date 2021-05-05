@@ -34,7 +34,7 @@ in the first end-block.
 ## Msg/EditValidator
 
 The `Description`, `CommissionRate` of a validator can be updated using the
-`Msg/EditCandidacy` service message.
+`Msg/EditValidator` service message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/tx.proto#L19-L20
 
@@ -61,7 +61,7 @@ assigned to `Delegation.Shares`.
 
 This service message is expected to fail if:
 
-- the validator is does not exist
+- the validator does not exist
 - the `Amount` `Coin` has a denomination different than one defined by `params.BondDenom`
 - the exchange rate is invalid, meaning the validator has no tokens (due to slashing) but there are outstanding shares
 - the amount delegated is less than the minimum allowed delegation

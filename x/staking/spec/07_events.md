@@ -18,7 +18,7 @@ The staking module emits the following events:
 | complete_redelegation | destination_validator | {dstValidatorAddress}     |
 | complete_redelegation | delegator             | {delegatorAddress}        |
 
-## Service Messages
+## ServiceMessages
 
 ### Msg/CreateValidator
 

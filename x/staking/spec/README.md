@@ -41,7 +41,7 @@ network.
     - [Msg/CreateValidator](03_messages.md#msgcreatevalidator)
     - [Msg/EditValidator](03_messages.md#msgeditvalidator)
     - [Msg/Delegate](03_messages.md#msgdelegate)
-    - [Msg/BeginUnbonding](03_messages.md#msgbeginunbonding)
+    - [Msg/Undelegate](03_messages.md#msgundelegate)
     - [Msg/BeginRedelegate](03_messages.md#msgbeginredelegate)
 4. **[Begin-Block](04_begin_block.md)**
     - [Historical Info Tracking](04_begin_block.md#historical-info-tracking)
@@ -51,5 +51,5 @@ network.
 6. **[Hooks](06_hooks.md)**
 7. **[Events](07_events.md)**
     - [EndBlocker](07_events.md#endblocker)
-    - [Handlers](07_events.md#handlers)
+    - [ServiceMessages](07_events.md#servicemessages)
 8. **[Parameters](08_params.md)**

@@ -58,32 +58,30 @@ The base keeper provides full-permission access: the ability to arbitrary modify
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.
 type Keeper interface {
-	SendKeeper
-
-	InitGenesis(sdk.Context, *types.GenesisState)
-	ExportGenesis(sdk.Context) *types.GenesisState
-
-	GetSupply(ctx sdk.Context) exported.SupplyI
-	SetSupply(ctx sdk.Context, supply exported.SupplyI)
-
-	GetDenomMetaData(ctx sdk.Context, denom string) types.Metadata
-	SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
-	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
-
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-
-	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
-	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
-	MarshalSupply(supplyI exported.SupplyI) ([]byte, error)
-	UnmarshalSupply(bz []byte) (exported.SupplyI, error)
-
-	types.QueryServer
+    SendKeeper
+    
+    InitGenesis(sdk.Context, *types.GenesisState)
+    ExportGenesis(sdk.Context) *types.GenesisState
+    
+    GetSupply(ctx sdk.Context, denom string) sdk.Coin
+    GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.PageRequest) (sdk.Coins, *query.PageResponse, error)
+    IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bool)
+    GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool)
+    SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metadata)
+    IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
+    
+    SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+    SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+    SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+    DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+    UndelegateCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+    MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+    BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+    
+    DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
+    UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
+    
+    types.QueryServer
 }
 ```
 
@@ -96,18 +94,18 @@ accounts. The send keeper does not alter the total supply (mint or burn coins).
 // SendKeeper defines a module interface that facilitates the transfer of coins
 // between accounts without the possibility of creating coins.
 type SendKeeper interface {
-	ViewKeeper
-
-	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-
-	GetParams(ctx sdk.Context) types.Params
-	SetParams(ctx sdk.Context, params types.Params)
-
-	SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-	SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
-
-	BlockedAddr(addr sdk.AccAddress) bool
+    ViewKeeper
+    
+    InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
+    SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+    
+    GetParams(ctx sdk.Context) types.Params
+    SetParams(ctx sdk.Context, params types.Params)
+    
+    SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
+    SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+    
+    BlockedAddr(addr sdk.AccAddress) bool
 }
 ```
 
@@ -119,16 +117,16 @@ The view keeper provides read-only access to account balances. The view keeper d
 // ViewKeeper defines a module interface that facilitates read only access to
 // account balances.
 type ViewKeeper interface {
-	ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
-	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
-
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	GetAccountsBalances(ctx sdk.Context) []types.Balance
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-
-	IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
-	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
+    ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) error
+    HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
+    
+    GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+    GetAccountsBalances(ctx sdk.Context) []types.Balance
+    GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+    LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+    SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+    
+    IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
+    IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
 }
 ```

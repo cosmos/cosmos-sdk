@@ -6,7 +6,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -157,9 +156,9 @@ func (msg MsgRevoke) ValidateBasic() error {
 // NewMsgExec creates a new MsgExecAuthorized
 //nolint:interfacer
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
-	msgsAny := make([]*types.Any, len(msgs))
+	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
-		any, err := types.NewAnyWithValue(msg)
+		any, err := cdctypes.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}

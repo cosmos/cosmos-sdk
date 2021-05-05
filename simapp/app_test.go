@@ -213,12 +213,10 @@ func TestInitGenesisOnMigration(t *testing.T) {
 
 	app.mm.Modules["mock"] = mockModule
 
-	// Run migrations only for "mock" module. That's why we put the initial
-	// version for bank as 0 (to run its InitGenesis), and for all other
-	// modules, we put their latest ConsensusVersion to skip migrations.
+	// Run migrations only for "mock" module. We exclude it from
+	// the VersionMap to simulate upgrading with a new module.
 	_, err := app.mm.RunMigrations(ctx, app.configurator,
 		module.VersionMap{
-			"mock":         0,
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
 			"authz":        authz.AppModule{}.ConsensusVersion(),

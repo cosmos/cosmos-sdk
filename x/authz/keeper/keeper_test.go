@@ -4,15 +4,11 @@ import (
 	"testing"
 	"time"
 
-	proto "github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	"github.com/stretchr/testify/suite"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz/types"
@@ -42,7 +38,6 @@ func (s *TestSuite) SetupTest() {
 	s.ctx = ctx
 	s.queryClient = queryClient
 	s.addrs = simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(30000000))
-
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -76,7 +71,7 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Equal(authorization.MethodName(), banktypes.SendAuthorization{}.MethodName())
 
 	s.T().Log("verify fetching authorization with wrong msg type fails")
-	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, proto.MessageName(&banktypes.MsgMultiSend{}))
+	authorization, _ = app.AuthzKeeper.GetOrRevokeAuthorization(ctx, granteeAddr, granterAddr, sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
 	s.Require().Nil(authorization)
 
 	s.T().Log("verify fetching authorization with wrong grantee fails")
@@ -139,21 +134,18 @@ func (s *TestSuite) TestKeeperFees() {
 	smallCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 20))
 	someCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 123))
 
-	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
-		{
-			MethodName: banktypes.SendAuthorization{}.MethodName(),
-			Request: &banktypes.MsgSend{
-				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-				FromAddress: granterAddr.String(),
-				ToAddress:   recipientAddr.String(),
-			},
+	msgs := types.NewMsgExecAuthorized(granteeAddr, []sdk.Msg{
+		&banktypes.MsgSend{
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+			FromAddress: granterAddr.String(),
+			ToAddress:   recipientAddr.String(),
 		},
 	})
 
 	s.Require().NoError(msgs.UnpackInterfaces(app.AppCodec()))
 
 	s.T().Log("verify dispatch fails with invalid authorization")
-	executeMsgs, err := msgs.GetServiceMsgs()
+	executeMsgs, err := msgs.GetMessages()
 	s.Require().NoError(err)
 	result, err := app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 
@@ -169,7 +161,7 @@ func (s *TestSuite) TestKeeperFees() {
 
 	s.Require().Equal(authorization.MethodName(), banktypes.SendAuthorization{}.MethodName())
 
-	executeMsgs, err = msgs.GetServiceMsgs()
+	executeMsgs, err = msgs.GetMessages()
 	s.Require().NoError(err)
 
 	result, err = app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
@@ -182,19 +174,16 @@ func (s *TestSuite) TestKeeperFees() {
 	s.T().Log("verify dispatch fails with overlimit")
 	// grant authorization
 
-	msgs = types.NewMsgExecAuthorized(granteeAddr, []sdk.ServiceMsg{
-		{
-			MethodName: banktypes.SendAuthorization{}.MethodName(),
-			Request: &banktypes.MsgSend{
-				Amount:      someCoin,
-				FromAddress: granterAddr.String(),
-				ToAddress:   recipientAddr.String(),
-			},
+	msgs = types.NewMsgExecAuthorized(granteeAddr, []sdk.Msg{
+		&banktypes.MsgSend{
+			Amount:      someCoin,
+			FromAddress: granterAddr.String(),
+			ToAddress:   recipientAddr.String(),
 		},
 	})
 
 	s.Require().NoError(msgs.UnpackInterfaces(app.AppCodec()))
-	executeMsgs, err = msgs.GetServiceMsgs()
+	executeMsgs, err = msgs.GetMessages()
 	s.Require().NoError(err)
 
 	result, err = app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)

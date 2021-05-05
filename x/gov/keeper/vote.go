@@ -27,6 +27,9 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	vote := types.NewVote(proposalID, voterAddr, options)
 	keeper.SetVote(ctx, vote)
 
+	// called after a vote on a proposal is cast
+	keeper.AfterProposalVote(ctx, proposalID, voterAddr)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeProposalVote,
@@ -64,14 +67,14 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 		return vote, false
 	}
 
-	keeper.cdc.MustUnmarshalBinaryBare(bz, &vote)
+	keeper.cdc.MustUnmarshal(bz, &vote)
 	return vote, true
 }
 
 // SetVote sets a Vote to the gov store
 func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinaryBare(&vote)
+	bz := keeper.cdc.MustMarshal(&vote)
 	addr, err := sdk.AccAddressFromBech32(vote.Voter)
 	if err != nil {
 		panic(err)
@@ -87,7 +90,7 @@ func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote types.Vote) (
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var vote types.Vote
-		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &vote)
+		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
 
 		if cb(vote) {
 			break
@@ -103,7 +106,7 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var vote types.Vote
-		keeper.cdc.MustUnmarshalBinaryBare(iterator.Value(), &vote)
+		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
 
 		if cb(vote) {
 			break

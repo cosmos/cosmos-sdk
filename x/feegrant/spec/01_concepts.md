@@ -3,7 +3,6 @@ order: 1
 -->
 
 # Concepts
-
 ## FeeAllowanceGrant
 
 `FeeAllowanceGrant` is stored in the KVStore to record a grant with full context. Every grant will contain `granter`, `grantee` and what kind of `allowance` is granted. `granter` is an account address who is giving permission to `grantee` (the beneficiary account address) to pay for some or all of `grantee`'s transaction fees. `allowance` defines what kind of fee allowance (`BasicFeeAllowance` or `PeriodicFeeAllowance`, see below) is granted to `grantee`. `allowance` accepts an interface which implements `FeeAllowanceI`, encoded as `Any` type. There can be only one existing fee grant allowed for a `grantee` and `granter`, self grants are not allowed.
@@ -65,6 +64,10 @@ Example cmd:
 ./simd tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --from validator-key --fee-account=cosmos1xh44hxt7spr67hqaa7nyx5gnutrz5fraw6grxn --chain-id=testnet --fees="10stake"
 ```
 
-## DeductGrantedFeeDecorator
+## Granted Fee Deductions
+Fees are deducted from grants in the `x/auth` ante handler. To learn more about how ante handlers work, read the [Auth Module AnteHandlers Guide](../../auth/spec/03_antehandlers.md).
 
-`feegrant` module also adds a `DeductGrantedFeeDecorator` ante handler. Whenever a transaction is being executed with `granter` field set, then this ante handler will check whether `payer` and `granter` have proper fee allowance grant in state. If it exists the fees will be deducted from the `granter`'s account address. If the `granter` field isn't set then this ante handler works as normal fee deductor.
+## Gas
+In order to prevent DoS attacks, using a filtered `x/feegrant` incurs gas. The SDK must assure that the `grantee`'s transactions all conform to the filter set by the `granter`. The SDK does this by iterating over the allowed messages in the filter and charging 10 gas per filtered message. The SDK will then iterate over the messages being sent by the `grantee` to ensure the messages adhere to the filter, also charging 10 gas per message. The SDK will stop iterating and fail the transaction if it finds a message that does not conform to the filter.
+
+**WARNING**: The gas is charged against the granted allowance. Ensure your messages conform to the filter, if any, before sending transactions using your allowance. 

@@ -27,7 +27,7 @@ const (
 // prefix based on the key type provided for a given PublicKey.
 func MarshalPubKey(pkt Bech32PubKeyType, pubkey cryptotypes.PubKey) (string, error) {
 	bech32Prefix := getPrefix(pkt)
-	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshalBinaryBare(pubkey))
+	return bech32.ConvertAndEncode(bech32Prefix, legacy.Cdc.MustMarshal(pubkey))
 }
 
 // Deprecated: MustMarshalPubKey calls MarshalPubKey and panics on error.

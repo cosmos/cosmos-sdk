@@ -177,6 +177,9 @@ func NewDecFromStr(str string) (Dec, error) {
 	if !ok {
 		return Dec{}, fmt.Errorf("failed to set decimal string: %s", combinedStr)
 	}
+	if combined.BitLen() > maxBitLen {
+		return Dec{}, fmt.Errorf("decimal out of range; bitLen: got %d, max %d", combined.BitLen(), maxBitLen)
+	}
 	if neg {
 		combined = new(big.Int).Neg(combined)
 	}
@@ -298,7 +301,7 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.i, precisionReuse)
 	mul.Mul(mul, precisionReuse)
 
-	quo := new(big.Int).Quo(mul, d2.i)
+	quo := mul.Quo(mul, d2.i)
 	chopped := chopPrecisionAndTruncate(quo)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
@@ -557,19 +560,15 @@ func (d Dec) RoundInt() Int {
 	return NewIntFromBigInt(chopPrecisionAndRoundNonMutative(d.i))
 }
 
-// similar to chopPrecisionAndRound, but always rounds down
+// chopPrecisionAndTruncate is similar to chopPrecisionAndRound,
+// but always rounds down. It does not mutate the input.
 func chopPrecisionAndTruncate(d *big.Int) *big.Int {
-	return d.Quo(d, precisionReuse)
-}
-
-func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
-	tmp := new(big.Int).Set(d)
-	return chopPrecisionAndTruncate(tmp)
+	return new(big.Int).Quo(d, precisionReuse)
 }
 
 // TruncateInt64 truncates the decimals from the number and returns an int64
 func (d Dec) TruncateInt64() int64 {
-	chopped := chopPrecisionAndTruncateNonMutative(d.i)
+	chopped := chopPrecisionAndTruncate(d.i)
 	if !chopped.IsInt64() {
 		panic("Int64() out of bound")
 	}
@@ -578,12 +577,12 @@ func (d Dec) TruncateInt64() int64 {
 
 // TruncateInt truncates the decimals from the number and returns an Int
 func (d Dec) TruncateInt() Int {
-	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
+	return NewIntFromBigInt(chopPrecisionAndTruncate(d.i))
 }
 
 // TruncateDec truncates the decimals from the number and returns a Dec
 func (d Dec) TruncateDec() Dec {
-	return NewDecFromBigInt(chopPrecisionAndTruncateNonMutative(d.i))
+	return NewDecFromBigInt(chopPrecisionAndTruncate(d.i))
 }
 
 // Ceil returns the smallest interger value (as a decimal) that is greater than

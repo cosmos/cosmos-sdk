@@ -100,6 +100,11 @@ func (coin Coin) Add(coinB Coin) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
+// AddAmount adds an amount to the Coin.
+func (coin Coin) AddAmount(amount Int) Coin {
+	return Coin{coin.Denom, coin.Amount.Add(amount)}
+}
+
 // Sub subtracts amounts of two coins with same denom. If the coins differ in denom
 // then it panics.
 func (coin Coin) Sub(coinB Coin) Coin {
@@ -108,6 +113,16 @@ func (coin Coin) Sub(coinB Coin) Coin {
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+	if res.IsNegative() {
+		panic("negative coin amount")
+	}
+
+	return res
+}
+
+// SubAmount subtracts an amount from the Coin.
+func (coin Coin) SubAmount(amount Int) Coin {
+	res := Coin{coin.Denom, coin.Amount.Sub(amount)}
 	if res.IsNegative() {
 		panic("negative coin amount")
 	}

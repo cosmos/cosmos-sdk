@@ -25,7 +25,7 @@ type Context struct {
 	FromAddress       sdk.AccAddress
 	Client            rpcclient.Client
 	ChainID           string
-	JSONMarshaler     codec.JSONMarshaler
+	JSONCodec         codec.JSONCodec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
 	Keyring           keyring.Keyring
@@ -72,9 +72,9 @@ func (ctx Context) WithInput(r io.Reader) Context {
 	return ctx
 }
 
-// WithJSONMarshaler returns a copy of the Context with an updated JSONMarshaler.
-func (ctx Context) WithJSONMarshaler(m codec.JSONMarshaler) Context {
-	ctx.JSONMarshaler = m
+// WithJSONCodec returns a copy of the Context with an updated JSONCodec.
+func (ctx Context) WithJSONCodec(m codec.JSONCodec) Context {
+	ctx.JSONCodec = m
 	return ctx
 }
 
@@ -227,8 +227,10 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 
 // WithViper returns the context with Viper field. This Viper instance is used to read
 // client-side config from the config file.
-func (ctx Context) WithViper() Context {
+func (ctx Context) WithViper(prefix string) Context {
 	v := viper.New()
+	v.SetEnvPrefix(prefix)
+	v.AutomaticEnv()
 	ctx.Viper = v
 	return ctx
 }
@@ -252,10 +254,10 @@ func (ctx Context) PrintBytes(o []byte) error {
 
 // PrintProto outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
-// will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
+// will be JSON encoded using ctx.JSONCodec. An error is returned upon failure.
 func (ctx Context) PrintProto(toPrint proto.Message) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
-	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
+	out, err := ctx.JSONCodec.MarshalJSON(toPrint)
 	if err != nil {
 		return err
 	}

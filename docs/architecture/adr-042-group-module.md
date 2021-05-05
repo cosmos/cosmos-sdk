@@ -212,7 +212,6 @@ message Tally {
 
 Members of a group can vote on proposals. There are four choices to choose while voting - yes, no, abstain and veto. Not
 all decision policies will support them. Votes can contain some optional metadata.
-During the voting window, accounts that have already voted may change their vote.
 In the current implementation, the voting window begins as soon as a proposal
 is submitted.
 
@@ -247,7 +246,7 @@ Votes are stored in the `voteTable`. The primary key is based on the vote's `pro
 
 #### ADR-033 to route proposal messages
 
-Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module-comm.md) can be used to route a proposal's messages using the `DerivedModuleKey` corresponding to the proposal's group account. It can also temporarily support routing of non `ServiceMsg`s through the `sdk.Router` (see [#8864](https://github.com/cosmos/cosmos-sdk/issues/8864)).
+Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module-comm.md) can be used to route a proposal's messages using the `DerivedModuleKey` corresponding to the proposal's group account.
 
 ## Consequences
 

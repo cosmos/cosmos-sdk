@@ -38,7 +38,7 @@ Fee allowances are defined by the extensible `FeeAllowanceI` interface:
 
 ```go
 type FeeAllowanceI {
-    // Accept can use fee payment requested as well as timestamp/height of the current block
+    // Accept can use fee payment requested as well as timestamp of the current block
  	// to determine whether or not to process this. This is checked in
  	// Keeper.UseGrantedFees and the return values should match how it is handled there.
  	//
@@ -48,33 +48,37 @@ type FeeAllowanceI {
  	//
  	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
  	// (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
- 	Accept(fee sdk.Coins, blockTime time.Time, blockHeight int64) (remove bool, err error)
+ 	Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
+
+   // ValidateBasic should evaluate this FeeAllowance for internal consistency.
+	// Don't allow negative amounts, or negative periods for example.
+	ValidateBasic() error
 }
 ```
 
-Two basic fee allowance types, `BasicFeeAllowance` and `PeriodicFeeAllowance` are defined to support known use cases:
+Two basic fee allowance types, `BasicAllowance` and `PeriodicAllowance` are defined to support known use cases:
 
 ```proto
-// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
+// BasicAllowance implements FeeAllowanceI with a one-time grant of tokens
 // that optionally expires. The delegatee can use up to SpendLimit to cover fees.
-message BasicFeeAllowance {
+message BasicAllowance {
 	// spend_limit specifies the maximum amount of tokens that can be spent
 	// by this allowance and will be updated as tokens are spent. If it is
 	// empty, there is no spend limit and any amount of coins can be spent.
     repeated cosmos_sdk.v1.Coin spend_limit = 1;
 
-    // expires_at specifies an optional time when this allowance expires
-    ExpiresAt expiration = 2;
+    // expiration specifies an optional time when this allowance expires
+    google.protobuf.Timestamp expiration = 2;
 }
 
-// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+// PeriodicAllowance extends FeeAllowanceI to allow for both a maximum cap,
 // as well as a limit per time period.
-message PeriodicFeeAllowance {
-     BasicFeeAllowance basic = 1;
+message PeriodicAllowance {
+     BasicAllowance basic = 1;
 
      // period specifies the time duration in which period_spend_limit coins can
      // be spent before that allowance is reset
-     Duration period = 2;
+     google.protobuf.Duration period = 2;
  
      // period_spend_limit specifies the maximum number of coins that can be spent
      // in the period
@@ -86,39 +90,24 @@ message PeriodicFeeAllowance {
      // period_reset is the time at which this period resets and a new one begins,
      // it is calculated from the start time of the first transaction after the
      // last period ended
-     ExpiresAt period_reset = 5;
-}
-
-// ExpiresAt is a point in time where something expires.
-// It may be *either* block time or block height
-message ExpiresAt {
-     oneof sum {
-       google.protobuf.Timestamp time = 1;
-       uint64 height = 2;
-     }
- }
-
-// Duration is a repeating unit of either clock time or number of blocks.
-message Duration {
-    oneof sum {
-      google.protobuf.Duration duration = 1;
-      uint64 blocks = 2;
-    }
+     google.protobuf.Timestamp period_reset = 5;
 }
 
 ```
 
-Allowances can be granted and revoked using `MsgGrantFeeAllowance` and `MsgRevokeFeeAllowance`:
+Allowances can be granted and revoked using `MsgGrantAllowance` and `MsgRevokeAllowance`:
 
 ```proto
-message MsgGrantFeeAllowance {
+// MsgGrantAllowance adds permission for Grantee to spend up to Allowance
+// of fees from the account of Granter.
+message MsgGrantAllowance {
      string granter = 1;
      string grantee = 2;
      google.protobuf.Any allowance = 3;
  }
 
- // MsgRevokeFeeAllowance removes any existing FeeAllowance from Granter to Grantee.
- message MsgRevokeFeeAllowance {
+ // MsgRevokeAllowance removes any existing FeeAllowance from Granter to Grantee.
+ message MsgRevokeAllowance {
      string granter = 1;
      string grantee = 2;
  }

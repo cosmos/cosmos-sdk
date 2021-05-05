@@ -111,7 +111,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
-	_, ctx := suite.app, suite.ctx
+	ctx := suite.ctx
 
 	require := suite.Require()
 
@@ -119,7 +119,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
 	initialPower := int64(100)
-	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, initialPower)
+	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(ctx, initialPower)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 
 	// set burnerAcc balance

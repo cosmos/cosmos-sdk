@@ -214,7 +214,8 @@ func (k BaseKeeper) GetSupply(ctx sdk.Context, denom string) sdk.Coin {
 	}
 }
 
-// GetDenomMetaData retrieves the denomination metadata
+// GetDenomMetaData retrieves the denomination metadata. returns the metadata and true if the denom exists,
+// false otherwise.
 func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metadata, bool) {
 	store := ctx.KVStore(k.storeKey)
 	store = prefix.NewStore(store, types.DenomMetadataKey(denom))

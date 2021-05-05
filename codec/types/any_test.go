@@ -23,8 +23,6 @@ func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 	return nil, errAlways
 }
 
-const fauxURL = "/anyhere"
-
 var eom = &errOnMarshal{}
 
 // Ensure that returning an error doesn't suddenly allocate and waste bytes.
@@ -32,7 +30,7 @@ var eom = &errOnMarshal{}
 func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	var ms1, ms2 runtime.MemStats
 	runtime.ReadMemStats(&ms1)
-	any, err := types.NewAnyWithCustomTypeURL(eom, fauxURL)
+	any, err := types.NewAnyWithValue(eom)
 	runtime.ReadMemStats(&ms2)
 	// Ensure that no fresh allocation was made.
 	if diff := ms2.HeapAlloc - ms1.HeapAlloc; diff > 0 {
@@ -52,7 +50,7 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		any, err := types.NewAnyWithCustomTypeURL(eom, fauxURL)
+		any, err := types.NewAnyWithValue(eom)
 		if err == nil {
 			b.Fatal("err wasn't returned")
 		}

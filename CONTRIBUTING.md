@@ -20,7 +20,7 @@
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
 
-Contributing to this repo can mean many things such as participated in
+Contributing to this repo can mean many things such as participating in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
@@ -51,9 +51,6 @@ not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
 taken place in a github issue, that PR runs a high likelihood of being rejected.
 
-Take a peek at our [coding repo](https://github.com/tendermint/coding) for
-overall information on repository workflow and standards. Note, we use `make tools` for installing the linting tools.
-
 Other notes:
 
 - Looking for a good place to start contributing? How about checking out some
@@ -69,7 +66,7 @@ Other notes:
 When proposing an architecture decision for the SDK, please create an [ADR](./docs/architecture/README.md)
 so further discussions can be made. We are following this process so all involved parties are in
 agreement before any party begins coding the proposed implementation. If you would like to see some examples
-of how these are written refer to [Tendermint ADRs](https://github.com/tendermint/tendermint/tree/master/docs/architecture)
+of how these are written refer to the current [ADRs](https://github.com/cosmos/cosmos-sdk/tree/master/docs/architecture)
 
 ## Pull Requests
 
@@ -169,12 +166,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 ## Testing
 
-All repos should be hooked up to [CircleCI](https://circleci.com/).
-
-If they have `.go` files in the root directory, they will be automatically
-tested by circle using `go test -v -race ./...`. If not, they will need a
-`circle.yml`. Ideally, every repo has a `Makefile` that defines `make test` and
-includes its continuous integration status using a badge in the `README.md`.
+Tests can be ran by running `make test` at the top level of the SDK repository. 
 
 We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
 unless there is a reason to do otherwise.
@@ -212,8 +204,7 @@ The SDK utilizes [semantic versioning](https://semver.org/).
 Ensure that you base and target your PR on the `master` branch.
 
 All feature additions should be targeted against `master`. Bug fixes for an outstanding release candidate
-should be targeted against the release candidate branch. Release candidate branches themselves should be the
-only pull requests targeted directly against master.
+should be targeted against the release candidate branch. 
 
 ### Development Procedure
 

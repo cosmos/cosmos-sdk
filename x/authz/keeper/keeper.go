@@ -19,12 +19,12 @@ import (
 
 type Keeper struct {
 	storeKey sdk.StoreKey
-	cdc      codec.BinaryMarshaler
+	cdc      codec.BinaryCodec
 	router   *baseapp.MsgServiceRouter
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router *baseapp.MsgServiceRouter) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
@@ -44,7 +44,7 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, grantStoreKey []byte) (gr
 	if bz == nil {
 		return grant, false
 	}
-	k.cdc.MustUnmarshalBinaryBare(bz, &grant)
+	k.cdc.MustUnmarshal(bz, &grant)
 	return grant, true
 }
 
@@ -67,32 +67,35 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 	grant.Authorization = any
 	store := ctx.KVStore(k.storeKey)
-	store.Set(grantStoreKey, k.cdc.MustMarshalBinaryBare(&grant))
+	store.Set(grantStoreKey, k.cdc.MustMarshal(&grant))
 	return nil
 }
 
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
-func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, serviceMsgs []sdk.ServiceMsg) (*sdk.Result, error) {
+func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
 	var msgResult *sdk.Result
 	var err error
-	for _, serviceMsg := range serviceMsgs {
-		signers := serviceMsg.GetSigners()
+	for _, msg := range msgs {
+		signers := msg.GetSigners()
 		if len(signers) != 1 {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "authorization can be given to msg with only one signer")
 		}
 		granter := signers[0]
 		if !granter.Equals(grantee) {
-			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, serviceMsg.MethodName)
+			authorization, _ := k.GetOrRevokeAuthorization(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			if authorization == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
-			updated, del, err := authorization.Accept(ctx, serviceMsg)
+			updated, del, err := authorization.Accept(ctx, msg)
 			if err != nil {
 				return nil, err
 			}
 			if del {
-				k.Revoke(ctx, grantee, granter, serviceMsg.Type())
+				err = k.Revoke(ctx, grantee, granter, sdk.MsgTypeURL(msg))
+				if err != nil {
+					return nil, err
+				}
 			} else if updated != nil {
 				err = k.update(ctx, grantee, granter, updated)
 				if err != nil {
@@ -100,15 +103,15 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, service
 				}
 			}
 		}
-		handler := k.router.Handler(serviceMsg.Route())
+		handler := k.router.Handler(msg)
 
 		if handler == nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", serviceMsg.Route())
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", sdk.MsgTypeURL(msg))
 		}
 
-		msgResult, err = handler(ctx, serviceMsg.Request)
+		msgResult, err = handler(ctx, msg)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %s", serviceMsg.MethodName)
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 	}
 
@@ -126,7 +129,7 @@ func (k Keeper) Grant(ctx sdk.Context, grantee, granter sdk.AccAddress, authoriz
 		return err
 	}
 
-	bz := k.cdc.MustMarshalBinaryBare(&grant)
+	bz := k.cdc.MustMarshal(&grant)
 	grantStoreKey := types.GetAuthorizationStoreKey(grantee, granter, authorization.MethodName())
 	store.Set(grantStoreKey, bz)
 
@@ -172,7 +175,7 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	defer iter.Close()
 	var authorization types.AuthorizationGrant
 	for ; iter.Valid(); iter.Next() {
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &authorization)
+		k.cdc.MustUnmarshal(iter.Value(), &authorization)
 		authorizations = append(authorizations, authorization.GetAuthorizationGrant())
 	}
 	return authorizations
@@ -203,7 +206,7 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	for ; iter.Valid(); iter.Next() {
 		var grant types.AuthorizationGrant
 		granterAddr, granteeAddr := types.ExtractAddressesFromGrantKey(iter.Key())
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &grant)
+		k.cdc.MustUnmarshal(iter.Value(), &grant)
 		if handler(granterAddr, granteeAddr, grant) {
 			break
 		}

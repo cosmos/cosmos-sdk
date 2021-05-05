@@ -81,11 +81,11 @@ One of the Stargate core features are snapshots and state sync delivered in the 
 Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big), usually a snapshot mechanism is based on a _copy on write_ and it allows to efficiently deliver DB state at a certain stage.
 Some DB engines support snapshotting. Hence, we propose to reuse that functionality for the state sync and versioning (described below). It will the supported DB engines to ones which efficiently implement snapshots. In a final section we will discuss evaluated DBs.
 
-New snapshot will be created in every `EndBlocker`. The `rootmulti.Store` keeps track of the version number and implements the `MultiStore` interface. `MultiStore` encapsulates a `Commiter` interface, which has the `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `Store.Commit` function increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Commiter` interface.
+A new state sync snapshot will be created in every `EndBlocker`. The `rootmulti.Store` keeps track of the version number and implements the `CommitMultiStore` interface. `CommitMultiStore` encapsulates a `Committer` interface, which has the `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `Store.Commit` function increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
-NOTE: For the SDK storage, we may consider splitting that interface into `Committer` and `PrunningCommiter` - only the multiroot should implement `PrunningCommiter` (cache and prefix store don't need pruning).
+NOTE: For the SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
-Number of historical versions (snapshots) for `abci.Query` and fast sync is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all snapshots.
+Number of historical versions for `abci.Query` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
 
 Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it create new nodes on the update path, without removing the old one. Since we are snapshoting each block, we need to update that mechanism to immediately remove orphaned nodes from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
 
@@ -96,9 +96,9 @@ To manage the active snapshots we will either us a DB _max number of snapshots_ 
 One of the functional requirements is to access old state. This is done through `abci.Query` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
 `abci.Query` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine).
 
-Moreover, SDK could provide a way to directly access the state. However, a state machines shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
+Moreover, SDK could provide a way to directly access the state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
-We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a snapshot mechanism for querying old state with regards to the database we evaluated.
+We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a versioning mechanism for querying old state with regards to the database we evaluated.
 
 ### State Proofs
 

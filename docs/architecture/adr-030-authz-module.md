@@ -5,6 +5,7 @@
 - 2019-11-06: Initial Draft
 - 2020-10-12: Updated Draft
 - 2020-11-13: Accepted
+- 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.MsgService` (the latter concept was removed from SDK)
 
 ## Status
 
@@ -148,7 +149,7 @@ message MsgExecResponse {
 
 message MsgExec {
   string   grantee                  = 1;
-  // MsgService requests to execute.
+  // Authorization Msg requests to execute. Each msg must implement Authorization interface
   repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg"];;
 }
 ```

@@ -100,7 +100,7 @@ func (s *IntegrationTestSuite) TestVersionMapCLI() {
 				pm := types.QueryVersionMapResponse{
 					VersionMap: req,
 				}
-				jsonVM, _ := clientCtx.JSONMarshaler.MarshalJSON(&pm)
+				jsonVM, _ := clientCtx.JSONCodec.MarshalJSON(&pm)
 				expectedVM := string(jsonVM)
 				// append new line to match behaviour of PrintProto
 				expectedVM += "\n"

@@ -140,7 +140,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	require.Equal(total.String(), "")
 }
 
-func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blacklist() {
+func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	ctx := suite.ctx
 
 	// add module accounts to supply keeper

@@ -12,9 +12,9 @@ require.
 Best practices dictate careful review of `bank` module code to ensure that
 permissions are limited in the way that you expect.
 
-## Blacklisting Addresses
+## Blocklisting Addresses
 
-The `x/bank` module accepts a map of addresses that are considered blacklisted
+The `x/bank` module accepts a map of addresses that are considered blocklisted
 from directly and explicitly receiving funds through means such as `MsgSend` and
 `MsgMultiSend` and direct API calls like `SendCoinsFromModuleToAccount`.
 
@@ -22,7 +22,7 @@ Typically, these addresses are module accounts. If these addresses receive funds
 outside the expected rules of the state machine, invariants are likely to be
 broken and could result in a halted network.
 
-By providing the `x/bank` module with a blacklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blacklisted account, for example, by using [IBC](http://docs.cosmos.network/master/ibc/).
+By providing the `x/bank` module with a blocklisted set of addresses, an error occurs for the operation if a user or client attempts to directly or indirectly send funds to a blocklisted account, for example, by using [IBC](http://docs.cosmos.network/master/ibc/).
 
 ## Common Types
 

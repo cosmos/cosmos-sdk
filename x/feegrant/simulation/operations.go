@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -89,9 +88,10 @@ func SimulateMsgGrantFeeAllowance(ak types.AccountKeeper, bk types.BankKeeper, k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgGrantFeeAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
 		}
 
+		oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 		msg, err := types.NewMsgGrantAllowance(&types.BasicAllowance{
 			SpendLimit: spendableCoins,
-			Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(30 * time.Hour)),
+			Expiration: &oneYear,
 		}, granter.Address, grantee.Address)
 
 		if err != nil {

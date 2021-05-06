@@ -31,7 +31,9 @@ func (suite *SimTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{
+		Time: time.Now(),
+	})
 	suite.protoCdc = codec.NewProtoCodec(suite.app.InterfaceRegistry())
 
 }
@@ -139,13 +141,14 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
+	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 	err := app.FeeGrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,
 		&types.BasicAllowance{
 			SpendLimit: feeCoins,
-			Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(30 * time.Hour)),
+			Expiration: &oneYear,
 		},
 	)
 	require.NoError(err)

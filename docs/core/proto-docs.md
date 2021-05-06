@@ -308,8 +308,6 @@
 - [cosmos/feegrant/v1beta1/feegrant.proto](#cosmos/feegrant/v1beta1/feegrant.proto)
     - [AllowedMsgAllowance](#cosmos.feegrant.v1beta1.AllowedMsgAllowance)
     - [BasicAllowance](#cosmos.feegrant.v1beta1.BasicAllowance)
-    - [Duration](#cosmos.feegrant.v1beta1.Duration)
-    - [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt)
     - [Grant](#cosmos.feegrant.v1beta1.Grant)
     - [PeriodicAllowance](#cosmos.feegrant.v1beta1.PeriodicAllowance)
   
@@ -4552,41 +4550,7 @@ that optionally expires. The grantee can use up to SpendLimit to cover fees.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | spend_limit specifies the maximum amount of tokens that can be spent by this allowance and will be updated as tokens are spent. If it is empty, there is no spend limit and any amount of coins can be spent. |
-| `expiration` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | expiration specifies an optional time when this allowance expires |
-
-
-
-
-
-
-<a name="cosmos.feegrant.v1beta1.Duration"></a>
-
-### Duration
-Duration is a span of a clock time or number of blocks.
-This is designed to be added to an ExpiresAt struct.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `blocks` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
-<a name="cosmos.feegrant.v1beta1.ExpiresAt"></a>
-
-### ExpiresAt
-ExpiresAt is a point in time where something expires.
-It may be *either* block time or block height
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `height` | [int64](#int64) |  |  |
+| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | expiration specifies an optional time when this allowance expires |
 
 
 
@@ -4620,10 +4584,10 @@ as well as a limit per time period.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `basic` | [BasicAllowance](#cosmos.feegrant.v1beta1.BasicAllowance) |  | basic specifies a struct of `BasicAllowance` |
-| `period` | [Duration](#cosmos.feegrant.v1beta1.Duration) |  | period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset |
+| `period` | [google.protobuf.Duration](#google.protobuf.Duration) |  | period specifies the time duration in which period_spend_limit coins can be spent before that allowance is reset |
 | `period_spend_limit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_spend_limit specifies the maximum number of coins that can be spent in the period |
 | `period_can_spend` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | period_can_spend is the number of coins left to be spent before the period_reset time |
-| `period_reset` | [ExpiresAt](#cosmos.feegrant.v1beta1.ExpiresAt) |  | period_reset is the time at which this period resets and a new one begins, it is calculated from the start time of the first transaction after the last period ended |
+| `period_reset` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | period_reset is the time at which this period resets and a new one begins, it is calculated from the start time of the first transaction after the last period ended |
 
 
 
@@ -7606,7 +7570,7 @@ TxBody is the body of a transaction that all signers sign over.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | messages is a list of messages to be executed. The required signers of those messages define the number and order of elements in AuthInfo's signer_infos and Tx's signatures. Each required signer address is added to the list only the first time it occurs. By convention, the first required signer (usually from the first message) is referred to as the primary signer and pays the fee for the whole transaction. |
-| `memo` | [string](#string) |  | memo is any arbitrary memo to be added to the transaction |
+| `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. In clients, any public exposing text should not be called as memo, should use `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
 | `timeout_height` | [uint64](#uint64) |  | timeout is the block height after which this transaction will not be processed by the chain |
 | `extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, the transaction will be rejected |
 | `non_critical_extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, they will be ignored |

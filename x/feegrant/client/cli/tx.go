@@ -106,7 +106,7 @@ Examples:
 				if err != nil {
 					return err
 				}
-				basic.Expiration = types.ExpiresAtTime(expiresAtTime)
+				basic.Expiration = &expiresAtTime
 			}
 
 			var grant types.FeeAllowanceI
@@ -130,15 +130,15 @@ Examples:
 				}
 
 				if periodClock > 0 && periodLimit != nil {
-					periodReset := time.Now().Add(time.Duration(periodClock) * time.Second)
+					periodReset := getPeriodReset(periodClock)
 					if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
 						return fmt.Errorf("period(%d) cannot reset after expiration(%v)", periodClock, exp)
 					}
 
 					periodic := types.PeriodicAllowance{
 						Basic:            basic,
-						Period:           types.ClockDuration(time.Duration(periodClock) * time.Second),
-						PeriodReset:      types.ExpiresAtTime(periodReset),
+						Period:           getPeriod(periodClock),
+						PeriodReset:      getPeriodReset(periodClock),
 						PeriodSpendLimit: periodLimit,
 						PeriodCanSpend:   periodLimit,
 					}
@@ -215,4 +215,12 @@ Example:
 
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+func getPeriodReset(duration int64) time.Time {
+	return time.Now().Add(getPeriod(duration))
+}
+
+func getPeriod(duration int64) time.Duration {
+	return time.Duration(duration) * time.Second
 }

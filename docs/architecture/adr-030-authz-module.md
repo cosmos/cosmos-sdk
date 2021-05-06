@@ -5,7 +5,7 @@
 - 2019-11-06: Initial Draft
 - 2020-10-12: Updated Draft
 - 2020-11-13: Accepted
-- 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.MsgService` (the latter concept was removed from SDK)
+- 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from SDK)
 
 ## Status
 
@@ -45,8 +45,7 @@ of `Authorization` interface.
 
 Authorizations determine exactly what privileges are granted. They are extensible
 and can be defined for any `Msg` service method even outside of the module where
-the `Msg` method is defined. `Authorization`s use the new `Msg` type from
-ADR 031.
+the `Msg` method is defined. `Authorization`s reference `Msg`s using their TypeURL.
 
 #### Authorization
 
@@ -54,7 +53,7 @@ ADR 031.
 type Authorization interface {
 	proto.Message
 
-	// MsgTypeURL returns the fully-qualified Msg service method URL (as described in ADR 031),
+	// MsgTypeURL returns the fully-qualified Msg TypeURL (as described in ADR 020),
 	// which will process and accept or reject a request.
 	MsgTypeURL() string
 

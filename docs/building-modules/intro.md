@@ -4,7 +4,7 @@ order: 1
 
 # Introduction to SDK Modules
 
-Modules define most of the logic of SDK applications. Developers compose module together using the Cosmos SDK to build their custom application-specific blockchains. This document outlines the basic concepts behind SDK modules and how to approach module management. {synopsis}
+Modules define most of the logic of SDK applications. Developers compose modules together using the Cosmos SDK to build their custom application-specific blockchains. This document outlines the basic concepts behind SDK modules and how to approach module management. {synopsis}
 
 ## Pre-requisite Readings
 
@@ -13,11 +13,11 @@ Modules define most of the logic of SDK applications. Developers compose module 
 
 ## Role of Modules in an SDK Application
 
-The Cosmos SDK can be thought as the Ruby-on-Rails of blockchain development. It comes with a core that provides the basic functionalities every blockchain application needs, like a [boilerplate implementation of the ABCI](../core/baseapp.md) to communicate with the underlying consensus engine, a [`multistore`](../core/store.md#multistore) to persist state, a [server](../core/node.md) to form a full-node and [interfaces](./module-interfaces.md) to handle queries.  
+The Cosmos SDK can be thought of as the Ruby-on-Rails of blockchain development. It comes with a core that provides the basic functionalities every blockchain application needs, like a [boilerplate implementation of the ABCI](../core/baseapp.md) to communicate with the underlying consensus engine, a [`multistore`](../core/store.md#multistore) to persist state, a [server](../core/node.md) to form a full-node and [interfaces](./module-interfaces.md) to handle queries.  
 
 On top of this core, the Cosmos SDK enables developers to build modules that implement the business logic of their application. In other words, SDK modules implement the bulk of the logic of applications, while the core does the wiring and enables modules to be composed together. The end goal is to build a robust ecosystem of open-source SDK modules, making it increasingly easier to build complex blockchain applications. 
 
-SDK Modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../core/store.md), as well as a subset of [message types](./messages-and-queries.md#messages). These messages are routed by one of the main component of SDK core, [`BaseApp`](../core/baseapp.md), to the [`Msg` service](./msg-services.md) of the module that define them. 
+SDK Modules can be seen as little state-machines within the state-machine. They generally define a subset of the state using one or more `KVStore`s in the [main multistore](../core/store.md), as well as a subset of [message types](./messages-and-queries.md#messages). These messages are routed by one of the main components of the SDK core, [`BaseApp`](../core/baseapp.md), to the [`Msg` service](./msg-services.md) of the module that defines them. 
 
 ```
                                       +
@@ -72,7 +72,7 @@ While there are no definitive guidelines for writing modules, here are some impo
 
 - **Composability**: SDK applications are almost always composed of multiple modules. This means developers need to carefully consider the integration of their module not only with the core of the Cosmos SDK, but also with other modules. The former is achieved by following standard design patterns outlined [here](#main-components-of-sdk-modules), while the latter is achieved by properly exposing the store(s) of the module via the [`keeper`](./keeper.md). 
 - **Specialization**: A direct consequence of the **composability** feature is that modules should be **specialized**. Developers should carefully establish the scope of their module and not batch multiple functionalities into the same module. This separation of concern enables modules to be re-used in other projects and improves the upgradability of the application. **Specialization** also plays an important role in the [object-capabilities model](../core/ocap.md) of the Cosmos SDK. 
-- **Capabilities**: Most modules need to read and/or write to the store(s) of other modules. However, in an open-source environment, it is possible for some module to be malicious. That is why module developers need to carefully think not only about how their module interacts with other modules, but also about how to give access to the module's store(s). The Cosmos SDK takes a capabilities-oriented approach to inter-module security. This means that each store defined by a module is accessed by a `key`, which is held by the module's [`keeper`](./keeper.md). This `keeper` defines how to access the store(s) and under what conditions. Access to the module's store(s) is done by passing a reference to the module's `keeper`. 
+- **Capabilities**: Most modules need to read and/or write to the store(s) of other modules. However, in an open-source environment, it is possible for some modules to be malicious. That is why module developers need to carefully think not only about how their module interacts with other modules, but also about how to give access to the module's store(s). The Cosmos SDK takes a capabilities-oriented approach to inter-module security. This means that each store defined by a module is accessed by a `key`, which is held by the module's [`keeper`](./keeper.md). This `keeper` defines how to access the store(s) and under what conditions. Access to the module's store(s) is done by passing a reference to the module's `keeper`. 
 
 ## Main Components of SDK Modules
 

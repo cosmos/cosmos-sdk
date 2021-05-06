@@ -1,13 +1,7 @@
 package rest
 
 import (
-	"fmt"
-	"net/http"
-
 	"github.com/cosmos/cosmos-sdk/client"
-	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/poolx/types"
 	"github.com/gorilla/mux"
 )
 

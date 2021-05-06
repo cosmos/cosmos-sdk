@@ -130,7 +130,7 @@ To represent weighted vote on chain, we use the following Protobuf message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L126-L137
 
-For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the weights of all options must be equal to 1.
+For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
 ### Quorum
 

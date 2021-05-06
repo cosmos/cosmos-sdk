@@ -25,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrant_m "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -177,7 +177,7 @@ func TestRunMigrations(t *testing.T) {
 					"params":       params.AppModule{}.ConsensusVersion(),
 					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 					"vesting":      vesting.AppModule{}.ConsensusVersion(),
-					"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
+					"feegrant":     feegrant_m.AppModule{}.ConsensusVersion(),
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"crisis":       crisis.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
@@ -228,7 +228,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"params":       params.AppModule{}.ConsensusVersion(),
 			"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 			"vesting":      vesting.AppModule{}.ConsensusVersion(),
-			"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
+			"feegrant":     feegrant_m.AppModule{}.ConsensusVersion(),
 			"evidence":     evidence.AppModule{}.ConsensusVersion(),
 			"crisis":       crisis.AppModule{}.ConsensusVersion(),
 			"genutil":      genutil.AppModule{}.ConsensusVersion(),

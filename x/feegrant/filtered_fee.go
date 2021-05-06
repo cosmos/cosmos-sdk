@@ -1,4 +1,4 @@
-package types
+package feegrant
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec/types"

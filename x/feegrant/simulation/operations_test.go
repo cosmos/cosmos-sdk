@@ -15,8 +15,8 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 type SimTestSuite struct {
@@ -79,12 +79,12 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{
 			simappparams.DefaultWeightGrantFeeAllowance,
-			types.ModuleName,
+			feegrant.ModuleName,
 			simulation.TypeMsgGrantFeeAllowance,
 		},
 		{
 			simappparams.DefaultWeightRevokeFeeAllowance,
-			types.ModuleName,
+			feegrant.ModuleName,
 			simulation.TypeMsgRevokeFeeAllowance,
 		},
 	}
@@ -116,7 +116,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgGrantAllowance
+	var msg feegrant.MsgGrantAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
@@ -146,7 +146,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 		ctx,
 		granter.Address,
 		grantee.Address,
-		&types.BasicAllowance{
+		&feegrant.BasicAllowance{
 			SpendLimit: feeCoins,
 			Expiration: &oneYear,
 		},
@@ -158,7 +158,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgRevokeAllowance
+	var msg feegrant.MsgRevokeAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)

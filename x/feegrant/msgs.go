@@ -1,4 +1,4 @@
-package types
+package feegrant
 
 import (
 	"github.com/gogo/protobuf/proto"

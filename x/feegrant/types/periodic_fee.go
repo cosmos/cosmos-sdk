@@ -7,9 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ FeeAllowanceI = (*PeriodicFeeAllowance)(nil)
+var _ FeeAllowanceI = (*PeriodicAllowance)(nil)
 
-// Accept can use fee payment requested as well as timestamp/height of the current block
+// Accept can use fee payment requested as well as timestamp of the current block
 // to determine whether or not to process this. This is checked in
 // Keeper.UseGrantedFees and the return values should match how it is handled there.
 //
@@ -19,15 +19,14 @@ var _ FeeAllowanceI = (*PeriodicFeeAllowance)(nil)
 //
 // If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 // (eg. when it is used up). (See call to RevokeFeeAllowance in Keeper.UseGrantedFees)
-func (a *PeriodicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
+func (a *PeriodicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) (bool, error) {
 	blockTime := ctx.BlockTime()
-	blockHeight := ctx.BlockHeight()
 
-	if a.Basic.Expiration.IsExpired(&blockTime, blockHeight) {
+	if a.Basic.Expiration != nil && blockTime.After(*a.Basic.Expiration) {
 		return true, sdkerrors.Wrap(ErrFeeLimitExpired, "absolute limit")
 	}
 
-	a.tryResetPeriod(blockTime, blockHeight)
+	a.tryResetPeriod(blockTime)
 
 	// deduct from both the current period and the max amount
 	var isNeg bool
@@ -54,8 +53,8 @@ func (a *PeriodicFeeAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Ms
 // It will also update the PeriodReset. If we are within one Period, it will update from the
 // last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
 // If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
-func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight int64) {
-	if !a.PeriodReset.Undefined() && !a.PeriodReset.IsExpired(&blockTime, blockHeight) {
+func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
+	if blockTime.Before(a.PeriodReset) {
 		return
 	}
 	// set CanSpend to the lesser of PeriodSpendLimit and the TotalLimit
@@ -67,31 +66,14 @@ func (a *PeriodicFeeAllowance) tryResetPeriod(blockTime time.Time, blockHeight i
 
 	// If we are within the period, step from expiration (eg. if you always do one tx per day, it will always reset the same time)
 	// If we are more then one period out (eg. no activity in a week), reset is one period from this time
-	a.PeriodReset = a.PeriodReset.MustStep(a.Period)
-	if a.PeriodReset.IsExpired(&blockTime, blockHeight) {
-		a.PeriodReset = a.PeriodReset.FastForward(blockTime, blockHeight).MustStep(a.Period)
-	}
-}
-
-// PrepareForExport will adjust the expiration based on export time. In particular,
-// it will subtract the dumpHeight from any height-based expiration to ensure that
-// the elapsed number of blocks this allowance is valid for is fixed.
-// (For PeriodReset and Basic.Expiration)
-func (a *PeriodicFeeAllowance) PrepareForExport(dumpTime time.Time, dumpHeight int64) FeeAllowanceI {
-	return &PeriodicFeeAllowance{
-		Basic: BasicFeeAllowance{
-			SpendLimit: a.Basic.SpendLimit,
-			Expiration: a.Basic.Expiration.PrepareForExport(dumpTime, dumpHeight),
-		},
-		PeriodSpendLimit: a.PeriodSpendLimit,
-		PeriodCanSpend:   a.PeriodCanSpend,
-		Period:           a.Period,
-		PeriodReset:      a.PeriodReset.PrepareForExport(dumpTime, dumpHeight),
+	a.PeriodReset = a.PeriodReset.Add(a.Period)
+	if blockTime.After(a.PeriodReset) {
+		a.PeriodReset = blockTime.Add(a.Period)
 	}
 }
 
 // ValidateBasic implements FeeAllowance and enforces basic sanity checks
-func (a PeriodicFeeAllowance) ValidateBasic() error {
+func (a PeriodicAllowance) ValidateBasic() error {
 	if err := a.Basic.ValidateBasic(); err != nil {
 		return err
 	}
@@ -116,8 +98,9 @@ func (a PeriodicFeeAllowance) ValidateBasic() error {
 	}
 
 	// check times
-	if err := a.Period.ValidateBasic(); err != nil {
-		return err
+	if a.Period.Seconds() < 0 {
+		return sdkerrors.Wrap(ErrInvalidDuration, "negative clock step")
 	}
-	return a.PeriodReset.ValidateBasic()
+
+	return nil
 }

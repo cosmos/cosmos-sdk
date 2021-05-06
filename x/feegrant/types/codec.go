@@ -8,17 +8,17 @@ import (
 
 // RegisterInterfaces registers the interfaces types with the interface registry
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.MsgRequest)(nil),
-		&MsgGrantFeeAllowance{},
-		&MsgRevokeFeeAllowance{},
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgGrantAllowance{},
+		&MsgRevokeAllowance{},
 	)
 
 	registry.RegisterInterface(
 		"cosmos.feegrant.v1beta1.FeeAllowanceI",
 		(*FeeAllowanceI)(nil),
-		&BasicFeeAllowance{},
-		&PeriodicFeeAllowance{},
-		&AllowedMsgFeeAllowance{},
+		&BasicAllowance{},
+		&PeriodicAllowance{},
+		&AllowedMsgAllowance{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

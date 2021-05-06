@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/gogo/protobuf/proto"
 	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -147,7 +146,7 @@ func (c converter) UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx,
 	for i := 0; i < len(ops); i++ {
 		op := ops[i]
 
-		protoMessage, err := c.ir.Resolve("/" + op.Type)
+		protoMessage, err := c.ir.Resolve(op.Type)
 		if err != nil {
 			return nil, crgerrs.WrapError(crgerrs.ErrBadArgument, "operation not found: "+op.Type)
 		}
@@ -241,31 +240,7 @@ func (c converter) Meta(msg sdk.Msg) (meta map[string]interface{}, err error) {
 // with the message proto name as type, and the raw fields
 // as metadata
 func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, error) {
-	opName := proto.MessageName(msg)
-	// in case proto does not recognize the message name
-	// then we should try to cast it to service msg, to
-	// check if it was wrapped or not, in case the cast
-	// from sdk.ServiceMsg to sdk.Msg fails, then a
-	// codec error is returned
-	if opName == "" {
-		unwrappedMsg, ok := msg.(sdk.ServiceMsg)
-		if !ok {
-			return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("unrecognized message type: %T", msg))
-		}
-
-		msg, ok = unwrappedMsg.Request.(sdk.Msg)
-		if !ok {
-			return nil, crgerrs.WrapError(
-				crgerrs.ErrCodec,
-				fmt.Sprintf("unable to cast %T to sdk.Msg, method: %s", unwrappedMsg.Request, unwrappedMsg.MethodName),
-			)
-		}
-
-		opName = proto.MessageName(msg)
-		if opName == "" {
-			return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("unrecognized message type: %T", msg))
-		}
-	}
+	opName := sdk.MsgTypeURL(msg)
 
 	meta, err := c.Meta(msg)
 	if err != nil {

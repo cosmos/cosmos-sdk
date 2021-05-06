@@ -20,8 +20,8 @@ type SendKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
-	SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-	SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
+	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -277,20 +277,20 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	return nil
 }
 
-// SendEnabledCoins checks the coins provide and returns an ErrSendDisabled if
+// IsSendEnabledCoins checks the coins provide and returns an ErrSendDisabled if
 // any of the coins are not configured for sending.  Returns nil if sending is enabled
 // for all provided coin
-func (k BaseSendKeeper) SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
+func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
 	for _, coin := range coins {
-		if !k.SendEnabledCoin(ctx, coin) {
+		if !k.IsSendEnabledCoin(ctx, coin) {
 			return sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", coin.Denom)
 		}
 	}
 	return nil
 }
 
-// SendEnabledCoin returns the current SendEnabled status of the provided coin's denom
-func (k BaseSendKeeper) SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
+// IsSendEnabledCoin returns the current SendEnabled status of the provided coin's denom
+func (k BaseSendKeeper) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
 	return k.GetParams(ctx).SendEnabledDenom(coin.Denom)
 }
 

@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -46,14 +45,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestKeeperCrud() {
 	// some helpers
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 	basic := &types.BasicAllowance{
 		SpendLimit: suite.atom,
-		Expiration: types.ExpiresAtHeight(334455),
+		Expiration: &exp,
 	}
 
 	basic2 := &types.BasicAllowance{
 		SpendLimit: eth,
-		Expiration: types.ExpiresAtHeight(172436),
+		Expiration: &exp,
 	}
 
 	// let's set up some initial state here
@@ -149,24 +149,20 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 
 func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	blockTime := suite.sdkCtx.BlockTime()
+	oneYear := blockTime.AddDate(1, 0, 0)
+
 	future := &types.BasicAllowance{
 		SpendLimit: suite.atom,
-		Expiration: types.ExpiresAtHeight(5678),
-	}
-
-	expired := &types.BasicAllowance{
-		SpendLimit: eth,
-		Expiration: types.ExpiresAtHeight(55),
+		Expiration: &oneYear,
 	}
 
 	// for testing limits of the contract
 	hugeAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 9999))
-	_ = hugeAtom
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
-	_ = smallAtom
 	futureAfterSmall := &types.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 554)),
-		Expiration: types.ExpiresAtHeight(5678),
+		Expiration: &oneYear,
 	}
 
 	// then lots of queries
@@ -182,13 +178,6 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			grantee: suite.addrs[1],
 			fee:     suite.atom,
 			allowed: true,
-			final:   nil,
-		},
-		"expired and removed": {
-			granter: suite.addrs[0],
-			grantee: suite.addrs[2],
-			fee:     eth,
-			allowed: false,
 			final:   nil,
 		},
 		"too high": {
@@ -210,14 +199,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	for name, tc := range cases {
 		tc := tc
 		suite.Run(name, func() {
-			// let's set up some initial state here
-			// addr -> addr2 (future)
-			// addr -> addr3 (expired)
-
 			err := suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], future)
-			suite.Require().NoError(err)
-
-			err = suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[3], expired)
 			suite.Require().NoError(err)
 
 			err = suite.keeper.UseGrantedFees(suite.sdkCtx, tc.granter, tc.grantee, tc.fee, []sdk.Msg{})
@@ -228,22 +210,43 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 			}
 
 			loaded, _ := suite.keeper.GetAllowance(suite.sdkCtx, tc.granter, tc.grantee)
-
 			suite.Equal(tc.final, loaded)
 		})
 	}
+
+	expired := &types.BasicAllowance{
+		SpendLimit: eth,
+		Expiration: &blockTime,
+	}
+	// creating expired feegrant
+	ctx := suite.sdkCtx.WithBlockTime(oneYear)
+	err := suite.keeper.GrantAllowance(ctx, suite.addrs[0], suite.addrs[2], expired)
+	suite.Require().NoError(err)
+
+	// expect error: feegrant expired
+	err = suite.keeper.UseGrantedFees(ctx, suite.addrs[0], suite.addrs[2], eth, []sdk.Msg{})
+	suite.Error(err)
+	suite.Contains(err.Error(), "fee allowance expired")
+
+	// verify: feegrant is revoked
+	_, err = suite.keeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
+	suite.Error(err)
+	suite.Contains(err.Error(), "fee-grant not found")
+
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
+	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
+
 	allowance := &types.BasicAllowance{
 		SpendLimit: suite.atom,
-		Expiration: types.ExpiresAtHeight(5678),
+		Expiration: &exp,
 	}
 
 	allowance1 := &types.BasicAllowance{
 		SpendLimit: eth,
-		Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().Add(24 * time.Hour)),
+		Expiration: &exp,
 	}
 
 	suite.keeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], allowance)

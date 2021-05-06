@@ -412,6 +412,15 @@
   
     - [Query](#cosmos.params.v1beta1.Query)
   
+- [cosmos/poolx/v1beta1/genesis.proto](#cosmos/poolx/v1beta1/genesis.proto)
+    - [GenesisState](#cosmos.poolx.v1beta1.GenesisState)
+  
+- [cosmos/poolx/v1beta1/query.proto](#cosmos/poolx/v1beta1/query.proto)
+    - [Query](#cosmos.poolx.v1beta1.Query)
+  
+- [cosmos/poolx/v1beta1/tx.proto](#cosmos/poolx/v1beta1/tx.proto)
+    - [Msg](#cosmos.poolx.v1beta1.Msg)
+  
 - [cosmos/slashing/v1beta1/slashing.proto](#cosmos/slashing/v1beta1/slashing.proto)
     - [Params](#cosmos.slashing.v1beta1.Params)
     - [ValidatorSigningInfo](#cosmos.slashing.v1beta1.ValidatorSigningInfo)
@@ -5855,6 +5864,82 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse) | Params queries a specific parameter of a module, given its subspace and key. | GET|/cosmos/params/v1beta1/params|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/poolx/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/poolx/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.poolx.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the poolx module's genesis state.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/poolx/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/poolx/v1beta1/query.proto
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.poolx.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/poolx/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/poolx/v1beta1/tx.proto
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.poolx.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
 
  <!-- end services -->
 

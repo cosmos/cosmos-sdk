@@ -95,7 +95,7 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 				suite.PanicsWithError(tc.expPanicMsg, func() { suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis) })
 			} else {
 				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
-				suite.Require().Equal(tc.expSupply, suite.app.BankKeeper.GetTotalSupply(suite.ctx))
+				suite.Require().Equal(tc.expSupply, suite.app.BankKeeper.GetSupply(suite.ctx).GetTotal())
 			}
 		})
 	}

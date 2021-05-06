@@ -46,9 +46,10 @@ message MsgExecResponse {
 // one signer corresponding to the granter of the authorization.
 message MsgExec {
   string   grantee                  = 1;
-  // Msg requests to execute. The x/authz will try to find a grant matching
-  // (msg.signers[0], grantee, MsgTypeURL(msg)) triple and validate it.
-  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg"];;
+  // Authorization Msg requests to execute. Each msg must implement Authorization interface
+  // The x/authz will try to find a grant matching (msg.signers[0], grantee, MsgTypeURL(msg))
+  // triple and validate it.
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg, authz.Authorization"];;
 }
 
 // MsgGrantResponse defines the Msg/MsgGrant response type.

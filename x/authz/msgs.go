@@ -1,34 +1,33 @@
-package types
+package authz
 
 import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 )
 
 var (
-	_ sdk.Msg = &MsgGrantAuthorizationRequest{}
-	_ sdk.Msg = &MsgRevokeAuthorizationRequest{}
-	_ sdk.Msg = &MsgExecAuthorizedRequest{}
+	_ sdk.Msg = &MsgGrant{}
+	_ sdk.Msg = &MsgRevoke{}
+	_ sdk.Msg = &MsgExec{}
 
-	_ types.UnpackInterfacesMessage = &MsgGrantAuthorizationRequest{}
-	_ types.UnpackInterfacesMessage = &MsgExecAuthorizedRequest{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
+	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}
 )
 
-// NewMsgGrantAuthorization creates a new MsgGrantAuthorization
+// NewMsgGrant creates a new MsgGrant
 //nolint:interfacer
-func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization exported.Authorization, expiration time.Time) (*MsgGrantAuthorizationRequest, error) {
-	m := &MsgGrantAuthorizationRequest{
+func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
+	m := &MsgGrant{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
 		Expiration: expiration,
 	}
-	err := m.SetAuthorization(authorization)
+	err := m.SetAuthorization(a)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +35,7 @@ func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, au
 }
 
 // GetSigners implements Msg
-func (msg MsgGrantAuthorizationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgGrant) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		panic(err)
@@ -45,7 +44,7 @@ func (msg MsgGrantAuthorizationRequest) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic implements Msg
-func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
+func (msg MsgGrant) ValidateBasic() error {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid granter address")
@@ -63,29 +62,30 @@ func (msg MsgGrantAuthorizationRequest) ValidateBasic() error {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
 	}
 
-	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
+	av := msg.Authorization.GetCachedValue()
+	a, ok := av.(Authorization)
 	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (exported.Authorization)(nil), msg.Authorization.GetCachedValue())
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (Authorization)(nil), av)
 	}
-	return authorization.ValidateBasic()
+	return a.ValidateBasic()
 }
 
-// GetGrantAuthorization returns the cache value from the MsgGrantAuthorization.Authorization if present.
-func (msg *MsgGrantAuthorizationRequest) GetGrantAuthorization() exported.Authorization {
-	authorization, ok := msg.Authorization.GetCachedValue().(exported.Authorization)
+// GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
+func (msg *MsgGrant) GetAuthorization() Authorization {
+	a, ok := msg.Authorization.GetCachedValue().(Authorization)
 	if !ok {
 		return nil
 	}
-	return authorization
+	return a
 }
 
-// SetAuthorization converts Authorization to any and adds it to MsgGrantAuthorization.Authorization.
-func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization exported.Authorization) error {
-	m, ok := authorization.(proto.Message)
+// SetAuthorization converts Authorization to any and adds it to MsgGrant.Authorization.
+func (msg *MsgGrant) SetAuthorization(a Authorization) error {
+	m, ok := a.(proto.Message)
 	if !ok {
 		return sdkerrors.Wrapf(sdkerrors.ErrPackAny, "can't proto marshal %T", m)
 	}
-	any, err := types.NewAnyWithValue(m)
+	any, err := cdctypes.NewAnyWithValue(m)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (msg *MsgGrantAuthorizationRequest) SetAuthorization(authorization exported
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgExecAuthorizedRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (msg MsgExec) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 	for _, x := range msg.Msgs {
 		var msgExecAuthorized sdk.Msg
 		err := unpacker.UnpackAny(x, &msgExecAuthorized)
@@ -107,23 +107,23 @@ func (msg MsgExecAuthorizedRequest) UnpackInterfaces(unpacker types.AnyUnpacker)
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgGrantAuthorizationRequest) UnpackInterfaces(unpacker types.AnyUnpacker) error {
-	var authorization exported.Authorization
-	return unpacker.UnpackAny(msg.Authorization, &authorization)
+func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var a Authorization
+	return unpacker.UnpackAny(msg.Authorization, &a)
 }
 
-// NewMsgRevokeAuthorization creates a new MsgRevokeAuthorization
+// NewMsgRevoke creates a new MsgRevoke
 //nolint:interfacer
-func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, methodName string) MsgRevokeAuthorizationRequest {
-	return MsgRevokeAuthorizationRequest{
+func NewMsgRevoke(granter sdk.AccAddress, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke {
+	return MsgRevoke{
 		Granter:    granter.String(),
 		Grantee:    grantee.String(),
-		MethodName: methodName,
+		MsgTypeUrl: msgTypeURL,
 	}
 }
 
 // GetSigners implements Msg
-func (msg MsgRevokeAuthorizationRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgRevoke) GetSigners() []sdk.AccAddress {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		panic(err)
@@ -132,7 +132,7 @@ func (msg MsgRevokeAuthorizationRequest) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic implements MsgRequest.ValidateBasic
-func (msg MsgRevokeAuthorizationRequest) ValidateBasic() error {
+func (msg MsgRevoke) ValidateBasic() error {
 	granter, err := sdk.AccAddressFromBech32(msg.Granter)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid granter address")
@@ -146,19 +146,19 @@ func (msg MsgRevokeAuthorizationRequest) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
 	}
 
-	if msg.MethodName == "" {
+	if msg.MsgTypeUrl == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "missing method name")
 	}
 
 	return nil
 }
 
-// NewMsgExecAuthorized creates a new MsgExecAuthorized
+// NewMsgExec creates a new MsgExecAuthorized
 //nolint:interfacer
-func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthorizedRequest {
-	msgsAny := make([]*types.Any, len(msgs))
+func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
+	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
-		any, err := types.NewAnyWithValue(msg)
+		any, err := cdctypes.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
@@ -166,14 +166,14 @@ func NewMsgExecAuthorized(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExecAuthori
 		msgsAny[i] = any
 	}
 
-	return MsgExecAuthorizedRequest{
+	return MsgExec{
 		Grantee: grantee.String(),
 		Msgs:    msgsAny,
 	}
 }
 
 // GetMessages returns the cache values from the MsgExecAuthorized.Msgs if present.
-func (msg MsgExecAuthorizedRequest) GetMessages() ([]sdk.Msg, error) {
+func (msg MsgExec) GetMessages() ([]sdk.Msg, error) {
 	msgs := make([]sdk.Msg, len(msg.Msgs))
 	for i, msgAny := range msg.Msgs {
 		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
@@ -187,7 +187,7 @@ func (msg MsgExecAuthorizedRequest) GetMessages() ([]sdk.Msg, error) {
 }
 
 // GetSigners implements Msg
-func (msg MsgExecAuthorizedRequest) GetSigners() []sdk.AccAddress {
+func (msg MsgExec) GetSigners() []sdk.AccAddress {
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		panic(err)
@@ -196,7 +196,7 @@ func (msg MsgExecAuthorizedRequest) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic implements Msg
-func (msg MsgExecAuthorizedRequest) ValidateBasic() error {
+func (msg MsgExec) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid grantee address")

@@ -149,9 +149,10 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 }
 
 func grantFeeAllowance(suite *KeeperTestSuite) {
+	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 	err := suite.app.FeeGrantKeeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], &types.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
-		Expiration: types.ExpiresAtHeight(334455),
+		Expiration: &exp,
 	})
 	suite.Require().NoError(err)
 }

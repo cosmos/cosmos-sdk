@@ -6,10 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"net"
-	"os"
-	"path/filepath"
-
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
@@ -17,11 +14,13 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+	"net"
+	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -41,29 +40,49 @@ var (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagSetupConfigOnly   = "setup-config-only"
+	flagEnableLogging     = "enable-logging"
 )
 
+func addTestnetFlagsToCmd(cmd *cobra.Command) {
+	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
+	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+}
+
+
+
+func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+	testnetCmd := &cobra.Command{
+		Use:                        "testnet",
+		Short:                      "subcommands for starting or configuring local testnets",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+
+	testnetCmd.AddCommand(testnetStartCmd())
+	testnetCmd.AddCommand(testnetInitFilesCmd(mbm, genBalIterator))
+
+	return testnetCmd
+}
+
 // get cmd to initialize all files for tendermint testnet and application
-func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "testnet",
-		Short: "Launch an in-process multi-validator testnet, or initialize config directories & files for a multi-validator testnet running locally via a separate processes",
-		Long: `testnet will launch an in-process multi-validator testnet, and generate "v" directories, populated with necessary validator configuration files
-(private validator, genesis, config, etc.).
+		Use: "init-files",
+		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
+		Long: `init-files will setup "v" number of directories and populate each with
+necessary files (private validator, genesis, config, etc.) for running "v" validator nodes.
 
-If --setup-config-only flag is provided, it will not launch a testnet, but instead will only setup
-"v" number of directories and populate each with
-necessary files (private validator, genesis, config, etc.).
-
-The following flags are only intended for use if --setup-config-only flag is present, and ignored otherwise:
---keyring-backend, --algo, --node-dir-prefix, --node-daemon-home, --starting-ip-address
+Booting up a network with these validator folders is intended to be used with Docker Compose,
+or a similar setup where each node has a manually configurable IP address.
 
 Note, strict routability for addresses is turned off in the config file.
 
 Example:
-	simd testnet --v 4 --output-dir ./output
-	simd testnet --v 4 --output-dir ./output --setup-config-only --starting-ip-address 192.168.10.2
+	simd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -80,33 +99,56 @@ Example:
 			minGasPrices, _ := cmd.Flags().GetString(server.FlagMinGasPrices)
 			nodeDirPrefix, _ := cmd.Flags().GetString(flagNodeDirPrefix)
 			nodeDaemonHome, _ := cmd.Flags().GetString(flagNodeDaemonHome)
-			setupConfigOnly, _ := cmd.Flags().GetBool(flagSetupConfigOnly)
 			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
-			if setupConfigOnly {
-				return SetupTestnetConfigs(
-					clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-					nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
-				)
-			}
-			return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators)
+			return SetupTestnetConfigs(
+				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
+				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
+			)
 
 		},
 	}
 
-	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
-	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
+	addTestnetFlagsToCmd(cmd)
 	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
 	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
-	cmd.Flags().Bool(flagSetupConfigOnly, false, "Initialize data for separately running validator nodes manually, does not start in-process testnet")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...), required if --setup-config-only")
-	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
+	return cmd
+}
+
+// get cmd to initialize all files for tendermint testnet and application
+func testnetStartCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "start",
+		Short: "Launch an in-process multi-validator testnet",
+		Long: `testnet will launch an in-process multi-validator testnet,
+andgenerate "v" directories, populated with necessary validator configuration files
+(private validator, genesis, config, etc.).
+
+Example:
+	simd testnet --v 4 --output-dir ./output
+	`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+
+			outputDir, _ := cmd.Flags().GetString(flagOutputDir)
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
+			minGasPrices, _ := cmd.Flags().GetString(server.FlagMinGasPrices)
+			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
+			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			enableLogging, _ := cmd.Flags().GetBool(flagEnableLogging)
+
+			return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators, enableLogging)
+
+		},
+	}
+
+
+	addTestnetFlagsToCmd(cmd)
+	cmd.Flags().Bool(flagEnableLogging, false, "Enable INFO logging of tendermint validator nodes")
 	return cmd
 }
 
@@ -415,7 +457,7 @@ func writeFile(name string, dir string, contents []byte) error {
 	return nil
 }
 
-func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,numValidators int) error {
+func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,numValidators int, enableLogging bool) error {
 	networkConfig := network.DefaultConfig()
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
@@ -426,6 +468,7 @@ func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGas
 	networkConfig.SigningAlgo = algo
 	networkConfig.MinGasPrices = minGasPrices
 	networkConfig.NumValidators = numValidators
+	networkConfig.EnableTMLogging = enableLogging
 	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", testnetsDir, networkConfig.ChainID)
@@ -435,10 +478,15 @@ func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGas
 			networkConfig.ChainID, baseDir)
 	}
 
-	_, err := network.New(networkLogger, baseDir, networkConfig)
+	testnet, err := network.New(networkLogger, baseDir, networkConfig)
 	if err != nil {
 		return err
 	}
 
-	return server.WaitForQuitSignals()
+	testnet.WaitForHeight(1)
+	cmd.Println("press the Enter Key to terminate")
+	fmt.Scanln() // wait for Enter Key
+	testnet.Cleanup()
+
+	return nil
 }

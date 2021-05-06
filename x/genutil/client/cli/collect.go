@@ -27,7 +27,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 			config := serverCtx.Config
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.JSONMarshaler
+			cdc := clientCtx.JSONCodec
 
 			config.SetRoot(clientCtx.HomeDir)
 

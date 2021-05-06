@@ -1,4 +1,4 @@
-package types_test
+package authz_test
 
 import (
 	"testing"
@@ -6,11 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var (
@@ -23,24 +21,21 @@ func TestMsgExecAuthorized(t *testing.T) {
 	tests := []struct {
 		title      string
 		grantee    sdk.AccAddress
-		msgs       []sdk.ServiceMsg
+		msgs       []sdk.Msg
 		expectPass bool
 	}{
-		{"nil grantee address", nil, []sdk.ServiceMsg{}, false},
-		{"zero-messages test: should fail", grantee, []sdk.ServiceMsg{}, false},
-		{"valid test: msg type", grantee, []sdk.ServiceMsg{
-			{
-				MethodName: banktypes.SendAuthorization{}.MethodName(),
-				Request: &banktypes.MsgSend{
-					Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
-					FromAddress: granter.String(),
-					ToAddress:   grantee.String(),
-				},
+		{"nil grantee address", nil, []sdk.Msg{}, false},
+		{"zero-messages test: should fail", grantee, []sdk.Msg{}, false},
+		{"valid test: msg type", grantee, []sdk.Msg{
+			&banktypes.MsgSend{
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+				FromAddress: granter.String(),
+				ToAddress:   grantee.String(),
 			},
 		}, true},
 	}
 	for i, tc := range tests {
-		msg := types.NewMsgExecAuthorized(tc.grantee, tc.msgs)
+		msg := authz.NewMsgExec(tc.grantee, tc.msgs)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -61,7 +56,7 @@ func TestMsgRevokeAuthorization(t *testing.T) {
 		{"valid test case", granter, grantee, "hello", true},
 	}
 	for i, tc := range tests {
-		msg := types.NewMsgRevokeAuthorization(tc.granter, tc.grantee, tc.msgType)
+		msg := authz.NewMsgRevoke(tc.granter, tc.grantee, tc.msgType)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
@@ -74,7 +69,7 @@ func TestMsgGrantAuthorization(t *testing.T) {
 	tests := []struct {
 		title            string
 		granter, grantee sdk.AccAddress
-		authorization    exported.Authorization
+		authorization    authz.Authorization
 		expiration       time.Time
 		expectErr        bool
 		expectPass       bool
@@ -87,7 +82,7 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		{"past time", granter, grantee, &banktypes.SendAuthorization{SpendLimit: coinsPos}, time.Now().AddDate(0, 0, -1), false, false},
 	}
 	for i, tc := range tests {
-		msg, err := types.NewMsgGrantAuthorization(
+		msg, err := authz.NewMsgGrant(
 			tc.granter, tc.grantee, tc.authorization, tc.expiration,
 		)
 		if !tc.expectErr {

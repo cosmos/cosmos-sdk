@@ -1,7 +1,6 @@
 syntax = "proto3";
 package cosmos.feegrant.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "cosmos/feegrant/v1beta1/feegrant.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
@@ -11,41 +10,44 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
 // Query defines the gRPC querier service.
 service Query {
 
-  // FeeAllowance returns fee granted to the grantee by the granter.
-  rpc FeeAllowance(QueryFeeAllowanceRequest) returns (QueryFeeAllowanceResponse) {
-    option (google.api.http).get = "/cosmos/feegrant/v1beta1/fee_allowance/{granter}/{grantee}";
+  // Allowance returns fee granted to the grantee by the granter.
+  rpc Allowance(QueryAllowanceRequest) returns (QueryAllowanceResponse) {
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}";
   }
 
-  // FeeAllowances returns all the grants for address.
-  rpc FeeAllowances(QueryFeeAllowancesRequest) returns (QueryFeeAllowancesResponse) {
-    option (google.api.http).get = "/cosmos/feegrant/v1beta1/fee_allowances/{grantee}";
+  // Allowances returns all the grants for address.
+  rpc Allowances(QueryAllowancesRequest) returns (QueryAllowancesResponse) {
+    option (google.api.http).get = "/cosmos/feegrant/v1beta1/allowances/{grantee}";
   }
 }
 
-// QueryFeeAllowanceRequest is the request type for the Query/FeeAllowance RPC method.
-message QueryFeeAllowanceRequest {
+// QueryAllowanceRequest is the request type for the Query/Allowance RPC method.
+message QueryAllowanceRequest {
+  // granter is the address of the user granting an allowance of their funds.
   string granter = 1;
+
+  // grantee is the address of the user being granted an allowance of another user's funds.
   string grantee = 2;
 }
 
-// QueryFeeAllowanceResponse is the response type for the Query/FeeAllowance RPC method.
-message QueryFeeAllowanceResponse {
-  // fee_allowance is a fee_allowance granted for grantee by granter.
-  cosmos.feegrant.v1beta1.FeeAllowanceGrant fee_allowance = 1;
+// QueryAllowanceResponse is the response type for the Query/Allowance RPC method.
+message QueryAllowanceResponse {
+  // allowance is a allowance granted for grantee by granter.
+  cosmos.feegrant.v1beta1.Grant allowance = 1;
 }
 
-// QueryFeeAllowancesRequest is the request type for the Query/FeeAllowances RPC method.
-message QueryFeeAllowancesRequest {
+// QueryAllowancesRequest is the request type for the Query/Allowances RPC method.
+message QueryAllowancesRequest {
   string grantee = 1;
 
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryFeeAllowancesResponse is the response type for the Query/FeeAllowances RPC method.
-message QueryFeeAllowancesResponse {
-  // fee_allowances are fee_allowance's granted for grantee by granter.
-  repeated cosmos.feegrant.v1beta1.FeeAllowanceGrant fee_allowances = 1;
+// QueryAllowancesResponse is the response type for the Query/Allowances RPC method.
+message QueryAllowancesResponse {
+  // allowances are allowance's granted for grantee by granter.
+  repeated cosmos.feegrant.v1beta1.Grant allowances = 1;
 
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

@@ -57,25 +57,25 @@ func (ac *AminoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 	ac.LegacyAmino.MustUnmarshalLengthPrefixed(bz, ptr)
 }
 
-// MarshalJSON implements JSONMarshaler.MarshalJSON method,
+// MarshalJSON implements JSONCodec.MarshalJSON method,
 // it marshals to JSON using legacy amino codec.
 func (ac *AminoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	return ac.LegacyAmino.MarshalJSON(o)
 }
 
-// MustMarshalJSON implements JSONMarshaler.MustMarshalJSON method,
+// MustMarshalJSON implements JSONCodec.MustMarshalJSON method,
 // it executes MarshalJSON except it panics upon failure.
 func (ac *AminoCodec) MustMarshalJSON(o proto.Message) []byte {
 	return ac.LegacyAmino.MustMarshalJSON(o)
 }
 
-// UnmarshalJSON implements JSONMarshaler.UnmarshalJSON method,
+// UnmarshalJSON implements JSONCodec.UnmarshalJSON method,
 // it unmarshals from JSON using legacy amino codec.
 func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
 
-// MustUnmarshalJSON implements JSONMarshaler.MustUnmarshalJSON method,
+// MustUnmarshalJSON implements JSONCodec.MustUnmarshalJSON method,
 // it executes UnmarshalJSON except it panics upon failure.
 func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	ac.LegacyAmino.MustUnmarshalJSON(bz, ptr)

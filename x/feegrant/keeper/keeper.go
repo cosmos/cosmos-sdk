@@ -36,8 +36,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GrantFeeAllowance creates a new grant
-func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance types.FeeAllowanceI) error {
+// GrantAllowance creates a new grant
+func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance types.FeeAllowanceI) error {
 
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
@@ -48,7 +48,7 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
-	grant, err := types.NewFeeAllowanceGrant(granter, grantee, feeAllowance)
+	grant, err := types.NewGrant(granter, grantee, feeAllowance)
 	if err != nil {
 		return err
 	}
@@ -71,9 +71,9 @@ func (k Keeper) GrantFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddre
 	return nil
 }
 
-// revokeFeeAllowance removes an existing grant
-func (k Keeper) revokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
-	_, err := k.getFeeGrant(ctx, granter, grantee)
+// revokeAllowance removes an existing grant
+func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
+	_, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}
@@ -92,20 +92,20 @@ func (k Keeper) revokeFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddr
 	return nil
 }
 
-// GetFeeAllowance returns the allowance between the granter and grantee.
+// GetAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetFeeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (types.FeeAllowanceI, error) {
-	grant, err := k.getFeeGrant(ctx, granter, grantee)
+func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (types.FeeAllowanceI, error) {
+	grant, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	return grant.GetFeeGrant()
+	return grant.GetGrant()
 }
 
-// getFeeGrant returns entire grant between both accounts
-func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*types.FeeAllowanceGrant, error) {
+// getGrant returns entire grant between both accounts
+func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*types.Grant, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
@@ -113,7 +113,7 @@ func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "fee-grant not found")
 	}
 
-	var feegrant types.FeeAllowanceGrant
+	var feegrant types.Grant
 	if err := k.cdc.Unmarshal(bz, &feegrant); err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (k Keeper) getFeeGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
-func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowanceGrant) bool) error {
+func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant types.Grant) bool) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.FeeAllowanceKeyPrefix)
 	defer iter.Close()
@@ -132,7 +132,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 	stop := false
 	for ; iter.Valid() && !stop; iter.Next() {
 		bz := iter.Value()
-		var feeGrant types.FeeAllowanceGrant
+		var feeGrant types.Grant
 		if err := k.cdc.Unmarshal(bz, &feeGrant); err != nil {
 			return err
 		}
@@ -145,12 +145,12 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(types.FeeAllowa
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
 func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
-	f, err := k.getFeeGrant(ctx, granter, grantee)
+	f, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
 	}
 
-	grant, err := f.GetFeeGrant()
+	grant, err := f.GetGrant()
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 
 	if remove {
 		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
-		k.revokeFeeAllowance(ctx, granter, grantee)
+		k.revokeAllowance(ctx, granter, grantee)
 		if err != nil {
 			return err
 		}
@@ -176,7 +176,7 @@ func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	emitUseGrantEvent(ctx, granter.String(), grantee.String())
 
 	// if fee allowance is accepted, store the updated state of the allowance
-	return k.GrantFeeAllowance(ctx, granter, grantee, grant)
+	return k.GrantAllowance(ctx, granter, grantee, grant)
 }
 
 func emitUseGrantEvent(ctx sdk.Context, granter, grantee string) {

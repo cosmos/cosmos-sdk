@@ -83,7 +83,7 @@ transfer(3){
     transfer.operations = [
       {
         "operation_identifier":{"index":0},
-        "type":"cosmos.bank.v1beta1.MsgSend",
+        "type":"/cosmos.bank.v1beta1.MsgSend",
         "account":{{sender.account_identifier}},
         "metadata": {
           "amount": [

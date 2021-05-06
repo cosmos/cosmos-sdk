@@ -415,7 +415,13 @@
 - [cosmos/poolx/v1beta1/genesis.proto](#cosmos/poolx/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.poolx.v1beta1.GenesisState)
   
+- [cosmos/poolx/v1beta1/poolx.proto](#cosmos/poolx/v1beta1/poolx.proto)
+    - [Params](#cosmos.poolx.v1beta1.Params)
+  
 - [cosmos/poolx/v1beta1/query.proto](#cosmos/poolx/v1beta1/query.proto)
+    - [QueryParamsRequest](#cosmos.poolx.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#cosmos.poolx.v1beta1.QueryParamsResponse)
+  
     - [Query](#cosmos.poolx.v1beta1.Query)
   
 - [cosmos/poolx/v1beta1/tx.proto](#cosmos/poolx/v1beta1/tx.proto)
@@ -5895,10 +5901,61 @@ GenesisState defines the poolx module's genesis state.
 
 
 
+<a name="cosmos/poolx/v1beta1/poolx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/poolx/v1beta1/poolx.proto
+
+
+
+<a name="cosmos.poolx.v1beta1.Params"></a>
+
+### Params
+Params defines the set of params for the distribution module.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/poolx/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/poolx/v1beta1/query.proto
+
+
+
+<a name="cosmos.poolx.v1beta1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="cosmos.poolx.v1beta1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#cosmos.poolx.v1beta1.Params) |  | params defines the parameters of the module. |
+
+
+
 
 
  <!-- end messages -->
@@ -5915,6 +5972,7 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#cosmos.poolx.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.poolx.v1beta1.QueryParamsResponse) | Params queries params of the poolx module. | GET|/cosmos/poolx/v1beta1/params|
 
  <!-- end services -->
 

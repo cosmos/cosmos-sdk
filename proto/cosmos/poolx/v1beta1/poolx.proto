@@ -1,0 +1,12 @@
+syntax = "proto3";
+package cosmos.poolx.v1beta1;
+
+option go_package            = "github.com/cosmos/cosmos-sdk/x/poolx/types";
+option (gogoproto.equal_all) = true;
+
+import "gogoproto/gogo.proto";
+
+// Params defines the set of params for the distribution module.
+message Params {
+  // option (gogoproto.goproto_stringer) = false;
+}

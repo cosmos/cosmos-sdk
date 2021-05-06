@@ -31,7 +31,6 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.DistrKeeper)
 	queryClient := types.NewQueryClient(queryHelper)

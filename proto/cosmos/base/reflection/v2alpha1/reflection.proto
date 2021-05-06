@@ -70,7 +70,8 @@ message CodecDescriptor {
 message InterfaceDescriptor {
   // fullname is the name of the interface
   string fullname = 1;
-  // interface_accepting_messages contains information regarding the proto messages which contain the interface as google.protobuf.Any field
+  // interface_accepting_messages contains information regarding the proto messages which contain the interface as
+  // google.protobuf.Any field
   repeated InterfaceAcceptingMessageDescriptor interface_accepting_messages = 2;
   // interface_implementers is a list of the descriptors of the interface implementers
   repeated InterfaceImplementerDescriptor interface_implementers = 3;
@@ -208,7 +209,6 @@ message GetTxDescriptorResponse {
   // alongside the accepted transaction protobuf type
   TxDescriptor tx = 1;
 }
-
 
 // QueryServicesDescriptor contains the list of cosmos-sdk queriable services
 message QueryServicesDescriptor {

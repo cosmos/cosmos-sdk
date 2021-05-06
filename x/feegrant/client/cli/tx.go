@@ -44,7 +44,7 @@ func GetTxCmd() *cobra.Command {
 	return feegrantTxCmd
 }
 
-// NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantFeeAllowance transaction.
+// NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant [granter] [grantee]",
@@ -189,7 +189,7 @@ Examples:
 	return cmd
 }
 
-// NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeFeeAllowance transaction.
+// NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeAllowance transaction.
 func NewCmdRevokeFeegrant() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [granter] [grantee]",

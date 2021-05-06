@@ -18,13 +18,13 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgGrantFeeAllowance  = "op_weight_msg_grant_fee_allowance"
-	OpWeightMsgRevokeFeeAllowance = "op_weight_msg_grant_revoke_allowance"
+	OpWeightMsgGrantAllowance  = "op_weight_msg_grant_fee_allowance"
+	OpWeightMsgRevokeAllowance = "op_weight_msg_grant_revoke_allowance"
 )
 
 var (
-	TypeMsgGrantFeeAllowance  = sdk.MsgTypeURL(&feegrant.MsgGrantAllowance{})
-	TypeMsgRevokeFeeAllowance = sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{})
+	TypeMsgGrantAllowance  = sdk.MsgTypeURL(&feegrant.MsgGrantAllowance{})
+	TypeMsgRevokeAllowance = sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{})
 )
 
 func WeightedOperations(
@@ -34,47 +34,47 @@ func WeightedOperations(
 ) simulation.WeightedOperations {
 
 	var (
-		weightMsgGrantFeeAllowance  int
-		weightMsgRevokeFeeAllowance int
+		weightMsgGrantAllowance  int
+		weightMsgRevokeAllowance int
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgGrantFeeAllowance, &weightMsgGrantFeeAllowance, nil,
+	appParams.GetOrGenerate(cdc, OpWeightMsgGrantAllowance, &weightMsgGrantAllowance, nil,
 		func(_ *rand.Rand) {
-			weightMsgGrantFeeAllowance = simappparams.DefaultWeightGrantFeeAllowance
+			weightMsgGrantAllowance = simappparams.DefaultWeightGrantAllowance
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgRevokeFeeAllowance, &weightMsgRevokeFeeAllowance, nil,
+	appParams.GetOrGenerate(cdc, OpWeightMsgRevokeAllowance, &weightMsgRevokeAllowance, nil,
 		func(_ *rand.Rand) {
-			weightMsgRevokeFeeAllowance = simappparams.DefaultWeightRevokeFeeAllowance
+			weightMsgRevokeAllowance = simappparams.DefaultWeightRevokeAllowance
 		},
 	)
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
-			weightMsgGrantFeeAllowance,
-			SimulateMsgGrantFeeAllowance(ak, bk, k, protoCdc),
+			weightMsgGrantAllowance,
+			SimulateMsgGrantAllowance(ak, bk, k, protoCdc),
 		),
 		simulation.NewWeightedOperation(
-			weightMsgRevokeFeeAllowance,
-			SimulateMsgRevokeFeeAllowance(ak, bk, k, protoCdc),
+			weightMsgRevokeAllowance,
+			SimulateMsgRevokeAllowance(ak, bk, k, protoCdc),
 		),
 	}
 }
 
-// SimulateMsgGrantFeeAllowance generates MsgGrantFeeAllowance with random values.
-func SimulateMsgGrantFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
+// SimulateMsgGrantAllowance generates MsgGrantAllowance with random values.
+func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		granter, _ := simtypes.RandomAcc(r, accs)
 		grantee, _ := simtypes.RandomAcc(r, accs)
 		if grantee.Address.String() == granter.Address.String() {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, "grantee and granter cannot be same"), nil, nil
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "grantee and granter cannot be same"), nil, nil
 		}
 
 		if f, _ := k.GetAllowance(ctx, granter.Address, grantee.Address); f != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, "fee allowance exists"), nil, nil
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "fee allowance exists"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, granter.Address)
@@ -82,12 +82,12 @@ func SimulateMsgGrantFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKee
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
 
 		spendableCoins = spendableCoins.Sub(fees)
 		if spendableCoins.Empty() {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
 		}
 
 		oneYear := ctx.BlockTime().AddDate(1, 0, 0)
@@ -97,14 +97,14 @@ func SimulateMsgGrantFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKee
 		}, granter.Address, grantee.Address)
 
 		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
 		feegrantMsgClient := feegrant.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.GrantAllowance(context.Background(), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
 		tx, err := helpers.GenTx(
 			txGen,
@@ -118,7 +118,7 @@ func SimulateMsgGrantFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKee
 		)
 
 		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
@@ -130,8 +130,8 @@ func SimulateMsgGrantFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKee
 	}
 }
 
-// SimulateMsgRevokeFeeAllowance generates a MsgRevokeFeeAllowance with random values.
-func SimulateMsgRevokeFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
+// SimulateMsgRevokeAllowance generates a MsgRevokeAllowance with random values.
+func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -156,19 +156,19 @@ func SimulateMsgRevokeFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKe
 		})
 
 		if !hasGrant {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeFeeAllowance, "no grants"), nil, nil
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, "no grants"), nil, nil
 		}
 		granter, ok := simtypes.FindAccount(accs, granterAddr)
 
 		if !ok {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeFeeAllowance, "Account not found"), nil, nil
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, "Account not found"), nil, nil
 		}
 
 		account := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
 		}
 
 		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
@@ -178,7 +178,7 @@ func SimulateMsgRevokeFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKe
 		feegrantMsgClient := feegrant.NewMsgClient(svcMsgClientConn)
 		_, err = feegrantMsgClient.RevokeAllowance(context.Background(), &msg)
 		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
 
 		tx, err := helpers.GenTx(
@@ -193,7 +193,7 @@ func SimulateMsgRevokeFeeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKe
 		)
 
 		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeFeeAllowance, err.Error()), nil, err
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
 		}
 
 		_, _, err = app.Deliver(txGen.TxEncoder(), tx)

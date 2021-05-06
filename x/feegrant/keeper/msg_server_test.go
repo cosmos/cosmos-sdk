@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
-func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
+func (suite *KeeperTestSuite) TestGrantAllowance() {
 	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 
 	testCases := []struct {
@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
+func (suite *KeeperTestSuite) TestRevokeAllowance() {
 	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 
 	testCases := []struct {

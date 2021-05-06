@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgGrantFeeAllowance(t *testing.T) {
+func TestMsgGrantAllowance(t *testing.T) {
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	addr, _ := sdk.AccAddressFromBech32("cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr")
 	addr2, _ := sdk.AccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
@@ -77,7 +77,7 @@ func TestMsgGrantFeeAllowance(t *testing.T) {
 	}
 }
 
-func TestMsgRevokeFeeAllowance(t *testing.T) {
+func TestMsgRevokeAllowance(t *testing.T) {
 	addr, _ := sdk.AccAddressFromBech32("cosmos1aeuqja06474dfrj7uqsvukm6rael982kk89mqr")
 	addr2, _ := sdk.AccAddressFromBech32("cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl")
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))

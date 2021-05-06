@@ -78,14 +78,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{
-			simappparams.DefaultWeightGrantFeeAllowance,
+			simappparams.DefaultWeightGrantAllowance,
 			feegrant.ModuleName,
-			simulation.TypeMsgGrantFeeAllowance,
+			simulation.TypeMsgGrantAllowance,
 		},
 		{
-			simappparams.DefaultWeightRevokeFeeAllowance,
+			simappparams.DefaultWeightRevokeAllowance,
 			feegrant.ModuleName,
-			simulation.TypeMsgRevokeFeeAllowance,
+			simulation.TypeMsgRevokeAllowance,
 		},
 	}
 
@@ -100,7 +100,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 }
 
-func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
+func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	app, ctx := suite.app, suite.ctx
 	require := suite.Require()
 
@@ -112,7 +112,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgGrantFeeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgGrantAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
@@ -125,7 +125,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	require.Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
+func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	app, ctx := suite.app, suite.ctx
 	require := suite.Require()
 
@@ -154,7 +154,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeFeeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgRevokeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 

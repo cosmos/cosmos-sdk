@@ -75,7 +75,7 @@ message TxBody {
   repeated google.protobuf.Any messages = 1;
 
   // memo is any arbitrary note/comment to be added to the transaction.
-  // In clients, any public exposing text should not be called as memo,
+  // WARNING: in clients, any publicly exposed text should not be called memo,
   // should use `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122).
   string memo = 2;
 

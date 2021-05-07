@@ -175,7 +175,7 @@ Here is an example of a request handler for the `bank` module `SendReq` request 
 The request handler can be broken down as follows:
 
 - **Parse Request:** First, the request handler tries to parse the argument `address` into a `AccountAddress`. The request handler then attempts to parse the request, followed by running `Sanitize` and `ValidateBasic` on the underlying `BaseReq` to check the validity of the request. Finally, the request handler attempts to parse `BaseReq.From` to the type `AccountAddress`.
-- **Message:** After parsing the request, a [message](./messages-and-queries.md#messages) of the type `MsgSend` is created from the values, which is defined by the module developer to trigger the state changes for this transaction.
+- **Message:** After parsing the request, a [message](./messages-and-queries.md#messages) of type `MsgSend` is created from the values, which is defined by the module developer to trigger the state changes for this transaction.
 - **Generate Transaction:** Finally, the client `Context`, the HTTP `ResponseWriter`, the request's [`BaseReq`](../interfaces/rest.md#basereq), and the message are all passed to `WriteGeneratedTxResponse` to further process the request.
 
 To read more about how a transaction is generated, visit the transactions documentation [here](../core/transactions.md#transaction-generation).

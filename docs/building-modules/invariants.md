@@ -18,7 +18,7 @@ An `Invariant` is a function that checks for a particular invariant within a mod
 
 The `string` return value is the invariant message, which can be used when printing logs, and the `bool` return value is the actual result of the invariant check. 
 
-In practice, each module implements `Invariant`s in a `./keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants as demonstrated in the following example:
+In practice, each module implements `Invariant`s in a `./keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants with the following model:
 
 ```go
 // Example for an Invariant that checks balance-related invariants

@@ -81,7 +81,7 @@ Let us go through the methods of `AppModule`:
 
 Typically, the various application module interfaces are implemented in a file called `module.go`, located in the module's folder (e.g. `./x/module/module.go`).
 
-Almost every module needs to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewHandler(k keeper)` function defined in `module.go` and therefore needs to pass the module's [`keeper`](./keeper.md) as a parameter. <!-- keeper is not passed to NewHandler() in authz or feegrant - is this still accurate? -->
+Almost every module needs to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewHandler(k keeper)` function defined in `module.go` and therefore needs to pass the module's [`keeper`](./keeper.md) as a parameter.
 
 ```go
 // example

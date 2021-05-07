@@ -119,13 +119,13 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 		gov.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, app.GovKeeper, &types.GenesisState{
 			Deposits: types.Deposits{
 				{
-					1234,
-					"me",
-					sdk.Coins{
-						{
+					ProposalId: 1234,
+					Depositor:  "me",
+					Amount: sdk.Coins{
+						sdk.NewCoin(
 							"stake",
 							sdk.NewInt(1234),
-						},
+						),
 					},
 				},
 			},

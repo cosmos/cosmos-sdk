@@ -4,14 +4,14 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	github.com/99designs/keyring v1.1.6
-	github.com/armon/go-metrics v0.3.6
+	github.com/armon/go-metrics v0.3.7
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/coinbase/rosetta-sdk-go v0.5.9
-	github.com/confio/ics23/go v0.6.3
+	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.15.3
+	github.com/cosmos/iavl v0.16.0
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
@@ -22,7 +22,7 @@ require (
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87
@@ -34,7 +34,7 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.10.0
-	github.com/prometheus/common v0.20.0
+	github.com/prometheus/common v0.23.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.21.0

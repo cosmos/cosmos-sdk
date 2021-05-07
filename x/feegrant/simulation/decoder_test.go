@@ -25,13 +25,13 @@ func TestDecodeStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
-	grant, err := types.NewFeeAllowanceGrant(granterAddr, granteeAddr, &types.BasicFeeAllowance{
+	grant, err := types.NewGrant(granterAddr, granteeAddr, &types.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100))),
 	})
 
 	require.NoError(t, err)
 
-	grantBz, err := cdc.MarshalBinaryBare(&grant)
+	grantBz, err := cdc.Marshal(&grant)
 	require.NoError(t, err)
 
 	kvPairs := kv.Pairs{

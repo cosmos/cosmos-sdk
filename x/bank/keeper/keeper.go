@@ -50,7 +50,7 @@ type BaseKeeper struct {
 	BaseSendKeeper
 
 	ak         types.AccountKeeper
-	cdc        codec.BinaryMarshaler
+	cdc        codec.BinaryCodec
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 }
@@ -67,7 +67,9 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 		if err != nil {
 			return fmt.Errorf("unable to convert amount string to Int %v", err)
 		}
-		supply = append(supply, sdk.NewCoin(string(key), amount))
+
+		// `Add` omits the 0 coins addition to the `supply`.
+		supply = supply.Add(sdk.NewCoin(string(key), amount))
 		return nil
 	})
 
@@ -85,7 +87,7 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 // to receive funds through direct and explicit actions, for example, by using a MsgSend or
 // by using a SendCoinsFromModuleToAccount execution.
 func NewBaseKeeper(
-	cdc codec.BinaryMarshaler,
+	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
 	ak types.AccountKeeper,
 	paramSpace paramtypes.Subspace,
@@ -124,7 +126,7 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 	balances := sdk.NewCoins()
 
 	for _, coin := range amt {
-		balance := k.GetBalance(ctx, delegatorAddr, coin.Denom)
+		balance := k.GetBalance(ctx, delegatorAddr, coin.GetDenom())
 		if balance.IsLT(coin) {
 			return sdkerrors.Wrapf(
 				sdkerrors.ErrInsufficientFunds, "failed to delegate; %s is smaller than %s", balance, amt,
@@ -222,7 +224,7 @@ func (k BaseKeeper) GetDenomMetaData(ctx sdk.Context, denom string) (types.Metad
 	}
 
 	var metadata types.Metadata
-	k.cdc.MustUnmarshalBinaryBare(bz, &metadata)
+	k.cdc.MustUnmarshal(bz, &metadata)
 
 	return metadata, true
 }
@@ -250,7 +252,7 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 
 	for ; iterator.Valid(); iterator.Next() {
 		var metadata types.Metadata
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &metadata)
+		k.cdc.MustUnmarshal(iterator.Value(), &metadata)
 
 		if cb(metadata) {
 			break
@@ -263,7 +265,7 @@ func (k BaseKeeper) SetDenomMetaData(ctx sdk.Context, denomMetaData types.Metada
 	store := ctx.KVStore(k.storeKey)
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataKey(denomMetaData.Base))
 
-	m := k.cdc.MustMarshalBinaryBare(&denomMetaData)
+	m := k.cdc.MustMarshal(&denomMetaData)
 	denomMetaDataStore.Set([]byte(denomMetaData.Base), m)
 }
 
@@ -426,14 +428,20 @@ func (k BaseKeeper) BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 }
 
 func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
-	store := ctx.KVStore(k.storeKey)
-	supplyStore := prefix.NewStore(store, types.SupplyKey)
-
 	intBytes, err := coin.Amount.Marshal()
 	if err != nil {
 		panic(fmt.Errorf("unable to marshal amount value %v", err))
 	}
-	supplyStore.Set([]byte(coin.GetDenom()), intBytes)
+
+	store := ctx.KVStore(k.storeKey)
+	supplyStore := prefix.NewStore(store, types.SupplyKey)
+
+	// Bank invariants and IBC requires to remove zero coins.
+	if coin.IsZero() {
+		supplyStore.Delete([]byte(coin.GetDenom()))
+	} else {
+		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
+	}
 }
 
 func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {

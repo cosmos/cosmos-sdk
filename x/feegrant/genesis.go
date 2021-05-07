@@ -6,17 +6,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
-// GenesisState contains a set of fee allowances, persisted from the store
-type GenesisState []types.FeeAllowanceGrant
-
-// ValidateBasic ensures all grants in the genesis state are valid
-func (g GenesisState) ValidateBasic() error {
-	for _, f := range g {
-		grant, err := f.GetFeeGrant()
+// InitGenesis will initialize the keeper from a *previously validated* GenesisState
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) error {
+	for _, f := range data.Allowances {
+		granter, err := sdk.AccAddressFromBech32(f.Granter)
 		if err != nil {
 			return err
 		}
-		err = grant.ValidateBasic()
+		grantee, err := sdk.AccAddressFromBech32(f.Grantee)
+		if err != nil {
+			return err
+		}
+
+		grant, err := f.GetGrant()
+		if err != nil {
+			return err
+		}
+
+		err = k.GrantAllowance(ctx, granter, grantee, grant)
 		if err != nil {
 			return err
 		}
@@ -24,47 +31,16 @@ func (g GenesisState) ValidateBasic() error {
 	return nil
 }
 
-// InitGenesis will initialize the keeper from a *previously validated* GenesisState
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, data *types.GenesisState) {
-	for _, f := range data.FeeAllowances {
-		granter, err := sdk.AccAddressFromBech32(f.Granter)
-		if err != nil {
-			panic(err)
-		}
-		grantee, err := sdk.AccAddressFromBech32(f.Grantee)
-		if err != nil {
-			panic(err)
-		}
-
-		grant, err := f.GetFeeGrant()
-		if err != nil {
-			panic(err)
-		}
-
-		err = k.GrantFeeAllowance(ctx, granter, grantee, grant)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-// ExportGenesis will dump the contents of the keeper into a serializable GenesisState
-//
-// All expiration heights will be thrown off if we dump state and start at a new
-// chain at height 0. Thus, we allow the Allowances to "prepare themselves"
-// for export, like if they have expiry at 5000 and current is 4000, they export with
-// expiry of 1000. Every FeeAllowance has a method `PrepareForExport` that allows
-// them to perform any changes needed prior to export.
+// ExportGenesis will dump the contents of the keeper into a serializable GenesisState.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) (*types.GenesisState, error) {
-	time, height := ctx.BlockTime(), ctx.BlockHeight()
-	var grants []types.FeeAllowanceGrant
+	var grants []types.Grant
 
-	err := k.IterateAllFeeAllowances(ctx, func(grant types.FeeAllowanceGrant) bool {
-		grants = append(grants, grant.PrepareForExport(time, height))
+	err := k.IterateAllFeeAllowances(ctx, func(grant types.Grant) bool {
+		grants = append(grants, grant)
 		return false
 	})
 
 	return &types.GenesisState{
-		FeeAllowances: grants,
+		Allowances: grants,
 	}, err
 }

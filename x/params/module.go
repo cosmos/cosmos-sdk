@@ -45,10 +45,10 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // DefaultGenesis returns default genesis state as raw bytes for the params
 // module.
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage { return nil }
+func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage { return nil }
 
 // ValidateGenesis performs genesis state validation for the params module.
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, config client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
 	return nil
 }
 
@@ -90,7 +90,7 @@ func NewAppModule(k keeper.Keeper) AppModule {
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs a no-op.
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
@@ -133,7 +133,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 }
 
 // ExportGenesis performs a no-op.
-func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONMarshaler) json.RawMessage {
+func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMessage {
 	return nil
 }
 

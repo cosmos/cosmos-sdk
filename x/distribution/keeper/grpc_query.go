@@ -92,7 +92,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 
 	pageRes, err := query.FilteredPaginate(slashesStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var result types.ValidatorSlashEvent
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
+		err := k.cdc.Unmarshal(value, &result)
 
 		if err != nil {
 			return false, err

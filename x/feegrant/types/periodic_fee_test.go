@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,167 +15,158 @@ import (
 
 func TestPeriodicFeeValidAllow(t *testing.T) {
 	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{
+		Time: time.Now(),
+	})
+
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
 	smallAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 43))
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 	oneAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
 
+	now := ctx.BlockTime()
+	oneHour := now.Add(1 * time.Hour)
+	twoHours := now.Add(2 * time.Hour)
+	tenMinutes := time.Duration(10) * time.Minute
+
 	cases := map[string]struct {
-		allow types.PeriodicFeeAllowance
+		allow types.PeriodicAllowance
 		// all other checks are ignored if valid=false
 		fee           sdk.Coins
-		blockHeight   int64
+		blockTime     time.Time
 		valid         bool
 		accept        bool
 		remove        bool
 		remains       sdk.Coins
 		remainsPeriod sdk.Coins
-		periodReset   types.ExpiresAt
+		periodReset   time.Time
 	}{
 		"empty": {
-			allow: types.PeriodicFeeAllowance{},
+			allow: types.PeriodicAllowance{},
 			valid: false,
 		},
 		"only basic": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
-					Expiration: types.ExpiresAtHeight(100),
+					Expiration: &oneHour,
 				},
 			},
 			valid: false,
 		},
 		"empty basic": {
-			allow: types.PeriodicFeeAllowance{
-				Period:           types.BlockDuration(10),
+			allow: types.PeriodicAllowance{
+				Period:           tenMinutes,
 				PeriodSpendLimit: smallAtom,
-				PeriodReset:      types.ExpiresAtHeight(70),
+				PeriodReset:      now.Add(30 * time.Minute),
 			},
-			blockHeight: 75,
+			blockTime:   now,
 			valid:       true,
 			accept:      true,
 			remove:      false,
-			periodReset: types.ExpiresAtHeight(80),
+			periodReset: now.Add(30 * time.Minute),
 		},
 		"mismatched currencies": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
-					Expiration: types.ExpiresAtHeight(100),
+					Expiration: &oneHour,
 				},
-				Period:           types.BlockDuration(10),
+				Period:           tenMinutes,
 				PeriodSpendLimit: eth,
 			},
 			valid: false,
 		},
-		"first time": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
-					SpendLimit: atom,
-					Expiration: types.ExpiresAtHeight(100),
-				},
-				Period:           types.BlockDuration(10),
-				PeriodSpendLimit: smallAtom,
-			},
-			valid:         true,
-			fee:           smallAtom,
-			blockHeight:   75,
-			accept:        true,
-			remove:        false,
-			remainsPeriod: nil,
-			remains:       leftAtom,
-			periodReset:   types.ExpiresAtHeight(85),
-		},
 		"same period": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
-					Expiration: types.ExpiresAtHeight(100),
+					Expiration: &twoHours,
 				},
-				Period:           types.BlockDuration(10),
-				PeriodReset:      types.ExpiresAtHeight(80),
+				Period:           tenMinutes,
+				PeriodReset:      now.Add(1 * time.Hour),
 				PeriodSpendLimit: leftAtom,
 				PeriodCanSpend:   smallAtom,
 			},
 			valid:         true,
 			fee:           smallAtom,
-			blockHeight:   75,
+			blockTime:     now,
 			accept:        true,
 			remove:        false,
 			remainsPeriod: nil,
 			remains:       leftAtom,
-			periodReset:   types.ExpiresAtHeight(80),
+			periodReset:   now.Add(1 * time.Hour),
 		},
 		"step one period": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
-					Expiration: types.ExpiresAtHeight(100),
+					Expiration: &twoHours,
 				},
-				Period:           types.BlockDuration(10),
-				PeriodReset:      types.ExpiresAtHeight(70),
+				Period:           tenMinutes,
+				PeriodReset:      now,
 				PeriodSpendLimit: leftAtom,
 			},
 			valid:         true,
 			fee:           leftAtom,
-			blockHeight:   75,
+			blockTime:     now.Add(1 * time.Hour),
 			accept:        true,
 			remove:        false,
 			remainsPeriod: nil,
 			remains:       smallAtom,
-			periodReset:   types.ExpiresAtHeight(80), // one step from last reset, not now
+			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
 		},
 		"step limited by global allowance": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: smallAtom,
-					Expiration: types.ExpiresAtHeight(100),
+					Expiration: &twoHours,
 				},
-				Period:           types.BlockDuration(10),
-				PeriodReset:      types.ExpiresAtHeight(70),
+				Period:           tenMinutes,
+				PeriodReset:      now,
 				PeriodSpendLimit: atom,
 			},
 			valid:         true,
 			fee:           oneAtom,
-			blockHeight:   75,
+			blockTime:     oneHour,
 			accept:        true,
 			remove:        false,
 			remainsPeriod: smallAtom.Sub(oneAtom),
 			remains:       smallAtom.Sub(oneAtom),
-			periodReset:   types.ExpiresAtHeight(80), // one step from last reset, not now
+			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
 		},
 		"expired": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
-					Expiration: types.ExpiresAtHeight(100),
+					Expiration: &now,
 				},
-				Period:           types.BlockDuration(10),
+				Period:           time.Hour,
 				PeriodSpendLimit: smallAtom,
 			},
-			valid:       true,
-			fee:         smallAtom,
-			blockHeight: 101,
-			accept:      false,
-			remove:      true,
+			valid:     true,
+			fee:       smallAtom,
+			blockTime: oneHour,
+			accept:    false,
+			remove:    true,
 		},
 		"over period limit": {
-			allow: types.PeriodicFeeAllowance{
-				Basic: types.BasicFeeAllowance{
+			allow: types.PeriodicAllowance{
+				Basic: types.BasicAllowance{
 					SpendLimit: atom,
-					Expiration: types.ExpiresAtHeight(100),
+					Expiration: &now,
 				},
-				Period:           types.BlockDuration(10),
-				PeriodReset:      types.ExpiresAtHeight(80),
+				Period:           time.Hour,
+				PeriodReset:      now.Add(1 * time.Hour),
 				PeriodSpendLimit: leftAtom,
 				PeriodCanSpend:   smallAtom,
 			},
-			valid:       true,
-			fee:         leftAtom,
-			blockHeight: 70,
-			accept:      false,
-			remove:      true,
+			valid:     true,
+			fee:       leftAtom,
+			blockTime: now,
+			accept:    false,
+			remove:    true,
 		},
 	}
 
@@ -188,7 +180,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockHeight(tc.blockHeight)
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockTime(tc.blockTime)
 			// now try to deduct
 			remove, err := tc.allow.Accept(ctx, tc.fee, []sdk.Msg{})
 			if !tc.accept {
@@ -201,7 +193,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			if !remove {
 				assert.Equal(t, tc.remains, tc.allow.Basic.SpendLimit)
 				assert.Equal(t, tc.remainsPeriod, tc.allow.PeriodCanSpend)
-				assert.Equal(t, tc.periodReset, tc.allow.PeriodReset)
+				assert.Equal(t, tc.periodReset.String(), tc.allow.PeriodReset.String())
 			}
 		})
 	}

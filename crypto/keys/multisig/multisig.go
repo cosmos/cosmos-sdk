@@ -39,7 +39,7 @@ func (m *LegacyAminoPubKey) Address() cryptotypes.Address {
 
 // Bytes returns the proto encoded version of the LegacyAminoPubKey
 func (m *LegacyAminoPubKey) Bytes() []byte {
-	return AminoCdc.MustMarshalBinaryBare(m)
+	return AminoCdc.MustMarshal(m)
 }
 
 // VerifyMultisignature implements the multisigtypes.PubKey VerifyMultisignature method.

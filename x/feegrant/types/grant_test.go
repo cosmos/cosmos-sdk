@@ -2,9 +2,10 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,66 +19,69 @@ func TestGrant(t *testing.T) {
 	addr2, err := sdk.AccAddressFromBech32("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")
 	require.NoError(t, err)
 	atom := sdk.NewCoins(sdk.NewInt64Coin("atom", 555))
-
-	goodGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
-		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{
+		Time: time.Now(),
 	})
-	require.NoError(t, err)
+	now := ctx.BlockTime()
+	oneYear := now.AddDate(1, 0, 0)
 
-	noGranteeGrant, err := types.NewFeeAllowanceGrant(addr2, nil, &types.BasicFeeAllowance{
-		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
-	})
-	require.NoError(t, err)
-
-	noGranterGrant, err := types.NewFeeAllowanceGrant(nil, addr, &types.BasicFeeAllowance{
-		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
-	})
-	require.NoError(t, err)
-
-	selfGrant, err := types.NewFeeAllowanceGrant(addr2, addr2, &types.BasicFeeAllowance{
-		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(100),
-	})
-	require.NoError(t, err)
-
-	badAllowanceGrant, err := types.NewFeeAllowanceGrant(addr2, addr, &types.BasicFeeAllowance{
-		SpendLimit: atom,
-		Expiration: types.ExpiresAtHeight(-1),
-	})
-	require.NoError(t, err)
-
+	zeroAtoms := sdk.NewCoins(sdk.NewInt64Coin("atom", 0))
 	cdc := app.AppCodec()
-	// RegisterLegacyAminoCodec(cdc)
 
 	cases := map[string]struct {
-		grant types.FeeAllowanceGrant
-		valid bool
+		granter sdk.AccAddress
+		grantee sdk.AccAddress
+		limit   sdk.Coins
+		expires time.Time
+		valid   bool
 	}{
 		"good": {
-			grant: goodGrant,
-			valid: true,
+			granter: addr2,
+			grantee: addr,
+			limit:   atom,
+			expires: oneYear,
+			valid:   true,
 		},
 		"no grantee": {
-			grant: noGranteeGrant,
+			granter: addr2,
+			grantee: nil,
+			limit:   atom,
+			expires: oneYear,
+			valid:   false,
 		},
 		"no granter": {
-			grant: noGranterGrant,
+			granter: nil,
+			grantee: addr,
+			limit:   atom,
+			expires: oneYear,
+			valid:   false,
 		},
 		"self-grant": {
-			grant: selfGrant,
+			granter: addr2,
+			grantee: addr2,
+			limit:   atom,
+			expires: oneYear,
+			valid:   false,
 		},
-		"bad allowance": {
-			grant: badAllowanceGrant,
+		"zero allowance": {
+			granter: addr2,
+			grantee: addr,
+			limit:   zeroAtoms,
+			expires: oneYear,
+			valid:   false,
 		},
 	}
 
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
-			err := tc.grant.ValidateBasic()
+			grant, err := types.NewGrant(tc.granter, tc.grantee, &types.BasicAllowance{
+				SpendLimit: tc.limit,
+				Expiration: &tc.expires,
+			})
+			require.NoError(t, err)
+			err = grant.ValidateBasic()
+
 			if !tc.valid {
 				require.Error(t, err)
 				return
@@ -85,16 +89,16 @@ func TestGrant(t *testing.T) {
 			require.NoError(t, err)
 
 			// if it is valid, let's try to serialize, deserialize, and make sure it matches
-			bz, err := cdc.MarshalBinaryBare(&tc.grant)
+			bz, err := cdc.Marshal(&grant)
 			require.NoError(t, err)
-			var loaded types.FeeAllowanceGrant
-			err = cdc.UnmarshalBinaryBare(bz, &loaded)
+			var loaded types.Grant
+			err = cdc.Unmarshal(bz, &loaded)
 			require.NoError(t, err)
 
 			err = loaded.ValidateBasic()
 			require.NoError(t, err)
 
-			assert.Equal(t, tc.grant, loaded)
+			require.Equal(t, grant, loaded)
 		})
 	}
 }

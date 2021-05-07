@@ -1,12 +1,18 @@
 package proofs
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 
 	ics23 "github.com/confio/ics23/go"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
+)
+
+var (
+	ErrEmptyKey       = errors.New("key is empty")
+	ErrEmptyKeyInData = errors.New("data contains empty key")
 )
 
 // TendermintSpec constrains the format from ics23-tendermint (crypto/merkle SimpleProof)
@@ -31,6 +37,9 @@ CreateMembershipProof will produce a CommitmentProof that the given key (and que
 If the key doesn't exist in the tree, this will return an error.
 */
 func CreateMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {
+	if len(key) == 0 {
+		return nil, ErrEmptyKey
+	}
 	exist, err := createExistenceProof(data, key)
 	if err != nil {
 		return nil, err
@@ -48,6 +57,9 @@ CreateNonMembershipProof will produce a CommitmentProof that the given key doesn
 If the key exists in the tree, this will return an error.
 */
 func CreateNonMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {
+	if len(key) == 0 {
+		return nil, ErrEmptyKey
+	}
 	// ensure this key is not in the store
 	if _, ok := data[string(key)]; ok {
 		return nil, fmt.Errorf("cannot create non-membership proof if key is in map")
@@ -89,6 +101,11 @@ func CreateNonMembershipProof(data map[string][]byte, key []byte) (*ics23.Commit
 }
 
 func createExistenceProof(data map[string][]byte, key []byte) (*ics23.ExistenceProof, error) {
+	for k := range data {
+		if k == "" {
+			return nil, ErrEmptyKeyInData
+		}
+	}
 	value, ok := data[string(key)]
 	if !ok {
 		return nil, fmt.Errorf("cannot make existence proof if key is not in map")

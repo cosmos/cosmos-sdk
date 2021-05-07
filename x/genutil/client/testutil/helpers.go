@@ -17,7 +17,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.JSONMarshaler) error {
+func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.JSONCodec) error {
 	logger := log.NewNopLogger()
 	cfg, err := CreateDefaultTendermintConfig(home)
 	if err != nil {
@@ -26,7 +26,7 @@ func ExecInitCmd(testMbm module.BasicManager, home string, cdc codec.JSONMarshal
 
 	cmd := genutilcli.InitCmd(testMbm, home)
 	serverCtx := server.NewContext(viper.New(), cfg, logger)
-	clientCtx := client.Context{}.WithJSONMarshaler(cdc).WithHomeDir(home)
+	clientCtx := client.Context{}.WithJSONCodec(cdc).WithHomeDir(home)
 
 	_, out := testutil.ApplyMockIO(cmd)
 	clientCtx = clientCtx.WithOutput(out)

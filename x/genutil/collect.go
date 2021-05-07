@@ -25,7 +25,7 @@ import (
 )
 
 // GenAppStateFromConfig gets the genesis app state from the config
-func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEncodingConfig,
+func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
 	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
 
@@ -69,7 +69,7 @@ func GenAppStateFromConfig(cdc codec.JSONMarshaler, txEncodingConfig client.TxEn
 
 // CollectTxs processes and validates application's genesis Txs and returns
 // the list of appGenTxs, and persistent peers required to generate genesis.json.
-func CollectTxs(cdc codec.JSONMarshaler, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
+func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 	// prepare a map of all balances in genesis state to then validate

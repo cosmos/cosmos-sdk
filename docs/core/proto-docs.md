@@ -151,7 +151,6 @@
     - [QueryMethodDescriptor](#cosmos.base.reflection.v2alpha1.QueryMethodDescriptor)
     - [QueryServiceDescriptor](#cosmos.base.reflection.v2alpha1.QueryServiceDescriptor)
     - [QueryServicesDescriptor](#cosmos.base.reflection.v2alpha1.QueryServicesDescriptor)
-    - [ServiceMsgDescriptor](#cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor)
     - [SigningModeDescriptor](#cosmos.base.reflection.v2alpha1.SigningModeDescriptor)
     - [TxDescriptor](#cosmos.base.reflection.v2alpha1.TxDescriptor)
   
@@ -2449,7 +2448,7 @@ MsgDescriptor describes a cosmos-sdk message that can be delivered with a transa
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `service_msg` | [ServiceMsgDescriptor](#cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor) |  | service_msg is used when the message is an sdk.ServiceMsg type |
+| `msg_type_url` | [string](#string) |  | msg_type_url contains the TypeURL of a sdk.Msg. |
 
 
 
@@ -2506,24 +2505,6 @@ QueryServicesDescriptor contains the list of cosmos-sdk queriable services
 
 
 
-<a name="cosmos.base.reflection.v2alpha1.ServiceMsgDescriptor"></a>
-
-### ServiceMsgDescriptor
-ServiceMsgDescriptor describes an sdk.ServiceMsg type
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `request_fullname` | [string](#string) |  | request_fullname is the protobuf fullname of the given sdk.ServiceMsg request this is the protobuf message type which should be used as google.protobuf.Any.value when delivering the msg to the DeliverTx endpoint |
-| `request_route` | [string](#string) |  | request_route is the sdk.ServiceMsg route, it is equal to type_url |
-| `request_type_url` | [string](#string) |  | request_type_url is the identifier that should be used as google.protobuf.Any.type_url when delivering the msg to the DeliverTx endpoint |
-| `response_fullname` | [string](#string) |  | response_fullname is the protobuf fullname of the given sdk.ServiceMsg response |
-
-
-
-
-
-
 <a name="cosmos.base.reflection.v2alpha1.SigningModeDescriptor"></a>
 
 ### SigningModeDescriptor
@@ -2553,7 +2534,7 @@ TxDescriptor describes the accepted transaction type
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `fullname` | [string](#string) |  | fullname is the protobuf fullname of the raw transaction type (for instance the tx.Tx type) it is not meant to support polymorphism of transaction types, it is supposed to be used by reflection clients to understand if they can handle a specific transaction type in an application. |
-| `msgs` | [MsgDescriptor](#cosmos.base.reflection.v2alpha1.MsgDescriptor) | repeated | msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg) NOTE: not to be confused with proto.Message types |
+| `msgs` | [MsgDescriptor](#cosmos.base.reflection.v2alpha1.MsgDescriptor) | repeated | msgs lists the accepted application messages (sdk.Msg) |
 
 
 
@@ -2712,7 +2693,8 @@ between a store name and the commit ID.
 
 ### StoreKVPair
 StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
-It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and Deletes
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
+Deletes
 
 
 | Field | Type | Label | Description |
@@ -5500,7 +5482,7 @@ MsgVoteResponse defines the Msg/Vote response type.
 <a name="cosmos.gov.v1beta1.MsgVoteWeighted"></a>
 
 ### MsgVoteWeighted
-MsgVote defines a message to cast a vote.
+MsgVoteWeighted defines a message to cast a vote.
 
 
 | Field | Type | Label | Description |
@@ -5539,7 +5521,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
 | `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
-| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | WeightedVote defines a method to add a weighted vote on a specific proposal. | |
+| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal. | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->
@@ -7609,7 +7591,7 @@ TxBody is the body of a transaction that all signers sign over.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | messages is a list of messages to be executed. The required signers of those messages define the number and order of elements in AuthInfo's signer_infos and Tx's signatures. Each required signer address is added to the list only the first time it occurs. By convention, the first required signer (usually from the first message) is referred to as the primary signer and pays the fee for the whole transaction. |
-| `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. In clients, any public exposing text should not be called as memo, should use `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
+| `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. WARNING: in clients, any publicly exposed text should not be called memo, but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
 | `timeout_height` | [uint64](#uint64) |  | timeout is the block height after which this transaction will not be processed by the chain |
 | `extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, the transaction will be rejected |
 | `non_critical_extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, they will be ignored |

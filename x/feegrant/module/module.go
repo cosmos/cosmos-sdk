@@ -1,4 +1,4 @@
-package feegrant
+package module
 
 import (
 	"context"
@@ -18,10 +18,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 var (
@@ -41,14 +41,14 @@ type AppModuleBasic struct {
 
 // Name returns the feegrant module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return feegrant.ModuleName
 }
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	feegrant.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+	feegrant.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // RegisterLegacyAminoCodec registers the feegrant module's types for the given codec.
@@ -57,7 +57,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 // RegisterInterfaces registers the feegrant module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
+	feegrant.RegisterInterfaces(registry)
 }
 
 // LegacyQuerierHandler returns the feegrant module sdk.Querier.
@@ -68,17 +68,17 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(feegrant.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the feegrant module.
 func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
+	var data feegrant.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", types.ModuleName)
+		sdkerrors.Wrapf(err, "failed to unmarshal %s genesis state", feegrant.ModuleName)
 	}
 
-	return types.ValidateGenesis(data)
+	return feegrant.ValidateGenesis(data)
 }
 
 // RegisterRESTRoutes registers the REST routes for the feegrant module.
@@ -86,7 +86,7 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx sdkclient.Context, rtr *mux.Router)
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the feegrant module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	feegrant.RegisterQueryHandlerClient(context.Background(), mux, feegrant.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the root tx command for the feegrant module.
@@ -107,13 +107,13 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 	keeper        keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	accountKeeper feegrant.AccountKeeper
+	bankKeeper    feegrant.BankKeeper
 	registry      cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, ak types.AccountKeeper, bk types.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKeeper, keeper keeper.Keeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -125,7 +125,7 @@ func NewAppModule(cdc codec.Codec, ak types.AccountKeeper, bk types.BankKeeper, 
 
 // Name returns the feegrant module's name.
 func (AppModule) Name() string {
-	return types.ModuleName
+	return feegrant.ModuleName
 }
 
 // RegisterInvariants registers the feegrant module invariants.
@@ -133,7 +133,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the feegrant module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, nil)
+	return sdk.NewRoute(feegrant.RouterKey, nil)
 }
 
 // NewHandler returns an sdk.Handler for the feegrant module.
@@ -149,10 +149,10 @@ func (AppModule) QuerierRoute() string {
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
-	var gs types.GenesisState
+	var gs feegrant.GenesisState
 	cdc.MustUnmarshalJSON(bz, &gs)
 
-	err := InitGenesis(ctx, am.keeper, &gs)
+	err := am.keeper.InitGenesis(ctx, &gs)
 	if err != nil {
 		panic(err)
 	}
@@ -162,7 +162,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 // ExportGenesis returns the exported genesis state as raw bytes for the feegrant
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs, err := ExportGenesis(ctx, am.keeper)
+	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,7 +202,7 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for feegrant module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns all the feegrant module operations with their respective weights.

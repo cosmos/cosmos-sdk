@@ -10,13 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
 	feegrantQueryCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        feegrant.ModuleName,
 		Short:                      "Querying commands for the feegrant module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
@@ -47,7 +47,7 @@ $ %s query feegrant grant [granter] [grantee]
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := feegrant.NewQueryClient(clientCtx)
 
 			granterAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -61,7 +61,7 @@ $ %s query feegrant grant [granter] [grantee]
 
 			res, err := queryClient.Allowance(
 				cmd.Context(),
-				&types.QueryAllowanceRequest{
+				&feegrant.QueryAllowanceRequest{
 					Granter: granterAddr.String(),
 					Grantee: granteeAddr.String(),
 				},
@@ -95,7 +95,7 @@ $ %s query feegrant grants [grantee]
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := feegrant.NewQueryClient(clientCtx)
 
 			granteeAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -109,7 +109,7 @@ $ %s query feegrant grants [grantee]
 
 			res, err := queryClient.Allowances(
 				cmd.Context(),
-				&types.QueryAllowancesRequest{
+				&feegrant.QueryAllowancesRequest{
 					Grantee:    granteeAddr.String(),
 					Pagination: pageReq,
 				},

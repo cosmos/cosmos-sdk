@@ -3,6 +3,7 @@ package simulation
 import (
 	"context"
 	"math/rand"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -241,7 +242,7 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 		})
 
 		if !hasGrant {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "Not found"), nil, nil
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "no grant found"), nil, nil
 		}
 
 		if _, ok := simtypes.FindAccount(accs, granteeAddr); !ok {
@@ -296,6 +297,9 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
+			if strings.Contains(err.Error(), "insufficient funds") {
+				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "insufficient fuds"), nil, nil
+			}
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
 		}
 

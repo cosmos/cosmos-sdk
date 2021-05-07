@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
+import "cosmos/authz/v1beta1/authz.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
 option (gogoproto.goproto_getters_all) = false;
@@ -32,8 +33,7 @@ message MsgGrant {
   string granter = 1;
   string grantee = 2;
 
-  google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
-  google.protobuf.Timestamp expiration    = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  cosmos.authz.v1beta1.Grant grant = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgExecResponse defines the Msg/MsgExecResponse response type.

@@ -97,3 +97,14 @@ func TestMsgGrantAuthorization(t *testing.T) {
 		}
 	}
 }
+
+func TestMsgGrantGetAuthorization(t *testing.T) {
+	require := require.New(t)
+
+	m := authz.MsgGrant{}
+	require.Nil(m.GetAuthorization())
+
+	g := authz.GenericAuthorization{Msg: "some_type"}
+	m.Grant.Authorization = authz.NewAnyWithValue(&g)
+	require.Equal(m.GetAuthorization(), &g)
+}

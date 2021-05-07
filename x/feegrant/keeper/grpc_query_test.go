@@ -2,58 +2,58 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func (suite *KeeperTestSuite) TestFeeAllowance() {
 
 	testCases := []struct {
 		name      string
-		req       *types.QueryAllowanceRequest
+		req       *feegrant.QueryAllowanceRequest
 		expectErr bool
 		preRun    func()
-		postRun   func(_ *types.QueryAllowanceResponse)
+		postRun   func(_ *feegrant.QueryAllowanceResponse)
 	}{
 		{
 			"nil request",
 			nil,
 			true,
 			func() {},
-			func(*types.QueryAllowanceResponse) {},
+			func(*feegrant.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: invalid granter",
-			&types.QueryAllowanceRequest{
+			&feegrant.QueryAllowanceRequest{
 				Granter: "invalid_granter",
 				Grantee: suite.addrs[0].String(),
 			},
 			true,
 			func() {},
-			func(*types.QueryAllowanceResponse) {},
+			func(*feegrant.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: invalid grantee",
-			&types.QueryAllowanceRequest{
+			&feegrant.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
 				Grantee: "invalid_grantee",
 			},
 			true,
 			func() {},
-			func(*types.QueryAllowanceResponse) {},
+			func(*feegrant.QueryAllowanceResponse) {},
 		},
 		{
 			"fail: no grants",
-			&types.QueryAllowanceRequest{
+			&feegrant.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
 			true,
 			func() {},
-			func(*types.QueryAllowanceResponse) {},
+			func(*feegrant.QueryAllowanceResponse) {},
 		},
 		{
 			"valid query: expect single grant",
-			&types.QueryAllowanceRequest{
+			&feegrant.QueryAllowanceRequest{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 			func() {
 				grantFeeAllowance(suite)
 			},
-			func(response *types.QueryAllowanceResponse) {
+			func(response *feegrant.QueryAllowanceResponse) {
 				suite.Require().Equal(response.Allowance.Granter, suite.addrs[0].String())
 				suite.Require().Equal(response.Allowance.Grantee, suite.addrs[1].String())
 			},
@@ -85,48 +85,48 @@ func (suite *KeeperTestSuite) TestFeeAllowance() {
 func (suite *KeeperTestSuite) TestFeeAllowances() {
 	testCases := []struct {
 		name      string
-		req       *types.QueryAllowancesRequest
+		req       *feegrant.QueryAllowancesRequest
 		expectErr bool
 		preRun    func()
-		postRun   func(_ *types.QueryAllowancesResponse)
+		postRun   func(_ *feegrant.QueryAllowancesResponse)
 	}{
 		{
 			"nil request",
 			nil,
 			true,
 			func() {},
-			func(*types.QueryAllowancesResponse) {},
+			func(*feegrant.QueryAllowancesResponse) {},
 		},
 		{
 			"fail: invalid grantee",
-			&types.QueryAllowancesRequest{
+			&feegrant.QueryAllowancesRequest{
 				Grantee: "invalid_grantee",
 			},
 			true,
 			func() {},
-			func(*types.QueryAllowancesResponse) {},
+			func(*feegrant.QueryAllowancesResponse) {},
 		},
 		{
 			"no grants",
-			&types.QueryAllowancesRequest{
+			&feegrant.QueryAllowancesRequest{
 				Grantee: suite.addrs[1].String(),
 			},
 			false,
 			func() {},
-			func(resp *types.QueryAllowancesResponse) {
+			func(resp *feegrant.QueryAllowancesResponse) {
 				suite.Require().Equal(len(resp.Allowances), 0)
 			},
 		},
 		{
 			"valid query: expect single grant",
-			&types.QueryAllowancesRequest{
+			&feegrant.QueryAllowancesRequest{
 				Grantee: suite.addrs[1].String(),
 			},
 			false,
 			func() {
 				grantFeeAllowance(suite)
 			},
-			func(resp *types.QueryAllowancesResponse) {
+			func(resp *feegrant.QueryAllowancesResponse) {
 				suite.Require().Equal(len(resp.Allowances), 1)
 				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
 				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 
 func grantFeeAllowance(suite *KeeperTestSuite) {
 	exp := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
-	err := suite.app.FeeGrantKeeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], &types.BasicAllowance{
+	err := suite.app.FeeGrantKeeper.GrantAllowance(suite.sdkCtx, suite.addrs[0], suite.addrs[1], &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 555)),
 		Expiration: &exp,
 	})

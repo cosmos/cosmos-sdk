@@ -14,9 +14,9 @@ order: 6
 
 `BeginBlocker` and `EndBlocker` are a way for module developers to add automatic execution of logic to their module. This is a powerful tool that should be used carefully, as complex automatic functions can slow down or even halt the chain. 
 
-When needed, `BeginBlocker` and `EndBlocker` are implemented as part of the [`AppModule` interface](./module-manager.md#appmodule). The `BeginBlock` and `EndBlock` methods of the interface implemented in `module.go` generally defer to `BeginBlocker` and `EndBlocker` methods respectively, which are usually implemented in a **`abci.go`** file. 
+When needed, `BeginBlocker` and `EndBlocker` are implemented as part of the [`AppModule` interface](./module-manager.md#appmodule). The `BeginBlock` and `EndBlock` methods of the interface implemented in `module.go` generally defer to `BeginBlocker` and `EndBlocker` methods respectively, which are usually implemented in the `abci.go` file. 
 
-The actual implementation of `BeginBlocker` and `EndBlocker` in `./abci.go` are very similar to that of a [`Msg` service](./msg-services.md):
+The actual implementation of `BeginBlocker` and `EndBlocker` in the `abci.go` file are very similar to that of a [`Msg` service](./msg-services.md):
 
 - They generally use the [`keeper`](./keeper.md) and [`ctx`](../core/context.md) to retrieve information about the latest state. 
 - If needed, they use the `keeper` and `ctx` to trigger state-transitions. 

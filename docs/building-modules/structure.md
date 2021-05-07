@@ -73,7 +73,7 @@ x/{module_name}
 	- `codec.go`: The module's registry methods for interface types.
 	- `errors.go`: The module's sentinel errors.
 	- `events.go`: The module's event types and constructors.
-	- `expected_keepers.go`: The module's expected keeper interfaces<!-- (also includes expected subspace interface, also includes expected event hook interfaces (gov and staking hooks), also includes expected properties for validator set and delegation set, also expected iterating genesis accounts object) -->.
+	- `expected_keepers.go`: The module's [expected keeper](./keeper.html#type-definition) interfaces<!-- (also includes expected subspace interface, also includes expected event hook interfaces (gov and staking hooks), also includes expected properties for validator set and delegation set, also expected iterating genesis accounts object) -->.
 	- `genesis.go`: The module's genesis state methods and helper functions.
 	- `keys.go`: The module's store keys and helper functions<!-- (also includes other constants such as ModuleName and QuerierRoute)-->.
 	- `msgs.go`: The module's message type definitions and instance methods.

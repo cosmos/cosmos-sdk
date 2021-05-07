@@ -56,11 +56,11 @@ Let us go through the two added methods:
 - `InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)`: Initializes the subset of the state managed by the module. It is called at genesis (i.e. when the chain is first started).
 - `ExportGenesis(sdk.Context, codec.JSONCodec)`: Exports the latest subset of the state managed by the module to be used in a new genesis file. `ExportGenesis` is called for each module when a new chain is started from the state of an existing chain.
 
-It does not have its own manager, and exists separately from [`AppModule`](#appmodule) only for modules that exist only to implement genesis functionalities, so that they can be managed without having to implement all of `AppModule`'s methods. If the module is not only used during genesis, `InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)` and `ExportGenesis(sdk.Context,  codec.JSONCodec)` will generally be defined as methods of the concrete type implementing hte `AppModule` interface.
+It does not have its own manager, and exists separately from [`AppModule`](#appmodule) only for modules that exist only to implement genesis functionalities, so that they can be managed without having to implement all of `AppModule`'s methods. If the module is not only used during genesis, `InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage)` and `ExportGenesis(sdk.Context,  codec.JSONCodec)` will generally be defined as methods of the concrete type implementing the `AppModule` interface.
 
 ### `AppModule`
 
-The `AppModule` interface defines the inter-dependent methods modules need to implement.
+The `AppModule` interface defines the inter-dependent methods that modules need to implement.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/b4cce159bcc6a32ac78245c6866dd87c73f3720d/types/module/module.go#L160-L182
 
@@ -68,7 +68,7 @@ The `AppModule` interface defines the inter-dependent methods modules need to im
 
 Let us go through the methods of `AppModule`:
 
-- `RegisterInvariants(sdk.InvariantRegistry)`: Registers the [`invariants`](./invariants.md) of the module. If the invariants deviates from its predicted value, the [`InvariantRegistry`](./invariants.md#registry) triggers appropriate logic (most often the chain will be halted).
+- `RegisterInvariants(sdk.InvariantRegistry)`: Registers the [`invariants`](./invariants.md) of the module. If an invariant deviates from its predicted value, the [`InvariantRegistry`](./invariants.md#registry) triggers appropriate logic (most often the chain will be halted).
 - `Route()`: Returns the route for [`message`s](./messages-and-queries.md#messages) to be routed to the module by [`BaseApp`](../core/baseapp.md#message-routing).
 - `QuerierRoute()` (deprecated): Returns the name of the module's query route, for [`queries`](./messages-and-queries.md#queries) to be routes to the module by [`BaseApp`](../core/baseapp.md#query-routing).
 - `LegacyQuerierHandler(*codec.LegacyAmino)` (deprecated): Returns a [`querier`](./query-services.md#legacy-queriers) given the query `path`, in order to process the `query`.
@@ -81,7 +81,7 @@ Let us go through the methods of `AppModule`:
 
 Typically, the various application module interfaces are implemented in a file called `module.go`, located in the module's folder (e.g. `./x/module/module.go`).
 
-Almost every module needs to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewHandler(k keeper)` function defined in [`handler.go`](./msg-services.md#handler-type) and therefore needs to pass the module's [`keeper`](./keeper.md) as a parameter.
+Almost every module needs to implement the `AppModuleBasic` and `AppModule` interfaces. If the module is only used for genesis, it will implement `AppModuleGenesis` instead of `AppModule`. The concrete type that implements the interface can add parameters that are required for the implementation of the various methods of the interface. For example, the `Route()` function often calls a `NewHandler(k keeper)` function defined in `module.go` and therefore needs to pass the module's [`keeper`](./keeper.md) as a parameter. <!-- keeper is not passed to NewHandler() in authz or feegrant - is this still accurate? -->
 
 ```go
 // example

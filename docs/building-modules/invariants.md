@@ -12,13 +12,13 @@ An invariant is a property of the application that should always be true. In the
 
 ## Implementing `Invariant`s
 
-An `Invariant` is a function that checks for a particular invariant within a module. Module `Invariant`s must follow the `Invariant`s type:
+An `Invariant` is a function that checks for a particular invariant within a module. Module `Invariant`s must follow the `Invariant` type:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/types/invariant.go#L9
 
-where the `string` return value is the invariant message, which can be used when printing logs, and the `bool` return value is the actual result of the invariant check. 
+The `string` return value is the invariant message, which can be used when printing logs, and the `bool` return value is the actual result of the invariant check. 
 
-In practice, each module implements `Invariant`s in a `./keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants with the following model:
+In practice, each module implements `Invariant`s in a `./keeper/invariants.go` file within the module's folder. The standard is to implement one `Invariant` function per logical grouping of invariants as demonstrated in the following example:
 
 ```go
 // Example for an Invariant that checks balance-related invariants
@@ -49,7 +49,7 @@ func AllInvariants(k Keeper) sdk.Invariant {
 }
 ```
 
-Finally, module developers need to implement the `RegisterInvariants` method as part of the [`AppModule` interface](./module-manager.md#appmodule). Indeed, the `RegisterInvariants` method of the module, implemented in the `module.go` file, typically only defers the call to a `RegisterInvariants` method implemented in `internal/keeper/invariants.go`. The `RegisterInvariants` method registers a route for each `Invariant` function in the [`InvariantRegistry`](#invariant-registry):
+Finally, module developers need to implement the `RegisterInvariants` method as part of the [`AppModule` interface](./module-manager.md#appmodule). Indeed, the `RegisterInvariants` method of the module, implemented in the `module/module.go` file, typically only defers the call to a `RegisterInvariants` method implemented in the `keeper/invariants.go` file. The `RegisterInvariants` method registers a route for each `Invariant` function in the [`InvariantRegistry`](#invariant-registry):
 
 
 ```go

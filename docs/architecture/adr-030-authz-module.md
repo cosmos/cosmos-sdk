@@ -135,7 +135,7 @@ service Msg {
 }
 
 // Grant gives permissions to execute
-// the provide method with expiration time.
+// the provided method with expiration time.
 message Grant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];

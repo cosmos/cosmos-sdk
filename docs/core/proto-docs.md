@@ -417,6 +417,7 @@
   
 - [cosmos/poolx/v1beta1/poolx.proto](#cosmos/poolx/v1beta1/poolx.proto)
     - [Params](#cosmos.poolx.v1beta1.Params)
+    - [Pool](#cosmos.poolx.v1beta1.Pool)
   
 - [cosmos/poolx/v1beta1/query.proto](#cosmos/poolx/v1beta1/query.proto)
     - [QueryParamsRequest](#cosmos.poolx.v1beta1.QueryParamsRequest)
@@ -425,6 +426,11 @@
     - [Query](#cosmos.poolx.v1beta1.Query)
   
 - [cosmos/poolx/v1beta1/tx.proto](#cosmos/poolx/v1beta1/tx.proto)
+    - [MsgCreatePool](#cosmos.poolx.v1beta1.MsgCreatePool)
+    - [MsgCreatePoolResponse](#cosmos.poolx.v1beta1.MsgCreatePoolResponse)
+    - [MsgFundPool](#cosmos.poolx.v1beta1.MsgFundPool)
+    - [MsgFundPoolResponse](#cosmos.poolx.v1beta1.MsgFundPoolResponse)
+  
     - [Msg](#cosmos.poolx.v1beta1.Msg)
   
 - [cosmos/slashing/v1beta1/slashing.proto](#cosmos/slashing/v1beta1/slashing.proto)
@@ -5917,6 +5923,22 @@ Params defines the set of params for the distribution module.
 
 
 
+
+<a name="cosmos.poolx.v1beta1.Pool"></a>
+
+### Pool
+TODO(levi) document Pool
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `funds` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -5984,6 +6006,68 @@ Query defines the gRPC querier service.
 ## cosmos/poolx/v1beta1/tx.proto
 
 
+
+<a name="cosmos.poolx.v1beta1.MsgCreatePool"></a>
+
+### MsgCreatePool
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `initial_funds` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="cosmos.poolx.v1beta1.MsgCreatePoolResponse"></a>
+
+### MsgCreatePoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool` | [Pool](#cosmos.poolx.v1beta1.Pool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.poolx.v1beta1.MsgFundPool"></a>
+
+### MsgFundPool
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `additional_funds` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="cosmos.poolx.v1beta1.MsgFundPoolResponse"></a>
+
+### MsgFundPoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool` | [Pool](#cosmos.poolx.v1beta1.Pool) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -5998,6 +6082,8 @@ Msg defines the Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreatePool` | [MsgCreatePool](#cosmos.poolx.v1beta1.MsgCreatePool) | [MsgCreatePoolResponse](#cosmos.poolx.v1beta1.MsgCreatePoolResponse) |  | |
+| `FundPool` | [MsgFundPool](#cosmos.poolx.v1beta1.MsgFundPool) | [MsgFundPoolResponse](#cosmos.poolx.v1beta1.MsgFundPoolResponse) |  | |
 
  <!-- end services -->
 

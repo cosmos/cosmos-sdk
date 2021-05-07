@@ -3,6 +3,48 @@ package cosmos.poolx.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/poolx/types";
 
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/poolx/v1beta1/poolx.proto";
+import "gogoproto/gogo.proto";
+
 // Msg defines the Msg service.
 service Msg {
+	rpc CreatePool(MsgCreatePool) returns (MsgCreatePoolResponse);
+	rpc FundPool(MsgFundPool) returns (MsgFundPoolResponse);
+}
+
+// ===================== MsgCreatePool
+
+message MsgCreatePool {
+	string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
+
+	cosmos.base.v1beta1.Coin initial_funds = 2 [
+		(gogoproto.moretags) = "yaml:\"initial_funds\"",
+		(gogoproto.nullable) = false
+	];
+}
+
+message MsgCreatePoolResponse {
+	Pool pool = 1 [
+		(gogoproto.moretags) = "yaml:\"pool\"",
+		(gogoproto.nullable) = false
+	];
+}
+
+// ===================== MsgFundPool
+
+message MsgFundPool {
+	string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
+
+	cosmos.base.v1beta1.Coin additional_funds = 2 [
+		(gogoproto.moretags) = "yaml:\"initial_funds\"",
+		(gogoproto.nullable) = false
+	];
+}
+
+message MsgFundPoolResponse {
+	Pool pool = 1 [
+		(gogoproto.moretags) = "yaml:\"pool\"",
+		(gogoproto.nullable) = false
+	];
 }

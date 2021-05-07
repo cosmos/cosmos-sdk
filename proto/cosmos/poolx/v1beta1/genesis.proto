@@ -3,6 +3,10 @@ package cosmos.poolx.v1beta1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/poolx/types";
 
+// TODO(levi) import "cosmos/poolx/v1beta1/poolx.proto";
+import "gogoproto/gogo.proto";
+
 // GenesisState defines the poolx module's genesis state.
 message GenesisState {
+	// TODO(levi) repeated Pool pools = 1 [(gogoproto.nullable) = false];
 }

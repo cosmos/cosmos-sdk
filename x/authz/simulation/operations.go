@@ -26,7 +26,6 @@ var (
 	TypeMsgGrant  = sdk.MsgTypeURL(&authz.MsgGrant{})
 	TypeMsgRevoke = sdk.MsgTypeURL(&authz.MsgRevoke{})
 	TypeMsgExec   = sdk.MsgTypeURL(&authz.MsgExec{})
-	sendLimit     = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10)))
 )
 
 // Simulation operation weights constants

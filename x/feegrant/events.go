@@ -1,4 +1,4 @@
-package types
+package feegrant
 
 // evidence module events
 const (

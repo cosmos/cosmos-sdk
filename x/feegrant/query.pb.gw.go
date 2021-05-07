@@ -2,11 +2,11 @@
 // source: cosmos/feegrant/v1beta1/query.proto
 
 /*
-Package types is a reverse proxy.
+Package feegrant is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package types
+package feegrant
 
 import (
 	"context"

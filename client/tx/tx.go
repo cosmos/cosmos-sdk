@@ -35,6 +35,9 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	// Validate all msgs before generating or broadcasting the tx.
+	// We were calling ValidateBasic separately in each CLI handler before.
+	// Right now, we're factorizing that call inside this function.
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
 	for _, msg := range msgs {
 		if err := msg.ValidateBasic(); err != nil {
 			return err

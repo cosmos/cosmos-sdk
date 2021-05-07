@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -9,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -37,7 +35,7 @@ func generateRandomGrant(r *rand.Rand) *codectypes.Any {
 	return authorizations[r.Intn(len(authorizations))]
 }
 
-func newAnyAuthorization(grant exported.Authorization) *codectypes.Any {
+func newAnyAuthorization(grant authz.Authorization) *codectypes.Any {
 	any, err := codectypes.NewAnyWithValue(grant)
 	if err != nil {
 		panic(err)
@@ -56,11 +54,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	authzGrantsGenesis := authz.NewGenesisState(grants)
 
-	bz, err := simState.Cdc.MarshalJSON(authzGrantsGenesis)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", authz.ModuleName, bz)
 	simState.GenState[authz.ModuleName] = simState.Cdc.MustMarshalJSON(authzGrantsGenesis)
 }

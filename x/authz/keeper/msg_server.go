@@ -27,7 +27,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 		return nil, sdkerrors.ErrUnpackAny.Wrap("Authorization is not present in the msg")
 	}
 	t := authorization.MsgTypeURL()
-	if k.router.HandlerbyTypeURL(t) == nil {
+	if k.router.HandlerByTypeURL(t) == nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "%s doesn't exist.", t)
 	}
 

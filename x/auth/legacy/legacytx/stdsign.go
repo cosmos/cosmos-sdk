@@ -53,10 +53,12 @@ type StdSignDoc struct {
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
-		// If msg is a legacy Msg, then GetSignBytes is implemented.
-		// If msg is a ServiceMsg, then GetSignBytes has graceful support of
-		// calling GetSignBytes from its underlying Msg.
-		msgsBytes = append(msgsBytes, json.RawMessage(msg.(LegacyMsg).GetSignBytes()))
+		legacyMsg, ok := msg.(LegacyMsg)
+		if !ok {
+			panic(fmt.Errorf("expected %T when using amino JSON", (*LegacyMsg)(nil)))
+		}
+
+		msgsBytes = append(msgsBytes, json.RawMessage(legacyMsg.GetSignBytes()))
 	}
 
 	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{

@@ -11,9 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // flag for feegrant module
@@ -28,7 +27,7 @@ const (
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
 	feegrantTxCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        feegrant.ModuleName,
 		Short:                      "Feegrant transactions subcommands",
 		Long:                       "Grant and revoke fee allowance for a grantee by a granter",
 		DisableFlagParsing:         true,
@@ -44,7 +43,7 @@ func GetTxCmd() *cobra.Command {
 	return feegrantTxCmd
 }
 
-// NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantFeeAllowance transaction.
+// NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "grant [granter] [grantee]",
@@ -59,7 +58,7 @@ Examples:
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --period 3600 --period-limit 10stake --expiration 36000 or
 %s tx %s grant cosmos1skjw... cosmos1skjw... --spend-limit 100stake --expiration 2022-01-30T15:04:05Z 
 	--allowed-messages "/cosmos.gov.v1beta1.MsgSubmitProposal,/cosmos.gov.v1beta1.MsgVote"
-				`, version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
+				`, version.AppName, feegrant.ModuleName, version.AppName, feegrant.ModuleName, version.AppName, feegrant.ModuleName,
 			),
 		),
 		Args: cobra.ExactArgs(2),
@@ -97,7 +96,7 @@ Examples:
 				return err
 			}
 
-			basic := types.BasicAllowance{
+			basic := feegrant.BasicAllowance{
 				SpendLimit: limit,
 			}
 
@@ -110,7 +109,7 @@ Examples:
 				basic.Expiration = &expiresAtTime
 			}
 
-			var grant types.FeeAllowanceI
+			var grant feegrant.FeeAllowanceI
 			grant = &basic
 
 			periodClock, err := cmd.Flags().GetInt64(FlagPeriod)
@@ -136,7 +135,7 @@ Examples:
 						return fmt.Errorf("period(%d) cannot reset after expiration(%v)", periodClock, exp)
 					}
 
-					periodic := types.PeriodicAllowance{
+					periodic := feegrant.PeriodicAllowance{
 						Basic:            basic,
 						Period:           getPeriod(periodClock),
 						PeriodReset:      getPeriodReset(periodClock),
@@ -157,25 +156,18 @@ Examples:
 			}
 
 			if len(allowedMsgs) > 0 {
-				grant, err = types.NewAllowedMsgAllowance(grant, allowedMsgs)
+				grant, err = feegrant.NewAllowedMsgAllowance(grant, allowedMsgs)
 				if err != nil {
 					return err
 				}
 			}
 
-			msg, err := types.NewMsgGrantAllowance(grant, granter, grantee)
+			msg, err := feegrant.NewMsgGrantAllowance(grant, granter, grantee)
 			if err != nil {
 				return err
 			}
 
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.GrantAllowance(cmd.Context(), msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -189,7 +181,7 @@ Examples:
 	return cmd
 }
 
-// NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeFeeAllowance transaction.
+// NewCmdRevokeFeegrant returns a CLI command handler for creating a MsgRevokeAllowance transaction.
 func NewCmdRevokeFeegrant() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [granter] [grantee]",
@@ -200,7 +192,7 @@ func NewCmdRevokeFeegrant() *cobra.Command {
 
 Example:
  $ %s tx %s revoke cosmos1skj.. cosmos1skj..
-			`, version.AppName, types.ModuleName),
+			`, version.AppName, feegrant.ModuleName),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -215,15 +207,9 @@ Example:
 				return err
 			}
 
-			msg := types.NewMsgRevokeAllowance(clientCtx.GetFromAddress(), grantee)
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.RevokeAllowance(cmd.Context(), &msg)
-			if err != nil {
-				return err
-			}
+			msg := feegrant.NewMsgRevokeAllowance(clientCtx.GetFromAddress(), grantee)
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 

@@ -140,9 +140,9 @@ func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, 
 }
 
 func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Authorization {
-	authorizations := make([]authz.Authorization, 2)
+	authorizations := make([]authz.Authorization, 1)
 	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
-	authorizations[1] = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{}))
+	// authorizations[1] = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{}))
 
 	return authorizations[r.Intn(len(authorizations))]
 }

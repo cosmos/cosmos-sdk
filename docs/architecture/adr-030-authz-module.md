@@ -134,12 +134,18 @@ service Msg {
   rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
 }
 
+// Grant gives permissions to execute
+// the provide method with expiration time.
+message Grant {
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
 message MsgGrant {
   string granter = 1;
   string grantee = 2;
 
-  google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
-  google.protobuf.Timestamp expiration    = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  Grant grant = 3 [(gogoproto.nullable) = false];
 }
 
 message MsgExecResponse {

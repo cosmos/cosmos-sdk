@@ -36,9 +36,9 @@ func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
 	return msr.routes[sdk.MsgTypeURL(msg)]
 }
 
-// HandlerbyTypeURL returns the MsgServiceHandler for a given query route path or nil
+// HandlerByTypeURL returns the MsgServiceHandler for a given query route path or nil
 // if not found.
-func (msr *MsgServiceRouter) HandlerbyTypeURL(typeURL string) MsgServiceHandler {
+func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler {
 	return msr.routes[typeURL]
 }
 

@@ -32,20 +32,26 @@ func TestDecodeStore(t *testing.T) {
 	tests := []struct {
 		name        string
 		expectedLog string
+		expectedErr bool
 	}{
-		{"Supply", fmt.Sprintf("%v\n%v", totalSupply, totalSupply)},
-		{"other", ""},
+		{"Supply", fmt.Sprintf("%v\n%v", totalSupply, totalSupply), false},
+		{"other", "", true},
 	}
 
 	for i, tt := range tests {
 		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
-			switch i {
-			case len(tests) - 1:
+			if tt.expectedErr {
 				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
-			default:
+			} else {
 				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
 			}
+			// switch i {
+			// case len(tests) - 1:
+			// 	require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
+			// default:
+			// 	require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
+			// }
 		})
 	}
 }

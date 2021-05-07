@@ -10,15 +10,15 @@ import (
 // RegisterInvariants registers the bank module invariants
 func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
 	ir.RegisterRoute(types.ModuleName, "nonnegative-outstanding", NonnegativeBalanceInvariant(k))
-	ir.RegisterRoute(types.ModuleName, "total-supply", TotalSupply(k))
+	// ir.RegisterRoute(types.ModuleName, "total-supply", TotalSupply(k))
 }
 
 // AllInvariants runs all invariants of the X/bank module.
-func AllInvariants(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) (string, bool) {
-		return TotalSupply(k)(ctx)
-	}
-}
+// func AllInvariants(k Keeper) sdk.Invariant {
+// 	return func(ctx sdk.Context) (string, bool) {
+// 		return TotalSupply(k)(ctx)
+// 	}
+// }
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
 func NonnegativeBalanceInvariant(k ViewKeeper) sdk.Invariant {
@@ -47,22 +47,22 @@ func NonnegativeBalanceInvariant(k ViewKeeper) sdk.Invariant {
 }
 
 // TotalSupply checks that the total supply reflects all the coins held in accounts
-func TotalSupply(k Keeper) sdk.Invariant {
-	return func(ctx sdk.Context) (string, bool) {
-		expectedTotal := sdk.Coins{}
-		supply := k.GetSupply(ctx)
+// func TotalSupply(k Keeper) sdk.Invariant {
+// 	return func(ctx sdk.Context) (string, bool) {
+// 		expectedTotal := sdk.Coins{}
+// 		supply := k.GetSupply(ctx)
 
-		k.IterateAllBalances(ctx, func(_ sdk.AccAddress, balance sdk.Coin) bool {
-			expectedTotal = expectedTotal.Add(balance)
-			return false
-		})
+// 		k.IterateAllBalances(ctx, func(_ sdk.AccAddress, balance sdk.Coin) bool {
+// 			expectedTotal = expectedTotal.Add(balance)
+// 			return false
+// 		})
 
-		broken := !expectedTotal.IsEqual(supply.GetTotal())
+// 		broken := !expectedTotal.IsEqual(supply.GetTotal())
 
-		return sdk.FormatInvariant(types.ModuleName, "total supply",
-			fmt.Sprintf(
-				"\tsum of accounts coins: %v\n"+
-					"\tsupply.Total:          %v\n",
-				expectedTotal, supply.GetTotal())), broken
-	}
-}
+// 		return sdk.FormatInvariant(types.ModuleName, "total supply",
+// 			fmt.Sprintf(
+// 				"\tsum of accounts coins: %v\n"+
+// 					"\tsupply.Total:          %v\n",
+// 				expectedTotal, supply.GetTotal())), broken
+// 	}
+// }

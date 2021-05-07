@@ -155,7 +155,7 @@ func SimulateMsgSubmitProposal(
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -242,7 +242,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -304,7 +304,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -367,7 +367,7 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

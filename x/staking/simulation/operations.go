@@ -153,7 +153,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -223,7 +223,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -295,7 +295,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -384,7 +384,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -496,7 +496,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 		)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

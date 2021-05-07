@@ -38,8 +38,8 @@ const (
 // authz operations weights
 const (
 	WeightGrant  = 100
-	WeightRevoke = 100
-	WeightExec   = 100
+	WeightRevoke = 90
+	WeightExec   = 90
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -117,7 +117,7 @@ func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, 
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txCfg,
 			[]sdk.Msg{msg},
 			fees,
@@ -168,8 +168,9 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "no grants"), nil, nil
 		}
 
-		if _, ok := simtypes.FindAccount(accs, granterAddr); !ok {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "account not found")
+		granterAcc, ok := simtypes.FindAccount(accs, granterAddr)
+		if !ok {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "account not found")
 		}
 
 		spendableCoins := bk.SpendableCoins(ctx, granterAddr)
@@ -178,20 +179,19 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "fee error"), nil, err
 		}
 
-		auth := grant.GetAuthorization()
-		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, auth.MsgTypeURL())
+		authorizationGrant := grant.GetAuthorization()
+		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, authorizationGrant.MsgTypeURL())
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		granterKeys, _ := simtypes.FindAccount(accs, granterAddr)
-		granterAcc := ak.GetAccount(ctx, granterAddr)
-		tx, err := helpers.GenTx(
+		account := ak.GetAccount(ctx, granterAddr)
+		tx, err := helpers.GenerateTx(
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
-			[]uint64{granterAcc.GetAccountNumber()},
-			[]uint64{granterAcc.GetSequence()},
-			granterKeys.PrivKey,
+			[]uint64{account.GetAccountNumber()},
+			[]uint64{account.GetSequence()},
+			granterAcc.PrivKey,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, err.Error()), nil, err
@@ -240,21 +240,22 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "grant expired"), nil, nil
 		}
 
-		sentCoins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(int64(simtypes.RandIntBetween(r, 100, 1000000)))))
+		coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(int64(simtypes.RandIntBetween(r, 100, 1000000)))))
+
 		// Check send_enabled status of each sent coin denom
-		if err := bk.SendEnabledCoins(ctx, sentCoins...); err != nil {
+		if err := bk.SendEnabledCoins(ctx, coins...); err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
 		}
 
 		if targetGrant.Authorization.TypeUrl == fmt.Sprintf("/%s", proto.MessageName(&banktype.SendAuthorization{})) {
 			sendAuthorization := targetGrant.GetAuthorization().(*banktype.SendAuthorization)
-			if sendAuthorization.SpendLimit.IsAllLT(sentCoins) {
+			if sendAuthorization.SpendLimit.IsAllLT(coins) {
 				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "over spend limit"), nil, nil
 			}
 		}
 
 		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
-		if granterspendableCoins.IsAllLTE(sentCoins) {
+		if granterspendableCoins.IsAllLTE(coins) {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "insufficient funds"), nil, nil
 		}
 
@@ -264,17 +265,11 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
-		execMsg := banktype.NewMsgSend(
-			granterAddr,
-			granteeAddr,
-			sentCoins,
-		)
-		msg := authz.NewMsgExec(granteeAddr, []sdk.Msg{execMsg})
-
+		msg := authz.NewMsgExec(granteeAddr, []sdk.Msg{banktype.NewMsgSend(granterAddr, granteeAddr, coins)})
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
 
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txCfg,
 			[]sdk.Msg{&msg},
 			fees,

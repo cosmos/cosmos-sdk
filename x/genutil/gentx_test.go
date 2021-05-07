@@ -233,7 +233,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				_ = suite.setAccountBalance(addr2, 0)
 
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
-				tx, err := helpers.GenTx(
+				tx, err := helpers.GenerateTx(
 					suite.encodingConfig.TxConfig,
 					[]sdk.Msg{msg},
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},

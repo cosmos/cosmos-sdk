@@ -98,7 +98,7 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,
@@ -166,7 +166,7 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{&msg},
 			fees,

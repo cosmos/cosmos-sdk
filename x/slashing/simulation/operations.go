@@ -89,7 +89,7 @@ func SimulateMsgUnjail(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Kee
 		msg := types.NewMsgUnjail(validator.GetOperator())
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenerateTx(
 			txGen,
 			[]sdk.Msg{msg},
 			fees,

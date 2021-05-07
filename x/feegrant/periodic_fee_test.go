@@ -1,4 +1,4 @@
-package types_test
+package feegrant_test
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func TestPeriodicFeeValidAllow(t *testing.T) {
@@ -31,7 +31,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	tenMinutes := time.Duration(10) * time.Minute
 
 	cases := map[string]struct {
-		allow types.PeriodicAllowance
+		allow feegrant.PeriodicAllowance
 		// all other checks are ignored if valid=false
 		fee           sdk.Coins
 		blockTime     time.Time
@@ -43,12 +43,12 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 		periodReset   time.Time
 	}{
 		"empty": {
-			allow: types.PeriodicAllowance{},
+			allow: feegrant.PeriodicAllowance{},
 			valid: false,
 		},
 		"only basic": {
-			allow: types.PeriodicAllowance{
-				Basic: types.BasicAllowance{
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &oneHour,
 				},
@@ -56,7 +56,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			valid: false,
 		},
 		"empty basic": {
-			allow: types.PeriodicAllowance{
+			allow: feegrant.PeriodicAllowance{
 				Period:           tenMinutes,
 				PeriodSpendLimit: smallAtom,
 				PeriodReset:      now.Add(30 * time.Minute),
@@ -68,8 +68,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset: now.Add(30 * time.Minute),
 		},
 		"mismatched currencies": {
-			allow: types.PeriodicAllowance{
-				Basic: types.BasicAllowance{
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &oneHour,
 				},
@@ -79,8 +79,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			valid: false,
 		},
 		"same period": {
-			allow: types.PeriodicAllowance{
-				Basic: types.BasicAllowance{
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &twoHours,
 				},
@@ -99,8 +99,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   now.Add(1 * time.Hour),
 		},
 		"step one period": {
-			allow: types.PeriodicAllowance{
-				Basic: types.BasicAllowance{
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &twoHours,
 				},
@@ -118,8 +118,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
 		},
 		"step limited by global allowance": {
-			allow: types.PeriodicAllowance{
-				Basic: types.BasicAllowance{
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
 					SpendLimit: smallAtom,
 					Expiration: &twoHours,
 				},
@@ -137,8 +137,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
 		},
 		"expired": {
-			allow: types.PeriodicAllowance{
-				Basic: types.BasicAllowance{
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &now,
 				},
@@ -152,8 +152,8 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:    true,
 		},
 		"over period limit": {
-			allow: types.PeriodicAllowance{
-				Basic: types.BasicAllowance{
+			allow: feegrant.PeriodicAllowance{
+				Basic: feegrant.BasicAllowance{
 					SpendLimit: atom,
 					Expiration: &now,
 				},

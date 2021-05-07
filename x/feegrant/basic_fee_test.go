@@ -1,4 +1,4 @@
-package types_test
+package feegrant_test
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func TestBasicFeeValidAllow(t *testing.T) {
@@ -18,7 +18,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	badTime := ctx.BlockTime().AddDate(0, 0, -1)
-	allowace := &types.BasicAllowance{
+	allowace := &feegrant.BasicAllowance{
 		Expiration: &badTime,
 	}
 	require.Error(t, allowace.ValidateBasic())
@@ -35,7 +35,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	oneHour := now.Add(1 * time.Hour)
 
 	cases := map[string]struct {
-		allowance *types.BasicAllowance
+		allowance *feegrant.BasicAllowance
 		// all other checks are ignored if valid=false
 		fee       sdk.Coins
 		blockTime time.Time
@@ -45,11 +45,11 @@ func TestBasicFeeValidAllow(t *testing.T) {
 		remains   sdk.Coins
 	}{
 		"empty": {
-			allowance: &types.BasicAllowance{},
+			allowance: &feegrant.BasicAllowance{},
 			accept:    true,
 		},
 		"small fee without expire": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				SpendLimit: atom,
 			},
 			fee:     smallAtom,
@@ -58,7 +58,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains: leftAtom,
 		},
 		"all fee without expire": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
 			fee:    smallAtom,
@@ -66,14 +66,14 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove: true,
 		},
 		"wrong fee": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				SpendLimit: smallAtom,
 			},
 			fee:    eth,
 			accept: false,
 		},
 		"non-expired": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
@@ -85,7 +85,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remains:   leftAtom,
 		},
 		"expired": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: &now,
 			},
@@ -96,7 +96,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			remove:    true,
 		},
 		"fee more than allowed": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				SpendLimit: atom,
 				Expiration: &oneHour,
 			},
@@ -106,7 +106,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:    false,
 		},
 		"with out spend limit": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				Expiration: &oneHour,
 			},
 			valid:     true,
@@ -115,7 +115,7 @@ func TestBasicFeeValidAllow(t *testing.T) {
 			accept:    true,
 		},
 		"expired no spend limit": {
-			allowance: &types.BasicAllowance{
+			allowance: &feegrant.BasicAllowance{
 				Expiration: &now,
 			},
 			valid:     true,

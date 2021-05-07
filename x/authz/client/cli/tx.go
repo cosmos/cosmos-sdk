@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -166,14 +165,7 @@ Examples:
 				return err
 			}
 
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := authz.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.Grant(cmd.Context(), msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -211,14 +203,7 @@ Example:
 			msgAuthorized := args[1]
 			msg := authz.NewMsgRevoke(granter, grantee, msgAuthorized)
 
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := authz.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.Revoke(cmd.Context(), &msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -254,14 +239,8 @@ Example:
 				return err
 			}
 			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := authz.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.Exec(cmd.Context(), &msg)
-			if err != nil {
-				return err
-			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 

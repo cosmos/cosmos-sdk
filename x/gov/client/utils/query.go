@@ -37,6 +37,18 @@ func (p Proposer) String() string {
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
 func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposalParams) ([]byte, error) {
+	var deposits []types.Deposit
+
+	// initial deposit was submitted with proposal, so must be queried separately
+	initialDeposit, err := queryInitialDepositByTxQuery(clientCtx, params.ProposalID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !initialDeposit.Amount.IsZero() {
+		deposits = append(deposits, initialDeposit)
+	}
+
 	searchResult, err := combineEvents(
 		clientCtx, defaultPage,
 		// Query legacy Msgs event action
@@ -53,8 +65,6 @@ func QueryDepositsByTxQuery(clientCtx client.Context, params types.QueryProposal
 	if err != nil {
 		return nil, err
 	}
-
-	var deposits []types.Deposit
 
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
@@ -337,4 +347,48 @@ func combineEvents(clientCtx client.Context, page int, eventGroups ...[]string) 
 	}
 
 	return &sdk.SearchTxsResult{Txs: allTxs}, nil
+}
+
+// queryInitialDepositByTxQuery will query for a initial deposit of a governance proposal by
+// ID.
+func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (types.Deposit, error) {
+	searchResult, err := combineEvents(
+		clientCtx, defaultPage,
+		// Query old Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgSubmitProposal),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+		},
+		// Query service Msgs
+		[]string{
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgSubmitProposal),
+			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+		},
+	)
+
+	if err != nil {
+		return types.Deposit{}, err
+	}
+
+	for _, info := range searchResult.Txs {
+		for _, msg := range info.GetTx().GetMsgs() {
+			// there should only be a single proposal under the given conditions
+			var subMsg *types.MsgSubmitProposal
+			if msg.Type() == types.TypeSvcMsgSubmitProposal {
+				subMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
+			} else if protoSubMsg, ok := msg.(*types.MsgSubmitProposal); ok {
+				subMsg = protoSubMsg
+			}
+
+			if subMsg != nil {
+				return types.Deposit{
+					ProposalId: proposalID,
+					Depositor:  subMsg.Proposer,
+					Amount:     subMsg.InitialDeposit,
+				}, nil
+			}
+		}
+	}
+
+	return types.Deposit{}, fmt.Errorf("failed to find the initial deposit for proposalID %d", proposalID)
 }

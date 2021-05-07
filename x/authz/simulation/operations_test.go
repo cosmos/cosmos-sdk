@@ -55,7 +55,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{simulation.WeightGrant, authz.ModuleName, simulation.TypeMsgGrant},
 		{simulation.WeightRevoke, authz.ModuleName, simulation.TypeMsgRevoke},
-		// {simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
 	}
 
 	for i, w := range weightesOps {
@@ -157,39 +157,39 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 
 }
 
-// func (suite *SimTestSuite) TestSimulateExecAuthorization() {
-// 	// setup 3 accounts
-// 	s := rand.NewSource(1)
-// 	r := rand.New(s)
-// 	accounts := suite.getTestingAccounts(r, 3)
+func (suite *SimTestSuite) TestSimulateExecAuthorization() {
+	// setup 3 accounts
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, 3)
 
-// 	// begin a new block
-// 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	// begin a new block
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
-// 	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
-// 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200000)
+	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))
 
-// 	granter := accounts[0]
-// 	grantee := accounts[1]
-// 	authorization := banktypes.NewSendAuthorization(initCoins)
+	granter := accounts[0]
+	grantee := accounts[1]
+	authorization := banktypes.NewSendAuthorization(initCoins)
 
-// 	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
-// 	suite.Require().NoError(err)
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	suite.Require().NoError(err)
 
-// 	// execute operation
-// 	op := simulation.SimulateMsgExecAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
-// 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-// 	suite.Require().NoError(err)
+	// execute operation
+	op := simulation.SimulateMsgExecAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
+	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
+	suite.Require().NoError(err)
 
-// 	var msg authz.MsgExec
+	var msg authz.MsgExec
 
-// 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
-// 	suite.Require().True(operationMsg.OK)
-// 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-// 	suite.Require().Len(futureOperations, 0)
+	suite.Require().True(operationMsg.OK)
+	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
+	suite.Require().Len(futureOperations, 0)
 
-// }
+}
 
 func TestSimTestSuite(t *testing.T) {
 	suite.Run(t, new(SimTestSuite))

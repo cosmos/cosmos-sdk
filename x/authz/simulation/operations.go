@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -25,6 +26,7 @@ var (
 	TypeMsgGrant  = sdk.MsgTypeURL(&authz.MsgGrant{})
 	TypeMsgRevoke = sdk.MsgTypeURL(&authz.MsgRevoke{})
 	TypeMsgExec   = sdk.MsgTypeURL(&authz.MsgExec{})
+	sendLimit     = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10)))
 )
 
 // Simulation operation weights constants
@@ -78,10 +80,10 @@ func WeightedOperations(
 			weightRevoke,
 			SimulateMsgRevokeAuthorization(ak, bk, k, protoCdc),
 		),
-		// simulation.NewWeightedOperation(
-		// 	weightExecAuthorization,
-		// 	SimulateMsgExecAuthorization(ak, bk, k, appCdc, protoCdc),
-		// ),
+		simulation.NewWeightedOperation(
+			weightExec,
+			SimulateMsgExecAuthorization(ak, bk, k, appCdc, protoCdc),
+		),
 	}
 }
 
@@ -151,7 +153,7 @@ func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, 
 func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Authorization {
 	authorizations := make([]authz.Authorization, 2)
 	authorizations[0] = banktype.NewSendAuthorization(spendLimit)
-	authorizations[1] = authz.NewGenericAuthorization("/cosmos.gov.v1beta1.Msg/SubmitProposal")
+	authorizations[1] = authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
 
 	return authorizations[r.Intn(len(authorizations))]
 }
@@ -225,98 +227,105 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 }
 
 // SimulateMsgExecAuthorization generates a MsgExecAuthorized with random values.
-// nolint: funlen
-// func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, cdc cdctypes.AnyUnpacker, protoCdc *codec.ProtoCodec) simtypes.Operation {
-// 	return func(
-// 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-// 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-// 		var grant types.AuthorizationGrant
-// 		hasGrant := false
-// 		var targetGrant authz.Grant
-// 		var granterAddr sdk.AccAddress
-// 		var granteeAddr sdk.AccAddress
-// 		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
-// 			targetGrant = grant
-// 			granterAddr = granter
-// 			granteeAddr = grantee
-// 			hasGrant = true
-// 			return true
-// 		})
+func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, cdc cdctypes.AnyUnpacker, protoCdc *codec.ProtoCodec) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		hasGrant := false
+		var targetGrant authz.Grant
+		var granterAddr sdk.AccAddress
+		var granteeAddr sdk.AccAddress
+		k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
+			targetGrant = grant
+			granterAddr = granter
+			granteeAddr = grantee
+			hasGrant = true
+			return true
+		})
 
-// 		if !hasGrant {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, "Not found"), nil, nil
-// 		}
+		if !hasGrant {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "Not found"), nil, nil
+		}
 
-// 		grantee, _ := simtypes.FindAccount(accs, granteeAddr)
-// 		granterAccount := ak.GetAccount(ctx, granterAddr)
+		if _, ok := simtypes.FindAccount(accs, granteeAddr); !ok {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "Account not found"), nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "account not found")
+		}
 
-// 		granterspendableCoins := bk.SpendableCoins(ctx, granterAccount.GetAddress())
-// 		if granterspendableCoins.Empty() {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, "no coins"), nil, nil
-// 		}
+		// granterAccount := ak.GetAccount(ctx, granterAddr)
 
-// 		if targetGrant.Expiration.Before(ctx.BlockHeader().Time) {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, "grant expired"), nil, nil
-// 		}
+		granterspendableCoins := bk.SpendableCoins(ctx, granterAddr)
+		if granterspendableCoins.Empty() {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "no coins"), nil, nil
+		}
 
-// 		granteeSpendableCoins := bk.SpendableCoins(ctx, grantee)
-// 		fees, err := simtypes.RandomFees(r, ctx, granteeSpendableCoins)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, "fee error"), nil, err
-// 		}
+		if targetGrant.Expiration.Before(ctx.BlockHeader().Time) {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "grant expired"), nil, nil
+		}
 
-// 		authorization := grant.Authorization.GetCachedValue().(exported.Authorization)
+		granteeSpendableCoins := bk.SpendableCoins(ctx, granteeAddr)
+		fees, err := simtypes.RandomFees(r, ctx, granteeSpendableCoins)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
+		}
 
-// 		execMsg := banktype.NewMsgSend(
-// 			granterAddr,
-// 			granteeAddr,
-// 			sendCoins,
-// 		)
+		execMsg := banktype.NewMsgSend(
+			granterAddr,
+			granteeAddr,
+			sendLimit,
+		)
 
-// 		msg := authz.NewMsgExec(grantee.Address, []sdk.Msg{execMsg})
-// 		sendGrant := targetGrant.Authorization.GetCachedValue().(*banktype.SendAuthorization)
-// 		_, err = sendGrant.Accept(ctx, execMsg)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, err.Error()), nil, nil
-// 		}
+		msg := authz.NewMsgExec(granteeAddr, []sdk.Msg{execMsg})
 
-// 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-// 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-// 		authzMsgClient := authz.NewMsgClient(svcMsgClientConn)
-// 		_, err = authzMsgClient.Exec(context.Background(), &msg)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, err.Error()), nil, err
-// 		}
+		var sendGrant authz.Authorization
+		switch targetGrant.Authorization.TypeUrl {
+		case "/cosmos.authz.v1beta1.GenericAuthorization":
+			sendGrant = authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgSend")
+		case "/cosmos.bank.v1beta1.SendAuthorization":
+			sendGrant = banktype.NewSendAuthorization(sendLimit)
+		default:
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "authorization type error"), nil, errors.New("invalid authorization")
 
-// 		granteeAcc := ak.GetAccount(ctx, grantee)
-// 		grantee1, _ := simtypes.FindAccount(accs, grantee)
-// 		tx, err := helpers.GenTx(
-// 			txCfg,
-// 			svcMsgClientConn.GetMsgs(),
-// 			fees,
-// 			helpers.DefaultGenTxGas,
-// 			chainID,
-// 			[]uint64{granteeAcc.GetAccountNumber()},
-// 			[]uint64{granteeAcc.GetSequence()},
-// 			grantee1.PrivKey,
-// 		)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, err.Error()), nil, err
-// 		}
+		}
 
-// 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
-// 		if err != nil {
-// 			if strings.Contains(err.Error(), "insufficient fee") {
-// 				return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, "insufficient fee"), nil, nil
-// 			}
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, err.Error()), nil, err
-// 		}
+		_, err = sendGrant.Accept(ctx, execMsg)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
+		}
 
-// 		err = msg.UnpackInterfaces(cdc)
-// 		if err != nil {
-// 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExecDelegated, "unmarshal error"), nil, err
-// 		}
+		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
+		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
+		authzMsgClient := authz.NewMsgClient(svcMsgClientConn)
+		_, err = authzMsgClient.Exec(context.Background(), &msg)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
 
-// 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
-// 	}
-// }
+		granteeAcc := ak.GetAccount(ctx, granteeAddr)
+		grantee1, _ := simtypes.FindAccount(accs, granteeAddr)
+		tx, err := helpers.GenTx(
+			txCfg,
+			svcMsgClientConn.GetMsgs(),
+			fees,
+			helpers.DefaultGenTxGas,
+			chainID,
+			[]uint64{granteeAcc.GetAccountNumber()},
+			[]uint64{granteeAcc.GetSequence()},
+			grantee1.PrivKey,
+		)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+
+		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
+		}
+
+		err = msg.UnpackInterfaces(cdc)
+		if err != nil {
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "unmarshal error"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
+	}
+}

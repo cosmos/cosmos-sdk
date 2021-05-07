@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 
@@ -11,12 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/gogo/protobuf/proto"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -119,18 +117,10 @@ func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, 
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
 		}
-
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-		authzMsgClient := authz.NewMsgClient(svcMsgClientConn)
-		_, err = authzMsgClient.Grant(context.Background(), msg)
-		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, err.Error()), nil, err
-		}
-
 		tx, err := helpers.GenTx(
 			txCfg,
-			svcMsgClientConn.GetMsgs(),
+			[]sdk.Msg{msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -144,10 +134,9 @@ func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, 
 
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
-
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
+		return simtypes.NewOperationMsg(msg, true, "", protoCdc), nil, err
 	}
 }
 
@@ -190,22 +179,14 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "fee error"), nil, err
 		}
 
-		authorizationGrant := grant.GetAuthorization()
-		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, authorizationGrant.MsgTypeURL())
+		auth := grant.GetAuthorization()
+		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, auth.MsgTypeURL())
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-		authzMsgClient := authz.NewMsgClient(svcMsgClientConn)
-		_, err = authzMsgClient.Revoke(context.Background(), &msg)
-		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, err.Error()), nil, err
-		}
-
 		granterKeys, _ := simtypes.FindAccount(accs, granterAddr)
 		granterAcc := ak.GetAccount(ctx, granterAddr)
-
 		tx, err := helpers.GenTx(
 			txCfg,
-			svcMsgClientConn.GetMsgs(),
+			[]sdk.Msg{&msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -222,7 +203,7 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
+		return simtypes.NewOperationMsg(&msg, true, "", protoCdc), nil, nil
 	}
 }
 
@@ -283,18 +264,11 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 		msg := authz.NewMsgExec(granteeAddr, []sdk.Msg{execMsg})
 
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
-		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-		authzMsgClient := authz.NewMsgClient(svcMsgClientConn)
-		_, err = authzMsgClient.Exec(context.Background(), &msg)
-		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, err
-		}
-
 		granteeAcc := ak.GetAccount(ctx, granteeAddr)
 		grantee, _ := simtypes.FindAccount(accs, granteeAddr)
 		tx, err := helpers.GenTx(
 			txCfg,
-			svcMsgClientConn.GetMsgs(),
+			[]sdk.Msg{&msg},
 			fees,
 			helpers.DefaultGenTxGas,
 			chainID,
@@ -315,7 +289,6 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 		if err != nil {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "unmarshal error"), nil, err
 		}
-
-		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
+		return simtypes.NewOperationMsg(&msg, true, "success", protoCdc), nil, nil
 	}
 }

@@ -1,4 +1,4 @@
-package types
+package feegrant
 
 import (
 	"github.com/gogo/protobuf/proto"
@@ -13,7 +13,7 @@ var (
 	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 
-// NewMsgGrantAllowance creates a new MsgGrantFeeAllowance.
+// NewMsgGrantAllowance creates a new MsgGrantAllowance.
 //nolint:interfacer
 func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAddress) (*MsgGrantAllowance, error) {
 	msg, ok := feeAllowance.(proto.Message)

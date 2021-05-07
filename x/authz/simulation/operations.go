@@ -2,8 +2,6 @@ package simulation
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -17,7 +15,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	"github.com/gogo/protobuf/proto"
 
 	banktype "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -90,7 +87,6 @@ func WeightedOperations(
 }
 
 // SimulateMsgGrantAuthorization generates a MsgGrantAuthorization with random values.
-// nolint: funlen
 func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keeper,
 	protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
@@ -145,7 +141,7 @@ func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, 
 
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
@@ -161,7 +157,6 @@ func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Autho
 }
 
 // SimulateMsgRevokeAuthorization generates a MsgRevokeAuthorization with random values.
-// nolint: funlen
 func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -221,7 +216,7 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 
 		_, _, err = app.Deliver(txCfg.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(svcMsgClientConn.GetMsgs()[0]), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgRevoke, "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil
@@ -268,26 +263,12 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "fee error"), nil, err
 		}
 
-		var sendGrant authz.Authorization
-		switch targetGrant.Authorization.TypeUrl {
-		case fmt.Sprintf("/%s", proto.MessageName(&authz.GenericAuthorization{})):
-			sendGrant = authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktype.MsgSend{}))
-		case fmt.Sprintf("/%s", proto.MessageName(&banktype.SendAuthorization{})):
-			sendGrant = banktype.NewSendAuthorization(sendLimit)
-		default:
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "authorization type error"), nil, errors.New("invalid authorization")
-		}
-
 		execMsg := banktype.NewMsgSend(
 			granterAddr,
 			granteeAddr,
 			sendLimit,
 		)
 		msg := authz.NewMsgExec(granteeAddr, []sdk.Msg{execMsg})
-		_, err = sendGrant.Accept(ctx, execMsg)
-		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, err.Error()), nil, nil
-		}
 
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
@@ -320,7 +301,7 @@ func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k
 
 		err = msg.UnpackInterfaces(cdc)
 		if err != nil {
-			return simtypes.NoOpMsg(authz.ModuleName, sdk.MsgTypeURL(svcMsgClientConn.GetMsgs()[0]), "unmarshal error"), nil, err
+			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgExec, "unmarshal error"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(svcMsgClientConn.GetMsgs()[0], true, "", protoCdc), nil, nil

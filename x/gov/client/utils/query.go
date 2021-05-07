@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -354,14 +355,14 @@ func combineEvents(clientCtx client.Context, page int, eventGroups ...[]string) 
 func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (types.Deposit, error) {
 	searchResult, err := combineEvents(
 		clientCtx, defaultPage,
-		// Query old Msgs
+		// Query legacy Msgs event action
 		[]string{
 			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeMsgSubmitProposal),
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 		},
-		// Query service Msgs
+		// Query proto Msgs event action
 		[]string{
-			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, types.TypeSvcMsgSubmitProposal),
+			fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeyAction, sdk.MsgTypeURL(&types.MsgSubmitProposal{})),
 			fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 		},
 	)
@@ -373,14 +374,7 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 	for _, info := range searchResult.Txs {
 		for _, msg := range info.GetTx().GetMsgs() {
 			// there should only be a single proposal under the given conditions
-			var subMsg *types.MsgSubmitProposal
-			if msg.Type() == types.TypeSvcMsgSubmitProposal {
-				subMsg = msg.(sdk.ServiceMsg).Request.(*types.MsgSubmitProposal)
-			} else if protoSubMsg, ok := msg.(*types.MsgSubmitProposal); ok {
-				subMsg = protoSubMsg
-			}
-
-			if subMsg != nil {
+			if subMsg, ok := msg.(*types.MsgSubmitProposal); ok {
 				return types.Deposit{
 					ProposalId: proposalID,
 					Depositor:  subMsg.Proposer,
@@ -390,5 +384,5 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 		}
 	}
 
-	return types.Deposit{}, fmt.Errorf("failed to find the initial deposit for proposalID %d", proposalID)
+	return types.Deposit{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "failed to find the initial deposit for proposalID %d", proposalID)
 }

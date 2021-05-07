@@ -15,8 +15,8 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 type SimTestSuite struct {
@@ -78,14 +78,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{
-			simappparams.DefaultWeightGrantFeeAllowance,
-			types.ModuleName,
-			simulation.TypeMsgGrantFeeAllowance,
+			simappparams.DefaultWeightGrantAllowance,
+			feegrant.ModuleName,
+			simulation.TypeMsgGrantAllowance,
 		},
 		{
-			simappparams.DefaultWeightRevokeFeeAllowance,
-			types.ModuleName,
-			simulation.TypeMsgRevokeFeeAllowance,
+			simappparams.DefaultWeightRevokeAllowance,
+			feegrant.ModuleName,
+			simulation.TypeMsgRevokeAllowance,
 		},
 	}
 
@@ -100,7 +100,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 }
 
-func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
+func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	app, ctx := suite.app, suite.ctx
 	require := suite.Require()
 
@@ -112,11 +112,11 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgGrantFeeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgGrantAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgGrantAllowance
+	var msg feegrant.MsgGrantAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
@@ -125,7 +125,7 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	require.Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
+func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	app, ctx := suite.app, suite.ctx
 	require := suite.Require()
 
@@ -146,7 +146,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 		ctx,
 		granter.Address,
 		grantee.Address,
-		&types.BasicAllowance{
+		&feegrant.BasicAllowance{
 			SpendLimit: feeCoins,
 			Expiration: &oneYear,
 		},
@@ -154,11 +154,11 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeFeeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgRevokeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgRevokeAllowance
+	var msg feegrant.MsgRevokeAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)

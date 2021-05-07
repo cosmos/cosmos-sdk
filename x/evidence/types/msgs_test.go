@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
@@ -51,8 +50,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		require.Equal(t, tc.msg.(legacytx.LegacyMsg).Route(), types.RouterKey, "unexpected result for tc #%d", i)
-		require.Equal(t, tc.msg.(legacytx.LegacyMsg).Type(), types.TypeMsgSubmitEvidence, "unexpected result for tc #%d", i)
+		require.Equal(t, sdk.MsgTypeURL(&types.MsgSubmitEvidence{}), sdk.MsgTypeURL(tc.msg), "unexpected result for tc #%d", i)
 		require.Equal(t, tc.expectErr, tc.msg.ValidateBasic() != nil, "unexpected result for tc #%d", i)
 
 		if !tc.expectErr {

@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -127,14 +126,7 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return fmt.Errorf("invalid message: %w", err)
 			}
 
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.SubmitProposal(cmd.Context(), msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -186,14 +178,8 @@ $ %s tx gov deposit 1 10stake --from mykey
 			}
 
 			msg := types.NewMsgDeposit(from, proposalID, amount)
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.Deposit(cmd.Context(), msg)
-			if err != nil {
-				return err
-			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -240,14 +226,8 @@ $ %s tx gov vote 1 yes --from mykey
 
 			// Build vote message and run basic validation
 			msg := types.NewMsgVote(from, proposalID, byteVoteOption)
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			msgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = msgClient.Vote(cmd.Context(), msg)
-			if err != nil {
-				return err
-			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

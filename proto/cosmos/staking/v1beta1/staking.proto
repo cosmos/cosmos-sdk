@@ -288,6 +288,7 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
   string min_commission_rate = 7 [
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

@@ -139,7 +139,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
 	}
 
 	if newRate.LT(k.MinCommissionRate(ctx)) {
-		return commission, fmt.Errorf("Cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
+		return commission, fmt.Errorf("cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
 	}
 
 	commission.Rate = newRate

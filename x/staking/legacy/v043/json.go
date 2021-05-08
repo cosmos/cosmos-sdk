@@ -3,7 +3,6 @@ package v043
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	v043staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -32,7 +31,7 @@ func migrateParams(oldParams v040staking.Params) v043staking.Params {
 		oldParams.HistoricalEntries,
 		oldParams.BondDenom,
 		sdk.DefaultPowerReduction,
-		types.DefaultMinCommissionRate,
+		v043staking.DefaultMinCommissionRate,
 	)
 }
 

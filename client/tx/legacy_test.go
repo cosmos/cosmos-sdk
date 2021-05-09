@@ -103,7 +103,7 @@ func (s *TestSuite) TestCopyTx() {
 	s.Require().Equal(sigsV2_1, sigsV2_2)
 	s.Require().Equal(aminoBuilder.GetTx().GetSigners(), aminoBuilder2.GetTx().GetSigners())
 	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[0], aminoBuilder2.GetTx().GetMsgs()[0])
-	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[1], aminoBuilder2.GetTx().GetMsgs()[1]) // We lose the "ServiceMsg" information
+	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[1], aminoBuilder2.GetTx().GetMsgs()[1])
 }
 
 func (s *TestSuite) TestConvertTxToStdTx() {

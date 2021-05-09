@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 func TestRandomizedGenState(t *testing.T) {
@@ -33,8 +33,8 @@ func TestRandomizedGenState(t *testing.T) {
 	}
 
 	simulation.RandomizedGenState(&simState)
-	var feegrantGenesis types.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &feegrantGenesis)
+	var feegrantGenesis feegrant.GenesisState
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[feegrant.ModuleName], &feegrantGenesis)
 
 	require.Len(t, feegrantGenesis.Allowances, len(accounts)-1)
 }

@@ -50,7 +50,8 @@ func (suite *PKSuite) TestString() {
 func (suite *PKSuite) TestBytes() {
 	require := suite.Require()
 	bz := suite.sk.Bytes()
-	suite.Len(bz, 32)
+	fieldSize := (suite.sk.Curve.Params().BitSize + 7) / 8
+	suite.Len(bz, fieldSize)
 	var pk *PubKey
 	require.Nil(pk.Bytes())
 }

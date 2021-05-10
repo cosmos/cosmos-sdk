@@ -23,9 +23,9 @@ var (
 //nolint:interfacer
 func NewMsgGrant(granter sdk.AccAddress, grantee sdk.AccAddress, a Authorization, expiration time.Time) (*MsgGrant, error) {
 	m := &MsgGrant{
-		Granter:    granter.String(),
-		Grantee:    grantee.String(),
-		Expiration: expiration,
+		Granter: granter.String(),
+		Grantee: grantee.String(),
+		Grant:   Grant{Expiration: expiration},
 	}
 	err := m.SetAuthorization(a)
 	if err != nil {
@@ -57,26 +57,12 @@ func (msg MsgGrant) ValidateBasic() error {
 	if granter.Equals(grantee) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "granter and grantee cannot be same")
 	}
-
-	if msg.Expiration.Unix() < time.Now().Unix() {
-		return sdkerrors.Wrap(ErrInvalidExpirationTime, "Time can't be in the past")
-	}
-
-	av := msg.Authorization.GetCachedValue()
-	a, ok := av.(Authorization)
-	if !ok {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (Authorization)(nil), av)
-	}
-	return a.ValidateBasic()
+	return msg.Grant.ValidateBasic()
 }
 
 // GetAuthorization returns the cache value from the MsgGrant.Authorization if present.
 func (msg *MsgGrant) GetAuthorization() Authorization {
-	a, ok := msg.Authorization.GetCachedValue().(Authorization)
-	if !ok {
-		return nil
-	}
-	return a
+	return msg.Grant.GetAuthorization()
 }
 
 // SetAuthorization converts Authorization to any and adds it to MsgGrant.Authorization.
@@ -89,7 +75,7 @@ func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 	if err != nil {
 		return err
 	}
-	msg.Authorization = any
+	msg.Grant.Authorization = any
 	return nil
 }
 
@@ -108,8 +94,7 @@ func (msg MsgExec) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgGrant) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
-	var a Authorization
-	return unpacker.UnpackAny(msg.Authorization, &a)
+	return msg.Grant.UnpackInterfaces(unpacker)
 }
 
 // NewMsgRevoke creates a new MsgRevoke

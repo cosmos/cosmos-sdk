@@ -113,7 +113,8 @@ func AppStateRandomizedFn(
 		GenState:     genesisState,
 		Accounts:     accs,
 		InitialStake: initialStake,
-		NumBonded:    numInitiallyBonded,
+		NumBonded:    0,
+		// NumBonded:    numInitiallyBonded,
 		GenTimestamp: genesisTimestamp,
 	}
 

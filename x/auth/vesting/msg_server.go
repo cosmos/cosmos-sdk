@@ -32,7 +32,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	ak := s.AccountKeeper
 	bk := s.BankKeeper
 
-	if err := bk.SendEnabledCoins(ctx, msg.Amount...); err != nil {
+	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
 	}
 

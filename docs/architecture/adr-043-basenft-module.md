@@ -34,12 +34,23 @@ We will create a module `x/nft` which only stores NFTs by id and owner.
 The interface for the `x/nft` module:
 
 ```go
-// NFTI is an interface used to store NFTs at a given id and owner.
+// NFTI is an interface used to store NFTs at a given id.
 type NFTI interface {
-	GetId() string // can not return empty string.
-	GetOwner() sdk.AccAddress
+	GetId() string // define a simple identifier for the NFT 
+	GetOwner() sdk.AccAddress // the current owner's address
+	GetData() string // specialized metadata to accompany the nft
 }
 ```
+
+The NFT conforms to the following specifications:
+  * The Id is an immutable field used as a unique identifier. NFT identifiers don't currently have a naming convention but
+    can be used in association with existing Hub attributes, e.g., defining an NFT's identifier as an immutable Hub address allows its integration into existing Hub account management modules. 
+    We envision that identifiers can accommodate mint and transfer actions. 
+  * Owner: This mutable field represents the current account owner (on the Hub) of the NFT, i.e., the account that will have authorization
+    to perform various activities in the future. This can be a user, a module account, or potentially a future NFT module that adds capabilities.
+  * Data: This mutable field allows for attaching pertinent metadata to the NFT, e.g., to record special parameter change upon transferring or criteria being met.
+    The data field is used to maintain special information, such as name and URI. Currently, there is no convention for the data placed into this field,
+    however, best practices recommend defining clear specifications that apply to each specific NFT type.
 
 We will also create `BaseNFT` as the default implementation of the `NFTI` interface:
 ```proto
@@ -47,10 +58,8 @@ message BaseNFT {
   option (gogoproto.equal) = true;
 
   string id    = 1;
-  string name  = 2;
-  string uri   = 3 [(gogoproto.customname) = "URI"];
-  string data  = 4;
-  string owner = 5;
+  string owner = 2;
+  string data  = 3;
 }
 ```
 
@@ -100,12 +109,20 @@ message QueryNFTsResponse {
 
 No backwards incompatibilities.
 
+### Forwards Compatibility
+
+This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly 
+because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe. 
+
 ### Positive
 
-- NFT functions available on Cosmos Hub
+- NFT identifiers available on Cosmos Hub
+- Ability to build different NFT modules for the Cosmos Hub, e.g., ERC-721.
 - NFT module which supports interoperability with IBC and other cross-chain infrastractures like Gravity Bridge
 
 ### Negative
+
+- Currently, no methods are defined for this module except to store and retrieve data.
 
 ### Neutral
 
@@ -114,9 +131,9 @@ No backwards incompatibilities.
 ## Further Discussions
 
 For other kinds of applications on the Hub, more app-specific modules can be developed in the future:
-- `x/collectibles`: grouping NFTs into collections and defining properties of NFTs such as minting, burning and transferring, etc.
-- `x/nft_custody`: custody of NFTs to support trading functionality
-- `x/nft_marketplace`: selling and buying NFTs using sdk.Coins
+- `x/nft/collectibles`: grouping NFTs into collections and defining properties of NFTs such as minting, burning and transferring, etc.
+- `x/nft/custody`: custody of NFTs to support trading functionality
+- `x/nft/marketplace`: selling and buying NFTs using sdk.Coins
 
 Other networks in the Cosmos ecosystem could design and implement their own NFT modules for specific NFT applications and usecases.
 

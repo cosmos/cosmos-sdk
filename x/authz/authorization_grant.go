@@ -9,7 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// NewGrant returns new AuthrizationGrant
+// NewGrant returns new Grant
 func NewGrant(a Authorization, expiration time.Time) (Grant, error) {
 	g := Grant{
 		Expiration: expiration,

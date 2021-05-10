@@ -2692,7 +2692,8 @@ between a store name and the commit ID.
 
 ### StoreKVPair
 StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
-It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and Deletes
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
+Deletes
 
 
 | Field | Type | Label | Description |
@@ -5480,7 +5481,7 @@ MsgVoteResponse defines the Msg/Vote response type.
 <a name="cosmos.gov.v1beta1.MsgVoteWeighted"></a>
 
 ### MsgVoteWeighted
-MsgVote defines a message to cast a vote.
+MsgVoteWeighted defines a message to cast a vote.
 
 
 | Field | Type | Label | Description |
@@ -5519,7 +5520,7 @@ Msg defines the bank Msg service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
 | `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
-| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | WeightedVote defines a method to add a weighted vote on a specific proposal. | |
+| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal. | |
 | `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->

@@ -8,7 +8,7 @@ import "google/protobuf/any.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/authz/v1beta1/authz.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/authz";
+option go_package                      = "github.com/cosmos/cosmos-sdk/x/authz";
 option (gogoproto.goproto_getters_all) = false;
 
 // Msg defines the authz Msg service.
@@ -45,11 +45,11 @@ message MsgExecResponse {
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
 message MsgExec {
-  string   grantee                  = 1;
+  string grantee = 1;
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
   // The x/authz will try to find a grant matching (msg.signers[0], grantee, MsgTypeURL(msg))
   // triple and validate it.
-  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg, authz.Authorization"];;
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg, authz.Authorization"];
 }
 
 // MsgGrantResponse defines the Msg/MsgGrant response type.
@@ -58,8 +58,8 @@ message MsgGrantResponse {}
 // MsgRevoke revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 message MsgRevoke {
-  string granter     = 1;
-  string grantee     = 2;
+  string granter      = 1;
+  string grantee      = 2;
   string msg_type_url = 3;
 }
 

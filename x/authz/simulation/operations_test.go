@@ -15,8 +15,8 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -54,9 +54,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, simulation.TypeMsgGrantAuthorization},
-		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, simulation.TypeMsgRevokeAuthorization},
-		{simappparams.DefaultWeightMsgSend, types.ModuleName, simulation.TypeMsgExecDelegated},
+		{simappparams.DefaultWeightMsgDelegate, authz.ModuleName, simulation.TypeMsgGrantAuthorization},
+		{simappparams.DefaultWeightMsgUndelegate, authz.ModuleName, simulation.TypeMsgRevokeAuthorization},
+		{simappparams.DefaultWeightMsgSend, authz.ModuleName, simulation.TypeMsgExecDelegated},
 	}
 
 	for i, w := range weightesOps {
@@ -110,7 +110,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgGrantAuthorizationRequest
+	var msg authz.MsgGrant
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
@@ -139,7 +139,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	grantee := accounts[1]
 	authorization := banktypes.NewSendAuthorization(initCoins)
 
-	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation
@@ -147,13 +147,13 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgRevokeAuthorizationRequest
+	var msg authz.MsgRevoke
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal(granter.Address.String(), msg.Granter)
 	suite.Require().Equal(grantee.Address.String(), msg.Grantee)
-	suite.Require().Equal(banktypes.SendAuthorization{}.MethodName(), msg.MethodName)
+	suite.Require().Equal(banktypes.SendAuthorization{}.MsgTypeURL(), msg.MsgTypeUrl)
 	suite.Require().Len(futureOperations, 0)
 
 }
@@ -174,7 +174,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	grantee := accounts[1]
 	authorization := banktypes.NewSendAuthorization(initCoins)
 
-	err := suite.app.AuthzKeeper.Grant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
+	err := suite.app.AuthzKeeper.SaveGrant(suite.ctx, grantee.Address, granter.Address, authorization, time.Now().Add(30*time.Hour))
 	suite.Require().NoError(err)
 
 	// execute operation
@@ -182,7 +182,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgExecAuthorizedRequest
+	var msg authz.MsgExec
 
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 

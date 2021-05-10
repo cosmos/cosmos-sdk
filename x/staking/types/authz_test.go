@@ -32,7 +32,7 @@ func TestAuthzAuthorizations(t *testing.T) {
 	// verify MethodName
 	delAuth, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
 	require.NoError(t, err)
-	require.Equal(t, delAuth.MethodName(), sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}))
+	require.Equal(t, delAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}))
 
 	// error both allow & deny list
 	_, err = stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, &coin100)
@@ -40,11 +40,11 @@ func TestAuthzAuthorizations(t *testing.T) {
 
 	// verify MethodName
 	undelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, &coin100)
-	require.Equal(t, undelAuth.MethodName(), sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}))
+	require.Equal(t, undelAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}))
 
 	// verify MethodName
 	beginRedelAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1, val2}, []sdk.ValAddress{}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, &coin100)
-	require.Equal(t, beginRedelAuth.MethodName(), sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}))
+	require.Equal(t, beginRedelAuth.MsgTypeURL(), sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}))
 
 	validators1_2 := []string{val1.String(), val2.String()}
 
@@ -251,15 +251,14 @@ func TestAuthzAuthorizations(t *testing.T) {
 		t.Run(tc.msg, func(t *testing.T) {
 			delAuth, err := stakingtypes.NewStakeAuthorization(tc.allowed, tc.denied, tc.msgType, tc.limit)
 			require.NoError(t, err)
-			updated, del, err := delAuth.Accept(ctx, tc.srvMsg)
+			resp, err := delAuth.Accept(ctx, tc.srvMsg)
+			require.Equal(t, tc.isDelete, resp.Delete)
 			if tc.expectErr {
 				require.Error(t, err)
-				require.Equal(t, tc.isDelete, del)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.isDelete, del)
 				if tc.updatedAuthorization != nil {
-					require.Equal(t, tc.updatedAuthorization.String(), updated.String())
+					require.Equal(t, tc.updatedAuthorization.String(), resp.Updated.String())
 				}
 			}
 		})

@@ -227,8 +227,8 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		}
 
 		// remove any output that has no coins
-		i := 0
-		for i < len(outputs) {
+		
+		for i := 0; i < len(outputs); {
 			if outputs[i].Coins.Empty() {
 				outputs[i] = outputs[len(outputs)-1]
 				outputs = outputs[:len(outputs)-1]
@@ -300,8 +300,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 
 		// remove any output that has no coins
 
-		i := 0
-		for i < len(outputs) {
+		for i := 0; i < len(outputs); {
 			if outputs[i].Coins.Empty() {
 				outputs[i] = outputs[len(outputs)-1]
 				outputs = outputs[:len(outputs)-1]

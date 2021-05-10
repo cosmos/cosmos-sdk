@@ -271,7 +271,6 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 
-		// Check send_enabled status of each sent coin denom
 		if err := bk.SendEnabledCoins(ctx, totalSentCoins...); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
 		}

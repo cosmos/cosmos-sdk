@@ -38,11 +38,11 @@ network.
     - [Delegations](02_state_transitions.md#delegations)
     - [Slashing](02_state_transitions.md#slashing)
 3. **[Messages](03_messages.md)**
-    - [Msg/CreateValidator](03_messages.md#msgcreatevalidator)
-    - [Msg/EditValidator](03_messages.md#msgeditvalidator)
-    - [Msg/Delegate](03_messages.md#msgdelegate)
-    - [Msg/Undelegate](03_messages.md#msgundelegate)
-    - [Msg/BeginRedelegate](03_messages.md#msgbeginredelegate)
+    - [MsgCreateValidator](03_messages.md#msgcreatevalidator)
+    - [MsgEditValidator](03_messages.md#msgeditvalidator)
+    - [MsgDelegate](03_messages.md#msgdelegate)
+    - [MsgUndelegate](03_messages.md#msgundelegate)
+    - [MsgBeginRedelegate](03_messages.md#msgbeginredelegate)
 4. **[Begin-Block](04_begin_block.md)**
     - [Historical Info Tracking](04_begin_block.md#historical-info-tracking)
 5. **[End-Block ](05_end_block.md)**
@@ -51,5 +51,5 @@ network.
 6. **[Hooks](06_hooks.md)**
 7. **[Events](07_events.md)**
     - [EndBlocker](07_events.md#endblocker)
-    - [ServiceMessages](07_events.md#servicemessages)
+    - [Msg's](07_events.md#msg's)
 8. **[Parameters](08_params.md)**

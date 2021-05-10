@@ -12,9 +12,3 @@ type (
 		Supply sdk.Coins `json:"supply" yaml:"supply"`
 	}
 )
-
-func EmptyGenesisState() GenesisState {
-	return GenesisState{
-		Supply: sdk.NewCoins(), // leave this empty as it's filled on initialization
-	}
-}

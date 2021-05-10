@@ -12,6 +12,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -82,13 +84,14 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 
 // SimulateMsgSendToModuleAccount tests and runs a single msg send where both
 // accounts already exist.
-func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		from := accs[0]
-		to := accs[1]
+
+		to := getModuleAccounts(ak, ctx, moduleAccCount)[0]
 
 		spendable := bk.SpendableCoins(ctx, from.Address)
 		coins := simtypes.RandSubsetCoins(r, spendable)
@@ -250,21 +253,21 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 }
 
 // SimulateMsgMultiSendToModuleAccount sends coins to Module Accounts
-func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 
 		inputs := make([]types.Input, 2)
-		outputs := make([]types.Output, 2)
+		outputs := make([]types.Output, moduleAccCount)
 		// collect signer privKeys
 		privs := make([]cryptotypes.PrivKey, len(inputs))
 
 		var totalSentCoins sdk.Coins
 		for i := range inputs {
 			sender := accs[i]
-			privs[i] = simAcc.PrivKey
+			privs[i] = sender.PrivKey
 			spendable := bk.SpendableCoins(ctx, sender.Address)
 			coins := simtypes.RandSubsetCoins(r, spendable)
 			inputs[i] = types.NewInput(sender.Address, coins)
@@ -275,9 +278,11 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
 		}
 
+		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccCount)
+
 		for o := range outputs {
 
-			to := accs[o+len(inputs)]
+			moduleAccount := moduleAccounts[o]
 
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
@@ -290,7 +295,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 				totalSentCoins = totalSentCoins.Sub(outCoins)
 			}
 
-			outputs[o] = types.NewOutput(to.Address, outCoins)
+			outputs[o] = types.NewOutput(moduleAccount.Address, outCoins)
 		}
 
 		// remove any output that has no coins
@@ -412,4 +417,34 @@ func randomSendFields(
 	}
 
 	return from, to, sendCoins, false
+}
+
+func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount int) []simtypes.Account {
+
+	s := rand.NewSource(int64(moduleAccCount))
+	r := rand.New(s)
+	moduleAccounts := make([]simtypes.Account, moduleAccCount)
+
+	for i := 0; i < moduleAccCount; i++ {
+		var addr sdk.AccAddress
+
+		switch {
+		case r.Int()%2 == 0:
+			addr = ak.GetModuleAddress(distributiontypes.ModuleName)
+		default:
+			addr = ak.GetModuleAddress(stakingtypes.ModuleName)
+		}
+
+		acc := ak.GetAccount(ctx, addr)
+		mAcc := simtypes.Account{
+			Address: acc.GetAddress(),
+			PrivKey: nil,
+			ConsKey: nil,
+			PubKey:  acc.GetPubKey(),
+		}
+		moduleAccounts[i] = mAcc
+	}
+
+	return moduleAccounts
+
 }

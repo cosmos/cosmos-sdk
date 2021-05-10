@@ -14,8 +14,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 type SimTestSuite struct {
@@ -125,19 +123,22 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 
 func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	const (
-		moduleAccCount = 2
 		accCount       = 1
+		moduleAccCount = 1
 	)
-	accounts := suite.setupAccounts(moduleAccCount, accCount)
+
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, accCount)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSendToModuleAccount(suite.app.AccountKeeper, suite.app.BankKeeper)
+	op := simulation.SimulateMsgSendToModuleAccount(suite.app.AccountKeeper, suite.app.BankKeeper, moduleAccCount)
 
-	s := rand.NewSource(1)
-	r := rand.New(s)
+	s = rand.NewSource(1)
+	r = rand.New(s)
 
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)
@@ -154,19 +155,22 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 
 func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	const (
-		moduleAccCount = 2
-		accCount       = 2
+		accCount  = 2
+		mAccCount = 2
 	)
-	accounts := suite.setupAccounts(moduleAccCount, accCount)
+
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, accCount)
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.app.AccountKeeper, suite.app.BankKeeper)
+	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.app.AccountKeeper, suite.app.BankKeeper, mAccCount)
 
-	s := rand.NewSource(1)
-	r := rand.New(s)
+	s = rand.NewSource(1)
+	r = rand.New(s)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)
 
@@ -196,10 +200,12 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	return accounts
 }
 
-func (suite *SimTestSuite) setupAccounts(moduleAccCount, accCount int) []simtypes.Account {
+/*
+func (suite *SimTestSuite) getModuleAccounts(moduleAccCount int) []simtypes.Account {
+
 	s := rand.NewSource(int64(moduleAccCount))
 	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, accCount)
+	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
 	for i := 0; i < moduleAccCount; i++ {
 		var addr sdk.AccAddress
@@ -218,10 +224,44 @@ func (suite *SimTestSuite) setupAccounts(moduleAccCount, accCount int) []simtype
 			ConsKey: nil,
 			PubKey:  acc.GetPubKey(),
 		}
-		accounts = append(accounts, mAcc)
+		moduleAccounts[i] = mAcc
 	}
-	return accounts
+
+	return moduleAccounts
+
 }
+*/
+
+/*
+func (suite *SimTestSuite) setupAccounts(moduleAccCount, accCount int) ([]simtypes.Account, []simtypes.Account) {
+	s := rand.NewSource(int64(moduleAccCount))
+	r := rand.New(s)
+	accounts := suite.getTestingAccounts(r, accCount)
+
+	moduleAccounts := make([]simtypes.Account, moduleAccCount)
+
+	for i := 0; i < moduleAccCount; i++ {
+		var addr sdk.AccAddress
+
+		switch {
+		case r.Int()%2 == 0:
+			addr = suite.app.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName)
+		default:
+			addr = suite.app.AccountKeeper.GetModuleAddress(stakingtypes.ModuleName)
+		}
+
+		acc := suite.app.AccountKeeper.GetAccount(suite.ctx, addr)
+		mAcc := simtypes.Account{
+			Address: acc.GetAddress(),
+			PrivKey: nil,
+			ConsKey: nil,
+			PubKey:  acc.GetPubKey(),
+		}
+		moduleAccounts[i] = mAcc
+	}
+	return accounts,moduleAccounts
+}
+*/
 
 func TestSimTestSuite(t *testing.T) {
 	suite.Run(t, new(SimTestSuite))

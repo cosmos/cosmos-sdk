@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -50,6 +51,20 @@ func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 	return genesisBalances
 }
 
+func randomBondedAccountsGenesisBalances(randomGenesisBalance []types.Balance, numBonded int64, initialStake int64) []types.Balance {
+	genesisBalances := randomGenesisBalance
+	s := rand.NewSource(1)
+	r := rand.New(s)
+	accounts := simtypes.RandomAccounts(r, int(numBonded))
+	for _, acc := range accounts {
+		genesisBalances = append(genesisBalances, types.Balance{
+			Address: acc.Address.String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(initialStake))),
+		})
+	}
+	return genesisBalances
+}
+
 // RandomizedGenState generates a random GenesisState for bank
 func RandomizedGenState(simState *module.SimulationState) {
 	var sendEnabledParams types.SendEnabledParams
@@ -68,13 +83,34 @@ func RandomizedGenState(simState *module.SimulationState) {
 	totalSupply := sdk.NewInt(simState.InitialStake * (numAccs + simState.NumBonded))
 	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))
 
+	// genesisBalances := []types.Balance{}
+	// s := rand.NewSource(1)
+	// r := rand.New(s)
+	// accounts := simtypes.RandomAccounts(r, int(simState.NumBonded))
+	// fmt.Println("===================")
+	// fmt.Println(len(accounts))
+	// fmt.Println(len(simState.Accounts))
+	// for _, acc := range accounts {
+	// 	genesisBalances = append(genesisBalances, types.Balance{
+	// 		Address: acc.Address.String(),
+	// 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(simState.InitialStake))),
+	// 	})
+	// }
+	// simStateBalances := RandomGenesisBalances(simState)
+	// for i := 0; i < len(simStateBalances); i++ {
+	// 	genesisBalances = append(genesisBalances, simStateBalances...)
+	// }
+
+	genesisBalance := RandomGenesisBalances(simState)
+	totalBalance := randomBondedAccountsGenesisBalances(genesisBalance, simState.NumBonded, simState.InitialStake)
 	bankGenesis := types.GenesisState{
 		Params: types.Params{
 			SendEnabled:        sendEnabledParams,
 			DefaultSendEnabled: defaultSendEnabledParam,
 		},
-		Balances: RandomGenesisBalances(simState),
-		Supply:   supply,
+		Balances: totalBalance,
+		// Balances: RandomGenesisBalances(simState),
+		Supply: supply,
 	}
 
 	paramsBytes, err := json.MarshalIndent(&bankGenesis.Params, "", " ")

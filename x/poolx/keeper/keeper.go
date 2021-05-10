@@ -14,14 +14,12 @@ import (
 type Keeper struct {
 	cdc        codec.Codec
 	storeKey   sdk.StoreKey
-	memKey     sdk.StoreKey
 	paramSpace paramtypes.Subspace
 }
 
 func NewKeeper(
 	cdc codec.Codec,
 	storeKey sdk.StoreKey,
-	memKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -32,7 +30,6 @@ func NewKeeper(
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
-		memKey:     memKey,
 		paramSpace: paramSpace,
 	}
 }

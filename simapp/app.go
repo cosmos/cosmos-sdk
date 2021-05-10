@@ -86,6 +86,9 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz/types"
 
+	poolxkeeper "github.com/cosmos/cosmos-sdk/x/poolx/keeper"
+	poolxtypes "github.com/cosmos/cosmos-sdk/x/poolx/types"
+
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
@@ -167,6 +170,7 @@ type SimApp struct {
 	AuthzKeeper      authzkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
+	PoolxKeeper      *poolxkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -266,6 +270,12 @@ func NewSimApp(
 	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authztypes.StoreKey], appCodec, app.BaseApp.MsgServiceRouter())
+
+	app.PoolxKeeper = poolxkeeper.NewKeeper(
+		appCodec,
+		keys[poolxtypes.StoreKey],
+		app.GetSubspace(poolxtypes.ModuleName),
+	)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()

@@ -4,13 +4,11 @@
 
 Only the following release series are currently supported and receive bug fixes:
 
-The `0.37.x` release series will continue receiving bug fixes until the Cosmos Hub
-migrates to a newer release of the Cosmos-SDK.
 
-* **0.37** will continue receiving bug fixes until the Cosmos Hub migrates to a newer release series of the Cosmos-SDK.
-* **0.39 «Launchpad»** will be supported until 6 months after **0.40.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.39 «Launchpad»** will be supported until 6 months after **0.42.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.42 «Stargate»** is the latest stable release.
 
-The **0.39 «Launchpad»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
+The **0.42 «Stargate»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
 
 ## Stable Release Policy
 

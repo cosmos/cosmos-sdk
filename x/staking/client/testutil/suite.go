@@ -230,7 +230,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 		},
 		{
 			"happy case",
-			[]string{fmt.Sprintf("%s", val.ValAddress), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 		},
 	}
@@ -415,7 +415,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDelegations() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -755,7 +755,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorRedelegations() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -925,7 +925,7 @@ not_bonded_tokens: "0"`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
+func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 	val := s.network.Validators[0]
 
 	details := "bio"
@@ -1041,7 +1041,7 @@ func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdDelegate() {
+func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -1123,7 +1123,7 @@ func (s *IntegrationTestSuite) TestNewCmdDelegate() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
+func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -1209,7 +1209,7 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdUnbond() {
+func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {

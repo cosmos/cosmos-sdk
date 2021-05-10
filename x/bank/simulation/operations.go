@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -242,7 +242,6 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			Inputs:  inputs,
 			Outputs: outputs,
 		}
-
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
@@ -314,7 +313,6 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 			Inputs:  inputs,
 			Outputs: outputs,
 		}
-
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err

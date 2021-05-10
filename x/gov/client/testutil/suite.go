@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,7 +70,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// vote for proposal3 as val
 	_, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
-
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -453,7 +453,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 				var proposals types.QueryProposalsResponse
 
 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &proposals), out.String())
-				s.Require().Len(proposals.Proposals, 4)
+				s.Require().Len(proposals.Proposals, 3)
 			}
 		})
 	}

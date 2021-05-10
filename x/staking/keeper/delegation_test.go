@@ -384,6 +384,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	selfDelegation := types.NewDelegation(addrVals[0].Bytes(), addrVals[0], issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
 
+	// add bonded tokens to pool for delegations
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.NoError(t, simapp.FundModuleAccount(app, ctx, bondedPool.GetName(), delCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
@@ -470,6 +471,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
 
+	// add bonded tokens to pool for delegations
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.NoError(t, simapp.FundModuleAccount(app, ctx, bondedPool.GetName(), delCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
@@ -518,7 +520,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	_, err = app.StakingKeeper.Undelegate(ctx, addrDels[1], addrVals[0], remainingTokens.ToDec())
 	require.NoError(t, err)
 
-	//  now validator should now be deleted from state
+	//  now validator should be deleted from state
 	validator, found = app.StakingKeeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found, "%v", validator)
 }
@@ -556,6 +558,7 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	validator, issuedShares = validator.AddTokensFromDel(delTokens)
 	require.Equal(t, delTokens, issuedShares.RoundInt())
 
+	// add bonded tokens to pool for delegations
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	require.NoError(t, simapp.FundModuleAccount(app, ctx, bondedPool.GetName(), delCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)

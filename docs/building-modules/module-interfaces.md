@@ -12,11 +12,11 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 ## CLI
 
-One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint adds commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md#messages) and [**queries**](./messages-and-queries.md#queries). The CLI files are typically found in the `./x/moduleName/client/cli` folder.
+One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint adds commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md#messages) and [**queries**](./messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
 
 ### Transaction Commands
 
-[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module `./x/moduleName/client/cli` folder. The commands are specified in getter functions and include the name of the command.
+[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module's `./client/cli` folder. The commands are specified in getter functions and include the name of the command.
 
 Here is an example from the `auth` module:
 
@@ -45,7 +45,7 @@ An application using this module likely adds `auth` module commands to its root 
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module `x/moduleName/client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `auth` module:
+[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `auth` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/auth/client/cli/query.go#L76-L108
 
@@ -53,7 +53,7 @@ This query returns the account at a given address. The getter function does the 
 
 - **Construct the command.** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `account` and provide the `address` they are querying for as the only argument.
 - **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
-  - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands)
+  - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands).
   - If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
   - A new `queryClient` should be initialized using `NewQueryClient(clientCtx)`, this method being generated from `query.proto`. Then it can be used to call the appropriate [query](./messages-and-queries.md#grpc-queries).
   - The `clientCtx.PrintProto` method is used to format a `proto.Message` object and print it back to the user.
@@ -65,7 +65,7 @@ Finally, the module also needs a `GetQueryCmd`, which aggregates all of the quer
 
 [Flags](../interfaces/cli.md#flags) are entered by the user and allow for command customizations. Examples include the [fees](../basics/gas-fees.md) or gas prices users are willing to pay for their transactions.
 
-The flags for a module are typically found in a `flags.go` file in the `./x/moduleName/client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as _required_ so that an error is thrown if the user does not provide values for them.
+The flags for a module are typically found in a `flags.go` file in the module's `./client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as _required_ so that an error is thrown if the user does not provide values for them.
 
 For full details on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
@@ -97,7 +97,7 @@ Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common fla
 
 In addition to providing an ABCI query pathway, modules [custom queries](./messages-and-queries.md#grpc-queries) can provide a GRPC proxy server that routes requests in the GRPC protocol to ABCI query requests under the hood.
 
-In order to do that, module should implement `RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+In order to do that, modules should implement `RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
 
 Here's an example from the `auth` module:
 
@@ -105,7 +105,7 @@ Here's an example from the `auth` module:
 
 ## gRPC-gateway REST
 
-Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](https://lunie.io). Thus, application developers can also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers.
+Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](https://lunie.io)). Thus, application developers can also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers.
 
 [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) translates REST calls into gRPC calls, which might be useful for clients that do not use gRPC.
 
@@ -134,7 +134,7 @@ The SDK provides a command for generating [Swagger](https://swagger.io/) documen
 
 Legacy REST endpoints will be deprecated. But developers may choose to keep using legacy REST endpoints for backward compatibility, although the recommended way is to use [gRPC](#grpc) and [gRPC-gateway](#grpc-gateway-rest).
 
-With this implementation, module developers need to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./x/moduleName/client/rest` folder.
+With this implementation, module developers need to define the REST client by defining [routes](#register-routes) for all possible [requests](#request-types) and [handlers](#request-handlers) for each of them. It's up to the module developer how to organize the REST interface files; there is typically a `rest.go` file found in the module's `./client/rest` folder.
 
 To support HTTP requests, the module developer needs to define possible request types, how to handle them, and provide a way to register them with a provided router.
 
@@ -158,9 +158,9 @@ The `BaseReq` includes basic information that every request needs to have, simil
 - `AccountNumber` is an identifier for the account.
 - `Sequence`is the value of a counter measuring how many transactions have been sent from the account. It is used to prevent replay attacks.
 - `TimeoutHeight` allows a transaction to be rejected if it's committed at a height greater than the timeout.
-- `Gas` refers to how much [gas](../basics/gas-fees.md), which represents computational resources, Tx consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing auto as the value for `Gas`.
-- `GasAdjustment` can be used to scale gas up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
-- `GasPrices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, --gas-prices=0.025uatom, 0.025upho means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
+- `Gas` refers to how much [gas](../basics/gas-fees.md), which represents computational resources, a transaction consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `Gas`.
+- `GasAdjustment` can be used to scale gas up in order to avoid underestimating. For example, users can specify their gas adjustment as `1.5` to use 1.5 times the estimated gas.
+- `GasPrices` specifies how much the user is willing pay per unit of gas, which can be one or multiple denominations of tokens. For example, `--gas-prices=0.025uatom, 0.025upho` means the user is willing to pay 0.025uatom AND 0.025upho per unit of gas.
 - `Fees` specifies how much in [fees](../basics/gas-fees.md) the user is willing to pay in total. Note that the user only needs to provide either `gas-prices` or `fees`, but not both, because they can be derived from each other.
 - `Simulate` instructs the application to ignore gas and simulate the transaction running without broadcasting.
 
@@ -174,9 +174,9 @@ Here is an example of a request handler for the `bank` module `SendReq` request 
 
 The request handler can be broken down as follows:
 
-- **Parse Request:** First, it tries to parse the argument `address` into a `AccountAddress`. Then, the request handler attempts to parse the request, and then run `Sanitize` and `ValidateBasic` on the underlying `BaseReq` to check the validity of the request. Finally, it attempts to parse `BaseReq.From` to the type `AccountAddress`.
-- **Message:** Then, a [message](./messages-and-queries.md#messages) of the type `MsgSend` (defined by the module developer to trigger the state changes for this transaction) is created from the values.
-- **Generate Transaction:** Finally, the HTTP `ResponseWriter`, client `Context`, request [`BaseReq`](../interfaces/rest.md#basereq), and message is passed to `WriteGeneratedTxResponse` to further process the request.
+- **Parse Request:** First, the request handler tries to parse the argument `address` into a `AccountAddress`. The request handler then attempts to parse the request, followed by running `Sanitize` and `ValidateBasic` on the underlying `BaseReq` to check the validity of the request. Finally, the request handler attempts to parse `BaseReq.From` to the type `AccountAddress`.
+- **Message:** After parsing the request, a [message](./messages-and-queries.md#messages) of type `MsgSend` is created from the values, which is defined by the module developer to trigger the state changes for this transaction.
+- **Generate Transaction:** Finally, the client `Context`, the HTTP `ResponseWriter`, the request's [`BaseReq`](../interfaces/rest.md#basereq), and the message are all passed to `WriteGeneratedTxResponse` to further process the request.
 
 To read more about how a transaction is generated, visit the transactions documentation [here](../core/transactions.md#transaction-generation).
 
@@ -184,7 +184,7 @@ To read more about how a transaction is generated, visit the transactions docume
 
 The application CLI entrypoint will have a `RegisterRoutes` function in its `main.go` file, which calls the `registerRoutes` functions of each module utilized by the application. Module developers need to implement `registerRoutes` for their modules so that applications are able to route messages and queries to their corresponding handlers and queriers.
 
-The router used by the SDK is [Gorilla Mux](https://github.com/gorilla/mux). The router is initialized with the Gorilla Mux `NewRouter()` function. Then, the router's `HandleFunc` function can then be used to route urls with the defined request handlers and the HTTP method (e.g. "POST", "GET") as a route matcher. It is recommended to prefix every route with the name of the module to avoid collisions with other modules that have the same query or transaction names.
+The router used by the SDK is [Gorilla Mux](https://github.com/gorilla/mux). The router is initialized with the Gorilla Mux `NewRouter()` function. The router's `HandleFunc` function can then be used to route urls with the defined request handlers and the HTTP method (e.g. "POST", "GET") as a route matcher. It is recommended to prefix every route with the name of the module to avoid collisions with other modules that have the same query or transaction names.
 
 Here is a `registerRoutes` function with one query route example from the [nameservice tutorial](https://cosmos.network/docs/tutorial/rest.html):
 

@@ -93,7 +93,7 @@ The `TxBuilder` interface contains data closely related with the generation of t
 
 - `Msg`s, the array of [messages](#messages) included in the transaction.
 - `GasLimit`, option chosen by the users for how to calculate how much gas they will need to pay.
-- `Memo`, to send with the transaction.
+- `Memo`, a note or comment to send with the transaction.
 - `FeeAmount`, the maximum amount the user is willing to pay in fees.
 - `TimeoutHeight`, block height until which the transaction is valid.
 - `Signatures`, the array of signatures from all signers of the transaction.

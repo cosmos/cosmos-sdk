@@ -1323,8 +1323,7 @@ account with the provided expiration time.
 | ----- | ---- | ----- | ----------- |
 | `granter` | [string](#string) |  |  |
 | `grantee` | [string](#string) |  |  |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `grant` | [Grant](#cosmos.authz.v1beta1.Grant) |  |  |
 
 
 
@@ -2693,7 +2692,8 @@ between a store name and the commit ID.
 
 ### StoreKVPair
 StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
-It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and Deletes
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
+Deletes
 
 
 | Field | Type | Label | Description |
@@ -6182,9 +6182,9 @@ AuthorizationType defines the type of staking module authorization type
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | AUTHORIZATION_TYPE_UNSPECIFIED | 0 | AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type |
-| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines an authorization type for Msg/Delegate |
-| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for Msg/Undelegate |
-| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate |
+| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines an authorization type for MsgDelegate |
+| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for MsgUndelegate |
+| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for MsgBeginRedelegate |
 
 
  <!-- end enums -->
@@ -7167,7 +7167,7 @@ of coins from a delegator and source validator to a destination validator.
 <a name="cosmos.staking.v1beta1.MsgBeginRedelegateResponse"></a>
 
 ### MsgBeginRedelegateResponse
-MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
+MsgBeginRedelegateResponse defines the MsgBeginRedelegate response type.
 
 
 | Field | Type | Label | Description |
@@ -7203,7 +7203,7 @@ MsgCreateValidator defines a SDK message for creating a new validator.
 <a name="cosmos.staking.v1beta1.MsgCreateValidatorResponse"></a>
 
 ### MsgCreateValidatorResponse
-MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
+MsgCreateValidatorResponse defines the MsgCreateValidator response type.
 
 
 
@@ -7231,7 +7231,7 @@ from a delegator to a validator.
 <a name="cosmos.staking.v1beta1.MsgDelegateResponse"></a>
 
 ### MsgDelegateResponse
-MsgDelegateResponse defines the Msg/Delegate response type.
+MsgDelegateResponse defines the MsgDelegate response type.
 
 
 
@@ -7259,7 +7259,7 @@ MsgEditValidator defines a SDK message for editing an existing validator.
 <a name="cosmos.staking.v1beta1.MsgEditValidatorResponse"></a>
 
 ### MsgEditValidatorResponse
-MsgEditValidatorResponse defines the Msg/EditValidator response type.
+MsgEditValidatorResponse defines the MsgEditValidator response type.
 
 
 
@@ -7287,7 +7287,7 @@ delegate and a validator.
 <a name="cosmos.staking.v1beta1.MsgUndelegateResponse"></a>
 
 ### MsgUndelegateResponse
-MsgUndelegateResponse defines the Msg/Undelegate response type.
+MsgUndelegateResponse defines the MsgUndelegate response type.
 
 
 | Field | Type | Label | Description |
@@ -7590,7 +7590,7 @@ TxBody is the body of a transaction that all signers sign over.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated | messages is a list of messages to be executed. The required signers of those messages define the number and order of elements in AuthInfo's signer_infos and Tx's signatures. Each required signer address is added to the list only the first time it occurs. By convention, the first required signer (usually from the first message) is referred to as the primary signer and pays the fee for the whole transaction. |
-| `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. In clients, any public exposing text should not be called as memo, should use `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
+| `memo` | [string](#string) |  | memo is any arbitrary note/comment to be added to the transaction. WARNING: in clients, any publicly exposed text should not be called memo, but should be called `note` instead (see https://github.com/cosmos/cosmos-sdk/issues/9122). |
 | `timeout_height` | [uint64](#uint64) |  | timeout is the block height after which this transaction will not be processed by the chain |
 | `extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, the transaction will be rejected |
 | `non_critical_extension_options` | [google.protobuf.Any](#google.protobuf.Any) | repeated | extension_options are arbitrary options that can be added by chains when the default options are not sufficient. If any of these are present and can't be handled, they will be ignored |

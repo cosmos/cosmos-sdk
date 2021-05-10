@@ -24,7 +24,7 @@ const AverageBlockTime = 6 * time.Second
 // initialize the chain for the simulation
 func initChain(
 	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn, config simulation.Config, cdc codec.JSONMarshaler,
+	appStateFn simulation.AppStateFn, config simulation.Config, cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 
@@ -53,7 +53,7 @@ func SimulateFromSeed(
 	ops WeightedOperations,
 	blockedAddrs map[string]bool,
 	config simulation.Config,
-	cdc codec.JSONMarshaler,
+	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, _, b := getTestingMode(tb)

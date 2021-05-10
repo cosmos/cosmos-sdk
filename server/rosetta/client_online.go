@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -71,7 +70,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		}
 
 		if _, ok := resolvedMsg.(sdk.Msg); ok {
-			supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
+			supportedOperations = append(supportedOperations, ii)
 		}
 	}
 

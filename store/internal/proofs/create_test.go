@@ -1,9 +1,11 @@
 package proofs
 
 import (
+	"errors"
 	"testing"
 
 	ics23 "github.com/confio/ics23/go"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateMembership(t *testing.T) {
@@ -84,6 +86,27 @@ func TestCreateNonMembership(t *testing.T) {
 			if !valid {
 				t.Fatalf("Non Membership Proof Invalid")
 			}
+		})
+	}
+}
+
+func TestInvalidKey(t *testing.T) {
+	tests := []struct {
+		name string
+		f    func(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error)
+		data map[string][]byte
+		key  []byte
+		err  error
+	}{
+		{"CreateMembershipProof empty key", CreateMembershipProof, map[string][]byte{"": nil}, []byte(""), ErrEmptyKey},
+		{"CreateMembershipProof empty key in data", CreateMembershipProof, map[string][]byte{"": nil, " ": nil}, []byte(" "), ErrEmptyKeyInData},
+		{"CreateNonMembershipProof empty key", CreateNonMembershipProof, map[string][]byte{" ": nil}, []byte(""), ErrEmptyKey},
+		{"CreateNonMembershipProof empty key in data", CreateNonMembershipProof, map[string][]byte{"": nil}, []byte(" "), ErrEmptyKeyInData},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.f(tc.data, tc.key)
+			assert.True(t, errors.Is(err, tc.err))
 		})
 	}
 }

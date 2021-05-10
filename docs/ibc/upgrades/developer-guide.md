@@ -19,7 +19,7 @@ The IBC protocol allows client implementations to provide a path to upgrading cl
 // may be cancelled or modified before the last planned height.
 VerifyUpgradeAndUpdateState(
     ctx sdk.Context,
-    cdc codec.BinaryMarshaler,
+    cdc codec.BinaryCodec,
     store sdk.KVStore,
     newClient ClientState,
     newConsState ConsensusState,

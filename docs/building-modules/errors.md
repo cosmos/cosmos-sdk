@@ -13,7 +13,7 @@ execution context.
 
 ## Registration
 
-Modules should define and register their custom errors in `x/{module}/types/errors.go`. Registration
+Modules should define and register their custom errors in `x/{module}/errors.go`. Registration
 of errors is handled via the `types/errors` package.
 
 Example:

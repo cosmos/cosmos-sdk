@@ -1323,8 +1323,7 @@ account with the provided expiration time.
 | ----- | ---- | ----- | ----------- |
 | `granter` | [string](#string) |  |  |
 | `grantee` | [string](#string) |  |  |
-| `authorization` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `expiration` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `grant` | [Grant](#cosmos.authz.v1beta1.Grant) |  |  |
 
 
 

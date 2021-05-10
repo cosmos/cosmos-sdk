@@ -384,5 +384,5 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 		}
 	}
 
-	return types.Deposit{}, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "failed to find the initial deposit for proposalID %d", proposalID)
+	return types.Deposit{}, sdkerrors.ErrNotFound.Wrapf("failed to find the initial deposit for proposalID %d", proposalID)
 }

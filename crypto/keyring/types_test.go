@@ -1,4 +1,4 @@
-package keyring
+package keyring_test
 
 import (
 	"encoding/hex"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,7 +19,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	bz, err := hex.DecodeString(hexPK)
 	require.NoError(t, err)
 	copy(tmpKey[:], bz)
-
+	// TODO fix it
 	lInfo := newLedgerInfo("some_name", &secp256k1.PubKey{Key: tmpKey}, *hd.NewFundraiserParams(5, sdk.CoinType, 1), hd.Secp256k1Type)
 	require.Equal(t, TypeLedger, lInfo.GetType())
 
@@ -31,8 +32,10 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 
 	// Serialize and restore
 	// TODO fix it
-	serialized := protoMarshalInfo(lInfo)
-	restoredInfo, err := protoUnmarshalInfo(serialized)
+	encCfg := simapp.MakeTestEncodingConfig()
+	serialized, err := encCfg.Marshaler.Marshal(lInfo)
+	require.NoError(t, err)
+	err := encCfg.Marshaler.Unmarshal(serialized, &lInfo)
 	require.NoError(t, err)
 	require.NotNil(t, restoredInfo)
 

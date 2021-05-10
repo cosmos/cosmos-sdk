@@ -28,6 +28,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Backend options for Keyring
@@ -401,12 +402,23 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	if err != nil {
 		return nil, err
 	}
-
-	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
+	
+	apk, err := codectypes.NewAnyWithValue(priv.PubKey())
+	if err != nil {
+		return nil, err
+	}
+	
+	return ks.writeLedgerKey(uid, apk, *hdPath)
 }
-
-func (ks keystore) writeLedgerKey(name string, pub types.PubKey, path hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
-	info := newLedgerInfo(name, pub, path, algo)
+// we dont need algo parameter here
+// what kind of type we should use for pub argument? types.Pubkey or *codectypes.Any?
+func (ks keystore) writeLedgerKey(name string, pubKey *cryptotypes.Any, path BIP44Params) (Info, error) {
+	//	info := newLedgerInfo(name, pub, path, algo)
+	
+	item := KeyringEntry_Ledger{
+		Ledger: &LedgerInfo(path),
+	}
+    info := NewKeyringEntry(name, pubKey, item )
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
@@ -769,7 +781,10 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKey
 
 func (ks keystore) writeInfo(info Info) error {
 	key := infoKeyBz(info.GetName())
-	serializedInfo := protoMarshalInfo(info)
+	serializedInfo, err := ks.cdc.Marshal(info)
+	if err != nil {
+		return err
+	}
 
 
 	exists, err := ks.existsInDb(info)

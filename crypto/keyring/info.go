@@ -5,9 +5,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/gogo/protobuf/proto"
+	
+
 )
 
 var (
@@ -19,28 +20,36 @@ type Info interface {
 	// Human-readable type for key listing
 	GetName() string
 	// Public key
-	GetPubKey(cdc codec.Codec) (cryptotypes.PubKey, error)
+	GetPubKey() (cryptotypes.PubKey, error)
 	// Address
-	GetAddress(cdc codec.Codec) (types.AccAddress, error)
+	GetAddress() (types.AccAddress, error)
 	// Bip44 Path
 	GetPath() (*BIP44Params, error)
+}
+
+func NewKeyringEntry(name string, pubKey *codectypes.Any, item isKeyringEntry_Item) *KeyringEntry {
+	return &KeyringEntry{name, pubKey, item}
 }
 
 func (ke KeyringEntry) GetName() string {
 	return ke.Name
 }
 
-func (ke KeyringEntry) GetPubKey(cdc codec.Codec) (pk cryptotypes.PubKey, err error) {
-	return ke.unmarshalAnytoPubKey(cdc)
+func (ke KeyringEntry) GetPubKey() (cryptotypes.PubKey, error) {
+	pk, ok := ke.PubKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return nil, fmt.Errorf("Unable to cast Pubkey to cryptotypes.PubKey")
+	}
+	return pk,nil
 }
 
 // GetType implements Info interface
-func (ke KeyringEntry) GetAddress(cdc codec.Codec) (types.AccAddress, error) {
-	pk, err := ke.unmarshalAnytoPubKey(cdc)
+func (ke KeyringEntry) GetAddress() (types.AccAddress, error) {
+	pk, err := ke.GetPubKey()
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to unmarshal any to Pubkey")
+		return nil, err
 	}
-	return pk.Address().Bytes(),nil
+	return pk.Address().Bytes(), nil
 }
 
 func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
@@ -49,19 +58,14 @@ func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
 	case l != nil:
 		tmp := l.Path
 		return tmp, nil
-	default:               
+	default:
 		return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 	}
 }
 
-func (ke KeyringEntry) unmarshalAnytoPubKey(cdc codec.Codec) (pk cryptotypes.PubKey, err error) {
-	if err := cdc.UnmarshalInterface(ke.PubKey, &pk); err != nil{
-		return nil, err
-	}
-	return
-}
-
 // encoding info
+// we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on keystore
+/*
 func protoMarshalInfo(i Info) ([]byte, error) {
 	ke, ok := i.(*KeyringEntry)
 	if !ok {
@@ -70,15 +74,18 @@ func protoMarshalInfo(i Info) ([]byte, error) {
 
 	bz, err := proto.Marshal(ke)
 	if err != nil {
-		return nil,sdkerrors.Wrap(err, "Unable to marshal KeyringEntry to bytes")
+		return nil, sdkerrors.Wrap(err, "Unable to marshal KeyringEntry to bytes")
 	}
 
-	return bz,nil
+	return bz, nil
 }
+*/
 
 // decoding info
+// we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on keystore
+/*
 func protoUnmarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
-	
+
 	var ke KeyringEntry // will not work cause we use any, use InterfaceRegistry
 	// dont forget to merge master to my branch, UnmarshalBinaryBare has been renamed
 	// cdcc.Marshaler.UnmarshalBinaryBare()  // like proto.UnMarshal but works with Any
@@ -88,3 +95,4 @@ func protoUnmarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
 
 	return ke, nil
 }
+*/

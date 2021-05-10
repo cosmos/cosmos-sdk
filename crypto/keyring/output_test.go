@@ -1,4 +1,4 @@
-package keyring
+package keyring_test
 
 import (
 	"fmt"

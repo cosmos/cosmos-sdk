@@ -1,6 +1,6 @@
 //+build ledger test_ledger_mock
 
-package keyring
+package keyring_test
 
 import (
 	"bytes"
@@ -9,12 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
-
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
-	kb := NewInMemory(codec.Codec)
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb := keyring.NewInMemory(encCfg.Marshaler)
 
 	ledger, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 
@@ -49,8 +51,9 @@ func TestInMemoryCreateLedger(t *testing.T) {
 // signatures
 func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	dir := t.TempDir()
+	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := New("keybasename", "test", dir, codec.Codec, nil)
+	kb, err := keyring.New("keybasename", "test", dir, encCfg.Marshaler, nil)
 	require.NoError(t, err)
 
 	i1, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
@@ -86,8 +89,9 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 
 func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	dir := t.TempDir()
+	encCfg := simapp.MakeTestEncodingConfig()
 
-	keyring, err := New(t.Name(), BackendTest, dir, codec.Codec, nil)
+	keyring, err := keyring.New(t.Name(), BackendTest, dir, encCfg.Marshaler, nil)
 	require.NoError(t, err)
 
 	// Test unsupported Algo

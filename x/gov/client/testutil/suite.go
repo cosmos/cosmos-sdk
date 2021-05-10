@@ -70,47 +70,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	_, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
 	s.Require().NoError(err)
 
-	// create a proposal with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 4", "Where is the title!?", types.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TestQueryInitialDeposit() {
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-
-	// query initial deposit
-	args := []string{"4", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	cmd := cli.GetCmdQueryDeposit()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err)
-	var depositRes types.Deposit
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &depositRes))
-	s.Require().Equal(depositRes.Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String())
-
-	// deposit more amount
-	args1 := []string{
-		"4",
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd = cli.NewCmdDeposit()
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args1)
-	s.Require().NoError(err)
-
-	// query deposit
-	cmd = cli.GetCmdQueryDeposit()
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &depositRes))
-	s.Require().Equal(depositRes.Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).Add(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String())
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

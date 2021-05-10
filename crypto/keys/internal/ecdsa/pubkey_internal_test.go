@@ -49,6 +49,8 @@ func (suite *PKSuite) TestString() {
 
 func (suite *PKSuite) TestBytes() {
 	require := suite.Require()
+	bz := suite.sk.Bytes()
+	suite.Len(bz, 32)
 	var pk *PubKey
 	require.Nil(pk.Bytes())
 }

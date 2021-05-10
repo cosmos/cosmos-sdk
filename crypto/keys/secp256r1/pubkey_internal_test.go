@@ -44,6 +44,13 @@ func (suite *PKSuite) TestType() {
 	suite.Require().Equal(name, suite.pk.Type())
 }
 
+func (suite *PKSuite) TestBytes() {
+	bz := suite.pk.Bytes()
+	suite.Len(bz, fieldSize+1)
+	var pk *PubKey
+	suite.Nil(pk.Bytes())
+}
+
 func (suite *PKSuite) TestEquals() {
 	require := suite.Require()
 

@@ -18,13 +18,13 @@ When a transaction is relayed from the underlying consensus engine to the SDK ap
 
 ### `Msg` Services
 
-Starting from v0.40, defining Protobuf `Msg` services is the recommended way to handle messages. A `Msg` protobuf service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). It must have an RPC service method defined for each message in the module.
+Starting from v0.40, defining Protobuf `Msg` services is the recommended way to handle messages. A Protobuf `Msg` service should be created for each module, typically in `tx.proto` (see more info about [conventions and naming](../core/encoding.md#faq)). It must have an RPC service method defined for each message in the module.
 
 See an example of a `Msg` service definition from `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
-Each `Msg` service RPC must have exactly one argument, which must implement the `sdk.Msg` interface, and a protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. Example:
+Each `Msg` service RPC must have exactly one argument, which must implement the `sdk.Msg` interface, and a Protobuf response. The naming convention is to call the RPC argument `Msg<service-rpc-name>` and the RPC response `Msg<service-rpc-name>Response`. For example:
 ```
   rpc Send(MsgSend) returns (MsgSendResponse);
 ```
@@ -32,9 +32,9 @@ Each `Msg` service RPC must have exactly one argument, which must implement the 
 `sdk.Msg` interface is a simplified version of the Amino `LegacyMsg` interface described [below](#legacy-amino-msgs) with only `ValidateBasic()` and `GetSigners()` methods. For backwards compatibility with [Amino `LegacyMsg`s](#legacy-amino-msgs), existing `LegacyMsg` types should be used as the request parameter for `service` RPC definitions. Newer `sdk.Msg` types, which only support `service` definitions, should use canonical `Msg...` name.
 
 
-SDK uses Protobuf definitions to generate client and server code:
+Cosmos SDK uses Protobuf definitions to generate client and server code:
 * `MsgServer` interface defines the server API for the `Msg` service and its implementation is described as part of the [`Msg` services](./msg-services.md) documentation.
-* structures are generated for all RPC request and response types.
+* Structures are generated for all RPC request and response types.
 
 A `RegisterMsgServer` method is also generated and should be used to register the module's `MsgServer` implementation in `RegisterServices` method from the [`AppModule` interface](./module-manager.md#appmodule).
 

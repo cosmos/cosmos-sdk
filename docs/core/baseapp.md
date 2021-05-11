@@ -61,7 +61,7 @@ First, the important parameters that are initialized during the bootstrapping of
   uses one or multiple `KVStores` in the multi-store to persist their subset of the state.
 - Database: The `db` is used by the `CommitMultiStore` to handle data persistence.
 - [`Msg` Service Router](#msg-service-router): The `msgServiceRouter` facilitates the routing of `sdk.Msg` requests to the appropriate
-  module `Msg` service for processing. Here a `sdk.Msg` refers to the transaction component that need to be
+  module `Msg` service for processing. Here a `sdk.Msg` refers to the transaction component that needs to be
   processed by a service in order to update the application state, and not to ABCI message which implements
   the interface between the application and the underlying consensus engine.
 - [gRPC Query Router](#grpc-query-router): The `grpcQueryRouter` facilitates the routing of gRPC queries to the

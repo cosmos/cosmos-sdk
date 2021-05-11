@@ -3,7 +3,7 @@ order: 4
 -->
 # `Msg` Services
 
-A Protobuf `Msg` Service processes [messages](./messages-and-queries.md#messages). Protobuf `Msg` Services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `BaseApp` during [`DeliverTx`](../core/baseapp.md#delivertx). {synopsis}
+A Protobuf `Msg` service processes [messages](./messages-and-queries.md#messages). Protobuf `Msg` services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `BaseApp` during [`DeliverTx`](../core/baseapp.md#delivertx). {synopsis}
 
 ## Pre-requisite Readings
 
@@ -12,7 +12,7 @@ A Protobuf `Msg` Service processes [messages](./messages-and-queries.md#messages
 
 ## Implementation of a module `Msg` service
 
-Each module should define a Protobuf `Msg` service, which will be responsible for processing requests (implementing `sdk.Msg`) and returning response.
+Each module should define a Protobuf `Msg` service, which will be responsible for processing requests (implementing `sdk.Msg`) and returning responses.
 
 As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
 
@@ -54,7 +54,7 @@ This method takes care of marshaling the `res` parameter to protobuf and attachi
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
 
-This diagram shows a typical structure of a Protobuf `Msg` Service, and how the message propagates through the module.
+This diagram shows a typical structure of a Protobuf `Msg` service, and how the message propagates through the module.
 
 ![Transaction flow](../uml/svg/transaction_flow.svg)
 

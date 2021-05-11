@@ -170,8 +170,6 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	// execute operation
 	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.app.AccountKeeper, suite.app.BankKeeper, mAccCount)
 
-	s = rand.NewSource(1)
-	r = rand.New(s)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().Error(err)
 

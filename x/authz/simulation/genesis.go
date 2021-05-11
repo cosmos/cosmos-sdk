@@ -36,7 +36,7 @@ func generateRandomGrant(r *rand.Rand) *codectypes.Any {
 	return authorizations[r.Intn(len(authorizations))]
 }
 
-func newAnyAuthorization(grant authz.Authorization) *codectypes.Any {
+func newAnyAuthorization(a authz.Authorization) *codectypes.Any {
 	any, err := codectypes.NewAnyWithValue(grant)
 	if err != nil {
 		panic(err)

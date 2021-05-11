@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -37,8 +36,7 @@ func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
 	if err != nil {
 		return nil, err
 	}
-	cdc := simappparams.EncodingConfig.Marshaler
-	return newDBKeybase(db,cdc), nil
+	return newDBKeybase(db), nil
 }
 
 var _ LegacyKeybase = dbKeybase{}
@@ -49,15 +47,13 @@ var _ LegacyKeybase = dbKeybase{}
 // Deprecated: dbKeybase will be removed in favor of keyringKeybase.
 type dbKeybase struct {
 	db dbm.DB
-	cdc codec.Marshaler
 }
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB, cdc codec.Marshaler) dbKeybase {
+func newDBKeybase(db dbm.DB) dbKeybase {
 	return dbKeybase{
 		db: db,
-		cdc: cdc,
 	}
 }
 

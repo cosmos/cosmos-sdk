@@ -760,7 +760,7 @@ func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	require.Error(t, err)
 }
 
-func Examplekeyring.New() {
+func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
 	encCfg := simapp.MakeTestEncodingConfig()
 	cstore := keyring.NewInMemory(encCfg.Marshaler)

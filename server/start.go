@@ -9,14 +9,13 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	crgserver "github.com/tendermint/cosmos-rosetta-gateway/server"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"

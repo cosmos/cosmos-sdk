@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -16,8 +14,9 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
+	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	"github.com/stretchr/testify/suite"
-	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"

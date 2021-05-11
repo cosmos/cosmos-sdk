@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
+	crg "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/spf13/pflag"
-	crg "github.com/tendermint/cosmos-rosetta-gateway/server"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

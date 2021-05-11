@@ -102,7 +102,6 @@ output
 	- armor encrypted private key (saved to file)
 */
 func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
-	// func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]

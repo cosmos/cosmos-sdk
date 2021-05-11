@@ -21,8 +21,8 @@ const (
 
 // KVStore keys
 var (
-	// BalancesPrefix is the for the account balances store. We use a byte
-	// (instead of say `[]]byte("balances")` to save some disk space).
+	// BalancesPrefix is the prefix for the account balances store. We use a byte
+	// (instead of `[]byte("balances")` to save some disk space).
 	BalancesPrefix      = []byte{0x02}
 	SupplyKey           = []byte{0x00}
 	DenomMetadataPrefix = []byte{0x1}
@@ -35,7 +35,7 @@ func DenomMetadataKey(denom string) []byte {
 }
 
 // AddressFromBalancesStore returns an account address from a balances prefix
-// store. The key must not contain the perfix BalancesPrefix as the prefix store
+// store. The key must not contain the prefix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
 //
 // If invalid key is passed, AddressFromBalancesStore returns ErrInvalidKey.

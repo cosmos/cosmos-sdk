@@ -4,41 +4,43 @@ order: 3
 
 # AnteHandlers
 
-## Handlers
-
 The auth module presently has no transaction handlers of its own, but does expose
 the special `AnteHandler`, used for performing basic validity checks on a transaction,
-such that it could be thrown out of the mempool. Note that the ante handler is called on
+such that it could be thrown out of the mempool.
+The `AnteHandler` can be seen as a set of decorators that check transactions within the current context, per [ADR 010](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/docs/architecture/adr-010-modular-antehandler.md).
+
+Note that the ante handler is called on
 `CheckTx`, but _also_ on `DeliverTx`, as Tendermint proposers presently have the ability
 to include in their proposed block transactions which fail `CheckTx`.
 
-### Ante Handler
+## Decorators
 
-```go
-anteHandler(ak AccountKeeper, fck FeeCollectionKeeper, tx sdk.Tx)
-  if !tx.(StdTx)
-    fail with "not a StdTx"
+The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
-  if isCheckTx and tx.Fee < config.SubjectiveMinimumFee
-    fail with "insufficient fee for mempool inclusion"
+- `SetUpContextDecorator`: sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
 
-  if tx.ValidateBasic() != nil
-    fail with "tx failed ValidateBasic"
+- `RejectExtensionOptionsDecorator`: rejects all extension options which can optionally be included in protobuf transactions.
 
-  if tx.Fee > 0
-    account = GetAccount(tx.GetSigners()[0])
-    coins := acount.GetCoins()
-    if coins < tx.Fee
-      fail with "insufficient fee to pay for transaction"
-    account.SetCoins(coins - tx.Fee)
-    fck.AddCollectedFees(tx.Fee)
+- `MempoolFeeDecorator`: Checks if the transaction fee is above local mempool `minFee` parameter during `CheckTx`.
 
-  for index, signature in tx.GetSignatures()
-    account = GetAccount(tx.GetSigners()[index])
-    bytesToSign := StdSignBytes(chainID, acc.GetAccountNumber(),
-      acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo)
-    if !signature.Verify(bytesToSign)
-      fail with "invalid signature"
+- `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
-  return
-```
+- `TxTimeoutHeightDecorator`: Check for a tx height timeout.
+
+- `ValidateMemoDecorator`: Validates tx memo with application parameters and returns any non-nil error.
+
+- `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the tx size based on application parameters.
+
+- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the transaction. If feegrant module is enabled and a fee granter is set, it will deduct fees from the fee granter account.
+
+- `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
+
+- `ValidateSigCountDecorator`: Validates the number of signatures in tx based on app-parameters.
+
+- `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+
+- `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+
+- `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
+
+

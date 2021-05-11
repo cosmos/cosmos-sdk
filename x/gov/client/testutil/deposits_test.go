@@ -1,5 +1,4 @@
 // +build norace
-
 package testutil
 
 import (
@@ -53,6 +52,7 @@ func (s *DepositTestSuite) TestQueryWithInitialDeposit() {
 		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String()))
 	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
@@ -90,6 +90,9 @@ func (s *DepositTestSuite) TestQueryWithoutInitialDeposit() {
 		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
 	s.Require().NoError(err)
 
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
 	// deposit amount
 	args1 := []string{
 		"2",
@@ -120,6 +123,7 @@ func TestDepositTestSuite(t *testing.T) {
 	cfg.NumValidators = 1
 	genesisState := types.DefaultGenesisState()
 	genesisState.DepositParams = types.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, types.DefaultMinDepositTokens)), time.Duration(30)*time.Second)
+	genesisState.VotingParams = types.NewVotingParams(time.Duration(20) * time.Second)
 	bz, err := cfg.Codec.MarshalJSON(genesisState)
 	require.NoError(t, err)
 	cfg.GenesisState["gov"] = bz

@@ -1,4 +1,5 @@
 // +build norace
+
 package testutil
 
 import (
@@ -48,13 +49,11 @@ func (s *DepositTestSuite) TestQueryWithInitialDeposit() {
 	clientCtx := val.ClientCtx
 
 	// create a proposal with deposit
-	_, err := MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+	res, err := MsgSubmitProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String()))
 	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	fmt.Println(res.String())
 
 	// deposit more amount
 	args1 := []string{
@@ -72,9 +71,9 @@ func (s *DepositTestSuite) TestQueryWithInitialDeposit() {
 	// waiting for proposal to expires
 	time.Sleep(30 * time.Second)
 
-	args := []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 	var depositRes types.Deposit
-	cmd = cli.GetCmdQueryDeposit()
+	cmd = cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &depositRes))
@@ -109,9 +108,9 @@ func (s *DepositTestSuite) TestQueryWithoutInitialDeposit() {
 	// waiting for proposal to expires
 	time.Sleep(30 * time.Second)
 
-	args := []string{"2", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{"2", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 	var depositRes types.Deposit
-	cmd = cli.GetCmdQueryDeposit()
+	cmd = cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &depositRes))

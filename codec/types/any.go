@@ -64,20 +64,14 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 	if v == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
 	}
-	return NewAnyWithCustomTypeURL(v, "/"+proto.MessageName(v))
-}
 
-// NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead
-// using the one from proto.Message.
-// NOTE: This functions should be only used for types with additional logic bundled
-// into the protobuf Any serialization. For simple marshaling you should use NewAnyWithValue.
-func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
 	bz, err := proto.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Any{
-		TypeUrl:     typeURL,
+		TypeUrl:     "/" + proto.MessageName(v),
 		Value:       bz,
 		cachedValue: v,
 	}, nil

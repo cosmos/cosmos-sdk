@@ -64,11 +64,13 @@ type Metrics struct {
 	prometheusEnabled bool
 }
 
+// GatherResponse is the response type of registered metrics
 type GatherResponse struct {
 	Metrics     []byte
 	ContentType string
 }
 
+// New creates a new instance of Metrics
 func New(cfg Config) (*Metrics, error) {
 	if !cfg.Enabled {
 		return nil, nil

@@ -41,7 +41,7 @@ func TestGetSimulationLog(t *testing.T) {
 		},
 		{
 			authtypes.StoreKey,
-			[]kv.Pair{{Key: authtypes.GlobalAccountNumberKey, Value: cdc.MustMarshalBinaryBare(uint64(10))}},
+			[]kv.Pair{{Key: authtypes.GlobalAccountNumberKey, Value: cdc.MustMarshal(uint64(10))}},
 			"10",
 		},
 		{

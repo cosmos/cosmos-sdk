@@ -7,7 +7,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 // MaxGasWanted defines the max gas allowed.
@@ -26,20 +25,11 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	anys := t.Body.Messages
 	res := make([]sdk.Msg, len(anys))
 	for i, any := range anys {
-		var msg sdk.Msg
-		if msgservice.IsServiceMsg(any.TypeUrl) {
-			req := any.GetCachedValue()
-			if req == nil {
-				panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
-			}
-			msg = sdk.ServiceMsg{
-				MethodName: any.TypeUrl,
-				Request:    any.GetCachedValue().(sdk.MsgRequest),
-			}
-		} else {
-			msg = any.GetCachedValue().(sdk.Msg)
+		cached := any.GetCachedValue()
+		if cached == nil {
+			panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
 		}
-		res[i] = msg
+		res[i] = cached.(sdk.Msg)
 	}
 	return res
 }
@@ -181,20 +171,10 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, any := range m.Messages {
-		// If the any's typeUrl contains 2 slashes, then we unpack the any into
-		// a ServiceMsg struct as per ADR-031.
-		if msgservice.IsServiceMsg(any.TypeUrl) {
-			var req sdk.MsgRequest
-			err := unpacker.UnpackAny(any, &req)
-			if err != nil {
-				return err
-			}
-		} else {
-			var msg sdk.Msg
-			err := unpacker.UnpackAny(any, &msg)
-			if err != nil {
-				return err
-			}
+		var msg sdk.Msg
+		err := unpacker.UnpackAny(any, &msg)
+		if err != nil {
+			return err
 		}
 	}
 

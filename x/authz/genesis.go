@@ -1,48 +1,41 @@
 package authz
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz/exported"
-	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// InitGenesis new authz genesis
-func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, data *types.GenesisState) {
-	for _, entry := range data.Authorization {
-		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
-		if err != nil {
-			panic(err)
-		}
-		granter, err := sdk.AccAddressFromBech32(entry.Granter)
-		if err != nil {
-			panic(err)
-		}
-		authorization, ok := entry.Authorization.GetCachedValue().(exported.Authorization)
-		if !ok {
-			panic("expected authorization")
-		}
-
-		err = keeper.Grant(ctx, grantee, granter, authorization, entry.Expiration)
-		if err != nil {
-			panic(err)
-		}
+// NewGenesisState creates new GenesisState object
+func NewGenesisState(entries []GrantAuthorization) *GenesisState {
+	return &GenesisState{
+		Authorization: entries,
 	}
 }
 
-// ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
-	var entries []types.GrantAuthorization
-	keeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant types.AuthorizationGrant) bool {
-		exp := grant.Expiration
-		entries = append(entries, types.GrantAuthorization{
-			Granter:       granter.String(),
-			Grantee:       grantee.String(),
-			Expiration:    exp,
-			Authorization: grant.Authorization,
-		})
-		return false
-	})
+// ValidateGenesis check the given genesis state has no integrity issues
+func ValidateGenesis(data GenesisState) error {
+	return nil
+}
 
-	return types.NewGenesisState(entries)
+// DefaultGenesisState - Return a default genesis state
+func DefaultGenesisState() *GenesisState {
+	return &GenesisState{}
+}
+
+var _ cdctypes.UnpackInterfacesMessage = GenesisState{}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (data GenesisState) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	for _, a := range data.Authorization {
+		err := a.UnpackInterfaces(unpacker)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (msg GrantAuthorization) UnpackInterfaces(unpacker cdctypes.AnyUnpacker) error {
+	var a Authorization
+	return unpacker.UnpackAny(msg.Authorization, &a)
 }

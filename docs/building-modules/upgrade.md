@@ -5,9 +5,11 @@ order: 13
 # In-Place Store Migrations
 
 In-place store migrations allow your modules to upgrade to new versions that include breaking changes. This document outlines how to build modules to take advantage of this functionality. {synopsis}
+
 ## Prerequisite Readings
 
 - [In-Place Store Migration](../core-concepts/upgrade.md) {prereq}
+
 ## Consensus Version
 
 Successful upgrades of existing modules require your `AppModule` to implement the function `ConsensusVersion() uint64`. 
@@ -43,7 +45,7 @@ Since these migrations are functions that need access to a Keeper's store, use a
 
 ## Writing Migration Scripts
 
-To define the functionality that takes place during an upgrade, write a migration script. Since migration scripts manipulate legacy code, place these functions in a `legacy/` directory. For example, to write migration scripts for the bank module, place the functions in `x/bank/legacy/`. Use the recommended naming convention for these functions. For example, `v043bank` is the script that migrates this legacy package `x/bank/legacy/v043:
+To define the functionality that takes place during an upgrade, write a migration script. Since migration scripts manipulate legacy code, place these functions in a `legacy/` directory. For example, to write migration scripts for the bank module, place the functions in `x/bank/legacy/`. Use the recommended naming convention for these functions. For example, `v043bank` is the script that migrates this legacy package `x/bank/legacy/v043`:
 
 ```golang
 // Migrating bank module from version 1 to 2

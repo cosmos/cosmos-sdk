@@ -259,7 +259,7 @@ func (k Keeper) GetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPa
 	}
 
 	pairs := types.DVPairs{}
-	k.cdc.MustUnmarshalBinaryBare(bz, &pairs)
+	k.cdc.MustUnmarshal(bz, &pairs)
 
 	return pairs.Pairs
 }
@@ -267,7 +267,7 @@ func (k Keeper) GetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPa
 // Sets a specific unbonding queue timeslice.
 func (k Keeper) SetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&types.DVPairs{Pairs: keys})
+	bz := k.cdc.MustMarshal(&types.DVPairs{Pairs: keys})
 	store.Set(types.GetUnbondingDelegationTimeKey(timestamp), bz)
 }
 
@@ -304,7 +304,7 @@ func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context, currTime time.Time) (m
 	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
 		timeslice := types.DVPairs{}
 		value := unbondingTimesliceIterator.Value()
-		k.cdc.MustUnmarshalBinaryBare(value, &timeslice)
+		k.cdc.MustUnmarshal(value, &timeslice)
 
 		matureUnbonds = append(matureUnbonds, timeslice.Pairs...)
 
@@ -485,7 +485,7 @@ func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 	}
 
 	triplets := types.DVVTriplets{}
-	k.cdc.MustUnmarshalBinaryBare(bz, &triplets)
+	k.cdc.MustUnmarshal(bz, &triplets)
 
 	return triplets.Triplets
 }
@@ -493,7 +493,7 @@ func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 // Sets a specific redelegation queue timeslice.
 func (k Keeper) SetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&types.DVVTriplets{Triplets: keys})
+	bz := k.cdc.MustMarshal(&types.DVVTriplets{Triplets: keys})
 	store.Set(types.GetRedelegationTimeKey(timestamp), bz)
 }
 
@@ -532,7 +532,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
 		timeslice := types.DVVTriplets{}
 		value := redelegationTimesliceIterator.Value()
-		k.cdc.MustUnmarshalBinaryBare(value, &timeslice)
+		k.cdc.MustUnmarshal(value, &timeslice)
 
 		matureRedelegations = append(matureRedelegations, timeslice.Triplets...)
 

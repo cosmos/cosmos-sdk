@@ -49,34 +49,34 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 	}, nil
 }
 
-// VersionMap implements the Query/VersionMap gRPC method
-func (k Keeper) VersionMap(c context.Context, req *types.QueryVersionMapRequest) (*types.QueryVersionMapResponse, error) {
+// ModuleVersions implements the Query/QueryModuleVersions gRPC method
+func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersionsRequest) (*types.QueryModuleVersionsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	// get version map from x/upgrade store
 	vm := k.GetModuleVersionMap(ctx)
 
 	// make response slice
-	res := make([]*types.ModuleConsensusVersion, 0)
+	res := make([]*types.ModuleVersion, 0)
 
 	// check if a specific module was requested
 	if len(req.ModuleName) > 0 {
 		// check if the requested module exists
 		if version, found := vm[req.ModuleName]; found {
 			// add the requested module
-			res = append(res, &types.ModuleConsensusVersion{Module: req.ModuleName, Version: version})
+			res = append(res, &types.ModuleVersion{Name: req.ModuleName, Version: version})
 		} else { // module was requested, but not found
-			return &types.QueryVersionMapResponse{}, errors.Wrapf(errors.ErrNotFound, "x/upgrade QueryVersionMap")
+			return &types.QueryModuleVersionsResponse{}, errors.Wrapf(errors.ErrNotFound, "x/upgrade: QueryModuleVersions")
 		}
 	} else {
 		// if no module requested, add entire vm to slice
 		for m, v := range vm {
-			res = append(res, &types.ModuleConsensusVersion{Module: m, Version: v})
+			res = append(res, &types.ModuleVersion{Name: m, Version: v})
 		}
 	}
 
 	res = xp.Sort(res)
 
-	return &types.QueryVersionMapResponse{
-		VersionMap: res,
+	return &types.QueryModuleVersionsResponse{
+		ModuleVersions: res,
 	}, nil
 }

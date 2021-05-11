@@ -302,27 +302,27 @@ func (m *QueryUpgradedConsensusStateResponse) GetUpgradedConsensusState() []byte
 	return nil
 }
 
-// QueryVersionMap is the request type for the Query/VersionMap
+// QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
 // RPC method.
-type QueryVersionMapRequest struct {
+type QueryModuleVersionsRequest struct {
 	// module_name is a field to query a specific module
 	// consensus version from state. Leaving this empty will
-	// fetch the full version map from state
+	// fetch the full module_versions list from state
 	ModuleName string `protobuf:"bytes,1,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
 }
 
-func (m *QueryVersionMapRequest) Reset()         { *m = QueryVersionMapRequest{} }
-func (m *QueryVersionMapRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryVersionMapRequest) ProtoMessage()    {}
-func (*QueryVersionMapRequest) Descriptor() ([]byte, []int) {
+func (m *QueryModuleVersionsRequest) Reset()         { *m = QueryModuleVersionsRequest{} }
+func (m *QueryModuleVersionsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryModuleVersionsRequest) ProtoMessage()    {}
+func (*QueryModuleVersionsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4a334d07ad8374f0, []int{6}
 }
-func (m *QueryVersionMapRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryModuleVersionsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryVersionMapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryModuleVersionsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryVersionMapRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryModuleVersionsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -332,44 +332,44 @@ func (m *QueryVersionMapRequest) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *QueryVersionMapRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryVersionMapRequest.Merge(m, src)
+func (m *QueryModuleVersionsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryModuleVersionsRequest.Merge(m, src)
 }
-func (m *QueryVersionMapRequest) XXX_Size() int {
+func (m *QueryModuleVersionsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryVersionMapRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryVersionMapRequest.DiscardUnknown(m)
+func (m *QueryModuleVersionsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryModuleVersionsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryVersionMapRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryModuleVersionsRequest proto.InternalMessageInfo
 
-func (m *QueryVersionMapRequest) GetModuleName() string {
+func (m *QueryModuleVersionsRequest) GetModuleName() string {
 	if m != nil {
 		return m.ModuleName
 	}
 	return ""
 }
 
-// QueryVersionMapResponse is the response type for the Query/VersionMap
+// QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
 // RPC method.
-type QueryVersionMapResponse struct {
-	// version_map is a map of module name to consensus version.
-	VersionMap []*ModuleConsensusVersion `protobuf:"bytes,1,rep,name=version_map,json=versionMap,proto3" json:"version_map,omitempty"`
+type QueryModuleVersionsResponse struct {
+	// module_versions is a list of module names with their consensus versions.
+	ModuleVersions []*ModuleVersion `protobuf:"bytes,1,rep,name=module_versions,json=moduleVersions,proto3" json:"module_versions,omitempty"`
 }
 
-func (m *QueryVersionMapResponse) Reset()         { *m = QueryVersionMapResponse{} }
-func (m *QueryVersionMapResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryVersionMapResponse) ProtoMessage()    {}
-func (*QueryVersionMapResponse) Descriptor() ([]byte, []int) {
+func (m *QueryModuleVersionsResponse) Reset()         { *m = QueryModuleVersionsResponse{} }
+func (m *QueryModuleVersionsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryModuleVersionsResponse) ProtoMessage()    {}
+func (*QueryModuleVersionsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4a334d07ad8374f0, []int{7}
 }
-func (m *QueryVersionMapResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryModuleVersionsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryVersionMapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryModuleVersionsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryVersionMapResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryModuleVersionsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -379,21 +379,21 @@ func (m *QueryVersionMapResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *QueryVersionMapResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryVersionMapResponse.Merge(m, src)
+func (m *QueryModuleVersionsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryModuleVersionsResponse.Merge(m, src)
 }
-func (m *QueryVersionMapResponse) XXX_Size() int {
+func (m *QueryModuleVersionsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryVersionMapResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryVersionMapResponse.DiscardUnknown(m)
+func (m *QueryModuleVersionsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryModuleVersionsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryVersionMapResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryModuleVersionsResponse proto.InternalMessageInfo
 
-func (m *QueryVersionMapResponse) GetVersionMap() []*ModuleConsensusVersion {
+func (m *QueryModuleVersionsResponse) GetModuleVersions() []*ModuleVersion {
 	if m != nil {
-		return m.VersionMap
+		return m.ModuleVersions
 	}
 	return nil
 }
@@ -405,8 +405,8 @@ func init() {
 	proto.RegisterType((*QueryAppliedPlanResponse)(nil), "cosmos.upgrade.v1beta1.QueryAppliedPlanResponse")
 	proto.RegisterType((*QueryUpgradedConsensusStateRequest)(nil), "cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest")
 	proto.RegisterType((*QueryUpgradedConsensusStateResponse)(nil), "cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse")
-	proto.RegisterType((*QueryVersionMapRequest)(nil), "cosmos.upgrade.v1beta1.QueryVersionMapRequest")
-	proto.RegisterType((*QueryVersionMapResponse)(nil), "cosmos.upgrade.v1beta1.QueryVersionMapResponse")
+	proto.RegisterType((*QueryModuleVersionsRequest)(nil), "cosmos.upgrade.v1beta1.QueryModuleVersionsRequest")
+	proto.RegisterType((*QueryModuleVersionsResponse)(nil), "cosmos.upgrade.v1beta1.QueryModuleVersionsResponse")
 }
 
 func init() {
@@ -414,44 +414,44 @@ func init() {
 }
 
 var fileDescriptor_4a334d07ad8374f0 = []byte{
-	// 585 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x4d, 0x6f, 0xd3, 0x30,
-	0x1c, 0xc6, 0xe7, 0xae, 0x9b, 0xc0, 0xe1, 0x80, 0x7c, 0x28, 0x5d, 0x35, 0x85, 0x2a, 0x54, 0xa8,
-	0x82, 0x35, 0xde, 0xba, 0x0b, 0x2f, 0x12, 0x02, 0x26, 0x26, 0x84, 0x18, 0x2f, 0x45, 0x70, 0xe0,
-	0x12, 0xb9, 0x8d, 0x69, 0x03, 0x89, 0xed, 0xc5, 0x4e, 0xc5, 0x34, 0xed, 0xc2, 0x27, 0x40, 0xe2,
-	0xc4, 0x85, 0x1b, 0xdf, 0x65, 0xc7, 0x49, 0x5c, 0xe0, 0x86, 0x5a, 0x3e, 0x08, 0x8a, 0xe3, 0x96,
-	0x4c, 0x6d, 0xba, 0x89, 0x53, 0x5b, 0xfb, 0xf9, 0x3f, 0xcf, 0xcf, 0xce, 0xd3, 0x40, 0xa7, 0xc7,
-	0x65, 0xc4, 0x25, 0x4e, 0x44, 0x3f, 0x26, 0x3e, 0xc5, 0xc3, 0xad, 0x2e, 0x55, 0x64, 0x0b, 0xef,
-	0x27, 0x34, 0x3e, 0x70, 0x45, 0xcc, 0x15, 0x47, 0x95, 0x4c, 0xe3, 0x1a, 0x8d, 0x6b, 0x34, 0xb5,
-	0xb5, 0x3e, 0xe7, 0xfd, 0x90, 0x62, 0xad, 0xea, 0x26, 0xef, 0x30, 0x61, 0x66, 0xa4, 0xb6, 0x6e,
-	0xb6, 0x88, 0x08, 0x30, 0x61, 0x8c, 0x2b, 0xa2, 0x02, 0xce, 0xa4, 0xd9, 0x6d, 0x14, 0x84, 0x4e,
-	0x02, 0xb4, 0xca, 0x59, 0x83, 0x57, 0x5e, 0xa6, 0x14, 0x3b, 0x49, 0x1c, 0x53, 0xa6, 0x5e, 0x84,
-	0x84, 0x75, 0xe8, 0x7e, 0x42, 0xa5, 0x72, 0x9e, 0xc2, 0xea, 0xec, 0x96, 0x14, 0x9c, 0x49, 0x8a,
-	0x36, 0x61, 0x59, 0x84, 0x84, 0x55, 0x41, 0x1d, 0x34, 0xad, 0xf6, 0xba, 0x3b, 0x1f, 0xde, 0xd5,
-	0x33, 0x5a, 0xe9, 0xb4, 0x4c, 0xd0, 0x03, 0x21, 0xc2, 0x80, 0xfa, 0xb9, 0x20, 0x84, 0x60, 0x99,
-	0x91, 0x88, 0x6a, 0xb3, 0x8b, 0x1d, 0xfd, 0xdd, 0x69, 0x9b, 0xf0, 0x53, 0x72, 0x13, 0x5e, 0x81,
-	0xab, 0x03, 0x1a, 0xf4, 0x07, 0x4a, 0x4f, 0x2c, 0x77, 0xcc, 0x2f, 0xe7, 0x11, 0x74, 0xf4, 0xcc,
-	0xeb, 0x8c, 0xc2, 0xdf, 0x49, 0xd5, 0x4c, 0x26, 0xf2, 0x95, 0x22, 0x8a, 0x4e, 0xd2, 0xae, 0x42,
-	0x2b, 0x24, 0x52, 0x79, 0xa7, 0x2c, 0x60, 0xba, 0xf4, 0x38, 0xb3, 0xa1, 0xf0, 0xda, 0x42, 0x1b,
-	0x43, 0x71, 0x0b, 0x56, 0xcd, 0x71, 0x7d, 0xaf, 0x37, 0x91, 0x78, 0x32, 0xd5, 0x54, 0x4b, 0x75,
-	0xd0, 0xbc, 0xd4, 0xa9, 0x24, 0x73, 0x1d, 0x9e, 0x94, 0x2f, 0x80, 0xcb, 0x25, 0xe7, 0x36, 0xac,
-	0xe8, 0x98, 0x37, 0x34, 0x96, 0x01, 0x67, 0x7b, 0x44, 0xe4, 0x08, 0x23, 0xee, 0x27, 0x21, 0xf5,
-	0x72, 0xd7, 0x02, 0xb3, 0xa5, 0x67, 0xe9, 0xe5, 0xbc, 0x37, 0x77, 0x99, 0x1f, 0x35, 0x54, 0xcf,
-	0xa1, 0x35, 0xcc, 0x56, 0xbd, 0x88, 0x88, 0x2a, 0xa8, 0x2f, 0x37, 0xad, 0xb6, 0x5b, 0xf4, 0x7c,
-	0xf6, 0xb4, 0xe7, 0x14, 0xcf, 0xf8, 0x75, 0xe0, 0x70, 0x6a, 0xdc, 0x3e, 0x5e, 0x81, 0x2b, 0x3a,
-	0x0c, 0x7d, 0x03, 0xd0, 0xca, 0x75, 0x01, 0xe1, 0x22, 0xd7, 0x82, 0x42, 0xd5, 0x36, 0xcf, 0x3f,
-	0x90, 0x9d, 0xc6, 0xd9, 0xf8, 0xf4, 0xe3, 0xcf, 0x97, 0xd2, 0x75, 0xd4, 0xc0, 0x05, 0x65, 0xee,
-	0x65, 0x43, 0x5e, 0x5a, 0x31, 0xf4, 0x1d, 0x40, 0x2b, 0xd7, 0x97, 0x33, 0x00, 0x67, 0x8b, 0x78,
-	0x06, 0xe0, 0x9c, 0x2a, 0x3a, 0xdb, 0x1a, 0xb0, 0x85, 0x6e, 0x16, 0x01, 0x92, 0x6c, 0x48, 0x03,
-	0xe2, 0xc3, 0xf4, 0x79, 0x1e, 0xa1, 0x5f, 0x00, 0x56, 0xe6, 0x97, 0x0b, 0xdd, 0x59, 0x48, 0xb0,
-	0xb0, 0xd8, 0xb5, 0xbb, 0xff, 0x35, 0x6b, 0x0e, 0xb2, 0xab, 0x0f, 0x72, 0x1f, 0xdd, 0xc3, 0x8b,
-	0x5f, 0x1b, 0x33, 0x5d, 0xc7, 0x87, 0xb9, 0x7f, 0xd3, 0x11, 0xfa, 0x0a, 0x20, 0xfc, 0x57, 0x4b,
-	0xe4, 0x2e, 0x64, 0x9a, 0xa9, 0x7e, 0x0d, 0x9f, 0x5b, 0x6f, 0xb8, 0x6f, 0x68, 0xee, 0x06, 0x72,
-	0x8a, 0xb8, 0x4d, 0x95, 0x23, 0x22, 0x1e, 0xee, 0x1e, 0x8f, 0x6c, 0x70, 0x32, 0xb2, 0xc1, 0xef,
-	0x91, 0x0d, 0x3e, 0x8f, 0xed, 0xa5, 0x93, 0xb1, 0xbd, 0xf4, 0x73, 0x6c, 0x2f, 0xbd, 0xdd, 0xe8,
-	0x07, 0x6a, 0x90, 0x74, 0xdd, 0x1e, 0x8f, 0x26, 0x3e, 0xd9, 0x47, 0x4b, 0xfa, 0x1f, 0xf0, 0xc7,
-	0xa9, 0xa9, 0x3a, 0x10, 0x54, 0x76, 0x57, 0xf5, 0xab, 0x73, 0xfb, 0x6f, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x5c, 0x8c, 0xc5, 0x5f, 0xd7, 0x05, 0x00, 0x00,
+	// 578 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xbf, 0x6e, 0xd3, 0x40,
+	0x18, 0xcf, 0xa5, 0x69, 0x05, 0x5f, 0x50, 0x41, 0x37, 0x84, 0xd4, 0x54, 0x26, 0x32, 0x05, 0x82,
+	0x68, 0x7c, 0x6d, 0xb2, 0x20, 0x10, 0x08, 0xa8, 0xa8, 0x10, 0x82, 0x0a, 0x82, 0x60, 0x60, 0x89,
+	0x2e, 0xf1, 0x91, 0x44, 0xd8, 0x3e, 0xd7, 0x77, 0xae, 0xa8, 0xaa, 0x2e, 0x3c, 0x01, 0x12, 0x3b,
+	0x1b, 0x0b, 0x4f, 0xc2, 0x58, 0x89, 0x85, 0x6e, 0x28, 0xe1, 0x41, 0x90, 0xcf, 0x17, 0xe4, 0x10,
+	0x3b, 0x85, 0x4e, 0x6d, 0xfc, 0xfd, 0xfe, 0x7d, 0xbe, 0xdf, 0x19, 0xac, 0x1e, 0x17, 0x1e, 0x17,
+	0x24, 0x0a, 0xfa, 0x21, 0x75, 0x18, 0xd9, 0xdb, 0xec, 0x32, 0x49, 0x37, 0xc9, 0x6e, 0xc4, 0xc2,
+	0x7d, 0x3b, 0x08, 0xb9, 0xe4, 0xb8, 0x92, 0x60, 0x6c, 0x8d, 0xb1, 0x35, 0xc6, 0x58, 0xe9, 0x73,
+	0xde, 0x77, 0x19, 0x51, 0xa8, 0x6e, 0xf4, 0x96, 0x50, 0x5f, 0x53, 0x8c, 0x55, 0x3d, 0xa2, 0xc1,
+	0x90, 0x50, 0xdf, 0xe7, 0x92, 0xca, 0x21, 0xf7, 0x85, 0x9e, 0xae, 0xe5, 0x98, 0x4e, 0x0c, 0x14,
+	0xca, 0x5a, 0x81, 0x8b, 0x2f, 0xe2, 0x14, 0x5b, 0x51, 0x18, 0x32, 0x5f, 0x3e, 0x77, 0xa9, 0xdf,
+	0x66, 0xbb, 0x11, 0x13, 0xd2, 0x7a, 0x0a, 0xd5, 0xd9, 0x91, 0x08, 0xb8, 0x2f, 0x18, 0xde, 0x80,
+	0x52, 0xe0, 0x52, 0xbf, 0x8a, 0x6a, 0xa8, 0x5e, 0x6e, 0xae, 0xda, 0xd9, 0xe1, 0x6d, 0xc5, 0x51,
+	0x48, 0xab, 0xa1, 0x8d, 0x1e, 0x04, 0x81, 0x3b, 0x64, 0x4e, 0xca, 0x08, 0x63, 0x28, 0xf9, 0xd4,
+	0x63, 0x4a, 0xec, 0x6c, 0x5b, 0xfd, 0x6f, 0x35, 0xb5, 0xf9, 0x14, 0x5c, 0x9b, 0x57, 0x60, 0x69,
+	0xc0, 0x86, 0xfd, 0x81, 0x54, 0x8c, 0x85, 0xb6, 0xfe, 0x65, 0x3d, 0x02, 0x4b, 0x71, 0x5e, 0x25,
+	0x29, 0x9c, 0xad, 0x18, 0xed, 0x8b, 0x48, 0xbc, 0x94, 0x54, 0xb2, 0x89, 0xdb, 0x65, 0x28, 0xbb,
+	0x54, 0xc8, 0xce, 0x94, 0x04, 0xc4, 0x8f, 0x1e, 0x27, 0x32, 0x0c, 0xae, 0xcc, 0x95, 0xd1, 0x29,
+	0x6e, 0x41, 0x55, 0xaf, 0xeb, 0x74, 0x7a, 0x13, 0x48, 0x47, 0xc4, 0x98, 0x6a, 0xb1, 0x86, 0xea,
+	0xe7, 0xda, 0x95, 0x28, 0x53, 0xe1, 0x49, 0xe9, 0x0c, 0xba, 0x50, 0xb4, 0xee, 0x82, 0xa1, 0x6c,
+	0x9e, 0x71, 0x27, 0x72, 0xd9, 0x6b, 0x16, 0x8a, 0xf8, 0xf0, 0x52, 0x29, 0x3d, 0x35, 0xe8, 0xa4,
+	0x5e, 0x0d, 0x24, 0x8f, 0x76, 0xe2, 0x17, 0xe4, 0xc1, 0xa5, 0x4c, 0xba, 0x4e, 0xb7, 0x03, 0xe7,
+	0x35, 0x7f, 0x4f, 0x8f, 0xaa, 0xa8, 0xb6, 0x50, 0x2f, 0x37, 0xaf, 0xe6, 0x9d, 0xd5, 0x94, 0x50,
+	0x7b, 0xd9, 0x9b, 0xd2, 0x6d, 0x1e, 0x2f, 0xc2, 0xa2, 0xf2, 0xc3, 0x9f, 0x11, 0x94, 0x53, 0x95,
+	0xc0, 0x24, 0x4f, 0x30, 0xa7, 0x57, 0xc6, 0xc6, 0xbf, 0x13, 0x92, 0x65, 0xac, 0xf5, 0x0f, 0xdf,
+	0x7f, 0x7d, 0x2a, 0x5e, 0xc3, 0x6b, 0x24, 0xa7, 0xd3, 0xbd, 0x84, 0xd4, 0x89, 0x9b, 0x86, 0xbf,
+	0x20, 0x28, 0xa7, 0x6a, 0x73, 0x42, 0xc0, 0xd9, 0x3e, 0x9e, 0x10, 0x30, 0xa3, 0x91, 0x56, 0x4b,
+	0x05, 0x6c, 0xe0, 0x9b, 0x79, 0x01, 0x69, 0x42, 0x52, 0x01, 0xc9, 0x41, 0x7c, 0xa4, 0x87, 0xf8,
+	0x18, 0x41, 0x25, 0xbb, 0x63, 0xf8, 0xf6, 0xdc, 0x04, 0x73, 0xfb, 0x6d, 0xdc, 0x39, 0x15, 0x57,
+	0x2f, 0xb2, 0xad, 0x16, 0xb9, 0x8f, 0xef, 0x91, 0xf9, 0x5f, 0x8f, 0x99, 0xca, 0x93, 0x83, 0xd4,
+	0xa5, 0x3a, 0xc4, 0x5f, 0x11, 0x2c, 0x4f, 0x37, 0x13, 0x37, 0xe7, 0xe6, 0xca, 0xbc, 0x05, 0x46,
+	0xeb, 0xbf, 0x38, 0x7a, 0x07, 0xa2, 0x76, 0xb8, 0x81, 0xaf, 0xe7, 0xed, 0xf0, 0xd7, 0xc5, 0x78,
+	0xb8, 0xfd, 0x6d, 0x64, 0xa2, 0xa3, 0x91, 0x89, 0x7e, 0x8e, 0x4c, 0xf4, 0x71, 0x6c, 0x16, 0x8e,
+	0xc6, 0x66, 0xe1, 0xc7, 0xd8, 0x2c, 0xbc, 0x59, 0xef, 0x0f, 0xe5, 0x20, 0xea, 0xda, 0x3d, 0xee,
+	0x4d, 0xc4, 0x92, 0x3f, 0x0d, 0xe1, 0xbc, 0x23, 0xef, 0xff, 0x28, 0xcb, 0xfd, 0x80, 0x89, 0xee,
+	0x92, 0xfa, 0xa4, 0xb6, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff, 0x02, 0x71, 0xd9, 0xc3, 0xef, 0x05,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -475,8 +475,8 @@ type QueryClient interface {
 	// stored at the last height of this chain.
 	// UpgradedConsensusState RPC not supported with legacy querier
 	UpgradedConsensusState(ctx context.Context, in *QueryUpgradedConsensusStateRequest, opts ...grpc.CallOption) (*QueryUpgradedConsensusStateResponse, error)
-	// VersionMap queries the version map from state.
-	VersionMap(ctx context.Context, in *QueryVersionMapRequest, opts ...grpc.CallOption) (*QueryVersionMapResponse, error)
+	// VersionMap queries the a list of module versions from state.
+	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
 }
 
 type queryClient struct {
@@ -514,9 +514,9 @@ func (c *queryClient) UpgradedConsensusState(ctx context.Context, in *QueryUpgra
 	return out, nil
 }
 
-func (c *queryClient) VersionMap(ctx context.Context, in *QueryVersionMapRequest, opts ...grpc.CallOption) (*QueryVersionMapResponse, error) {
-	out := new(QueryVersionMapResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.Query/VersionMap", in, out, opts...)
+func (c *queryClient) ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error) {
+	out := new(QueryModuleVersionsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.Query/ModuleVersions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -534,8 +534,8 @@ type QueryServer interface {
 	// stored at the last height of this chain.
 	// UpgradedConsensusState RPC not supported with legacy querier
 	UpgradedConsensusState(context.Context, *QueryUpgradedConsensusStateRequest) (*QueryUpgradedConsensusStateResponse, error)
-	// VersionMap queries the version map from state.
-	VersionMap(context.Context, *QueryVersionMapRequest) (*QueryVersionMapResponse, error)
+	// VersionMap queries the a list of module versions from state.
+	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -551,8 +551,8 @@ func (*UnimplementedQueryServer) AppliedPlan(ctx context.Context, req *QueryAppl
 func (*UnimplementedQueryServer) UpgradedConsensusState(ctx context.Context, req *QueryUpgradedConsensusStateRequest) (*QueryUpgradedConsensusStateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpgradedConsensusState not implemented")
 }
-func (*UnimplementedQueryServer) VersionMap(ctx context.Context, req *QueryVersionMapRequest) (*QueryVersionMapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VersionMap not implemented")
+func (*UnimplementedQueryServer) ModuleVersions(ctx context.Context, req *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModuleVersions not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -613,20 +613,20 @@ func _Query_UpgradedConsensusState_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_VersionMap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryVersionMapRequest)
+func _Query_ModuleVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryModuleVersionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).VersionMap(ctx, in)
+		return srv.(QueryServer).ModuleVersions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.upgrade.v1beta1.Query/VersionMap",
+		FullMethod: "/cosmos.upgrade.v1beta1.Query/ModuleVersions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).VersionMap(ctx, req.(*QueryVersionMapRequest))
+		return srv.(QueryServer).ModuleVersions(ctx, req.(*QueryModuleVersionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -648,8 +648,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_UpgradedConsensusState_Handler,
 		},
 		{
-			MethodName: "VersionMap",
-			Handler:    _Query_VersionMap_Handler,
+			MethodName: "ModuleVersions",
+			Handler:    _Query_ModuleVersions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -830,7 +830,7 @@ func (m *QueryUpgradedConsensusStateResponse) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryVersionMapRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryModuleVersionsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -840,12 +840,12 @@ func (m *QueryVersionMapRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryVersionMapRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryModuleVersionsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryVersionMapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryModuleVersionsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -860,7 +860,7 @@ func (m *QueryVersionMapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryVersionMapResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryModuleVersionsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -870,20 +870,20 @@ func (m *QueryVersionMapResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryVersionMapResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryModuleVersionsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryVersionMapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryModuleVersionsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.VersionMap) > 0 {
-		for iNdEx := len(m.VersionMap) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.ModuleVersions) > 0 {
+		for iNdEx := len(m.ModuleVersions) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.VersionMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.ModuleVersions[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -980,7 +980,7 @@ func (m *QueryUpgradedConsensusStateResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryVersionMapRequest) Size() (n int) {
+func (m *QueryModuleVersionsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -993,14 +993,14 @@ func (m *QueryVersionMapRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryVersionMapResponse) Size() (n int) {
+func (m *QueryModuleVersionsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.VersionMap) > 0 {
-		for _, e := range m.VersionMap {
+	if len(m.ModuleVersions) > 0 {
+		for _, e := range m.ModuleVersions {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -1454,7 +1454,7 @@ func (m *QueryUpgradedConsensusStateResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryVersionMapRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryModuleVersionsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1477,10 +1477,10 @@ func (m *QueryVersionMapRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryVersionMapRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryModuleVersionsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryVersionMapRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryModuleVersionsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1536,7 +1536,7 @@ func (m *QueryVersionMapRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryVersionMapResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryModuleVersionsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1559,15 +1559,15 @@ func (m *QueryVersionMapResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryVersionMapResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryModuleVersionsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryVersionMapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryModuleVersionsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VersionMap", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleVersions", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1594,8 +1594,8 @@ func (m *QueryVersionMapResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.VersionMap = append(m.VersionMap, &ModuleConsensusVersion{})
-			if err := m.VersionMap[len(m.VersionMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.ModuleVersions = append(m.ModuleVersions, &ModuleVersion{})
+			if err := m.ModuleVersions[len(m.ModuleVersions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

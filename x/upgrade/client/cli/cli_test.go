@@ -43,28 +43,28 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestVersionMapCLI() {
+func (s *IntegrationTestSuite) TestModuleVersionsCLI() {
 	testCases := []struct {
 		msg     string
-		req     types.QueryVersionMapRequest
+		req     types.QueryModuleVersionsRequest
 		single  bool
 		expPass bool
 	}{
 		{
 			msg:     "test full query",
-			req:     types.QueryVersionMapRequest{ModuleName: ""},
+			req:     types.QueryModuleVersionsRequest{ModuleName: ""},
 			single:  false,
 			expPass: true,
 		},
 		{
 			msg:     "test single module",
-			req:     types.QueryVersionMapRequest{ModuleName: "bank"},
+			req:     types.QueryModuleVersionsRequest{ModuleName: "bank"},
 			single:  true,
 			expPass: true,
 		},
 		{
 			msg:     "test non-existent module",
-			req:     types.QueryVersionMapRequest{ModuleName: "abcdefg"},
+			req:     types.QueryModuleVersionsRequest{ModuleName: "abcdefg"},
 			single:  true,
 			expPass: false,
 		},
@@ -92,27 +92,27 @@ func (s *IntegrationTestSuite) TestVersionMapCLI() {
 				}
 
 				// setup expected response
-				req := make([]*types.ModuleConsensusVersion, 0)
+				req := make([]*types.ModuleVersion, 0)
 				for m, v := range reqVM {
-					req = append(req, &types.ModuleConsensusVersion{Module: m, Version: v})
+					req = append(req, &types.ModuleVersion{Name: m, Version: v})
 				}
 				req = xp.Sort(req)
-				pm := types.QueryVersionMapResponse{
-					VersionMap: req,
+				pm := types.QueryModuleVersionsResponse{
+					ModuleVersions: req,
 				}
 				jsonVM, _ := clientCtx.JSONCodec.MarshalJSON(&pm)
 				expectedVM := string(jsonVM)
 				// append new line to match behaviour of PrintProto
 				expectedVM += "\n"
 
-				// get actual versionmap response from cli
-				cmd := cli.GetVersionMapCmd()
+				// get actual module versions list response from cli
+				cmd := cli.GetModuleVersionsCmd()
 				outVM, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{tc.req.ModuleName})
 				s.Require().NoError(err)
 
 				s.Require().Equal(expectedVM, outVM.String())
 			} else {
-				cmd := cli.GetVersionMapCmd()
+				cmd := cli.GetModuleVersionsCmd()
 				_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{tc.req.ModuleName})
 				s.Require().Error(err)
 			}

@@ -141,28 +141,28 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 	}
 }
 
-func (suite *UpgradeTestSuite) TestVersionMap() {
+func (suite *UpgradeTestSuite) TestModuleVersions() {
 	testCases := []struct {
 		msg     string
-		req     types.QueryVersionMapRequest
+		req     types.QueryModuleVersionsRequest
 		single  bool
 		expPass bool
 	}{
 		{
 			msg:     "test full query",
-			req:     types.QueryVersionMapRequest{},
+			req:     types.QueryModuleVersionsRequest{},
 			single:  false,
 			expPass: true,
 		},
 		{
 			msg:     "test single module",
-			req:     types.QueryVersionMapRequest{ModuleName: "bank"},
+			req:     types.QueryModuleVersionsRequest{ModuleName: "bank"},
 			single:  true,
 			expPass: true,
 		},
 		{
 			msg:     "test non-existent module",
-			req:     types.QueryVersionMapRequest{ModuleName: "abcdefg"},
+			req:     types.QueryModuleVersionsRequest{ModuleName: "abcdefg"},
 			single:  true,
 			expPass: false,
 		},
@@ -174,7 +174,7 @@ func (suite *UpgradeTestSuite) TestVersionMap() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			res, err := suite.queryClient.VersionMap(gocontext.Background(), &tc.req)
+			res, err := suite.queryClient.ModuleVersions(gocontext.Background(), &tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -182,16 +182,16 @@ func (suite *UpgradeTestSuite) TestVersionMap() {
 
 				if tc.single {
 					// test that the single module response is valid
-					suite.Require().Len(res.VersionMap, 1)
+					suite.Require().Len(res.ModuleVersions, 1)
 					// make sure we got the right values
-					suite.Require().Equal(actualVM[tc.req.ModuleName], res.VersionMap[0].Version)
-					suite.Require().Equal(tc.req.ModuleName, res.VersionMap[0].Module)
+					suite.Require().Equal(actualVM[tc.req.ModuleName], res.ModuleVersions[0].Version)
+					suite.Require().Equal(tc.req.ModuleName, res.ModuleVersions[0].Name)
 				} else {
 					// check that the full response is valid
-					suite.Require().NotEmpty(res.VersionMap)
-					suite.Require().Equal(len(res.VersionMap), len(actualVM))
-					for _, v := range res.VersionMap {
-						suite.Require().Equal(v.Version, actualVM[v.Module])
+					suite.Require().NotEmpty(res.ModuleVersions)
+					suite.Require().Equal(len(res.ModuleVersions), len(actualVM))
+					for _, v := range res.ModuleVersions {
+						suite.Require().Equal(v.Version, actualVM[v.Name])
 					}
 				}
 			} else {

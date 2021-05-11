@@ -27,9 +27,9 @@ service Query {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}";
   }
 
-  // VersionMap queries the version map from state.
-  rpc VersionMap(QueryVersionMapRequest) returns (QueryVersionMapResponse) {
-    option (google.api.http).get = "/cosmos/upgrade/v1beta1/versionmap";
+  // VersionMap queries the a list of module versions from state.
+  rpc ModuleVersions(QueryModuleVersionsRequest) returns (QueryModuleVersionsResponse) {
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/module_versions";
   }
 }
 
@@ -74,18 +74,18 @@ message QueryUpgradedConsensusStateResponse {
   bytes upgraded_consensus_state = 2;
 }
 
-// QueryVersionMap is the request type for the Query/VersionMap
+// QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
 // RPC method.
-message QueryVersionMapRequest {
+message QueryModuleVersionsRequest {
   // module_name is a field to query a specific module
   // consensus version from state. Leaving this empty will
-  // fetch the full version map from state
+  // fetch the full module_versions list from state
   string module_name = 1;
 }
 
-// QueryVersionMapResponse is the response type for the Query/VersionMap
+// QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
 // RPC method.
-message QueryVersionMapResponse {
-  // version_map is a map of module name to consensus version.
-  repeated ModuleConsensusVersion version_map = 1;
+message QueryModuleVersionsResponse {
+  // module_versions is a list of module names with their consensus versions.
+  repeated ModuleVersion module_versions = 1;
 }

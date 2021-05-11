@@ -21,7 +21,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(
 		GetCurrentPlanCmd(),
 		GetAppliedPlanCmd(),
-		GetVersionMapCmd(),
+		GetModuleVersionsCmd(),
 	)
 
 	return cmd
@@ -113,14 +113,14 @@ func GetAppliedPlanCmd() *cobra.Command {
 	return cmd
 }
 
-// GetVersionMapCmd returns the version map from state
-func GetVersionMapCmd() *cobra.Command {
+// GetModuleVersionsCmd returns the module version list from state
+func GetModuleVersionsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "versionmap [optional module_name]",
-		Short: "get module version map",
-		Long: "Gets a map of module names and their respective consensus versions.\n" +
-			"Following versionmap with a specific module name will return only the\n" +
-			"version of that module.",
+		Use:   "module_versions [optional module_name]",
+		Short: "get the list of module versions",
+		Long: "Gets a list of module names and their respective consensus versions.\n" +
+			"Following the command with a specific module name will return only the\n" +
+			"that module's information.",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -129,20 +129,20 @@ func GetVersionMapCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			var params types.QueryVersionMapRequest
+			var params types.QueryModuleVersionsRequest
 
 			if len(args) == 1 {
-				params = types.QueryVersionMapRequest{ModuleName: args[0]}
+				params = types.QueryModuleVersionsRequest{ModuleName: args[0]}
 			} else {
-				params = types.QueryVersionMapRequest{}
+				params = types.QueryModuleVersionsRequest{}
 			}
 
-			res, err := queryClient.VersionMap(cmd.Context(), &params)
+			res, err := queryClient.ModuleVersions(cmd.Context(), &params)
 			if err != nil {
 				return err
 			}
 
-			if res.VersionMap == nil {
+			if res.ModuleVersions == nil {
 				return errors.ErrNotFound
 			}
 

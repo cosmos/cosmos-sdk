@@ -13,11 +13,12 @@ type ProtocolVersionSetter interface {
 	SetProtocolVersion(uint64)
 }
 
-// Sorting methods to sort slices of ModuleConsensusVersion
+// Sorting methods to sort slices of ModuleVersion
 // by module name in alphabetical order
-type ModuleVersionSlice []*types.ModuleConsensusVersion
 
-func Sort(s []*types.ModuleConsensusVersion) []*types.ModuleConsensusVersion {
+type ModuleVersionSlice []*types.ModuleVersion
+
+func Sort(s []*types.ModuleVersion) []*types.ModuleVersion {
 	var t ModuleVersionSlice = s
 	sort.Sort(t)
 	s = t
@@ -33,8 +34,8 @@ func (m ModuleVersionSlice) Swap(i, j int) {
 }
 
 func (m ModuleVersionSlice) Less(i, j int) bool {
-	iRunes := []rune(m[i].Module)
-	jRunes := []rune(m[j].Module)
+	iRunes := []rune(m[i].Name)
+	jRunes := []rune(m[j].Name)
 
 	max := len(iRunes)
 	if max > len(jRunes) {

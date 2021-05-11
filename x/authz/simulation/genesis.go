@@ -13,7 +13,7 @@ import (
 )
 
 // genAuthorizationGrant returns a slice of authorization grants.
-func genAuthorizationGrant(r *rand.Rand, accounts []simtypes.Account) []authz.GrantAuthorization {
+func genGrant(r *rand.Rand, accounts []simtypes.Account) []authz.GrantAuthorization {
 	authorizations := make([]authz.GrantAuthorization, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
 		granter := accounts[i]

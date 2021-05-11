@@ -30,7 +30,7 @@ require (
 	github.com/jhump/protoreflect v1.8.2
 	github.com/magiconair/properties v1.8.5
 	github.com/mattn/go-isatty v0.0.12
-	github.com/otiai10/copy v1.5.1
+	github.com/otiai10/copy v1.6.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.10.0

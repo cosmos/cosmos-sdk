@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCValidator() {
+func (suite *KeeperTestSuite) TestGRPCQueryValidator() {
 	app, ctx, queryClient, vals := suite.app, suite.ctx, suite.queryClient, suite.vals
 	validator, found := app.StakingKeeper.GetValidator(ctx, vals[0].GetOperator())
 	suite.True(found)
@@ -586,7 +586,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
+func (suite *KeeperTestSuite) TestGRPCQueryRedelegations() {
 	app, ctx, queryClient, addrs, vals := suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals
 
 	addrAcc, addrAcc1 := addrs[0], addrs[1]

@@ -26,7 +26,9 @@ type PubKey struct {
 	address tmcrypto.Address
 }
 
-// Address creates an ADR-28 address for ECDSA keys. protoName is a concrete proto structure id.
+// Address gets the address associated with a pubkey. If no address exists, it returns a newly created ADR-28 address
+// for ECDSA keys.
+// protoName is a concrete proto structure id.
 func (pk *PubKey) Address(protoName string) tmcrypto.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(protoName, pk.Bytes())

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewStoreKVPairWriteListener(t *testing.T) {
@@ -44,7 +45,7 @@ func TestOnWrite(t *testing.T) {
 		StoreKey: testStoreKey.Name(),
 		Delete:   false,
 	}
-	testMarshaller.UnmarshalBinaryLengthPrefixed(outputBytes, outputKVPair)
+	testMarshaller.UnmarshalLengthPrefixed(outputBytes, outputKVPair)
 	require.EqualValues(t, expectedOutputKVPair, outputKVPair)
 	testWriter.Reset()
 
@@ -60,6 +61,6 @@ func TestOnWrite(t *testing.T) {
 		StoreKey: testStoreKey.Name(),
 		Delete:   true,
 	}
-	testMarshaller.UnmarshalBinaryLengthPrefixed(outputBytes, outputKVPair)
+	testMarshaller.UnmarshalLengthPrefixed(outputBytes, outputKVPair)
 	require.EqualValues(t, expectedOutputKVPair, outputKVPair)
 }

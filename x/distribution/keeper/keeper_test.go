@@ -55,7 +55,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// check initial balance
 	balance := app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))
-	expTokens := sdk.TokensFromConsensusPower(1000)
+	expTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1000)
 	expCoins := sdk.NewCoins(sdk.NewCoin("stake", expTokens))
 	require.Equal(t, expCoins, balance)
 

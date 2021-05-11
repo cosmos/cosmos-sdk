@@ -1,13 +1,9 @@
 package types
 
 import (
-	"reflect"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/exported"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 var (
@@ -21,26 +17,35 @@ func NewSendAuthorization(spendLimit sdk.Coins) *SendAuthorization {
 	}
 }
 
-// MethodName implements Authorization.MethodName.
-func (authorization SendAuthorization) MethodName() string {
-	return "/cosmos.bank.v1beta1.Msg/Send"
+// MsgTypeURL implements Authorization.MsgTypeURL.
+func (a SendAuthorization) MsgTypeURL() string {
+	return sdk.MsgTypeURL(&MsgSend{})
 }
 
 // Accept implements Authorization.Accept.
-func (authorization SendAuthorization) Accept(msg sdk.ServiceMsg, block tmproto.Header) (updated authz.Authorization, delete bool, err error) {
-	if reflect.TypeOf(msg.Request) == reflect.TypeOf(&MsgSend{}) {
-		msg, ok := msg.Request.(*MsgSend)
-		if ok {
-			limitLeft, isNegative := authorization.SpendLimit.SafeSub(msg.Amount)
-			if isNegative {
-				return nil, false, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "requested amount is more than spend limit")
-			}
-			if limitLeft.IsZero() {
-				return nil, true, nil
-			}
-
-			return &SendAuthorization{SpendLimit: limitLeft}, false, nil
-		}
+func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+	mSend, ok := msg.(*MsgSend)
+	if !ok {
+		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
-	return nil, false, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "type mismatch")
+	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount)
+	if isNegative {
+		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
+	}
+	if limitLeft.IsZero() {
+		return authz.AcceptResponse{Accept: true, Delete: true}, nil
+	}
+
+	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft}}, nil
+}
+
+// ValidateBasic implements Authorization.ValidateBasic.
+func (a SendAuthorization) ValidateBasic() error {
+	if a.SpendLimit == nil {
+		return sdkerrors.ErrInvalidCoins.Wrap("spend limit cannot be nil")
+	}
+	if !a.SpendLimit.IsAllPositive() {
+		return sdkerrors.ErrInvalidCoins.Wrapf("spend limit cannot be negitive")
+	}
+	return nil
 }

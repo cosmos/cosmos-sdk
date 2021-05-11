@@ -106,7 +106,7 @@ func TestBalance_GetAddress(t *testing.T) {
 
 func TestSanitizeBalances(t *testing.T) {
 	// 1. Generate balances
-	tokens := sdk.TokensFromConsensusPower(81)
+	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
 	coin := sdk.NewCoin("benchcoin", tokens)
 	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(20)
@@ -158,7 +158,7 @@ func BenchmarkSanitizeBalances1000(b *testing.B) {
 
 func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 	b.ReportAllocs()
-	tokens := sdk.TokensFromConsensusPower(81)
+	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
 	coin := sdk.NewCoin("benchcoin", tokens)
 	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)

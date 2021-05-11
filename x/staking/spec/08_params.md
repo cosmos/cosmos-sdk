@@ -13,3 +13,4 @@ The staking module contains the following parameters:
 | KeyMaxEntries     | uint16           | 7                 |
 | HistoricalEntries | uint16           | 3                 |
 | BondDenom         | string           | "stake"           |
+| PowerReduction    | string           | "1000000"         |

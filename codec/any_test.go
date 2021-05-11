@@ -84,11 +84,11 @@ func TestMarshalProtoPubKey(t *testing.T) {
 
 	// **** test binary serialization ****
 
-	bz, err = ccfg.Marshaler.MarshalBinaryBare(pkAny)
+	bz, err = ccfg.Marshaler.Marshal(pkAny)
 	require.NoError(err)
 
 	var pkAny3 codectypes.Any
-	err = ccfg.Marshaler.UnmarshalBinaryBare(bz, &pkAny3)
+	err = ccfg.Marshaler.Unmarshal(bz, &pkAny3)
 	require.NoError(err)
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny3, &pkI)
 	require.NoError(err)
@@ -114,7 +114,7 @@ func TestMarshalProtoInterfacePubKey(t *testing.T) {
 	require.NoError(err)
 	require.True(pk3.Equals(pk))
 
-	// ** Check unmarshal using JSONMarshaler **
+	// ** Check unmarshal using JSONCodec **
 	// Unpacking won't work straightforward s Any type
 	// Any can't implement UnpackInterfacesMessage interface. So Any is not
 	// automatically unpacked and we won't get a value.

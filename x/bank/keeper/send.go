@@ -20,8 +20,8 @@ type SendKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
 
-	SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-	SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
+	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 
 	BlockedAddr(addr sdk.AccAddress) bool
 }
@@ -33,7 +33,7 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	cdc        codec.BinaryMarshaler
+	cdc        codec.BinaryCodec
 	ak         types.AccountKeeper
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
@@ -43,7 +43,7 @@ type BaseSendKeeper struct {
 }
 
 func NewBaseSendKeeper(
-	cdc codec.BinaryMarshaler, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
+	cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -131,19 +131,6 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-		),
-	})
-
 	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
@@ -163,6 +150,19 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+		),
+	})
 
 	return nil
 }
@@ -266,26 +266,31 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 	accountStore := k.getAccountStore(ctx, addr)
 
-	bz := k.cdc.MustMarshalBinaryBare(&balance)
-	accountStore.Set([]byte(balance.Denom), bz)
+	// Bank invariants require to not store zero balances.
+	if balance.IsZero() {
+		accountStore.Delete([]byte(balance.Denom))
+	} else {
+		bz := k.cdc.MustMarshal(&balance)
+		accountStore.Set([]byte(balance.Denom), bz)
+	}
 
 	return nil
 }
 
-// SendEnabledCoins checks the coins provide and returns an ErrSendDisabled if
+// IsSendEnabledCoins checks the coins provide and returns an ErrSendDisabled if
 // any of the coins are not configured for sending.  Returns nil if sending is enabled
 // for all provided coin
-func (k BaseSendKeeper) SendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
+func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
 	for _, coin := range coins {
-		if !k.SendEnabledCoin(ctx, coin) {
+		if !k.IsSendEnabledCoin(ctx, coin) {
 			return sdkerrors.Wrapf(types.ErrSendDisabled, "%s transfers are currently disabled", coin.Denom)
 		}
 	}
 	return nil
 }
 
-// SendEnabledCoin returns the current SendEnabled status of the provided coin's denom
-func (k BaseSendKeeper) SendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
+// IsSendEnabledCoin returns the current SendEnabled status of the provided coin's denom
+func (k BaseSendKeeper) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
 	return k.GetParams(ctx).SendEnabledDenom(coin.Denom)
 }
 

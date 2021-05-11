@@ -54,9 +54,9 @@ This method takes care of marshaling the `res` parameter to protobuf and attachi
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/proto/cosmos/base/abci/v1beta1/abci.proto#L81-L95
 
-This diagram shows a typical structure of an `Msg` Service, and how the message propagates through the module.
+This diagram shows a typical structure of a `Msg` Service, and how the message propagates through the module.
 
-![](../uml/transaction_flow.svg)
+![Transaction flow](../uml/svg/transaction_flow.svg)
 
 ## Legacy Amino `Msg`s
 
@@ -72,7 +72,7 @@ Let us break it down:
 
 - The [`Msg`](./messages-and-queries.md#messages) is the actual object being processed. 
 - The [`Context`](../core/context.md) contains all the necessary information needed to process the `msg`, as well as a branch of the latest state. If the `msg` is successfully processed, the branched version of the state contained in the `ctx` will be written to the main state (branch).
-- The [`*Result`] returned to `BaseApp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
+- The `*Result` returned to `BaseApp` contains (among other things) information on the execution of the `handler` and [events](../core/events.md).
 
 Module `handler`s are typically implemented in a `./handler.go` file inside the module's folder. The [module manager](./module-manager.md) is used to add the module's `handler`s to the
 [application's `router`](../core/baseapp.md#message-routing) via the `Route()` method. Typically,

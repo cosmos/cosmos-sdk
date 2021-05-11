@@ -8,11 +8,11 @@ import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
 
-// BasicFeeAllowance implements FeeAllowance with a one-time grant of tokens
-// that optionally expires. The delegatee can use up to SpendLimit to cover fees.
-message BasicFeeAllowance {
+// BasicAllowance implements Allowance with a one-time grant of tokens
+// that optionally expires. The grantee can use up to SpendLimit to cover fees.
+message BasicAllowance {
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
   // spend_limit specifies the maximum amount of tokens that can be spent
@@ -22,20 +22,20 @@ message BasicFeeAllowance {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
   // expiration specifies an optional time when this allowance expires
-  ExpiresAt expiration = 2 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp expiration = 2 [(gogoproto.stdtime) = true];
 }
 
-// PeriodicFeeAllowance extends FeeAllowance to allow for both a maximum cap,
+// PeriodicAllowance extends Allowance to allow for both a maximum cap,
 // as well as a limit per time period.
-message PeriodicFeeAllowance {
+message PeriodicAllowance {
   option (cosmos_proto.implements_interface) = "FeeAllowanceI";
 
-  // basic specifies a struct of `BasicFeeAllowance`
-  BasicFeeAllowance basic = 1 [(gogoproto.nullable) = false];
+  // basic specifies a struct of `BasicAllowance`
+  BasicAllowance basic = 1 [(gogoproto.nullable) = false];
 
   // period specifies the time duration in which period_spend_limit coins can
   // be spent before that allowance is reset
-  Duration period = 2 [(gogoproto.nullable) = false];
+  google.protobuf.Duration period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
 
   // period_spend_limit specifies the maximum number of coins that can be spent
   // in the period
@@ -49,33 +49,29 @@ message PeriodicFeeAllowance {
   // period_reset is the time at which this period resets and a new one begins,
   // it is calculated from the start time of the first transaction after the
   // last period ended
-  ExpiresAt period_reset = 5 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp period_reset = 5 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
-// Duration is a span of a clock time or number of blocks.
-// This is designed to be added to an ExpiresAt struct.
-message Duration {
-  // sum is the oneof that represents either duration or block
-  oneof sum {
-    google.protobuf.Duration duration = 1 [(gogoproto.stdduration) = true];
-    uint64                   blocks   = 2;
-  }
+// AllowedMsgAllowance creates allowance only for specified message types.
+message AllowedMsgAllowance {
+  option (gogoproto.goproto_getters)         = false;
+  option (cosmos_proto.implements_interface) = "FeeAllowanceI";
+
+  // allowance can be any of basic and filtered fee allowance.
+  google.protobuf.Any allowance = 1 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
+
+  // allowed_messages are the messages for which the grantee has the access.
+  repeated string allowed_messages = 2;
 }
 
-// ExpiresAt is a point in time where something expires.
-// It may be *either* block time or block height
-message ExpiresAt {
-  // sum is the oneof that represents either time or height
-  oneof sum {
-    google.protobuf.Timestamp time   = 1 [(gogoproto.stdtime) = true];
-    int64                     height = 2;
-  }
-}
+// Grant is stored in the KVStore to record a grant with full context
+message Grant {
+  // granter is the address of the user granting an allowance of their funds.
+  string granter = 1;
 
-// FeeAllowanceGrant is stored in the KVStore to record a grant with full context
-message FeeAllowanceGrant {
+  // grantee is the address of the user being granted an allowance of another user's funds.
+  string grantee = 2;
 
-  string              granter   = 1;
-  string              grantee   = 2;
+  // allowance can be any of basic and filtered fee allowance.
   google.protobuf.Any allowance = 3 [(cosmos_proto.accepts_interface) = "FeeAllowanceI"];
 }

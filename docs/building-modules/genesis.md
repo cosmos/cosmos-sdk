@@ -29,7 +29,7 @@ The `DefaultGenesis()` method is a simple method that calls the constructor func
 
 ### `ValidateGenesis`
 
-The `ValidateGenesis(genesisState GenesisState)` method is called to verify that the provided `genesisState` is correct. It should perform validity checks on each of the parameter listed in `GenesisState`. See an example from the `auth` module:
+The `ValidateGenesis(genesisState GenesisState)` method is called to verify that the provided `genesisState` is correct. It should perform validity checks on each of the parameters listed in `GenesisState`. See an example from the `auth` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/types/genesis.go#L57-L70
 
@@ -41,9 +41,9 @@ Other than the methods related directly to `GenesisState`, module developers are
 
 The `InitGenesis` method is executed during [`InitChain`](../core/baseapp.md#initchain) when the application is first started. Given a `GenesisState`, it initializes the subset of the state managed by the module by using the module's [`keeper`](./keeper.md) setter function on each parameter within the `GenesisState`. 
 
-The [module manager](./module-manager.md#manager) of the application is responsible for calling the `InitGenesis` method of each of the application's modules, in order. This order is set by the application developer via the manager's `SetOrderGenesisMethod`, which is called in the [application's constructor function](../basics/app-anatomy.md#constructor-function)
+The [module manager](./module-manager.md#manager) of the application is responsible for calling the `InitGenesis` method of each of the application's modules in order. This order is set by the application developer via the manager's `SetOrderGenesisMethod`, which is called in the [application's constructor function](../basics/app-anatomy.md#constructor-function).
 
-See an example of `InitGenesis` from the `auth` module
+See an example of `InitGenesis` from the `auth` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/genesis.go#L13-L28
 

@@ -24,6 +24,8 @@ type Info interface {
 	GetAddress() (types.AccAddress, error)
 	// Bip44 Path
 	GetPath() (*BIP44Params, error)
+	// Algo  
+	GetAlgo() PubKeyType
 }
 
 func NewKeyringEntry(name string, pubKey *codectypes.Any, item isKeyringEntry_Item) *KeyringEntry {
@@ -61,6 +63,23 @@ func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
 		return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 	}
 }
+// TODO
+func (ke KeyringEntry) GetAlgo() PubKeyType {
+	m := ke.GetMulti()
+
+	select {
+	case m != nil:
+		// pubkeytype does not existy in MultiItem
+		return -1
+	default:
+		// Local Ledger, offline, 
+		// pubkeytype exist 
+		select {
+			// TODO
+		}
+	}
+}
+
 
 // encoding info
 // we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on keystore

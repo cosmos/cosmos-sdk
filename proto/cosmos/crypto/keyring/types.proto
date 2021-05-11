@@ -24,12 +24,14 @@ message LocalInfo {
   option (gogoproto.goproto_stringer) = false;
 
   google.protobuf.Any privKey = 1;
+  PubKeyType algo = 2;
 }
 
 message LedgerInfo {
   option (gogoproto.goproto_stringer) = false;
 
   BIP44Params path = 1;
+  PubKeyType algo = 2;
 }
 
 message BIP44Params {
@@ -44,8 +46,17 @@ message BIP44Params {
 
 message OfflineInfo {
   option (gogoproto.goproto_stringer) = false;
+
+  PubKeyType algo = 1;
 }
 
 message MultiInfo {
   option (gogoproto.goproto_stringer) = false;
+}
+
+enum PubKeyType {
+    MultiType = 0;
+    Secp256k1Type = 1;
+    Ed25519Type = 2;
+    Sr25519Type = 3;
 }

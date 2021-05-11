@@ -73,21 +73,21 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgGrant,
-			SimulateMsgGrantAuthorization(ak, bk, k, protoCdc),
+			SimulateMsgGrant(ak, bk, k, protoCdc),
 		),
 		simulation.NewWeightedOperation(
 			weightRevoke,
-			SimulateMsgRevokeAuthorization(ak, bk, k, protoCdc),
+			SimulateMsgRevoke(ak, bk, k, protoCdc),
 		),
 		simulation.NewWeightedOperation(
 			weightExec,
-			SimulateMsgExecAuthorization(ak, bk, k, appCdc, protoCdc),
+			SimulateMsgExec(ak, bk, k, appCdc, protoCdc),
 		),
 	}
 }
 
-// SimulateMsgGrantAuthorization generates a MsgGrantAuthorization with random values.
-func SimulateMsgGrantAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keeper,
+// SimulateMsgGrant generates a MsgGrant with random values.
+func SimulateMsgGrant(ak authz.AccountKeeper, bk authz.BankKeeper, _ keeper.Keeper,
 	protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -147,8 +147,8 @@ func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Autho
 	return authorizations[r.Intn(len(authorizations))]
 }
 
-// SimulateMsgRevokeAuthorization generates a MsgRevokeAuthorization with random values.
-func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
+// SimulateMsgRevoke generates a MsgRevoke with random values.
+func SimulateMsgRevoke(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -206,8 +206,8 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 	}
 }
 
-// SimulateMsgExecAuthorization generates a MsgExecAuthorized with random values.
-func SimulateMsgExecAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, cdc cdctypes.AnyUnpacker, protoCdc *codec.ProtoCodec) simtypes.Operation {
+// SimulateMsgExec generates a MsgExec with random values.
+func SimulateMsgExec(ak authz.AccountKeeper, bk authz.BankKeeper, k keeper.Keeper, cdc cdctypes.AnyUnpacker, protoCdc *codec.ProtoCodec) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

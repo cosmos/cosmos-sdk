@@ -85,7 +85,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	return accounts
 }
 
-func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
+func (suite *SimTestSuite) TestSimulateGrant() {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)
@@ -104,7 +104,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 	grantee := accounts[1]
 
 	// execute operation
-	op := simulation.SimulateMsgGrantAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgGrant(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -117,7 +117,7 @@ func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
 
 }
 
-func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
+func (suite *SimTestSuite) TestSimulateRevoke() {
 	// setup 3 accounts
 	s := rand.NewSource(2)
 	r := rand.New(s)
@@ -141,7 +141,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgRevoke(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -156,7 +156,7 @@ func (suite *SimTestSuite) TestSimulateRevokeAuthorization() {
 
 }
 
-func (suite *SimTestSuite) TestSimulateExecAuthorization() {
+func (suite *SimTestSuite) TestSimulateExec() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
@@ -176,7 +176,7 @@ func (suite *SimTestSuite) TestSimulateExecAuthorization() {
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgExecAuthorization(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
+	op := simulation.SimulateMsgExec(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

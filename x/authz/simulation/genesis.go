@@ -12,7 +12,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// genAuthorizationGrant returns a slice of authorization grants.
+// genGrant returns a slice of authorization grants.
 func genGrant(r *rand.Rand, accounts []simtypes.Account) []authz.GrantAuthorization {
 	authorizations := make([]authz.GrantAuthorization, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
@@ -37,7 +37,7 @@ func generateRandomGrant(r *rand.Rand) *codectypes.Any {
 }
 
 func newAnyAuthorization(a authz.Authorization) *codectypes.Any {
-	any, err := codectypes.NewAnyWithValue(grant)
+	any, err := codectypes.NewAnyWithValue(a)
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +50,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var grants []authz.GrantAuthorization
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, "authz", &grants, simState.Rand,
-		func(r *rand.Rand) { grants = genAuthorizationGrant(r, simState.Accounts) },
+		func(r *rand.Rand) { grants = genGrant(r, simState.Accounts) },
 	)
 
 	authzGrantsGenesis := authz.NewGenesisState(grants)

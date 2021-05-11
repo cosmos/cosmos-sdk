@@ -180,7 +180,7 @@ func SimulateMsgRevokeAuthorization(ak authz.AccountKeeper, bk authz.BankKeeper,
 		}
 
 		a := grant.GetAuthorization()
-		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, authorizationGrant.MsgTypeURL())
+		msg := authz.NewMsgRevoke(granterAddr, granteeAddr, a.MsgTypeURL())
 		txCfg := simappparams.MakeTestEncodingConfig().TxConfig
 		account := ak.GetAccount(ctx, granterAddr)
 		tx, err := helpers.GenerateTx(

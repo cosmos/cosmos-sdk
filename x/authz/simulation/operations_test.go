@@ -86,7 +86,6 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 }
 
 func (suite *SimTestSuite) TestSimulateGrantAuthorization() {
-	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 2)

@@ -49,11 +49,10 @@ func (s *DepositTestSuite) TestQueryWithInitialDeposit() {
 	clientCtx := val.ClientCtx
 
 	// create a proposal with deposit
-	res, err := MsgSubmitProposal(val.ClientCtx, val.Address.String(),
+	_, err := MsgSubmitProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String()))
 	s.Require().NoError(err)
-	fmt.Println(res.String())
 
 	// deposit more amount
 	args1 := []string{
@@ -72,12 +71,15 @@ func (s *DepositTestSuite) TestQueryWithInitialDeposit() {
 	time.Sleep(30 * time.Second)
 
 	args := []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	var depositRes types.Deposit
+	var depositRes types.Deposits
 	cmd = cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &depositRes))
-	s.Require().Equal(depositRes.Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(30))).String())
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositRes))
+	s.Require().GreaterOrEqual(len(depositRes), 1)
+
+	// verify initial deposit
+	s.Require().Equal(depositRes[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String())
 }
 
 func (s *DepositTestSuite) TestQueryWithoutInitialDeposit() {
@@ -109,12 +111,13 @@ func (s *DepositTestSuite) TestQueryWithoutInitialDeposit() {
 	time.Sleep(30 * time.Second)
 
 	args := []string{"2", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	var depositRes types.Deposit
+	var depositRes types.Deposits
 	cmd = cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &depositRes))
-	s.Require().Equal(depositRes.Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String())
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositRes))
+	s.Require().GreaterOrEqual(len(depositRes), 1)
+	s.Require().Equal(depositRes[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String())
 }
 
 func TestDepositTestSuite(t *testing.T) {

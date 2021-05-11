@@ -466,7 +466,7 @@ proto-update-deps:
 ###                                Localnet                                 ###
 ###############################################################################
 
-# Run a 4-node testnet locally
+# Run a 4-node testnet locally via docker compose
 localnet-start: build-linux localnet-stop
 	$(if $(shell $(DOCKER) inspect -f '{{ .Id }}' cosmossdk/simd-env 2>/dev/null),$(info found image cosmossdk/simd-env),$(MAKE) -C contrib/images simd-env)
 	if ! [ -f build/node0/simd/config/genesis.json ]; then $(DOCKER) run --rm \
@@ -475,7 +475,7 @@ localnet-start: build-linux localnet-stop
 		-v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro \
 		-v /etc/shadow:/etc/shadow:ro \
-		cosmossdk/simd-env testnet --setup-config-only --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+		cosmossdk/simd-env testnet init-files --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:

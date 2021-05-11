@@ -1545,7 +1545,7 @@ paths:
       parameters:
         - in: body
           name: delegation
-          description: The password of the account to remove from the KMS
+          description: Delegate an amount of liquid coins to a validator
           schema:
             type: object
             properties:
@@ -1760,7 +1760,7 @@ paths:
       parameters:
         - in: body
           name: delegation
-          description: The password of the account to remove from the KMS
+          description: Unbond an amount of bonded shares from a validator
           schema:
             type: object
             properties:
@@ -36127,7 +36127,14 @@ definitions:
               transaction.
           memo:
             type: string
-            title: memo is any arbitrary memo to be added to the transaction
+            description: >-
+              memo is any arbitrary note/comment to be added to the transaction.
+
+              WARNING: in clients, any publicly exposed text should not be
+              called memo,
+
+              but should be called `note` instead (see
+              https://github.com/cosmos/cosmos-sdk/issues/9122).
           timeout_height:
             type: string
             format: uint64
@@ -36697,7 +36704,14 @@ definitions:
           transaction.
       memo:
         type: string
-        title: memo is any arbitrary memo to be added to the transaction
+        description: >-
+          memo is any arbitrary note/comment to be added to the transaction.
+
+          WARNING: in clients, any publicly exposed text should not be called
+          memo,
+
+          but should be called `note` instead (see
+          https://github.com/cosmos/cosmos-sdk/issues/9122).
       timeout_height:
         type: string
         format: uint64

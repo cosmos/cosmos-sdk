@@ -17,8 +17,8 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -36,7 +36,7 @@ type IntegrationTestSuite struct {
 	network      *network.Network
 	addedGranter sdk.AccAddress
 	addedGrantee sdk.AccAddress
-	addedGrant   types.Grant
+	addedGrant   feegrant.Grant
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.addedGranter = granter
 	s.addedGrantee = grantee
 
-	grant, err := types.NewGrant(granter, grantee, &types.BasicAllowance{
+	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(fee),
 	})
 	s.Require().NoError(err)
@@ -113,8 +113,8 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 		args         []string
 		expectErrMsg string
 		expectErr    bool
-		respType     *types.Grant
-		resp         *types.Grant
+		respType     *feegrant.Grant
+		resp         *feegrant.Grant
 	}{
 		{
 			"wrong granter",
@@ -155,7 +155,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			},
 			"",
 			false,
-			&types.Grant{},
+			&feegrant.Grant{},
 			&s.addedGrant,
 		},
 	}
@@ -180,8 +180,8 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 				grant1, err1 := tc.resp.GetGrant()
 				s.Require().NoError(err1)
 				s.Require().Equal(
-					grant.(*types.BasicAllowance).SpendLimit,
-					grant1.(*types.BasicAllowance).SpendLimit,
+					grant.(*feegrant.BasicAllowance).SpendLimit,
+					grant1.(*feegrant.BasicAllowance).SpendLimit,
 				)
 			}
 		})
@@ -197,7 +197,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 		name         string
 		args         []string
 		expectErr    bool
-		resp         *types.QueryAllowancesResponse
+		resp         *feegrant.QueryAllowancesResponse
 		expectLength int
 	}{
 		{
@@ -214,7 +214,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, &types.QueryAllowancesResponse{}, 0,
+			false, &feegrant.QueryAllowancesResponse{}, 0,
 		},
 		{
 			"valid req",
@@ -222,7 +222,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 				grantee.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, &types.QueryAllowancesResponse{}, 1,
+			false, &feegrant.QueryAllowancesResponse{}, 1,
 		},
 	}
 
@@ -733,7 +733,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	resp := &types.Grant{}
+	resp := &feegrant.Grant{}
 
 	s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), resp), out.String())
 	s.Require().Equal(resp.Grantee, resp.Grantee)
@@ -742,11 +742,11 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	grant, err := resp.GetGrant()
 	s.Require().NoError(err)
 
-	filteredFeeGrant, err := grant.(*types.AllowedMsgAllowance).GetAllowance()
+	filteredFeeGrant, err := grant.(*feegrant.AllowedMsgAllowance).GetAllowance()
 	s.Require().NoError(err)
 
 	s.Require().Equal(
-		filteredFeeGrant.(*types.BasicAllowance).SpendLimit.String(),
+		filteredFeeGrant.(*feegrant.BasicAllowance).SpendLimit.String(),
 		spendLimit.String(),
 	)
 

@@ -139,7 +139,9 @@ Modules must implement [interfaces](../building-modules/module-manager.md#applic
 
 ### `Msg` Services
 
-Each module defines two [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services): one `Msg` service to handle messages, and one gRPC `Query` service to handle queries. If we consider the module as a state-machine, then a `Msg` is a state transition. A `Msg` service is a Protobuf service defining all possible `Msg`s a module exposes. Note that `Msg`s are bundled in [`transactions`](../core/transactions.md), and each transaction contains one or multiple `messages`.
+Each module defines two [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services): one `Msg` service to handle messages, and one gRPC `Query` service to handle queries. If we consider the module as a state-machine, then a `Msg Service` is a set state transition PRC methods.
+Each Protobuf `Msg` service RPC is 1:1 related to a Protobuf request type, which must implement `sdk.Msg` interface.
+Note that `sdk.Msg`s are bundled in [`transactions`](../core/transactions.md), and each transaction contains one or multiple `messages`.
 
 When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://tendermint.com/docs/app-dev/abci-spec.html#delivertx). Then, the application handles the transaction:
 

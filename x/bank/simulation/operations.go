@@ -278,11 +278,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 		}
 
 		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccCount)
-
 		for o := range outputs {
-
-			moduleAccount := moduleAccounts[o]
-
 			var outCoins sdk.Coins
 			// split total sent coins into random subsets for output
 			if o == len(outputs)-1 {
@@ -294,7 +290,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 				totalSentCoins = totalSentCoins.Sub(outCoins)
 			}
 
-			outputs[o] = types.NewOutput(moduleAccount.Address, outCoins)
+			outputs[o] = types.NewOutput(moduleAccounts[o].Address, outCoins)
 		}
 
 		// remove any output that has no coins

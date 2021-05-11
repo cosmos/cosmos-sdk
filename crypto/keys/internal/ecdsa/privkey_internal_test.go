@@ -24,7 +24,7 @@ func (suite *SKSuite) TestPubKey() {
 	suite.True(suite.sk.PublicKey.Equal(&pk.PublicKey))
 }
 
-func (suite *SKSuite) Bytes() {
+func (suite *SKSuite) TestBytes() {
 	bz := suite.sk.Bytes()
 	suite.Len(bz, 32)
 	var sk *PrivKey

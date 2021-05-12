@@ -4,7 +4,7 @@ order: 3
 
 # AnteHandlers
 
-The auth module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
+The `x/auth` module presently has no transaction handlers of its own, but does expose the special `AnteHandler`, used for performing basic validity checks on a transaction, such that it could be thrown out of the mempool.
 The `AnteHandler` can be seen as a set of decorators that check transactions within the current context, per [ADR 010](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/docs/architecture/adr-010-modular-antehandler.md).
 
 Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as Tendermint proposers presently have the ability to include in their proposed block transactions which fail `CheckTx`.
@@ -27,7 +27,7 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 - `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
 
-- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If feegrant module is enabled and a fee granter is set, it will deduct fees from the fee granter account.
+- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it will deduct fees from the fee granter account.
 
 - `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
 

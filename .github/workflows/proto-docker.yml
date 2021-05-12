@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.DOCKERHUBTM_TOKEN }}
 
       - name: Publish to Docker Hub
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v2.4.0
         with:
           context: ./contrib/devtools
           file: ./contrib/devtools/dockerfile

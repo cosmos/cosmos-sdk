@@ -13,6 +13,7 @@ const (
 	MetricLabelNameModule = "module"
 )
 
+// NewLabel creates a new instance of Label with name and value
 func NewLabel(name, value string) metrics.Label {
 	return metrics.Label{Name: name, Value: value}
 }

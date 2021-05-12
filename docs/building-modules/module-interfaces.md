@@ -28,42 +28,47 @@ In the example above, `NewSendTxCmd` creates and returns the transaction command
 
 In general, the getter function does the following:
 
-- **Constructs the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for more details on how to create commands.
+- **Constructs the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for more detailed information on how to create commands.
   - **Use:** Specifies the format of the user input required to invoke the command. In the example above, `send` is the name of the transaction command and `[from_key_or_address]`, `[to_address]`, and `[amount]` are the arguments.
   - **Args:** The number of arguments the user provides. In this case, there are exactly three: `[from_key_or_address]`, `[to_address]`, and `[amount]`.
   - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description is available for additional information that is provided when a user adds the `--help` flag.
-  - **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new transaction that is ready to be relayed to nodes.
-    - In general, the function usually starts by getting the `clientCtx` with `client.GetClientTxContext(cmd)`. The `clientCtx` contains information relevant to transaction handling, including information about the user. In this example, the `clientCtx` is used to retrieve the address of the sender by calling `clientCtx.GetFromAddress()`.
+  - **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new transaction.
+    - In general, the function usually starts by getting the `clientCtx` with `client.GetClientTxContext(cmd)`. The `clientCtx` contains information and helper methods relevant to transaction handling, including information about the user. In this example, the `clientCtx` is used to retrieve the address of the sender by calling `clientCtx.GetFromAddress()`.
     - If applicable, the command's arguments are parsed. In this example, the arguments `[to_address]` and `[amount]` are both parsed.
     - A [message](./messages-and-queries.md) is created using the parsed arguments and information from the `clientCtx`. The constructor function of the message type is called directly. In this case, `types.NewMsgSend(fromAddr, toAddr, amount)`. Its good practice to call `msg.ValidateBasic()` after creating the message, which runs a sanity check on the provided arguments.
     - Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastTxCLI(clientCtx, flags, msg)`.
 - **Adds transaction flags:** All transaction commands must add a set of transaction [flags](#flags). The transaction flags are used to collect additional information from the user (e.g. the amount of fees the user is willing to pay). The transaction flags are added to the constructed command using `AddTxFlagsToCmd(cmd)`.
-- **Adds command flags:** Some transaction commands may require additional flags that are specific to the command. See [flags](#flags) for more information.
+- **Adds additional flags:** Some transaction commands may require additional flags that are specific to the command. See [flags](#flags) for more information.
 - **Returns the command:** Finally, the transaction command is returned.
 
 Each module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Application developers wishing to include the module's transactions will call this function to add them as subcommands in the CLI. Here is the `GetTxCmd()` function for the `x/auth` module, which adds the `Sign`, `MultiSign`, `ValidateSignatures` and `SignBatch` transaction commands.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/351192aa0b52a42b66ff06e81cfa7a9e26667a7f/x/auth/client/cli/tx.go#L10-L26
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/auth/client/cli/tx.go#L10-L26
 
 An application using the `x/auth` module can then add the aggregated transaction commands to the root command by calling `rootCmd.AddCommand(auth.GetTxCmd())`.
 
 ### Query Commands
 
-[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `auth` module:
+[Queries](./messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `x/auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/d55c1a26657a0af937fa2273b38dcfa1bb3cff9f/x/auth/client/cli/query.go#L76-L108
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/auth/client/cli/query.go#L75-L105
 
 This query returns the account at a given address. The getter function does the following:
 
-- **Construct the command.** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) and the [transaction command](#transaction-commands) example above for more information. The user must type `account` and provide the `address` they are querying for as the only argument.
-- **`RunE`.** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new query that is ready to be relayed to nodes.
-  - The function should first initialize a new client [`Context`](../interfaces/query-lifecycle.md#context) as described in the [previous section](#transaction-commands).
-  - If applicable, the `Context` is used to retrieve any parameters (e.g. the query originator's address to be used in the query) and marshal them with the query parameter type, in preparation to be relayed to a node. There are no `Context` parameters in this case because the query does not involve any information about the user.
-  - A new `queryClient` should be initialized using `NewQueryClient(clientCtx)`, this method being generated from `query.proto`. Then it can be used to call the appropriate [query](./messages-and-queries.md#grpc-queries).
-  - The `clientCtx.PrintProto` method is used to format a `proto.Message` object and print it back to the user.
-- **Flags.** Add any [flags](#flags) to the command.
+- **Constructs the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for more detailed information on how to create commands.
+  - **Use:** Specifies the format of the user input required to invoke the command. In the example above, `account` is the name of the query command and `[address]` is the argument.
+  - **Args:** The number of arguments the user provides. In this case, there is exactly one: `[address]`.
+  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description is available for additional information that is provided when a user adds the `--help` flag.
+  - **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new query.
+    - In general, the function usually starts by getting the `clientCtx` with `client.GetClientQueryContext(cmd)`. The `clientCtx` contains information and helper methods relevant to query handling.
+    - If applicable, the command's arguments are parsed. In this example, the argument `[address]` is parsed.
+    - A new `queryClient` is initialized using `NewQueryClient(clientCtx)`. The `queryClient` is then used to call the appropriate [query](./messages-and-queries.md#grpc-queries).
+    - The `clientCtx.PrintProto` method is used to format the `proto.Message` object so that the results can be printed back to the user.
+- **Adds query flags:** All query commands must add a set of query [flags](#flags). The query flags are added to the constructed command using `AddQueryFlagsToCmd(cmd)`.
+- **Adds additional flags:** Some query commands may require additional flags that are specific to the command. See [flags](#flags) for more information.
+- **Returns the command:** Finally, the query command is returned.
 
-Finally, the module also needs a `GetQueryCmd`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the `GetTxCmd` command shown above.
+Each module needs to have a `GetQueryCmd()`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the `GetTxCmd()` command shown above.
 
 ### Flags
 

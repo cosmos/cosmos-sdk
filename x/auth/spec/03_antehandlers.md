@@ -21,17 +21,17 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 - `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
-- `TxTimeoutHeightDecorator`: Check for a tx height timeout.
+- `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
 
-- `ValidateMemoDecorator`: Validates tx memo with application parameters and returns any non-nil error.
+- `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
 
-- `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the tx size based on application parameters.
+- `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
 
 - `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the transaction. If feegrant module is enabled and a fee granter is set, it will deduct fees from the fee granter account.
 
 - `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
 
-- `ValidateSigCountDecorator`: Validates the number of signatures in tx based on app-parameters.
+- `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
 
 - `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 

@@ -37,7 +37,7 @@ func TestNewKeyring(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	// TODO fix keyring.New in other packages
-	// TODO fix line 41 cannot use encCfg.Marshaler (variable of type codec.Codec) as io.Reader value in argument to keyring.New: missing method Readcompiler 
+	// TODO fix line 41 cannot use encCfg.Marshaler (variable of type codec.Codec) as io.Reader value in argument to keyring.New: missing method Readcompiler
 	kr, err := keyring.New("cosmos", keyring.BackendFile, dir, encCfg.Marshaler, mockIn)
 	require.NoError(t, err)
 
@@ -123,8 +123,12 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	pub1 := priv1.PubKey()
 	i, err = kb.SavePubKey(o1, pub1, hd.Ed25519Type)
 	require.Nil(t, err)
-	i.GetPubKey()
-	require.Equal(t, pub1, i.GetPubKey())
+
+	key1, err = i.GetPubKey()
+	require.NoError(t, err)
+	require.NotNil(t, key1)
+	require.Equal(t, pub1, key1)
+
 	require.Equal(t, o1, i.GetName())
 	keyS, err = kb.List()
 	require.NoError(t, err)
@@ -166,19 +170,27 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
 	require.Nil(t, err)
-	require.Equal(t, i1.GetPubKey(), pub1)
+
+	// TODO consider to use the single function for that
+	key1, err := i1.GetPubKey()
+	require.NoError(t, err)
+	require.NotNil(t, key1)
+	require.Equal(t, key1, pub1)
 
 	s12, pub1, err := kb.Sign(n1, d2)
 	require.Nil(t, err)
-	require.Equal(t, i1.GetPubKey(), pub1)
+	require.Equal(t, key1, pub1)
 
 	s21, pub2, err := kb.Sign(n2, d1)
 	require.Nil(t, err)
-	require.Equal(t, i2.GetPubKey(), pub2)
+	key2, err := i2.GetPubKey()
+	require.NoError(t, err)
+	require.NotNil(t, key2)
+	require.Equal(t, key2, pub2)
 
 	s22, pub2, err := kb.Sign(n2, d2)
 	require.Nil(t, err)
-	require.Equal(t, i2.GetPubKey(), pub2)
+	require.Equal(t, key2, pub2)
 
 	// let's try to validate and make sure it only works when everything is proper
 	cases := []struct {
@@ -188,15 +200,15 @@ func TestSignVerifyKeyRing(t *testing.T) {
 		valid bool
 	}{
 		// proper matches
-		{i1.GetPubKey(), d1, s11, true},
+		{key1, d1, s11, true},
 		// change data, pubkey, or signature leads to fail
-		{i1.GetPubKey(), d2, s11, false},
-		{i2.GetPubKey(), d1, s11, false},
-		{i1.GetPubKey(), d1, s21, false},
+		{key1, d2, s11, false},
+		{key2, d1, s11, false},
+		{key1, d1, s21, false},
 		// make sure other successes
-		{i1.GetPubKey(), d2, s12, true},
-		{i2.GetPubKey(), d1, s21, true},
-		{i2.GetPubKey(), d2, s22, true},
+		{key1, d2, s12, true},
+		{key2, d1, s21, true},
+		{key2, d2, s22, true},
 	}
 
 	for i, tc := range cases {
@@ -232,7 +244,9 @@ func TestExportImportKeyRing(t *testing.T) {
 	john, err := kb.Key("john")
 	require.NoError(t, err)
 	require.Equal(t, info.GetName(), "john")
-	johnAddr := info.GetPubKey().Address()
+	key, err := info.GetPubKey()
+	require.NoError(t, err)
+	johnAddr := key.Address()
 
 	armor, err := kb.ExportPrivKeyArmor("john", "apassphrase")
 	require.NoError(t, err)
@@ -245,12 +259,26 @@ func TestExportImportKeyRing(t *testing.T) {
 	john2, err := kb.Key("john2")
 	require.NoError(t, err)
 
-	require.Equal(t, john.GetPubKey().Address(), johnAddr)
+	require.Equal(t, key.Address(), johnAddr)
 	require.Equal(t, john.GetName(), "john")
-	require.Equal(t, john.GetAddress(), john2.GetAddress())
+
+	addr, err := john.GetAddress()
+	require.NoError(t, err)
+	addr2, err := john2.GetAddress()
+	require.NoError(t, err)
+	require.Equal(t, addr, addr2)
+
 	require.Equal(t, john.GetAlgo(), john2.GetAlgo())
-	require.Equal(t, john.GetPubKey(), john2.GetPubKey())
-	require.Equal(t, john.GetType(), john2.GetType())
+
+	key, err = john.GetPubKey()
+	require.NoError(t, err)
+	key2, err := john2.GetPubKey()
+	require.NoError(t, err)
+
+	require.Equal(t, key, key2)
+
+	//TODO do we require GetType or pubKeyType is sufficient?
+	//	require.Equal(t, john.GetType(), john2.GetType())
 }
 
 func TestExportImportPubKeyKeyRing(t *testing.T) {
@@ -264,11 +292,16 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")
-	addr := info.GetPubKey().Address()
+	key, err := info.GetPubKey()
+	require.NoError(t, err)
+	addr := key.Address()
 	john, err := kb.Key("john")
 	require.NoError(t, err)
 	require.Equal(t, john.GetName(), "john")
-	require.Equal(t, john.GetPubKey().Address(), addr)
+
+	key, err = john.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, key.Address(), addr)
 
 	// Export the public key only
 	armor, err := kb.ExportPubKeyArmor("john")
@@ -283,9 +316,11 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	// Ensure consistency
 	john2, err := kb.Key("john-pubkey-only")
 	require.NoError(t, err)
+	key2, err := john2.GetPubKey()
+	require.NoError(t, err)
 
 	// Compare the public keys
-	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
+	require.True(t, key.Equals(key2))
 
 	// Ensure keys cannot be overwritten
 	err = kb.ImportPubKey("john-pubkey-only", armor)
@@ -343,6 +378,8 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	require.Nil(t, err, "%+v", err)
 	require.Equal(t, n1, info.GetName())
 	require.NotEmpty(t, mnemonic)
+	key, err := info.GetPubKey()
+	require.NoError(t, err)
 
 	// now, let us delete this key
 	err = kb.Delete(n1)
@@ -356,8 +393,11 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	newInfo, err := kb.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, hd.Secp256k1)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
-	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
-	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+	newKey, err := newInfo.GetPubKey()
+	require.NoError(t, err)
+
+	require.Equal(t, key.Address(), newKey.Address())
+	require.Equal(t, key, newKey)
 }
 
 func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
@@ -393,7 +433,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 func TestInMemoryLanguage(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb := keyring.NewInMemory(encCfg.Marshaler)
-	_, _, err := kb.NewMnemonic("something", Japanese, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	_, _, err := kb.NewMnemonic("something", keyring.Japanese, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.Error(t, err)
 	require.Equal(t, "unsupported language: only keyring.English is supported", err.Error())
 }
@@ -468,7 +508,13 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	// note these are in alphabetical order
 	require.Equal(t, n2, keyS[0].GetName())
 	require.Equal(t, n1, keyS[1].GetName())
-	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
+
+	key1, err := i2.GetPubKey()
+	require.NoError(t, err)
+	key2, err := keyS[0].GetPubKey()
+	require.NoError(t, err)
+
+	require.Equal(t, key1, key2)
 
 	// deleting a key removes it
 	err = cstore.Delete("bad name")
@@ -487,10 +533,18 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	pub1 := priv1.PubKey()
 	i, err = cstore.SavePubKey(o1, pub1, hd.Ed25519Type)
 	require.Nil(t, err)
-	require.Equal(t, pub1, i.GetPubKey())
+	
+	key, err  := i.GetPubKey()
+	require.NoError(t,err)
+	require.Equal(t, pub1, key)
+
 	require.Equal(t, o1, i.GetName())
-	iOffline := i.(*OfflineInfo)
-	require.Equal(t, hd.Ed25519Type, iOffline.GetAlgo())
+	// iOffline := i.(*OfflineInfo)
+	ke, ok :=  i.(*keyring.KeyringEntry)
+	require.True(t, ok)
+	require.NotNil(t, ke)
+	require.NotNil(t, ke.GetOffline())
+	require.Equal(t, hd.Ed25519Type, ke.GetAlgo())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
@@ -531,19 +585,25 @@ func TestInMemorySignVerify(t *testing.T) {
 	// try signing both data with both ..
 	s11, pub1, err := cstore.Sign(n1, d1)
 	require.Nil(t, err)
-	require.Equal(t, i1.GetPubKey(), pub1)
+	key1, err := i1.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, key1, pub1)
 
 	s12, pub1, err := cstore.Sign(n1, d2)
 	require.Nil(t, err)
-	require.Equal(t, i1.GetPubKey(), pub1)
+	require.Equal(t, key1, pub1)
 
 	s21, pub2, err := cstore.Sign(n2, d1)
 	require.Nil(t, err)
-	require.Equal(t, i2.GetPubKey(), pub2)
+	key2, err := i2.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, key2, pub2)
 
 	s22, pub2, err := cstore.Sign(n2, d2)
 	require.Nil(t, err)
-	require.Equal(t, i2.GetPubKey(), pub2)
+	require.Equal(t, key2, pub2)
+
+
 
 	// let's try to validate and make sure it only works when everything is proper
 	cases := []struct {
@@ -553,15 +613,15 @@ func TestInMemorySignVerify(t *testing.T) {
 		valid bool
 	}{
 		// proper matches
-		{i1.GetPubKey(), d1, s11, true},
+		{key1, d1, s11, true},
 		// change data, pubkey, or signature leads to fail
-		{i1.GetPubKey(), d2, s11, false},
-		{i2.GetPubKey(), d1, s11, false},
-		{i1.GetPubKey(), d1, s21, false},
+		{key1, d2, s11, false},
+		{key2, d1, s11, false},
+		{key1, d1, s21, false},
 		// make sure other successes
-		{i1.GetPubKey(), d2, s12, true},
-		{i2.GetPubKey(), d1, s21, true},
-		{i2.GetPubKey(), d2, s22, true},
+		{key1, d2, s12, true},
+		{key2, d1, s21, true},
+		{key2, d2, s22, true},
 	}
 
 	for i, tc := range cases {
@@ -599,7 +659,9 @@ func TestInMemoryExportImport(t *testing.T) {
 	john, err := cstore.Key("john")
 	require.NoError(t, err)
 	require.Equal(t, info.GetName(), "john")
-	johnAddr := info.GetPubKey().Address()
+	johnKey, err:=  info.GetPubKey()
+	require.NoError(t,err)
+	johnAddr := johnKey.Address()
 
 	armor, err := cstore.ExportPubKeyArmor("john")
 	require.NoError(t, err)
@@ -612,11 +674,21 @@ func TestInMemoryExportImport(t *testing.T) {
 	john2, err := cstore.Key("john2")
 	require.NoError(t, err)
 
-	require.Equal(t, john.GetPubKey().Address(), johnAddr)
+	require.Equal(t, johnKey.Address(), johnAddr)
 	require.Equal(t, john.GetName(), "john")
-	require.Equal(t, john.GetAddress(), john2.GetAddress())
+
+	johnSdkAddress, err :=  john.GetAddress()
+	require.NoError(t, err)
+	john2SdkAddress, err :=  john2.GetAddress()
+	require.NoError(t, err)
+	require.Equal(t, johnSdkAddress, john2SdkAddress)
+
 	require.Equal(t, john.GetAlgo(), john2.GetAlgo())
-	require.Equal(t, john.GetPubKey(), john2.GetPubKey())
+
+	john2Key, err :=  john2.GetPubKey()
+	require.NoError(t, err)
+
+	require.Equal(t, johnKey, john2Key)
 }
 
 func TestInMemoryExportImportPrivKey(t *testing.T) {
@@ -643,9 +715,13 @@ func TestInMemoryExportImportPrivKey(t *testing.T) {
 	// ensure old and new keys match
 	priv2, err := kb.Key("john")
 	require.NoError(t, err)
-	require.True(t, priv1.GetPubKey().Equals(priv2.GetPubKey()))
+	key1, err := priv1.GetPubKey()
+	require.NoError(t, err)
+	key2, err := priv2.GetPubKey()
+	require.NoError(t, err)
+	require.True(t, key1.Equals(key2))
 }
-
+// stopped here
 func TestInMemoryExportImportPubKey(t *testing.T) {
 	// make the storage with reasonable defaults
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -656,11 +732,15 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
 	require.Equal(t, info.GetName(), "john")
-	addr := info.GetPubKey().Address()
+	key, err := info.GetPubKey()
+	require.NoError(t, err)
+	addr := key.Address()
 	john, err := cstore.Key("john")
 	require.NoError(t, err)
 	require.Equal(t, john.GetName(), "john")
-	require.Equal(t, john.GetPubKey().Address(), addr)
+	johnKey, err := john.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, johnKey.Address(), addr)
 
 	// Export the public key only
 	armor, err := cstore.ExportPubKeyArmor("john")
@@ -675,7 +755,9 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	john2, err := cstore.Key("john-pubkey-only")
 	require.NoError(t, err)
 	// Compare the public keys
-	require.True(t, john.GetPubKey().Equals(john2.GetPubKey()))
+	john2Key, err := john2.GetPubKey()
+	require.NoError(t, err)
+	require.True(t, johnKey.Equals(john2Key))
 
 	// Ensure keys cannot be overwritten
 	err = cstore.ImportPubKey("john-pubkey-only", armor)
@@ -745,13 +827,17 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	newInfo, err := cstore.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, algo)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
-	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
-	require.Equal(t, info.GetPubKey(), newInfo.GetPubKey())
+	key,err := info.GetPubKey()
+	require.NoError(t, err)
+	newKey,err := newInfo.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, key.Address(), newKey.Address())
+	require.Equal(t, key, newKey)
 }
 
 func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
 	require.NoError(t, err)
 
 	// Given we create a mnemonic
@@ -801,11 +887,15 @@ func ExampleNew() {
 
 	// and we can validate the signature with publicly available info
 	binfo, _ := cstore.Key("Bob")
-	if !binfo.GetPubKey().Equals(bob.GetPubKey()) {
+	key, err := binfo.GetPubKey()
+	require.NoError(t, err)
+	bobKey,err := bob.GetPubKey()
+	require.NoError(t, err)
+	if !key.Equals(bobKey) {
 		fmt.Println("Get and Create return different keys")
 	}
 
-	if pub.Equals(binfo.GetPubKey()) {
+	if pub.Equals(key) {
 		fmt.Println("signed by Bob")
 	}
 	if !pub.VerifySignature(tx, sig) {
@@ -824,7 +914,7 @@ func TestAltKeyring_List(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	keyring, err := keyring.New(t.Name(), BackendTest, dir, encCfg.Marshaler, nil)
+	keyring, err := keyring.New(t.Name(), keyring.BackendTest, dir, encCfg.Marshaler, nil)
 	require.NoError(t, err)
 
 	list, err := keyring.List()
@@ -853,10 +943,10 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Equal(t, uid3, list[1].GetName())
 	require.Equal(t, uid1, list[2].GetName())
 }
-
+//stopped
 func TestAltKeyring_NewAccount(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	keyring, err := keyring.New(t.Name(), BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	keyring, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
 	require.NoError(t, err)
 
 	entropy, err := bip39.NewEntropy(defaultEntropySize)

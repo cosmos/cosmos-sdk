@@ -25,7 +25,7 @@ type Info interface {
 	// Bip44 Path
 	GetPath() (*BIP44Params, error)
 	// Algo  
-	GetAlgo() PubKeyType
+	GetAlgo() string
 }
 
 func NewKeyringEntry(name string, pubKey *codectypes.Any, item isKeyringEntry_Item) *KeyringEntry {
@@ -63,21 +63,23 @@ func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
 		return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 	}
 }
-// TODO
-func (ke KeyringEntry) GetAlgo() PubKeyType {
-	m := ke.GetMulti()
 
-	select {
-	case m != nil:
-		// pubkeytype does not existy in MultiItem
-		return -1
-	default:
-		// Local Ledger, offline, 
-		// pubkeytype exist 
-		select {
-			// TODO
-		}
+func (ke KeyringEntry) GetAlgo() string {
+
+	if l := ke.GetLedger(); l != nil {
+		return l.PubKeyType
 	}
+
+	if o := ke.GetOffline(); o != nil {
+		return o.PubKeyType
+	}
+
+	if l := ke.GetLocal(); l != nil {
+		return l.PubKeyType
+	}
+
+	// there is no field pubKeyType for multi 
+	return ""
 }
 
 

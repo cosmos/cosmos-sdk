@@ -1,0 +1,21 @@
+syntax = "proto3";
+package cosmos.authn.v1;
+
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authn";
+
+message Params {
+    uint64 max_memo_characters     = 1;
+    uint64 tx_sig_limit            = 2;
+    uint64 tx_size_cost_per_byte   = 3;
+    uint64 sig_verify_cost_ed25519 = 4;
+    uint64 sig_verify_cost_secp256k1 = 5;
+}
+
+message Account {
+    string address = 1;
+    google.protobuf.Any credential = 2;
+    uint64 account_number = 3;
+    uint64 sequence       = 4;
+}

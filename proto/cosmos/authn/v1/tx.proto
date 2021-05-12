@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.authn.v1;
+
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authn";
+
+service Msg {
+    rpc SetCredential (MsgSetCredentialRequest) returns (MsgSetCredentialResponse) {}
+}
+
+message MsgSetCredentialRequest {
+    string address = 1;
+    google.protobuf.Any credential = 2;
+}
+
+message MsgSetCredentialResponse {}

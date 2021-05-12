@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -85,7 +86,7 @@ hexadecimal into bech32 cosmos prefixed format and vice versa.
 }
 
 func parseKey(cmd *cobra.Command, args []string) error {
-	config := sdk.GetConfig()
+	config, _ := sdk.GetSealedConfig(context.Background())
 	return doParseKey(cmd, config, args)
 }
 

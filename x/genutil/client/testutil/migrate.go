@@ -28,12 +28,6 @@ func (s *IntegrationTestSuite) TestMigrateGenesis() {
 		check     func(jsonOut string)
 	}{
 		{
-			"migrate 0.34 to 0.36",
-			`{"chain_id":"test","app_state":{}}`,
-			"v0.36",
-			false, "", func(_ string) {},
-		},
-		{
 			"migrate 0.37 to 0.42",
 			v037Exported,
 			"v0.42",

@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -52,31 +51,21 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 // ModuleVersions implements the Query/QueryModuleVersions gRPC method
 func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersionsRequest) (*types.QueryModuleVersionsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	// get version map from x/upgrade store
-	vm := k.GetModuleVersionMap(ctx)
-
-	// make response slice
-	res := make([]*types.ModuleVersion, 0)
 
 	// check if a specific module was requested
 	if len(req.ModuleName) > 0 {
-		// check if the requested module exists
-		if version, found := vm[req.ModuleName]; found {
-			// add the requested module
-			res = append(res, &types.ModuleVersion{Name: req.ModuleName, Version: version})
+		if version, ok := k.getModuleVersion(ctx, req.ModuleName); ok {
+			// return the requested module
+			res := []*types.ModuleVersion{{Name: req.ModuleName, Version: version}}
+			return &types.QueryModuleVersionsResponse{ModuleVersions: res}, nil
 		} else { // module was requested, but not found
-			return &types.QueryModuleVersionsResponse{}, errors.Wrapf(errors.ErrNotFound, "x/upgrade: QueryModuleVersions")
-		}
-	} else {
-		// if no module requested, add entire vm to slice
-		for m, v := range vm {
-			res = append(res, &types.ModuleVersion{Name: m, Version: v})
+			return nil, errors.Wrapf(errors.ErrNotFound, "x/upgrade: QueryModuleVersions module %s not found", req.ModuleName)
 		}
 	}
 
-	res = xp.Sort(res)
-
+	// if no module requested return all module versions from state
+	mv := k.GetModuleVersions(ctx)
 	return &types.QueryModuleVersionsResponse{
-		ModuleVersions: res,
+		ModuleVersions: mv,
 	}, nil
 }

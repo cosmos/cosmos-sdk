@@ -8,9 +8,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
-	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -76,41 +74,32 @@ func (s *IntegrationTestSuite) TestModuleVersionsCLI() {
 	clientCtx.OutputFormat = "JSON"
 
 	vm := s.app.UpgradeKeeper.GetModuleVersionMap(s.ctx)
+	mv := s.app.UpgradeKeeper.GetModuleVersions(s.ctx)
 	s.Require().NotEmpty(vm)
 
 	for _, tc := range testCases {
 		s.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 
+			expect := mv
 			if tc.expPass {
-				// setup the expected map
-				var reqVM module.VersionMap
 				if tc.single {
-					reqVM = make(module.VersionMap)
-					reqVM[tc.req.ModuleName] = vm[tc.req.ModuleName]
-				} else {
-					reqVM = vm
+					expect = []*types.ModuleVersion{{Name: tc.req.ModuleName, Version: vm[tc.req.ModuleName]}}
 				}
-
 				// setup expected response
-				req := make([]*types.ModuleVersion, 0)
-				for m, v := range reqVM {
-					req = append(req, &types.ModuleVersion{Name: m, Version: v})
-				}
-				req = xp.Sort(req)
 				pm := types.QueryModuleVersionsResponse{
-					ModuleVersions: req,
+					ModuleVersions: expect,
 				}
 				jsonVM, _ := clientCtx.JSONCodec.MarshalJSON(&pm)
-				expectedVM := string(jsonVM)
+				expectedRes := string(jsonVM)
 				// append new line to match behaviour of PrintProto
-				expectedVM += "\n"
+				expectedRes += "\n"
 
 				// get actual module versions list response from cli
 				cmd := cli.GetModuleVersionsCmd()
 				outVM, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{tc.req.ModuleName})
 				s.Require().NoError(err)
 
-				s.Require().Equal(expectedVM, outVM.String())
+				s.Require().Equal(expectedRes, outVM.String())
 			} else {
 				cmd := cli.GetModuleVersionsCmd()
 				_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{tc.req.ModuleName})

@@ -168,7 +168,8 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 		},
 	}
 
-	actualVM := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
+	vm := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
+	mv := suite.app.UpgradeKeeper.GetModuleVersions(suite.ctx)
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
@@ -184,14 +185,15 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 					// test that the single module response is valid
 					suite.Require().Len(res.ModuleVersions, 1)
 					// make sure we got the right values
-					suite.Require().Equal(actualVM[tc.req.ModuleName], res.ModuleVersions[0].Version)
+					suite.Require().Equal(vm[tc.req.ModuleName], res.ModuleVersions[0].Version)
 					suite.Require().Equal(tc.req.ModuleName, res.ModuleVersions[0].Name)
 				} else {
 					// check that the full response is valid
 					suite.Require().NotEmpty(res.ModuleVersions)
-					suite.Require().Equal(len(res.ModuleVersions), len(actualVM))
-					for _, v := range res.ModuleVersions {
-						suite.Require().Equal(v.Version, actualVM[v.Name])
+					suite.Require().Equal(len(mv), len(res.ModuleVersions))
+					for i, v := range res.ModuleVersions {
+						suite.Require().Equal(mv[i].Version, v.Version)
+						suite.Require().Equal(mv[i].Name, v.Name)
 					}
 				}
 			} else {

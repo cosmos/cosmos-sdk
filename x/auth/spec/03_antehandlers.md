@@ -9,7 +9,7 @@ the special `AnteHandler`, used for performing basic validity checks on a transa
 such that it could be thrown out of the mempool.
 The `AnteHandler` can be seen as a set of decorators that check transactions within the current context, per [ADR 010](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/docs/architecture/adr-010-modular-antehandler.md).
 
-Note that the ante handler is called on
+Note that the `AnteHandler` is called on
 `CheckTx`, but _also_ on `DeliverTx`, as Tendermint proposers presently have the ability
 to include in their proposed block transactions which fail `CheckTx`.
 

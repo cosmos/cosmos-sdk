@@ -17,7 +17,7 @@ to include in their proposed block transactions which fail `CheckTx`.
 
 The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
-- `SetUpContextDecorator`: sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
+- `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
 
 - `RejectExtensionOptionsDecorator`: rejects all extension options which can optionally be included in protobuf transactions.
 
@@ -42,5 +42,4 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 - `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
 - `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
-
 

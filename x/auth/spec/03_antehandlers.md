@@ -29,7 +29,7 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 - `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it will deduct fees from the fee granter account.
 
-- `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
+- `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
 
 - `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
 

@@ -2,20 +2,27 @@ syntax = "proto3";
 package cosmos.authn.v1;
 
 import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
 import "cosmos/authn/v1/authn.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/authn";
 
 service Query {
-    rpc Config (QueryConfigRequest) returns (QueryConfigResponse) {}
+    // Account returns account details based on address.
+    rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
+        option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
+    }
 
-    rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {}
-}
+    // Accounts returns all the existing accounts
+    rpc Accounts(QueryAccountsRequest) returns (QueryAccountsResponse) {
+        option (google.api.http).get = "/cosmos/auth/v1beta1/accounts";
+    }
 
-message QueryConfigRequest {}
-
-message QueryConfigResponse {
-    string bech32_address_prefix = 1;
+    // Params queries all parameters.
+    rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+        option (google.api.http).get = "/cosmos/auth/v1beta1/params";
+    }
 }
 
 message QueryAccountRequest {
@@ -24,4 +31,26 @@ message QueryAccountRequest {
 
 message QueryAccountResponse {
     Account account = 1;
+}
+message QueryAccountsRequest {
+    // pagination defines an optional pagination for the request.
+    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+message QueryAccountsResponse {
+    // accounts are the existing accounts
+    repeated Account accounts = 1;
+
+    // pagination defines the pagination in the response.
+    cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+    // params defines the parameters of the module.
+    Params params = 1;
 }

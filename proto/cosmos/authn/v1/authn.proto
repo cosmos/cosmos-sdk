@@ -11,6 +11,7 @@ message Params {
     uint64 tx_size_cost_per_byte   = 3;
     uint64 sig_verify_cost_ed25519 = 4;
     uint64 sig_verify_cost_secp256k1 = 5;
+    string bech32_address_prefix = 6;
 }
 
 message Account {

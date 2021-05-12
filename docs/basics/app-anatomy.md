@@ -140,23 +140,23 @@ Modules must implement [interfaces](../building-modules/module-manager.md#applic
 ### `Msg` Services
 
 Each module defines two [Protobuf services](https://developers.google.com/protocol-buffers/docs/proto#services): one `Msg` service to handle messages, and one gRPC `Query` service to handle queries. If we consider the module as a state-machine, then a `Msg` service is a set of state transition RPC methods.
-Each Protobuf `Msg` service RPC is 1:1 related to a Protobuf request type, which must implement `sdk.Msg` interface.
+Each Protobuf `Msg` service method is 1:1 related to a Protobuf request type, which must implement `sdk.Msg` interface.
 Note that `sdk.Msg`s are bundled in [transactions](../core/transactions.md), and each transaction contains one or multiple messages.
 
 When a valid block of transactions is received by the full-node, Tendermint relays each one to the application via [`DeliverTx`](https://tendermint.com/docs/app-dev/abci-spec.html#delivertx). Then, the application handles the transaction:
 
 1. Upon receiving the transaction, the application first unmarshalls it from `[]bytes`.
 2. Then, it verifies a few things about the transaction like [fee payment and signatures](#gas-fees.md#antehandler) before extracting the `Msg`(s) contained in the transaction.
-3. `Msg`s are encoded as Protobuf [`Any`s](#register-codec) via the `sdk.ServiceMsg` struct. By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `Msg` to the corresponding module's `Msg` service.
+3. `sdk.Msg`s are encoded using Protobuf [`Any`s](#register-codec). By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `sdk.Msg` to the corresponding module's `Msg` service.
 4. If the message is successfully processed, the state is updated.
 
-For a more detailed look at a transaction lifecycle, click [here](./tx-lifecycle.md).
+For a more details look at a transaction [lifecycle](./tx-lifecycle.md).
 
-Module developers create custom `Msg`s when they build their own module. The general practice is to define all `Msg`s in a Protobuf service called `service Msg {}`, and define each `Msg` as a Protobuf service method, using the `rpc` keyword. These definitions usually reside in a `tx.proto` file. For example, the `x/bank` module defines two `Msg`s to allows users to transfer tokens:
+Module developers create custom `Msg` services when they build their own module. The general practice is to define the `Msg` Protobuf service in a `tx.proto` file. For example, the `x/bank` module defines a service with two methods to transfer tokens:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/proto/cosmos/bank/v1beta1/tx.proto#L10-L17
 
-These two `Msg`s are processed by the `Msg` service of the `x/bank` module, which ultimately calls the `keeper` of the `x/auth` module in order to update the state.
+Service methods use `keeper` in order to update the module state.
 
 Each module should also implement the `RegisterServices` method as part of the [`AppModule` interface](#application-module-interface). This method should call the `RegisterMsgServer` function provided by the generated Protobuf code.
 

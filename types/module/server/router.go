@@ -64,15 +64,7 @@ func (r registrar) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	}
 }
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 func (rtr *router) invoker(methodName string, writeCondition func(context.Context, string, types.MsgRequest) error) (types.Invoker, error) {
-=======
-func (rtr *router) invoker(methodName string, writeCondition func(context.Context, string, types.Msg) error) (types.Invoker, error) {
->>>>>>> Stashed changes
-=======
-func (rtr *router) invoker(methodName string, writeCondition func(context.Context, string, types.Msg) error) (types.Invoker, error) {
->>>>>>> Stashed changes
 	handler, found := rtr.handlers[methodName]
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("cannot find method named %s", methodName))
@@ -90,21 +82,9 @@ func (rtr *router) invoker(methodName string, writeCondition func(context.Contex
 			rtr.antiReentryMap[moduleName] = true
 			defer delete(rtr.antiReentryMap, moduleName)
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 			msgReq, ok := request.(types.MsgRequest)
 			if !ok {
 				return fmt.Errorf("expected %T, got %T", (*types.MsgRequest)(nil), request)
-=======
-			msgReq, ok := request.(types.Msg)
-			if !ok {
-				return fmt.Errorf("expected %T, got %T", (*types.Msg)(nil), request)
->>>>>>> Stashed changes
-=======
-			msgReq, ok := request.(types.Msg)
-			if !ok {
-				return fmt.Errorf("expected %T, got %T", (*types.Msg)(nil), request)
->>>>>>> Stashed changes
 			}
 
 			err := msgReq.ValidateBasic()
@@ -162,15 +142,7 @@ func (rtr *router) invokerFactory(moduleName string) InvokerFactory {
 
 		moduleAddr := moduleID.Address()
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 		writeCondition := func(ctx context.Context, methodName string, msgReq types.MsgRequest) error {
-=======
-		writeCondition := func(ctx context.Context, methodName string, msgReq types.Msg) error {
->>>>>>> Stashed changes
-=======
-		writeCondition := func(ctx context.Context, methodName string, msgReq types.Msg) error {
->>>>>>> Stashed changes
 			signers := msgReq.GetSigners()
 			if len(signers) != 1 {
 				return fmt.Errorf("inter module Msg invocation requires a single expected signer (%s), but %s expects multiple signers (%+v),  ", moduleAddr, methodName, signers)
@@ -201,15 +173,7 @@ func (rtr *router) testTxFactory(signers []types.AccAddress) InvokerFactory {
 	}
 
 	return func(callInfo CallInfo) (types.Invoker, error) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 		return rtr.invoker(callInfo.Method, func(_ context.Context, _ string, req types.MsgRequest) error {
-=======
-		return rtr.invoker(callInfo.Method, func(_ context.Context, _ string, req types.Msg) error {
->>>>>>> Stashed changes
-=======
-		return rtr.invoker(callInfo.Method, func(_ context.Context, _ string, req types.Msg) error {
->>>>>>> Stashed changes
 			for _, signer := range req.GetSigners() {
 				if _, found := signerMap[signer.String()]; !found {
 					return sdkerrors.ErrUnauthorized

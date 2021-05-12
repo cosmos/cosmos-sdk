@@ -44,7 +44,7 @@ func (s *DepositTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *DepositTestSuite) TestQueryWithInitialDeposit() {
+func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -82,7 +82,7 @@ func (s *DepositTestSuite) TestQueryWithInitialDeposit() {
 	s.Require().Equal(depositRes[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String())
 }
 
-func (s *DepositTestSuite) TestQueryWithoutInitialDeposit() {
+func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -110,14 +110,13 @@ func (s *DepositTestSuite) TestQueryWithoutInitialDeposit() {
 	// waiting for proposal to expires
 	time.Sleep(30 * time.Second)
 
-	args := []string{"2", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	var depositRes types.Deposits
-	cmd = cli.GetCmdQueryDeposits()
+	var depositRes types.Deposit
+	args := []string{"2", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	cmd = cli.GetCmdQueryDeposit()
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositRes))
-	s.Require().GreaterOrEqual(len(depositRes), 1)
-	s.Require().Equal(depositRes[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String())
+	s.Require().Equal(depositRes.Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String())
 }
 
 func TestDepositTestSuite(t *testing.T) {

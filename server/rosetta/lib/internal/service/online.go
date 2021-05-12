@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
+
 	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 )
@@ -59,7 +59,7 @@ func networkOptionsFromClient(client crgtypes.Client) *types.NetworkOptionsRespo
 		Allow: &types.Allow{
 			OperationStatuses:       client.OperationStatuses(),
 			OperationTypes:          client.SupportedOperations(),
-			Errors:                  errors.SealAndListErrors(),
+			Errors:                  crgerrs.SealAndListErrors(),
 			HistoricalBalanceLookup: true,
 		},
 	}

@@ -5,7 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/ibc/light-clients/07-tenderm
 
 import "tendermint/types/validator.proto";
 import "tendermint/types/types.proto";
-import "confio/proofs.proto";
+import "proofs.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "ibc/core/client/v1/client.proto";

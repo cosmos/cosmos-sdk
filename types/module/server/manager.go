@@ -12,7 +12,6 @@ import (
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -140,7 +139,7 @@ func (mm *Manager) RegisterModules(modules []module.Module) error {
 
 // AuthorizationMiddleware is a function that allows for more complex authorization than the default authorization scheme,
 // such as delegated permissions. It will be called only if the default authorization fails.
-type AuthorizationMiddleware func(ctx sdk.Context, methodName string, req sdk.MsgRequest, signer sdk.AccAddress) bool
+type AuthorizationMiddleware func(ctx sdk.Context, methodName string, req sdk.Msg, signer sdk.AccAddress) bool
 
 // SetAuthorizationMiddleware sets AuthorizationMiddleware for the Manager.
 func (mm *Manager) SetAuthorizationMiddleware(authzFunc AuthorizationMiddleware) {
@@ -170,14 +169,14 @@ func (mm *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawM
 	return res
 }
 
-func initGenesis(ctx sdk.Context, cdc codec.JSONMarshaler,
+func initGenesis(ctx sdk.Context, cdc codec.JSONCodec,
 	genesisData map[string]json.RawMessage, validatorUpdates []abci.ValidatorUpdate,
 	initGenesisHandlers map[string]module.InitGenesisHandler) (abci.ResponseInitChain, error) {
 	for name, initGenesisHandler := range initGenesisHandlers {
 		if genesisData[name] == nil || initGenesisHandler == nil {
 			continue
 		}
-		moduleValUpdates, err := initGenesisHandler(types.Context{Context: ctx}, cdc, genesisData[name])
+		moduleValUpdates, err := initGenesisHandler(ctx, cdc, genesisData[name])
 		if err != nil {
 			return abci.ResponseInitChain{}, err
 		}
@@ -207,14 +206,14 @@ func (mm *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	return genesisData
 }
 
-func exportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, exportGenesisHandlers map[string]module.ExportGenesisHandler) (map[string]json.RawMessage, error) {
+func exportGenesis(ctx sdk.Context, cdc codec.JSONCodec, exportGenesisHandlers map[string]module.ExportGenesisHandler) (map[string]json.RawMessage, error) {
 	var err error
 	genesisData := make(map[string]json.RawMessage)
 	for name, exportGenesisHandler := range exportGenesisHandlers {
 		if exportGenesisHandler == nil {
 			continue
 		}
-		genesisData[name], err = exportGenesisHandler(types.Context{Context: ctx}, cdc)
+		genesisData[name], err = exportGenesisHandler(ctx, cdc)
 		if err != nil {
 			return genesisData, err
 		}
@@ -229,7 +228,7 @@ type configurator struct {
 	msgServer                 gogogrpc.Server
 	queryServer               gogogrpc.Server
 	key                       *rootModuleKey
-	cdc                       codec.Marshaler
+	cdc                       codec.Codec
 	requiredServices          map[reflect.Type]bool
 	router                    sdk.Router
 	initGenesisHandler        module.InitGenesisHandler
@@ -238,6 +237,12 @@ type configurator struct {
 }
 
 var _ Configurator = &configurator{}
+
+// TODO - what to do here???
+
+func (c *configurator) RegisterMigration(moduleName string, forVersion uint64, handler module.MigrationHandler) error {
+	return nil
+}
 
 func (c *configurator) MsgServer() gogogrpc.Server {
 	return c.msgServer
@@ -260,7 +265,7 @@ func (c *configurator) ModuleKey() RootModuleKey {
 	return c.key
 }
 
-func (c *configurator) Marshaler() codec.Marshaler {
+func (c *configurator) Marshaler() codec.Codec {
 	return c.cdc
 }
 

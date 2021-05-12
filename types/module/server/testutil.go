@@ -4,27 +4,26 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	mod "github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/testutil"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	"testing"
 )
 
 type FixtureFactory struct {
 	t       *testing.T
-	modules []Module
+	modules []mod.Module
 	signers []sdk.AccAddress
 	cdc     *codec.ProtoCodec
 	baseApp *baseapp.BaseApp
@@ -42,7 +41,7 @@ func NewFixtureFactory(t *testing.T, numSigners int) *FixtureFactory {
 	}
 }
 
-func (ff *FixtureFactory) SetModules(modules []Module) {
+func (ff *FixtureFactory) SetModules(modules []mod.Module) {
 	ff.modules = modules
 }
 
@@ -102,7 +101,8 @@ type fixture struct {
 }
 
 func (f fixture) Context() context.Context {
-	return sdk.Context{Context: f.baseApp.NewUncachedContext(false, tmproto.Header{})}
+	ctx := f.baseApp.NewUncachedContext(false, tmproto.Header{})
+	return ctx
 }
 
 func (f fixture) TxConn() grpc.ClientConnInterface {

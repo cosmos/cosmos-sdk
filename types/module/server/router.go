@@ -64,7 +64,7 @@ func (r registrar) RegisterService(sd *grpc.ServiceDesc, ss interface{}) {
 	}
 }
 
-func (rtr *router) invoker(methodName string, writeCondition func(context.Context, string, types.MsgRequest) error) (types.Invoker, error) {
+func (rtr *router) invoker(methodName string, writeCondition func(context.Context, string, types.Msg) error) (types.Invoker, error) {
 	handler, found := rtr.handlers[methodName]
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("cannot find method named %s", methodName))
@@ -82,9 +82,9 @@ func (rtr *router) invoker(methodName string, writeCondition func(context.Contex
 			rtr.antiReentryMap[moduleName] = true
 			defer delete(rtr.antiReentryMap, moduleName)
 
-			msgReq, ok := request.(types.MsgRequest)
+			msgReq, ok := request.(types.Msg)
 			if !ok {
-				return fmt.Errorf("expected %T, got %T", (*types.MsgRequest)(nil), request)
+				return fmt.Errorf("expected %T, got %T", (*types.Msg)(nil), request)
 			}
 
 			err := msgReq.ValidateBasic()
@@ -142,7 +142,7 @@ func (rtr *router) invokerFactory(moduleName string) InvokerFactory {
 
 		moduleAddr := moduleID.Address()
 
-		writeCondition := func(ctx context.Context, methodName string, msgReq types.MsgRequest) error {
+		writeCondition := func(ctx context.Context, methodName string, msgReq types.Msg) error {
 			signers := msgReq.GetSigners()
 			if len(signers) != 1 {
 				return fmt.Errorf("inter module Msg invocation requires a single expected signer (%s), but %s expects multiple signers (%+v),  ", moduleAddr, methodName, signers)
@@ -173,7 +173,7 @@ func (rtr *router) testTxFactory(signers []types.AccAddress) InvokerFactory {
 	}
 
 	return func(callInfo CallInfo) (types.Invoker, error) {
-		return rtr.invoker(callInfo.Method, func(_ context.Context, _ string, req types.MsgRequest) error {
+		return rtr.invoker(callInfo.Method, func(_ context.Context, _ string, req types.Msg) error {
 			for _, signer := range req.GetSigners() {
 				if _, found := signerMap[signer.String()]; !found {
 					return sdkerrors.ErrUnauthorized

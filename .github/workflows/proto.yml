@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@master
-      - uses: technote-space/get-diff-action@v4
+      - uses: technote-space/get-diff-action@v4.1.1
         with:
           PATTERNS: |
             **/**.proto
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - uses: technote-space/get-diff-action@v4
+      - uses: technote-space/get-diff-action@v4.1.1
         with:
           PATTERNS: |
             **/**.proto

@@ -74,7 +74,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
+<<<<<<< HEAD
 	authclient.Codec = encodingConfig.Marshaler
+=======
+	cfg := sdk.GetConfig()
+	cfg.Seal()
+>>>>>>> d7dd1d7af (Fixed parse key issue (#9299))
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),

@@ -25,8 +25,8 @@ proto
 - `{module_name}.proto`: The module's common message type definitions.
 - `event.proto`: The module's message type definitions related to events.
 - `genesis.proto`: The module's message type definitions related to genesis state.
-- `query.proto`: The module's service and message type definitions related to the query service.
-- `tx.proto`: The module's service and message type definitions related to the message service.
+- `query.proto`: The module's Query service and related message type definitions.
+- `tx.proto`: The module's Msg service and related message type definitions.
 
 ```shell
 x/{module_name}

@@ -9,11 +9,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+=======
+	"github.com/cosmos/cosmos-sdk/types/module"
+	gogogrpc "github.com/gogo/protobuf/grpc"
+	abci "github.com/tendermint/tendermint/abci/types"
+>>>>>>> Stashed changes
+=======
+	"github.com/cosmos/cosmos-sdk/types/module"
+	gogogrpc "github.com/gogo/protobuf/grpc"
+	abci "github.com/tendermint/tendermint/abci/types"
+>>>>>>> Stashed changes
 )
 
 // Manager is the server module manager
@@ -110,7 +122,15 @@ func (mm *Manager) RegisterModules(modules []module.Module) error {
 			msgServer:        msgRegistrar,
 			queryServer:      queryRegistrar,
 			key:              key,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 			cdc:              mm.cdc,
+=======
+			cdc:              *mm.cdc,
+>>>>>>> Stashed changes
+=======
+			cdc:              *mm.cdc,
+>>>>>>> Stashed changes
 			requiredServices: map[reflect.Type]bool{},
 			router:           mm.baseApp.Router(), // TODO: remove once #225 addressed
 		}
@@ -140,7 +160,15 @@ func (mm *Manager) RegisterModules(modules []module.Module) error {
 
 // AuthorizationMiddleware is a function that allows for more complex authorization than the default authorization scheme,
 // such as delegated permissions. It will be called only if the default authorization fails.
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 type AuthorizationMiddleware func(ctx sdk.Context, methodName string, req sdk.MsgRequest, signer sdk.AccAddress) bool
+=======
+type AuthorizationMiddleware func(ctx sdk.Context, methodName string, req sdk.Msg, signer sdk.AccAddress) bool
+>>>>>>> Stashed changes
+=======
+type AuthorizationMiddleware func(ctx sdk.Context, methodName string, req sdk.Msg, signer sdk.AccAddress) bool
+>>>>>>> Stashed changes
 
 // SetAuthorizationMiddleware sets AuthorizationMiddleware for the Manager.
 func (mm *Manager) SetAuthorizationMiddleware(authzFunc AuthorizationMiddleware) {
@@ -170,14 +198,30 @@ func (mm *Manager) InitGenesis(ctx sdk.Context, genesisData map[string]json.RawM
 	return res
 }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 func initGenesis(ctx sdk.Context, cdc codec.JSONMarshaler,
+=======
+func initGenesis(ctx sdk.Context, cdc codec.JSONCodec,
+>>>>>>> Stashed changes
+=======
+func initGenesis(ctx sdk.Context, cdc codec.JSONCodec,
+>>>>>>> Stashed changes
 	genesisData map[string]json.RawMessage, validatorUpdates []abci.ValidatorUpdate,
 	initGenesisHandlers map[string]module.InitGenesisHandler) (abci.ResponseInitChain, error) {
 	for name, initGenesisHandler := range initGenesisHandlers {
 		if genesisData[name] == nil || initGenesisHandler == nil {
 			continue
 		}
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 		moduleValUpdates, err := initGenesisHandler(types.Context{Context: ctx}, cdc, genesisData[name])
+=======
+		moduleValUpdates, err := initGenesisHandler(ctx, cdc, genesisData[name])
+>>>>>>> Stashed changes
+=======
+		moduleValUpdates, err := initGenesisHandler(ctx, cdc, genesisData[name])
+>>>>>>> Stashed changes
 		if err != nil {
 			return abci.ResponseInitChain{}, err
 		}
@@ -207,14 +251,30 @@ func (mm *Manager) ExportGenesis(ctx sdk.Context) map[string]json.RawMessage {
 	return genesisData
 }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 func exportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, exportGenesisHandlers map[string]module.ExportGenesisHandler) (map[string]json.RawMessage, error) {
+=======
+func exportGenesis(ctx sdk.Context, cdc codec.JSONCodec, exportGenesisHandlers map[string]module.ExportGenesisHandler) (map[string]json.RawMessage, error) {
+>>>>>>> Stashed changes
+=======
+func exportGenesis(ctx sdk.Context, cdc codec.JSONCodec, exportGenesisHandlers map[string]module.ExportGenesisHandler) (map[string]json.RawMessage, error) {
+>>>>>>> Stashed changes
 	var err error
 	genesisData := make(map[string]json.RawMessage)
 	for name, exportGenesisHandler := range exportGenesisHandlers {
 		if exportGenesisHandler == nil {
 			continue
 		}
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 		genesisData[name], err = exportGenesisHandler(types.Context{Context: ctx}, cdc)
+=======
+		genesisData[name], err = exportGenesisHandler(ctx, cdc)
+>>>>>>> Stashed changes
+=======
+		genesisData[name], err = exportGenesisHandler(ctx, cdc)
+>>>>>>> Stashed changes
 		if err != nil {
 			return genesisData, err
 		}
@@ -229,7 +289,15 @@ type configurator struct {
 	msgServer                 gogogrpc.Server
 	queryServer               gogogrpc.Server
 	key                       *rootModuleKey
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	cdc                       codec.Marshaler
+=======
+	cdc                       codec.ProtoMarshaler
+>>>>>>> Stashed changes
+=======
+	cdc                       codec.ProtoMarshaler
+>>>>>>> Stashed changes
 	requiredServices          map[reflect.Type]bool
 	router                    sdk.Router
 	initGenesisHandler        module.InitGenesisHandler
@@ -260,7 +328,15 @@ func (c *configurator) ModuleKey() RootModuleKey {
 	return c.key
 }
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 func (c *configurator) Marshaler() codec.Marshaler {
+=======
+func (c *configurator) Marshaler() codec.ProtoMarshaler {
+>>>>>>> Stashed changes
+=======
+func (c *configurator) Marshaler() codec.ProtoMarshaler {
+>>>>>>> Stashed changes
 	return c.cdc
 }
 
@@ -272,4 +348,18 @@ func (c *configurator) Router() sdk.Router {
 
 func (c *configurator) RequireServer(serverInterface interface{}) {
 	c.requiredServices[reflect.TypeOf(serverInterface)] = true
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 }
+=======
+=======
+>>>>>>> Stashed changes
+}
+
+func (c *configurator) RegisterMigration(moduleName string, forVersion uint64, handler module.MigrationHandler) error {
+	return nil
+}
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes

@@ -17,7 +17,15 @@ type Configurator interface {
 	module.Configurator
 
 	ModuleKey() RootModuleKey
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 	Marshaler() codec.Marshaler
+=======
+	Marshaler() codec.ProtoMarshaler
+>>>>>>> Stashed changes
+=======
+	Marshaler() codec.ProtoMarshaler
+>>>>>>> Stashed changes
 	RequireServer(interface{})
 	RegisterInvariantsHandler(registry RegisterInvariantsHandler)
 	RegisterGenesisHandlers(module.InitGenesisHandler, module.ExportGenesisHandler)
@@ -32,4 +40,12 @@ type Configurator interface {
 // This is currently used for the group module as part of #218.
 type LegacyRouteModule interface {
 	Route(Configurator) sdk.Route
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes
+=======
+}
+>>>>>>> Stashed changes

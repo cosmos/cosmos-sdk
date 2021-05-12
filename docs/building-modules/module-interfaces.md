@@ -6,42 +6,46 @@ order: 11
 
 This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules are included. {synopsis}
 
-## Pre-requisite Readings
+## Pre-Requisite Readings
 
 - [Building Modules Intro](./intro.md) {prereq}
 
 ## CLI
 
-One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint adds commands from the application's modules to let end-users create [**messages**](./messages-and-queries.md#messages) and [**queries**](./messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
+One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint adds commands from the application's modules enabling end-users to create [**messages**](./messages-and-queries.md#messages) (wrapped in transactions) and [**queries**](./messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
 
 ### Transaction Commands
 
-[Transactions](../core/transactions.md) are created by users to wrap messages that trigger state changes when they get included in a valid block. Transaction commands typically have their own `tx.go` file in the module's `./client/cli` folder. The commands are specified in getter functions and include the name of the command.
+ In order to create messages that trigger state changes, end-users must create [transactions](../core/transactions.md) that wrap and deliver the messages. A transaction command creates a transaction that includes one or more messages.
+ 
+ Transaction commands typically have their own `tx.go` file that lives within the module's `./client/cli` folder. The commands are specified in getter functions and typically the name of the function includes the name of the command.
 
-Here is an example from the `auth` module:
+Here is an example from the `x/bank` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/client/cli/tx_sign.go#L160-L194
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/bank/client/cli/tx.go#L28-L63
 
-This getter function creates the command for the `Sign` transaction. It does the following:
+In the example above, `NewSendTxCmd` creates and returns the transaction command for a transaction that wraps and delivers `MsgSend`. `MsgSend` is the message used to send tokens from one account to another.
 
-- **Construct the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for details on how to create commands.
-  - **Use:** Specifies the format of a command-line entry users should type in order to invoke this command. In this case, the user uses `buy-name` as the name of the transaction command and provides the `name` the user wishes to buy and the `amount` the user is willing to pay.
-  - **Args:** The number of arguments the user provides, in this case exactly two: `name` and `amount`.
-  - **Short and Long:** A description for the function is provided here. A `Short` description is expected, and `Long` can be used to provide a more detailed description when a user uses the `--help` flag to ask for more information.
-  - **RunE:** Defines a function that can return an error, called when the command is executed. Using `Run` would do the same thing, but would not allow for errors to be returned.
-- **`RunE` Function Body:** The function should be specified as a `RunE` to allow for errors to be returned. This function encapsulates all of the logic to create a new transaction that is ready to be relayed to nodes.
-  - The function should first get the `clientCtx` with `client.GetClientContextFromCmd(cmd)` and `client.ReadTxCommandFlags(clientCtx, cmd.Flags())`. This context contains all the information provided by the user and will be used to transfer this user-specific information between processes. To learn more about how contexts are used in a transaction, click [here](../core/transactions.md#transaction-generation).
-  - If applicable, the command's arguments are parsed.
-  - If applicable, the `Context` is used to retrieve any parameters such as the transaction originator's address to be used in the transaction. Here, the `from` address is retrieved by calling `clientCtx.GetFromAddress()`.
-  - A [message](./messages-and-queries.md) is created using all parameters parsed from the command arguments and `Context`. The constructor function of the specific message type is called directly. It is good practice to call `ValidateBasic()` on the newly created message to run a sanity check and check for invalid arguments.
-  - Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastMsgs()`.
-- **Flags.** Add any [flags](#flags) to the command. All transaction commands have flags to provide additional information from the user (e.g. amount of fees they are willing to pay). These _persistent_ [transaction flags](../interfaces/cli.md#flags) can be added to a higher-level command so that they apply to all transaction commands.
+In general, the getter function does the following:
 
-Finally, the module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Often, each command getter function has its own file in the module's `cli` folder, and a separate `tx.go` file contains `GetTxCmd()`. Application developers wishing to include the module's transactions will call this function to add them as subcommands in their CLI. Here is the `auth` `GetTxCmd()` function, which adds the `Sign`, `MultiSign`, `ValidateSignatures` and `SignBatch` commands.
+- **Constructs the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for more details on how to create commands.
+  - **Use:** Specifies the format of the user input required to invoke the command. In the example above, `send` is the name of the transaction command and `[from_key_or_address]`, `[to_address]`, and `[amount]` are the arguments.
+  - **Args:** The number of arguments the user provides. In this case, there are exactly three: `[from_key_or_address]`, `[to_address]`, and `[amount]`.
+  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description is available for additional information that is provided when a user adds the `--help` flag.
+  - **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new transaction that is ready to be relayed to nodes.
+    - In general, the function usually starts by getting the `clientCtx` with `client.GetClientTxContext(cmd)`. The `clientCtx` contains information relevant to transaction handling, including information about the user. In this example, the `clientCtx` is used to retrieve the address of the sender by calling `clientCtx.GetFromAddress()`.
+    - If applicable, the command's arguments are parsed. In this example, the arguments `[to_address]` and `[amount]` are both parsed.
+    - A [message](./messages-and-queries.md) is created using the parsed arguments and information from the `clientCtx`. The constructor function of the message type is called directly. In this case, `types.NewMsgSend(fromAddr, toAddr, amount)`. Its good practice to call `msg.ValidateBasic()` after creating the message, which runs a sanity check on the provided arguments.
+    - Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastTxCLI(clientCtx, flags, msg)`.
+- **Adds transaction flags:** All transaction commands must add a set of transaction [flags](#flags). The transaction flags are used to collect additional information from the user (e.g. the amount of fees the user is willing to pay). The transaction flags are added to the constructed command using `AddTxFlagsToCmd(cmd)`.
+- **Adds command flags:** Some transaction commands may require additional flags that are specific to the command. See [flags](#flags) for more information.
+- **Returns the command:** Finally, the transaction command is returned.
+
+Each module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Application developers wishing to include the module's transactions will call this function to add them as subcommands in the CLI. Here is the `GetTxCmd()` function for the `x/auth` module, which adds the `Sign`, `MultiSign`, `ValidateSignatures` and `SignBatch` transaction commands.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/351192aa0b52a42b66ff06e81cfa7a9e26667a7f/x/auth/client/cli/tx.go#L10-L26
 
-An application using this module likely adds `auth` module commands to its root `TxCmd` command by calling `txCmd.AddCommand(authModuleClient.GetTxCmd())`.
+An application using the `x/auth` module can then add the aggregated transaction commands to the root command by calling `rootCmd.AddCommand(auth.GetTxCmd())`.
 
 ### Query Commands
 
@@ -142,7 +146,7 @@ To support HTTP requests, the module developer needs to define possible request 
 
 Request types, which define structured interactions from users, must be defined for all _transaction_ requests. Users using this method to interact with an application will send HTTP Requests with the required fields in order to trigger state changes in the application. Conventionally, each request is named with the suffix `Req`, e.g. `SendReq` for a Send transaction. Each struct should include a base request [`baseReq`](../interfaces/rest.md#basereq), the name of the transaction, and all the arguments the user must provide for the transaction.
 
-Here is an example of a request to send coins from the `bank` module:
+Here is an example of a request to send coins from the `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/bank/client/rest/tx.go#L15-L19
 
@@ -168,7 +172,7 @@ The `BaseReq` includes basic information that every request needs to have, simil
 
 Request handlers must be defined for both transaction and query requests. Handlers' arguments include a reference to the [client `Context`](../interfaces/query-lifecycle.md#context).
 
-Here is an example of a request handler for the `bank` module `SendReq` request (the same one shown above):
+Here is an example of a request handler for the `x/bank` module `SendReq` request (the same one shown above):
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7f59723d889b69ca19966167f0b3a7fec7a39e53/x/bank/client/rest/tx.go#L21-L51
 

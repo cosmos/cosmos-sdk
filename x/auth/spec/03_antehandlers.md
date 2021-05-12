@@ -17,7 +17,7 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 - `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
 
-- `MempoolFeeDecorator`: Checks if the transaction fee is above local mempool `minFee` parameter during `CheckTx`.
+- `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
 
 - `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
@@ -27,7 +27,7 @@ The auth module provides `AnteDecorator`s that are recursively chained together 
 
 - `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
 
-- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the transaction. If feegrant module is enabled and a fee granter is set, it will deduct fees from the fee granter account.
+- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If feegrant module is enabled and a fee granter is set, it will deduct fees from the fee granter account.
 
 - `SetPubKeyDecorator`: Sets pubkey of account in any account that does not already have pubkey saved in state machine.
 

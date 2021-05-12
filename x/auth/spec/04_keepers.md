@@ -29,7 +29,7 @@ type AccountKeeperI interface {
 	// Remove an account from the store.
 	RemoveAccount(sdk.Context, types.AccountI)
 
-	// Iterate over all accounts, calling the provided function. Stop iteraiton when it returns false.
+	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
 	IterateAccounts(sdk.Context, func(types.AccountI) bool)
 
 	// Fetch the public key of an account at a specified address

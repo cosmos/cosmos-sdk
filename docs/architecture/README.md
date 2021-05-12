@@ -73,3 +73,4 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 037: Governance Split Votes](./adr-037-gov-split-vote.md)
 - [ADR 038: State Listening](./adr-038-state-listening.md)
 - [ADR 039: Epoched Staking](./adr-039-epoched-staking.md)
+- [ADR 040: Storage and SMT State Commitments](./adr-040-storage-and-smt-state-commitments.md)

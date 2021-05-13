@@ -35,7 +35,7 @@ const (
 	DefaultBIP39Passphrase = ""
 
 	// bits of entropy to draw when creating a mnemonic
-	defaultEntropySize = 256
+	DefaultEntropySize = 256
 	addressSuffix      = "address"
 	infoSuffix         = "info"
 )

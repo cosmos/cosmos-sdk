@@ -653,7 +653,7 @@ func newTestBackendKeyringConfig(appName, dir string) keyring.Config {
 	}
 }
 
-func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
+func NewKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
 	return keyring.Config{
 		AllowedBackends: []keyring.BackendType{keyring.KWalletBackend},
 		ServiceName:     "kdewallet",
@@ -662,7 +662,7 @@ func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Conf
 	}
 }
 
-func newPassBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
+func NewPassBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
 	prefix := fmt.Sprintf(passKeyringPrefix, appName)
 
 	return keyring.Config{
@@ -912,6 +912,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			Data:        versionBytes,
 			Description: "SDK kerying version",
 		})
+	}
 
 	return nil
 	

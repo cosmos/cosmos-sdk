@@ -95,7 +95,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test unsupported Algo
-	_, err = keyring.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 118, 0, 0)
+	_, err = keyring.SaveLedgerKey("key", NotSupportedAlgo{}, "cosmos", 118, 0, 0)
 	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
 	ledger, err := keyring.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)

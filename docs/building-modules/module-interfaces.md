@@ -12,7 +12,7 @@ This document details how to build CLI and REST interfaces for a module. Example
 
 ## CLI
 
-One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint adds commands from the application's modules enabling end-users to create [**messages**](./messages-and-queries.md#messages) (wrapped in transactions) and [**queries**](./messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
+One of the main interfaces for an application is the [command-line interface](../interfaces/cli.md). This entrypoint adds commands from the application's modules enabling end-users to create [**messages**](./messages-and-queries.md#messages) wrapped in transactions and [**queries**](./messages-and-queries.md#queries). The CLI files are typically found in the module's `./client/cli` folder.
 
 ### Transaction Commands
 
@@ -58,7 +58,7 @@ This query returns the account at a given address. The getter function does the 
 - **Constructs the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for more detailed information on how to create commands.
   - **Use:** Specifies the format of the user input required to invoke the command. In the example above, `account` is the name of the query command and `[address]` is the argument.
   - **Args:** The number of arguments the user provides. In this case, there is exactly one: `[address]`.
-  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description is available for additional information that is provided when a user adds the `--help` flag.
+  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description is available for additional information that is provided when a user adds `--help` to the command.
   - **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new query.
     - In general, the function usually starts by getting the `clientCtx` with `client.GetClientQueryContext(cmd)`. The `clientCtx` contains information and helper methods relevant to query handling.
     - If applicable, the command's arguments are parsed. In this example, the argument `[address]` is parsed.
@@ -72,33 +72,35 @@ Each module needs to have a `GetQueryCmd()`, which aggregates all of the query c
 
 ### Flags
 
-[Flags](../interfaces/cli.md#flags) are entered by the user and allow for command customizations. Examples include the [fees](../basics/gas-fees.md) or gas prices users are willing to pay for their transactions.
+[Flags](../core/cli.md#flags) allow users to customize commands. `--fees` and `--gas-prices` are examples of flags that allow users to set the [fees](../basics/gas-fees.md) and gas prices for their transactions.
 
-The flags for a module are typically found in a `flags.go` file in the module's `./client/cli` folder. Module developers can create a list of possible flags including the value type, default value, and a description displayed if the user uses a `help` command. In each transaction getter function, they can add flags to the commands and, optionally, mark flags as _required_ so that an error is thrown if the user does not provide values for them.
+Flags that are specific to a module are typically created in a `flags.go` file in the module's `./client/cli` folder. When creating a flag, developers set the value type, the name of the flag, the default value, and a description about the flag. Developers also have the option to mark flags as _required_ so that an error is thrown if the user does not include a value for the flag.
 
-For full details on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
+Here is an example that adds the `--from` flag to a command:
 
-For example, the SDK `./client/flags` package includes a `AddTxFlagsToCmd(cmd *cobra.Command)` function that adds necessary flags to a transaction command, such as the `from` flag to indicate which address the transaction originates from.
+```go
+cmd.Flags().String("from", "", "Name or address of private key with which to sign")
+```
+
+In this example, the value of the flag is a `String`, the name of the flag is `from`, the default value of the flag is `""`, and there is a brief description provided that will be displayed when a user adds `--help` to the command.
+
+Here is an example that marks the `--from` flag as _required_:
+
+```go
+cmd.MarkFlagRequired("from")
+```
+
+As mentioned in [transaction commands](#transaction-commands), there is a set of flags that all transaction commands must add. This is done with the `AddTxFlagsToCmd` method defined in the SDK's `./client/flags` package.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/cfb5fc03e5092395403d10156c0ee96e6ff1ddbe/client/flags/flags.go#L85-L112
-
-Here is an example of how to add a flag using the `from` flag from this function.
-
-```go
-cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
-```
-
-The input provided for this flag - called `FlagFrom` is a string with the default value of `""` if none is provided. If the user asks for a description of this flag, the description will be printed.
-
-A flag can be marked as _required_ so that an error is automatically thrown if the user does not provide a value:
-
-```go
-cmd.MarkFlagRequired(FlagFrom)
-```
 
 Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate).
 
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/cfb5fc03e5092395403d10156c0ee96e6ff1ddbe/client/flags/flags.go#L73-L83
+
+For more information on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
 ## gRPC
 

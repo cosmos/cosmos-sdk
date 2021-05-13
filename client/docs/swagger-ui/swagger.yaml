@@ -21409,7 +21409,7 @@ paths:
         - Query
   /cosmos/upgrade/v1beta1/module_versions:
     get:
-      summary: VersionMap queries the a list of module versions from state.
+      summary: ModuleVersions queries the list of module versions from state.
       operationId: ModuleVersions
       responses:
         '200':
@@ -21429,9 +21429,7 @@ paths:
                       type: string
                       format: uint64
                       title: consensus version of the app module
-                  description: >-
-                    ModuleConsensusVersion specifies a module and its consensus
-                    version.
+                  description: ModuleVersion specifies a module and its consensus version.
                 description: >-
                   module_versions is a list of module names with their consensus
                   versions.
@@ -21634,7 +21632,7 @@ paths:
           description: |-
             module_name is a field to query a specific module
             consensus version from state. Leaving this empty will
-            fetch the full module_versions list from state.
+            fetch the full list of module versions from state.
           in: query
           required: false
           type: string
@@ -37113,7 +37111,7 @@ definitions:
         type: string
         format: uint64
         title: consensus version of the app module
-    description: ModuleConsensusVersion specifies a module and its consensus version.
+    description: ModuleVersion specifies a module and its consensus version.
   cosmos.upgrade.v1beta1.Plan:
     type: object
     properties:
@@ -37225,7 +37223,7 @@ definitions:
               type: string
               format: uint64
               title: consensus version of the app module
-          description: ModuleConsensusVersion specifies a module and its consensus version.
+          description: ModuleVersion specifies a module and its consensus version.
         description: >-
           module_versions is a list of module names with their consensus
           versions.

@@ -154,7 +154,7 @@ func (m *CancelSoftwareUpgradeProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CancelSoftwareUpgradeProposal proto.InternalMessageInfo
 
-// ModuleConsensusVersion specifies a module and its consensus version.
+// ModuleVersion specifies a module and its consensus version.
 type ModuleVersion struct {
 	// name of the app module
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`

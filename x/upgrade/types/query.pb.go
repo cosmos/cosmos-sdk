@@ -307,7 +307,7 @@ func (m *QueryUpgradedConsensusStateResponse) GetUpgradedConsensusState() []byte
 type QueryModuleVersionsRequest struct {
 	// module_name is a field to query a specific module
 	// consensus version from state. Leaving this empty will
-	// fetch the full module_versions list from state
+	// fetch the full list of module versions from state
 	ModuleName string `protobuf:"bytes,1,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
 }
 
@@ -475,7 +475,7 @@ type QueryClient interface {
 	// stored at the last height of this chain.
 	// UpgradedConsensusState RPC not supported with legacy querier
 	UpgradedConsensusState(ctx context.Context, in *QueryUpgradedConsensusStateRequest, opts ...grpc.CallOption) (*QueryUpgradedConsensusStateResponse, error)
-	// VersionMap queries the a list of module versions from state.
+	// ModuleVersions queries the list of module versions from state.
 	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
 }
 
@@ -534,7 +534,7 @@ type QueryServer interface {
 	// stored at the last height of this chain.
 	// UpgradedConsensusState RPC not supported with legacy querier
 	UpgradedConsensusState(context.Context, *QueryUpgradedConsensusStateRequest) (*QueryUpgradedConsensusStateResponse, error)
-	// VersionMap queries the a list of module versions from state.
+	// ModuleVersions queries the list of module versions from state.
 	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
 }
 

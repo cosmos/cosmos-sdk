@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Simulation operation weights constants
@@ -414,20 +413,10 @@ func randomSendFields(
 
 func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount int) []simtypes.Account {
 
-	s := rand.NewSource(1)
-	r := rand.New(s)
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
 	for i := 0; i < moduleAccCount; i++ {
-		var addr sdk.AccAddress
-
-		switch {
-		case r.Int()%2 == 0:
-			addr = ak.GetModuleAddress(distributiontypes.ModuleName)
-		default:
-			addr = ak.GetModuleAddress(stakingtypes.ModuleName)
-		}
-
+		addr := ak.GetModuleAddress(distributiontypes.ModuleName)
 		acc := ak.GetAccount(ctx, addr)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),
@@ -439,5 +428,4 @@ func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount i
 	}
 
 	return moduleAccounts
-
 }

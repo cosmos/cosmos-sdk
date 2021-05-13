@@ -170,6 +170,8 @@ type (
 	}
 )
 
+// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
+// This is not to be confused with logging that may happen at an individual node or validator level
 type Logger interface {
 	Log(args ...interface{})
 	Logf(format string, args ...interface{})
@@ -194,7 +196,7 @@ func NewCLILogger(cmd *cobra.Command) CLILogger {
 	return CLILogger{ cmd }
 }
 
-// New creates a new Network for integration tests.
+// New creates a new Network for integration tests or in-process testnets run via the CLI
 func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	// only one caller/test can create and use a network at a time
 	l.Log("acquiring test network lock")

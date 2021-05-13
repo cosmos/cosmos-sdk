@@ -44,6 +44,7 @@ var (
 	flagGRPCAddress       = "grpc.address"
 	flagRPCAddress        = "rpc.address"
 	flagAPIAddress        = "api.address"
+	flagPrintMnemonic     = "print-mnemonic"
 )
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
@@ -56,6 +57,8 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 
 
 
+// NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
+// validator configuration files for running a multi-validator testnet in a separate process
 func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	testnetCmd := &cobra.Command{
 		Use:                        "testnet",
@@ -123,7 +126,7 @@ Example:
 	return cmd
 }
 
-// get cmd to initialize all files for tendermint testnet and application
+// get cmd to start multi validator in-process testnet
 func testnetStartCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
@@ -146,9 +149,10 @@ Example:
 			rpcAddress, _ := cmd.Flags().GetString(flagRPCAddress)
 			apiAddress, _ := cmd.Flags().GetString(flagAPIAddress)
 			grpcAddress, _ := cmd.Flags().GetString(flagGRPCAddress)
+			printMnemonic, _ := cmd.Flags().GetBool(flagPrintMnemonic)
 
 			return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators, enableLogging,
-				rpcAddress, apiAddress, grpcAddress)
+				rpcAddress, apiAddress, grpcAddress, printMnemonic)
 
 		},
 	}
@@ -159,12 +163,13 @@ Example:
 	cmd.Flags().String(flagRPCAddress, "tcp://0.0.0.0:26657", "the RPC address to listen on")
 	cmd.Flags().String(flagAPIAddress, "http://0.0.0.0:1317", "the address to listen on for REST API")
 	cmd.Flags().String(flagGRPCAddress, "0.0.0.0:9090", "the gRPC server address to listen on")
+	cmd.Flags().Bool(flagPrintMnemonic, true, "print mnemonic of first validator to stdout for manual testing")
 	return cmd
 }
 
 const nodeDirPerm = 0755
 
-// Initialize the testnet
+// InitTestnetFiles initializes testnet files for a testnet to be run in a separate process
 func InitTestnetFiles(
 	clientCtx client.Context,
 	cmd *cobra.Command,
@@ -467,8 +472,9 @@ func writeFile(name string, dir string, contents []byte) error {
 	return nil
 }
 
+// StartTestnet starts an in-process testnet
 func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,
-	numValidators int, enableLogging bool, rpcAddress, apiAddress, grpcAddress string) error {
+	numValidators int, enableLogging bool, rpcAddress, apiAddress, grpcAddress string, printMnemonic bool) error {
 	networkConfig := network.DefaultConfig()
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
@@ -483,7 +489,7 @@ func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGas
 	networkConfig.RPCAddress = rpcAddress
 	networkConfig.APIAddress = apiAddress
 	networkConfig.GRPCAddress = grpcAddress
-	networkConfig.PrintMnemonic = true
+	networkConfig.PrintMnemonic = printMnemonic
 	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", testnetsDir, networkConfig.ChainID)

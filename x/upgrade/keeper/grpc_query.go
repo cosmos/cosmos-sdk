@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -10,7 +8,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // CurrentPlan implements the Query/CurrentPlan gRPC method
-func (k Keeper) CurrentPlan(c context.Context, req *types.QueryCurrentPlanRequest) (*types.QueryCurrentPlanResponse, error) {
+func (k Keeper) CurrentPlan(c sdk.Context, req *types.QueryCurrentPlanRequest) (*types.QueryCurrentPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	plan, found := k.GetUpgradePlan(ctx)
@@ -22,7 +20,7 @@ func (k Keeper) CurrentPlan(c context.Context, req *types.QueryCurrentPlanReques
 }
 
 // AppliedPlan implements the Query/AppliedPlan gRPC method
-func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanRequest) (*types.QueryAppliedPlanResponse, error) {
+func (k Keeper) AppliedPlan(c sdk.Context, req *types.QueryAppliedPlanRequest) (*types.QueryAppliedPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	applied := k.GetDoneHeight(ctx, req.Name)
@@ -34,7 +32,7 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 }
 
 // UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
-func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
+func (k Keeper) UpgradedConsensusState(c sdk.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	consState, found := k.GetUpgradedConsensusState(ctx, req.LastHeight)

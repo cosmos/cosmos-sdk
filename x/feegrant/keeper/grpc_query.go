@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,7 +15,7 @@ import (
 var _ feegrant.QueryServer = Keeper{}
 
 // Allowance returns fee granted to the grantee by the granter.
-func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
+func (q Keeper) Allowance(c sdk.Context, req *feegrant.QueryAllowanceRequest) (*feegrant.QueryAllowanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -59,7 +57,7 @@ func (q Keeper) Allowance(c context.Context, req *feegrant.QueryAllowanceRequest
 }
 
 // Allowances queries all the allowances granted to the given grantee.
-func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesRequest) (*feegrant.QueryAllowancesResponse, error) {
+func (q Keeper) Allowances(c sdk.Context, req *feegrant.QueryAllowancesRequest) (*feegrant.QueryAllowancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

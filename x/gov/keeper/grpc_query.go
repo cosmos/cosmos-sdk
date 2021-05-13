@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,7 +13,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // Proposal returns proposal details based on ProposalID
-func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*types.QueryProposalResponse, error) {
+func (q Keeper) Proposal(c sdk.Context, req *types.QueryProposalRequest) (*types.QueryProposalResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -35,7 +33,7 @@ func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*t
 }
 
 // Proposals implements the Query/Proposals gRPC method
-func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (*types.QueryProposalsResponse, error) {
+func (q Keeper) Proposals(c sdk.Context, req *types.QueryProposalsRequest) (*types.QueryProposalsResponse, error) {
 	var filteredProposals types.Proposals
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -93,7 +91,7 @@ func (q Keeper) Proposals(c context.Context, req *types.QueryProposalsRequest) (
 }
 
 // Vote returns Voted information based on proposalID, voterAddr
-func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.QueryVoteResponse, error) {
+func (q Keeper) Vote(c sdk.Context, req *types.QueryVoteRequest) (*types.QueryVoteResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -122,7 +120,7 @@ func (q Keeper) Vote(c context.Context, req *types.QueryVoteRequest) (*types.Que
 }
 
 // Votes returns single proposal's votes
-func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
+func (q Keeper) Votes(c sdk.Context, req *types.QueryVotesRequest) (*types.QueryVotesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -155,7 +153,7 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 }
 
 // Params queries all params
-func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Keeper) Params(c sdk.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -182,7 +180,7 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 }
 
 // Deposit queries single deposit information based proposalID, depositAddr
-func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {
+func (q Keeper) Deposit(c sdk.Context, req *types.QueryDepositRequest) (*types.QueryDepositResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -211,7 +209,7 @@ func (q Keeper) Deposit(c context.Context, req *types.QueryDepositRequest) (*typ
 }
 
 // Deposits returns single proposal's all deposits
-func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
+func (q Keeper) Deposits(c sdk.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -244,7 +242,7 @@ func (q Keeper) Deposits(c context.Context, req *types.QueryDepositsRequest) (*t
 }
 
 // TallyResult queries the tally of a proposal vote
-func (q Keeper) TallyResult(c context.Context, req *types.QueryTallyResultRequest) (*types.QueryTallyResultResponse, error) {
+func (q Keeper) TallyResult(c sdk.Context, req *types.QueryTallyResultRequest) (*types.QueryTallyResultResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

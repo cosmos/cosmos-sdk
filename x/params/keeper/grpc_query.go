@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -14,7 +12,7 @@ import (
 var _ proposal.QueryServer = Keeper{}
 
 // Params returns subspace params
-func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*proposal.QueryParamsResponse, error) {
+func (k Keeper) Params(c sdk.Context, req *proposal.QueryParamsRequest) (*proposal.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

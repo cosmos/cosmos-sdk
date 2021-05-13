@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,7 +13,7 @@ import (
 var _ types.QueryServer = BaseKeeper{}
 
 // Balance implements the Query/Balance gRPC method
-func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
+func (k BaseKeeper) Balance(ctx sdk.Context, req *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -40,7 +38,7 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 }
 
 // AllBalances implements the Query/AllBalances gRPC method
-func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
+func (k BaseKeeper) AllBalances(ctx sdk.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -77,7 +75,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method
-func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
+func (k BaseKeeper) TotalSupply(ctx sdk.Context, req *types.QueryTotalSupplyRequest) (*types.QueryTotalSupplyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	totalSupply, pageRes, err := k.GetPaginatedTotalSupply(sdkCtx, req.Pagination)
 	if err != nil {
@@ -88,7 +86,7 @@ func (k BaseKeeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupply
 }
 
 // SupplyOf implements the Query/SupplyOf gRPC method
-func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
+func (k BaseKeeper) SupplyOf(c sdk.Context, req *types.QuerySupplyOfRequest) (*types.QuerySupplyOfResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -104,7 +102,7 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 }
 
 // Params implements the gRPC service handler for querying x/bank parameters.
-func (k BaseKeeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k BaseKeeper) Params(ctx sdk.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -116,7 +114,7 @@ func (k BaseKeeper) Params(ctx context.Context, req *types.QueryParamsRequest) (
 }
 
 // DenomsMetadata implements Query/DenomsMetadata gRPC method.
-func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMetadataRequest) (*types.QueryDenomsMetadataResponse, error) {
+func (k BaseKeeper) DenomsMetadata(c sdk.Context, req *types.QueryDenomsMetadataRequest) (*types.QueryDenomsMetadataResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -144,7 +142,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 }
 
 // DenomMetadata implements Query/DenomMetadata gRPC method.
-func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
+func (k BaseKeeper) DenomMetadata(c sdk.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

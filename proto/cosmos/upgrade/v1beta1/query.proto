@@ -27,7 +27,7 @@ service Query {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}";
   }
 
-  // VersionMap queries the a list of module versions from state.
+  // VersionMap queries the list of module versions from state.
   rpc ModuleVersions(QueryModuleVersionsRequest) returns (QueryModuleVersionsResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/module_versions";
   }

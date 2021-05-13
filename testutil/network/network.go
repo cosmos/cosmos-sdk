@@ -90,6 +90,9 @@ type Config struct {
 	CleanupDir      bool                       // remove base temporary directory during cleanup
 	SigningAlgo     string                     // signing algorithm for keys
 	KeyringOptions  []keyring.Option
+	RPCAddress      string					   // RPC listen address (including port)
+	APIAddress      string					   // REST API listen address (including port)
+	GRPCAddress     string                     // GRPC server listen address (including port)
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -234,30 +237,44 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.RPC.ListenAddress = ""
 		appCfg.GRPC.Enable = false
 		appCfg.GRPCWeb.Enable = false
+		apiListenAddr := ""
 		if i == 0 {
-			apiListenAddr, _, err := server.FreeTCPAddr()
-			if err != nil {
-				return nil, err
+			if cfg.APIAddress != "" {
+				apiListenAddr = cfg.APIAddress
+			} else {
+				var err error
+				apiListenAddr, _, err = server.FreeTCPAddr()
+				if err != nil {
+					return nil, err
+				}
 			}
-			appCfg.API.Address = apiListenAddr
 
+			appCfg.API.Address = apiListenAddr
 			apiURL, err := url.Parse(apiListenAddr)
 			if err != nil {
 				return nil, err
 			}
 			apiAddr = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
 
-			rpcAddr, _, err := server.FreeTCPAddr()
-			if err != nil {
-				return nil, err
+			if cfg.RPCAddress != "" {
+				tmCfg.RPC.ListenAddress = cfg.RPCAddress
+			} else {
+				rpcAddr, _, err := server.FreeTCPAddr()
+				if err != nil {
+					return nil, err
+				}
+				tmCfg.RPC.ListenAddress = rpcAddr
 			}
-			tmCfg.RPC.ListenAddress = rpcAddr
 
-			_, grpcPort, err := server.FreeTCPAddr()
-			if err != nil {
-				return nil, err
+			if cfg.GRPCAddress != "" {
+				appCfg.GRPC.Address = cfg.GRPCAddress
+			} else {
+				_, grpcPort, err := server.FreeTCPAddr()
+				if err != nil {
+					return nil, err
+				}
+				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			}
-			appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			appCfg.GRPC.Enable = true
 
 			_, grpcWebPort, err := server.FreeTCPAddr()

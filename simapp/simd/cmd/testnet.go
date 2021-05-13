@@ -41,6 +41,9 @@ var (
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
 	flagEnableLogging     = "enable-logging"
+	flagGRPCAddress       = "grpc.address"
+	flagRPCAddress        = "rpc.address"
+	flagAPIAddress        = "api.address"
 )
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
@@ -103,7 +106,7 @@ Example:
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
-			return SetupTestnetConfigs(
+			return InitTestnetFiles(
 				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
@@ -140,8 +143,12 @@ Example:
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 			enableLogging, _ := cmd.Flags().GetBool(flagEnableLogging)
+			rpcAddress, _ := cmd.Flags().GetString(flagRPCAddress)
+			apiAddress, _ := cmd.Flags().GetString(flagAPIAddress)
+			grpcAddress, _ := cmd.Flags().GetString(flagGRPCAddress)
 
-			return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators, enableLogging)
+			return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators, enableLogging,
+				rpcAddress, apiAddress, grpcAddress)
 
 		},
 	}
@@ -149,13 +156,16 @@ Example:
 
 	addTestnetFlagsToCmd(cmd)
 	cmd.Flags().Bool(flagEnableLogging, false, "Enable INFO logging of tendermint validator nodes")
+	cmd.Flags().String(flagRPCAddress, "tcp://0.0.0.0:26657", "the RPC address to listen on")
+	cmd.Flags().String(flagAPIAddress, "http://0.0.0.0:1317", "the address to listen on for REST API")
+	cmd.Flags().String(flagGRPCAddress, "0.0.0.0:9090", "the gRPC server address to listen on")
 	return cmd
 }
 
 const nodeDirPerm = 0755
 
 // Initialize the testnet
-func SetupTestnetConfigs(
+func InitTestnetFiles(
 	clientCtx client.Context,
 	cmd *cobra.Command,
 	nodeConfig *tmconfig.Config,
@@ -457,7 +467,8 @@ func writeFile(name string, dir string, contents []byte) error {
 	return nil
 }
 
-func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,numValidators int, enableLogging bool) error {
+func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,
+	numValidators int, enableLogging bool, rpcAddress, apiAddress, grpcAddress string) error {
 	networkConfig := network.DefaultConfig()
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
@@ -469,6 +480,9 @@ func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGas
 	networkConfig.MinGasPrices = minGasPrices
 	networkConfig.NumValidators = numValidators
 	networkConfig.EnableTMLogging = enableLogging
+	networkConfig.RPCAddress = rpcAddress
+	networkConfig.APIAddress = apiAddress
+	networkConfig.GRPCAddress = grpcAddress
 	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", testnetsDir, networkConfig.ChainID)

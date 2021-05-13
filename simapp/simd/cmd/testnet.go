@@ -483,6 +483,7 @@ func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGas
 	networkConfig.RPCAddress = rpcAddress
 	networkConfig.APIAddress = apiAddress
 	networkConfig.GRPCAddress = grpcAddress
+	networkConfig.PrintMnemonic = true
 	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", testnetsDir, networkConfig.ChainID)

@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -93,6 +94,7 @@ type Config struct {
 	RPCAddress      string					   // RPC listen address (including port)
 	APIAddress      string					   // REST API listen address (including port)
 	GRPCAddress     string                     // GRPC server listen address (including port)
+	PrintMnemonic 	bool					   // print the mnemonic of first validator as log output for testing
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -120,6 +122,7 @@ func DefaultConfig() Config {
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.Secp256k1Type),
 		KeyringOptions:    []keyring.Option{},
+		PrintMnemonic: 	   false,
 	}
 }
 
@@ -204,7 +207,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		Config:     cfg,
 	}
 
-	l.Log("preparing test network...")
+	l.Logf("preparing test network with chain-id \"%s\"\n", cfg.ChainID)
 
 	monikers := make([]string, cfg.NumValidators)
 	nodeIDs := make([]string, cfg.NumValidators)
@@ -347,6 +350,13 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
 		if err != nil {
 			return nil, err
+		}
+
+
+		// if PrintMnemonic is set to true, we print the first validator node's secret to the network's logger
+		// for debugging and manual testing
+		if cfg.PrintMnemonic && i == 0 {
+			printMnemonic(l, secret)
 		}
 
 		info := map[string]string{"secret": secret}
@@ -581,4 +591,46 @@ func (n *Network) Cleanup() {
 	}
 
 	n.Logger.Log("finished cleaning up test network")
+}
+
+// printMnemonic prints a provided mnemonic seed phrase on a network logger
+// for debugging and manual testing
+func printMnemonic(l Logger, secret string){
+	lines := []string{
+		"THIS MNEMONIC IS FOR TESTING PURPOSES ONLY",
+		"DO NOT USE IN PRODUCTION",
+		"",
+		strings.Join(strings.Fields(secret)[0:8], " "),
+		strings.Join(strings.Fields(secret)[8:16], " "),
+		strings.Join(strings.Fields(secret)[16:24], " "),
+	}
+
+	lineLengths := make([]int, len(lines))
+	for i, line := range lines {
+		lineLengths[i] = len(line)
+	}
+
+	maxLineLength := 0
+	for _, lineLen := range lineLengths {
+		if lineLen > maxLineLength {
+			maxLineLength = lineLen
+		}
+	}
+
+	l.Log("\n")
+	l.Log(strings.Repeat("+",maxLineLength + 8))
+	for _, line := range lines {
+		l.Logf("++  %s  ++\n", centerText(line, maxLineLength))
+	}
+	l.Log(strings.Repeat("+",maxLineLength + 8))
+	l.Log("\n")
+}
+
+// centerText centers text across a fixed width, filling either side with whitespace buffers
+func centerText(text string, width int) string {
+	textLen := len(text)
+	leftBuffer := strings.Repeat(" ", (width - textLen) / 2)
+	rightBuffer := strings.Repeat( " ", (width - textLen) / 2 + (width - textLen) % 2)
+
+	return fmt.Sprintf("%s%s%s", leftBuffer, text, rightBuffer)
 }

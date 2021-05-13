@@ -62,7 +62,7 @@ message CancelSoftwareUpgradeProposal {
   string description = 2;
 }
 
-// ModuleConsensusVersion specifies a module and its consensus version.
+// ModuleVersion specifies a module and its consensus version.
 message ModuleVersion {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = true;

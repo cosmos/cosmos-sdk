@@ -9,7 +9,7 @@ func Fuzz(data []byte) int {
 	if err != nil {
 		return 0
 	}
-	if cba == nil {
+	if cba == nil && string(data) != "null" {
 		panic("Inconsistency, no error, yet BitArray is nil")
 	}
 	if cba.SetIndex(-1, true) {

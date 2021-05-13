@@ -106,10 +106,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return err
 	}
 	if !sdk.AccAddress(valAddr).Equals(delAddr) {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"validator address is invalid",
-		)
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "validator address is invalid")
 	}
 
 	if msg.Pubkey == nil {
@@ -117,10 +114,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid delegation amount",
-		)
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
 	}
 
 	if msg.Description == (Description{}) {

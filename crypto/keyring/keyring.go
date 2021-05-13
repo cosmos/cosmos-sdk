@@ -19,15 +19,15 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 // Backend options for Keyring
@@ -190,9 +190,9 @@ func New(
 	case BackendOS:
 		db, err = keyring.Open(newOSBackendKeyringConfig(appName, rootDir, userInput))
 	case BackendKWallet:
-		db, err = keyring.Open(newKWalletBackendKeyringConfig(appName, rootDir, userInput))
+		db, err = keyring.Open(NewKWalletBackendKeyringConfig(appName, rootDir, userInput))
 	case BackendPass:
-		db, err = keyring.Open(newPassBackendKeyringConfig(appName, rootDir, userInput))
+		db, err = keyring.Open(NewPassBackendKeyringConfig(appName, rootDir, userInput))
 	default:
 		return nil, fmt.Errorf("unknown keyring backend %v", backend)
 	}
@@ -401,23 +401,24 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	if err != nil {
 		return nil, err
 	}
-	
+
 	apk, err := codectypes.NewAnyWithValue(priv.PubKey())
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return ks.writeLedgerKey(uid, apk, *hdPath)
 }
+
 // we dont need algo parameter here
 // what kind of type we should use for pub argument? types.Pubkey or *codectypes.Any?
 func (ks keystore) writeLedgerKey(name string, pubKey *cryptotypes.Any, path BIP44Params) (Info, error) {
 	//	info := newLedgerInfo(name, pub, path, algo)
-	
+
 	item := KeyringEntry_Ledger{
 		Ledger: &LedgerInfo(path),
 	}
-    info := NewKeyringEntry(name, pubKey, item )
+	info := NewKeyringEntry(name, pubKey, item)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
@@ -785,7 +786,6 @@ func (ks keystore) writeInfo(info Info) error {
 		return err
 	}
 
-
 	exists, err := ks.existsInDb(info)
 	if err != nil {
 		return err
@@ -899,7 +899,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		if len(item.Data) == 0 {
 			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
-	
+
 		info, err := protoUnmarshalInfo(item.Data, ks.cdc)
 		if err != nil {
 			return err
@@ -915,15 +915,15 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 	}
 
 	return nil
-	
+
 	/*
-	var versionBytes = make([]byte, 4)
-	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
-	ks.db.Set(keyring.Item{
-		Key:         "migration",
-		Data:        versionBytes,
-		Description: "SDK kerying version",
-	})
+		var versionBytes = make([]byte, 4)
+		binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
+		ks.db.Set(keyring.Item{
+			Key:         "migration",
+			Data:        versionBytes,
+			Description: "SDK kerying version",
+		})
 	*/
 
 }

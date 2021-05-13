@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	keyring99designs "github.com/99designs/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
@@ -37,12 +37,10 @@ func TestNewKeyring(t *testing.T) {
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	// TODO fix keyring.New in other packages
-	// TODO fix line 41 cannot use encCfg.Marshaler (variable of type codec.Codec) as io.Reader value in argument to keyring.New: missing method Readcompiler
-	kr, err := keyring.New("cosmos", keyring.BackendFile, dir, encCfg.Marshaler, mockIn)
+	kr, err := keyring.New("cosmos", keyring.BackendFile, dir, mockIn, encCfg.Marshaler)
 	require.NoError(t, err)
 
-	nilKr, err := keyring.New("cosmos", "fuzzy", dir, encCfg.Marshaler, mockIn)
+	nilKr, err := keyring.New("cosmos", "fuzzy", dir, mockIn, encCfg.Marshaler)
 	require.Error(t, err)
 	require.Nil(t, nilKr)
 	require.Equal(t, "unknown keyring backend fuzzy", err.Error())
@@ -55,7 +53,7 @@ func TestNewKeyring(t *testing.T) {
 
 func TestKeyManagementKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New("keybasename", "test", t.TempDir(), encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	algo := hd.Secp256k1
@@ -66,7 +64,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.Nil(t, err)
 	require.Empty(t, l)
 
-	_, _, err = kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, NotSupportedAlgo{})
+	_, _, err = kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, keyring.NotSupportedAlgo{})
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
@@ -152,7 +150,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New("keybasename", "test", dir, encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Marshaler)
 	require.NoError(t, err)
 	algo := hd.Secp256k1
 
@@ -174,7 +172,6 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	s11, pub1, err := kb.Sign(n1, d1)
 	require.Nil(t, err)
 
-	// TODO consider to use the single function for that
 	key1, err := i1.GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key1)
@@ -237,7 +234,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 func TestExportImportKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New("keybasename", "test", t.TempDir(), encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	info, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -286,7 +283,7 @@ func TestExportImportKeyRing(t *testing.T) {
 
 func TestExportImportPubKeyKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New("keybasename", "test", t.TempDir(), encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 	algo := hd.Secp256k1
 
@@ -334,7 +331,7 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New("keybasename", "test", dir, encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	algo := hd.Secp256k1
@@ -370,7 +367,7 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New("keybasename", "test", dir, encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	algo := hd.Secp256k1
@@ -405,7 +402,7 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 
 func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New("keybasename", "test", t.TempDir(), encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	_, _, err = kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -443,7 +440,7 @@ func TestInMemoryLanguage(t *testing.T) {
 
 func TestInMemoryCreateMultisig(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New("keybasename", "memory", "", encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "memory", "", nil, encCfg.Marshaler)
 	require.NoError(t, err)
 	multi := multisig.NewLegacyAminoPubKey(
 		1, []types.PubKey{
@@ -479,7 +476,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.Nil(t, err)
 	require.Empty(t, l)
 
-	_, _, err = cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, NotSupportedAlgo{})
+	_, _, err = cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, keyring.NotSupportedAlgo{})
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
@@ -501,7 +498,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.NoError(t, err)
 	_, err = cstore.KeyByAddress(addr)
 	require.NoError(t, err)
-	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	addr, err = sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
 	_, err = cstore.KeyByAddress(addr)
 	require.NotNil(t, err)
@@ -840,7 +837,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 
 func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	// Given we create a mnemonic
@@ -915,7 +912,7 @@ func TestAltKeyring_List(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	list, err := kr.List()
@@ -923,7 +920,7 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Empty(t, list)
 
 	// Fails on creating unsupported pubKeyType
-	_, _, err = kr.NewMnemonic("failing", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, NotSupportedAlgo{})
+	_, _, err = kr.NewMnemonic("failing", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, keyring.NotSupportedAlgo{})
 	require.EqualError(t, err, keyring.ErrUnsupportedSigningAlgo.Error())
 
 	// Create 3 keys
@@ -947,7 +944,7 @@ func TestAltKeyring_List(t *testing.T) {
 
 func TestAltKeyring_NewAccount(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	entropy, err := bip39.NewEntropy(keyring.DefaultEntropySize)
@@ -974,7 +971,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 
 func TestAltKeyring_Get(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -988,7 +985,7 @@ func TestAltKeyring_Get(t *testing.T) {
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -1004,7 +1001,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 
 func TestAltKeyring_Delete(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -1025,7 +1022,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 
 func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := someKey
@@ -1048,7 +1045,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 
 func TestAltKeyring_SavePubKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	list, err := kr.List()
@@ -1074,7 +1071,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 
 func TestAltKeyring_SaveMultisig(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	mnemonic1, _, err := kr.NewMnemonic("key1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -1109,7 +1106,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 
 func TestAltKeyring_Sign(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := "jack"
@@ -1126,7 +1123,7 @@ func TestAltKeyring_Sign(t *testing.T) {
 
 func TestAltKeyring_SignByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := "jack"
@@ -1145,7 +1142,7 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 
 func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1172,7 +1169,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 
 func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1202,7 +1199,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 
 func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1225,7 +1222,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 
 func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1250,7 +1247,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 
 func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	uid := theID
@@ -1274,7 +1271,7 @@ func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 
 func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	// should fail when using unsupported signing algorythm.
@@ -1313,9 +1310,9 @@ func TestBackendConfigConstructors(t *testing.T) {
 func requireEqualInfo(t *testing.T, key keyring.Info, mnemonic keyring.Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 
-	keyAddr, err :=  key.GetAddress()
+	keyAddr, err := key.GetAddress()
 	require.NoError(t, err)
-	mnemonicAddr, err  := mnemonic.GetAddress()
+	mnemonicAddr, err := mnemonic.GetAddress()
 	require.NoError(t, err)
 	require.Equal(t, keyAddr, mnemonicAddr)
 
@@ -1325,7 +1322,7 @@ func requireEqualInfo(t *testing.T, key keyring.Info, mnemonic keyring.Info) {
 	require.NoError(t, err)
 	require.Equal(t, key1, key2)
 	require.Equal(t, key.GetAlgo(), mnemonic.GetAlgo())
-//	require.Equal(t, key.GetType(), mnemonic.GetType())
+	//	require.Equal(t, key.GetType(), mnemonic.GetType())
 }
 
-func accAddr(info keyring.Info) (sdk.AccAddress,error) { return info.GetAddress() }
+func accAddr(info keyring.Info) (sdk.AccAddress, error) { return info.GetAddress() }

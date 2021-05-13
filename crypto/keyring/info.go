@@ -3,11 +3,9 @@ package keyring
 import (
 	"fmt"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	
-
 )
 
 var (
@@ -24,7 +22,7 @@ type Info interface {
 	GetAddress() (types.AccAddress, error)
 	// Bip44 Path
 	GetPath() (*BIP44Params, error)
-	// Algo  
+	// Algo
 	GetAlgo() string
 }
 
@@ -41,7 +39,7 @@ func (ke KeyringEntry) GetPubKey() (cryptotypes.PubKey, error) {
 	if !ok {
 		return nil, fmt.Errorf("Unable to cast Pubkey to cryptotypes.PubKey")
 	}
-	return pk,nil
+	return pk, nil
 }
 
 // GetType implements Info interface
@@ -78,10 +76,9 @@ func (ke KeyringEntry) GetAlgo() string {
 		return l.PubKeyType
 	}
 
-	// there is no field pubKeyType for multi 
+	// there is no field pubKeyType for multi
 	return ""
 }
-
 
 // encoding info
 // we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on keystore

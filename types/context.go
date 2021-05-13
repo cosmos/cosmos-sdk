@@ -14,13 +14,15 @@ import (
 )
 
 /*
-Context is an immutable object contains all information needed to
+Context is an immutable object that contains all information needed to
 process a request.
-
 It contains a context.Context object inside if you want to use that,
 but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
+
+var _ context.Context = Context{}
+
 type Context struct {
 	ctx           context.Context
 	ms            MultiStore

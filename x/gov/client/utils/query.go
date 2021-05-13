@@ -237,6 +237,22 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
 func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositParams) ([]byte, error) {
+
+	// initial deposit was submitted with proposal, so must be queried separately
+	initialDeposit, err := queryInitialDepositByTxQuery(clientCtx, params.ProposalID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !initialDeposit.Amount.IsZero() {
+		bz, err := clientCtx.JSONCodec.MarshalJSON(&initialDeposit)
+		if err != nil {
+			return nil, err
+		}
+
+		return bz, nil
+	}
+
 	searchResult, err := combineEvents(
 		clientCtx, defaultPage,
 		// Query legacy Msgs event action

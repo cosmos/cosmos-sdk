@@ -15,7 +15,7 @@ const SpecVersion = ""
 type NetworkInformationProvider interface {
 	// SupportedOperations lists the operations supported by the implementation
 	SupportedOperations() []string
-	// OperationsStatuses returns the list of statuses supported by the implementation
+	// OperationStatuses returns the list of statuses supported by the implementation
 	OperationStatuses() []*types.OperationStatus
 	// Version returns the version of the node
 	Version() string
@@ -23,7 +23,7 @@ type NetworkInformationProvider interface {
 
 // Client defines the API the client implementation should provide.
 type Client interface {
-	// Needed if the client needs to perform some action before connecting.
+	// Bootstrap Needed if the client needs to perform some action before connecting.
 	Bootstrap() error
 	// Ready checks if the servicer constraints for queries are satisfied
 	// for example the node might still not be ready, it's useful in process
@@ -37,14 +37,14 @@ type Client interface {
 	// if height is not nil, then the balance will be displayed
 	// at the provided height, otherwise last block balance will be returned
 	Balances(ctx context.Context, addr string, height *int64) ([]*types.Amount, error)
-	// BlockByHashAlt gets a block and its transaction at the provided height
+	// BlockByHash gets a block and its transaction at the provided height
 	BlockByHash(ctx context.Context, hash string) (BlockResponse, error)
-	// BlockByHeightAlt gets a block given its height, if height is nil then last block is returned
+	// BlockByHeight gets a block given its height, if height is nil then last block is returned
 	BlockByHeight(ctx context.Context, height *int64) (BlockResponse, error)
 	// BlockTransactionsByHash gets the block, parent block and transactions
 	// given the block hash.
 	BlockTransactionsByHash(ctx context.Context, hash string) (BlockTransactionsResponse, error)
-	// BlockTransactionsByHash gets the block, parent block and transactions
+	// BlockTransactionsByHeight gets the block, parent block and transactions
 	// given the block hash.
 	BlockTransactionsByHeight(ctx context.Context, height *int64) (BlockTransactionsResponse, error)
 	// GetTx gets a transaction given its hash
@@ -64,7 +64,7 @@ type Client interface {
 	// PostTx posts txBytes to the node and returns the transaction identifier plus metadata related
 	// to the transaction itself.
 	PostTx(txBytes []byte) (res *types.TransactionIdentifier, meta map[string]interface{}, err error)
-	// ConstructionMetadataFromOptions
+	// ConstructionMetadataFromOptions builds metadata map from an option map
 	ConstructionMetadataFromOptions(ctx context.Context, options map[string]interface{}) (meta map[string]interface{}, err error)
 	OfflineClient
 }

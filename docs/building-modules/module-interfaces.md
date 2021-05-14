@@ -24,28 +24,29 @@ Here is an example from the `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/bank/client/cli/tx.go#L28-L63
 
-In the example above, `NewSendTxCmd` creates and returns the transaction command for a transaction that wraps and delivers `MsgSend`. `MsgSend` is the message used to send tokens from one account to another.
+In the example, `NewSendTxCmd()` creates and returns the transaction command for a transaction that wraps and delivers `MsgSend`. `MsgSend` is the message used to send tokens from one account to another.
 
 In general, the getter function does the following:
 
 - **Constructs the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for more detailed information on how to create commands.
   - **Use:** Specifies the format of the user input required to invoke the command. In the example above, `send` is the name of the transaction command and `[from_key_or_address]`, `[to_address]`, and `[amount]` are the arguments.
   - **Args:** The number of arguments the user provides. In this case, there are exactly three: `[from_key_or_address]`, `[to_address]`, and `[amount]`.
-  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description is available for additional information that is provided when a user adds the `--help` flag.
+  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description can be used to provide additional information that is displayed when a user adds the `--help` flag.
   - **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new transaction.
-    - In general, the function usually starts by getting the `clientCtx` with `client.GetClientTxContext(cmd)`. The `clientCtx` contains information and helper methods relevant to transaction handling, including information about the user. In this example, the `clientCtx` is used to retrieve the address of the sender by calling `clientCtx.GetFromAddress()`.
+    - The function typically starts by getting the `clientCtx`, which can be done with `client.GetClientTxContext(cmd)`. The `clientCtx` contains information relevant to transaction handling, including information about the user. In this example, the `clientCtx` is used to retrieve the address of the sender by calling `clientCtx.GetFromAddress()`.
     - If applicable, the command's arguments are parsed. In this example, the arguments `[to_address]` and `[amount]` are both parsed.
     - A [message](./messages-and-queries.md) is created using the parsed arguments and information from the `clientCtx`. The constructor function of the message type is called directly. In this case, `types.NewMsgSend(fromAddr, toAddr, amount)`. Its good practice to call `msg.ValidateBasic()` after creating the message, which runs a sanity check on the provided arguments.
-    - Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `GenerateOrBroadcastTxCLI(clientCtx, flags, msg)`.
+    - Depending on what the user wants, the transaction is either generated offline or signed and broadcasted to the preconfigured node using `tx.GenerateOrBroadcastTxCLI(clientCtx, flags, msg)`.
 - **Adds transaction flags:** All transaction commands must add a set of transaction [flags](#flags). The transaction flags are used to collect additional information from the user (e.g. the amount of fees the user is willing to pay). The transaction flags are added to the constructed command using `AddTxFlagsToCmd(cmd)`.
-- **Adds additional flags:** Some transaction commands may require additional flags that are specific to the command. See [flags](#flags) for more information.
 - **Returns the command:** Finally, the transaction command is returned.
 
-Each module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Application developers wishing to include the module's transactions will call this function to add them as subcommands in the CLI. Here is the `GetTxCmd()` function for the `x/bank` module:
+Each module must implement `NewTxCmd()`, which aggregates all of the transaction commands of the module. Here is an example from the `x/bank` module:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/bank/client/cli/tx.go#L13-L26
 
-An application using the `x/auth` module can then add the aggregated transaction commands to the root command by calling `rootCmd.AddCommand(auth.GetTxCmd())`.
+Each module must also implement the `GetTxCmd()` method for `AppModuleBasic` that simply returns `NewTxCmd()`. This allows the root command to easily aggregate all of the transaction commands for each module. Here is an example:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/bank/module.go#L74-L78
 
 ### Query Commands
 
@@ -53,24 +54,29 @@ An application using the `x/auth` module can then add the aggregated transaction
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/auth/client/cli/query.go#L75-L105
 
-This query returns the account at a given address. The getter function does the following:
+In the example, `GetAccountCmd()` creates and returns a query command that returns the state of an account based on the provided account address.
+
+In general, the getter function does the following:
 
 - **Constructs the command:** Read the [Cobra Documentation](https://godoc.org/github.com/spf13/cobra) for more detailed information on how to create commands.
   - **Use:** Specifies the format of the user input required to invoke the command. In the example above, `account` is the name of the query command and `[address]` is the argument.
   - **Args:** The number of arguments the user provides. In this case, there is exactly one: `[address]`.
-  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description is available for additional information that is provided when a user adds `--help` to the command.
+  - **Short and Long:** Descriptions for the command. A `Short` description is expected. A `Long` description can be used to provide additional information that is displayed when a user adds the `--help` flag.
   - **RunE:** Defines a function that can return an error. This is the function that is called when the command is executed. This function encapsulates all of the logic to create a new query.
-    - In general, the function usually starts by getting the `clientCtx` with `client.GetClientQueryContext(cmd)`. The `clientCtx` contains information and helper methods relevant to query handling.
+    - The function typically starts by getting the `clientCtx`, which can be done with `client.GetClientQueryContext(cmd)`. The `clientCtx` contains information relevant to query handling.
     - If applicable, the command's arguments are parsed. In this example, the argument `[address]` is parsed.
     - A new `queryClient` is initialized using `NewQueryClient(clientCtx)`. The `queryClient` is then used to call the appropriate [query](./messages-and-queries.md#grpc-queries).
     - The `clientCtx.PrintProto` method is used to format the `proto.Message` object so that the results can be printed back to the user.
 - **Adds query flags:** All query commands must add a set of query [flags](#flags). The query flags are added to the constructed command using `AddQueryFlagsToCmd(cmd)`.
-- **Adds additional flags:** Some query commands may require additional flags that are specific to the command. See [flags](#flags) for more information.
 - **Returns the command:** Finally, the query command is returned.
 
-Each module needs to have a `GetQueryCmd()`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the `GetTxCmd()` command shown above.
+Each module must implement `GetQueryCmd()`, which aggregates all of the query commands of the module. Here is an example from the `x/auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/bank/client/cli/query.go#L20-L39
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/auth/client/cli/query.go#L26-L42
+
+Each module must also implement the `GetQueryCmd()` method for `AppModuleBasic` that returns the `GetQueryCmd()` function. This allows for the root command to easily aggregate all of the query commands for each module. Here is an example:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/auth/module.go#L78-L81
 
 ### Flags
 
@@ -81,16 +87,18 @@ Flags that are specific to a module are typically created in a `flags.go` file i
 Here is an example that adds the `--from` flag to a command:
 
 ```go
-cmd.Flags().String("from", "", "Name or address of private key with which to sign")
+cmd.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 ```
 
-In this example, the value of the flag is a `String`, the name of the flag is `from`, the default value of the flag is `""`, and there is a brief description provided that will be displayed when a user adds `--help` to the command.
+In this example, the value of the flag is a `String`, the name of the flag is `from` (the value of the `FlagFrom` constant), the default value of the flag is `""`, and there is a description that will be displayed when a user adds `--help` to the command.
 
 Here is an example that marks the `--from` flag as _required_:
 
 ```go
-cmd.MarkFlagRequired("from")
+cmd.MarkFlagRequired(FlagFrom)
 ```
+
+For more detailed information on creating flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
 As mentioned in [transaction commands](#transaction-commands), there is a set of flags that all transaction commands must add. This is done with the `AddTxFlagsToCmd` method defined in the SDK's `./client/flags` package.
 
@@ -101,8 +109,6 @@ Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags requ
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/client/flags/flags.go#L83-L93
-
-For more information on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
 ## gRPC
 

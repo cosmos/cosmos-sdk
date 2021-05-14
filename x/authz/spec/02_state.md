@@ -4,11 +4,12 @@ order: 2
 
 # State
 
-## AuthorizationGrant
+## Grant
 
-Grants are identified by combining granter address (the address bytes of the granter), grantee address (the address bytes of the grantee) and Msg type (its TypeURL). Hence we only allow one grant for the (granter, grantee, msg type) triple.
+Grants are identified by combining granter address (the address bytes of the granter), grantee address (the address bytes of the grantee) and Msg type (its type URL). Hence we only allow one grant for the (granter, grantee, msg type) triple.
 
-- AuthorizationGrant: `0x01 | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes |  msgType_bytes-> ProtocolBuffer(AuthorizationGrant)`
+- Grant: `0x01 | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes |  msgType_bytes-> ProtocolBuffer(AuthorizationGrant)`
 
+The grant object encapsulates an Authorization and expiration date:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/proto/cosmos/authz/v1beta1/authz.proto#L32-L37
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/authz.proto#L21-L26

@@ -7,6 +7,10 @@
 - Alessio Treglia (@alessio)
 - Frojdy Dymylja (@fdymylja)
 
+
+## Changelog
+
+- 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the SDK.
 ## Context
 
 [Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to 
@@ -34,7 +38,7 @@ The driving principles of the proposed design are:
 
 We will achieve these delivering on these principles by the following:
 
-1. There will be an external repo called [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) 
+1. There will be a package `rosetta/lib`
    for the implementation of the core Rosetta API features, particularly:
    a. The types and interfaces (`Client`, `OfflineClient`...), this separates design from implementation detail.
    b. The `Server` functionality as this is independent of the Cosmos SDK version.
@@ -207,4 +211,3 @@ Proposed
 ## References
 
 - https://www.rosetta-api.org/
-- https://github.com/tendermint/cosmos-rosetta-gateway

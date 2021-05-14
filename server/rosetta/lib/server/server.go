@@ -8,6 +8,7 @@ import (
 	assert "github.com/coinbase/rosetta-sdk-go/asserter"
 	"github.com/coinbase/rosetta-sdk-go/server"
 	"github.com/coinbase/rosetta-sdk-go/types"
+
 	"github.com/cosmos/cosmos-sdk/server/rosetta/lib/internal/service"
 	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 )

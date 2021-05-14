@@ -11,16 +11,18 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
-	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

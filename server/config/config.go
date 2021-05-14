@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultMinGasPrices = "0.000000001" + sdk.DefaultBondDenom
+	defaultMinGasPrices = "0.0000000001" + sdk.DefaultBondDenom
 )
 
 // BaseConfig defines the server's basic configuration

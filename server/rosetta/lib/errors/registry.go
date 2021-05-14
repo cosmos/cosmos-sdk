@@ -14,7 +14,7 @@ type errorRegistry struct {
 	errors map[int32]*types.Error
 }
 
-func (r errorRegistry) add(err *Error) {
+func (r *errorRegistry) add(err *Error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.sealed {
@@ -36,7 +36,7 @@ func (r errorRegistry) list() []*types.Error {
 	return rosErrs
 }
 
-func (r errorRegistry) seal() {
+func (r *errorRegistry) seal() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sealed = true

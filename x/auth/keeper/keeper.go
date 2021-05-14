@@ -28,7 +28,7 @@ type AccountKeeper struct {
 
 	paramSubspace subspace.Subspace
 
-	observer ObserverI
+	observers []ObserverI
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to

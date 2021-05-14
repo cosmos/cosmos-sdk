@@ -15,5 +15,5 @@ type ObserverI interface {
 }
 
 func (k *AccountKeeper) SetObserverKeeper(observer ObserverI) {
-	k.observer = observer
+	k.observers = append(k.observers, observer)
 }

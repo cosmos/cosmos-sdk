@@ -3,6 +3,7 @@ package rootmulti
 import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 
+	"github.com/cosmos/cosmos-sdk/store/smt"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -24,4 +25,10 @@ func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	prt.RegisterOpDecoder(storetypes.ProofOpIAVLCommitment, storetypes.CommitmentOpDecoder)
 	prt.RegisterOpDecoder(storetypes.ProofOpSimpleMerkleCommitment, storetypes.CommitmentOpDecoder)
 	return
+}
+
+func SMTProofRuntime() (prt *merkle.ProofRuntime) {
+	prt = merkle.NewProofRuntime()
+	prt.RegisterOpDecoder(smt.ProofType, smt.ProofDecoder)
+	return prt
 }

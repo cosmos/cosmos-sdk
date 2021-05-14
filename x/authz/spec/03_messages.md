@@ -17,8 +17,10 @@ This message is expected to fail if:
 - both granter & grantee have same address.
 - provided `Expiration` time less than current unix timestamp.
 - provided `Authorization` is not implemented.
-- there is already a grant for `(granter, grantee, Authorization)` triple.
+-
 - Authorization Method doesn't exist (there is no defined handler in the app router to handle that Msg types)
+
+If there is already a grant for `(granter, grantee, AuthorizationType)` triple, then the new grant will overwrite the previous one. To update or extend an existing grant a new grant with same `(granter, grantee, AuthorizationType)` should be created.
 
 ## Revoke
 

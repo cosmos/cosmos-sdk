@@ -32,8 +32,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgGrant grants the provided authorization to the grantee on the granter's
-// account with the provided expiration time.
+// MsgGrant is represents a Grant request for provided authorization to the grantee on
+// the granter's account with the provided expiration time.
 type MsgGrant struct {
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	Grantee string `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
@@ -330,7 +330,8 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	// Grant grants the provided authorization to the grantee on the granter's
-	// account with the provided expiration time.
+	// account with the provided expiration time. If three is already a grant
+	// for given (grantee, granter, Authoriazation), then it will be overwritten.
 	Grant(ctx context.Context, in *MsgGrant, opts ...grpc.CallOption) (*MsgGrantResponse, error)
 	// Exec attempts to execute the provided messages using
 	// authorizations granted to the grantee. Each message should have only
@@ -379,7 +380,8 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Grant grants the provided authorization to the grantee on the granter's
-	// account with the provided expiration time.
+	// account with the provided expiration time. If three is already a grant
+	// for given (grantee, granter, Authoriazation), then it will be overwritten.
 	Grant(context.Context, *MsgGrant) (*MsgGrantResponse, error)
 	// Exec attempts to execute the provided messages using
 	// authorizations granted to the grantee. Each message should have only

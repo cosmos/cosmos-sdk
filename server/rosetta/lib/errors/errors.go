@@ -38,17 +38,13 @@ func (e *Error) Error() string {
 // Is implements errors.Is for *Error, two errors are considered equal
 // if their error codes are identical
 func (e *Error) Is(err error) bool {
-	// check if one is nil and the other isn't
-	if (e == nil && err != nil) || (err == nil && e != nil) {
-		return false
-	}
 	// assert it can be casted
 	rosErr, ok := err.(*Error)
-	if !ok {
+	if rosErr == nil || !ok {
 		return false
 	}
 	// check that both *Error's are correctly initialized to avoid dereference panics
-	if (rosErr.rosErr == nil && e.rosErr != nil) || (e.rosErr == nil && rosErr.rosErr != nil) {
+	if rosErr.rosErr == nil || e.rosErr == nil {
 		return false
 	}
 	// messages are equal if their error codes match
@@ -71,12 +67,10 @@ func WrapError(err *Error, msg string) *Error {
 // ToRosetta attempts to converting an error into a rosetta
 // error, if the error cannot be converted it will be parsed as unknown
 func ToRosetta(err error) *types.Error {
-	if err == nil {
-		return nil
-	}
+	// if it's null or not known
 	rosErr, ok := err.(*Error)
-	if !ok {
-		return ToRosetta(WrapError(ErrUnknown, err.Error()))
+	if rosErr == nil || !ok {
+		return ToRosetta(WrapError(ErrUnknown, ErrUnknown.Error()))
 	}
 	return rosErr.rosErr
 }

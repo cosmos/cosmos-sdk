@@ -31,3 +31,38 @@ func TestRegisterError(t *testing.T) {
 	assert.NotNil(t, error)
 
 }
+
+func TestError_Error(t *testing.T) {
+	var error *Error
+	// nil cases
+	assert.False(t, ErrOffline.Is(error))
+	error = &Error{}
+	assert.False(t, ErrOffline.Is(error))
+	// wrong type
+	assert.False(t, ErrOffline.Is(&MyError{}))
+	// test with wrapping an error
+	error = WrapError(ErrOffline, "offline")
+	assert.True(t, ErrOffline.Is(error))
+
+	// test equality
+	assert.False(t, ErrOffline.Is(ErrBadGateway))
+	assert.True(t, ErrBadGateway.Is(ErrBadGateway))
+}
+
+func TestToRosetta(t *testing.T) {
+	var error *Error
+	// nil case
+	assert.NotNil(t, ToRosetta(error))
+	// wrong type
+	assert.NotNil(t, ToRosetta(&MyError{}))
+}
+
+type MyError struct {
+}
+
+func (e *MyError) Error() string {
+	return ""
+}
+func (e *MyError) Is(err error) bool {
+	return true
+}

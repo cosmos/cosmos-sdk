@@ -41,9 +41,9 @@ In general, the getter function does the following:
 - **Adds additional flags:** Some transaction commands may require additional flags that are specific to the command. See [flags](#flags) for more information.
 - **Returns the command:** Finally, the transaction command is returned.
 
-Each module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Application developers wishing to include the module's transactions will call this function to add them as subcommands in the CLI. Here is the `GetTxCmd()` function for the `x/auth` module, which adds the `Sign`, `MultiSign`, `ValidateSignatures` and `SignBatch` transaction commands.
+Each module needs to have a `GetTxCmd()`, which aggregates all of the transaction commands of the module. Application developers wishing to include the module's transactions will call this function to add them as subcommands in the CLI. Here is the `GetTxCmd()` function for the `x/bank` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/auth/client/cli/tx.go#L10-L26
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/bank/client/cli/tx.go#L13-L26
 
 An application using the `x/auth` module can then add the aggregated transaction commands to the root command by calling `rootCmd.AddCommand(auth.GetTxCmd())`.
 
@@ -70,6 +70,8 @@ This query returns the account at a given address. The getter function does the 
 
 Each module needs to have a `GetQueryCmd()`, which aggregates all of the query commands of the module. Application developers wishing to include the module's queries will call this function to add them as subcommands in their CLI. Its structure is identical to the `GetTxCmd()` command shown above.
 
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/bank/client/cli/query.go#L20-L39
+
 ### Flags
 
 [Flags](../core/cli.md#flags) allow users to customize commands. `--fees` and `--gas-prices` are examples of flags that allow users to set the [fees](../basics/gas-fees.md) and gas prices for their transactions.
@@ -92,50 +94,35 @@ cmd.MarkFlagRequired("from")
 
 As mentioned in [transaction commands](#transaction-commands), there is a set of flags that all transaction commands must add. This is done with the `AddTxFlagsToCmd` method defined in the SDK's `./client/flags` package.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/cfb5fc03e5092395403d10156c0ee96e6ff1ddbe/client/flags/flags.go#L85-L112
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/client/flags/flags.go#L95-L123
 
 Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate).
 
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/cfb5fc03e5092395403d10156c0ee96e6ff1ddbe/client/flags/flags.go#L73-L83
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/client/flags/flags.go#L83-L93
 
 For more information on flags, visit the [Cobra Documentation](https://github.com/spf13/cobra).
 
 ## gRPC
 
-[gRPC](https://grpc.io/) is the prefered way for external clients like wallets and exchanges to interact with a node.
+[gRPC](https://grpc.io/) is a Remote Procedure Call (RPC) framework. RPC is the preferred way for external clients like wallets and exchanges to interact with a blockchain.
 
-In addition to providing an ABCI query pathway, modules [custom queries](./messages-and-queries.md#grpc-queries) can provide a GRPC proxy server that routes requests in the GRPC protocol to ABCI query requests under the hood.
+In addition to providing an ABCI query pathway, the Cosmos SDK provides a gRPC proxy server that routes gRPC query requests to ABCI query requests.
 
-In order to do that, modules should implement `RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
+In order to do that, modules must implement `RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux)` on `AppModuleBasic` to wire the client gRPC requests to the correct handler inside the module.
 
-Here's an example from the `auth` module:
+Here's an example from the `x/auth` module:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/64b6bb5270e1a3b688c2d98a8f481ae04bb713ca/x/auth/module.go#L69-L72
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/x/auth/module.go#L68-L71
 
 ## gRPC-gateway REST
 
-Applications typically support web services that use HTTP requests (e.g. a web wallet like [Lunie.io](https://lunie.io)). Thus, application developers can also use REST Routes to route HTTP requests to the application's modules; these routes will be used by service providers.
+Applications need to support web services that use HTTP requests (e.g. a web wallet like [Keplr](https://keplr.xyz)). [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) translates REST calls into gRPC calls, which might be useful for clients that do not use gRPC.
 
-[grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway) translates REST calls into gRPC calls, which might be useful for clients that do not use gRPC.
+Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `x/auth` module:
 
-Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `auth` module:
-
-```proto
-// Query defines the gRPC querier service.
-service Query{
-    // Account returns account details based on address.
-    rpc Account (QueryAccountRequest) returns (QueryAccountResponse) {
-      option (google.api.http).get = "/cosmos/auth/v1beta1/accounts/{address}";
-    }
-
-    // Params queries all parameters.
-    rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
-      option (google.api.http).get = "/cosmos/auth/v1beta1/params";
-    }
-}
-```
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/auth/v1beta1/query.proto#L12-L23
 
 gRPC gateway is started in-process along with the application and Tendermint. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
 

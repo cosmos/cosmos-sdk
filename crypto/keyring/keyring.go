@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -233,8 +234,11 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 	if bz == nil {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
-
-	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	key, err := bz.GetPubKey()
+	if err != nil {
+		return "",err
+	}
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(key), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -267,25 +271,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 		return nil, err
 	}
 
-	var priv types.PrivKey
-
-	switch linfo := info.(type) {
-	case LocalInfo:
-		if linfo.PrivKeyArmor == "" {
-			err = fmt.Errorf("private key not available")
-			return nil, err
-		}
-
-		priv, err = legacy.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
-		if err != nil {
-			return nil, err
-		}
-
-	case LedgerInfo, OfflineInfo, MultiInfo:
-		return nil, errors.New("only works on local private keys")
-	}
-
-	return priv, nil
+	return extractPrivKeyFromKeyringEntry(info)
 }
 
 func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
@@ -353,24 +339,9 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		return nil, nil, err
 	}
 
-	var priv types.PrivKey
-
-	switch i := info.(type) {
-	case LocalInfo:
-		if i.PrivKeyArmor == "" {
-			return nil, nil, fmt.Errorf("private key not available")
-		}
-
-		priv, err = legacy.PrivKeyFromBytes([]byte(i.PrivKeyArmor))
-		if err != nil {
-			return nil, nil, err
-		}
-
-	case LedgerInfo:
-		return SignWithLedger(info, msg)
-
-	case OfflineInfo, MultiInfo:
-		return nil, info.GetPubKey(), errors.New("cannot sign with offline keys")
+	priv, err := extractPrivKeyFromKeyringEntry(info)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	sig, err := priv.Sign(msg)
@@ -379,6 +350,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	}
 
 	return sig, priv.PubKey(), nil
+
 }
 
 func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {
@@ -407,7 +379,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 		return nil, err
 	}
 
-	return ks.writeLedgerKey(uid, apk, *hdPath)
+	return ks.writeLedgerKey(uid, apk, BIP44Params{})
 }
 
 // we dont need algo parameter here

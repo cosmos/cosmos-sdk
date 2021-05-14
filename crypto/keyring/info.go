@@ -80,6 +80,26 @@ func (ke KeyringEntry) GetAlgo() string {
 	return ""
 }
 
+func extractPrivKeyFromKeyringEntry(i Info) (cryptotypes.PrivKey, error) {
+	ke, ok := i.(*KeyringEntry)
+	if !ok {
+		return nil, fmt.Errorf("unable to cast info to KeyringEntry")
+	}
+
+	local := ke.GetLocal()
+
+	switch {
+	case local != nil:
+		privKey, ok := local.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
+		if !ok {
+			return nil, fmt.Errorf("unable to cast to cryptotypes.PrivKey")
+		}
+		return privKey, nil
+	default:
+		return nil, fmt.Errorf("unable to export private key object")
+	}
+}
+
 // encoding info
 // we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on keystore
 /*

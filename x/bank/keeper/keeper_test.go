@@ -111,7 +111,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
-	_, ctx := suite.app, suite.ctx
+	ctx := suite.ctx
 
 	require := suite.Require()
 
@@ -119,7 +119,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
 	initialPower := int64(100)
-	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, initialPower)
+	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(ctx, initialPower)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 
 	// set burnerAcc balance
@@ -140,7 +140,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	require.Equal(total.String(), "")
 }
 
-func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blacklist() {
+func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
 	ctx := suite.ctx
 
 	// add module accounts to supply keeper
@@ -484,11 +484,11 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
 
 	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
-	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
-	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Both coins should be send enabled.
-	err := app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	err := app.BankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
 	suite.Require().NoError(err)
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
@@ -497,20 +497,20 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app.BankKeeper.SetParams(ctx, params)
 
 	// Expect our specific override to be enabled, others to be !enabled.
-	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, fooCoin))
-	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
-	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, fooCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Foo coin should be send enabled.
-	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin)
+	err = app.BankKeeper.IsSendEnabledCoins(ctx, fooCoin)
 	suite.Require().NoError(err)
 
 	// Expect an error when one coin is not send enabled.
-	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	err = app.BankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
 	suite.Require().Error(err)
 
 	// Expect an error when all coins are not send enabled.
-	err = app.BankKeeper.SendEnabledCoins(ctx, bondCoin, barCoin)
+	err = app.BankKeeper.IsSendEnabledCoins(ctx, bondCoin, barCoin)
 	suite.Require().Error(err)
 }
 
@@ -538,12 +538,9 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	app.AccountKeeper.SetAccount(ctx, acc)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
+	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, newCoins))
 
-	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
-
-	events := ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(2, len(events))
-
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 	event1 := sdk.Event{
 		Type:       types.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
@@ -570,17 +567,9 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 
-	suite.Require().Equal(abci.Event(event1), events[0])
-	suite.Require().Equal(abci.Event(event2), events[1])
-
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
-	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
-
-	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
-
 	// events are shifted due to the funding account events
-	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(12, len(events))
+	events := ctx.EventManager().ABCIEvents()
+	suite.Require().Equal(10, len(events))
 	suite.Require().Equal(abci.Event(event1), events[8])
 	suite.Require().Equal(abci.Event(event2), events[9])
 }

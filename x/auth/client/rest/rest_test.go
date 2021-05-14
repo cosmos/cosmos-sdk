@@ -228,7 +228,7 @@ func (s *IntegrationTestSuite) testQueryTx(txHeight int64, txHash, txRecipient s
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
+func (s *IntegrationTestSuite) TestQueryLegacyStdTx() {
 	val0 := s.network.Validators[0]
 
 	// We broadcasted a StdTx in SetupSuite.
@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) TestQueryTxWithStdTx() {
 	s.testQueryTx(s.stdTxRes.Height, s.stdTxRes.TxHash, val0.Address.String())
 }
 
-func (s *IntegrationTestSuite) TestQueryTxWithServiceMsg() {
+func (s *IntegrationTestSuite) TestQueryTx() {
 	val := s.network.Validators[0]
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)

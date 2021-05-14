@@ -3,7 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	fmt "fmt"
+	"fmt"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -60,6 +60,20 @@ func (b Balance) Validate() error {
 	return nil
 }
 
+type balanceByAddress struct {
+	addresses []sdk.AccAddress
+	balances  []Balance
+}
+
+func (b balanceByAddress) Len() int { return len(b.addresses) }
+func (b balanceByAddress) Less(i, j int) bool {
+	return bytes.Compare(b.addresses[i], b.addresses[j]) < 0
+}
+func (b balanceByAddress) Swap(i, j int) {
+	b.addresses[i], b.addresses[j] = b.addresses[j], b.addresses[i]
+	b.balances[i], b.balances[j] = b.balances[j], b.balances[i]
+}
+
 // SanitizeGenesisBalances sorts addresses and coin sets.
 func SanitizeGenesisBalances(balances []Balance) []Balance {
 	// Given that this function sorts balances, using the standard library's
@@ -70,39 +84,17 @@ func SanitizeGenesisBalances(balances []Balance) []Balance {
 	// before whereby sdk.AccAddressFromBech32, which is a very expensive operation
 	// compared n * n elements yet discarded computations each time, as per:
 	//  https://github.com/cosmos/cosmos-sdk/issues/7766#issuecomment-786671734
-	// with this change the first step is to extract out and singly produce the values
-	// that'll be used for comparisons and keep them cheap and fast.
 
-	// 1. Retrieve the byte equivalents for each Balance's address and maintain a mapping of
-	// its Balance, as the mapper will be used in sorting.
-	type addrToBalance struct {
-		// We use a pointer here to avoid averse effects of value copying
-		// wasting RAM all around.
-		balance *Balance
-		accAddr []byte
-	}
-	adL := make([]*addrToBalance, 0, len(balances))
-	for _, balance := range balances {
-		balance := balance
-		addr, _ := sdk.AccAddressFromBech32(balance.Address)
-		adL = append(adL, &addrToBalance{
-			balance: &balance,
-			accAddr: []byte(addr),
-		})
+	// 1. Retrieve the address equivalents for each Balance's address.
+	addresses := make([]sdk.AccAddress, len(balances))
+	for i := range balances {
+		addr, _ := sdk.AccAddressFromBech32(balances[i].Address)
+		addresses[i] = addr
 	}
 
-	// 2. Sort with the cheap mapping, using the mapper's
-	// already accAddr bytes values which is a cheaper operation.
-	sort.Slice(adL, func(i, j int) bool {
-		ai, aj := adL[i], adL[j]
-		return bytes.Compare(ai.accAddr, aj.accAddr) < 0
-	})
+	// 2. Sort balances.
+	sort.Sort(balanceByAddress{addresses: addresses, balances: balances})
 
-	// 3. To complete the sorting, we have to now just insert
-	// back the balances in the order returned by the sort.
-	for i, ad := range adL {
-		balances[i] = *ad.balance
-	}
 	return balances
 }
 

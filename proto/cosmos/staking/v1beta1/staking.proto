@@ -284,9 +284,9 @@ message Params {
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
   // power_reduction is the amount of staking tokens required for 1 unit of consensus-engine power
   string power_reduction = 6 [
-    (gogoproto.moretags) = "yaml:\"power_reduction\"",
+    (gogoproto.moretags)   = "yaml:\"power_reduction\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
+    (gogoproto.nullable)   = false
   ];
 }
 

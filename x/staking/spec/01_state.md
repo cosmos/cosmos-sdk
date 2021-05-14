@@ -4,6 +4,10 @@ order: 1
 
 # State
 
+## Pool
+
+Pool is used for tracking bonded and not-bonded token supply of the bond denomination.
+
 ## LastTotalPower
 
 LastTotalPower tracks the total amounts of bonded tokens recorded during the previous end block.

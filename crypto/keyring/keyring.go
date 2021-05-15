@@ -991,6 +991,8 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		if err != nil {
 			return err
 		}
+
+		// TODO make sure migration is correct
 		ks.db.Set(keyring.Item{
 			Key:         key.String(),
 			Data:        versionBytes,

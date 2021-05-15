@@ -27,7 +27,7 @@ type LegacyKeybase interface {
 }
 
 // NewLegacy creates a new instance of a legacy keybase.
-func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
+func NewLegacy(name, dir string, cdc codec.Codec, opts ...KeybaseOption) (LegacyKeybase, error) {
 	if err := tmos.EnsureDir(dir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create Keybase directory: %s", err)
 	}
@@ -36,7 +36,8 @@ func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newDBKeybase(db), nil
+	
+	return newDBKeybase(db, cdc), nil
 }
 
 var _ LegacyKeybase = dbKeybase{}
@@ -47,13 +48,15 @@ var _ LegacyKeybase = dbKeybase{}
 // Deprecated: dbKeybase will be removed in favor of keyringKeybase.
 type dbKeybase struct {
 	db dbm.DB
+	cdc codec.Codec
 }
 
 // newDBKeybase creates a new dbKeybase instance using the provided DB for
 // reading and writing keys.
-func newDBKeybase(db dbm.DB) dbKeybase {
+func newDBKeybase(db dbm.DB, cdc codec.Codec) dbKeybase {
 	return dbKeybase{
 		db: db,
+		cdc: cdc,
 	}
 }
 
@@ -75,12 +78,16 @@ func (kb dbKeybase) List() ([]Info, error) {
 		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
-		info, err := protoUnmarshalInfo(iter.Value(), kb.cdc)
+		// TODO handle it properly
+		ke := KeyringEntry{}
+	//	info, err := protoUnmarshalInfo(iter.Value(), kb.cdc)
+		err = kb.cdc.Unmarshal(iter.Value(), &ke)
+		
 		if err != nil {
 			return nil, err
 		}
 
-		res = append(res, info)
+		res = append(res, ke)
 	}
 
 	return res, nil
@@ -96,8 +103,15 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	if len(bs) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
+	// TODO handle it properly
+	// TODO consider to make separate function for that
+	ke := KeyringEntry{}
+	//return protoUnmarshalInfo(bs, kb.cdc)
+	if err := kb.cdc.Unmarshal(bs, &ke); err != nil {
+		return nil, err
+	}
 
-	return protoUnmarshalInfo(bs, kb.cdc)
+	return ke,nil
 }
 
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
@@ -109,6 +123,9 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 		return nil, err
 	}
 
+	return extractPrivKeyFromKeyringEntry(info)
+
+	/*
 	var priv types.PrivKey
 
 	switch i := info.(type) {
@@ -129,6 +146,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 	}
 
 	return priv, nil
+	*/
 }
 
 func (kb dbKeybase) Export(name string) (armor string, err error) {
@@ -156,12 +174,18 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	info, err := protoUnmarshalInfo(bz, kb.cdc)
-	if err != nil {
-		return
+//	info, err := protoUnmarshalInfo(bz, kb.cdc)
+	ke := KeyringEntry{}
+	if err := kb.cdc.Unmarshal(bz, &ke); err != nil {
+		return "", err
 	}
 
-	return crypto.ArmorPubKeyBytes(info.GetPubKey().Bytes(), string(info.GetAlgo())), nil
+	key, err := ke.GetPubKey()
+	if err != nil {
+		return "", err
+	}
+	// TODO should I refactor ArmorPubKeyBytes
+	return crypto.ArmorPubKeyBytes(key.Bytes(), string(ke.GetAlgo())), nil
 }
 
 // ExportPrivKey returns a private key in ASCII armored format.

@@ -367,6 +367,7 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
+	// TODO shouold we use hd.BIPParams from hd or from keyring package?
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
 	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
@@ -379,18 +380,20 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 		return nil, err
 	}
 
-	return ks.writeLedgerKey(uid, apk, BIP44Params{})
+	return ks.writeLedgerKey(uid, apk, hdPath, algo.Name())
 }
 
 // we dont need algo parameter here
 // what kind of type we should use for pub argument? types.Pubkey or *codectypes.Any?
-func (ks keystore) writeLedgerKey(name string, pubKey *cryptotypes.Any, path BIP44Params) (Info, error) {
+func (ks keystore) writeLedgerKey(name string, pubKey *cryptotypes.Any, path *hd.BIP44Params, algo hd.PubKeyType) (Info, error) {
 	//	info := newLedgerInfo(name, pub, path, algo)
 
-	item := KeyringEntry_Ledger{
-		Ledger: &LedgerInfo(path),
+	// TODO  i assume i should use keyring.BIP44Params instead of hd.BIP44Params
+	// also i use algo as PubKeyType as ledger field
+	ledgerItem := KeyringEntry_Ledger{
+		Ledger: &LedgerInfo{&path, algo.Name()},
 	}
-	info := NewKeyringEntry(name, pubKey, item)
+	info := NewKeyringEntry(name, pubKey, ledgerItem)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
@@ -426,7 +429,12 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(addrHexKeyAsString(info.GetAddress()))
+	addr, err := info.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	err = ks.db.Remove(addrHexKeyAsString(addr))
 	if err != nil {
 		return err
 	}
@@ -481,13 +489,15 @@ func (ks keystore) List() ([]Info, error) {
 			if len(rawInfo.Data) == 0 {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 			}
-
-			info, err := protoUnmarshalInfo(rawInfo.Data, ks.cdc)
+			// TODO ks.cdc which method to use?
+			var ke KeyringEntry
+			err = ks.cdc.Unmarshal(rawInfo.Data, &ke)
+		//	info, err := protoUnmarshalInfo(rawInfo.Data, ks.cdc)
 			if err != nil {
 				return nil, err
 			}
 
-			res = append(res, info)
+			res = append(res, ke)
 		}
 	}
 
@@ -505,7 +515,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 
 	// Default number of words (24): This generates a mnemonic directly from the
 	// number of words by reading system entropy.
-	entropy, err := bip39.NewEntropy(defaultEntropySize)
+	entropy, err := bip39.NewEntropy(DefaultEntropySize)
 	if err != nil {
 		return nil, "", err
 	}
@@ -554,6 +564,7 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 	return ks.options.SupportedAlgos.Contains(algo)
 }
 
+
 func (ks keystore) key(infoKey string) (Info, error) {
 	if err := ks.checkMigrate(); err != nil {
 		return nil, err
@@ -565,7 +576,14 @@ func (ks keystore) key(infoKey string) (Info, error) {
 	if len(bs.Data) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
-	return protoUnmarshalInfo(bs.Data, ks.cdc)
+
+	// TODO just wonder if it does make sense
+	var ke KeyringEntry
+	if err := ks.cdc.Unmarshal(bs.Data, &ke); err != nil {
+		return nil, err
+	}
+	return ke,nil
+//	return protoUnmarshalInfo(bs.Data, ks.cdc)
 }
 
 func (ks keystore) Key(uid string) (Info, error) {
@@ -582,6 +600,36 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
 func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err error) {
+
+	// TODO does it make sense?
+	ke, ok := info.(*KeyringEntry)
+	if !ok {
+		return nil, nil, fmt.Errorf("unable to cast info to KeyringEntry")
+	}
+
+	if ledger := ke.GetLedger(); ledger == nil {
+		return nil, nil, errors.New("not a ledger object")
+	}
+	
+	path, err := info.GetPath()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// should I handle cryptotypes.LedgerPrivKey or *cryptotypes.Any?
+	priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
+	if err != nil {
+		return 
+	}
+
+	sig, err = priv.Sign(msg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sig, priv.PubKey(), nil
+     
+	/*
 	switch info.(type) {
 	case *LedgerInfo, LedgerInfo:
 	default:
@@ -590,7 +638,7 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err er
 
 	path, err := info.GetPath()
 	if err != nil {
-		return
+		return err
 	}
 
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
@@ -604,6 +652,7 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err er
 	}
 
 	return sig, priv.PubKey(), nil
+	*/
 }
 
 func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Config {
@@ -739,20 +788,36 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 		}
 	}
 }
-
+//stopped
 func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
+	
+	apk, err := codectypes.NewAnyWithValue(priv)
+	if err != nil {
+		return nil, err
+	}
+	// TODO what to do with PubKeyType 
+	local := LocalInfo{apk, PubKeyType}
+	ke := NewKeyringEntry(name, apk, local)
+	// TODO should I pass pointer here?
+	if err := ks.writeInfo(ke); err != nil {
+		return nil, err
+	}
+	/*
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshal(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
-
 	return info, nil
+	*/
+
+	return ke, nil
 }
 
 func (ks keystore) writeInfo(info Info) error {
 	key := infoKeyBz(info.GetName())
+	// TODO missing method Marshal
 	serializedInfo, err := ks.cdc.Marshal(info)
 	if err != nil {
 		return err
@@ -774,8 +839,13 @@ func (ks keystore) writeInfo(info Info) error {
 		return err
 	}
 
+	addr, err := info.GetAddress()
+	if err != nil {
+		return err
+	}
+
 	err = ks.db.Set(keyring.Item{
-		Key:  addrHexKeyAsString(info.GetAddress()),
+		Key:  addrHexKeyAsString(addr),
 		Data: key,
 	})
 	if err != nil {
@@ -788,7 +858,11 @@ func (ks keystore) writeInfo(info Info) error {
 // existsInDb returns true if key is in DB. Error is returned only when we have error
 // different thant ErrKeyNotFound
 func (ks keystore) existsInDb(info Info) (bool, error) {
-	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
+	addr, err := info.GetAddress()
+	if err != nil {
+		return false, err
+	}
+	if _, err := ks.db.Get(addrHexKeyAsString(addr)); err == nil {
 		return true, nil // address lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns error
@@ -805,6 +879,23 @@ func (ks keystore) existsInDb(info Info) (bool, error) {
 }
 
 func (ks keystore) writeOfflineKey(name string, pub types.PubKey, algo hd.PubKeyType) (Info, error) {
+	apk, err := codectypes.NewAnyWithValue(pub)
+	if err != nil {
+		return nil, err
+	}
+	// TODO what to do with PubKeyType 
+	offline := OfflineInfo{PubKeyType}
+	ke := NewKeyringEntry(name, apk, offline)
+	// TODO should I pass pointer here?
+
+	err := ks.writeInfo(ke)
+	if err != nil {
+		return nil, err
+	}
+
+	return ke, nil
+
+	/*
 	info := newOfflineInfo(name, pub, algo)
 	err := ks.writeInfo(info)
 	if err != nil {
@@ -812,9 +903,23 @@ func (ks keystore) writeOfflineKey(name string, pub types.PubKey, algo hd.PubKey
 	}
 
 	return info, nil
+	*/
 }
 
 func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error) {
+	apk, err := codectypes.NewAnyWithValue(pub)
+	if err != nil {
+		return nil, err
+	}
+	
+	// TODO missing method marshalTO by MultiInfo
+	ke := NewKeyringEntry(name, apk, MultiInfo{})
+	if err = ks.writeInfo(ke); err != nil {
+		return nil, err
+	}
+	return ke,nil
+
+	/*
 	info, err := NewMultiInfo(name, pub)
 	if err != nil {
 		return nil, err
@@ -824,6 +929,7 @@ func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (Info, error)
 	}
 
 	return info, nil
+	*/
 }
 
 func (ks keystore) checkMigrate() error {
@@ -871,12 +977,26 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		if len(item.Data) == 0 {
 			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
-
-		info, err := protoUnmarshalInfo(item.Data, ks.cdc)
+		// TODO handle unmarshal
+		ke := KeyringEntry{}
+		err = ks.cdc.Unmarshal(item.Data, &ke)
+	//	info, err := protoUnmarshalInfo(item.Data, ks.cdc)
 		if err != nil {
 			return err
 		}
 
+		var versionBytes = make([]byte, 4)
+		binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
+		key, err := ke.GetPubKey()
+		if err != nil {
+			return err
+		}
+		ks.db.Set(keyring.Item{
+			Key:         key.String(),
+			Data:        versionBytes,
+			Description: "SDK kerying version",
+		})
+		/*
 		var versionBytes = make([]byte, 4)
 		binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
 		ks.db.Set(keyring.Item{
@@ -884,6 +1004,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			Data:        versionBytes,
 			Description: "SDK kerying version",
 		})
+		*/
 	}
 
 	return nil

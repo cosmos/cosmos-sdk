@@ -28,8 +28,8 @@ service Msg {
   rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
 }
 
-// MsgGrant is represents a Grant request for provided authorization to the grantee on
-// the granter's account with the provided expiration time.
+// MsgGrant represents a Grant request for the provided authorization to the grantee
+// on behalf of the granter with the provided expiration time.
 message MsgGrant {
   string granter = 1;
   string grantee = 2;

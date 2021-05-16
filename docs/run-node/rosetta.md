@@ -2,8 +2,6 @@
 
 Package rosetta implements the rosetta API for the current cosmos sdk release series.
 
-The client satisfies [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) `Client` interface implementation. 
-
 ## Extension
 
 There are two ways in which you can customize and extend the implementation with your custom settings.
@@ -24,7 +22,7 @@ import (
 
 "context"
 "github.com/coinbase/rosetta-sdk-go/types"
-"github.com/cosmos/cosmos-sdk/server/rosetta"
+"github.com/cosmos/cosmos-sdk/server/rosetta/lib"
 )
 
 // CustomClient embeds the standard cosmos client
@@ -48,7 +46,7 @@ Example:
 
 ```go
 package custom_errors
-import crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
+import crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 
 var customErrRetriable = true
 var CustomError = crgerrs.RegisterError(100, "custom message", customErrRetriable, "description")

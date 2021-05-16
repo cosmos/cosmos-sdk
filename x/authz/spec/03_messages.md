@@ -4,7 +4,7 @@ order: 3
 
 # Messages
 
-In this section we describe the Msg Protobuf service for the authz module.
+In this section we describe the Protobuf Msg service for the authz module.
 
 ## Grant
 
@@ -20,7 +20,7 @@ This message is expected to fail if:
 -
 - Authorization Method doesn't exist (there is no defined handler in the app router to handle that Msg types)
 
-If there is already a grant for `(granter, grantee, AuthorizationType)` triple, then the new grant will overwrite the previous one. To update or extend an existing grant a new grant with same `(granter, grantee, AuthorizationType)` should be created.
+If there is already a grant for the `(granter, grantee, Authorization)` triple, then the new grant will overwrite the previous one. To update or extend an existing grant, a new grant with the same `(granter, grantee, Authorization)` triple should be created.
 
 ## Revoke
 

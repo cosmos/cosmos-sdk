@@ -8,7 +8,7 @@ order: 1
 `x/authz` module defines interfaces and messages grant authorizations to perform actions
 on behalf of one account to other accounts. The design is defined in the [ADR 030](../../../architecture/adr-030-authz-module.md).
 
-Grant is an allowance to execute an Msg by grantee address on behalf of the granter.
+Grant is an allowance to execute a Msg by the grantee on behalf of the granter.
 Authorization is an interface which must be implemented by a concrete authorization logic to validate and execute grants. They are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example in the next section for more details.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/authorizations.go#L14-L25
@@ -20,13 +20,13 @@ Cosmos-SDK `x/authz` module comes with following authorization types
 
 ### SendAuthorization
 
-`SendAuthorization` implements `Authorization` interface for the `cosmos.bank.v1beta1.MsgSend` Msg, that takes a `SpendLimit` and updates it down to zero.
+`SendAuthorization` implements the `Authorization` interface for the `cosmos.bank.v1beta1.MsgSend` Msg. It takes a `SpendLimit` that specifies the maximum amount of tokens the grantee can spend, which is updated as the tokens are spent.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/bank/v1beta1/authz.proto#L10-L19
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/bank/types/send_authorization.go#L25-L40
 
-- `spent_limit` keeps track of how many coins left in the authorization.
+- `spent_limit` keeps track of how many coins are left in the authorization.
 
 
 ### GenericAuthorization

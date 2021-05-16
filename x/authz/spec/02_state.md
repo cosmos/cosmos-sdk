@@ -10,6 +10,6 @@ Grants are identified by combining granter address (the address bytes of the gra
 
 - Grant: `0x01 | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes |  msgType_bytes-> ProtocolBuffer(AuthorizationGrant)`
 
-The grant object encapsulates an Authorization and expiration date:
+The grant object encapsulates an `Authorization` type and an expiration timestamp:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/authz.proto#L21-L26

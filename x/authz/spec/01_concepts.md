@@ -11,7 +11,7 @@ on behalf of one account to other accounts. The design is defined in the [ADR 03
 Grant is an allowance to execute a Msg by the grantee on behalf of the granter.
 Authorization is an interface which must be implemented by a concrete authorization logic to validate and execute grants. They are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example in the next section for more details.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/authorizations.go#L14-L25
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/authorizations.go#L11-L25
 
 
 ## Built-in Authorizations
@@ -33,7 +33,7 @@ Cosmos-SDK `x/authz` module comes with following authorization types
 
 `GenericAuthorization` implements the `Authorization` interface, that gives unrestricted permission to execute the provided Msg on behalf of granter's account.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/authz.proto#L12-L19
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/authz.proto#L14-L19
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/generic_authorization.go#L18-L31
 

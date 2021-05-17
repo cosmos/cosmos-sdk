@@ -10,7 +10,7 @@ In this section we describe the Protobuf Msg service for the authz module.
 
 An authorization-grant is created using the `MsgGrant` message.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L33-L37
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L32-L37
 
 This message is expected to fail if:
 

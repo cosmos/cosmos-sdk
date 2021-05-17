@@ -545,14 +545,9 @@ func (chain *TestChain) CurrentTMClientHeader() *ibctmtypes.Header {
 // CreateTMClientHeader creates a TM header to update the TM client. Args are passed in to allow
 // caller flexibility to use params that differ from the chain.
 func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, trustedHeight clienttypes.Height, timestamp time.Time, tmValSet, tmTrustedVals *tmtypes.ValidatorSet, signers []tmtypes.PrivValidator) *ibctmtypes.Header {
-	var (
-		valSet      *tmproto.ValidatorSet
-		trustedVals *tmproto.ValidatorSet
-	)
 	require.NotNil(chain.t, tmValSet)
 
 	vsetHash := tmValSet.Hash()
-
 	tmHeader := tmtypes.Header{
 		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
 		ChainID:            chainID,
@@ -567,7 +562,7 @@ func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, 
 		AppHash:            chain.CurrentHeader.AppHash,
 		LastResultsHash:    tmhash.Sum([]byte("last_results_hash")),
 		EvidenceHash:       tmhash.Sum([]byte("evidence_hash")),
-		ProposerAddress:    tmValSet.Proposer.Address, //nolint:staticcheck
+		ProposerAddress:    tmValSet.Proposer.Address,
 	}
 	hhash := tmHeader.Hash()
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
@@ -581,13 +576,11 @@ func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, 
 		Commit: commit.ToProto(),
 	}
 
-	if tmValSet != nil {
-		valSet, err = tmValSet.ToProto()
-		if err != nil {
-			panic(err)
-		}
+	valSet, err := tmValSet.ToProto()
+	if err != nil {
+		panic(err)
 	}
-
+	var trustedVals *tmproto.ValidatorSet
 	if tmTrustedVals != nil {
 		trustedVals, err = tmTrustedVals.ToProto()
 		if err != nil {

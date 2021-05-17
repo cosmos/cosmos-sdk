@@ -14,8 +14,9 @@ option (gogoproto.goproto_getters_all) = false;
 // Msg defines the authz Msg service.
 service Msg {
   // Grant grants the provided authorization to the grantee on the granter's
-  // account with the provided expiration time. If three is already a grant
-  // for given (grantee, granter, Authoriazation), then it will be overwritten.
+  // account with the provided expiration time. If there is already a grant
+  // for the given (granter, grantee, Authorization) triple, then the grant
+  // will be overwritten.
   rpc Grant(MsgGrant) returns (MsgGrantResponse);
 
   // Exec attempts to execute the provided messages using

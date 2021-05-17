@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/spf13/pflag"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -66,4 +67,12 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 		Limit:      limit,
 		CountTotal: countTotal,
 	}, nil
+}
+
+// NewClientFromNode sets up Client implementation that communicates with a Tendermint node over
+// JSON RPC and WebSockets
+// TODO: We might not need to manually append `/websocket`:
+// https://github.com/cosmos/cosmos-sdk/issues/8986
+func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
+	return rpchttp.New(nodeURI, "/websocket")
 }

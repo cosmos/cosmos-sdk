@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -98,6 +97,10 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		homeDir, _ := flagSet.GetString(flags.FlagHome)
 		clientCtx = clientCtx.WithHomeDir(homeDir)
 	}
+	if !clientCtx.Simulate || flagSet.Changed(flags.FlagDryRun) {
+		dryRun, _ := flagSet.GetBool(flags.FlagDryRun)
+		clientCtx = clientCtx.WithSimulation(dryRun)
+	}
 
 	if clientCtx.KeyringDir == "" || flagSet.Changed(flags.FlagKeyringDir) {
 		keyringDir, _ := flagSet.GetString(flags.FlagKeyringDir)
@@ -120,7 +123,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		keyringBackend, _ := flagSet.GetString(flags.FlagKeyringBackend)
 
 		if keyringBackend != "" {
-			kr, err := newKeyringFromFlags(clientCtx, keyringBackend)
+			kr, err := NewKeyringFromBackend(clientCtx, keyringBackend)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -134,7 +137,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		if rpcURI != "" {
 			clientCtx = clientCtx.WithNodeURI(rpcURI)
 
-			client, err := rpchttp.New(rpcURI, "/websocket")
+			client, err := NewClientFromNode(rpcURI)
 			if err != nil {
 				return clientCtx, err
 			}
@@ -240,6 +243,21 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 	}
 
 	return clientCtx, nil
+}
+
+// ReadHomeFlag checks if home flag is changed.
+// If this is a case, we update HomeDir field of Client Context
+/* Discovered a bug with Cory
+./build/simd init andrei --home ./test
+cd test/config there is no client.toml configuration file
+*/
+func ReadHomeFlag(clientCtx Context, cmd *cobra.Command) Context {
+	if cmd.Flags().Changed(flags.FlagHome) {
+		rootDir, _ := cmd.Flags().GetString(flags.FlagHome)
+		clientCtx = clientCtx.WithHomeDir(rootDir)
+	}
+
+	return clientCtx
 }
 
 // GetClientQueryContext returns a Context from a command with fields set based on flags

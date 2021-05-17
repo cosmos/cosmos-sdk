@@ -6,7 +6,7 @@ order: 11
 
 This document details how to build CLI and REST interfaces for a module. Examples from various SDK modules are included. {synopsis}
 
-## Pre-Requisite Readings
+## Prerequisite Readings
 
 - [Building Modules Intro](./intro.md) {prereq}
 

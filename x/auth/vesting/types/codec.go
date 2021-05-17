@@ -55,7 +55,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCreateVestingAccount{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &Msg_ServiceDesc)
 }
 
 var amino = codec.NewLegacyAmino()

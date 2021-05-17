@@ -19,7 +19,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgVerifyInvariant{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &Msg_ServiceDesc)
 }
 
 var (

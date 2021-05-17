@@ -33,7 +33,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&StakeAuthorization{},
 	)
 
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
+	msgservice.RegisterMsgServiceDesc(registry, &Msg_ServiceDesc)
 }
 
 var (

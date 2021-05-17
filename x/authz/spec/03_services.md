@@ -2,7 +2,7 @@
 order: 3
 -->
 
-# Messages
+# Tx Msg Service
 
 In this section we describe the Protobuf Msg service for the authz module.
 
@@ -24,7 +24,7 @@ If there is already a grant for the `(granter, grantee, Authorization)` triple, 
 
 ## Revoke
 
-An allowed authorization can be removed with `MsgRevoke` message.
+An grant can be removed with `MsgRevoke` message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L60-L64
 

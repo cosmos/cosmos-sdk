@@ -19,7 +19,7 @@ jobs:
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Create release
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v2.5.0
         with:
           args: release --rm-dist --release-notes ./RELEASE_CHANGELOG.md
         env:

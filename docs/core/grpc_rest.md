@@ -65,7 +65,7 @@ All routes are configured under the following fields in `~/.simapp/config/app.to
 
 If, for various reasons, you cannot use gRPC (for example, you are building a web application, and browsers don't support HTTP2 on which gRPC is built), then the SDK offers REST routes via gRPC-gateway.
 
-[gRPC-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) is a tool to expose gRPC endpoints as REST endpoints. For each RPC endpoint defined in a Protobuf service, the SDK offers a REST equivalent. For instance, querying a balance could be done via the `/cosmos.bank.v1beta1.Query/AllBalances` gRPC endpoint, or alternatively via the gRPC-gateway `"/cosmos/bank/v1beta1/balances/{address}"` REST endpoint: both will return the same result. For each RPC method defined in a Protobuf service, the corresponding REST endpoint is defined as an option:
+[gRPC-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) is a tool to expose gRPC endpoints as REST endpoints. For each RPC endpoint defined in a Protobuf service, the SDK offers a REST equivalent. For instance, querying a balance could be done via the `/cosmos.bank.v1beta1.QueryAllBalances` gRPC endpoint, or alternatively via the gRPC-gateway `"/cosmos/bank/v1beta1/balances/{address}"` REST endpoint: both will return the same result. For each RPC method defined in a Protobuf service, the corresponding REST endpoint is defined as an option:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/proto/cosmos/bank/v1beta1/query.proto#L19-L22
 
@@ -92,7 +92,7 @@ Independently from the Cosmos SDK, Tendermint also exposes a RPC server. This RP
 Some Tendermint RPC endpoints are directly related to the Cosmos SDK:
 
 - `/abci_query`: this endpoint will query the application for state. As the `path` parameter, you can send the following strings:
-  - any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.Query/AllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
+  - any Protobuf fully-qualified service method, such as `/cosmos.bank.v1beta1.QueryAllBalances`. The `data` field should then include the method's request parameter(s) encoded as bytes using Protobuf.
   - `/app/simulate`: this will simulate a transaction, and return some information such as gas used.
   - `/app/version`: this will return the application's version.
   - `/store/{path}`: this will query the store directly.

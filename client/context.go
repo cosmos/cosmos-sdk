@@ -216,7 +216,6 @@ func (ctx Context) WithViper(prefix string) Context {
 	v := viper.New()
 	v.SetEnvPrefix(prefix)
 	v.AutomaticEnv()
-
 	ctx.Viper = v
 	return ctx
 }

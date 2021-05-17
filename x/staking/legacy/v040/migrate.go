@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v034staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v034"
 	v038staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v038"
+	v040staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func migrateBondStatus(oldStatus v034staking.BondStatus) BondStatus {
@@ -128,6 +129,7 @@ func Migrate(stakingState v038staking.GenesisState) *GenesisState {
 			MaxEntries:        uint32(stakingState.Params.MaxEntries),
 			HistoricalEntries: uint32(stakingState.Params.HistoricalEntries),
 			BondDenom:         stakingState.Params.BondDenom,
+			MinCommissionRate: v040staking.DefaultMinCommissionRate,
 		},
 		LastTotalPower:       stakingState.LastTotalPower,
 		LastValidatorPowers:  newLastValidatorPowers,

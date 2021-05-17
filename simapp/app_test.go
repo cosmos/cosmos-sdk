@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	authz_m "github.com/cosmos/cosmos-sdk/x/authz/module"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
@@ -168,7 +168,7 @@ func TestRunMigrations(t *testing.T) {
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
-					"authz":        authz_m.AppModule{}.ConsensusVersion(),
+					"authz":        authzmodule.AppModule{}.ConsensusVersion(),
 					"staking":      staking.AppModule{}.ConsensusVersion(),
 					"mint":         mint.AppModule{}.ConsensusVersion(),
 					"distribution": distribution.AppModule{}.ConsensusVersion(),
@@ -219,7 +219,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 		module.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
-			"authz":        authz_m.AppModule{}.ConsensusVersion(),
+			"authz":        authzmodule.AppModule{}.ConsensusVersion(),
 			"staking":      staking.AppModule{}.ConsensusVersion(),
 			"mint":         mint.AppModule{}.ConsensusVersion(),
 			"distribution": distribution.AppModule{}.ConsensusVersion(),

@@ -10,9 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/hashicorp/golang-lru/simplelru"
+	yaml "gopkg.in/yaml.v2"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"

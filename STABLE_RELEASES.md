@@ -23,7 +23,7 @@ and must follow the [Point Release Procedure](CONTRIBUTING.md).
 ### Rationale
 
 Unlike in-development `master` branch snapshots, **Cosmos-SDK** releases are subject to much wider adoption,
-and by a significantly different demographic of users. During development, changes in the `master` branch 
+and by a significantly different demographic of users. During development, changes in the `master` branch
 affect SDK users, application developers, early adopters, and other advanced users that elect to use
 unstable experimental software at their own risk.
 
@@ -82,9 +82,9 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 
  * **State machine changes**.
  * **Client application's code-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
- 
+
  In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
- 
+
 ## Stable Release Exception - Procedure
 
 1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [0.42 «Stargate»](https://github.com/cosmos/cosmos-sdk/labels/0.42%20LTS%20%28Stargate%29) to the issue.
@@ -123,9 +123,8 @@ Their responsibilites include:
  * Approving/rejecting proposed changes to a stable release series.
  * Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
 
-The Stable Release Managers are appointed by the Interchain Foundation.
+The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
 
-*Stable Release Managers* for the **0.42 «Stargate»** release series follow:
-
-* @alessio - Alessio Treglia
 * @clevinson - Cory Levinson
+* @amaurym - Amaruy Martiny
+* @robert-zaremba - Robert Zaremba

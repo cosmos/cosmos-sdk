@@ -189,17 +189,17 @@ type ReflectionServiceServer interface {
 	// GetAuthnDescriptor returns information on how to authenticate transactions in the application
 	// NOTE: this RPC is still experimental and might be subject to breaking changes or removal in
 	// future releases of the cosmos-sdk.
-	GetAuthnDescriptor(types.Context, *GetAuthnDescriptorRequest) (*GetAuthnDescriptorResponse, error)
+	GetAuthnDescriptor(context.Context, *GetAuthnDescriptorRequest) (*GetAuthnDescriptorResponse, error)
 	// GetChainDescriptor returns the description of the chain
-	GetChainDescriptor(types.Context, *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error)
+	GetChainDescriptor(context.Context, *GetChainDescriptorRequest) (*GetChainDescriptorResponse, error)
 	// GetCodecDescriptor returns the descriptor of the codec of the application
-	GetCodecDescriptor(types.Context, *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error)
+	GetCodecDescriptor(context.Context, *GetCodecDescriptorRequest) (*GetCodecDescriptorResponse, error)
 	// GetConfigurationDescriptor returns the descriptor for the sdk.Config of the application
-	GetConfigurationDescriptor(types.Context, *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error)
+	GetConfigurationDescriptor(context.Context, *GetConfigurationDescriptorRequest) (*GetConfigurationDescriptorResponse, error)
 	// GetQueryServicesDescriptor returns the available gRPC queryable services of the application
-	GetQueryServicesDescriptor(types.Context, *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error)
+	GetQueryServicesDescriptor(context.Context, *GetQueryServicesDescriptorRequest) (*GetQueryServicesDescriptorResponse, error)
 	// GetTxDescriptor returns information on the used transaction object and available msgs that can be used
-	GetTxDescriptor(types.Context, *GetTxDescriptorRequest) (*GetTxDescriptorResponse, error)
+	GetTxDescriptor(context.Context, *GetTxDescriptorRequest) (*GetTxDescriptorResponse, error)
 }
 
 func RegisterReflectionServiceServer(s grpc.ServiceRegistrar, srv ReflectionServiceServer) {

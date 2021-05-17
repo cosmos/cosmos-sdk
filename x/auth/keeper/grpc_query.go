@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -14,7 +15,7 @@ import (
 
 var _ types.QueryServer = AccountKeeper{}
 
-func (ak AccountKeeper) Accounts(c sdk.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
+func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -43,7 +44,7 @@ func (ak AccountKeeper) Accounts(c sdk.Context, req *types.QueryAccountsRequest)
 }
 
 // Account returns account details based on address
-func (ak AccountKeeper) Account(c sdk.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
+func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -72,7 +73,7 @@ func (ak AccountKeeper) Account(c sdk.Context, req *types.QueryAccountRequest) (
 }
 
 // Params returns parameters of auth module
-func (ak AccountKeeper) Params(c sdk.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (ak AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

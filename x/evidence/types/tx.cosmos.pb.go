@@ -57,7 +57,7 @@ func (c *msgClient) SubmitEvidence(ctx context.Context, in *MsgSubmitEvidence, o
 type MsgServer interface {
 	// SubmitEvidence submits an arbitrary Evidence of misbehavior such as equivocation or
 	// counterfactual signing.
-	SubmitEvidence(types.Context, *MsgSubmitEvidence) (*MsgSubmitEvidenceResponse, error)
+	SubmitEvidence(context.Context, *MsgSubmitEvidence) (*MsgSubmitEvidenceResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

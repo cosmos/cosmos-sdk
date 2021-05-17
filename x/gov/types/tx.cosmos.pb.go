@@ -133,13 +133,13 @@ func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.Ca
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// SubmitProposal defines a method to create new proposal given a content.
-	SubmitProposal(types.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
+	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
 	// Vote defines a method to add a vote on a specific proposal.
-	Vote(types.Context, *MsgVote) (*MsgVoteResponse, error)
+	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// VoteWeighted defines a method to add a weighted vote on a specific proposal.
-	VoteWeighted(types.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error)
+	VoteWeighted(context.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error)
 	// Deposit defines a method to add deposit on a specific proposal.
-	Deposit(types.Context, *MsgDeposit) (*MsgDepositResponse, error)
+	Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

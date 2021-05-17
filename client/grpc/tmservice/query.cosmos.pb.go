@@ -185,17 +185,17 @@ func (c *serviceClient) GetValidatorSetByHeight(ctx context.Context, in *GetVali
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
 	// GetNodeInfo queries the current node info.
-	GetNodeInfo(types.Context, *GetNodeInfoRequest) (*GetNodeInfoResponse, error)
+	GetNodeInfo(context.Context, *GetNodeInfoRequest) (*GetNodeInfoResponse, error)
 	// GetSyncing queries node syncing.
-	GetSyncing(types.Context, *GetSyncingRequest) (*GetSyncingResponse, error)
+	GetSyncing(context.Context, *GetSyncingRequest) (*GetSyncingResponse, error)
 	// GetLatestBlock returns the latest block.
-	GetLatestBlock(types.Context, *GetLatestBlockRequest) (*GetLatestBlockResponse, error)
+	GetLatestBlock(context.Context, *GetLatestBlockRequest) (*GetLatestBlockResponse, error)
 	// GetBlockByHeight queries block for given height.
-	GetBlockByHeight(types.Context, *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error)
+	GetBlockByHeight(context.Context, *GetBlockByHeightRequest) (*GetBlockByHeightResponse, error)
 	// GetLatestValidatorSet queries latest validator-set.
-	GetLatestValidatorSet(types.Context, *GetLatestValidatorSetRequest) (*GetLatestValidatorSetResponse, error)
+	GetLatestValidatorSet(context.Context, *GetLatestValidatorSetRequest) (*GetLatestValidatorSetResponse, error)
 	// GetValidatorSetByHeight queries validator-set at a given height.
-	GetValidatorSetByHeight(types.Context, *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error)
+	GetValidatorSetByHeight(context.Context, *GetValidatorSetByHeightRequest) (*GetValidatorSetByHeightResponse, error)
 }
 
 func RegisterServiceServer(s grpc.ServiceRegistrar, srv ServiceServer) {

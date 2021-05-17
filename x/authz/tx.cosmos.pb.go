@@ -112,14 +112,14 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 type MsgServer interface {
 	// Grant grants the provided authorization to the grantee on the granter's
 	// account with the provided expiration time.
-	Grant(types.Context, *MsgGrant) (*MsgGrantResponse, error)
+	Grant(context.Context, *MsgGrant) (*MsgGrantResponse, error)
 	// Exec attempts to execute the provided messages using
 	// authorizations granted to the grantee. Each message should have only
 	// one signer corresponding to the granter of the authorization.
-	Exec(types.Context, *MsgExec) (*MsgExecResponse, error)
+	Exec(context.Context, *MsgExec) (*MsgExecResponse, error)
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
-	Revoke(types.Context, *MsgRevoke) (*MsgRevokeResponse, error)
+	Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

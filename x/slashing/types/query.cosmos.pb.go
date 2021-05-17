@@ -107,11 +107,11 @@ func (c *queryClient) SigningInfos(ctx context.Context, in *QuerySigningInfosReq
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries the parameters of slashing module
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// SigningInfo queries the signing info of given cons address
-	SigningInfo(types.Context, *QuerySigningInfoRequest) (*QuerySigningInfoResponse, error)
+	SigningInfo(context.Context, *QuerySigningInfoRequest) (*QuerySigningInfoResponse, error)
 	// SigningInfos queries signing info of all validators
-	SigningInfos(types.Context, *QuerySigningInfosRequest) (*QuerySigningInfosResponse, error)
+	SigningInfos(context.Context, *QuerySigningInfosRequest) (*QuerySigningInfosResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

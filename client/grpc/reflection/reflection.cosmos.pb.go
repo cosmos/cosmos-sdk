@@ -84,10 +84,10 @@ func (c *reflectionServiceClient) ListImplementations(ctx context.Context, in *L
 type ReflectionServiceServer interface {
 	// ListAllInterfaces lists all the interfaces registered in the interface
 	// registry.
-	ListAllInterfaces(types.Context, *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error)
+	ListAllInterfaces(context.Context, *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error)
 	// ListImplementations list all the concrete types that implement a given
 	// interface.
-	ListImplementations(types.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
+	ListImplementations(context.Context, *ListImplementationsRequest) (*ListImplementationsResponse, error)
 }
 
 func RegisterReflectionServiceServer(s grpc.ServiceRegistrar, srv ReflectionServiceServer) {

@@ -57,7 +57,7 @@ func (c *msgClient) CreateVestingAccount(ctx context.Context, in *MsgCreateVesti
 type MsgServer interface {
 	// CreateVestingAccount defines a method that enables creating a vesting
 	// account.
-	CreateVestingAccount(types.Context, *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error)
+	CreateVestingAccount(context.Context, *MsgCreateVestingAccount) (*MsgCreateVestingAccountResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

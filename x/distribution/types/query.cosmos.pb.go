@@ -264,24 +264,24 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries params of the distribution module.
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address.
-	ValidatorOutstandingRewards(types.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
+	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
 	// ValidatorCommission queries accumulated commission for a validator.
-	ValidatorCommission(types.Context, *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error)
+	ValidatorCommission(context.Context, *QueryValidatorCommissionRequest) (*QueryValidatorCommissionResponse, error)
 	// ValidatorSlashes queries slash events of a validator.
-	ValidatorSlashes(types.Context, *QueryValidatorSlashesRequest) (*QueryValidatorSlashesResponse, error)
+	ValidatorSlashes(context.Context, *QueryValidatorSlashesRequest) (*QueryValidatorSlashesResponse, error)
 	// DelegationRewards queries the total rewards accrued by a delegation.
-	DelegationRewards(types.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error)
+	DelegationRewards(context.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error)
 	// DelegationTotalRewards queries the total rewards accrued by a each
 	// validator.
-	DelegationTotalRewards(types.Context, *QueryDelegationTotalRewardsRequest) (*QueryDelegationTotalRewardsResponse, error)
+	DelegationTotalRewards(context.Context, *QueryDelegationTotalRewardsRequest) (*QueryDelegationTotalRewardsResponse, error)
 	// DelegatorValidators queries the validators of a delegator.
-	DelegatorValidators(types.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
+	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
 	// DelegatorWithdrawAddress queries withdraw address of a delegator.
-	DelegatorWithdrawAddress(types.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
+	DelegatorWithdrawAddress(context.Context, *QueryDelegatorWithdrawAddressRequest) (*QueryDelegatorWithdrawAddressResponse, error)
 	// CommunityPool queries the community pool coins.
-	CommunityPool(types.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
+	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

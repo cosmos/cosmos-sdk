@@ -55,7 +55,7 @@ func (c *msgClient) VerifyInvariant(ctx context.Context, in *MsgVerifyInvariant,
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// VerifyInvariant defines a method to verify a particular invariance.
-	VerifyInvariant(types.Context, *MsgVerifyInvariant) (*MsgVerifyInvariantResponse, error)
+	VerifyInvariant(context.Context, *MsgVerifyInvariant) (*MsgVerifyInvariantResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

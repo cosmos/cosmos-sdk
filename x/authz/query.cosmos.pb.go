@@ -55,7 +55,7 @@ func (c *queryClient) Grants(ctx context.Context, in *QueryGrantsRequest, opts .
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Returns list of `Authorization`, granted to the grantee by the granter.
-	Grants(types.Context, *QueryGrantsRequest) (*QueryGrantsResponse, error)
+	Grants(context.Context, *QueryGrantsRequest) (*QueryGrantsResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

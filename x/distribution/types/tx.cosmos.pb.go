@@ -138,16 +138,16 @@ func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityP
 type MsgServer interface {
 	// SetWithdrawAddress defines a method to change the withdraw address
 	// for a delegator (or validator self-delegation).
-	SetWithdrawAddress(types.Context, *MsgSetWithdrawAddress) (*MsgSetWithdrawAddressResponse, error)
+	SetWithdrawAddress(context.Context, *MsgSetWithdrawAddress) (*MsgSetWithdrawAddressResponse, error)
 	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
 	// from a single validator.
-	WithdrawDelegatorReward(types.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
+	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
 	// WithdrawValidatorCommission defines a method to withdraw the
 	// full commission to the validator address.
-	WithdrawValidatorCommission(types.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
+	WithdrawValidatorCommission(context.Context, *MsgWithdrawValidatorCommission) (*MsgWithdrawValidatorCommissionResponse, error)
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
-	FundCommunityPool(types.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
+	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

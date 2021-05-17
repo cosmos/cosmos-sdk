@@ -81,9 +81,9 @@ func (c *queryClient) AllEvidence(ctx context.Context, in *QueryAllEvidenceReque
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Evidence queries evidence based on evidence hash.
-	Evidence(types.Context, *QueryEvidenceRequest) (*QueryEvidenceResponse, error)
+	Evidence(context.Context, *QueryEvidenceRequest) (*QueryEvidenceResponse, error)
 	// AllEvidence queries all evidence.
-	AllEvidence(types.Context, *QueryAllEvidenceRequest) (*QueryAllEvidenceResponse, error)
+	AllEvidence(context.Context, *QueryAllEvidenceRequest) (*QueryAllEvidenceResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

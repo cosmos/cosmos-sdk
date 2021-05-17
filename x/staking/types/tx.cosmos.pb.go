@@ -162,18 +162,18 @@ func (c *msgClient) Undelegate(ctx context.Context, in *MsgUndelegate, opts ...g
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// CreateValidator defines a method for creating a new validator.
-	CreateValidator(types.Context, *MsgCreateValidator) (*MsgCreateValidatorResponse, error)
+	CreateValidator(context.Context, *MsgCreateValidator) (*MsgCreateValidatorResponse, error)
 	// EditValidator defines a method for editing an existing validator.
-	EditValidator(types.Context, *MsgEditValidator) (*MsgEditValidatorResponse, error)
+	EditValidator(context.Context, *MsgEditValidator) (*MsgEditValidatorResponse, error)
 	// Delegate defines a method for performing a delegation of coins
 	// from a delegator to a validator.
-	Delegate(types.Context, *MsgDelegate) (*MsgDelegateResponse, error)
+	Delegate(context.Context, *MsgDelegate) (*MsgDelegateResponse, error)
 	// BeginRedelegate defines a method for performing a redelegation
 	// of coins from a delegator and source validator to a destination validator.
-	BeginRedelegate(types.Context, *MsgBeginRedelegate) (*MsgBeginRedelegateResponse, error)
+	BeginRedelegate(context.Context, *MsgBeginRedelegate) (*MsgBeginRedelegateResponse, error)
 	// Undelegate defines a method for performing an undelegation from a
 	// delegate and a validator.
-	Undelegate(types.Context, *MsgUndelegate) (*MsgUndelegateResponse, error)
+	Undelegate(context.Context, *MsgUndelegate) (*MsgUndelegateResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

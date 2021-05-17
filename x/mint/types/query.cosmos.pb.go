@@ -107,11 +107,11 @@ func (c *queryClient) AnnualProvisions(ctx context.Context, in *QueryAnnualProvi
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params returns the total set of minting parameters.
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Inflation returns the current minting inflation value.
-	Inflation(types.Context, *QueryInflationRequest) (*QueryInflationResponse, error)
+	Inflation(context.Context, *QueryInflationRequest) (*QueryInflationResponse, error)
 	// AnnualProvisions current minting annual provisions value.
-	AnnualProvisions(types.Context, *QueryAnnualProvisionsRequest) (*QueryAnnualProvisionsResponse, error)
+	AnnualProvisions(context.Context, *QueryAnnualProvisionsRequest) (*QueryAnnualProvisionsResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

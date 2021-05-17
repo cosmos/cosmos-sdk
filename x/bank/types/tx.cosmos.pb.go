@@ -81,9 +81,9 @@ func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grp
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Send defines a method for sending coins from one account to another account.
-	Send(types.Context, *MsgSend) (*MsgSendResponse, error)
+	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
-	MultiSend(types.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
+	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

@@ -211,19 +211,19 @@ func (c *queryClient) DenomsMetadata(ctx context.Context, in *QueryDenomsMetadat
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Balance queries the balance of a single coin for a single account.
-	Balance(types.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
+	Balance(context.Context, *QueryBalanceRequest) (*QueryBalanceResponse, error)
 	// AllBalances queries the balance of all coins for a single account.
-	AllBalances(types.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
+	AllBalances(context.Context, *QueryAllBalancesRequest) (*QueryAllBalancesResponse, error)
 	// TotalSupply queries the total supply of all coins.
-	TotalSupply(types.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error)
+	TotalSupply(context.Context, *QueryTotalSupplyRequest) (*QueryTotalSupplyResponse, error)
 	// SupplyOf queries the supply of a single coin.
-	SupplyOf(types.Context, *QuerySupplyOfRequest) (*QuerySupplyOfResponse, error)
+	SupplyOf(context.Context, *QuerySupplyOfRequest) (*QuerySupplyOfResponse, error)
 	// Params queries the parameters of x/bank module.
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// DenomsMetadata queries the client metadata of a given coin denomination.
-	DenomMetadata(types.Context, *QueryDenomMetadataRequest) (*QueryDenomMetadataResponse, error)
+	DenomMetadata(context.Context, *QueryDenomMetadataRequest) (*QueryDenomMetadataResponse, error)
 	// DenomsMetadata queries the client metadata for all registered coin denominations.
-	DenomsMetadata(types.Context, *QueryDenomsMetadataRequest) (*QueryDenomsMetadataResponse, error)
+	DenomsMetadata(context.Context, *QueryDenomsMetadataRequest) (*QueryDenomsMetadataResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

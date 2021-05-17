@@ -59,7 +59,7 @@ type MsgServer interface {
 	// Unjail defines a method for unjailing a jailed validator, thus returning
 	// them into the bonded validator set, so they can begin receiving provisions
 	// and rewards again.
-	Unjail(types.Context, *MsgUnjail) (*MsgUnjailResponse, error)
+	Unjail(context.Context, *MsgUnjail) (*MsgUnjailResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

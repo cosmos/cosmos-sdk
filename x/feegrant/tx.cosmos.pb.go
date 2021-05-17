@@ -84,10 +84,10 @@ func (c *msgClient) RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance,
 type MsgServer interface {
 	// GrantAllowance grants fee allowance to the grantee on the granter's
 	// account with the provided expiration time.
-	GrantAllowance(types.Context, *MsgGrantAllowance) (*MsgGrantAllowanceResponse, error)
+	GrantAllowance(context.Context, *MsgGrantAllowance) (*MsgGrantAllowanceResponse, error)
 	// RevokeAllowance revokes any fee allowance of granter's account that
 	// has been granted to the grantee.
-	RevokeAllowance(types.Context, *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error)
+	RevokeAllowance(context.Context, *MsgRevokeAllowance) (*MsgRevokeAllowanceResponse, error)
 }
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {

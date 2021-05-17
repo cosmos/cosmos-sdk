@@ -231,7 +231,7 @@ func serverSignature(g *protogen.GeneratedFile, method *protogen.Method) string 
 		return ""
 	}
 	var reqArgs []string
-	reqArgs = append(reqArgs, g.QualifiedGoIdent(cosmosTypesPackage.Ident("Context")))
+	reqArgs = append(reqArgs, g.QualifiedGoIdent(contextPackage.Ident("Context")))
 	reqArgs = append(reqArgs, "*"+g.QualifiedGoIdent(method.Input.GoIdent))
 	ret := "(*" + g.QualifiedGoIdent(method.Output.GoIdent) + ", error)"
 	return method.GoName + "(" + strings.Join(reqArgs, ", ") + ") " + ret

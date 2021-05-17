@@ -1,8 +1,7 @@
 package reflection
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -22,7 +21,7 @@ var _ ReflectionServiceServer = (*reflectionServiceServer)(nil)
 
 // ListAllInterfaces implements the ListAllInterfaces method of the
 // ReflectionServiceServer interface.
-func (r reflectionServiceServer) ListAllInterfaces(_ sdk.Context, _ *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
+func (r reflectionServiceServer) ListAllInterfaces(_ context.Context, _ *ListAllInterfacesRequest) (*ListAllInterfacesResponse, error) {
 	ifaces := r.interfaceRegistry.ListAllInterfaces()
 
 	return &ListAllInterfacesResponse{InterfaceNames: ifaces}, nil
@@ -30,7 +29,7 @@ func (r reflectionServiceServer) ListAllInterfaces(_ sdk.Context, _ *ListAllInte
 
 // ListImplementations implements the ListImplementations method of the
 // ReflectionServiceServer interface.
-func (r reflectionServiceServer) ListImplementations(_ sdk.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {
+func (r reflectionServiceServer) ListImplementations(_ context.Context, req *ListImplementationsRequest) (*ListImplementationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

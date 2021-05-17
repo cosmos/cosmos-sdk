@@ -397,37 +397,37 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Validators queries all validators that match the given status.
-	Validators(types.Context, *QueryValidatorsRequest) (*QueryValidatorsResponse, error)
+	Validators(context.Context, *QueryValidatorsRequest) (*QueryValidatorsResponse, error)
 	// Validator queries validator info for given validator address.
-	Validator(types.Context, *QueryValidatorRequest) (*QueryValidatorResponse, error)
+	Validator(context.Context, *QueryValidatorRequest) (*QueryValidatorResponse, error)
 	// ValidatorDelegations queries delegate info for given validator.
-	ValidatorDelegations(types.Context, *QueryValidatorDelegationsRequest) (*QueryValidatorDelegationsResponse, error)
+	ValidatorDelegations(context.Context, *QueryValidatorDelegationsRequest) (*QueryValidatorDelegationsResponse, error)
 	// ValidatorUnbondingDelegations queries unbonding delegations of a validator.
-	ValidatorUnbondingDelegations(types.Context, *QueryValidatorUnbondingDelegationsRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
+	ValidatorUnbondingDelegations(context.Context, *QueryValidatorUnbondingDelegationsRequest) (*QueryValidatorUnbondingDelegationsResponse, error)
 	// Delegation queries delegate info for given validator delegator pair.
-	Delegation(types.Context, *QueryDelegationRequest) (*QueryDelegationResponse, error)
+	Delegation(context.Context, *QueryDelegationRequest) (*QueryDelegationResponse, error)
 	// UnbondingDelegation queries unbonding info for given validator delegator
 	// pair.
-	UnbondingDelegation(types.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
+	UnbondingDelegation(context.Context, *QueryUnbondingDelegationRequest) (*QueryUnbondingDelegationResponse, error)
 	// DelegatorDelegations queries all delegations of a given delegator address.
-	DelegatorDelegations(types.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
+	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
 	// DelegatorUnbondingDelegations queries all unbonding delegations of a given
 	// delegator address.
-	DelegatorUnbondingDelegations(types.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
+	DelegatorUnbondingDelegations(context.Context, *QueryDelegatorUnbondingDelegationsRequest) (*QueryDelegatorUnbondingDelegationsResponse, error)
 	// Redelegations queries redelegations of given address.
-	Redelegations(types.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
+	Redelegations(context.Context, *QueryRedelegationsRequest) (*QueryRedelegationsResponse, error)
 	// DelegatorValidators queries all validators info for given delegator
 	// address.
-	DelegatorValidators(types.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
+	DelegatorValidators(context.Context, *QueryDelegatorValidatorsRequest) (*QueryDelegatorValidatorsResponse, error)
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
-	DelegatorValidator(types.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
+	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
 	// HistoricalInfo queries the historical info for given height.
-	HistoricalInfo(types.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
+	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
-	Pool(types.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
+	Pool(context.Context, *QueryPoolRequest) (*QueryPoolResponse, error)
 	// Parameters queries the staking parameters.
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

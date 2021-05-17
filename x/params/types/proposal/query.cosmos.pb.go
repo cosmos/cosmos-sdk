@@ -57,7 +57,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 type QueryServer interface {
 	// Params queries a specific parameter of a module, given its subspace and
 	// key.
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

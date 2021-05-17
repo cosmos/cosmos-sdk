@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -17,7 +18,7 @@ import (
 var _ authz.QueryServer = Keeper{}
 
 // Grants implements the Query/Grants gRPC method.
-func (k Keeper) Grants(c sdk.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
+func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

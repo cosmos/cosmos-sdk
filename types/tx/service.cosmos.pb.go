@@ -133,13 +133,13 @@ func (c *serviceClient) GetTxsEvent(ctx context.Context, in *GetTxsEventRequest,
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
-	Simulate(types.Context, *SimulateRequest) (*SimulateResponse, error)
+	Simulate(context.Context, *SimulateRequest) (*SimulateResponse, error)
 	// GetTx fetches a tx by hash.
-	GetTx(types.Context, *GetTxRequest) (*GetTxResponse, error)
+	GetTx(context.Context, *GetTxRequest) (*GetTxResponse, error)
 	// BroadcastTx broadcast transaction.
-	BroadcastTx(types.Context, *BroadcastTxRequest) (*BroadcastTxResponse, error)
+	BroadcastTx(context.Context, *BroadcastTxRequest) (*BroadcastTxResponse, error)
 	// GetTxsEvent fetches txs by event.
-	GetTxsEvent(types.Context, *GetTxsEventRequest) (*GetTxsEventResponse, error)
+	GetTxsEvent(context.Context, *GetTxsEventRequest) (*GetTxsEventResponse, error)
 }
 
 func RegisterServiceServer(s grpc.ServiceRegistrar, srv ServiceServer) {

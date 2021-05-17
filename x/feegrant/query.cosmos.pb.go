@@ -81,9 +81,9 @@ func (c *queryClient) Allowances(ctx context.Context, in *QueryAllowancesRequest
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Allowance returns fee granted to the grantee by the granter.
-	Allowance(types.Context, *QueryAllowanceRequest) (*QueryAllowanceResponse, error)
+	Allowance(context.Context, *QueryAllowanceRequest) (*QueryAllowanceResponse, error)
 	// Allowances returns all the grants for address.
-	Allowances(types.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)
+	Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

@@ -107,11 +107,11 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Accounts returns all the existing accounts
-	Accounts(types.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
+	Accounts(context.Context, *QueryAccountsRequest) (*QueryAccountsResponse, error)
 	// Account returns account details based on address.
-	Account(types.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
+	Account(context.Context, *QueryAccountRequest) (*QueryAccountResponse, error)
 	// Params queries all parameters.
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

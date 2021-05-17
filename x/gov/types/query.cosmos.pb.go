@@ -237,21 +237,21 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Proposal queries proposal details based on ProposalID.
-	Proposal(types.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
+	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
 	// Proposals queries all proposals based on given status.
-	Proposals(types.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
+	Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
 	// Vote queries voted information based on proposalID, voterAddr.
-	Vote(types.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
+	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
 	// Votes queries votes of a given proposal.
-	Votes(types.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
+	Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
 	// Params queries all parameters of the gov module.
-	Params(types.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Deposit queries single deposit information based proposalID, depositAddr.
-	Deposit(types.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
+	Deposit(context.Context, *QueryDepositRequest) (*QueryDepositResponse, error)
 	// Deposits queries all deposits of a single proposal.
-	Deposits(types.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
+	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
 	// TallyResult queries the tally of a proposal vote.
-	TallyResult(types.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
+	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 }
 
 func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {

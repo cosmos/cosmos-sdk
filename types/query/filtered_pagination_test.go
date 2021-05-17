@@ -32,7 +32,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	s.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 	store := ctx.KVStore(app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
@@ -107,7 +107,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	s.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 	store := ctx.KVStore(app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
@@ -188,7 +188,7 @@ func ExampleFilteredPaginate() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	err := simapp.FundAccount(app, ctx, addr1, balances)
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr1, balances)
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 

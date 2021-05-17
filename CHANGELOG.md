@@ -38,6 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9205](https://github.com/cosmos/cosmos-sdk/pull/9205) Improve readability in `abci` handleQueryP2P
 * [\#9235](https://github.com/cosmos/cosmos-sdk/pull/9235) CreateMembershipProof/CreateNonMembershipProof now returns an error
 if input key is empty, or input data contains empty key.
+* [\#9314](https://github.com/cosmos/cosmos-sdk/pull/9314) Update Rosetta SDK to upstream's latest release.
 
 ### Features
 

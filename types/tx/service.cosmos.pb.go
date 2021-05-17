@@ -46,7 +46,7 @@ func (c *serviceClient) Simulate(ctx context.Context, in *SimulateRequest, opts 
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Simulate, err = invokerConn.Invoker("/cosmos.tx.v1beta1.ServiceSimulate")
+		c._Simulate, err = invokerConn.Invoker("/cosmos.tx.v1beta1.Service/Simulate")
 		if err != nil {
 			var out SimulateResponse
 			err = c._Simulate(ctx, in, &out)
@@ -54,7 +54,7 @@ func (c *serviceClient) Simulate(ctx context.Context, in *SimulateRequest, opts 
 		}
 	}
 	out := new(SimulateResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.ServiceSimulate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/Simulate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *serviceClient) GetTx(ctx context.Context, in *GetTxRequest, opts ...grp
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetTx, err = invokerConn.Invoker("/cosmos.tx.v1beta1.ServiceGetTx")
+		c._GetTx, err = invokerConn.Invoker("/cosmos.tx.v1beta1.Service/GetTx")
 		if err != nil {
 			var out GetTxResponse
 			err = c._GetTx(ctx, in, &out)
@@ -77,7 +77,7 @@ func (c *serviceClient) GetTx(ctx context.Context, in *GetTxRequest, opts ...grp
 		}
 	}
 	out := new(GetTxResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.ServiceGetTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/GetTx", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (c *serviceClient) BroadcastTx(ctx context.Context, in *BroadcastTxRequest,
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._BroadcastTx, err = invokerConn.Invoker("/cosmos.tx.v1beta1.ServiceBroadcastTx")
+		c._BroadcastTx, err = invokerConn.Invoker("/cosmos.tx.v1beta1.Service/BroadcastTx")
 		if err != nil {
 			var out BroadcastTxResponse
 			err = c._BroadcastTx(ctx, in, &out)
@@ -100,7 +100,7 @@ func (c *serviceClient) BroadcastTx(ctx context.Context, in *BroadcastTxRequest,
 		}
 	}
 	out := new(BroadcastTxResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.ServiceBroadcastTx", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/BroadcastTx", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (c *serviceClient) GetTxsEvent(ctx context.Context, in *GetTxsEventRequest,
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetTxsEvent, err = invokerConn.Invoker("/cosmos.tx.v1beta1.ServiceGetTxsEvent")
+		c._GetTxsEvent, err = invokerConn.Invoker("/cosmos.tx.v1beta1.Service/GetTxsEvent")
 		if err != nil {
 			var out GetTxsEventResponse
 			err = c._GetTxsEvent(ctx, in, &out)
@@ -123,7 +123,7 @@ func (c *serviceClient) GetTxsEvent(ctx context.Context, in *GetTxsEventRequest,
 		}
 	}
 	out := new(GetTxsEventResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.ServiceGetTxsEvent", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/GetTxsEvent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +246,8 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ServiceSimulateMethod    = "/cosmos.tx.v1beta1.ServiceSimulate"
-	ServiceGetTxMethod       = "/cosmos.tx.v1beta1.ServiceGetTx"
-	ServiceBroadcastTxMethod = "/cosmos.tx.v1beta1.ServiceBroadcastTx"
-	ServiceGetTxsEventMethod = "/cosmos.tx.v1beta1.ServiceGetTxsEvent"
+	ServiceSimulateMethod    = "/cosmos.tx.v1beta1.Service/Simulate"
+	ServiceGetTxMethod       = "/cosmos.tx.v1beta1.Service/GetTx"
+	ServiceBroadcastTxMethod = "/cosmos.tx.v1beta1.Service/BroadcastTx"
+	ServiceGetTxsEventMethod = "/cosmos.tx.v1beta1.Service/GetTxsEvent"
 )

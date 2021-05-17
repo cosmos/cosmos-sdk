@@ -52,7 +52,7 @@ func (c *msgClient) CreateValidator(ctx context.Context, in *MsgCreateValidator,
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._CreateValidator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.MsgCreateValidator")
+		c._CreateValidator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Msg/CreateValidator")
 		if err != nil {
 			var out MsgCreateValidatorResponse
 			err = c._CreateValidator(ctx, in, &out)
@@ -60,7 +60,7 @@ func (c *msgClient) CreateValidator(ctx context.Context, in *MsgCreateValidator,
 		}
 	}
 	out := new(MsgCreateValidatorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.MsgCreateValidator", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/CreateValidator", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *msgClient) EditValidator(ctx context.Context, in *MsgEditValidator, opt
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._EditValidator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.MsgEditValidator")
+		c._EditValidator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Msg/EditValidator")
 		if err != nil {
 			var out MsgEditValidatorResponse
 			err = c._EditValidator(ctx, in, &out)
@@ -83,7 +83,7 @@ func (c *msgClient) EditValidator(ctx context.Context, in *MsgEditValidator, opt
 		}
 	}
 	out := new(MsgEditValidatorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.MsgEditValidator", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/EditValidator", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (c *msgClient) Delegate(ctx context.Context, in *MsgDelegate, opts ...grpc.
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Delegate, err = invokerConn.Invoker("/cosmos.staking.v1beta1.MsgDelegate")
+		c._Delegate, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Msg/Delegate")
 		if err != nil {
 			var out MsgDelegateResponse
 			err = c._Delegate(ctx, in, &out)
@@ -106,7 +106,7 @@ func (c *msgClient) Delegate(ctx context.Context, in *MsgDelegate, opts ...grpc.
 		}
 	}
 	out := new(MsgDelegateResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.MsgDelegate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/Delegate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (c *msgClient) BeginRedelegate(ctx context.Context, in *MsgBeginRedelegate,
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._BeginRedelegate, err = invokerConn.Invoker("/cosmos.staking.v1beta1.MsgBeginRedelegate")
+		c._BeginRedelegate, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Msg/BeginRedelegate")
 		if err != nil {
 			var out MsgBeginRedelegateResponse
 			err = c._BeginRedelegate(ctx, in, &out)
@@ -129,7 +129,7 @@ func (c *msgClient) BeginRedelegate(ctx context.Context, in *MsgBeginRedelegate,
 		}
 	}
 	out := new(MsgBeginRedelegateResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.MsgBeginRedelegate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/BeginRedelegate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (c *msgClient) Undelegate(ctx context.Context, in *MsgUndelegate, opts ...g
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Undelegate, err = invokerConn.Invoker("/cosmos.staking.v1beta1.MsgUndelegate")
+		c._Undelegate, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Msg/Undelegate")
 		if err != nil {
 			var out MsgUndelegateResponse
 			err = c._Undelegate(ctx, in, &out)
@@ -152,7 +152,7 @@ func (c *msgClient) Undelegate(ctx context.Context, in *MsgUndelegate, opts ...g
 		}
 	}
 	out := new(MsgUndelegateResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.MsgUndelegate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Msg/Undelegate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -302,9 +302,9 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgCreateValidatorMethod = "/cosmos.staking.v1beta1.MsgCreateValidator"
-	MsgEditValidatorMethod   = "/cosmos.staking.v1beta1.MsgEditValidator"
-	MsgDelegateMethod        = "/cosmos.staking.v1beta1.MsgDelegate"
-	MsgBeginRedelegateMethod = "/cosmos.staking.v1beta1.MsgBeginRedelegate"
-	MsgUndelegateMethod      = "/cosmos.staking.v1beta1.MsgUndelegate"
+	MsgCreateValidatorMethod = "/cosmos.staking.v1beta1.Msg/CreateValidator"
+	MsgEditValidatorMethod   = "/cosmos.staking.v1beta1.Msg/EditValidator"
+	MsgDelegateMethod        = "/cosmos.staking.v1beta1.Msg/Delegate"
+	MsgBeginRedelegateMethod = "/cosmos.staking.v1beta1.Msg/BeginRedelegate"
+	MsgUndelegateMethod      = "/cosmos.staking.v1beta1.Msg/Undelegate"
 )

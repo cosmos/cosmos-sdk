@@ -38,7 +38,7 @@ func (c *msgClient) SubmitEvidence(ctx context.Context, in *MsgSubmitEvidence, o
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._SubmitEvidence, err = invokerConn.Invoker("/cosmos.evidence.v1beta1.MsgSubmitEvidence")
+		c._SubmitEvidence, err = invokerConn.Invoker("/cosmos.evidence.v1beta1.Msg/SubmitEvidence")
 		if err != nil {
 			var out MsgSubmitEvidenceResponse
 			err = c._SubmitEvidence(ctx, in, &out)
@@ -46,7 +46,7 @@ func (c *msgClient) SubmitEvidence(ctx context.Context, in *MsgSubmitEvidence, o
 		}
 	}
 	out := new(MsgSubmitEvidenceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.MsgSubmitEvidence", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.Msg/SubmitEvidence", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,5 +98,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgSubmitEvidenceMethod = "/cosmos.evidence.v1beta1.MsgSubmitEvidence"
+	MsgSubmitEvidenceMethod = "/cosmos.evidence.v1beta1.Msg/SubmitEvidence"
 )

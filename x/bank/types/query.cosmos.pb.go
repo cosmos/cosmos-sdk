@@ -55,7 +55,7 @@ func (c *queryClient) Balance(ctx context.Context, in *QueryBalanceRequest, opts
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Balance, err = invokerConn.Invoker("/cosmos.bank.v1beta1.QueryBalance")
+		c._Balance, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Query/Balance")
 		if err != nil {
 			var out QueryBalanceResponse
 			err = c._Balance(ctx, in, &out)
@@ -63,7 +63,7 @@ func (c *queryClient) Balance(ctx context.Context, in *QueryBalanceRequest, opts
 		}
 	}
 	out := new(QueryBalanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.QueryBalance", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/Balance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c *queryClient) AllBalances(ctx context.Context, in *QueryAllBalancesReque
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._AllBalances, err = invokerConn.Invoker("/cosmos.bank.v1beta1.QueryAllBalances")
+		c._AllBalances, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Query/AllBalances")
 		if err != nil {
 			var out QueryAllBalancesResponse
 			err = c._AllBalances(ctx, in, &out)
@@ -86,7 +86,7 @@ func (c *queryClient) AllBalances(ctx context.Context, in *QueryAllBalancesReque
 		}
 	}
 	out := new(QueryAllBalancesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.QueryAllBalances", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/AllBalances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (c *queryClient) TotalSupply(ctx context.Context, in *QueryTotalSupplyReque
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._TotalSupply, err = invokerConn.Invoker("/cosmos.bank.v1beta1.QueryTotalSupply")
+		c._TotalSupply, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Query/TotalSupply")
 		if err != nil {
 			var out QueryTotalSupplyResponse
 			err = c._TotalSupply(ctx, in, &out)
@@ -109,7 +109,7 @@ func (c *queryClient) TotalSupply(ctx context.Context, in *QueryTotalSupplyReque
 		}
 	}
 	out := new(QueryTotalSupplyResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.QueryTotalSupply", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/TotalSupply", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (c *queryClient) SupplyOf(ctx context.Context, in *QuerySupplyOfRequest, op
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._SupplyOf, err = invokerConn.Invoker("/cosmos.bank.v1beta1.QuerySupplyOf")
+		c._SupplyOf, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Query/SupplyOf")
 		if err != nil {
 			var out QuerySupplyOfResponse
 			err = c._SupplyOf(ctx, in, &out)
@@ -132,7 +132,7 @@ func (c *queryClient) SupplyOf(ctx context.Context, in *QuerySupplyOfRequest, op
 		}
 	}
 	out := new(QuerySupplyOfResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.QuerySupplyOf", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/SupplyOf", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.bank.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -155,7 +155,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (c *queryClient) DenomMetadata(ctx context.Context, in *QueryDenomMetadataR
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DenomMetadata, err = invokerConn.Invoker("/cosmos.bank.v1beta1.QueryDenomMetadata")
+		c._DenomMetadata, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Query/DenomMetadata")
 		if err != nil {
 			var out QueryDenomMetadataResponse
 			err = c._DenomMetadata(ctx, in, &out)
@@ -178,7 +178,7 @@ func (c *queryClient) DenomMetadata(ctx context.Context, in *QueryDenomMetadataR
 		}
 	}
 	out := new(QueryDenomMetadataResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.QueryDenomMetadata", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/DenomMetadata", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (c *queryClient) DenomsMetadata(ctx context.Context, in *QueryDenomsMetadat
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DenomsMetadata, err = invokerConn.Invoker("/cosmos.bank.v1beta1.QueryDenomsMetadata")
+		c._DenomsMetadata, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Query/DenomsMetadata")
 		if err != nil {
 			var out QueryDenomsMetadataResponse
 			err = c._DenomsMetadata(ctx, in, &out)
@@ -201,7 +201,7 @@ func (c *queryClient) DenomsMetadata(ctx context.Context, in *QueryDenomsMetadat
 		}
 	}
 	out := new(QueryDenomsMetadataResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.QueryDenomsMetadata", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Query/DenomsMetadata", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -396,11 +396,11 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryBalanceMethod        = "/cosmos.bank.v1beta1.QueryBalance"
-	QueryAllBalancesMethod    = "/cosmos.bank.v1beta1.QueryAllBalances"
-	QueryTotalSupplyMethod    = "/cosmos.bank.v1beta1.QueryTotalSupply"
-	QuerySupplyOfMethod       = "/cosmos.bank.v1beta1.QuerySupplyOf"
-	QueryParamsMethod         = "/cosmos.bank.v1beta1.QueryParams"
-	QueryDenomMetadataMethod  = "/cosmos.bank.v1beta1.QueryDenomMetadata"
-	QueryDenomsMetadataMethod = "/cosmos.bank.v1beta1.QueryDenomsMetadata"
+	QueryBalanceMethod        = "/cosmos.bank.v1beta1.Query/Balance"
+	QueryAllBalancesMethod    = "/cosmos.bank.v1beta1.Query/AllBalances"
+	QueryTotalSupplyMethod    = "/cosmos.bank.v1beta1.Query/TotalSupply"
+	QuerySupplyOfMethod       = "/cosmos.bank.v1beta1.Query/SupplyOf"
+	QueryParamsMethod         = "/cosmos.bank.v1beta1.Query/Params"
+	QueryDenomMetadataMethod  = "/cosmos.bank.v1beta1.Query/DenomMetadata"
+	QueryDenomsMetadataMethod = "/cosmos.bank.v1beta1.Query/DenomsMetadata"
 )

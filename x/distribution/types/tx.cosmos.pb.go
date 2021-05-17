@@ -50,7 +50,7 @@ func (c *msgClient) SetWithdrawAddress(ctx context.Context, in *MsgSetWithdrawAd
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._SetWithdrawAddress, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.MsgSetWithdrawAddress")
+		c._SetWithdrawAddress, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Msg/SetWithdrawAddress")
 		if err != nil {
 			var out MsgSetWithdrawAddressResponse
 			err = c._SetWithdrawAddress(ctx, in, &out)
@@ -58,7 +58,7 @@ func (c *msgClient) SetWithdrawAddress(ctx context.Context, in *MsgSetWithdrawAd
 		}
 	}
 	out := new(MsgSetWithdrawAddressResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/SetWithdrawAddress", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdraw
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._WithdrawDelegatorReward, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward")
+		c._WithdrawDelegatorReward, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward")
 		if err != nil {
 			var out MsgWithdrawDelegatorRewardResponse
 			err = c._WithdrawDelegatorReward(ctx, in, &out)
@@ -81,7 +81,7 @@ func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdraw
 		}
 	}
 	out := new(MsgWithdrawDelegatorRewardResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (c *msgClient) WithdrawValidatorCommission(ctx context.Context, in *MsgWith
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._WithdrawValidatorCommission, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission")
+		c._WithdrawValidatorCommission, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission")
 		if err != nil {
 			var out MsgWithdrawValidatorCommissionResponse
 			err = c._WithdrawValidatorCommission(ctx, in, &out)
@@ -104,7 +104,7 @@ func (c *msgClient) WithdrawValidatorCommission(ctx context.Context, in *MsgWith
 		}
 	}
 	out := new(MsgWithdrawValidatorCommissionResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityP
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._FundCommunityPool, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.MsgFundCommunityPool")
+		c._FundCommunityPool, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Msg/FundCommunityPool")
 		if err != nil {
 			var out MsgFundCommunityPoolResponse
 			err = c._FundCommunityPool(ctx, in, &out)
@@ -127,7 +127,7 @@ func (c *msgClient) FundCommunityPool(ctx context.Context, in *MsgFundCommunityP
 		}
 	}
 	out := new(MsgFundCommunityPoolResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.MsgFundCommunityPool", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/FundCommunityPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -254,8 +254,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgSetWithdrawAddressMethod          = "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress"
-	MsgWithdrawDelegatorRewardMethod     = "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"
-	MsgWithdrawValidatorCommissionMethod = "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission"
-	MsgFundCommunityPoolMethod           = "/cosmos.distribution.v1beta1.MsgFundCommunityPool"
+	MsgSetWithdrawAddressMethod          = "/cosmos.distribution.v1beta1.Msg/SetWithdrawAddress"
+	MsgWithdrawDelegatorRewardMethod     = "/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward"
+	MsgWithdrawValidatorCommissionMethod = "/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission"
+	MsgFundCommunityPoolMethod           = "/cosmos.distribution.v1beta1.Msg/FundCommunityPool"
 )

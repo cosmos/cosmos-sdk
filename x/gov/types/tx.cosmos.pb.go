@@ -46,7 +46,7 @@ func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, o
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._SubmitProposal, err = invokerConn.Invoker("/cosmos.gov.v1beta1.MsgSubmitProposal")
+		c._SubmitProposal, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Msg/SubmitProposal")
 		if err != nil {
 			var out MsgSubmitProposalResponse
 			err = c._SubmitProposal(ctx, in, &out)
@@ -54,7 +54,7 @@ func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, o
 		}
 	}
 	out := new(MsgSubmitProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.MsgSubmitProposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Msg/SubmitProposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOpti
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Vote, err = invokerConn.Invoker("/cosmos.gov.v1beta1.MsgVote")
+		c._Vote, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Msg/Vote")
 		if err != nil {
 			var out MsgVoteResponse
 			err = c._Vote(ctx, in, &out)
@@ -77,7 +77,7 @@ func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOpti
 		}
 	}
 	out := new(MsgVoteResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.MsgVote", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Msg/Vote", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (c *msgClient) VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts 
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._VoteWeighted, err = invokerConn.Invoker("/cosmos.gov.v1beta1.MsgVoteWeighted")
+		c._VoteWeighted, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Msg/VoteWeighted")
 		if err != nil {
 			var out MsgVoteWeightedResponse
 			err = c._VoteWeighted(ctx, in, &out)
@@ -100,7 +100,7 @@ func (c *msgClient) VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts 
 		}
 	}
 	out := new(MsgVoteWeightedResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.MsgVoteWeighted", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Msg/VoteWeighted", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.Ca
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Deposit, err = invokerConn.Invoker("/cosmos.gov.v1beta1.MsgDeposit")
+		c._Deposit, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Msg/Deposit")
 		if err != nil {
 			var out MsgDepositResponse
 			err = c._Deposit(ctx, in, &out)
@@ -123,7 +123,7 @@ func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.Ca
 		}
 	}
 	out := new(MsgDepositResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.MsgDeposit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Msg/Deposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +246,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgSubmitProposalMethod = "/cosmos.gov.v1beta1.MsgSubmitProposal"
-	MsgVoteMethod           = "/cosmos.gov.v1beta1.MsgVote"
-	MsgVoteWeightedMethod   = "/cosmos.gov.v1beta1.MsgVoteWeighted"
-	MsgDepositMethod        = "/cosmos.gov.v1beta1.MsgDeposit"
+	MsgSubmitProposalMethod = "/cosmos.gov.v1beta1.Msg/SubmitProposal"
+	MsgVoteMethod           = "/cosmos.gov.v1beta1.Msg/Vote"
+	MsgVoteWeightedMethod   = "/cosmos.gov.v1beta1.Msg/VoteWeighted"
+	MsgDepositMethod        = "/cosmos.gov.v1beta1.Msg/Deposit"
 )

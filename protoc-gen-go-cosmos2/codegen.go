@@ -177,7 +177,7 @@ func genService(file *protogen.File, g *protogen.GeneratedFile, service *protoge
 		if method.Desc.IsStreamingClient() || method.Desc.IsStreamingServer() {
 			continue
 		}
-		g.P(service.GoName, method.GoName, "Method = ", strconv.Quote(fmt.Sprintf("/%s%s", service.Desc.FullName(), method.Desc.Name())))
+		g.P(service.GoName, method.GoName, "Method = ", strconv.Quote(fmt.Sprintf("/%s/%s", service.Desc.FullName(), method.Desc.Name())))
 	}
 	g.P(")")
 	g.P()
@@ -198,7 +198,7 @@ func clientSignature(g *protogen.GeneratedFile, method *protogen.Method) string 
 
 func genClientMethod(g *protogen.GeneratedFile, method *protogen.Method) {
 	service := method.Parent
-	sname := fmt.Sprintf("/%s%s", service.Desc.FullName(), method.Desc.Name())
+	sname := fmt.Sprintf("/%s/%s", service.Desc.FullName(), method.Desc.Name())
 
 	if method.Desc.Options().(*descriptorpb.MethodOptions).GetDeprecated() {
 		g.P(deprecationComment)

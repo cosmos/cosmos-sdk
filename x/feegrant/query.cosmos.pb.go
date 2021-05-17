@@ -40,7 +40,7 @@ func (c *queryClient) Allowance(ctx context.Context, in *QueryAllowanceRequest, 
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Allowance, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.QueryAllowance")
+		c._Allowance, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.Query/Allowance")
 		if err != nil {
 			var out QueryAllowanceResponse
 			err = c._Allowance(ctx, in, &out)
@@ -48,7 +48,7 @@ func (c *queryClient) Allowance(ctx context.Context, in *QueryAllowanceRequest, 
 		}
 	}
 	out := new(QueryAllowanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.QueryAllowance", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/Allowance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c *queryClient) Allowances(ctx context.Context, in *QueryAllowancesRequest
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Allowances, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.QueryAllowances")
+		c._Allowances, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.Query/Allowances")
 		if err != nil {
 			var out QueryAllowancesResponse
 			err = c._Allowances(ctx, in, &out)
@@ -71,7 +71,7 @@ func (c *queryClient) Allowances(ctx context.Context, in *QueryAllowancesRequest
 		}
 	}
 	out := new(QueryAllowancesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.QueryAllowances", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Query/Allowances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +146,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryAllowanceMethod  = "/cosmos.feegrant.v1beta1.QueryAllowance"
-	QueryAllowancesMethod = "/cosmos.feegrant.v1beta1.QueryAllowances"
+	QueryAllowanceMethod  = "/cosmos.feegrant.v1beta1.Query/Allowance"
+	QueryAllowancesMethod = "/cosmos.feegrant.v1beta1.Query/Allowances"
 )

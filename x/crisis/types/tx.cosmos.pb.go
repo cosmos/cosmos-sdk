@@ -37,7 +37,7 @@ func (c *msgClient) VerifyInvariant(ctx context.Context, in *MsgVerifyInvariant,
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._VerifyInvariant, err = invokerConn.Invoker("/cosmos.crisis.v1beta1.MsgVerifyInvariant")
+		c._VerifyInvariant, err = invokerConn.Invoker("/cosmos.crisis.v1beta1.Msg/VerifyInvariant")
 		if err != nil {
 			var out MsgVerifyInvariantResponse
 			err = c._VerifyInvariant(ctx, in, &out)
@@ -45,7 +45,7 @@ func (c *msgClient) VerifyInvariant(ctx context.Context, in *MsgVerifyInvariant,
 		}
 	}
 	out := new(MsgVerifyInvariantResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.crisis.v1beta1.MsgVerifyInvariant", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.crisis.v1beta1.Msg/VerifyInvariant", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,5 +96,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgVerifyInvariantMethod = "/cosmos.crisis.v1beta1.MsgVerifyInvariant"
+	MsgVerifyInvariantMethod = "/cosmos.crisis.v1beta1.Msg/VerifyInvariant"
 )

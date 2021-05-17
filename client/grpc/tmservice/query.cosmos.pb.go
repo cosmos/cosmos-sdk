@@ -52,7 +52,7 @@ func (c *serviceClient) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest,
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetNodeInfo, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.ServiceGetNodeInfo")
+		c._GetNodeInfo, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo")
 		if err != nil {
 			var out GetNodeInfoResponse
 			err = c._GetNodeInfo(ctx, in, &out)
@@ -60,7 +60,7 @@ func (c *serviceClient) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest,
 		}
 	}
 	out := new(GetNodeInfoResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.ServiceGetNodeInfo", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *serviceClient) GetSyncing(ctx context.Context, in *GetSyncingRequest, o
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetSyncing, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.ServiceGetSyncing")
+		c._GetSyncing, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.Service/GetSyncing")
 		if err != nil {
 			var out GetSyncingResponse
 			err = c._GetSyncing(ctx, in, &out)
@@ -83,7 +83,7 @@ func (c *serviceClient) GetSyncing(ctx context.Context, in *GetSyncingRequest, o
 		}
 	}
 	out := new(GetSyncingResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.ServiceGetSyncing", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.Service/GetSyncing", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (c *serviceClient) GetLatestBlock(ctx context.Context, in *GetLatestBlockRe
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetLatestBlock, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.ServiceGetLatestBlock")
+		c._GetLatestBlock, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock")
 		if err != nil {
 			var out GetLatestBlockResponse
 			err = c._GetLatestBlock(ctx, in, &out)
@@ -106,7 +106,7 @@ func (c *serviceClient) GetLatestBlock(ctx context.Context, in *GetLatestBlockRe
 		}
 	}
 	out := new(GetLatestBlockResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.ServiceGetLatestBlock", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (c *serviceClient) GetBlockByHeight(ctx context.Context, in *GetBlockByHeig
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetBlockByHeight, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.ServiceGetBlockByHeight")
+		c._GetBlockByHeight, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight")
 		if err != nil {
 			var out GetBlockByHeightResponse
 			err = c._GetBlockByHeight(ctx, in, &out)
@@ -129,7 +129,7 @@ func (c *serviceClient) GetBlockByHeight(ctx context.Context, in *GetBlockByHeig
 		}
 	}
 	out := new(GetBlockByHeightResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.ServiceGetBlockByHeight", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (c *serviceClient) GetLatestValidatorSet(ctx context.Context, in *GetLatest
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetLatestValidatorSet, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.ServiceGetLatestValidatorSet")
+		c._GetLatestValidatorSet, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet")
 		if err != nil {
 			var out GetLatestValidatorSetResponse
 			err = c._GetLatestValidatorSet(ctx, in, &out)
@@ -152,7 +152,7 @@ func (c *serviceClient) GetLatestValidatorSet(ctx context.Context, in *GetLatest
 		}
 	}
 	out := new(GetLatestValidatorSetResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.ServiceGetLatestValidatorSet", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (c *serviceClient) GetValidatorSetByHeight(ctx context.Context, in *GetVali
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetValidatorSetByHeight, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.ServiceGetValidatorSetByHeight")
+		c._GetValidatorSetByHeight, err = invokerConn.Invoker("/cosmos.base.tendermint.v1beta1.Service/GetValidatorSetByHeight")
 		if err != nil {
 			var out GetValidatorSetByHeightResponse
 			err = c._GetValidatorSetByHeight(ctx, in, &out)
@@ -175,7 +175,7 @@ func (c *serviceClient) GetValidatorSetByHeight(ctx context.Context, in *GetVali
 		}
 	}
 	out := new(GetValidatorSetByHeightResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.ServiceGetValidatorSetByHeight", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.tendermint.v1beta1.Service/GetValidatorSetByHeight", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -346,10 +346,10 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ServiceGetNodeInfoMethod             = "/cosmos.base.tendermint.v1beta1.ServiceGetNodeInfo"
-	ServiceGetSyncingMethod              = "/cosmos.base.tendermint.v1beta1.ServiceGetSyncing"
-	ServiceGetLatestBlockMethod          = "/cosmos.base.tendermint.v1beta1.ServiceGetLatestBlock"
-	ServiceGetBlockByHeightMethod        = "/cosmos.base.tendermint.v1beta1.ServiceGetBlockByHeight"
-	ServiceGetLatestValidatorSetMethod   = "/cosmos.base.tendermint.v1beta1.ServiceGetLatestValidatorSet"
-	ServiceGetValidatorSetByHeightMethod = "/cosmos.base.tendermint.v1beta1.ServiceGetValidatorSetByHeight"
+	ServiceGetNodeInfoMethod             = "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo"
+	ServiceGetSyncingMethod              = "/cosmos.base.tendermint.v1beta1.Service/GetSyncing"
+	ServiceGetLatestBlockMethod          = "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock"
+	ServiceGetBlockByHeightMethod        = "/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight"
+	ServiceGetLatestValidatorSetMethod   = "/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet"
+	ServiceGetValidatorSetByHeightMethod = "/cosmos.base.tendermint.v1beta1.Service/GetValidatorSetByHeight"
 )

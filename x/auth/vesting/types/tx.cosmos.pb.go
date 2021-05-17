@@ -38,7 +38,7 @@ func (c *msgClient) CreateVestingAccount(ctx context.Context, in *MsgCreateVesti
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._CreateVestingAccount, err = invokerConn.Invoker("/cosmos.vesting.v1beta1.MsgCreateVestingAccount")
+		c._CreateVestingAccount, err = invokerConn.Invoker("/cosmos.vesting.v1beta1.Msg/CreateVestingAccount")
 		if err != nil {
 			var out MsgCreateVestingAccountResponse
 			err = c._CreateVestingAccount(ctx, in, &out)
@@ -46,7 +46,7 @@ func (c *msgClient) CreateVestingAccount(ctx context.Context, in *MsgCreateVesti
 		}
 	}
 	out := new(MsgCreateVestingAccountResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.MsgCreateVestingAccount", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreateVestingAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,5 +98,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgCreateVestingAccountMethod = "/cosmos.vesting.v1beta1.MsgCreateVestingAccount"
+	MsgCreateVestingAccountMethod = "/cosmos.vesting.v1beta1.Msg/CreateVestingAccount"
 )

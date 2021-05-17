@@ -40,7 +40,7 @@ func (c *queryClient) Evidence(ctx context.Context, in *QueryEvidenceRequest, op
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Evidence, err = invokerConn.Invoker("/cosmos.evidence.v1beta1.QueryEvidence")
+		c._Evidence, err = invokerConn.Invoker("/cosmos.evidence.v1beta1.Query/Evidence")
 		if err != nil {
 			var out QueryEvidenceResponse
 			err = c._Evidence(ctx, in, &out)
@@ -48,7 +48,7 @@ func (c *queryClient) Evidence(ctx context.Context, in *QueryEvidenceRequest, op
 		}
 	}
 	out := new(QueryEvidenceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.QueryEvidence", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.Query/Evidence", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c *queryClient) AllEvidence(ctx context.Context, in *QueryAllEvidenceReque
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._AllEvidence, err = invokerConn.Invoker("/cosmos.evidence.v1beta1.QueryAllEvidence")
+		c._AllEvidence, err = invokerConn.Invoker("/cosmos.evidence.v1beta1.Query/AllEvidence")
 		if err != nil {
 			var out QueryAllEvidenceResponse
 			err = c._AllEvidence(ctx, in, &out)
@@ -71,7 +71,7 @@ func (c *queryClient) AllEvidence(ctx context.Context, in *QueryAllEvidenceReque
 		}
 	}
 	out := new(QueryAllEvidenceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.QueryAllEvidence", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.evidence.v1beta1.Query/AllEvidence", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +146,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryEvidenceMethod    = "/cosmos.evidence.v1beta1.QueryEvidence"
-	QueryAllEvidenceMethod = "/cosmos.evidence.v1beta1.QueryAllEvidence"
+	QueryEvidenceMethod    = "/cosmos.evidence.v1beta1.Query/Evidence"
+	QueryAllEvidenceMethod = "/cosmos.evidence.v1beta1.Query/AllEvidence"
 )

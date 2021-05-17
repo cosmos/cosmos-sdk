@@ -43,7 +43,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -51,7 +51,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (c *queryClient) SigningInfo(ctx context.Context, in *QuerySigningInfoReque
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._SigningInfo, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.QuerySigningInfo")
+		c._SigningInfo, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.Query/SigningInfo")
 		if err != nil {
 			var out QuerySigningInfoResponse
 			err = c._SigningInfo(ctx, in, &out)
@@ -74,7 +74,7 @@ func (c *queryClient) SigningInfo(ctx context.Context, in *QuerySigningInfoReque
 		}
 	}
 	out := new(QuerySigningInfoResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.QuerySigningInfo", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.Query/SigningInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *queryClient) SigningInfos(ctx context.Context, in *QuerySigningInfosReq
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._SigningInfos, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.QuerySigningInfos")
+		c._SigningInfos, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.Query/SigningInfos")
 		if err != nil {
 			var out QuerySigningInfosResponse
 			err = c._SigningInfos(ctx, in, &out)
@@ -97,7 +97,7 @@ func (c *queryClient) SigningInfos(ctx context.Context, in *QuerySigningInfosReq
 		}
 	}
 	out := new(QuerySigningInfosResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.QuerySigningInfos", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.Query/SigningInfos", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryParamsMethod       = "/cosmos.slashing.v1beta1.QueryParams"
-	QuerySigningInfoMethod  = "/cosmos.slashing.v1beta1.QuerySigningInfo"
-	QuerySigningInfosMethod = "/cosmos.slashing.v1beta1.QuerySigningInfos"
+	QueryParamsMethod       = "/cosmos.slashing.v1beta1.Query/Params"
+	QuerySigningInfoMethod  = "/cosmos.slashing.v1beta1.Query/SigningInfo"
+	QuerySigningInfosMethod = "/cosmos.slashing.v1beta1.Query/SigningInfos"
 )

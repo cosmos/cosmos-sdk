@@ -42,7 +42,7 @@ func (c *reflectionServiceClient) ListAllInterfaces(ctx context.Context, in *Lis
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._ListAllInterfaces, err = invokerConn.Invoker("/cosmos.base.reflection.v1beta1.ReflectionServiceListAllInterfaces")
+		c._ListAllInterfaces, err = invokerConn.Invoker("/cosmos.base.reflection.v1beta1.ReflectionService/ListAllInterfaces")
 		if err != nil {
 			var out ListAllInterfacesResponse
 			err = c._ListAllInterfaces(ctx, in, &out)
@@ -50,7 +50,7 @@ func (c *reflectionServiceClient) ListAllInterfaces(ctx context.Context, in *Lis
 		}
 	}
 	out := new(ListAllInterfacesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionServiceListAllInterfaces", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/ListAllInterfaces", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *reflectionServiceClient) ListImplementations(ctx context.Context, in *L
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._ListImplementations, err = invokerConn.Invoker("/cosmos.base.reflection.v1beta1.ReflectionServiceListImplementations")
+		c._ListImplementations, err = invokerConn.Invoker("/cosmos.base.reflection.v1beta1.ReflectionService/ListImplementations")
 		if err != nil {
 			var out ListImplementationsResponse
 			err = c._ListImplementations(ctx, in, &out)
@@ -73,7 +73,7 @@ func (c *reflectionServiceClient) ListImplementations(ctx context.Context, in *L
 		}
 	}
 	out := new(ListImplementationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionServiceListImplementations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v1beta1.ReflectionService/ListImplementations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +150,6 @@ var ReflectionService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ReflectionServiceListAllInterfacesMethod   = "/cosmos.base.reflection.v1beta1.ReflectionServiceListAllInterfaces"
-	ReflectionServiceListImplementationsMethod = "/cosmos.base.reflection.v1beta1.ReflectionServiceListImplementations"
+	ReflectionServiceListAllInterfacesMethod   = "/cosmos.base.reflection.v1beta1.ReflectionService/ListAllInterfaces"
+	ReflectionServiceListImplementationsMethod = "/cosmos.base.reflection.v1beta1.ReflectionService/ListImplementations"
 )

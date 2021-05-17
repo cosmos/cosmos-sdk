@@ -46,7 +46,7 @@ func (c *queryClient) CurrentPlan(ctx context.Context, in *QueryCurrentPlanReque
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._CurrentPlan, err = invokerConn.Invoker("/cosmos.upgrade.v1beta1.QueryCurrentPlan")
+		c._CurrentPlan, err = invokerConn.Invoker("/cosmos.upgrade.v1beta1.Query/CurrentPlan")
 		if err != nil {
 			var out QueryCurrentPlanResponse
 			err = c._CurrentPlan(ctx, in, &out)
@@ -54,7 +54,7 @@ func (c *queryClient) CurrentPlan(ctx context.Context, in *QueryCurrentPlanReque
 		}
 	}
 	out := new(QueryCurrentPlanResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.QueryCurrentPlan", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.Query/CurrentPlan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *queryClient) AppliedPlan(ctx context.Context, in *QueryAppliedPlanReque
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._AppliedPlan, err = invokerConn.Invoker("/cosmos.upgrade.v1beta1.QueryAppliedPlan")
+		c._AppliedPlan, err = invokerConn.Invoker("/cosmos.upgrade.v1beta1.Query/AppliedPlan")
 		if err != nil {
 			var out QueryAppliedPlanResponse
 			err = c._AppliedPlan(ctx, in, &out)
@@ -77,7 +77,7 @@ func (c *queryClient) AppliedPlan(ctx context.Context, in *QueryAppliedPlanReque
 		}
 	}
 	out := new(QueryAppliedPlanResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.QueryAppliedPlan", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.Query/AppliedPlan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (c *queryClient) UpgradedConsensusState(ctx context.Context, in *QueryUpgra
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._UpgradedConsensusState, err = invokerConn.Invoker("/cosmos.upgrade.v1beta1.QueryUpgradedConsensusState")
+		c._UpgradedConsensusState, err = invokerConn.Invoker("/cosmos.upgrade.v1beta1.Query/UpgradedConsensusState")
 		if err != nil {
 			var out QueryUpgradedConsensusStateResponse
 			err = c._UpgradedConsensusState(ctx, in, &out)
@@ -100,7 +100,7 @@ func (c *queryClient) UpgradedConsensusState(ctx context.Context, in *QueryUpgra
 		}
 	}
 	out := new(QueryUpgradedConsensusStateResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.QueryUpgradedConsensusState", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.upgrade.v1beta1.Query/UpgradedConsensusState", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryCurrentPlanMethod            = "/cosmos.upgrade.v1beta1.QueryCurrentPlan"
-	QueryAppliedPlanMethod            = "/cosmos.upgrade.v1beta1.QueryAppliedPlan"
-	QueryUpgradedConsensusStateMethod = "/cosmos.upgrade.v1beta1.QueryUpgradedConsensusState"
+	QueryCurrentPlanMethod            = "/cosmos.upgrade.v1beta1.Query/CurrentPlan"
+	QueryAppliedPlanMethod            = "/cosmos.upgrade.v1beta1.Query/AppliedPlan"
+	QueryUpgradedConsensusStateMethod = "/cosmos.upgrade.v1beta1.Query/UpgradedConsensusState"
 )

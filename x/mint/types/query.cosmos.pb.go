@@ -43,7 +43,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.mint.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.mint.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -51,7 +51,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.mint.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.mint.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (c *queryClient) Inflation(ctx context.Context, in *QueryInflationRequest, 
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Inflation, err = invokerConn.Invoker("/cosmos.mint.v1beta1.QueryInflation")
+		c._Inflation, err = invokerConn.Invoker("/cosmos.mint.v1beta1.Query/Inflation")
 		if err != nil {
 			var out QueryInflationResponse
 			err = c._Inflation(ctx, in, &out)
@@ -74,7 +74,7 @@ func (c *queryClient) Inflation(ctx context.Context, in *QueryInflationRequest, 
 		}
 	}
 	out := new(QueryInflationResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.mint.v1beta1.QueryInflation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.mint.v1beta1.Query/Inflation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *queryClient) AnnualProvisions(ctx context.Context, in *QueryAnnualProvi
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._AnnualProvisions, err = invokerConn.Invoker("/cosmos.mint.v1beta1.QueryAnnualProvisions")
+		c._AnnualProvisions, err = invokerConn.Invoker("/cosmos.mint.v1beta1.Query/AnnualProvisions")
 		if err != nil {
 			var out QueryAnnualProvisionsResponse
 			err = c._AnnualProvisions(ctx, in, &out)
@@ -97,7 +97,7 @@ func (c *queryClient) AnnualProvisions(ctx context.Context, in *QueryAnnualProvi
 		}
 	}
 	out := new(QueryAnnualProvisionsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.mint.v1beta1.QueryAnnualProvisions", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.mint.v1beta1.Query/AnnualProvisions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryParamsMethod           = "/cosmos.mint.v1beta1.QueryParams"
-	QueryInflationMethod        = "/cosmos.mint.v1beta1.QueryInflation"
-	QueryAnnualProvisionsMethod = "/cosmos.mint.v1beta1.QueryAnnualProvisions"
+	QueryParamsMethod           = "/cosmos.mint.v1beta1.Query/Params"
+	QueryInflationMethod        = "/cosmos.mint.v1beta1.Query/Inflation"
+	QueryAnnualProvisionsMethod = "/cosmos.mint.v1beta1.Query/AnnualProvisions"
 )

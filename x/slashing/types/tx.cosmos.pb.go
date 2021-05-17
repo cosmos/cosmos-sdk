@@ -39,7 +39,7 @@ func (c *msgClient) Unjail(ctx context.Context, in *MsgUnjail, opts ...grpc.Call
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Unjail, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.MsgUnjail")
+		c._Unjail, err = invokerConn.Invoker("/cosmos.slashing.v1beta1.Msg/Unjail")
 		if err != nil {
 			var out MsgUnjailResponse
 			err = c._Unjail(ctx, in, &out)
@@ -47,7 +47,7 @@ func (c *msgClient) Unjail(ctx context.Context, in *MsgUnjail, opts ...grpc.Call
 		}
 	}
 	out := new(MsgUnjailResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.MsgUnjail", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.slashing.v1beta1.Msg/Unjail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,5 +100,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgUnjailMethod = "/cosmos.slashing.v1beta1.MsgUnjail"
+	MsgUnjailMethod = "/cosmos.slashing.v1beta1.Msg/Unjail"
 )

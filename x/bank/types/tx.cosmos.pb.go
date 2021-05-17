@@ -40,7 +40,7 @@ func (c *msgClient) Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOpti
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Send, err = invokerConn.Invoker("/cosmos.bank.v1beta1.MsgSend")
+		c._Send, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Msg/Send")
 		if err != nil {
 			var out MsgSendResponse
 			err = c._Send(ctx, in, &out)
@@ -48,7 +48,7 @@ func (c *msgClient) Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOpti
 		}
 	}
 	out := new(MsgSendResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.MsgSend", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Msg/Send", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grp
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._MultiSend, err = invokerConn.Invoker("/cosmos.bank.v1beta1.MsgMultiSend")
+		c._MultiSend, err = invokerConn.Invoker("/cosmos.bank.v1beta1.Msg/MultiSend")
 		if err != nil {
 			var out MsgMultiSendResponse
 			err = c._MultiSend(ctx, in, &out)
@@ -71,7 +71,7 @@ func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grp
 		}
 	}
 	out := new(MsgMultiSendResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.MsgMultiSend", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Msg/MultiSend", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,6 +146,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgSendMethod      = "/cosmos.bank.v1beta1.MsgSend"
-	MsgMultiSendMethod = "/cosmos.bank.v1beta1.MsgMultiSend"
+	MsgSendMethod      = "/cosmos.bank.v1beta1.Msg/Send"
+	MsgMultiSendMethod = "/cosmos.bank.v1beta1.Msg/MultiSend"
 )

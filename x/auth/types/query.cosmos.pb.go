@@ -43,7 +43,7 @@ func (c *queryClient) Accounts(ctx context.Context, in *QueryAccountsRequest, op
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Accounts, err = invokerConn.Invoker("/cosmos.auth.v1beta1.QueryAccounts")
+		c._Accounts, err = invokerConn.Invoker("/cosmos.auth.v1beta1.Query/Accounts")
 		if err != nil {
 			var out QueryAccountsResponse
 			err = c._Accounts(ctx, in, &out)
@@ -51,7 +51,7 @@ func (c *queryClient) Accounts(ctx context.Context, in *QueryAccountsRequest, op
 		}
 	}
 	out := new(QueryAccountsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.QueryAccounts", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/Accounts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (c *queryClient) Account(ctx context.Context, in *QueryAccountRequest, opts
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Account, err = invokerConn.Invoker("/cosmos.auth.v1beta1.QueryAccount")
+		c._Account, err = invokerConn.Invoker("/cosmos.auth.v1beta1.Query/Account")
 		if err != nil {
 			var out QueryAccountResponse
 			err = c._Account(ctx, in, &out)
@@ -74,7 +74,7 @@ func (c *queryClient) Account(ctx context.Context, in *QueryAccountRequest, opts
 		}
 	}
 	out := new(QueryAccountResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.QueryAccount", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/Account", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.auth.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.auth.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -97,7 +97,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.auth.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryAccountsMethod = "/cosmos.auth.v1beta1.QueryAccounts"
-	QueryAccountMethod  = "/cosmos.auth.v1beta1.QueryAccount"
-	QueryParamsMethod   = "/cosmos.auth.v1beta1.QueryParams"
+	QueryAccountsMethod = "/cosmos.auth.v1beta1.Query/Accounts"
+	QueryAccountMethod  = "/cosmos.auth.v1beta1.Query/Account"
+	QueryParamsMethod   = "/cosmos.auth.v1beta1.Query/Params"
 )

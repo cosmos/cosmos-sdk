@@ -58,7 +58,7 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, op
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Proposal, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryProposal")
+		c._Proposal, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/Proposal")
 		if err != nil {
 			var out QueryProposalResponse
 			err = c._Proposal(ctx, in, &out)
@@ -66,7 +66,7 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, op
 		}
 	}
 	out := new(QueryProposalResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryProposal", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/Proposal", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (c *queryClient) Proposals(ctx context.Context, in *QueryProposalsRequest, 
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Proposals, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryProposals")
+		c._Proposals, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/Proposals")
 		if err != nil {
 			var out QueryProposalsResponse
 			err = c._Proposals(ctx, in, &out)
@@ -89,7 +89,7 @@ func (c *queryClient) Proposals(ctx context.Context, in *QueryProposalsRequest, 
 		}
 	}
 	out := new(QueryProposalsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryProposals", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/Proposals", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c *queryClient) Vote(ctx context.Context, in *QueryVoteRequest, opts ...gr
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Vote, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryVote")
+		c._Vote, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/Vote")
 		if err != nil {
 			var out QueryVoteResponse
 			err = c._Vote(ctx, in, &out)
@@ -112,7 +112,7 @@ func (c *queryClient) Vote(ctx context.Context, in *QueryVoteRequest, opts ...gr
 		}
 	}
 	out := new(QueryVoteResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryVote", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/Vote", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (c *queryClient) Votes(ctx context.Context, in *QueryVotesRequest, opts ...
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Votes, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryVotes")
+		c._Votes, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/Votes")
 		if err != nil {
 			var out QueryVotesResponse
 			err = c._Votes(ctx, in, &out)
@@ -135,7 +135,7 @@ func (c *queryClient) Votes(ctx context.Context, in *QueryVotesRequest, opts ...
 		}
 	}
 	out := new(QueryVotesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryVotes", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/Votes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -158,7 +158,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (c *queryClient) Deposit(ctx context.Context, in *QueryDepositRequest, opts
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Deposit, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryDeposit")
+		c._Deposit, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/Deposit")
 		if err != nil {
 			var out QueryDepositResponse
 			err = c._Deposit(ctx, in, &out)
@@ -181,7 +181,7 @@ func (c *queryClient) Deposit(ctx context.Context, in *QueryDepositRequest, opts
 		}
 	}
 	out := new(QueryDepositResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryDeposit", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/Deposit", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (c *queryClient) Deposits(ctx context.Context, in *QueryDepositsRequest, op
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Deposits, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryDeposits")
+		c._Deposits, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/Deposits")
 		if err != nil {
 			var out QueryDepositsResponse
 			err = c._Deposits(ctx, in, &out)
@@ -204,7 +204,7 @@ func (c *queryClient) Deposits(ctx context.Context, in *QueryDepositsRequest, op
 		}
 	}
 	out := new(QueryDepositsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryDeposits", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/Deposits", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._TallyResult, err = invokerConn.Invoker("/cosmos.gov.v1beta1.QueryTallyResult")
+		c._TallyResult, err = invokerConn.Invoker("/cosmos.gov.v1beta1.Query/TallyResult")
 		if err != nil {
 			var out QueryTallyResultResponse
 			err = c._TallyResult(ctx, in, &out)
@@ -227,7 +227,7 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 		}
 	}
 	out := new(QueryTallyResultResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.QueryTallyResult", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1beta1.Query/TallyResult", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -446,12 +446,12 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryProposalMethod    = "/cosmos.gov.v1beta1.QueryProposal"
-	QueryProposalsMethod   = "/cosmos.gov.v1beta1.QueryProposals"
-	QueryVoteMethod        = "/cosmos.gov.v1beta1.QueryVote"
-	QueryVotesMethod       = "/cosmos.gov.v1beta1.QueryVotes"
-	QueryParamsMethod      = "/cosmos.gov.v1beta1.QueryParams"
-	QueryDepositMethod     = "/cosmos.gov.v1beta1.QueryDeposit"
-	QueryDepositsMethod    = "/cosmos.gov.v1beta1.QueryDeposits"
-	QueryTallyResultMethod = "/cosmos.gov.v1beta1.QueryTallyResult"
+	QueryProposalMethod    = "/cosmos.gov.v1beta1.Query/Proposal"
+	QueryProposalsMethod   = "/cosmos.gov.v1beta1.Query/Proposals"
+	QueryVoteMethod        = "/cosmos.gov.v1beta1.Query/Vote"
+	QueryVotesMethod       = "/cosmos.gov.v1beta1.Query/Votes"
+	QueryParamsMethod      = "/cosmos.gov.v1beta1.Query/Params"
+	QueryDepositMethod     = "/cosmos.gov.v1beta1.Query/Deposit"
+	QueryDepositsMethod    = "/cosmos.gov.v1beta1.Query/Deposits"
+	QueryTallyResultMethod = "/cosmos.gov.v1beta1.Query/TallyResult"
 )

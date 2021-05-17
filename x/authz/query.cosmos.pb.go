@@ -37,7 +37,7 @@ func (c *queryClient) Grants(ctx context.Context, in *QueryGrantsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Grants, err = invokerConn.Invoker("/cosmos.authz.v1beta1.QueryGrants")
+		c._Grants, err = invokerConn.Invoker("/cosmos.authz.v1beta1.Query/Grants")
 		if err != nil {
 			var out QueryGrantsResponse
 			err = c._Grants(ctx, in, &out)
@@ -45,7 +45,7 @@ func (c *queryClient) Grants(ctx context.Context, in *QueryGrantsRequest, opts .
 		}
 	}
 	out := new(QueryGrantsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.QueryGrants", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Query/Grants", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,5 +96,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryGrantsMethod = "/cosmos.authz.v1beta1.QueryGrants"
+	QueryGrantsMethod = "/cosmos.authz.v1beta1.Query/Grants"
 )

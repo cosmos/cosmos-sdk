@@ -62,7 +62,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -70,7 +70,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (c *queryClient) ValidatorOutstandingRewards(ctx context.Context, in *Query
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._ValidatorOutstandingRewards, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryValidatorOutstandingRewards")
+		c._ValidatorOutstandingRewards, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards")
 		if err != nil {
 			var out QueryValidatorOutstandingRewardsResponse
 			err = c._ValidatorOutstandingRewards(ctx, in, &out)
@@ -93,7 +93,7 @@ func (c *queryClient) ValidatorOutstandingRewards(ctx context.Context, in *Query
 		}
 	}
 	out := new(QueryValidatorOutstandingRewardsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryValidatorOutstandingRewards", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (c *queryClient) ValidatorCommission(ctx context.Context, in *QueryValidato
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._ValidatorCommission, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryValidatorCommission")
+		c._ValidatorCommission, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/ValidatorCommission")
 		if err != nil {
 			var out QueryValidatorCommissionResponse
 			err = c._ValidatorCommission(ctx, in, &out)
@@ -116,7 +116,7 @@ func (c *queryClient) ValidatorCommission(ctx context.Context, in *QueryValidato
 		}
 	}
 	out := new(QueryValidatorCommissionResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryValidatorCommission", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/ValidatorCommission", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (c *queryClient) ValidatorSlashes(ctx context.Context, in *QueryValidatorSl
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._ValidatorSlashes, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryValidatorSlashes")
+		c._ValidatorSlashes, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/ValidatorSlashes")
 		if err != nil {
 			var out QueryValidatorSlashesResponse
 			err = c._ValidatorSlashes(ctx, in, &out)
@@ -139,7 +139,7 @@ func (c *queryClient) ValidatorSlashes(ctx context.Context, in *QueryValidatorSl
 		}
 	}
 	out := new(QueryValidatorSlashesResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryValidatorSlashes", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/ValidatorSlashes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func (c *queryClient) DelegationRewards(ctx context.Context, in *QueryDelegation
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegationRewards, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryDelegationRewards")
+		c._DelegationRewards, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/DelegationRewards")
 		if err != nil {
 			var out QueryDelegationRewardsResponse
 			err = c._DelegationRewards(ctx, in, &out)
@@ -162,7 +162,7 @@ func (c *queryClient) DelegationRewards(ctx context.Context, in *QueryDelegation
 		}
 	}
 	out := new(QueryDelegationRewardsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryDelegationRewards", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/DelegationRewards", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func (c *queryClient) DelegationTotalRewards(ctx context.Context, in *QueryDeleg
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegationTotalRewards, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryDelegationTotalRewards")
+		c._DelegationTotalRewards, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/DelegationTotalRewards")
 		if err != nil {
 			var out QueryDelegationTotalRewardsResponse
 			err = c._DelegationTotalRewards(ctx, in, &out)
@@ -185,7 +185,7 @@ func (c *queryClient) DelegationTotalRewards(ctx context.Context, in *QueryDeleg
 		}
 	}
 	out := new(QueryDelegationTotalRewardsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryDelegationTotalRewards", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/DelegationTotalRewards", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (c *queryClient) DelegatorValidators(ctx context.Context, in *QueryDelegato
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegatorValidators, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryDelegatorValidators")
+		c._DelegatorValidators, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/DelegatorValidators")
 		if err != nil {
 			var out QueryDelegatorValidatorsResponse
 			err = c._DelegatorValidators(ctx, in, &out)
@@ -208,7 +208,7 @@ func (c *queryClient) DelegatorValidators(ctx context.Context, in *QueryDelegato
 		}
 	}
 	out := new(QueryDelegatorValidatorsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryDelegatorValidators", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/DelegatorValidators", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func (c *queryClient) DelegatorWithdrawAddress(ctx context.Context, in *QueryDel
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegatorWithdrawAddress, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddress")
+		c._DelegatorWithdrawAddress, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress")
 		if err != nil {
 			var out QueryDelegatorWithdrawAddressResponse
 			err = c._DelegatorWithdrawAddress(ctx, in, &out)
@@ -231,7 +231,7 @@ func (c *queryClient) DelegatorWithdrawAddress(ctx context.Context, in *QueryDel
 		}
 	}
 	out := new(QueryDelegatorWithdrawAddressResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddress", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._CommunityPool, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.QueryCommunityPool")
+		c._CommunityPool, err = invokerConn.Invoker("/cosmos.distribution.v1beta1.Query/CommunityPool")
 		if err != nil {
 			var out QueryCommunityPoolResponse
 			err = c._CommunityPool(ctx, in, &out)
@@ -254,7 +254,7 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 		}
 	}
 	out := new(QueryCommunityPoolResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.QueryCommunityPool", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/CommunityPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -498,13 +498,13 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryParamsMethod                      = "/cosmos.distribution.v1beta1.QueryParams"
-	QueryValidatorOutstandingRewardsMethod = "/cosmos.distribution.v1beta1.QueryValidatorOutstandingRewards"
-	QueryValidatorCommissionMethod         = "/cosmos.distribution.v1beta1.QueryValidatorCommission"
-	QueryValidatorSlashesMethod            = "/cosmos.distribution.v1beta1.QueryValidatorSlashes"
-	QueryDelegationRewardsMethod           = "/cosmos.distribution.v1beta1.QueryDelegationRewards"
-	QueryDelegationTotalRewardsMethod      = "/cosmos.distribution.v1beta1.QueryDelegationTotalRewards"
-	QueryDelegatorValidatorsMethod         = "/cosmos.distribution.v1beta1.QueryDelegatorValidators"
-	QueryDelegatorWithdrawAddressMethod    = "/cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddress"
-	QueryCommunityPoolMethod               = "/cosmos.distribution.v1beta1.QueryCommunityPool"
+	QueryParamsMethod                      = "/cosmos.distribution.v1beta1.Query/Params"
+	QueryValidatorOutstandingRewardsMethod = "/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards"
+	QueryValidatorCommissionMethod         = "/cosmos.distribution.v1beta1.Query/ValidatorCommission"
+	QueryValidatorSlashesMethod            = "/cosmos.distribution.v1beta1.Query/ValidatorSlashes"
+	QueryDelegationRewardsMethod           = "/cosmos.distribution.v1beta1.Query/DelegationRewards"
+	QueryDelegationTotalRewardsMethod      = "/cosmos.distribution.v1beta1.Query/DelegationTotalRewards"
+	QueryDelegatorValidatorsMethod         = "/cosmos.distribution.v1beta1.Query/DelegatorValidators"
+	QueryDelegatorWithdrawAddressMethod    = "/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress"
+	QueryCommunityPoolMethod               = "/cosmos.distribution.v1beta1.Query/CommunityPool"
 )

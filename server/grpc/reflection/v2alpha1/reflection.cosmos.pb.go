@@ -54,7 +54,7 @@ func (c *reflectionServiceClient) GetAuthnDescriptor(ctx context.Context, in *Ge
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetAuthnDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionServiceGetAuthnDescriptor")
+		c._GetAuthnDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionService/GetAuthnDescriptor")
 		if err != nil {
 			var out GetAuthnDescriptorResponse
 			err = c._GetAuthnDescriptor(ctx, in, &out)
@@ -62,7 +62,7 @@ func (c *reflectionServiceClient) GetAuthnDescriptor(ctx context.Context, in *Ge
 		}
 	}
 	out := new(GetAuthnDescriptorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetAuthnDescriptor", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetAuthnDescriptor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *reflectionServiceClient) GetChainDescriptor(ctx context.Context, in *Ge
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetChainDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionServiceGetChainDescriptor")
+		c._GetChainDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionService/GetChainDescriptor")
 		if err != nil {
 			var out GetChainDescriptorResponse
 			err = c._GetChainDescriptor(ctx, in, &out)
@@ -85,7 +85,7 @@ func (c *reflectionServiceClient) GetChainDescriptor(ctx context.Context, in *Ge
 		}
 	}
 	out := new(GetChainDescriptorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetChainDescriptor", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetChainDescriptor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (c *reflectionServiceClient) GetCodecDescriptor(ctx context.Context, in *Ge
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetCodecDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionServiceGetCodecDescriptor")
+		c._GetCodecDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionService/GetCodecDescriptor")
 		if err != nil {
 			var out GetCodecDescriptorResponse
 			err = c._GetCodecDescriptor(ctx, in, &out)
@@ -108,7 +108,7 @@ func (c *reflectionServiceClient) GetCodecDescriptor(ctx context.Context, in *Ge
 		}
 	}
 	out := new(GetCodecDescriptorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetCodecDescriptor", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetCodecDescriptor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (c *reflectionServiceClient) GetConfigurationDescriptor(ctx context.Context
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetConfigurationDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionServiceGetConfigurationDescriptor")
+		c._GetConfigurationDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionService/GetConfigurationDescriptor")
 		if err != nil {
 			var out GetConfigurationDescriptorResponse
 			err = c._GetConfigurationDescriptor(ctx, in, &out)
@@ -131,7 +131,7 @@ func (c *reflectionServiceClient) GetConfigurationDescriptor(ctx context.Context
 		}
 	}
 	out := new(GetConfigurationDescriptorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetConfigurationDescriptor", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetConfigurationDescriptor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (c *reflectionServiceClient) GetQueryServicesDescriptor(ctx context.Context
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetQueryServicesDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionServiceGetQueryServicesDescriptor")
+		c._GetQueryServicesDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionService/GetQueryServicesDescriptor")
 		if err != nil {
 			var out GetQueryServicesDescriptorResponse
 			err = c._GetQueryServicesDescriptor(ctx, in, &out)
@@ -154,7 +154,7 @@ func (c *reflectionServiceClient) GetQueryServicesDescriptor(ctx context.Context
 		}
 	}
 	out := new(GetQueryServicesDescriptorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetQueryServicesDescriptor", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetQueryServicesDescriptor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (c *reflectionServiceClient) GetTxDescriptor(ctx context.Context, in *GetTx
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GetTxDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionServiceGetTxDescriptor")
+		c._GetTxDescriptor, err = invokerConn.Invoker("/cosmos.base.reflection.v2alpha1.ReflectionService/GetTxDescriptor")
 		if err != nil {
 			var out GetTxDescriptorResponse
 			err = c._GetTxDescriptor(ctx, in, &out)
@@ -177,7 +177,7 @@ func (c *reflectionServiceClient) GetTxDescriptor(ctx context.Context, in *GetTx
 		}
 	}
 	out := new(GetTxDescriptorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetTxDescriptor", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.base.reflection.v2alpha1.ReflectionService/GetTxDescriptor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -350,10 +350,10 @@ var ReflectionService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ReflectionServiceGetAuthnDescriptorMethod         = "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetAuthnDescriptor"
-	ReflectionServiceGetChainDescriptorMethod         = "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetChainDescriptor"
-	ReflectionServiceGetCodecDescriptorMethod         = "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetCodecDescriptor"
-	ReflectionServiceGetConfigurationDescriptorMethod = "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetConfigurationDescriptor"
-	ReflectionServiceGetQueryServicesDescriptorMethod = "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetQueryServicesDescriptor"
-	ReflectionServiceGetTxDescriptorMethod            = "/cosmos.base.reflection.v2alpha1.ReflectionServiceGetTxDescriptor"
+	ReflectionServiceGetAuthnDescriptorMethod         = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetAuthnDescriptor"
+	ReflectionServiceGetChainDescriptorMethod         = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetChainDescriptor"
+	ReflectionServiceGetCodecDescriptorMethod         = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetCodecDescriptor"
+	ReflectionServiceGetConfigurationDescriptorMethod = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetConfigurationDescriptor"
+	ReflectionServiceGetQueryServicesDescriptorMethod = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetQueryServicesDescriptor"
+	ReflectionServiceGetTxDescriptorMethod            = "/cosmos.base.reflection.v2alpha1.ReflectionService/GetTxDescriptor"
 )

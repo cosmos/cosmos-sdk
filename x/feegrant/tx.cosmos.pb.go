@@ -42,7 +42,7 @@ func (c *msgClient) GrantAllowance(ctx context.Context, in *MsgGrantAllowance, o
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._GrantAllowance, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.MsgGrantAllowance")
+		c._GrantAllowance, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.Msg/GrantAllowance")
 		if err != nil {
 			var out MsgGrantAllowanceResponse
 			err = c._GrantAllowance(ctx, in, &out)
@@ -50,7 +50,7 @@ func (c *msgClient) GrantAllowance(ctx context.Context, in *MsgGrantAllowance, o
 		}
 	}
 	out := new(MsgGrantAllowanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.MsgGrantAllowance", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Msg/GrantAllowance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *msgClient) RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance,
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._RevokeAllowance, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.MsgRevokeAllowance")
+		c._RevokeAllowance, err = invokerConn.Invoker("/cosmos.feegrant.v1beta1.Msg/RevokeAllowance")
 		if err != nil {
 			var out MsgRevokeAllowanceResponse
 			err = c._RevokeAllowance(ctx, in, &out)
@@ -73,7 +73,7 @@ func (c *msgClient) RevokeAllowance(ctx context.Context, in *MsgRevokeAllowance,
 		}
 	}
 	out := new(MsgRevokeAllowanceResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.MsgRevokeAllowance", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.feegrant.v1beta1.Msg/RevokeAllowance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +150,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgGrantAllowanceMethod  = "/cosmos.feegrant.v1beta1.MsgGrantAllowance"
-	MsgRevokeAllowanceMethod = "/cosmos.feegrant.v1beta1.MsgRevokeAllowance"
+	MsgGrantAllowanceMethod  = "/cosmos.feegrant.v1beta1.Msg/GrantAllowance"
+	MsgRevokeAllowanceMethod = "/cosmos.feegrant.v1beta1.Msg/RevokeAllowance"
 )

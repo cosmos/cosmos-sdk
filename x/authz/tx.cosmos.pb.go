@@ -47,7 +47,7 @@ func (c *msgClient) Grant(ctx context.Context, in *MsgGrant, opts ...grpc.CallOp
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Grant, err = invokerConn.Invoker("/cosmos.authz.v1beta1.MsgGrant")
+		c._Grant, err = invokerConn.Invoker("/cosmos.authz.v1beta1.Msg/Grant")
 		if err != nil {
 			var out MsgGrantResponse
 			err = c._Grant(ctx, in, &out)
@@ -55,7 +55,7 @@ func (c *msgClient) Grant(ctx context.Context, in *MsgGrant, opts ...grpc.CallOp
 		}
 	}
 	out := new(MsgGrantResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.MsgGrant", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/Grant", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (c *msgClient) Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOpti
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Exec, err = invokerConn.Invoker("/cosmos.authz.v1beta1.MsgExec")
+		c._Exec, err = invokerConn.Invoker("/cosmos.authz.v1beta1.Msg/Exec")
 		if err != nil {
 			var out MsgExecResponse
 			err = c._Exec(ctx, in, &out)
@@ -78,7 +78,7 @@ func (c *msgClient) Exec(ctx context.Context, in *MsgExec, opts ...grpc.CallOpti
 		}
 	}
 	out := new(MsgExecResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.MsgExec", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/Exec", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Revoke, err = invokerConn.Invoker("/cosmos.authz.v1beta1.MsgRevoke")
+		c._Revoke, err = invokerConn.Invoker("/cosmos.authz.v1beta1.Msg/Revoke")
 		if err != nil {
 			var out MsgRevokeResponse
 			err = c._Revoke(ctx, in, &out)
@@ -101,7 +101,7 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 		}
 	}
 	out := new(MsgRevokeResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.MsgRevoke", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.authz.v1beta1.Msg/Revoke", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	MsgGrantMethod  = "/cosmos.authz.v1beta1.MsgGrant"
-	MsgExecMethod   = "/cosmos.authz.v1beta1.MsgExec"
-	MsgRevokeMethod = "/cosmos.authz.v1beta1.MsgRevoke"
+	MsgGrantMethod  = "/cosmos.authz.v1beta1.Msg/Grant"
+	MsgExecMethod   = "/cosmos.authz.v1beta1.Msg/Exec"
+	MsgRevokeMethod = "/cosmos.authz.v1beta1.Msg/Revoke"
 )

@@ -38,7 +38,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.params.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.params.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -46,7 +46,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.params.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.params.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,5 +98,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryParamsMethod = "/cosmos.params.v1beta1.QueryParams"
+	QueryParamsMethod = "/cosmos.params.v1beta1.Query/Params"
 )

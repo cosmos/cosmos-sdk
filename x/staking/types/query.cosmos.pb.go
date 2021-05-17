@@ -80,7 +80,7 @@ func (c *queryClient) Validators(ctx context.Context, in *QueryValidatorsRequest
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Validators, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryValidators")
+		c._Validators, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/Validators")
 		if err != nil {
 			var out QueryValidatorsResponse
 			err = c._Validators(ctx, in, &out)
@@ -88,7 +88,7 @@ func (c *queryClient) Validators(ctx context.Context, in *QueryValidatorsRequest
 		}
 	}
 	out := new(QueryValidatorsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryValidators", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/Validators", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (c *queryClient) Validator(ctx context.Context, in *QueryValidatorRequest, 
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Validator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryValidator")
+		c._Validator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/Validator")
 		if err != nil {
 			var out QueryValidatorResponse
 			err = c._Validator(ctx, in, &out)
@@ -111,7 +111,7 @@ func (c *queryClient) Validator(ctx context.Context, in *QueryValidatorRequest, 
 		}
 	}
 	out := new(QueryValidatorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryValidator", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/Validator", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (c *queryClient) ValidatorDelegations(ctx context.Context, in *QueryValidat
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._ValidatorDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryValidatorDelegations")
+		c._ValidatorDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/ValidatorDelegations")
 		if err != nil {
 			var out QueryValidatorDelegationsResponse
 			err = c._ValidatorDelegations(ctx, in, &out)
@@ -134,7 +134,7 @@ func (c *queryClient) ValidatorDelegations(ctx context.Context, in *QueryValidat
 		}
 	}
 	out := new(QueryValidatorDelegationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryValidatorDelegations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/ValidatorDelegations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (c *queryClient) ValidatorUnbondingDelegations(ctx context.Context, in *Que
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._ValidatorUnbondingDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryValidatorUnbondingDelegations")
+		c._ValidatorUnbondingDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations")
 		if err != nil {
 			var out QueryValidatorUnbondingDelegationsResponse
 			err = c._ValidatorUnbondingDelegations(ctx, in, &out)
@@ -157,7 +157,7 @@ func (c *queryClient) ValidatorUnbondingDelegations(ctx context.Context, in *Que
 		}
 	}
 	out := new(QueryValidatorUnbondingDelegationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryValidatorUnbondingDelegations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (c *queryClient) Delegation(ctx context.Context, in *QueryDelegationRequest
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Delegation, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryDelegation")
+		c._Delegation, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/Delegation")
 		if err != nil {
 			var out QueryDelegationResponse
 			err = c._Delegation(ctx, in, &out)
@@ -180,7 +180,7 @@ func (c *queryClient) Delegation(ctx context.Context, in *QueryDelegationRequest
 		}
 	}
 	out := new(QueryDelegationResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryDelegation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/Delegation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (c *queryClient) UnbondingDelegation(ctx context.Context, in *QueryUnbondin
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._UnbondingDelegation, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryUnbondingDelegation")
+		c._UnbondingDelegation, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/UnbondingDelegation")
 		if err != nil {
 			var out QueryUnbondingDelegationResponse
 			err = c._UnbondingDelegation(ctx, in, &out)
@@ -203,7 +203,7 @@ func (c *queryClient) UnbondingDelegation(ctx context.Context, in *QueryUnbondin
 		}
 	}
 	out := new(QueryUnbondingDelegationResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryUnbondingDelegation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/UnbondingDelegation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (c *queryClient) DelegatorDelegations(ctx context.Context, in *QueryDelegat
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegatorDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryDelegatorDelegations")
+		c._DelegatorDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/DelegatorDelegations")
 		if err != nil {
 			var out QueryDelegatorDelegationsResponse
 			err = c._DelegatorDelegations(ctx, in, &out)
@@ -226,7 +226,7 @@ func (c *queryClient) DelegatorDelegations(ctx context.Context, in *QueryDelegat
 		}
 	}
 	out := new(QueryDelegatorDelegationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryDelegatorDelegations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/DelegatorDelegations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (c *queryClient) DelegatorUnbondingDelegations(ctx context.Context, in *Que
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegatorUnbondingDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegations")
+		c._DelegatorUnbondingDelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations")
 		if err != nil {
 			var out QueryDelegatorUnbondingDelegationsResponse
 			err = c._DelegatorUnbondingDelegations(ctx, in, &out)
@@ -249,7 +249,7 @@ func (c *queryClient) DelegatorUnbondingDelegations(ctx context.Context, in *Que
 		}
 	}
 	out := new(QueryDelegatorUnbondingDelegationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func (c *queryClient) Redelegations(ctx context.Context, in *QueryRedelegationsR
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Redelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryRedelegations")
+		c._Redelegations, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/Redelegations")
 		if err != nil {
 			var out QueryRedelegationsResponse
 			err = c._Redelegations(ctx, in, &out)
@@ -272,7 +272,7 @@ func (c *queryClient) Redelegations(ctx context.Context, in *QueryRedelegationsR
 		}
 	}
 	out := new(QueryRedelegationsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryRedelegations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/Redelegations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +287,7 @@ func (c *queryClient) DelegatorValidators(ctx context.Context, in *QueryDelegato
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegatorValidators, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryDelegatorValidators")
+		c._DelegatorValidators, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/DelegatorValidators")
 		if err != nil {
 			var out QueryDelegatorValidatorsResponse
 			err = c._DelegatorValidators(ctx, in, &out)
@@ -295,7 +295,7 @@ func (c *queryClient) DelegatorValidators(ctx context.Context, in *QueryDelegato
 		}
 	}
 	out := new(QueryDelegatorValidatorsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryDelegatorValidators", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/DelegatorValidators", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (c *queryClient) DelegatorValidator(ctx context.Context, in *QueryDelegator
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._DelegatorValidator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryDelegatorValidator")
+		c._DelegatorValidator, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/DelegatorValidator")
 		if err != nil {
 			var out QueryDelegatorValidatorResponse
 			err = c._DelegatorValidator(ctx, in, &out)
@@ -318,7 +318,7 @@ func (c *queryClient) DelegatorValidator(ctx context.Context, in *QueryDelegator
 		}
 	}
 	out := new(QueryDelegatorValidatorResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryDelegatorValidator", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/DelegatorValidator", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func (c *queryClient) HistoricalInfo(ctx context.Context, in *QueryHistoricalInf
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._HistoricalInfo, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryHistoricalInfo")
+		c._HistoricalInfo, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/HistoricalInfo")
 		if err != nil {
 			var out QueryHistoricalInfoResponse
 			err = c._HistoricalInfo(ctx, in, &out)
@@ -341,7 +341,7 @@ func (c *queryClient) HistoricalInfo(ctx context.Context, in *QueryHistoricalInf
 		}
 	}
 	out := new(QueryHistoricalInfoResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryHistoricalInfo", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/HistoricalInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +356,7 @@ func (c *queryClient) Pool(ctx context.Context, in *QueryPoolRequest, opts ...gr
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Pool, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryPool")
+		c._Pool, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/Pool")
 		if err != nil {
 			var out QueryPoolResponse
 			err = c._Pool(ctx, in, &out)
@@ -364,7 +364,7 @@ func (c *queryClient) Pool(ctx context.Context, in *QueryPoolRequest, opts ...gr
 		}
 	}
 	out := new(QueryPoolResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryPool", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/Pool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -379,7 +379,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	}
 	if invokerConn, ok := c.cc.(types.InvokerConn); ok {
 		var err error
-		c._Params, err = invokerConn.Invoker("/cosmos.staking.v1beta1.QueryParams")
+		c._Params, err = invokerConn.Invoker("/cosmos.staking.v1beta1.Query/Params")
 		if err != nil {
 			var out QueryParamsResponse
 			err = c._Params(ctx, in, &out)
@@ -387,7 +387,7 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 		}
 	}
 	out := new(QueryParamsResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.QueryParams", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.staking.v1beta1.Query/Params", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -754,18 +754,18 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	QueryValidatorsMethod                    = "/cosmos.staking.v1beta1.QueryValidators"
-	QueryValidatorMethod                     = "/cosmos.staking.v1beta1.QueryValidator"
-	QueryValidatorDelegationsMethod          = "/cosmos.staking.v1beta1.QueryValidatorDelegations"
-	QueryValidatorUnbondingDelegationsMethod = "/cosmos.staking.v1beta1.QueryValidatorUnbondingDelegations"
-	QueryDelegationMethod                    = "/cosmos.staking.v1beta1.QueryDelegation"
-	QueryUnbondingDelegationMethod           = "/cosmos.staking.v1beta1.QueryUnbondingDelegation"
-	QueryDelegatorDelegationsMethod          = "/cosmos.staking.v1beta1.QueryDelegatorDelegations"
-	QueryDelegatorUnbondingDelegationsMethod = "/cosmos.staking.v1beta1.QueryDelegatorUnbondingDelegations"
-	QueryRedelegationsMethod                 = "/cosmos.staking.v1beta1.QueryRedelegations"
-	QueryDelegatorValidatorsMethod           = "/cosmos.staking.v1beta1.QueryDelegatorValidators"
-	QueryDelegatorValidatorMethod            = "/cosmos.staking.v1beta1.QueryDelegatorValidator"
-	QueryHistoricalInfoMethod                = "/cosmos.staking.v1beta1.QueryHistoricalInfo"
-	QueryPoolMethod                          = "/cosmos.staking.v1beta1.QueryPool"
-	QueryParamsMethod                        = "/cosmos.staking.v1beta1.QueryParams"
+	QueryValidatorsMethod                    = "/cosmos.staking.v1beta1.Query/Validators"
+	QueryValidatorMethod                     = "/cosmos.staking.v1beta1.Query/Validator"
+	QueryValidatorDelegationsMethod          = "/cosmos.staking.v1beta1.Query/ValidatorDelegations"
+	QueryValidatorUnbondingDelegationsMethod = "/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations"
+	QueryDelegationMethod                    = "/cosmos.staking.v1beta1.Query/Delegation"
+	QueryUnbondingDelegationMethod           = "/cosmos.staking.v1beta1.Query/UnbondingDelegation"
+	QueryDelegatorDelegationsMethod          = "/cosmos.staking.v1beta1.Query/DelegatorDelegations"
+	QueryDelegatorUnbondingDelegationsMethod = "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations"
+	QueryRedelegationsMethod                 = "/cosmos.staking.v1beta1.Query/Redelegations"
+	QueryDelegatorValidatorsMethod           = "/cosmos.staking.v1beta1.Query/DelegatorValidators"
+	QueryDelegatorValidatorMethod            = "/cosmos.staking.v1beta1.Query/DelegatorValidator"
+	QueryHistoricalInfoMethod                = "/cosmos.staking.v1beta1.Query/HistoricalInfo"
+	QueryPoolMethod                          = "/cosmos.staking.v1beta1.Query/Pool"
+	QueryParamsMethod                        = "/cosmos.staking.v1beta1.Query/Params"
 )

@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
@@ -44,6 +46,7 @@ type Context struct {
 	TxConfig          TxConfig
 	AccountRetriever  AccountRetriever
 	NodeURI           string
+	Viper             *viper.Viper
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -125,7 +128,9 @@ func (ctx Context) WithChainID(chainID string) Context {
 
 // WithHomeDir returns a copy of the Context with HomeDir set.
 func (ctx Context) WithHomeDir(dir string) Context {
-	ctx.HomeDir = dir
+	if dir != "" {
+		ctx.HomeDir = dir
+	}
 	return ctx
 }
 
@@ -205,19 +210,17 @@ func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceR
 	return ctx
 }
 
-<<<<<<< HEAD
-=======
 // WithViper returns the context with Viper field. This Viper instance is used to read
 // client-side config from the config file.
 func (ctx Context) WithViper(prefix string) Context {
 	v := viper.New()
 	v.SetEnvPrefix(prefix)
 	v.AutomaticEnv()
+
 	ctx.Viper = v
 	return ctx
 }
 
->>>>>>> a465ae182... Add env variable to cmd flags (#9040)
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -328,8 +331,9 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 	return info.GetAddress(), info.GetName(), info.GetType(), nil
 }
 
-func newKeyringFromFlags(ctx Context, backend string) (keyring.Keyring, error) {
-	if ctx.GenerateOnly {
+// NewKeyringFromBackend gets a Keyring object from a backend
+func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
+	if ctx.GenerateOnly || ctx.Simulate {
 		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input)
 	}
 

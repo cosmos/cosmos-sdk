@@ -26,38 +26,31 @@ module correctly.
 
 ## Components Overview
 
-### [Clients](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/core/02-client)
+This section describes the IBC components and links to the repos.
 
-IBC Clients are light clients (identified by a unique client-id) that track the consensus states of
-other blockchains, along with the proof spec necessary to properly verify proofs against the
-client's consensus state. A client may be associated with any number of connections to multiple
-chains. The supported IBC clients are:
+### [Clients](https://github.com/cosmos/ibc-go/blob/main/modules/core/02-client)
 
-* [Solo Machine light client](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/light-clients/06-solomachine): devices such as phones, browsers, or laptops.
-* [Tendermint light client](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/light-clients/07-tendermint): The default for SDK-based chains,
-* [Localhost (loopback) client](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/light-clients/09-localhost): Useful for
-testing, simulation and relaying packets to modules on the same application.
+IBC clients are light clients that are identified by a unique client id. IBC clients track the consensus states of other blockchains and the proof specs of those blockchains that are required to properly verify proofs against the client's consensus state. A client can be associated with any number of connections to multiple chains. The supported IBC clients are:
 
-### [Connections](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/core/03-connection)
+- [Solo Machine light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/06-solomachine): devices such as phones, browsers, or laptops.
+- [Tendermint light client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/07-tendermint): The default for Cosmos SDK-based chains.
+- [Localhost (loopback) client](https://github.com/cosmos/ibc-go/blob/main/modules/light-clients/09-localhost): Useful for testing, simulation, and relaying packets to modules on the same application.
 
-Connections encapsulate two `ConnectionEnd` objects on two seperate blockchains. Each
-`ConnectionEnd` is associated with a client of the other blockchain (ie counterparty blockchain).
-The connection handshake is responsible for verifying that the light clients on each chain are
-correct for their respective counterparties. Connections, once established, are responsible for
-facilitation all cross-chain verification of IBC state. A connection may be associated with any
-number of channels.
+### [Connections](https://github.com/cosmos/ibc-go/blob/main/modules/core/03-connection)
 
-### [Proofs](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/core/23-commitment) and [Paths](https://github.com/cosmos/cosmos-sdk/tree/release/v0.42.x/x/ibc/core/24-host)
-  
-In IBC, blockchains do not directly pass messages to each other over the network. Instead, to
-communicate, a blockchain will commit some state to a specifically defined path reserved for a
-specific message type and a specific counterparty (perhaps storing a specific connectionEnd as part
-of a handshake, or a packet intended to be relayed to a module on the counterparty chain). A relayer
-process monitors for updates to these paths, and will relay messages, by submitting the data stored
-under the path along with a proof to the counterparty chain. The paths that all IBC implementations
-must use for committing IBC messages is defined in
-[ICS-24](https://github.com/cosmos/ics/tree/master/spec/ics-024-host-requirements) and the proof
-format that all implementations must be able to produce and verify is defined in this [ICS-23 implementation](https://github.com/confio/ics23).
+Connections encapsulate two `ConnectionEnd` objects on two separate blockchains. Each `ConnectionEnd` is associated with a client of the other blockchain (the counterparty blockchain). The connection handshake is responsible for verifying that the light clients on each chain are correct for their respective counterparties. Connections, once established, are responsible for facilitating all cross-chain verification of IBC state. A connection can be associated with any number of channels.
+
+### [Proofs](https://github.com/cosmos/ibc-go/blob/main/modules/core/23-commitment) and [Paths](https://github.com/cosmos/ibc-go/blob/main/modules/core/24-host)
+
+In IBC, blockchains do not directly pass messages to each other over the network.
+
+- To communicate, a blockchain commits some state to a precisely defined path reserved for a specific message type and a specific counterparty. For example, a blockchain that stores a specific connectionEnd as part of a handshake or a packet intended to be relayed to a module on the counterparty chain.
+
+- A relayer process monitors for updates to these paths and relays messages by submitting the data stored under the path along with a proof of that data to the counterparty chain.
+
+- The paths that all IBC implementations must support for committing IBC messages are defined in [ICS-24 host requirements](https://github.com/cosmos/ics/tree/master/spec/core/ics-024-host-requirements).
+
+- The proof format that all implementations must produce and verify is defined in [ICS-23 implementation](https://github.com/confio/ics23).
 
 ### [Capabilities](./ocap.md)
 

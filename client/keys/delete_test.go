@@ -33,6 +33,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	path := sdk.GetConfig().GetFullFundraiserPath()
 
+	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 
@@ -42,9 +43,10 @@ func Test_runDeleteCmd(t *testing.T) {
 	_, _, err = kb.NewMnemonic(fakeKeyName2, keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
-	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithKeyring(kb)
 
-	clientCtx := client.Context{}.WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	err = cmd.ExecuteContext(ctx)

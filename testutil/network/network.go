@@ -333,6 +333,7 @@ func New(t *testing.T, cfg Config) *Network {
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), appCfg)
 
 		clientCtx := client.Context{}.
+			WithKeyringDir(clientDir).
 			WithKeyring(kb).
 			WithHomeDir(tmCfg.RootDir).
 			WithChainID(cfg.ChainID).

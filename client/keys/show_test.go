@@ -112,7 +112,9 @@ func Test_runShowCmd(t *testing.T) {
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 
-	clientCtx := client.Context{}.WithKeyring(kb)
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{"invalid"})

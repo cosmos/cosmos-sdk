@@ -1,4 +1,4 @@
-# ADR 43: BaseNFT Module
+# ADR 43: NFT Module
 
 ## Changelog
 
@@ -10,9 +10,11 @@ DRAFT
 
 ## Abstract
 
-This ADR defines a generic NFT module of `x/nft` which supports NFTs as a `proto.Any` and contains `BaseNFT` as the default implementation.
+This ADR defines a generic NFT module of `x/nft` which supports NFTs as a `proto.Any` and contains `NFT` as the default implementation.
 
 ## Context
+``
+NFTs are more digital assets than only crypto arts, which is very helpful for accruing value to ATOM. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs ss discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
 
 As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
 - irismod/nft and modules/incubator/nft
@@ -20,9 +22,13 @@ As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/906
 - DID NFTs
 - interNFT
 
+Since NFTs functions/use cases are tightly connected with their logic, it is almost impossible to support all the NFTs' use cases in one Cosmos SDK module by defining and implementing different transaction types.
+
 Considering generic usage and compatibility of interchain protocols including IBC and Gravity Bridge, it is preferred to have a very simple NFT module design which only stores NFTs by id and owner. 
 
-Application-specific functions (minting, burning, transferring, etc.) should be managed by other modules on Cosmos Hub or on other Zones.
+This design idea can enable composability that application-specific functions should be managed by other modules on Cosmos Hub or on other Zones by importing the NFT module.
+
+For example, NFTs can be grouped into collections in a collectibles module to define the behaviors such as minting, burning, transferring, etc.
 
 The current design is based on the work done by [IRISnet team](https://github.com/irisnet/irismod/tree/master/modules/nft) and an older implementation in the [Cosmos repository](https://github.com/cosmos/modules/tree/master/incubator/nft).
 
@@ -34,11 +40,12 @@ We will create a module `x/nft` which only stores NFTs by id and owner.
 The interface for the `x/nft` module:
 
 ```go
-// NFTI is an interface used to store NFTs at a given id.
-type NFTI interface {
-	GetId() string // define a simple identifier for the NFT 
-	GetOwner() sdk.AccAddress // the current owner's address
-	GetData() string // specialized metadata to accompany the nft
+// NFT is an interface used to store NFTs at a given id.
+type NFT interface {
+    GetId() string // define a simple identifier for the NFT 
+    GetOwner() sdk.AccAddress // the current owner's address
+    GetData() string // specialized metadata to accompany the nft
+    Validate() error 
 }
 ```
 
@@ -52,9 +59,9 @@ The NFT conforms to the following specifications:
     The data field is used to maintain special information, such as name and URI. Currently, there is no convention for the data placed into this field,
     however, best practices recommend defining clear specifications that apply to each specific NFT type.
 
-We will also create `BaseNFT` as the default implementation of the `NFTI` interface:
+We will also create `NFT` as the default implementation of the `NFT` interface:
 ```proto
-message BaseNFT {
+message NFT {
   option (gogoproto.equal) = true;
 
   string id    = 1;
@@ -63,7 +70,7 @@ message BaseNFT {
 }
 ```
 
-Queries functions for `BaseNFT` is:
+Queries functions for `NFT` is:
 ```proto
 service Query {
 
@@ -85,7 +92,7 @@ message QueryNFTRequest {
 
 // QueryNFTResponse is the response type for the Query/NFT RPC method
 message QueryNFTResponse {
-  google.protobuf.Any nft = 1 [(cosmos_proto.accepts_interface) = "NFTI", (gogoproto.customname) = "NFT"];
+  google.protobuf.Any nft = 1 [(cosmos_proto.accepts_interface) = "NFT", (gogoproto.customname) = "NFT"];
 }
 
 // QueryNFTsRequest is the request type for the Query/NFTs RPC method
@@ -96,7 +103,7 @@ message QueryNFTsRequest {
 
 // QueryNFTsResponse is the response type for the Query/NFTs RPC method
 message QueryNFTsResponse {
-  repeated google.protobuf.Any nfts = 1 [(cosmos_proto.accepts_interface) = "NFTI", (gogoproto.customname) = "NFTs"];
+  repeated google.protobuf.Any nfts = 1 [(cosmos_proto.accepts_interface) = "NFT", (gogoproto.customname) = "NFTs"];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 ```
@@ -107,9 +114,9 @@ message QueryNFTsResponse {
 
 ### Backward Compatibility
 
-No backwards incompatibilities.
+No backward incompatibilities.
 
-### Forwards Compatibility
+### Forward Compatibility
 
 This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly 
 because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe. 
@@ -118,7 +125,7 @@ because a single module is currently aimed to track NFT identifiers. Note: use o
 
 - NFT identifiers available on Cosmos Hub
 - Ability to build different NFT modules for the Cosmos Hub, e.g., ERC-721.
-- NFT module which supports interoperability with IBC and other cross-chain infrastractures like Gravity Bridge
+- NFT module which supports interoperability with IBC and other cross-chain infrastructures like Gravity Bridge
 
 ### Negative
 
@@ -135,7 +142,7 @@ For other kinds of applications on the Hub, more app-specific modules can be dev
 - `x/nft/custody`: custody of NFTs to support trading functionality
 - `x/nft/marketplace`: selling and buying NFTs using sdk.Coins
 
-Other networks in the Cosmos ecosystem could design and implement their own NFT modules for specific NFT applications and usecases.
+Other networks in the Cosmos ecosystem could design and implement their own NFT modules for specific NFT applications and use cases.
 
 ## References
 

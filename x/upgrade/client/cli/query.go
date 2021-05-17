@@ -119,7 +119,7 @@ func GetModuleVersionsCmd() *cobra.Command {
 		Use:   "module_versions [optional module_name]",
 		Short: "get the list of module versions",
 		Long: "Gets a list of module names and their respective consensus versions.\n" +
-			"Following the command with a specific module name will return only the\n" +
+			"Following the command with a specific module name will return only\n" +
 			"that module's information.",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

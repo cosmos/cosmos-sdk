@@ -28,7 +28,7 @@ To parse the attribute values as strings, make sure to add `'` (single quotes) a
 :::
 
 Events, the `type` and `attributes` are defined on a **per-module basis** in the module's
-`/types/events.go` file, and triggered from the module's [`Msg` service](../building-modules/msg-services.md)
+`/types/events.go` file, and triggered from the module's Protobuf [`Msg` service](../building-modules/msg-services.md)
 by using the [`EventManager`](#eventmanager). In addition, each module documents its Events under
 `spec/xx_events.md`.
 

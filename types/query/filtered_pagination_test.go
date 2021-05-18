@@ -32,7 +32,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	s.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 	store := ctx.KVStore(app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
@@ -107,7 +107,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	s.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	s.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 	store := ctx.KVStore(app.GetKey(types.StoreKey))
 
 	// verify pagination with limit > total values
@@ -188,7 +188,7 @@ func ExampleFilteredPaginate() {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	err := simapp.FundAccount(app, ctx, addr1, balances)
+	err := simapp.FundAccount(app.BankKeeper, ctx, addr1, balances)
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}
@@ -201,7 +201,7 @@ func ExampleFilteredPaginate() {
 	var balResult sdk.Coins
 	pageRes, err := query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
-		err := appCodec.UnmarshalBinaryBare(value, &bal)
+		err := appCodec.Unmarshal(value, &bal)
 		if err != nil {
 			return false, err
 		}
@@ -226,14 +226,14 @@ func ExampleFilteredPaginate() {
 	// balances:<denom:"test0denom" amount:"250" > pagination:<next_key:"test1denom" total:5 >
 }
 
-func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Marshaler) (balances sdk.Coins, res *query.PageResponse, err error) {
+func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 
 	var balResult sdk.Coins
 	res, err = query.FilteredPaginate(accountStore, pageReq, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		var bal sdk.Coin
-		err := appCodec.UnmarshalBinaryBare(value, &bal)
+		err := appCodec.Unmarshal(value, &bal)
 		if err != nil {
 			return false, err
 		}

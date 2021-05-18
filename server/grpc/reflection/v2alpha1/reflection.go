@@ -169,33 +169,17 @@ func newTxDescriptor(ir codectypes.InterfaceRegistry) (*TxDescriptor, error) {
 		return nil, fmt.Errorf("unable to get *tx.Tx protobuf name")
 	}
 	// get msgs
-	svcMsgImplementers := ir.ListImplementations(sdk.ServiceMsgInterfaceProtoName)
+	sdkMsgImplementers := ir.ListImplementations(sdk.MsgInterfaceProtoName)
 
-	msgsDesc := make([]*MsgDescriptor, 0, len(svcMsgImplementers))
+	msgsDesc := make([]*MsgDescriptor, 0, len(sdkMsgImplementers))
 
-	// process sdk.ServiceMsg
-	for _, svcMsg := range svcMsgImplementers {
-		resolved, err := ir.Resolve(svcMsg)
-		if err != nil {
-			return nil, fmt.Errorf("unable to resolve sdk.ServiceMsg %s: %w", svcMsg, err)
-		}
-		pbName := proto.MessageName(resolved)
-		if pbName == "" {
-			return nil, fmt.Errorf("unable to get proto name for sdk.ServiceMsg %s", svcMsg)
-		}
-
-		msgsDesc = append(msgsDesc, &MsgDescriptor{Msg: &MsgDescriptor_ServiceMsg{
-			ServiceMsg: &ServiceMsgDescriptor{
-				RequestFullname: pbName,
-				RequestRoute:    svcMsg,
-				RequestTypeUrl:  svcMsg,
-				// NOTE(fdymylja): this cannot be filled as of now, the Configurator is not held inside the *BaseApp type
-				// but is local to specific applications, hence we have no way of getting the MsgServer's descriptors
-				// which contain response information.
-				ResponseFullname: "",
-			},
-		}})
+	// process sdk.Msg
+	for _, msgTypeURL := range sdkMsgImplementers {
+		msgsDesc = append(msgsDesc, &MsgDescriptor{
+			MsgTypeUrl: msgTypeURL,
+		})
 	}
+
 	return &TxDescriptor{
 		Fullname: txPbName,
 		Msgs:     msgsDesc,

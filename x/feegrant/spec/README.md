@@ -14,20 +14,20 @@ This module allows accounts to grant fee allowances and to use fees from their a
 ## Contents
 
 1. **[Concepts](01_concepts.md)**
-    - [FeeAllowanceGrant](01_concepts.md#feeallowancegrant)
+    - [Grant](01_concepts.md#grant)
     - [Fee Allowance types](01_concepts.md#fee-allowance-types)
-    - [BasicFeeAllowance](01_concepts.md#basicfeeallowance)
-    - [PeriodicFeeAllowance](01_concepts.md#periodicfeeallowance)
+    - [BasicAllowance](01_concepts.md#basicallowance)
+    - [PeriodicAllowance](01_concepts.md#periodicallowance)
     - [FeeAccount flag](01_concepts.md#feeaccount-flag)
-    - [DeductGrantedFeeDecorator](01_concepts.md#deductgrantedfeedecorator)
+    -  [Granted Fee Deductions](01_concepts.md#granted-fee-deductions)
     - [Gas](01_concepts.md#gas)
 2. **[State](02_state.md)**
     - [FeeAllowance](02_state.md#feeallowance)
 3. **[Messages](03_messages.md)**
-    - [Msg/GrantFeeAllowance](03_messages.md#msggrantfeeallowance)
-    - [Msg/RevokeFeeAllowance](03_messages.md#msgrevokefeeallowance)
+    - [Msg/GrantAllowance](03_messages.md#msggrantallowance)
+    - [Msg/RevokeAllowance](03_messages.md#msgrevokeallowance)
 4. **[Events](04_events.md)**
-    - [MsgGrantFeeAllowance](04_events.md#msggrantfeeallowance)
-    - [MsgrevokeFeeAllowance](04_events.md#msgrevokefeeallowance)
+    - [MsgGrantAllowance](04_events.md#msggrantallowance)
+    - [MsgRevokeAllowance](04_events.md#msgrevokeallowance)
     - [Exec fee allowance](04_events.md#exec-fee-allowance)
     

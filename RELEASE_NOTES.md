@@ -1,6 +1,6 @@
 # Cosmos SDK v0.42.5 "Stargate" Release Notes
 
-This release includes various minor bugfixes discovered in the past weeks, as well as some improvments, including:
+This release includes various minor bugfixes and improvments, including:
 
 - Fix support for building the Cosmos SDK on ARM architectures,
 - Fix the `[appd] keys show/list` CLI subcommands for multisigs,

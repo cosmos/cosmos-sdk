@@ -57,7 +57,7 @@ google/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
   --grpc-gateway_out=logtostderr=true,allow_colon_final_segments=true:. \
   $(find "${dir}" -maxdepth 1 -name '*.proto')
 
-  # get the module name, e.g. from "./proto/regen/data/v1alpha1", extract "data"
+  # get the module name, e.g. from "./proto/cosmos/upgrade/v1beta1", extract "data"
   module=$(basename $(dirname $dir))
 
   mkdir -p ./docs/modules/${module}

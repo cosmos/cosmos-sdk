@@ -61,39 +61,35 @@ func (s *GRPCWebTestSuite) TearDownSuite() {
 
 func (s *GRPCWebTestSuite) Test_Latest_Validators() {
 	val := s.network.Validators[0]
-	for _, contentType := range []string{grpcWebContentType} {
-		headers, trailers, responses, err := s.makeGrpcRequest(
-			"/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet",
-			headerWithFlag(),
-			serializeProtoMessages([]proto.Message{&tmservice.GetLatestValidatorSetRequest{}}), false)
+	headers, trailers, responses, err := s.makeGrpcRequest(
+		tmservice.ServiceGetLatestValidatorSetMethod,
+		headerWithFlag(),
+		serializeProtoMessages([]proto.Message{&tmservice.GetLatestValidatorSetRequest{}}), false)
 
-		s.Require().NoError(err)
-		s.Require().Equal(1, len(responses))
-		s.assertTrailerGrpcCode(trailers, codes.OK, "")
-		s.assertContentTypeSet(headers, contentType)
-		var valsSet tmservice.GetLatestValidatorSetResponse
-		err = s.protoCdc.Unmarshal(responses[0], &valsSet)
-		s.Require().NoError(err)
-		pubKey, ok := valsSet.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
-		s.Require().Equal(true, ok)
-		s.Require().Equal(pubKey, val.PubKey)
-	}
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(responses))
+	s.assertTrailerGrpcCode(trailers, codes.OK, "")
+	s.assertContentTypeSet(headers, grpcWebContentType)
+	var valsSet tmservice.GetLatestValidatorSetResponse
+	err = s.protoCdc.Unmarshal(responses[0], &valsSet)
+	s.Require().NoError(err)
+	pubKey, ok := valsSet.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
+	s.Require().Equal(true, ok)
+	s.Require().Equal(pubKey, val.PubKey)
 }
 
 func (s *GRPCWebTestSuite) Test_Total_Supply() {
-	for _, contentType := range []string{grpcWebContentType} {
-		headers, trailers, responses, err := s.makeGrpcRequest(
-			"/cosmos.bank.v1beta1.Query/TotalSupply",
-			headerWithFlag(),
-			serializeProtoMessages([]proto.Message{&banktypes.QueryTotalSupplyRequest{}}), false)
+	headers, trailers, responses, err := s.makeGrpcRequest(
+		"/cosmos.bank.v1beta1.Query/TotalSupply",
+		headerWithFlag(),
+		serializeProtoMessages([]proto.Message{&banktypes.QueryTotalSupplyRequest{}}), false)
 
-		s.Require().NoError(err)
-		s.Require().Equal(1, len(responses))
-		s.assertTrailerGrpcCode(trailers, codes.OK, "")
-		s.assertContentTypeSet(headers, contentType)
-		var totalSupply banktypes.QueryTotalSupplyResponse
-		_ = s.protoCdc.Unmarshal(responses[0], &totalSupply)
-	}
+	s.Require().NoError(err)
+	s.Require().Equal(1, len(responses))
+	s.assertTrailerGrpcCode(trailers, codes.OK, "")
+	s.assertContentTypeSet(headers, grpcWebContentType)
+	var totalSupply banktypes.QueryTotalSupplyResponse
+	_ = s.protoCdc.Unmarshal(responses[0], &totalSupply)
 }
 
 func (s *GRPCWebTestSuite) assertContentTypeSet(headers http.Header, contentType string) {

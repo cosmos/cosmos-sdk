@@ -134,7 +134,7 @@ type KVStore interface {
 }
 ```
 
-The `WithPrefix` method will create a proxy object for the parent object and will prepend `prefix` to a key parameter of all key-value operations.
+The `WithPrefix` method will create a proxy object for the parent object and will prepend `prefix` to a key parameter of all key-value operations (similar to the `store/prefix.Store` implementation).
 The following invariant should be applied
 
 ```

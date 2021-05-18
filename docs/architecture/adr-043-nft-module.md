@@ -70,7 +70,7 @@ message NFT {
 }
 ```
 
-Queries functions for `NFT` is:
+The query service methods for the `x/nft` module are:
 ```proto
 service Query {
 

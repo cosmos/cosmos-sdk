@@ -328,9 +328,12 @@ benchmark:
 
 lint:
 	golangci-lint run --out-format=tab
+	docker run --rm -i -v "$(CURDIR):/work" tmknom/markdownlint
 
 lint-fix:
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	docker run --rm -i -v "$(CURDIR):/work" tmknom/markdownlint . --fix
+
 .PHONY: lint lint-fix
 
 format:

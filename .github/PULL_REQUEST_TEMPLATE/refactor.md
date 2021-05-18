@@ -15,5 +15,8 @@ closes: #XXXX
 Before we can merge this PR, please make sure that all the following items have been
 checked off. If any of the checklist items are not applicable, please leave them but
 write a little note why.
-
-- [ ] ...
+ 
+- [ ] This PR targets the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
+- [ ] This PR links to the GitHub issue that proposes these changes
+- [ ] I have reviewed "Files changed" and provided comments if necessary
+- [ ] I have confirmed that all required CI checks have passed

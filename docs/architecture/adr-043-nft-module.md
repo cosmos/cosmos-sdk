@@ -61,7 +61,7 @@ The NFT conforms to the following specifications:
 
 We will also create `NFT` as the default implementation of the `NFT` interface:
 ```proto
-message NFT {
+message BaseNFT {
   option (gogoproto.equal) = true;
 
   string id    = 1;

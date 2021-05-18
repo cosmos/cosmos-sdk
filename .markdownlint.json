@@ -1,0 +1,10 @@
+{
+    "default": true,
+    "MD007": { "indent": 4 },
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD025": false,
+    "MD033": { "no-inline-html": false },
+    "no-hard-tabs": false,
+    "whitespace": false
+}

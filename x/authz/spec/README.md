@@ -18,9 +18,9 @@ granting arbitrary privileges from one account (the granter) to another account 
     - [Built-in Authorizations](01_concepts.md#Built-in-Authorization)
     - [Gas](01_concepts.md#gas)
 2. **[State](02_state.md)**
-3. **[Protobuf Services](03_services.md)**
-    - [Grant](03_services.md#Grant)
-    - [Revoke](03_services.md#Revoke)
-    - [Exec](03_services.md#Exec)
+3. **[Messages](03_messages.md)**
+    - [MsgGrant](03_messages.md#MsgGrant)
+    - [MsgRevoke](03_messages.md#MsgRevoke)
+    - [MsgExec](03_messages.md#MsgExec)
 4. **[Events](04_events.md)**
     - [Keeper](04_events.md#Keeper)

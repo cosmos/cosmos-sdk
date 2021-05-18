@@ -119,6 +119,41 @@ We need to be able to process transactions and roll-back state updates if a tran
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
 
+### Remove MultiStore
+
+IAVL based store adds additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using it's own instance of IAVL, but in the current implementation, all instances share the same database.
+The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync problems (eg: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
+
+We propose to remove the MultiStore from the SDK, and use a single instance of `SC`. To improve usability, we should extend the `KVStore` interface with _prefix store_:
+
+```
+type KVStore interface {
+    ... current KVStore
+
+    WithPrefix(prefix string) KVStore
+}
+```
+
+The `WithPrefix` method will create a proxy object for the parent object and will prepend `prefix` to a key parameter of all key-value operations.
+The following invariant should be applied
+
+```
+for each OP in [Get Has, Set, ...]
+    store.WithPrefix(prefix).OP(key) == store.OP(prefix + key)
+```
+
+#### Optimization: use compression for prefix keys
+
+Moreover we can consider a compression of prefix keys using Huffman Coding. It will require a knowledge of used prefixes. And for best results it will need an frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding the above invariant should have the following shape:
+
+```
+for each OP in [Get Has, Set, ...]
+    store.WithPrefix(prefix).OP(key) == store.OP(store.Code(prefix) + key)
+```
+
+Where `store.Code(prefix)` is a Huffman Code of `prefix` in the given `store`.
+
+
 ## Consequences
 
 
@@ -133,6 +168,8 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 + Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
 + Performance improvements.
 + Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, LazyLedger.
++ Multistore removal fixes a long standing issues with current MultiStore design.
+
 
 ### Negative
 

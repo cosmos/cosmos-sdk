@@ -20,6 +20,6 @@ Due to [popular demand](https://github.com/cosmos/cosmos-sdk/issues/8529), we ha
 - `[appd] config [config-name]`: Get the given configuration (e.g. `keyring-backend` or `node-id`).
 - `[appd] config [config-name] [config-value]`: Set and persist the given configuration with the new value.
 
-All configurations are persisted to the filesystem, under the path `$APP_HOME/config/client.toml`. For the list of all possible client-side configurations, please have a look at that file, as it is heavily commented.
+All configurations are persisted to the filesystem, under the path `$APP_HOME/config/client.toml`. For the list of all possible client-side configurations, please have a look at this `client.toml` file, as it is heavily commented.
 
 Environment variables binding to client-side configuration also works. For example, the command `KEYRING_BACKEND=os [appd] tx bank send ...` will bind ENV variable to the `keyring-backend` config. The order or precedence for config is: `flags > env vars > client.toml file`.

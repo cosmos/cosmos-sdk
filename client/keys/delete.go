@@ -35,7 +35,7 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 			}
 
 			for _, name := range args {
-				info, err := clientCtx.Keyring.Key(name)
+				ke, err := clientCtx.Keyring.Key(name)
 				if err != nil {
 					return err
 				}
@@ -53,7 +53,7 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 					return err
 				}
 
-				if info.GetType() == keyring.TypeLedger || info.GetType() == keyring.TypeOffline {
+				if ke.GetType() == keyring.TypeLedger || ke.GetType() == keyring.TypeOffline {
 					cmd.PrintErrln("Public key reference deleted")
 					continue
 				}

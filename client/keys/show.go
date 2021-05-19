@@ -53,26 +53,29 @@ consisting of all the keys provided by name and multisig threshold.`,
 }
 
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
-	var info keyring.Info
+	ke := new(keyring.KeyringEntry)
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
 
 	if len(args) == 1 {
-		info, err = fetchKey(clientCtx.Keyring, args[0])
+		ke, err = fetchKey(clientCtx.Keyring, args[0])
 		if err != nil {
 			return fmt.Errorf("%s is not a valid name or address: %v", args[0], err)
 		}
 	} else {
 		pks := make([]cryptotypes.PubKey, len(args))
 		for i, keyref := range args {
-			info, err := fetchKey(clientCtx.Keyring, keyref)
+			ke, err := fetchKey(clientCtx.Keyring, keyref)
 			if err != nil {
 				return fmt.Errorf("%s is not a valid name or address: %v", keyref, err)
 			}
-
-			pks[i] = info.GetPubKey()
+			key, err := ke.GetPubKey()
+			if err != nil {
+				return err
+			}
+			pks[i] = key
 		}
 
 		multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
@@ -153,21 +156,21 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func fetchKey(kb keyring.Keyring, keyref string) (keyring.Info, error) {
+func fetchKey(kb keyring.Keyring, keyref string) (*keyring.KeyringEntry, error) {
 	// firstly check if the keyref is a key name of a key registered in a keyring.
-	info, err := kb.Key(keyref)
+	ke, err := kb.Key(keyref)
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
 	// fallback: searching for key by address.
 	if err == nil || !sdkerr.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
-		return info, err
+		return ke, err
 	}
 	accAddr, err := sdk.AccAddressFromBech32(keyref)
 	if err != nil {
-		return info, err
+		return ke, err
 	}
 
-	info, err = kb.KeyByAddress(accAddr)
-	return info, sdkerr.Wrap(err, "Invalid key")
+	ke, err = kb.KeyByAddress(accAddr)
+	return ke, sdkerr.Wrap(err, "Invalid key")
 }
 
 func validateMultisigThreshold(k, nKeys int) error {

@@ -40,15 +40,24 @@ func NewKeyOutput(name string, keyType KeyType, a sdk.Address, pk cryptotypes.Pu
 
 // MkConsKeyOutput create a KeyOutput in with "cons" Bech32 prefixes.
 func MkConsKeyOutput(keyInfo Info) (KeyOutput, error) {
-	pk := keyInfo.GetPubKey()
+	pk, err := keyInfo.GetPubKey()
+	// TODO fix that
+	if err != nil {
+		return KeyOutput{}, err
+	}
 	addr := sdk.ConsAddress(pk.Address())
+	// TODO do we need keyInfo.GetType() here?
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
 // MkValKeyOutput create a KeyOutput in with "val" Bech32 prefixes.
 func MkValKeyOutput(keyInfo Info) (KeyOutput, error) {
-	pk := keyInfo.GetPubKey()
+	pk, err := keyInfo.GetPubKey()
+	if err != nil {
+		return KeyOutput{}, err
+	}
 	addr := sdk.ValAddress(pk.Address())
+	// TODO do we need keyInfo.GetType() here?
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 
@@ -56,8 +65,12 @@ func MkValKeyOutput(keyInfo Info) (KeyOutput, error) {
 // public key is a multisig public key, then the threshold and constituent
 // public keys will be added.
 func MkAccKeyOutput(keyInfo Info) (KeyOutput, error) {
-	pk := keyInfo.GetPubKey()
+	pk, err := keyInfo.GetPubKey()
+	if err != nil {
+		return KeyOutput{}, err
+	}
 	addr := sdk.AccAddress(pk.Address())
+	// TODO do we need keyInfo.GetType() here?
 	return NewKeyOutput(keyInfo.GetName(), keyInfo.GetType(), addr, pk)
 }
 

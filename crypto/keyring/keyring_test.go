@@ -32,6 +32,7 @@ func init() {
 	crypto.BcryptSecurityParameter = 1
 }
 
+
 func TestNewKeyring(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
@@ -46,9 +47,9 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "unknown keyring backend fuzzy", err.Error())
 
 	mockIn.Reset("password\npassword\n")
-	info, _, err := kr.NewMnemonic("foo", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	ke, _, err := kr.NewMnemonic("foo", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	require.Equal(t, "foo", info.GetName())
+	require.Equal(t, "foo", ke.GetName())
 }
 
 func TestKeyManagementKeyRing(t *testing.T) {
@@ -70,10 +71,10 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	// create some keys
 	_, err = kb.Key(n1)
 	require.Error(t, err)
-	i, _, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke, _, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 
 	require.NoError(t, err)
-	require.Equal(t, n1, i.GetName())
+	require.Equal(t, n1, ke.GetName())
 	_, _, err = kb.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.NoError(t, err)
 
@@ -122,10 +123,10 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = kb.SavePubKey(o1, pub1, hd.Ed25519Type)
+	ke, err = kb.SavePubKey(o1, pub1, hd.Ed25519Type)
 	require.Nil(t, err)
 
-	key1, err = i.GetPubKey()
+	key1, err = ke.GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 	require.Equal(t, pub1, key1)
@@ -157,10 +158,10 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
 
 	// create two users and get their info
-	i1, _, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke1, _, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
 
-	i2, _, err := kb.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke2, _, err := kb.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
 
 	// let's try to sign some messages
@@ -172,7 +173,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	s11, pub1, err := kb.Sign(n1, d1)
 	require.Nil(t, err)
 
-	key1, err := i1.GetPubKey()
+	key1, err := ke1.GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 	require.Equal(t, key1, pub1)
@@ -183,7 +184,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	s21, pub2, err := kb.Sign(n2, d1)
 	require.Nil(t, err)
-	key2, err := i2.GetPubKey()
+	key2, err := ke2.GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key2)
 	require.Equal(t, key2, pub2)
@@ -237,14 +238,15 @@ func TestExportImportKeyRing(t *testing.T) {
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
-	info, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	ke, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	name := ke.GetName()
 	require.NoError(t, err)
-	require.Equal(t, info.GetName(), "john")
+	require.Equal(t, name, "john")
 
 	john, err := kb.Key("john")
 	require.NoError(t, err)
-	require.Equal(t, info.GetName(), "john")
-	key, err := info.GetPubKey()
+	require.Equal(t, name, "john")
+	key, err := ke.GetPubKey()
 	require.NoError(t, err)
 	johnAddr := key.Address()
 
@@ -288,11 +290,11 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	algo := hd.Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
-	info, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
-	require.NotEqual(t, info, "")
-	require.Equal(t, info.GetName(), "john")
-	key, err := info.GetPubKey()
+	require.NotEqual(t, ke, "")
+	require.Equal(t, ke.GetName(), "john")
+	key, err := ke.GetPubKey()
 	require.NoError(t, err)
 	addr := key.Address()
 	john, err := kb.Key("john")
@@ -374,11 +376,11 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	n1, n2 := "lost-key", "found-again"
 
 	// make sure key works with initial password
-	info, mnemonic, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke, mnemonic, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err, "%+v", err)
-	require.Equal(t, n1, info.GetName())
+	require.Equal(t, n1, ke.GetName())
 	require.NotEmpty(t, mnemonic)
-	key, err := info.GetPubKey()
+	key, err := ke.GetPubKey()
 	require.NoError(t, err)
 
 	// now, let us delete this key
@@ -390,10 +392,10 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	hdPath := params.String()
-	newInfo, err := kb.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, hd.Secp256k1)
+	newKe, err := kb.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, hd.Secp256k1)
 	require.NoError(t, err)
-	require.Equal(t, n2, newInfo.GetName())
-	newKey, err := newInfo.GetPubKey()
+	require.Equal(t, n2, newKe.GetName())
+	newKey, err := newKe.GetPubKey()
 	require.NoError(t, err)
 
 	require.Equal(t, key.Address(), newKey.Address())
@@ -482,7 +484,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	// create some keys
 	_, err = cstore.Key(n1)
 	require.Error(t, err)
-	i, _, err := cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke, _, err := cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 
 	require.NoError(t, err)
 	require.Equal(t, n1, i.GetName())
@@ -490,11 +492,11 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.NoError(t, err)
 
 	// we can get these keys
-	i2, err := cstore.Key(n2)
+	ke2, err := cstore.Key(n2)
 	require.NoError(t, err)
 	_, err = cstore.Key(n3)
 	require.NotNil(t, err)
-	addr, err := accAddr(i2)
+	addr, err := accAddr(ke2)
 	require.NoError(t, err)
 	_, err = cstore.KeyByAddress(addr)
 	require.NoError(t, err)
@@ -511,7 +513,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.Equal(t, n2, keyS[0].GetName())
 	require.Equal(t, n1, keyS[1].GetName())
 
-	key1, err := i2.GetPubKey()
+	key1, err := ke2.GetPubKey()
 	require.NoError(t, err)
 	key2, err := keyS[0].GetPubKey()
 	require.NoError(t, err)
@@ -533,18 +535,14 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = cstore.SavePubKey(o1, pub1, hd.Ed25519Type)
+	ke, err = cstore.SavePubKey(o1, pub1, hd.Ed25519Type)
 	require.Nil(t, err)
 
-	key, err := i.GetPubKey()
+	key, err := ke.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, pub1, key)
 
-	require.Equal(t, o1, i.GetName())
-	// iOffline := i.(*OfflineInfo)
-	ke, ok := i.(*keyring.KeyringEntry)
-	require.True(t, ok)
-	require.NotNil(t, ke)
+	require.Equal(t, o1, ke.GetName())
 	require.NotNil(t, ke.GetOffline())
 	require.Equal(t, hd.Ed25519Type, ke.GetAlgo())
 	keyS, err = cstore.List()
@@ -573,10 +571,10 @@ func TestInMemorySignVerify(t *testing.T) {
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
 
 	// create two users and get their info
-	i1, _, err := cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke1, _, err := cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
 
-	i2, _, err := cstore.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	ke2, _, err := cstore.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
 
 	// let's try to sign some messages
@@ -587,7 +585,7 @@ func TestInMemorySignVerify(t *testing.T) {
 	// try signing both data with both ..
 	s11, pub1, err := cstore.Sign(n1, d1)
 	require.Nil(t, err)
-	key1, err := i1.GetPubKey()
+	key1, err := ke1.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key1, pub1)
 
@@ -597,7 +595,7 @@ func TestInMemorySignVerify(t *testing.T) {
 
 	s21, pub2, err := cstore.Sign(n2, d1)
 	require.Nil(t, err)
-	key2, err := i2.GetPubKey()
+	key2, err := ke2.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key2, pub2)
 
@@ -652,14 +650,14 @@ func TestInMemoryExportImport(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	cstore := keyring.NewInMemory(encCfg.Marshaler)
 
-	info, _, err := cstore.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	ke, _, err := cstore.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	require.Equal(t, info.GetName(), "john")
+	require.Equal(t, ke.GetName(), "john")
 
 	john, err := cstore.Key("john")
 	require.NoError(t, err)
-	require.Equal(t, info.GetName(), "john")
-	johnKey, err := info.GetPubKey()
+	require.Equal(t, ke.GetName(), "john")
+	johnKey, err := ke.GetPubKey()
 	require.NoError(t, err)
 	johnAddr := johnKey.Address()
 
@@ -695,9 +693,9 @@ func TestInMemoryExportImportPrivKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb := keyring.NewInMemory(encCfg.Marshaler)
 
-	info, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	ke, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	require.Equal(t, info.GetName(), "john")
+	require.Equal(t, ke.GetName(), "john")
 	priv1, err := kb.Key("john")
 	require.NoError(t, err)
 
@@ -728,11 +726,11 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	cstore := keyring.NewInMemory(encCfg.Marshaler)
 
 	// CreateMnemonic a private-public key pair and ensure consistency
-	info, _, err := cstore.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	ke, _, err := cstore.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.Nil(t, err)
 	require.NotEqual(t, info, "")
-	require.Equal(t, info.GetName(), "john")
-	key, err := info.GetPubKey()
+	require.Equal(t, ke.GetName(), "john")
+	key, err := ke.GetPubKey()
 	require.NoError(t, err)
 	addr := key.Address()
 	john, err := cstore.Key("john")
@@ -824,12 +822,12 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	hdPath := params.String()
-	newInfo, err := cstore.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, algo)
+	newKe, err := cstore.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, algo)
 	require.NoError(t, err)
-	require.Equal(t, n2, newInfo.GetName())
+	require.Equal(t, n2, newKe.GetName())
 	key, err := info.GetPubKey()
 	require.NoError(t, err)
-	newKey, err := newInfo.GetPubKey()
+	newKey, err := newKe.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key.Address(), newKey.Address())
 	require.Equal(t, key, newKey)
@@ -959,10 +957,10 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	_, err = kr.NewAccount(uid, mnemonic, keyring.DefaultBIP39Passphrase, sdk.FullFundraiserPath, keyring.NotSupportedAlgo{})
 	require.EqualError(t, err, keyring.ErrUnsupportedSigningAlgo.Error())
 
-	info, err := kr.NewAccount(uid, mnemonic, keyring.DefaultBIP39Passphrase, sdk.FullFundraiserPath, hd.Secp256k1)
+	ke, err := kr.NewAccount(uid, mnemonic, keyring.DefaultBIP39Passphrase, sdk.FullFundraiserPath, hd.Secp256k1)
 	require.NoError(t, err)
 
-	require.Equal(t, uid, info.GetName())
+	require.Equal(t, uid, ke.GetName())
 
 	list, err := kr.List()
 	require.NoError(t, err)
@@ -980,7 +978,7 @@ func TestAltKeyring_Get(t *testing.T) {
 
 	key, err := kr.Key(uid)
 	require.NoError(t, err)
-	requireEqualInfo(t, mnemonic, key)
+	requireEqualKeyringEntry(t, mnemonic, key)
 }
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
@@ -996,7 +994,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	require.NoError(t, err)
 	key, err := kr.KeyByAddress(addr)
 	require.NoError(t, err)
-	requireEqualInfo(t, key, mnemonic)
+	requireEqualKeyringEntry(t, key, mnemonic)
 }
 
 func TestAltKeyring_Delete(t *testing.T) {
@@ -1056,13 +1054,13 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	info, err := kr.SavePubKey(key, pub, hd.Secp256k1.Name())
+	ke, err := kr.SavePubKey(key, pub, hd.Secp256k1.Name())
 	require.Nil(t, err)
-	infoKey, err := info.GetPubKey()
+	key, err := ke.GetPubKey()
 	require.NoError(t, err)
-	require.Equal(t, pub, infoKey)
-	require.Equal(t, key, info.GetName())
-	require.Equal(t, hd.Secp256k1.Name(), info.GetAlgo())
+	require.Equal(t, pub, key)
+	require.Equal(t, key, ke.GetName())
+	require.Equal(t, hd.Secp256k1.Name(), ke.GetAlgo())
 
 	list, err = kr.List()
 	require.NoError(t, err)
@@ -1307,7 +1305,7 @@ func TestBackendConfigConstructors(t *testing.T) {
 	require.Equal(t, "keyring-test", backend.PassPrefix)
 }
 
-func requireEqualInfo(t *testing.T, key keyring.Info, mnemonic keyring.Info) {
+func requireEqualKeyringEntry(t *testing.T, key *keyring.KeyringEntry, mnemonic *keyring.KeyringEntry) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 
 	keyAddr, err := key.GetAddress()
@@ -1325,4 +1323,4 @@ func requireEqualInfo(t *testing.T, key keyring.Info, mnemonic keyring.Info) {
 	//	require.Equal(t, key.GetType(), mnemonic.GetType())
 }
 
-func accAddr(info keyring.Info) (sdk.AccAddress, error) { return info.GetAddress() }
+func accAddr(ke *keyring.KeyringEntry) (sdk.AccAddress, error) { return ke.GetAddress() }

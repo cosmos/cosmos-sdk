@@ -151,7 +151,11 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 					return err
 				}
 
-				pks = append(pks, k.GetPubKey())
+				key, err := k.GetPubKey()
+				if err != nil {
+					return err
+				}
+				pks = append(pks, key)
 			}
 
 			if noSort, _ := cmd.Flags().GetBool(flagNoSort); !noSort {

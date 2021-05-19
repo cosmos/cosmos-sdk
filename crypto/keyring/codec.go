@@ -11,6 +11,7 @@ func init() {
 }
 
 // RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
+// TODO how to remove Info entirely?
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*Info)(nil), nil)
 	cdc.RegisterConcrete(hd.BIP44Params{}, "crypto/keys/hd/BIP44Params", nil)

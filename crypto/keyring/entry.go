@@ -8,27 +8,54 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	_ Info = &KeyringEntry{}
-)
 
-// Info is the publicly exposed information about a keypair
-type Info interface {
-	// Human-readable type for key listing
-	GetName() string
-	// Public key
-	GetPubKey() (cryptotypes.PubKey, error)
-	// Address
-	GetAddress() (types.AccAddress, error)
-	// Bip44 Path
-	GetPath() (*BIP44Params, error)
-	// Algo
-	GetAlgo() string
-}
 
+//TODO replace Info by keyring entry in client/keys
+// check  newLedgerInfo, newLocalInfo, newMultiInfo in whole codebase
+// TODO count how many times newLedgerInfo or newLocalInfo is used and perhaps consider create a separate functions for that
 func NewKeyringEntry(name string, pubKey *codectypes.Any, item isKeyringEntry_Item) *KeyringEntry {
 	return &KeyringEntry{name, pubKey, item}
 }
+
+// TODO do we need two separate functions? does it make sense to declare function if it is callede only one time NO two times yes?
+func newLocalInfo(apk *codectypes.Any, pubKeyType string) *LocalInfo {
+	return &LocalInfo{apk, pubKeyType}
+}
+
+func newLocalInfoItem(localInfo *LocalInfo) *KeyringEntry_Local{
+	return &KeyringEntry_Local{localInfo}
+}
+
+
+func newLedgerInfo(path *BIP44Params, pubKeyType string) *LedgerInfo {
+	return &LedgerInfo{path, pubKeyType}
+}
+
+func newLedgerInfoItem(ledgerInfo *LedgerInfo) *KeyringEntry_Ledger{
+	return &KeyringEntry_Ledger{ledgerInfo}
+}
+
+func (li LedgerInfo) GetPath() *BIP44Params {
+	return li.Path
+}
+// TODO should I declare the function for clarity sake if it is called only once?
+func newMultiInfo() *MultiInfo {
+	return &MultiInfo{}
+}
+
+func newMultiInfoItem(multiInfo *MultiInfo) *KeyringEntry_Multi{
+	return &KeyringEntry_Multi{multiInfo}
+}
+
+func newOfflineInfo(pubkeyType string) *OfflineInfo {
+	return &OfflineInfo{pubkeyType}
+}
+
+func newOfflineInfoItem(offlineInfo *OfflineInfo) *KeyringEntry_Offline{
+	return &KeyringEntry_Offline{offlineInfo}
+}
+
+
 
 func (ke KeyringEntry) GetName() string {
 	return ke.Name
@@ -51,17 +78,6 @@ func (ke KeyringEntry) GetAddress() (types.AccAddress, error) {
 	return pk.Address().Bytes(), nil
 }
 
-func (ke KeyringEntry) GetPath() (*BIP44Params, error) {
-	l := ke.GetLedger()
-	switch {
-	case l != nil:
-		tmp := l.Path
-		return tmp, nil
-	default:
-		return nil, fmt.Errorf("BIP44 Paths are not available for this type")
-	}
-}
-
 func (ke KeyringEntry) GetAlgo() string {
 
 	if l := ke.GetLedger(); l != nil {
@@ -80,12 +96,22 @@ func (ke KeyringEntry) GetAlgo() string {
 	return ""
 }
 
-func extractPrivKeyFromKeyringEntry(i Info) (cryptotypes.PrivKey, error) {
-	ke, ok := i.(*KeyringEntry)
-	if !ok {
-		return nil, fmt.Errorf("unable to cast info to KeyringEntry")
-	}
+// TODO should I implement GetType?
+func (ke KeyringEntry) GetType() string {
+	return ""
+	/*
+		TODO
+		fix client/keys/delete.go
 
+		if ke.GetType() == keyring.TypeLedger || ke.GetType() == keyring.TypeOffline {
+			cmd.PrintErrln("Public key reference deleted")
+			continue
+		}
+
+	*/
+}
+
+func (ke KeyringEntry) extractPrivKey() (cryptotypes.PrivKey, error) {
 	local := ke.GetLocal()
 
 	switch {
@@ -133,3 +159,40 @@ func protoUnmarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
 	return ke, nil
 }
 */
+
+func NewBIP44Params(purpose uint32, coinType uint32, account uint32, change bool, adressIndex uint32) *BIP44Params {
+	return &BIP44Params{purpose, coinType, account, change, adressIndex}
+}
+
+// DerivationPath returns the BIP44 fields as an array.
+func (p BIP44Params) DerivationPath() []uint32 {
+	change := uint32(0)
+	if p.Change {
+		change = 1
+	}
+
+	return []uint32{
+		p.Purpose,
+		p.Cointype,
+		p.Account,
+		change,
+		p.Adressindex,
+	}
+}
+
+func (p BIP44Params) String() string {
+	var changeStr string
+	if p.Change {
+		changeStr = "1"
+	} else {
+		changeStr = "0"
+	}
+	return fmt.Sprintf("m/%d'/%d'/%d'/%s/%d",
+		p.Purpose,
+		p.Cointype,
+		p.Account,
+		changeStr,
+		p.Adressindex)
+}
+
+

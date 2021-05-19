@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 var (
@@ -70,7 +71,7 @@ func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKey, error)
 
 // NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
+func NewPrivKeySecp256k1(path keyring.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, "", err
@@ -258,7 +259,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 //
 // Since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling.
-func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types.PubKey, string, error) {
+func getPubKeyAddrSafe(device SECP256K1, path keyring.BIP44Params, hrp string) (types.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
 		return nil, "", fmt.Errorf("address %s rejected", addr)

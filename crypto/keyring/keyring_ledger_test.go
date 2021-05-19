@@ -18,32 +18,36 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb := keyring.NewInMemory(encCfg.Marshaler)
 
-	ledger, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
+	ke, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 
 	if err != nil {
 		require.Error(t, err)
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-		require.Nil(t, ledger)
+		require.Nil(t, ke)
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
 
 	// The mock is available, check that the address is correct
-	pubKey := ledger.GetPubKey()
+	pubKey, err := ke.GetPubKey()
+	require.NoError(t, err)
 	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"
 	require.Equal(t, expectedPkStr, pubKey.String())
 
 	// Check that restoring the key gets the same results
-	restoredKey, err := kb.Key("some_account")
+	restoredKeyringEntry, err := kb.Key("some_account")
 	require.NoError(t, err)
-	require.NotNil(t, restoredKey)
-	require.Equal(t, "some_account", restoredKey.GetName())
+	require.NotNil(t, restoredKeyringEntry)
+	require.Equal(t, "some_account", restoredKeyringEntry.GetName())
+	// TODO handle GetType
 	require.Equal(t, TypeLedger, restoredKey.GetType())
-	pubKey = restoredKey.GetPubKey()
+	pubKey, err = restoredKeyringEntry.GetPubKey()
+	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())
 
-	path, err := restoredKey.GetPath()
-	require.NoError(t, err)
+	ledgerInfo := restoredKeyringEntry.GetLedger()
+	require.NotNil(t, ledgerInfo)
+	path := ledgerInfo.GetPath()
 	require.Equal(t, "m/44'/118'/3'/0/1", path.String())
 }
 
@@ -53,36 +57,39 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New("keybasename", "test", dir, encCfg.Marshaler, nil)
+	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
-	i1, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
+	ke1, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
 	if err != nil {
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
-	require.Equal(t, "key", i1.GetName())
+	require.Equal(t, "key", ke1.GetName())
 
 	d1 := []byte("my first message")
 	s1, pub1, err := kb.Sign("key", d1)
 	require.NoError(t, err)
 
-	s2, pub2, err := SignWithLedger(i1, d1)
+	s2, pub2, err := keyring.SignWithLedger(ke1, d1)
 	require.NoError(t, err)
 
 	require.True(t, pub1.Equals(pub2))
 	require.True(t, bytes.Equal(s1, s2))
 
-	require.Equal(t, i1.GetPubKey(), pub1)
-	require.Equal(t, i1.GetPubKey(), pub2)
+	key1, err := ke1.GetPubKey()
+	require.NoError(t, err)
+
+	require.Equal(t, key1, pub1)
+	require.Equal(t, key1, pub2)
 	require.True(t, pub1.VerifySignature(d1, s1))
-	require.True(t, i1.GetPubKey().VerifySignature(d1, s1))
+	require.True(t, key1.VerifySignature(d1, s1))
 	require.True(t, bytes.Equal(s1, s2))
 
-	LocalInfo, _, err := kb.NewMnemonic("test", English, types.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+	ke, _, err := kb.NewMnemonic("test", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = SignWithLedger(LocalInfo, d1)
+	_, _, err = keyring.SignWithLedger(ke, d1)
 	require.Error(t, err)
 	require.Equal(t, "not a ledger object", err.Error())
 }
@@ -91,35 +98,39 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	keyring, err := keyring.New(t.Name(), BackendTest, dir, encCfg.Marshaler, nil)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	// Test unsupported Algo
-	_, err = keyring.SaveLedgerKey("key", NotSupportedAlgo{}, "cosmos", 118, 0, 0)
-	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
+	_, err = kr.SaveLedgerKey("key", keyring.NotSupportedAlgo{}, "cosmos", 118, 0, 0)
+	require.EqualError(t, err, keyring.ErrUnsupportedSigningAlgo.Error())
 
-	ledger, err := keyring.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
+	ke, err := kr.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 	if err != nil {
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
 	// The mock is available, check that the address is correct
-	require.Equal(t, "some_account", ledger.GetName())
-	pubKey := ledger.GetPubKey()
+	require.Equal(t, "some_account", ke.GetName())
+	pubKey, err := ke.GetPubKey()
+	require.NoError(t, err)
 	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"
 	require.Equal(t, expectedPkStr, pubKey.String())
 
 	// Check that restoring the key gets the same results
-	restoredKey, err := keyring.Key("some_account")
+	restoredKeyringEntry, err := kr.Key("some_account")
 	require.NoError(t, err)
-	require.NotNil(t, restoredKey)
-	require.Equal(t, "some_account", restoredKey.GetName())
-	require.Equal(t, TypeLedger, restoredKey.GetType())
-	pubKey = restoredKey.GetPubKey()
+	require.NotNil(t, restoredKeyringEntry)
+	require.Equal(t, "some_account", restoredKeyringEntry.GetName())
+	require.Equal(t, TypeLedger, restoredKeyringEntry.GetType())
+	pubKey, err = restoredKeyringEntry.GetPubKey()
+	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())
 
-	path, err := restoredKey.GetPath()
-	require.NoError(t, err)
+	ledgerInfo := ke.GetLedger()
+	require.NotNil(t, ledgerInfo)
+
+	path := ledgerInfo.GetPath()
 	require.Equal(t, "m/44'/118'/3'/0/1", path.String())
 }

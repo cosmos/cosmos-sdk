@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
@@ -19,7 +18,7 @@ import (
 
 // LegacyKeybase is implemented by the legacy keybase implementation.
 type LegacyKeybase interface {
-	List() ([]Info, error)
+	List() ([]KeyringEntry, error)
 	Export(name string) (armor string, err error)
 	ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
@@ -36,7 +35,7 @@ func NewLegacy(name, dir string, cdc codec.Codec, opts ...KeybaseOption) (Legacy
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return newDBKeybase(db, cdc), nil
 }
 
@@ -47,7 +46,7 @@ var _ LegacyKeybase = dbKeybase{}
 //
 // Deprecated: dbKeybase will be removed in favor of keyringKeybase.
 type dbKeybase struct {
-	db dbm.DB
+	db  dbm.DB
 	cdc codec.Codec
 }
 
@@ -55,14 +54,14 @@ type dbKeybase struct {
 // reading and writing keys.
 func newDBKeybase(db dbm.DB, cdc codec.Codec) dbKeybase {
 	return dbKeybase{
-		db: db,
+		db:  db,
 		cdc: cdc,
 	}
 }
 
 // List returns the keys from storage in alphabetical order.
-func (kb dbKeybase) List() ([]Info, error) {
-	var res []Info
+func (kb dbKeybase) List() ([]*KeyringEntry, error) {
+	var res []*KeyringEntry
 
 	iter, err := kb.db.Iterator(nil, nil)
 	if err != nil {
@@ -78,12 +77,9 @@ func (kb dbKeybase) List() ([]Info, error) {
 		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
-		// TODO handle it properly
-		ke := KeyringEntry{}
-	//	info, err := protoUnmarshalInfo(iter.Value(), kb.cdc)
-		err = kb.cdc.Unmarshal(iter.Value(), &ke)
-		
-		if err != nil {
+
+		ke := new(KeyringEntry)
+		if err := kb.cdc.Unmarshal(iter.Value(), ke); err != nil {
 			return nil, err
 		}
 
@@ -94,7 +90,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 }
 
 // Get returns the public information about one key.
-func (kb dbKeybase) Get(name string) (Info, error) {
+func (kb dbKeybase) Get(name string) (*KeyringEntry, error) {
 	bs, err := kb.db.Get(infoKeyBz(name))
 	if err != nil {
 		return nil, err
@@ -103,49 +99,47 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	if len(bs) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
-	// TODO handle it properly
-	// TODO consider to make separate function for that
-	ke := KeyringEntry{}
+	ke := new(KeyringEntry)
 	//return protoUnmarshalInfo(bs, kb.cdc)
-	if err := kb.cdc.Unmarshal(bs, &ke); err != nil {
+	if err := kb.cdc.Unmarshal(bs, ke); err != nil {
 		return nil, err
 	}
 
-	return ke,nil
+	return ke, nil
 }
 
 // ExportPrivateKeyObject returns a PrivKey object given the key name and
 // passphrase. An error is returned if the key does not exist or if the Info for
 // the key is invalid.
 func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (types.PrivKey, error) {
-	info, err := kb.Get(name)
+	ke, err := kb.Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return extractPrivKeyFromKeyringEntry(info)
+	return ke.extractPrivKey()
 
 	/*
-	var priv types.PrivKey
+		var priv types.PrivKey
 
-	switch i := info.(type) {
-	case LocalInfo:
-		linfo := i
-		if linfo.PrivKeyArmor == "" {
-			err = fmt.Errorf("private key not available")
-			return nil, err
+		switch i := info.(type) {
+		case LocalInfo:
+			linfo := i
+			if linfo.PrivKeyArmor == "" {
+				err = fmt.Errorf("private key not available")
+				return nil, err
+			}
+
+			priv, _, err = crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
+			if err != nil {
+				return nil, err
+			}
+
+		case LedgerInfo, OfflineInfo, MultiInfo:
+			return nil, errors.New("only works on local private keys")
 		}
 
-		priv, _, err = crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
-		if err != nil {
-			return nil, err
-		}
-
-	case LedgerInfo, OfflineInfo, MultiInfo:
-		return nil, errors.New("only works on local private keys")
-	}
-
-	return priv, nil
+		return priv, nil
 	*/
 }
 
@@ -174,7 +168,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-//	info, err := protoUnmarshalInfo(bz, kb.cdc)
+	//	info, err := protoUnmarshalInfo(bz, kb.cdc)
 	ke := KeyringEntry{}
 	if err := kb.cdc.Unmarshal(bz, &ke); err != nil {
 		return "", err

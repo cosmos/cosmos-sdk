@@ -28,18 +28,18 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	infos, err := clientCtx.Keyring.List()
+	keyringEntries, err := clientCtx.Keyring.List()
 	if err != nil {
 		return err
 	}
 
 	if ok, _ := cmd.Flags().GetBool(flagListNames); !ok {
-		printInfos(cmd.OutOrStdout(), infos, clientCtx.OutputFormat)
+		printInfos(cmd.OutOrStdout(), keyringEntries, clientCtx.OutputFormat)
 		return nil
 	}
 
-	for _, info := range infos {
-		cmd.Println(info.GetName())
+	for _, ke := range keyringEntries {
+		cmd.Println(ke.GetName())
 	}
 
 	return nil

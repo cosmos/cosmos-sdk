@@ -1157,7 +1157,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 4, &sdk.TxResponse{},
+			false, 3, &sdk.TxResponse{},
 		},
 		{
 			"with wrong destination validator address",
@@ -1170,7 +1170,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 39, &sdk.TxResponse{},
+			false, 31, &sdk.TxResponse{},
 		},
 		{
 			"valid transaction of delegate",

@@ -68,9 +68,9 @@ message MsgVoteWeighted {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string voter       = 2;
-  repeated WeightedVoteOption options = 3 [(gogoproto.nullable) = false];
+  uint64                      proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string                      voter       = 2;
+  repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.

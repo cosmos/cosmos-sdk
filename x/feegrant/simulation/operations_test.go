@@ -15,8 +15,8 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 type SimTestSuite struct {
@@ -31,7 +31,9 @@ func (suite *SimTestSuite) SetupTest() {
 	checkTx := false
 	app := simapp.Setup(checkTx)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{
+		Time: time.Now(),
+	})
 	suite.protoCdc = codec.NewProtoCodec(suite.app.InterfaceRegistry())
 
 }
@@ -44,7 +46,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 
 	// add coins to the accounts
 	for _, account := range accounts {
-		err := simapp.FundAccount(suite.app, suite.ctx, account.Address, initCoins)
+		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins)
 		suite.Require().NoError(err)
 	}
 
@@ -76,14 +78,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgName  string
 	}{
 		{
-			simappparams.DefaultWeightGrantFeeAllowance,
-			types.ModuleName,
-			simulation.TypeMsgGrantFeeAllowance,
+			simappparams.DefaultWeightGrantAllowance,
+			feegrant.ModuleName,
+			simulation.TypeMsgGrantAllowance,
 		},
 		{
-			simappparams.DefaultWeightRevokeFeeAllowance,
-			types.ModuleName,
-			simulation.TypeMsgRevokeFeeAllowance,
+			simappparams.DefaultWeightRevokeAllowance,
+			feegrant.ModuleName,
+			simulation.TypeMsgRevokeAllowance,
 		},
 	}
 
@@ -98,7 +100,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}
 }
 
-func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
+func (suite *SimTestSuite) TestSimulateMsgGrantAllowance() {
 	app, ctx := suite.app, suite.ctx
 	require := suite.Require()
 
@@ -110,20 +112,20 @@ func (suite *SimTestSuite) TestSimulateMsgGrantFeeAllowance() {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgGrantFeeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgGrantAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgGrantFeeAllowance
+	var msg feegrant.MsgGrantAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Granter)
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.Grantee)
+	require.Equal(accounts[2].Address.String(), msg.Granter)
+	require.Equal(accounts[1].Address.String(), msg.Grantee)
 	require.Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
+func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	app, ctx := suite.app, suite.ctx
 	require := suite.Require()
 
@@ -139,23 +141,24 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeFeeAllowance() {
 
 	granter, grantee := accounts[0], accounts[1]
 
-	err := app.FeeGrantKeeper.GrantFeeAllowance(
+	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
+	err := app.FeeGrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,
-		&types.BasicFeeAllowance{
+		&feegrant.BasicAllowance{
 			SpendLimit: feeCoins,
-			Expiration: types.ExpiresAtTime(ctx.BlockTime().Add(30 * time.Hour)),
+			Expiration: &oneYear,
 		},
 	)
 	require.NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevokeFeeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgRevokeAllowance(app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, suite.protoCdc)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(err)
 
-	var msg types.MsgRevokeFeeAllowance
+	var msg feegrant.MsgRevokeAllowance
 	suite.app.AppCodec().UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)

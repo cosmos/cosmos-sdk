@@ -44,7 +44,7 @@ func (m *MockAppModuleBasic) EXPECT() *MockAppModuleBasicMockRecorder {
 }
 
 // DefaultGenesis mocks base method.
-func (m *MockAppModuleBasic) DefaultGenesis(arg0 codec.JSONMarshaler) json.RawMessage {
+func (m *MockAppModuleBasic) DefaultGenesis(arg0 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DefaultGenesis", arg0)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -148,7 +148,7 @@ func (mr *MockAppModuleBasicMockRecorder) RegisterRESTRoutes(arg0, arg1 interfac
 }
 
 // ValidateGenesis mocks base method.
-func (m *MockAppModuleBasic) ValidateGenesis(arg0 codec.JSONMarshaler, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
+func (m *MockAppModuleBasic) ValidateGenesis(arg0 codec.JSONCodec, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -185,7 +185,7 @@ func (m *MockAppModuleGenesis) EXPECT() *MockAppModuleGenesisMockRecorder {
 }
 
 // DefaultGenesis mocks base method.
-func (m *MockAppModuleGenesis) DefaultGenesis(arg0 codec.JSONMarshaler) json.RawMessage {
+func (m *MockAppModuleGenesis) DefaultGenesis(arg0 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DefaultGenesis", arg0)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -199,7 +199,7 @@ func (mr *MockAppModuleGenesisMockRecorder) DefaultGenesis(arg0 interface{}) *go
 }
 
 // ExportGenesis mocks base method.
-func (m *MockAppModuleGenesis) ExportGenesis(arg0 types0.Context, arg1 codec.JSONMarshaler) json.RawMessage {
+func (m *MockAppModuleGenesis) ExportGenesis(arg0 types0.Context, arg1 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -241,7 +241,7 @@ func (mr *MockAppModuleGenesisMockRecorder) GetTxCmd() *gomock.Call {
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModuleGenesis) InitGenesis(arg0 types0.Context, arg1 codec.JSONMarshaler, arg2 json.RawMessage) []types1.ValidatorUpdate {
+func (m *MockAppModuleGenesis) InitGenesis(arg0 types0.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types1.ValidatorUpdate {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]types1.ValidatorUpdate)
@@ -317,7 +317,7 @@ func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interf
 }
 
 // ValidateGenesis mocks base method.
-func (m *MockAppModuleGenesis) ValidateGenesis(arg0 codec.JSONMarshaler, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
+func (m *MockAppModuleGenesis) ValidateGenesis(arg0 codec.JSONCodec, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -380,7 +380,7 @@ func (mr *MockAppModuleMockRecorder) ConsensusVersion() *gomock.Call {
 }
 
 // DefaultGenesis mocks base method.
-func (m *MockAppModule) DefaultGenesis(arg0 codec.JSONMarshaler) json.RawMessage {
+func (m *MockAppModule) DefaultGenesis(arg0 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DefaultGenesis", arg0)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -408,7 +408,7 @@ func (mr *MockAppModuleMockRecorder) EndBlock(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // ExportGenesis mocks base method.
-func (m *MockAppModule) ExportGenesis(arg0 types0.Context, arg1 codec.JSONMarshaler) json.RawMessage {
+func (m *MockAppModule) ExportGenesis(arg0 types0.Context, arg1 codec.JSONCodec) json.RawMessage {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
 	ret0, _ := ret[0].(json.RawMessage)
@@ -450,7 +450,7 @@ func (mr *MockAppModuleMockRecorder) GetTxCmd() *gomock.Call {
 }
 
 // InitGenesis mocks base method.
-func (m *MockAppModule) InitGenesis(arg0 types0.Context, arg1 codec.JSONMarshaler, arg2 json.RawMessage) []types1.ValidatorUpdate {
+func (m *MockAppModule) InitGenesis(arg0 types0.Context, arg1 codec.JSONCodec, arg2 json.RawMessage) []types1.ValidatorUpdate {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]types1.ValidatorUpdate)
@@ -592,7 +592,7 @@ func (mr *MockAppModuleMockRecorder) Route() *gomock.Call {
 }
 
 // ValidateGenesis mocks base method.
-func (m *MockAppModule) ValidateGenesis(arg0 codec.JSONMarshaler, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
+func (m *MockAppModule) ValidateGenesis(arg0 codec.JSONCodec, arg1 client.TxEncodingConfig, arg2 json.RawMessage) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateGenesis", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

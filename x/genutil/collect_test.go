@@ -21,7 +21,7 @@ import (
 )
 
 type doNothingUnmarshalJSON struct {
-	codec.JSONMarshaler
+	codec.JSONCodec
 }
 
 func (dnj *doNothingUnmarshalJSON) UnmarshalJSON(_ []byte, _ proto.Message) error {
@@ -32,7 +32,7 @@ type doNothingIterator struct {
 	gtypes.GenesisBalancesIterator
 }
 
-func (dni *doNothingIterator) IterateGenesisBalances(_ codec.JSONMarshaler, _ map[string]json.RawMessage, _ func(bankexported.GenesisBalance) bool) {
+func (dni *doNothingIterator) IterateGenesisBalances(_ codec.JSONCodec, _ map[string]json.RawMessage, _ func(bankexported.GenesisBalance) bool) {
 }
 
 // Ensures that CollectTx correctly traverses directories and won't error out on encountering

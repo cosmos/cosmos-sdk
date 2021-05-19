@@ -29,7 +29,7 @@ service Msg {
   rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
 }
 
-// MsgGrant represents a Grant request for the provided authorization to the grantee
+// MsgGrant is a request type for Grant method. It declares authorization to the grantee
 // on behalf of the granter with the provided expiration time.
 message MsgGrant {
   string granter = 1;

@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

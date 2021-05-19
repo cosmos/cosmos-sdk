@@ -1,9 +1,7 @@
-package cli_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -13,6 +11,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
+
+func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
+	return &IntegrationTestSuite{cfg: cfg}
+}
 
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -107,8 +109,4 @@ func (s *IntegrationTestSuite) TestModuleVersionsCLI() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

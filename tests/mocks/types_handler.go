@@ -38,6 +38,7 @@ func (m *MockAnteDecorator) EXPECT() *MockAnteDecoratorMockRecorder {
 func (m *MockAnteDecorator) AnteHandle(ctx types.Context, tx types.Tx, simulate bool, next types.AnteHandler) (types.Context, error) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AnteHandle", ctx, tx, simulate, next)
+	// NOTE: we need to edit a generated code to call the "next handler"
 	return next(ctx, tx, simulate)
 }
 

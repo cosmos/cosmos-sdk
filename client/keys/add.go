@@ -58,7 +58,7 @@ required through --multisig-threshold. The keys are sorted by address, unless
 the flag --nosort is set.
 `,
 		Args: cobra.ExactArgs(1),
-		RunE: runAddCmd,
+		RunE: runAddCmdPrepare,
 	}
 
 	cmd.Flags().StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
@@ -82,28 +82,14 @@ the flag --nosort is set.
 	return cmd
 }
 
-func runAddCmd(cmd *cobra.Command, args []string) error {
+func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 	buf := bufio.NewReader(cmd.InOrStdin())
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
 
-	var kr keyring.Keyring
-
-	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
-	if dryRun {
-		kr, err = keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, clientCtx.KeyringDir, buf)
-	} else {
-		backend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-		kr, err = keyring.New(sdk.KeyringServiceName(), backend, clientCtx.KeyringDir, buf)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	return RunAddCmd(cmd, args, kr, buf)
+	return RunAddCmd(clientCtx, cmd, args, buf)
 }
 
 /*
@@ -115,18 +101,15 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
+func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
 	showMnemonic := !noBackup
-<<<<<<< HEAD
-=======
 	kb := ctx.Keyring
 	outputFormat := ctx.OutputFormat
->>>>>>> b4d1a5e5d... fix client config don't take effect (#9211)
 
 	keyringAlgos, _ := kb.SupportedAlgorithms()
 	algoStr, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
@@ -300,21 +283,11 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	return printCreate(cmd, info, showMnemonic, mnemonic, outputFormat)
 }
 
-<<<<<<< HEAD
-func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string) error {
-	output, _ := cmd.Flags().GetString(cli.OutputFlag)
-
-	switch output {
-	case OutputFormatText:
-		cmd.PrintErrln()
-		printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput, output)
-=======
 func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string, outputFormat string) error {
 	switch outputFormat {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(cmd.OutOrStdout(), info, keyring.MkAccKeyOutput, outputFormat)
->>>>>>> b4d1a5e5d... fix client config don't take effect (#9211)
+		printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput, outputFormat)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {

@@ -280,7 +280,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, simapp.FundModuleAccount(app, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// create validator with 50% commission
@@ -492,7 +492,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, simapp.FundModuleAccount(app, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}

@@ -88,9 +88,7 @@ type (
 // k1 is a prefix of k2
 func assertNoPrefix(keys []string) {
 	sorted := make([]string, len(keys))
-	for i := range keys {
-		sorted[i] = keys[i]
-	}
+	copy(sorted, keys)
 	sort.Strings(sorted)
 	for i, n := range sorted {
 		if i > 0 && strings.HasPrefix(n, sorted[i-1]) {

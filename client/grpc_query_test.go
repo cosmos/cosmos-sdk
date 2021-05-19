@@ -31,7 +31,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), network.DefaultConfig())
 	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(2)
+	_, err = s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 }
 

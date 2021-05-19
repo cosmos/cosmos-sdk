@@ -9,7 +9,6 @@ import (
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -123,6 +122,11 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
 	showMnemonic := !noBackup
+<<<<<<< HEAD
+=======
+	kb := ctx.Keyring
+	outputFormat := ctx.OutputFormat
+>>>>>>> b4d1a5e5d... fix client config don't take effect (#9211)
 
 	keyringAlgos, _ := kb.SupportedAlgorithms()
 	algoStr, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
@@ -219,7 +223,7 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 			return err
 		}
 
-		return printCreate(cmd, info, false, "")
+		return printCreate(cmd, info, false, "", outputFormat)
 	}
 
 	// Get bip39 mnemonic
@@ -293,9 +297,10 @@ func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *buf
 		mnemonic = ""
 	}
 
-	return printCreate(cmd, info, showMnemonic, mnemonic)
+	return printCreate(cmd, info, showMnemonic, mnemonic, outputFormat)
 }
 
+<<<<<<< HEAD
 func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string) error {
 	output, _ := cmd.Flags().GetString(cli.OutputFlag)
 
@@ -303,6 +308,13 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 	case OutputFormatText:
 		cmd.PrintErrln()
 		printKeyInfo(cmd.OutOrStdout(), info, keyring.Bech32KeyOutput, output)
+=======
+func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string, outputFormat string) error {
+	switch outputFormat {
+	case OutputFormatText:
+		cmd.PrintErrln()
+		printKeyInfo(cmd.OutOrStdout(), info, keyring.MkAccKeyOutput, outputFormat)
+>>>>>>> b4d1a5e5d... fix client config don't take effect (#9211)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -329,7 +341,7 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 		cmd.Println(string(jsonString))
 
 	default:
-		return fmt.Errorf("invalid output format %s", output)
+		return fmt.Errorf("invalid output format %s", outputFormat)
 	}
 
 	return nil

@@ -111,7 +111,9 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	output, _ := cmd.Flags().GetString(cli.OutputFlag)
+	if isOutputSet {
+		clientCtx.OutputFormat, _ = cmd.Flags().GetString(cli.OutputFlag)
+	}
 
 	switch {
 	case isShowAddr:
@@ -119,7 +121,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	case isShowPubKey:
 		printPubKey(cmd.OutOrStdout(), info, bechKeyOut)
 	default:
-		printKeyInfo(cmd.OutOrStdout(), info, bechKeyOut, output)
+		printKeyInfo(cmd.OutOrStdout(), info, bechKeyOut, clientCtx.OutputFormat)
 	}
 
 	if isShowDevice {

@@ -76,25 +76,25 @@ type Config struct {
 
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
-	AppConstructor   AppConstructor            // the ABCI application constructor
-	GenesisState    map[string]json.RawMessage // custom gensis state to provide
-	TimeoutCommit   time.Duration              // the consensus commitment timeout
-	ChainID         string                     // the network chain-id
-	NumValidators   int                        // the total number of validators to create and bond
-	BondDenom       string                     // the staking bond denomination
-	MinGasPrices    string                     // the minimum gas prices each validator will accept
-	AccountTokens   sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens   sdk.Int                    // the amount of tokens each validator has available to stake
-	BondedTokens    sdk.Int                    // the amount of tokens each validator stakes
-	PruningStrategy string                     // the pruning strategy each validator will have
-	EnableTMLogging bool                       // enable Tendermint logging to STDOUT
-	CleanupDir      bool                       // remove base temporary directory during cleanup
-	SigningAlgo     string                     // signing algorithm for keys
-	KeyringOptions  []keyring.Option
-	RPCAddress      string					   // RPC listen address (including port)
-	APIAddress      string					   // REST API listen address (including port)
-	GRPCAddress     string                     // GRPC server listen address (including port)
-	PrintMnemonic 	bool					   // print the mnemonic of first validator as log output for testing
+	AppConstructor   AppConstructor             // the ABCI application constructor
+	GenesisState     map[string]json.RawMessage // custom gensis state to provide
+	TimeoutCommit    time.Duration              // the consensus commitment timeout
+	ChainID          string                     // the network chain-id
+	NumValidators    int                        // the total number of validators to create and bond
+	BondDenom        string                     // the staking bond denomination
+	MinGasPrices     string                     // the minimum gas prices each validator will accept
+	AccountTokens    sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    sdk.Int                    // the amount of tokens each validator has available to stake
+	BondedTokens     sdk.Int                    // the amount of tokens each validator stakes
+	PruningStrategy  string                     // the pruning strategy each validator will have
+	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
+	CleanupDir       bool                       // remove base temporary directory during cleanup
+	SigningAlgo      string                     // signing algorithm for keys
+	KeyringOptions   []keyring.Option
+	RPCAddress       string // RPC listen address (including port)
+	APIAddress       string // REST API listen address (including port)
+	GRPCAddress      string // GRPC server listen address (including port)
+	PrintMnemonic    bool   // print the mnemonic of first validator as log output for testing
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all
@@ -122,7 +122,7 @@ func DefaultConfig() Config {
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.Secp256k1Type),
 		KeyringOptions:    []keyring.Option{},
-		PrintMnemonic: 	   false,
+		PrintMnemonic:     false,
 	}
 }
 
@@ -181,7 +181,7 @@ var _ Logger = (*testing.T)(nil)
 var _ Logger = (*CLILogger)(nil)
 
 type CLILogger struct {
-	cmd           *cobra.Command
+	cmd *cobra.Command
 }
 
 func (s CLILogger) Log(args ...interface{}) {
@@ -193,7 +193,7 @@ func (s CLILogger) Logf(format string, args ...interface{}) {
 }
 
 func NewCLILogger(cmd *cobra.Command) CLILogger {
-	return CLILogger{ cmd }
+	return CLILogger{cmd}
 }
 
 // New creates a new Network for integration tests or in-process testnets run via the CLI
@@ -203,7 +203,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	lock.Lock()
 
 	network := &Network{
-		Logger:          l,
+		Logger:     l,
 		BaseDir:    baseDir,
 		Validators: make([]*Validator, cfg.NumValidators),
 		Config:     cfg,
@@ -353,7 +353,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err != nil {
 			return nil, err
 		}
-
 
 		// if PrintMnemonic is set to true, we print the first validator node's secret to the network's logger
 		// for debugging and manual testing
@@ -597,7 +596,7 @@ func (n *Network) Cleanup() {
 
 // printMnemonic prints a provided mnemonic seed phrase on a network logger
 // for debugging and manual testing
-func printMnemonic(l Logger, secret string){
+func printMnemonic(l Logger, secret string) {
 	lines := []string{
 		"THIS MNEMONIC IS FOR TESTING PURPOSES ONLY",
 		"DO NOT USE IN PRODUCTION",
@@ -620,19 +619,19 @@ func printMnemonic(l Logger, secret string){
 	}
 
 	l.Log("\n")
-	l.Log(strings.Repeat("+",maxLineLength + 8))
+	l.Log(strings.Repeat("+", maxLineLength+8))
 	for _, line := range lines {
 		l.Logf("++  %s  ++\n", centerText(line, maxLineLength))
 	}
-	l.Log(strings.Repeat("+",maxLineLength + 8))
+	l.Log(strings.Repeat("+", maxLineLength+8))
 	l.Log("\n")
 }
 
 // centerText centers text across a fixed width, filling either side with whitespace buffers
 func centerText(text string, width int) string {
 	textLen := len(text)
-	leftBuffer := strings.Repeat(" ", (width - textLen) / 2)
-	rightBuffer := strings.Repeat( " ", (width - textLen) / 2 + (width - textLen) % 2)
+	leftBuffer := strings.Repeat(" ", (width-textLen)/2)
+	rightBuffer := strings.Repeat(" ", (width-textLen)/2+(width-textLen)%2)
 
 	return fmt.Sprintf("%s%s%s", leftBuffer, text, rightBuffer)
 }

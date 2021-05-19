@@ -209,7 +209,7 @@ func InitTestnetFiles(
 	baseDir := fmt.Sprintf("%s/%s", outputDir, chainID)
 	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
 		return fmt.Errorf(
-			"Testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
+			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
 			chainID, baseDir)
 	}
 
@@ -500,7 +500,7 @@ func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGas
 	baseDir := fmt.Sprintf("%s/%s", testnetsDir, networkConfig.ChainID)
 	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
 		return fmt.Errorf(
-			"Testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
+			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
 			networkConfig.ChainID, baseDir)
 	}
 

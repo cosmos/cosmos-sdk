@@ -13,7 +13,7 @@ If there is already a grant for the `(granter, grantee, Authorization)` triple, 
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L32-L37
 
-The message handling should to fail if:
+The message handling should fail if:
 
 - both granter and grantee have the same address.
 - provided `Expiration` time is less than current unix timestamp.
@@ -23,7 +23,7 @@ The message handling should to fail if:
 
 ## MsgRevoke
 
-A grant can be removed with `MsgRevoke` message.
+A grant can be removed with the `MsgRevoke` message.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L60-L64
 
@@ -32,15 +32,15 @@ The message handling should fail if:
 - both granter and grantee have the same address.
 - provided `MsgTypeUrl` is empty.
 
-NOTE: `MsgExec` message removes a grant if the grant exhausted.
+NOTE: The `MsgExec` message removes a grant if the grant has expired.
 
 ## MsgExec
 
-When a grantee wants to execute transaction on behalf of a granter, it must send `MsgExec`.
+When a grantee wants to execute a transaction on behalf of a granter, they must send `MsgExec`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L47-L53
 
-The method should fail if:
+The message handling should fail if:
 
 - provided `Authorization` is not implemented.
 - grantee doesn't have permission to run the transaction.

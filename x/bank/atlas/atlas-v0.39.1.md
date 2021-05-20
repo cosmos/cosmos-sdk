@@ -35,14 +35,14 @@ with particular kinds of accounts.
    ```
 
 4. Create the keeper. Note, the `x/bank` module depends on the `x/auth` module
-   and a list of blacklisted account addresses which funds are not allowed to be
+   and a list of blocklisted account addresses which funds are not allowed to be
    sent to. Your application will need to define this method based your needs.
 
    ```go
    func NewApp(...) *App {
      // ...
      app.BankKeeper = bank.NewBaseKeeper(
-       app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlacklistedAccAddrs(),
+       app.AccountKeeper, app.subspaces[bank.ModuleName], app.BlocklistedAccAddrs(),
      )
    }
    ```

@@ -147,6 +147,9 @@ func TestMsgVoteWeighted(t *testing.T) {
 		}, false},
 		{0, addrs[0], WeightedVoteOptions{}, false},
 		{0, addrs[0], NewNonSplitVoteOption(VoteOption(0x13)), false},
+		{0, addrs[0], WeightedVoteOptions{ // weight sum <1
+			WeightedVoteOption{Option: OptionYes, Weight: sdk.NewDecWithPrec(5, 1)},
+		}, false},
 	}
 
 	for i, tc := range tests {

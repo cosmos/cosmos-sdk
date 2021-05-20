@@ -13,6 +13,7 @@ import (
 // Len is the length of base addresses
 const Len = sha256.Size
 
+// Addressable represents any type from which we can derive an address.
 type Addressable interface {
 	Address() []byte
 }
@@ -20,20 +21,21 @@ type Addressable interface {
 // Hash creates a new address from address type and key
 func Hash(typ string, key []byte) []byte {
 	hasher := sha256.New()
-	hasher.Write(conv.UnsafeStrToBytes(typ))
+	_, err := hasher.Write(conv.UnsafeStrToBytes(typ))
+	// the error always nil, it's here only to satisfy the io.Writer interface
+	errors.AssertNil(err)
 	th := hasher.Sum(nil)
 
 	hasher.Reset()
-	_, err := hasher.Write(th)
-	// the error always nil, it's here only to satisfy the io.Writer interface
+	_, err = hasher.Write(th)
 	errors.AssertNil(err)
 	_, err = hasher.Write(key)
 	errors.AssertNil(err)
 	return hasher.Sum(nil)
 }
 
-// NewComposed creates a new address based on sub addresses.
-func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
+// Compose creates a new address based on sub addresses.
+func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 	as := make([][]byte, len(subAddresses))
 	totalLen := 0
 	var err error
@@ -61,4 +63,9 @@ func NewComposed(typ string, subAddresses []Addressable) ([]byte, error) {
 func Module(moduleName string, key []byte) []byte {
 	mKey := append([]byte(moduleName), 0)
 	return Hash("module", append(mKey, key...))
+}
+
+// Derive derives a new address from the main `address` and a derivation `key`.
+func Derive(address []byte, key []byte) []byte {
+	return Hash(conv.UnsafeBytesToStr(address), key)
 }

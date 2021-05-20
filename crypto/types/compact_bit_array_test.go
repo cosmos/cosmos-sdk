@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 
@@ -182,6 +184,17 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 	}
 }
 
+// Ensure that CompactUnmarshal does not blindly try to slice using
+// a negative/out of bounds index of size returned from binary.Uvarint.
+// See issue https://github.com/cosmos/cosmos-sdk/issues/9165
+func TestCompactMarshalUnmarshalReturnsErrorOnInvalidSize(t *testing.T) {
+	malicious := []byte{0xd7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x24, 0x28}
+	cba, err := CompactUnmarshal(malicious)
+	require.Error(t, err)
+	require.Nil(t, cba)
+	require.Contains(t, err.Error(), "n=-11 is out of range of len(bz)=13")
+}
+
 func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 	testCases := []struct {
 		marshalledBA   string
@@ -225,6 +238,15 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 			val := (r.Int63() % 2) == 0
 			bA.SetIndex(index, val)
 			require.Equal(t, val, bA.GetIndex(index), "bA.SetIndex(%d, %v) failed on bit array: %s", index, val, copy)
+
+			// Ensure that passing in negative indices to .SetIndex and .GetIndex do not
+			// panic. See issue https://github.com/cosmos/cosmos-sdk/issues/9164.
+			// To intentionally use negative indices, We want only values that aren't 0.
+			if index == 0 {
+				continue
+			}
+			require.False(t, bA.SetIndex(-index, val))
+			require.False(t, bA.GetIndex(-index))
 		}
 	}
 }
@@ -238,4 +260,36 @@ func BenchmarkNumTrueBitsBefore(b *testing.B) {
 			ba.NumTrueBitsBefore(90)
 		}
 	})
+}
+
+func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
+	if testing.Short() {
+		t.Skip("This test can be expensive in memory")
+	}
+	tests := []struct {
+		in       int
+		mustPass bool
+	}{
+		{int(^uint(0) >> 30), false},
+		{int(^uint(0) >> 1), false},
+		{int(^uint(0) >> 2), false},
+		{int(math.MaxInt32), true},
+		{int(math.MaxInt32) + 1, true},
+		{int(math.MaxInt32) + 2, true},
+		{int(math.MaxInt32) - 7, true},
+		{int(math.MaxInt32) + 24, true},
+		{int(math.MaxInt32) * 9, false}, // results in >=maxint after (bits+7)/8
+		{1, true},
+		{0, false},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("%d", tt.in), func(t *testing.T) {
+			got := NewCompactBitArray(tt.in)
+			if g := got != nil; g != tt.mustPass {
+				t.Fatalf("got!=nil=%t, want=%t", g, tt.mustPass)
+			}
+		})
+	}
 }

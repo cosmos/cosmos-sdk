@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -19,8 +18,8 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"google.golang.org/grpc"
 
-	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
-	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
+	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
+	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
@@ -71,7 +70,7 @@ func NewClient(cfg *Config) (*Client, error) {
 		}
 
 		if _, ok := resolvedMsg.(sdk.Msg); ok {
-			supportedOperations = append(supportedOperations, strings.TrimLeft(ii, "/"))
+			supportedOperations = append(supportedOperations, ii)
 		}
 	}
 

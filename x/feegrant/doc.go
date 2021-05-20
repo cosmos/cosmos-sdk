@@ -10,7 +10,7 @@ provides ways for specifying fee allowances such that authorizing fee payment to
 another account can be done with clear and safe restrictions.
 
 A user would authorize granting fee payment to another user using
-MsgDelegateFeeAllowance and revoke that delegation using MsgRevokeFeeAllowance.
+MsgGrantAllowance and revoke that delegation using MsgRevokeAllowance.
 In both cases, Granter is the one who is authorizing fee payment and Grantee is
 the one who is receiving the fee payment authorization. So grantee would correspond
 to the one who is signing a transaction and the granter would be the address that
@@ -18,12 +18,6 @@ pays the fees.
 
 The fee allowance that a grantee receives is specified by an implementation of
 the FeeAllowance interface. Two FeeAllowance implementations are provided in
-this package: BasicFeeAllowance and PeriodicFeeAllowance.
-
-In order to integrate this into an application, we must use the DeductGrantedFeeDecorator
-ante handler from this package instead of the default DeductFeeDecorator from x/auth.
-
-To allow handling txs from empty accounts (with fees paid from an existing account),
-we have to re-order the decorators as well.
+this package: BasicAllowance and PeriodicAllowance.
 */
 package feegrant

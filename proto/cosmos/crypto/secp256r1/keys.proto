@@ -3,10 +3,10 @@ package cosmos.crypto.secp256r1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1";
-option (gogoproto.messagename_all) = true;
+option go_package                       = "github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1";
+option (gogoproto.messagename_all)      = true;
 option (gogoproto.goproto_stringer_all) = false;
-option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.goproto_getters_all)  = false;
 
 // PubKey defines a secp256r1 ECDSA public key.
 message PubKey {

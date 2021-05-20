@@ -18,14 +18,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -168,7 +168,7 @@ func TestRunMigrations(t *testing.T) {
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
-					"authz":        authz.AppModule{}.ConsensusVersion(),
+					"authz":        authzmodule.AppModule{}.ConsensusVersion(),
 					"staking":      staking.AppModule{}.ConsensusVersion(),
 					"mint":         mint.AppModule{}.ConsensusVersion(),
 					"distribution": distribution.AppModule{}.ConsensusVersion(),
@@ -177,7 +177,7 @@ func TestRunMigrations(t *testing.T) {
 					"params":       params.AppModule{}.ConsensusVersion(),
 					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 					"vesting":      vesting.AppModule{}.ConsensusVersion(),
-					"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
+					"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
 					"evidence":     evidence.AppModule{}.ConsensusVersion(),
 					"crisis":       crisis.AppModule{}.ConsensusVersion(),
 					"genutil":      genutil.AppModule{}.ConsensusVersion(),
@@ -219,7 +219,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 		module.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
-			"authz":        authz.AppModule{}.ConsensusVersion(),
+			"authz":        authzmodule.AppModule{}.ConsensusVersion(),
 			"staking":      staking.AppModule{}.ConsensusVersion(),
 			"mint":         mint.AppModule{}.ConsensusVersion(),
 			"distribution": distribution.AppModule{}.ConsensusVersion(),
@@ -228,7 +228,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"params":       params.AppModule{}.ConsensusVersion(),
 			"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 			"vesting":      vesting.AppModule{}.ConsensusVersion(),
-			"feegrant":     feegrant.AppModule{}.ConsensusVersion(),
+			"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
 			"evidence":     evidence.AppModule{}.ConsensusVersion(),
 			"crisis":       crisis.AppModule{}.ConsensusVersion(),
 			"genutil":      genutil.AppModule{}.ConsensusVersion(),

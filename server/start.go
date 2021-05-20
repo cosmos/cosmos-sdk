@@ -123,6 +123,10 @@ which accepts a path for the resulting pprof file.
 				return startStandAlone(serverCtx, appCreator)
 			}
 
+			if flagMinGasPricesStr, _ := cmd.Flags().GetString(FlagMinGasPrices); flagMinGasPricesStr == "" {
+				return fmt.Errorf("FlagMinGasPrices must not be empty")
+			}
+
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
 			// amino is needed here for backwards compatibility of REST routes
@@ -142,7 +146,7 @@ which accepts a path for the resulting pprof file.
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
-	cmd.Flags().String(FlagMinGasPrices, "", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
+	cmd.Flags().String(FlagMinGasPrices, "0", "Minimum gas prices to accept for transactions; Any fee in a tx must meet this minimum (e.g. 0.01photino;0.0001stake)")
 	cmd.Flags().IntSlice(FlagUnsafeSkipUpgrades, []int{}, "Skip a set of upgrade heights to continue the old binary")
 	cmd.Flags().Uint64(FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node")
 	cmd.Flags().Uint64(FlagHaltTime, 0, "Minimum block time (in Unix seconds) at which to gracefully halt the chain and shutdown the node")

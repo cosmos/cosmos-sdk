@@ -12,9 +12,9 @@ closes: #XXXX
 
 ---
 
-Before we can merge this PR, please make sure that all the following items have been
-checked off. If any of the checklist items are not applicable, please leave them but
-write a little note why.
+### Author Checklist
+
+*All items required. Please add a note if the item is not applicable.*
 
 - [ ] This PR targets the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
 - [ ] This PR links to the GitHub issue that proposes these changes
@@ -25,3 +25,13 @@ write a little note why.
 - [ ] I have updated the relevant documentation (`docs/` or `x/<module>/spec/`) (or opened a separate issue)
 - [ ] I have reviewed "Files changed" and provided comments if necessary
 - [ ] I have confirmed that all required CI checks have passed
+
+### Reviewers Checklist
+
+*All items required. Please add your handle to the items you have reviewed.*
+
+- [ ] I have reviewed documentation
+- [ ] I have reviewed API design and naming
+- [ ] I have reviewed tests and test coverage
+- [ ] I have reviewed state machine logic
+- [ ] I have manual tested (if applicable)

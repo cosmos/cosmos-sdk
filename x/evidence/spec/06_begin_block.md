@@ -151,4 +151,4 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 
 Note, the slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
 that emits informative events and finally delegates calls to the `x/staking` module. See documentation 
-on slashing and jailing in the [x/staking spec](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).
+on slashing and jailing in [x/staking spec](/.././cosmos-sdk/x/staking/spec/02_state_transitions.md).

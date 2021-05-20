@@ -90,9 +90,9 @@ func assertNoPrefix(keys []string) {
 	sorted := make([]string, len(keys))
 	copy(sorted, keys)
 	sort.Strings(sorted)
-	for i, n := range sorted {
-		if i > 0 && strings.HasPrefix(n, sorted[i-1]) {
-			panic(fmt.Sprint("Potential key collision between KVStores:", n, " - ", sorted[i-1]))
+	for i := 1; i < len(sorted); i++ {
+		if strings.HasPrefix(sorted[i], sorted[i-1]) {
+			panic(fmt.Sprint("Potential key collision between KVStores:", sorted[i], " - ", sorted[i-1]))
 		}
 	}
 }

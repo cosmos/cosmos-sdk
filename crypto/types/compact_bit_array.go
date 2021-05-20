@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
+	"math/bits"
 	"regexp"
 	"strings"
 )
@@ -15,14 +17,24 @@ import (
 // This is not thread safe, and is not intended for concurrent usage.
 
 // NewCompactBitArray returns a new compact bit array.
-// It returns nil if the number of bits is zero.
+// It returns nil if the number of bits is zero, or if there is any overflow
+// in the arithmetic to encounter for the number of its elements: (bits+7)/8,
+// or if the number of elements will be an unreasonably large number like
+// > maxint32 aka >2**31.
 func NewCompactBitArray(bits int) *CompactBitArray {
 	if bits <= 0 {
 		return nil
 	}
+	nElems := (bits + 7) / 8
+	if nElems <= 0 || nElems > math.MaxInt32 {
+		// We encountered an overflow here, and shouldn't pass negatives
+		// to make, nor should we allow unreasonable limits > maxint32.
+		// See https://github.com/cosmos/cosmos-sdk/issues/9162
+		return nil
+	}
 	return &CompactBitArray{
 		ExtraBitsStored: uint32(bits % 8),
-		Elems:           make([]byte, (bits+7)/8),
+		Elems:           make([]byte, nElems),
 	}
 }
 
@@ -30,41 +42,41 @@ func NewCompactBitArray(bits int) *CompactBitArray {
 func (bA *CompactBitArray) Count() int {
 	if bA == nil {
 		return 0
-	} else if bA.ExtraBitsStored == uint32(0) {
+	} else if bA.ExtraBitsStored == 0 {
 		return len(bA.Elems) * 8
 	}
 
 	return (len(bA.Elems)-1)*8 + int(bA.ExtraBitsStored)
 }
 
-// GetIndex returns the bit at index i within the bit array.
+// GetIndex returns true if the bit at index i is set; returns false otherwise.
 // The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) GetIndex(i int) bool {
 	if bA == nil {
 		return false
 	}
-	if i >= bA.Count() {
+	if i < 0 || i >= bA.Count() {
 		return false
 	}
 
-	return bA.Elems[i>>3]&(uint8(1)<<uint8(7-(i%8))) > 0
+	return bA.Elems[i>>3]&(1<<uint8(7-(i%8))) > 0
 }
 
-// SetIndex sets the bit at index i within the bit array.
-// The behavior is undefined if i >= bA.Count()
+// SetIndex sets the bit at index i within the bit array. Returns true if and only if the
+// operation succeeded. The behavior is undefined if i >= bA.Count()
 func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 	if bA == nil {
 		return false
 	}
 
-	if i >= bA.Count() {
+	if i < 0 || i >= bA.Count() {
 		return false
 	}
 
 	if v {
-		bA.Elems[i>>3] |= (uint8(1) << uint8(7-(i%8)))
+		bA.Elems[i>>3] |= (1 << uint8(7-(i%8)))
 	} else {
-		bA.Elems[i>>3] &= ^(uint8(1) << uint8(7-(i%8)))
+		bA.Elems[i>>3] &= ^(1 << uint8(7-(i%8)))
 	}
 
 	return true
@@ -74,14 +86,19 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 // given index. e.g. if bA = _XX__XX, NumOfTrueBitsBefore(4) = 2, since
 // there are two bits set to true before index 4.
 func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
-	numTrueValues := 0
-	for i := 0; i < index; i++ {
-		if bA.GetIndex(i) {
-			numTrueValues++
-		}
+	onesCount := 0
+	max := bA.Count()
+	if index > max {
+		index = max
 	}
-
-	return numTrueValues
+	// below we iterate over the bytes then over bits (in low endian) and count bits set to 1
+	for elem := 0; ; elem++ {
+		if elem*8+7 >= index {
+			onesCount += bits.OnesCount8(bA.Elems[elem] >> (7 - (index % 8) + 1))
+			return onesCount
+		}
+		onesCount += bits.OnesCount8(bA.Elems[elem])
+	}
 }
 
 // Copy returns a copy of the provided bit array.
@@ -97,6 +114,18 @@ func (bA *CompactBitArray) Copy() *CompactBitArray {
 		ExtraBitsStored: bA.ExtraBitsStored,
 		Elems:           c,
 	}
+}
+
+// Equal checks if both bit arrays are equal. If both arrays are nil then it returns true.
+func (bA *CompactBitArray) Equal(other *CompactBitArray) bool {
+	if bA == other {
+		return true
+	}
+	if bA == nil || other == nil {
+		return false
+	}
+	return bA.ExtraBitsStored == other.ExtraBitsStored &&
+		bytes.Equal(bA.Elems, other.Elems)
 }
 
 // String returns a string representation of CompactBitArray: BA{<bit-string>},
@@ -229,6 +258,9 @@ func CompactUnmarshal(bz []byte) (*CompactBitArray, error) {
 	}
 
 	size, n := binary.Uvarint(bz)
+	if n < 0 || n >= len(bz) {
+		return nil, fmt.Errorf("compact bit array: n=%d is out of range of len(bz)=%d", n, len(bz))
+	}
 	bz = bz[n:]
 
 	if len(bz) != int(size+7)/8 {

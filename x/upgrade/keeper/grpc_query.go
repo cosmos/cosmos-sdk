@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -38,17 +38,34 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	consState, err := k.GetUpgradedConsensusState(ctx, req.LastHeight)
-	if err != nil {
-		return nil, err
-	}
-
-	cs, err := clienttypes.PackConsensusState(consState)
-	if err != nil {
-		return nil, err
+	consState, found := k.GetUpgradedConsensusState(ctx, req.LastHeight)
+	if !found {
+		return &types.QueryUpgradedConsensusStateResponse{}, nil
 	}
 
 	return &types.QueryUpgradedConsensusStateResponse{
-		UpgradedConsensusState: cs,
+		UpgradedConsensusState: consState,
+	}, nil
+}
+
+// ModuleVersions implements the Query/QueryModuleVersions gRPC method
+func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersionsRequest) (*types.QueryModuleVersionsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	// check if a specific module was requested
+	if len(req.ModuleName) > 0 {
+		if version, ok := k.getModuleVersion(ctx, req.ModuleName); ok {
+			// return the requested module
+			res := []*types.ModuleVersion{{Name: req.ModuleName, Version: version}}
+			return &types.QueryModuleVersionsResponse{ModuleVersions: res}, nil
+		}
+		// module requested, but not found
+		return nil, errors.Wrapf(errors.ErrNotFound, "x/upgrade: QueryModuleVersions module %s not found", req.ModuleName)
+	}
+
+	// if no module requested return all module versions from state
+	mv := k.GetModuleVersions(ctx)
+	return &types.QueryModuleVersionsResponse{
+		ModuleVersions: mv,
 	}, nil
 }

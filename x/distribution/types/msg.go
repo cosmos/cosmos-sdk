@@ -1,13 +1,6 @@
-//nolint
 package types
 
 import (
-	"fmt"
-
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	"github.com/gogo/protobuf/proto"
-
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -94,50 +87,6 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() error {
 		return ErrEmptyValidatorAddr
 	}
 	return nil
-}
-
-func (msg *MsgWithdrawDelegatorReward) ToOperations(withStatus, hasError bool) []*rosettatypes.Operation {
-
-	var status string
-	if withStatus {
-		status = rosetta.StatusSuccess
-		if hasError {
-			status = rosetta.StatusReverted
-		}
-	}
-
-	op := &rosettatypes.Operation{
-		OperationIdentifier: &rosettatypes.OperationIdentifier{
-			Index: 0,
-		},
-		RelatedOperations: nil,
-		Type:              proto.MessageName(msg),
-		Status:            status,
-		Account: &rosettatypes.AccountIdentifier{
-			Address: msg.DelegatorAddress,
-			SubAccount: &rosettatypes.SubAccountIdentifier{
-				Address: msg.ValidatorAddress,
-			},
-		},
-	}
-	return []*rosettatypes.Operation{op}
-}
-
-func (msg *MsgWithdrawDelegatorReward) FromOperations(ops []*rosettatypes.Operation) (sdk.Msg, error) {
-	if len(ops) != 1 {
-		return nil, fmt.Errorf("expected one operation")
-	}
-	op := ops[0]
-	if op.Account == nil {
-		return nil, fmt.Errorf("account identifier must be specified")
-	}
-	if op.Account.SubAccount == nil {
-		return nil, fmt.Errorf("account identifier subaccount must be specified")
-	}
-	return &MsgWithdrawDelegatorReward{
-		DelegatorAddress: op.Account.Address,
-		ValidatorAddress: op.Account.SubAccount.Address,
-	}, nil
 }
 
 func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValidatorCommission {

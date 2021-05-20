@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -110,7 +111,9 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				suite.app.UpgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
 
 				suite.ctx = suite.ctx.WithBlockHeight(expHeight)
-				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan) {})
+				suite.app.UpgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+					return vm, nil
+				})
 				suite.app.UpgradeKeeper.ApplyUpgrade(suite.ctx, plan)
 
 				req = &types.QueryAppliedPlanRequest{Name: planName}
@@ -131,6 +134,68 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
 				suite.Require().Equal(expHeight, res.Height)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *UpgradeTestSuite) TestModuleVersions() {
+	testCases := []struct {
+		msg     string
+		req     types.QueryModuleVersionsRequest
+		single  bool
+		expPass bool
+	}{
+		{
+			msg:     "test full query",
+			req:     types.QueryModuleVersionsRequest{},
+			single:  false,
+			expPass: true,
+		},
+		{
+			msg:     "test single module",
+			req:     types.QueryModuleVersionsRequest{ModuleName: "bank"},
+			single:  true,
+			expPass: true,
+		},
+		{
+			msg:     "test non-existent module",
+			req:     types.QueryModuleVersionsRequest{ModuleName: "abcdefg"},
+			single:  true,
+			expPass: false,
+		},
+	}
+
+	vm := suite.app.UpgradeKeeper.GetModuleVersionMap(suite.ctx)
+	mv := suite.app.UpgradeKeeper.GetModuleVersions(suite.ctx)
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			res, err := suite.queryClient.ModuleVersions(gocontext.Background(), &tc.req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+
+				if tc.single {
+					// test that the single module response is valid
+					suite.Require().Len(res.ModuleVersions, 1)
+					// make sure we got the right values
+					suite.Require().Equal(vm[tc.req.ModuleName], res.ModuleVersions[0].Version)
+					suite.Require().Equal(tc.req.ModuleName, res.ModuleVersions[0].Name)
+				} else {
+					// check that the full response is valid
+					suite.Require().NotEmpty(res.ModuleVersions)
+					suite.Require().Equal(len(mv), len(res.ModuleVersions))
+					for i, v := range res.ModuleVersions {
+						suite.Require().Equal(mv[i].Version, v.Version)
+						suite.Require().Equal(mv[i].Name, v.Name)
+					}
+				}
 			} else {
 				suite.Require().Error(err)
 			}

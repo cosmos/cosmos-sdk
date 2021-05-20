@@ -26,6 +26,11 @@ service Query {
   rpc UpgradedConsensusState(QueryUpgradedConsensusStateRequest) returns (QueryUpgradedConsensusStateResponse) {
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}";
   }
+
+  // ModuleVersions queries the list of module versions from state.
+  rpc ModuleVersions(QueryModuleVersionsRequest) returns (QueryModuleVersionsResponse) {
+    option (google.api.http).get = "/cosmos/upgrade/v1beta1/module_versions";
+  }
 }
 
 // QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC
@@ -64,5 +69,23 @@ message QueryUpgradedConsensusStateRequest {
 // QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
 // RPC method.
 message QueryUpgradedConsensusStateResponse {
-  google.protobuf.Any upgraded_consensus_state = 1;
+  reserved 1;
+
+  bytes upgraded_consensus_state = 2;
+}
+
+// QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
+// RPC method.
+message QueryModuleVersionsRequest {
+  // module_name is a field to query a specific module
+  // consensus version from state. Leaving this empty will
+  // fetch the full list of module versions from state
+  string module_name = 1;
+}
+
+// QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
+// RPC method.
+message QueryModuleVersionsResponse {
+  // module_versions is a list of module names with their consensus versions.
+  repeated ModuleVersion module_versions = 1;
 }

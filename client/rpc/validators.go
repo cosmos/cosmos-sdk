@@ -9,7 +9,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,7 +21,7 @@ import (
 
 // TODO these next two functions feel kinda hacky based on their placement
 
-//ValidatorCommand returns the validator set for a given height
+// ValidatorCommand returns the validator set for a given height
 func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tendermint-validator-set [height]",
@@ -67,7 +66,7 @@ func ValidatorCommand() *cobra.Command {
 	return cmd
 }
 
-// Validator output in bech32 format
+// Validator output
 type ValidatorOutput struct {
 	Address          sdk.ConsAddress    `json:"address"`
 	PubKey           cryptotypes.PubKey `json:"pub_key"`
@@ -79,12 +78,14 @@ type ValidatorOutput struct {
 type ResultValidatorsOutput struct {
 	BlockHeight int64             `json:"block_height"`
 	Validators  []ValidatorOutput `json:"validators"`
+	Total       uint64            `json:"total"`
 }
 
 func (rvo ResultValidatorsOutput) String() string {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("block height: %d\n", rvo.BlockHeight))
+	b.WriteString(fmt.Sprintf("total count: %d\n", rvo.Total))
 
 	for _, val := range rvo.Validators {
 		b.WriteString(
@@ -129,19 +130,23 @@ func GetValidators(ctx context.Context, clientCtx client.Context, height *int64,
 		return ResultValidatorsOutput{}, err
 	}
 
-	outputValidatorsRes := ResultValidatorsOutput{
+	total := validatorsRes.Total
+	if validatorsRes.Total < 0 {
+		total = 0
+	}
+	out := ResultValidatorsOutput{
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
+		Total:       uint64(total),
 	}
-
 	for i := 0; i < len(validatorsRes.Validators); i++ {
-		outputValidatorsRes.Validators[i], err = validatorOutput(validatorsRes.Validators[i])
+		out.Validators[i], err = validatorOutput(validatorsRes.Validators[i])
 		if err != nil {
-			return ResultValidatorsOutput{}, err
+			return out, err
 		}
 	}
 
-	return outputValidatorsRes, nil
+	return out, nil
 }
 
 // REST

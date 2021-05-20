@@ -57,7 +57,7 @@ func (s IntegrationTestSuite) TestQueryNodeInfo() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", val.APIAddress))
 	s.Require().NoError(err)
 	var getInfoRes tmservice.GetNodeInfoResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &getInfoRes))
+	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &getInfoRes))
 	s.Require().Equal(getInfoRes.ApplicationVersion.AppName, version.NewInfo().AppName)
 }
 
@@ -70,7 +70,7 @@ func (s IntegrationTestSuite) TestQuerySyncing() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", val.APIAddress))
 	s.Require().NoError(err)
 	var syncingRes tmservice.GetSyncingResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &syncingRes))
+	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &syncingRes))
 }
 
 func (s IntegrationTestSuite) TestQueryLatestBlock() {
@@ -82,7 +82,7 @@ func (s IntegrationTestSuite) TestQueryLatestBlock() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", val.APIAddress))
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetLatestBlockResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
+	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
 func (s IntegrationTestSuite) TestQueryBlockByHeight() {
@@ -93,7 +93,7 @@ func (s IntegrationTestSuite) TestQueryBlockByHeight() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", val.APIAddress, 1))
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetBlockByHeightResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
+	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
 func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
@@ -124,39 +124,133 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
 	s.Require().NoError(err)
 	var validatorSetRes tmservice.GetLatestValidatorSetResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
+	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &validatorSetRes))
 	s.Require().Equal(1, len(validatorSetRes.Validators))
 	anyPub, err := codectypes.NewAnyWithValue(val.PubKey)
 	s.Require().NoError(err)
 	s.Require().Equal(validatorSetRes.Validators[0].PubKey, anyPub)
 }
 
-func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
-	val := s.network.Validators[0]
+func (s IntegrationTestSuite) TestLatestValidatorSet_GRPC() {
+	vals := s.network.Validators
+	testCases := []struct {
+		name      string
+		req       *tmservice.GetLatestValidatorSetRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "cannot be nil"},
+		{"no pagination", &tmservice.GetLatestValidatorSetRequest{}, false, ""},
+		{"with pagination", &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{Offset: 0, Limit: uint64(len(vals))}}, false, ""},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			grpcRes, err := s.queryClient.GetLatestValidatorSet(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Len(grpcRes.Validators, len(vals))
+				s.Require().Equal(grpcRes.Pagination.Total, uint64(len(vals)))
+				content, ok := grpcRes.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
+				s.Require().Equal(true, ok)
+				s.Require().Equal(content, vals[0].PubKey)
+			}
+		})
+	}
+}
 
-	// nil pagination
-	_, err := s.queryClient.GetValidatorSetByHeight(context.Background(), &tmservice.GetValidatorSetByHeightRequest{
-		Height:     1,
-		Pagination: nil,
-	})
-	s.Require().NoError(err)
+func (s IntegrationTestSuite) TestLatestValidatorSet_GRPCGateway() {
+	vals := s.network.Validators
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest", vals[0].APIAddress), false, ""},
+		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=-1&pagination.limit=-2", vals[0].APIAddress), true, "strconv.ParseUint"},
+		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=0&pagination.limit=2", vals[0].APIAddress), false, ""},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tmservice.GetLatestValidatorSetResponse
+				err = vals[0].ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
+				anyPub, err := codectypes.NewAnyWithValue(vals[0].PubKey)
+				s.Require().NoError(err)
+				s.Require().Equal(result.Validators[0].PubKey, anyPub)
+			}
+		})
+	}
+}
 
-	_, err = s.queryClient.GetValidatorSetByHeight(context.Background(), &tmservice.GetValidatorSetByHeightRequest{
-		Height: 1,
-		Pagination: &qtypes.PageRequest{
-			Offset: 0,
-			Limit:  10,
-		}})
-	s.Require().NoError(err)
+func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPC() {
+	vals := s.network.Validators
+	testCases := []struct {
+		name      string
+		req       *tmservice.GetValidatorSetByHeightRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than 0"},
+		{"no pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1}, false, ""},
+		{"with pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1, Pagination: &qtypes.PageRequest{Offset: 0, Limit: 1}}, false, ""},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			grpcRes, err := s.queryClient.GetValidatorSetByHeight(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Len(grpcRes.Validators, len(vals))
+				s.Require().Equal(grpcRes.Pagination.Total, uint64(len(vals)))
+			}
+		})
+	}
+}
 
-	// no pagination rest
-	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", val.APIAddress, 1))
-	s.Require().NoError(err)
-
-	// rest query with pagination
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 1, 0, 1))
-	var validatorSetRes tmservice.GetValidatorSetByHeightResponse
-	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &validatorSetRes))
+func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
+	vals := s.network.Validators
+	testCases := []struct {
+		name      string
+		url       string
+		expErr    bool
+		expErrMsg string
+	}{
+		{"invalid height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, -1), true, "height must be greater than 0"},
+		{"no pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d", vals[0].APIAddress, 1), false, ""},
+		{"pagination invalid fields", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=-1&pagination.limit=-2", vals[0].APIAddress, 1), true, "strconv.ParseUint"},
+		{"with pagination", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/%d?pagination.offset=0&pagination.limit=2", vals[0].APIAddress, 1), false, ""},
+	}
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := rest.GetRequest(tc.url)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tmservice.GetValidatorSetByHeightResponse
+				err = vals[0].ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
+			}
+		})
+	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

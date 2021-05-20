@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
 )
 
 type addressTestSuite struct {
@@ -66,48 +67,6 @@ func (s *addressTestSuite) TestEmptyAddresses() {
 	consAddr, err := types.ConsAddressFromBech32("")
 	s.Require().True(consAddr.Empty())
 	s.Require().Error(err)
-}
-
-func (s *addressTestSuite) TestRandBech32PubkeyConsistency() {
-	pubBz := make([]byte, ed25519.PubKeySize)
-	pub := &ed25519.PubKey{Key: pubBz}
-
-	for i := 0; i < 1000; i++ {
-		rand.Read(pub.Key)
-
-		mustBech32AccPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
-		bech32AccPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
-		s.Require().Nil(err)
-		s.Require().Equal(bech32AccPub, mustBech32AccPub)
-
-		mustBech32ValPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
-		bech32ValPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
-		s.Require().Nil(err)
-		s.Require().Equal(bech32ValPub, mustBech32ValPub)
-
-		mustBech32ConsPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
-		bech32ConsPub, err := types.Bech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
-		s.Require().Nil(err)
-		s.Require().Equal(bech32ConsPub, mustBech32ConsPub)
-
-		mustAccPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeAccPub, bech32AccPub)
-		accPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeAccPub, bech32AccPub)
-		s.Require().Nil(err)
-		s.Require().Equal(accPub, mustAccPub)
-
-		mustValPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeValPub, bech32ValPub)
-		valPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeValPub, bech32ValPub)
-		s.Require().Nil(err)
-		s.Require().Equal(valPub, mustValPub)
-
-		mustConsPub := types.MustGetPubKeyFromBech32(types.Bech32PubKeyTypeConsPub, bech32ConsPub)
-		consPub, err := types.GetPubKeyFromBech32(types.Bech32PubKeyTypeConsPub, bech32ConsPub)
-		s.Require().Nil(err)
-		s.Require().Equal(consPub, mustConsPub)
-
-		s.Require().Equal(valPub, accPub)
-		s.Require().Equal(valPub, consPub)
-	}
 }
 
 func (s *addressTestSuite) TestYAMLMarshalers() {
@@ -277,7 +236,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				acc.String(),
 				prefix+types.PrefixAccount), acc.String())
 
-			bech32Pub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeAccPub, pub)
+			bech32Pub := legacybech32.MustMarshalPubKey(legacybech32.AccPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32Pub,
 				prefix+types.PrefixPublic))
@@ -291,7 +250,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				val.String(),
 				prefix+types.PrefixValidator+types.PrefixAddress))
 
-			bech32ValPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeValPub, pub)
+			bech32ValPub := legacybech32.MustMarshalPubKey(legacybech32.ValPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ValPub,
 				prefix+types.PrefixValidator+types.PrefixPublic))
@@ -305,7 +264,7 @@ func (s *addressTestSuite) TestConfiguredPrefix() {
 				cons.String(),
 				prefix+types.PrefixConsensus+types.PrefixAddress))
 
-			bech32ConsPub := types.MustBech32ifyPubKey(types.Bech32PubKeyTypeConsPub, pub)
+			bech32ConsPub := legacybech32.MustMarshalPubKey(legacybech32.ConsPK, pub)
 			s.Require().True(strings.HasPrefix(
 				bech32ConsPub,
 				prefix+types.PrefixConsensus+types.PrefixPublic))
@@ -523,7 +482,7 @@ func (s *addressTestSuite) TestGetConsAddress() {
 func (s *addressTestSuite) TestGetFromBech32() {
 	_, err := types.GetFromBech32("", "prefix")
 	s.Require().Error(err)
-	s.Require().Equal("decoding Bech32 address failed: must provide an address", err.Error())
+	s.Require().Equal("decoding Bech32 address failed: must provide a non empty address", err.Error())
 	_, err = types.GetFromBech32("cosmos1qqqsyqcyq5rqwzqfys8f67", "x")
 	s.Require().Error(err)
 	s.Require().Equal("invalid Bech32 prefix; expected x, got cosmos", err.Error())

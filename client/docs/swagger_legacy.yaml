@@ -446,6 +446,45 @@ paths:
           description: Invalid request
         500:
           description: Server internal error
+  /bank/total:
+    get:
+      deprecated: true
+      summary: Total supply of coins in the chain
+      tags:
+        - Bank
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Supply"
+        500:
+          description: Internal Server Error
+  /bank/total/{denomination}:
+    parameters:
+      - in: path
+        name: denomination
+        description: Coin denomination
+        required: true
+        type: string
+        x-example: uatom
+    get:
+      deprecated: true
+      summary: Total supply of a single coin denomination
+      tags:
+        - Bank
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: string
+        400:
+          description: Invalid coin denomination
+        500:
+          description: Internal Server Error
   /auth/accounts/{address}:
     get:
       deprecated: true
@@ -517,7 +556,7 @@ paths:
       parameters:
         - in: body
           name: delegation
-          description: The password of the account to remove from the KMS
+          description: Delegate an amount of liquid coins to a validator
           schema:
             type: object
             properties:
@@ -527,7 +566,7 @@ paths:
                 $ref: "#/definitions/Address"
               validator_address:
                 $ref: "#/definitions/ValidatorAddress"
-              delegation:
+              amount:
                 $ref: "#/definitions/Coin"
       tags:
         - Staking
@@ -607,7 +646,7 @@ paths:
       parameters:
         - in: body
           name: delegation
-          description: The password of the account to remove from the KMS
+          description: Unbond an amount of bonded shares from a validator
           schema:
             type: object
             properties:
@@ -617,9 +656,8 @@ paths:
                 $ref: "#/definitions/Address"
               validator_address:
                 $ref: "#/definitions/ValidatorAddress"
-              shares:
-                type: string
-                example: "100"
+              amount:
+                $ref: "#/definitions/Coin"
       tags:
         - Staking
       consumes:
@@ -1938,45 +1976,6 @@ paths:
           description: OK
           schema:
             type: string
-        500:
-          description: Internal Server Error
-  /supply/total:
-    get:
-      deprecated: true
-      summary: Total supply of coins in the chain
-      tags:
-        - Supply
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/Supply"
-        500:
-          description: Internal Server Error
-  /supply/total/{denomination}:
-    parameters:
-      - in: path
-        name: denomination
-        description: Coin denomination
-        required: true
-        type: string
-        x-example: uatom
-    get:
-      deprecated: true
-      summary: Total supply of a single coin denomination
-      tags:
-        - Supply
-      produces:
-        - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: string
-        400:
-          description: Invalid coin denomination
         500:
           description: Internal Server Error
 definitions:

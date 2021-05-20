@@ -183,8 +183,13 @@ To query for the total supply of a specific coin denomination use:
 
 			queryClient := types.NewQueryClient(clientCtx)
 			ctx := cmd.Context()
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
 			if denom == "" {
-				res, err := queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{})
+				res, err := queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{Pagination: pageReq})
 				if err != nil {
 					return err
 				}

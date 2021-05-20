@@ -27,46 +27,66 @@ func TestDecodeStore(t *testing.T) {
 
 	endTime := time.Now().UTC()
 	content := types.ContentFromProposalType("test", "test", types.ProposalTypeText)
-	proposal, err := types.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour))
+	proposalA, err := types.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour))
+	require.NoError(t, err)
+	proposalB, err := types.NewProposal(content, 2, endTime, endTime.Add(24*time.Hour))
 	require.NoError(t, err)
 
 	proposalIDBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(proposalIDBz, 1)
 	deposit := types.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
-	vote := types.NewVote(1, delAddr1, types.OptionYes)
+	vote := types.NewVote(1, delAddr1, types.NewNonSplitVoteOption(types.OptionYes))
 
-	proposalBz, err := cdc.MarshalBinaryBare(&proposal)
+	proposalBzA, err := cdc.Marshal(&proposalA)
 	require.NoError(t, err)
-
-	kvPairs := kv.Pairs{
-		Pairs: []kv.Pair{
-			{Key: types.ProposalKey(1), Value: proposalBz},
-			{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
-			{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&deposit)},
-			{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshalBinaryBare(&vote)},
-			{Key: []byte{0x99}, Value: []byte{0x99}},
-		},
-	}
+	proposalBzB, err := cdc.Marshal(&proposalB)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name        string
+		kvA, kvB    kv.Pair
 		expectedLog string
+		wantPanic   bool
 	}{
-		{"proposals", fmt.Sprintf("%v\n%v", proposal, proposal)},
-		{"proposal IDs", "proposalIDA: 1\nProposalIDB: 1"},
-		{"deposits", fmt.Sprintf("%v\n%v", deposit, deposit)},
-		{"votes", fmt.Sprintf("%v\n%v", vote, vote)},
-		{"other", ""},
+		{
+			"proposals",
+			kv.Pair{Key: types.ProposalKey(1), Value: proposalBzA},
+			kv.Pair{Key: types.ProposalKey(2), Value: proposalBzB},
+			fmt.Sprintf("%v\n%v", proposalA, proposalB), false,
+		},
+		{
+			"proposal IDs",
+			kv.Pair{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
+			kv.Pair{Key: types.InactiveProposalQueueKey(1, endTime), Value: proposalIDBz},
+			"proposalIDA: 1\nProposalIDB: 1", false,
+		},
+		{
+			"deposits",
+			kv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshal(&deposit)},
+			kv.Pair{Key: types.DepositKey(1, delAddr1), Value: cdc.MustMarshal(&deposit)},
+			fmt.Sprintf("%v\n%v", deposit, deposit), false,
+		},
+		{
+			"votes",
+			kv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshal(&vote)},
+			kv.Pair{Key: types.VoteKey(1, delAddr1), Value: cdc.MustMarshal(&vote)},
+			fmt.Sprintf("%v\n%v", vote, vote), false,
+		},
+		{
+			"other",
+			kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+			kv.Pair{Key: []byte{0x99}, Value: []byte{0x99}},
+			"", true,
+		},
 	}
 
-	for i, tt := range tests {
-		i, tt := i, tt
+	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			switch i {
-			case len(tests) - 1:
-				require.Panics(t, func() { dec(kvPairs.Pairs[i], kvPairs.Pairs[i]) }, tt.name)
-			default:
-				require.Equal(t, tt.expectedLog, dec(kvPairs.Pairs[i], kvPairs.Pairs[i]), tt.name)
+			if tt.wantPanic {
+				require.Panics(t, func() { dec(tt.kvA, tt.kvB) }, tt.name)
+			} else {
+				require.Equal(t, tt.expectedLog, dec(tt.kvA, tt.kvB), tt.name)
 			}
 		})
 	}

@@ -109,6 +109,8 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 
 	return abci.ResponseInfo{
 		Data:             app.name,
+		Version:          app.version,
+		AppVersion:       app.appVersion,
 		LastBlockHeight:  lastCommitID.Version,
 		LastBlockAppHash: lastCommitID.Hash,
 	}
@@ -755,7 +757,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 			return abci.ResponseQuery{
 				Codespace: sdkerrors.RootCodespace,
 				Height:    req.Height,
-				Value:     []byte(app.appVersion),
+				Value:     []byte(app.version),
 			}
 
 		default:
@@ -797,28 +799,32 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 
 func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
 	// "/p2p" prefix for p2p queries
-	if len(path) >= 4 {
-		cmd, typ, arg := path[1], path[2], path[3]
-		switch cmd {
-		case "filter":
-			switch typ {
-			case "addr":
-				return app.FilterPeerByAddrPort(arg)
-
-			case "id":
-				return app.FilterPeerByID(arg)
-			}
-
-		default:
-			return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"))
-		}
+	if len(path) < 4 {
+		return sdkerrors.QueryResult(
+			sdkerrors.Wrap(
+				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
+			),
+		)
 	}
 
-	return sdkerrors.QueryResult(
-		sdkerrors.Wrap(
-			sdkerrors.ErrUnknownRequest, "expected path is p2p filter <addr|id> <parameter>",
-		),
-	)
+	var resp abci.ResponseQuery
+
+	cmd, typ, arg := path[1], path[2], path[3]
+	switch cmd {
+	case "filter":
+		switch typ {
+		case "addr":
+			resp = app.FilterPeerByAddrPort(arg)
+
+		case "id":
+			resp = app.FilterPeerByID(arg)
+		}
+
+	default:
+		resp = sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"))
+	}
+
+	return resp
 }
 
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {

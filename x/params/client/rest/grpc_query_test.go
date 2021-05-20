@@ -113,7 +113,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.expErr {
 				s.Require().Error(err)

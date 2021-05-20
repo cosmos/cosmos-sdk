@@ -90,11 +90,11 @@ type Config struct {
 	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
 	SigningAlgo      string                     // signing algorithm for keys
-	KeyringOptions   []keyring.Option
-	RPCAddress       string // RPC listen address (including port)
-	APIAddress       string // REST API listen address (including port)
-	GRPCAddress      string // GRPC server listen address (including port)
-	PrintMnemonic    bool   // print the mnemonic of first validator as log output for testing
+	KeyringOptions   []keyring.Option           // keyring configuration options
+	RPCAddress       string                     // RPC listen address (including port)
+	APIAddress       string                     // REST API listen address (including port)
+	GRPCAddress      string                     // GRPC server listen address (including port)
+	PrintMnemonic    bool                       // print the mnemonic of first validator as log output for testing
 }
 
 // DefaultConfig returns a sane default configuration suitable for nearly all

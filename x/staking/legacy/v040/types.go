@@ -1,6 +1,7 @@
 package v040
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -8,6 +9,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Staking params default values
@@ -27,6 +29,15 @@ const (
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
+)
+
+var (
+	KeyUnbondingTime     = []byte("UnbondingTime")
+	KeyMaxValidators     = []byte("MaxValidators")
+	KeyMaxEntries        = []byte("MaxEntries")
+	KeyBondDenom         = []byte("BondDenom")
+	KeyHistoricalEntries = []byte("HistoricalEntries")
+	KeyPowerReduction    = []byte("PowerReduction")
 )
 
 // NewParams creates a new Params instance
@@ -198,4 +209,80 @@ func (v Validators) String() (out string) {
 func (d Description) String() string {
 	out, _ := yaml.Marshal(d)
 	return string(out)
+}
+
+func validateUnbondingTime(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v <= 0 {
+		return fmt.Errorf("unbonding time must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateMaxValidators(i interface{}) error {
+	v, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max validators must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateMaxEntries(i interface{}) error {
+	v, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max entries must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateHistoricalEntries(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateBondDenom(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if strings.TrimSpace(v) == "" {
+		return errors.New("bond denom cannot be blank")
+	}
+
+	if err := sdk.ValidateDenom(v); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Implements params.ParamSet
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyUnbondingTime, &p.UnbondingTime, validateUnbondingTime),
+		paramtypes.NewParamSetPair(KeyMaxValidators, &p.MaxValidators, validateMaxValidators),
+		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
+		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
+		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
+	}
 }

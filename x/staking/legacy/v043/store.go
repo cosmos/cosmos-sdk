@@ -55,9 +55,17 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 	}
 }
 
-func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
-	paramstore.WithKeyTable(types.ParamKeyTable())
-	paramstore.Set(ctx, types.KeyPowerReduction, sdk.DefaultPowerReduction)
+func migrateParamsStore(ctx sdk.Context, paramSpace paramtypes.Subspace) {
+	var oldParamSet v040staking.Params
+	paramSpace.GetParamSet(ctx, &oldParamSet)
+	paramSpace.SetParamSet(ctx, &types.Params{
+		UnbondingTime:     oldParamSet.UnbondingTime,
+		MaxValidators:     oldParamSet.MaxValidators,
+		MaxEntries:        oldParamSet.MaxEntries,
+		HistoricalEntries: oldParamSet.HistoricalEntries,
+		BondDenom:         oldParamSet.BondDenom,
+		PowerReduction:    sdk.DefaultPowerReduction,
+	})
 }
 
 // MigrateStore performs in-place store migrations from v0.40 to v0.43. The

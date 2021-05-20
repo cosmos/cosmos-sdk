@@ -105,22 +105,22 @@ as JSON under the `"binaries"` key, eg:
 2. Store a link to a file that contains all information in the above format (eg. if you want
 to specify lots of binaries, changelog info, etc without filling up the blockchain).
 
-e.g `https://example.com/testnet-1001-info.json?checksum=sha256:deaaa99fda9407c4dbe1d04bd49bab0cc3c1dd76fa392cd55a9425be074af01e`
+e.g. `https://example.com/testnet-1001-info.json?checksum=sha256:deaaa99fda9407c4dbe1d04bd49bab0cc3c1dd76fa392cd55a9425be074af01e`
 
-This file contained in link will be retrieved by [go-getter](https://github.com/hashicorp/go-getter) 
-and the "binaries" field will be parsed as above.
+This file contained in the link will be retrieved by [go-getter](https://github.com/hashicorp/go-getter) 
+and the `"binaries"` field will be parsed as above.
 
 If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can access a canonical url for the new binary,
 then the `cosmovisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and
-unpack it into the `upgrades/<name>` folder to be run as if we installed it manually
+unpack it into the `upgrades/<name>` folder to be run as if we installed it manually.
 
 Note that for this mechanism to provide strong security guarantees, all URLS should include a
 sha{256,512} checksum. This ensures that no false binary is run, even if someone hacks the server
-or hijacks the dns. go-getter will always ensure the downloaded file matches the checksum if it
-is provided. And also handles unpacking archives into directories (so these download links should be
-a zip of all data in the bin directory).
+or hijacks the DNS. go-getter will always ensure the downloaded file matches the checksum if it
+is provided. go-getter will also handle unpacking archives into directories (so these download links should be
+a zip of all data in the `bin` directory).
 
-To properly create a checksum on linux, you can use the `sha256sum` utility. eg. 
+To properly create a checksum on linux, you can use the `sha256sum` utility. e.g. 
 `sha256sum ./testdata/repo/zip_directory/autod.zip`
 which should return `29139e1381b8177aec909fab9a75d11381cab5adf7d3af0c05ff1c9c117743a7`.
 You can also use `sha512sum` if you like longer hashes, or `md5sum` if you like to use broken hashes.

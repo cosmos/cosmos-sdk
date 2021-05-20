@@ -206,25 +206,18 @@ func InitTestnetFiles(
 		genFiles    []string
 	)
 
-	baseDir := fmt.Sprintf("%s/%s", outputDir, chainID)
-	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
-		return fmt.Errorf(
-			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
-			chainID, baseDir)
-	}
-
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
-		nodeDir := filepath.Join(baseDir, nodeDirName, nodeDaemonHome)
-		gentxsDir := filepath.Join(baseDir, "gentxs")
+		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
+		gentxsDir := filepath.Join(outputDir, "gentxs")
 
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
-			_ = os.RemoveAll(baseDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
@@ -232,13 +225,13 @@ func InitTestnetFiles(
 
 		ip, err := getIP(i, startingIPAddress)
 		if err != nil {
-			_ = os.RemoveAll(baseDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
 		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(nodeConfig)
 		if err != nil {
-			_ = os.RemoveAll(baseDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
@@ -258,7 +251,7 @@ func InitTestnetFiles(
 
 		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
 		if err != nil {
-			_ = os.RemoveAll(baseDir)
+			_ = os.RemoveAll(outputDir)
 			return err
 		}
 
@@ -333,7 +326,7 @@ func InitTestnetFiles(
 
 	err := collectGenFiles(
 		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
-		baseDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
+		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
 		return err

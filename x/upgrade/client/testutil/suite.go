@@ -36,7 +36,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
+
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

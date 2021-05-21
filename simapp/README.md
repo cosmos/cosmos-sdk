@@ -25,7 +25,8 @@ in this testnet.
 5. `$ ./simd add-genesis-account [key_name] [amount]`, where `key_name` is the same key name as
     before; and `amount` is something like `10000000000000000000000000stake`.
 6. `$ ./simd gentx [key_name] [amount] --chain-id [chain-id]`. This will create the genesis
-    transaction for your new chain. 
+    transaction for your new chain. Here `amount` should be at least `1000000000stake`. If you
+    provide too much or too little, you will encounter an error when starting your node.
 7. Now, one person needs to create the genesis file `genesis.json` using the genesis transactions 
    from every participant, by gathering all the genesis transactions under `config/gentx` and then
    calling `$ ./simd collect-gentxs`. This will create a new `genesis.json` file that includes data
@@ -41,7 +42,7 @@ in this testnet.
     persistent_peers = "[validator_address]@[ip_address]:[port],[validator_address]@[ip_address]:[port]"
     ```
 
-    You can find `validator_address` by running `$ ./simd tendermint show-node-id`. The outpur will
+    You can find `validator_address` by running `$ ./simd tendermint show-node-id`. The output will
     be the hex-encoded `validator_address`. The default `port` is 26656.
 10. Now you can start your nodes: `$ ./simd start`. 
 

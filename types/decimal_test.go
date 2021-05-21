@@ -100,6 +100,25 @@ func (s *decimalTestSuite) TestDecString() {
 	}
 }
 
+func (s *decimalTestSuite) TestDecFloat64() {
+	tests := []struct {
+		d    sdk.Dec
+		want float64
+	}{
+		{sdk.NewDec(0), 0.000000000000000000},
+		{sdk.NewDec(1), 1.000000000000000000},
+		{sdk.NewDec(10), 10.000000000000000000},
+		{sdk.NewDec(12340), 12340.000000000000000000},
+		{sdk.NewDecWithPrec(12340, 4), 1.234000000000000000},
+		{sdk.NewDecWithPrec(12340, 5), 0.123400000000000000},
+		{sdk.NewDecWithPrec(12340, 8), 0.000123400000000000},
+		{sdk.NewDecWithPrec(1009009009009009009, 17), 10.090090090090090090},
+	}
+	for tcIndex, tc := range tests {
+		s.Require().Equal(tc.want, tc.d.Float64(), "bad FLoat64(), index: %v", tcIndex)
+	}
+}
+
 func (s *decimalTestSuite) TestEqualities() {
 	tests := []struct {
 		d1, d2     sdk.Dec

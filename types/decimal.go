@@ -474,6 +474,14 @@ func (d Dec) String() string {
 	return string(bzStr)
 }
 
+func (d Dec) Float64() float64 {
+	if value, err := strconv.ParseFloat(d.String(), 64); err != nil {
+		panic(err)
+	} else {
+		return value
+	}
+}
+
 //     ____
 //  __|    |__   "chop 'em
 //       ` \     round!"

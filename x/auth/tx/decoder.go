@@ -19,7 +19,7 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
-		err = cdc.UnmarshalBinaryBare(txBytes, &raw)
+		err = cdc.Unmarshal(txBytes, &raw)
 		if err != nil {
 			return nil, err
 		}
@@ -32,7 +32,7 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
-		err = cdc.UnmarshalBinaryBare(raw.BodyBytes, &body)
+		err = cdc.Unmarshal(raw.BodyBytes, &body)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -45,7 +45,7 @@ func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
-		err = cdc.UnmarshalBinaryBare(raw.AuthInfoBytes, &authInfo)
+		err = cdc.Unmarshal(raw.AuthInfoBytes, &authInfo)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}

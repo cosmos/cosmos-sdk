@@ -22,18 +22,18 @@ const (
 	epochInterval     = "epoch_interval"
 )
 
-// GenUnbondingTime randomized UnbondingTime
-func GenUnbondingTime(r *rand.Rand) (ubdTime time.Duration) {
+// genUnbondingTime returns randomized UnbondingTime
+func genUnbondingTime(r *rand.Rand) (ubdTime time.Duration) {
 	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
 }
 
-// GenMaxValidators randomized MaxValidators
-func GenMaxValidators(r *rand.Rand) (maxValidators uint32) {
+// genMaxValidators returns randomized MaxValidators
+func genMaxValidators(r *rand.Rand) (maxValidators uint32) {
 	return uint32(r.Intn(250) + 1)
 }
 
-// GetHistEntries randomized HistoricalEntries between 0-100.
-func GetHistEntries(r *rand.Rand) uint32 {
+// getHistEntries returns randomized HistoricalEntries between 0-100.
+func getHistEntries(r *rand.Rand) uint32 {
 	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
 }
 
@@ -54,17 +54,17 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, unbondingTime, &unbondTime, simState.Rand,
-		func(r *rand.Rand) { unbondTime = GenUnbondingTime(r) },
+		func(r *rand.Rand) { unbondTime = genUnbondingTime(r) },
 	)
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, maxValidators, &maxVals, simState.Rand,
-		func(r *rand.Rand) { maxVals = GenMaxValidators(r) },
+		func(r *rand.Rand) { maxVals = genMaxValidators(r) },
 	)
 
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, historicalEntries, &histEntries, simState.Rand,
-		func(r *rand.Rand) { histEntries = GetHistEntries(r) },
+		func(r *rand.Rand) { histEntries = getHistEntries(r) },
 	)
 
 	simState.AppParams.GetOrGenerate(

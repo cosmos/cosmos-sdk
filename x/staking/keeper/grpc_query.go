@@ -62,7 +62,7 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 	return &types.QueryValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
-// Validator queries validator info for given validator addr
+// Validator queries validator info for given validator address
 func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) (*types.QueryValidatorResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -459,6 +459,7 @@ func (k Querier) Redelegations(c context.Context, req *types.QueryRedelegationsR
 	return &types.QueryRedelegationsResponse{RedelegationResponses: redelResponses, Pagination: pageRes}, nil
 }
 
+// DelegatorValidators queries all validators info for given delegator address
 func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegatorValidatorsRequest) (*types.QueryDelegatorValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"container/list"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -21,19 +20,18 @@ var _ types.DelegationSet = Keeper{}
 
 // keeper of the staking store
 type Keeper struct {
-	storeKey           sdk.StoreKey
-	cdc                codec.BinaryMarshaler
-	authKeeper         types.AccountKeeper
-	bankKeeper         types.BankKeeper
-	epochKeeper        epochkeeper.Keeper
-	hooks              types.StakingHooks
-	paramstore         paramtypes.Subspace
-	validatorCacheList *list.List
+	storeKey    sdk.StoreKey
+	cdc         codec.BinaryCodec
+	authKeeper  types.AccountKeeper
+	bankKeeper  types.BankKeeper
+	epochKeeper epochkeeper.Keeper
+	hooks       types.StakingHooks
+	paramstore  paramtypes.Subspace
 }
 
 // NewKeeper creates a new staking Keeper instance
 func NewKeeper(
-	cdc codec.BinaryMarshaler, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
+	cdc codec.BinaryCodec, key sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper,
 	ps paramtypes.Subspace,
 ) Keeper {
 	// set KeyTable if it has not already been set
@@ -55,14 +53,13 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:           key,
-		cdc:                cdc,
-		authKeeper:         ak,
-		bankKeeper:         bk,
-		epochKeeper:        epochkeeper.NewKeeper(cdc, key),
-		paramstore:         ps,
-		hooks:              nil,
-		validatorCacheList: list.New(),
+		storeKey:    key,
+		cdc:         cdc,
+		authKeeper:  ak,
+		bankKeeper:  bk,
+		epochKeeper: epochkeeper.NewKeeper(cdc, key),
+		paramstore:  ps,
+		hooks:       nil,
 	}
 }
 
@@ -92,7 +89,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	}
 
 	ip := sdk.IntProto{}
-	k.cdc.MustUnmarshalBinaryBare(bz, &ip)
+	k.cdc.MustUnmarshal(bz, &ip)
 
 	return ip.Int
 }
@@ -100,6 +97,6 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 // Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&sdk.IntProto{Int: power})
+	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)
 }

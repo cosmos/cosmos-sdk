@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -39,10 +38,7 @@ var (
 		},
 	}
 	msg0 = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 1)))
-	msg1 = sdk.ServiceMsg{
-		MethodName: "/cosmos.bank.v1beta1.Msg/Send",
-		Request:    banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 2))),
-	}
+	msg1 = banktypes.NewMsgSend(addr1, addr2, types.NewCoins(types.NewInt64Coin("wack", 2)))
 )
 
 func buildTestTx(t *testing.T, builder client.TxBuilder) {
@@ -88,7 +84,7 @@ func (s *TestSuite) TestCopyTx() {
 	s.Require().Equal(sigsV2_1, sigsV2_2)
 	s.Require().Equal(protoBuilder.GetTx().GetSigners(), protoBuilder2.GetTx().GetSigners())
 	s.Require().Equal(protoBuilder.GetTx().GetMsgs()[0], protoBuilder2.GetTx().GetMsgs()[0])
-	s.Require().Equal(protoBuilder.GetTx().GetMsgs()[1].(sdk.ServiceMsg).Request, protoBuilder2.GetTx().GetMsgs()[1]) // We lose the "ServiceMsg" information
+	s.Require().Equal(protoBuilder.GetTx().GetMsgs()[1], protoBuilder2.GetTx().GetMsgs()[1])
 
 	// amino -> proto -> amino
 	aminoBuilder = s.aminoCfg.NewTxBuilder()
@@ -107,7 +103,7 @@ func (s *TestSuite) TestCopyTx() {
 	s.Require().Equal(sigsV2_1, sigsV2_2)
 	s.Require().Equal(aminoBuilder.GetTx().GetSigners(), aminoBuilder2.GetTx().GetSigners())
 	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[0], aminoBuilder2.GetTx().GetMsgs()[0])
-	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[1], aminoBuilder2.GetTx().GetMsgs()[1]) // We lose the "ServiceMsg" information
+	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[1], aminoBuilder2.GetTx().GetMsgs()[1])
 }
 
 func (s *TestSuite) TestConvertTxToStdTx() {
@@ -120,7 +116,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
 	s.Require().Equal(msg0, stdTx.Msgs[0])
-	s.Require().Equal(msg1.Request, stdTx.Msgs[1])
+	s.Require().Equal(msg1, stdTx.Msgs[1])
 	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Equal(sig.PubKey, stdTx.Signatures[0].PubKey)
 	s.Require().Equal(sig.Data.(*signing2.SingleSignatureData).Signature, stdTx.Signatures[0].Signature)
@@ -140,7 +136,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	s.Require().Equal(gas, stdTx.Fee.Gas)
 	s.Require().Equal(fee, stdTx.Fee.Amount)
 	s.Require().Equal(msg0, stdTx.Msgs[0])
-	s.Require().Equal(msg1.Request, stdTx.Msgs[1])
+	s.Require().Equal(msg1, stdTx.Msgs[1])
 	s.Require().Equal(timeoutHeight, stdTx.TimeoutHeight)
 	s.Require().Empty(stdTx.Signatures)
 

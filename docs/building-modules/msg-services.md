@@ -1,6 +1,7 @@
 <!--
 order: 4
 -->
+
 # `Msg` Services
 
 A Protobuf `Msg` service processes [messages](./messages-and-queries.md#messages). Protobuf `Msg` services are specific to the module in which they are defined, and only process messages defined within the said module. They are called from `BaseApp` during [`DeliverTx`](../core/baseapp.md#delivertx). {synopsis}
@@ -91,7 +92,6 @@ Then, a simple switch calls the appropriate `handler` based on the `LegacyMsg` t
 
 In this regard, `handler`s functions need to be implemented for each module `LegacyMsg`. This will also involve manual handler registration of `LegacyMsg` types.
 `handler`s functions should return a `*Result` and an `error`.
-
 
 ## Telemetry
 

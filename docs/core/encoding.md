@@ -86,7 +86,7 @@ Another important use of Protobuf is the encoding and decoding of
 [transactions](./transactions.md). Transactions are defined by the application or
 the SDK but are then passed to the underlying consensus engine to be relayed to
 other peers. Since the underlying consensus engine is agnostic to the application,
-the consensus engine accepts only transactions in the form of raw bytes. 
+the consensus engine accepts only transactions in the form of raw bytes.
 
 - The `TxEncoder` object performs the encoding.
 - The `TxDecoder` object performs the decoding.

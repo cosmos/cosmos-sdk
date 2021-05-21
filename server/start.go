@@ -122,11 +122,7 @@ which accepts a path for the resulting pprof file.
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(serverCtx, appCreator)
 			}
-
-			if flagMinGasPricesStr, _ := cmd.Flags().GetString(FlagMinGasPrices); flagMinGasPricesStr == "" {
-				return fmt.Errorf("FlagMinGasPrices must not be empty")
-			}
-
+			
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
 			// amino is needed here for backwards compatibility of REST routes

@@ -15,8 +15,8 @@ type Authorization interface {
 	// which will process and accept or reject a request.
 	MsgTypeURL() string
 
-	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
-	// so provides an upgraded authorization instance.
+	// Accept determines whether this grant permits the provided sdk.Msg to be performed,
+	// and if so provides an upgraded authorization instance.
 	Accept(ctx sdk.Context, msg sdk.Msg) (AcceptResponse, error)
 
 	// ValidateBasic does a simple validation check that

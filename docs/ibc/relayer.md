@@ -44,3 +44,4 @@ piece of information needed to relay a packet.
 
 - [Golang Relayer](https://github.com/iqlusioninc/relayer)
 - [Hermes](https://github.com/informalsystems/ibc-rs/tree/master/relayer)
+- [Typescript Relayer](https://github.com/confio/ts-relayer)

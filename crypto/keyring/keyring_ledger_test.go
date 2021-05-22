@@ -35,17 +35,17 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	require.Equal(t, expectedPkStr, pubKey.String())
 
 	// Check that restoring the key gets the same results
-	restoredKeyringEntry, err := kb.Key("some_account")
+	restoredRecord, err := kb.Key("some_account")
 	require.NoError(t, err)
-	require.NotNil(t, restoredKeyringEntry)
-	require.Equal(t, "some_account", restoredKeyringEntry.GetName())
-	// TODO handle GetType
+	require.NotNil(t, restoredRecord)
+	require.Equal(t, "some_account", restoredRecord.GetName())
+	// TODO handle GetType remove it
 	require.Equal(t, TypeLedger, restoredKey.GetType())
-	pubKey, err = restoredKeyringEntry.GetPubKey()
+	pubKey, err = restoredRecord.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())
 
-	ledgerInfo := restoredKeyringEntry.GetLedger()
+	ledgerInfo := restoredRecord.GetLedger()
 	require.NotNil(t, ledgerInfo)
 	path := ledgerInfo.GetPath()
 	require.Equal(t, "m/44'/118'/3'/0/1", path.String())
@@ -119,12 +119,12 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.Equal(t, expectedPkStr, pubKey.String())
 
 	// Check that restoring the key gets the same results
-	restoredKeyringEntry, err := kr.Key("some_account")
+	restoredRecord, err := kr.Key("some_account")
 	require.NoError(t, err)
-	require.NotNil(t, restoredKeyringEntry)
-	require.Equal(t, "some_account", restoredKeyringEntry.GetName())
-	require.Equal(t, TypeLedger, restoredKeyringEntry.GetType())
-	pubKey, err = restoredKeyringEntry.GetPubKey()
+	require.NotNil(t, restoredRecord)
+	require.Equal(t, "some_account", restoredRecord.GetName())
+	require.Equal(t, TypeLedger, restoredRecord.GetType())
+	pubKey, err = restoredRecord.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())
 

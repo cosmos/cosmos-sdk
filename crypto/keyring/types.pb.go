@@ -24,29 +24,29 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type KeyringEntry struct {
+type Record struct {
 	Name   string     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	PubKey *types.Any `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
 	// Types that are valid to be assigned to Item:
-	//	*KeyringEntry_Local
-	//	*KeyringEntry_Ledger
-	//	*KeyringEntry_Offline
-	//	*KeyringEntry_Multi
-	Item isKeyringEntry_Item `protobuf_oneof:"item"`
+	//	*Record_Local
+	//	*Record_Ledger
+	//	*Record_Offline
+	//	*Record_Multi
+	Item isRecord_Item `protobuf_oneof:"item"`
 }
 
-func (m *KeyringEntry) Reset()         { *m = KeyringEntry{} }
-func (m *KeyringEntry) String() string { return proto.CompactTextString(m) }
-func (*KeyringEntry) ProtoMessage()    {}
-func (*KeyringEntry) Descriptor() ([]byte, []int) {
+func (m *Record) Reset()         { *m = Record{} }
+func (m *Record) String() string { return proto.CompactTextString(m) }
+func (*Record) ProtoMessage()    {}
+func (*Record) Descriptor() ([]byte, []int) {
 	return fileDescriptor_46feab99abea8f51, []int{0}
 }
-func (m *KeyringEntry) XXX_Unmarshal(b []byte) error {
+func (m *Record) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *KeyringEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Record) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_KeyringEntry.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Record.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -56,84 +56,84 @@ func (m *KeyringEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *KeyringEntry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KeyringEntry.Merge(m, src)
+func (m *Record) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Record.Merge(m, src)
 }
-func (m *KeyringEntry) XXX_Size() int {
+func (m *Record) XXX_Size() int {
 	return m.Size()
 }
-func (m *KeyringEntry) XXX_DiscardUnknown() {
-	xxx_messageInfo_KeyringEntry.DiscardUnknown(m)
+func (m *Record) XXX_DiscardUnknown() {
+	xxx_messageInfo_Record.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_KeyringEntry proto.InternalMessageInfo
+var xxx_messageInfo_Record proto.InternalMessageInfo
 
-type isKeyringEntry_Item interface {
-	isKeyringEntry_Item()
+type isRecord_Item interface {
+	isRecord_Item()
 	MarshalTo([]byte) (int, error)
 	Size() int
 }
 
-type KeyringEntry_Local struct {
+type Record_Local struct {
 	Local *LocalInfo `protobuf:"bytes,3,opt,name=local,proto3,oneof" json:"local,omitempty"`
 }
-type KeyringEntry_Ledger struct {
+type Record_Ledger struct {
 	Ledger *LedgerInfo `protobuf:"bytes,4,opt,name=ledger,proto3,oneof" json:"ledger,omitempty"`
 }
-type KeyringEntry_Offline struct {
+type Record_Offline struct {
 	Offline *OfflineInfo `protobuf:"bytes,5,opt,name=offline,proto3,oneof" json:"offline,omitempty"`
 }
-type KeyringEntry_Multi struct {
+type Record_Multi struct {
 	Multi *MultiInfo `protobuf:"bytes,6,opt,name=multi,proto3,oneof" json:"multi,omitempty"`
 }
 
-func (*KeyringEntry_Local) isKeyringEntry_Item()   {}
-func (*KeyringEntry_Ledger) isKeyringEntry_Item()  {}
-func (*KeyringEntry_Offline) isKeyringEntry_Item() {}
-func (*KeyringEntry_Multi) isKeyringEntry_Item()   {}
+func (*Record_Local) isRecord_Item()   {}
+func (*Record_Ledger) isRecord_Item()  {}
+func (*Record_Offline) isRecord_Item() {}
+func (*Record_Multi) isRecord_Item()   {}
 
-func (m *KeyringEntry) GetItem() isKeyringEntry_Item {
+func (m *Record) GetItem() isRecord_Item {
 	if m != nil {
 		return m.Item
 	}
 	return nil
 }
 
-func (m *KeyringEntry) GetLocal() *LocalInfo {
-	if x, ok := m.GetItem().(*KeyringEntry_Local); ok {
+func (m *Record) GetLocal() *LocalInfo {
+	if x, ok := m.GetItem().(*Record_Local); ok {
 		return x.Local
 	}
 	return nil
 }
 
-func (m *KeyringEntry) GetLedger() *LedgerInfo {
-	if x, ok := m.GetItem().(*KeyringEntry_Ledger); ok {
+func (m *Record) GetLedger() *LedgerInfo {
+	if x, ok := m.GetItem().(*Record_Ledger); ok {
 		return x.Ledger
 	}
 	return nil
 }
 
-func (m *KeyringEntry) GetOffline() *OfflineInfo {
-	if x, ok := m.GetItem().(*KeyringEntry_Offline); ok {
+func (m *Record) GetOffline() *OfflineInfo {
+	if x, ok := m.GetItem().(*Record_Offline); ok {
 		return x.Offline
 	}
 	return nil
 }
 
-func (m *KeyringEntry) GetMulti() *MultiInfo {
-	if x, ok := m.GetItem().(*KeyringEntry_Multi); ok {
+func (m *Record) GetMulti() *MultiInfo {
+	if x, ok := m.GetItem().(*Record_Multi); ok {
 		return x.Multi
 	}
 	return nil
 }
 
 // XXX_OneofWrappers is for the internal use of the proto package.
-func (*KeyringEntry) XXX_OneofWrappers() []interface{} {
+func (*Record) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
-		(*KeyringEntry_Local)(nil),
-		(*KeyringEntry_Ledger)(nil),
-		(*KeyringEntry_Offline)(nil),
-		(*KeyringEntry_Multi)(nil),
+		(*Record_Local)(nil),
+		(*Record_Ledger)(nil),
+		(*Record_Offline)(nil),
+		(*Record_Multi)(nil),
 	}
 }
 
@@ -176,8 +176,7 @@ func (m *LocalInfo) XXX_DiscardUnknown() {
 var xxx_messageInfo_LocalInfo proto.InternalMessageInfo
 
 type LedgerInfo struct {
-	Path       *BIP44Params `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	PubKeyType string       `protobuf:"bytes,2,opt,name=pubKeyType,proto3" json:"pubKeyType,omitempty"`
+	Path *BIP44Params `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 }
 
 func (m *LedgerInfo) Reset()      { *m = LedgerInfo{} }
@@ -213,11 +212,11 @@ func (m *LedgerInfo) XXX_DiscardUnknown() {
 var xxx_messageInfo_LedgerInfo proto.InternalMessageInfo
 
 type BIP44Params struct {
-	Purpose     uint32 `protobuf:"varint,1,opt,name=purpose,proto3" json:"purpose,omitempty"`
-	Cointype    uint32 `protobuf:"varint,2,opt,name=cointype,proto3" json:"cointype,omitempty"`
-	Account     uint32 `protobuf:"varint,3,opt,name=account,proto3" json:"account,omitempty"`
-	Change      bool   `protobuf:"varint,4,opt,name=change,proto3" json:"change,omitempty"`
-	Adressindex uint32 `protobuf:"varint,5,opt,name=adressindex,proto3" json:"adressindex,omitempty"`
+	Purpose      uint32 `protobuf:"varint,1,opt,name=purpose,proto3" json:"purpose,omitempty"`
+	CoinType     uint32 `protobuf:"varint,2,opt,name=coinType,proto3" json:"coinType,omitempty"`
+	Account      uint32 `protobuf:"varint,3,opt,name=account,proto3" json:"account,omitempty"`
+	Change       bool   `protobuf:"varint,4,opt,name=change,proto3" json:"change,omitempty"`
+	AddressIndex uint32 `protobuf:"varint,5,opt,name=addressIndex,proto3" json:"addressIndex,omitempty"`
 }
 
 func (m *BIP44Params) Reset()      { *m = BIP44Params{} }
@@ -253,7 +252,6 @@ func (m *BIP44Params) XXX_DiscardUnknown() {
 var xxx_messageInfo_BIP44Params proto.InternalMessageInfo
 
 type OfflineInfo struct {
-	PubKeyType string `protobuf:"bytes,1,opt,name=pubKeyType,proto3" json:"pubKeyType,omitempty"`
 }
 
 func (m *OfflineInfo) Reset()      { *m = OfflineInfo{} }
@@ -324,7 +322,7 @@ func (m *MultiInfo) XXX_DiscardUnknown() {
 var xxx_messageInfo_MultiInfo proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*KeyringEntry)(nil), "cosmos.crypto.keyring.KeyringEntry")
+	proto.RegisterType((*Record)(nil), "cosmos.crypto.keyring.Record")
 	proto.RegisterType((*LocalInfo)(nil), "cosmos.crypto.keyring.LocalInfo")
 	proto.RegisterType((*LedgerInfo)(nil), "cosmos.crypto.keyring.LedgerInfo")
 	proto.RegisterType((*BIP44Params)(nil), "cosmos.crypto.keyring.BIP44Params")
@@ -335,42 +333,41 @@ func init() {
 func init() { proto.RegisterFile("cosmos/crypto/keyring/types.proto", fileDescriptor_46feab99abea8f51) }
 
 var fileDescriptor_46feab99abea8f51 = []byte{
-	// 499 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0x4f, 0x8b, 0xd3, 0x4e,
-	0x18, 0xc7, 0x93, 0xfd, 0x65, 0xd3, 0xed, 0xd3, 0x5f, 0x0f, 0x0e, 0xab, 0xc4, 0x1e, 0x62, 0xb7,
-	0xa7, 0x05, 0xd9, 0x09, 0xb8, 0x8b, 0x88, 0x82, 0x60, 0x41, 0xb0, 0x54, 0x71, 0x19, 0x3c, 0x79,
-	0x91, 0x49, 0x3a, 0x4d, 0x63, 0x93, 0x99, 0x90, 0x4c, 0xc4, 0x79, 0x17, 0x1e, 0xbd, 0x08, 0xbe,
-	0x9c, 0xc5, 0xd3, 0x1e, 0x3d, 0x6a, 0xfb, 0x46, 0x24, 0x33, 0x49, 0x2d, 0x8b, 0x11, 0x4f, 0x99,
-	0xe7, 0xc9, 0xf7, 0xf3, 0xcc, 0xf3, 0x6f, 0xe0, 0x24, 0x12, 0x65, 0x26, 0xca, 0x20, 0x2a, 0x54,
-	0x2e, 0x45, 0xb0, 0x66, 0xaa, 0x48, 0x78, 0x1c, 0x48, 0x95, 0xb3, 0x12, 0xe7, 0x85, 0x90, 0x02,
-	0xdd, 0x36, 0x12, 0x6c, 0x24, 0xb8, 0x91, 0x8c, 0x8e, 0x63, 0x11, 0x0b, 0xad, 0x08, 0xea, 0x93,
-	0x11, 0x8f, 0xee, 0xc6, 0x42, 0xc4, 0x29, 0x0b, 0xb4, 0x15, 0x56, 0xcb, 0x80, 0x72, 0x65, 0x7e,
-	0x4d, 0xbe, 0x1d, 0xc0, 0xff, 0x73, 0x03, 0x3f, 0xe7, 0xb2, 0x50, 0x08, 0x81, 0xc3, 0x69, 0xc6,
-	0x3c, 0x7b, 0x6c, 0x9f, 0xf6, 0x89, 0x3e, 0xa3, 0x33, 0xe8, 0xe5, 0x55, 0xf8, 0x6e, 0xcd, 0x94,
-	0x77, 0x30, 0xb6, 0x4f, 0x07, 0x0f, 0x8e, 0xb1, 0x89, 0x88, 0xdb, 0x88, 0xf8, 0x19, 0x57, 0xc4,
-	0xcd, 0xab, 0x70, 0xce, 0x14, 0x7a, 0x04, 0x87, 0xa9, 0x88, 0x68, 0xea, 0xfd, 0xa7, 0xc5, 0x63,
-	0xfc, 0xc7, 0x5c, 0xf1, 0xcb, 0x5a, 0x33, 0xe3, 0x4b, 0xf1, 0xc2, 0x22, 0x06, 0x40, 0x4f, 0xc0,
-	0x4d, 0xd9, 0x22, 0x66, 0x85, 0xe7, 0x68, 0xf4, 0xa4, 0x0b, 0xd5, 0xa2, 0x86, 0x6d, 0x10, 0xf4,
-	0x14, 0x7a, 0x62, 0xb9, 0x4c, 0x13, 0xce, 0xbc, 0x43, 0x4d, 0x4f, 0x3a, 0xe8, 0xd7, 0x46, 0xd5,
-	0xe0, 0x2d, 0x54, 0xa7, 0x9d, 0x55, 0xa9, 0x4c, 0x3c, 0xf7, 0xaf, 0x69, 0xbf, 0xaa, 0x35, 0x6d,
-	0xda, 0x1a, 0x98, 0xba, 0xe0, 0x24, 0x92, 0x65, 0x13, 0x0a, 0xfd, 0x5d, 0x51, 0x08, 0x43, 0x2f,
-	0x2f, 0x92, 0x0f, 0x73, 0xa6, 0x74, 0x2f, 0xbb, 0x9a, 0xd6, 0x8a, 0x90, 0x0f, 0x60, 0xfa, 0xf7,
-	0x46, 0xe5, 0x4c, 0xf7, 0xb9, 0x4f, 0xf6, 0x3c, 0x8f, 0x9d, 0xcf, 0x5f, 0xef, 0x59, 0x93, 0xf7,
-	0x00, 0xbf, 0x8b, 0x47, 0x0f, 0xc1, 0xc9, 0xa9, 0x5c, 0x35, 0x17, 0x74, 0xd5, 0x3b, 0x9d, 0x5d,
-	0x5e, 0x5c, 0x5c, 0xd2, 0x82, 0x66, 0x25, 0xd1, 0xfa, 0x7f, 0xbc, 0xeb, 0x8b, 0x0d, 0x83, 0x3d,
-	0x16, 0x79, 0xf5, 0x1a, 0x14, 0xb9, 0x28, 0xcd, 0x76, 0x0c, 0x49, 0x6b, 0xa2, 0x11, 0x1c, 0x45,
-	0x22, 0xe1, 0xb2, 0x8d, 0x36, 0x24, 0x3b, 0xbb, 0xa6, 0x68, 0x14, 0x89, 0x8a, 0x4b, 0xbd, 0x0f,
-	0x43, 0xd2, 0x9a, 0xe8, 0x0e, 0xb8, 0xd1, 0x8a, 0xf2, 0x98, 0xe9, 0x69, 0x1f, 0x91, 0xc6, 0x42,
-	0x63, 0x18, 0xd0, 0x45, 0xc1, 0xca, 0x32, 0xe1, 0x0b, 0xf6, 0x51, 0x0f, 0x73, 0x48, 0xf6, 0x5d,
-	0x4d, 0x7e, 0xe7, 0x30, 0xd8, 0x1b, 0xe5, 0x8d, 0xa2, 0xec, 0x8e, 0xa2, 0x6e, 0x41, 0x7f, 0x37,
-	0x41, 0xe3, 0x9a, 0xce, 0xae, 0x7e, 0xfa, 0xd6, 0xd5, 0xc6, 0xb7, 0xaf, 0x37, 0xbe, 0xfd, 0x63,
-	0xe3, 0xdb, 0x9f, 0xb6, 0xbe, 0x75, 0xbd, 0xf5, 0xad, 0xef, 0x5b, 0xdf, 0x7a, 0x7b, 0x3f, 0x4e,
-	0xe4, 0xaa, 0x0a, 0x71, 0x24, 0xb2, 0xa0, 0x7d, 0x97, 0xfa, 0x73, 0x56, 0x2e, 0xd6, 0x37, 0x9e,
-	0x68, 0xe8, 0xea, 0xd9, 0x9e, 0xff, 0x0a, 0x00, 0x00, 0xff, 0xff, 0xce, 0x0e, 0x85, 0x60, 0xc2,
-	0x03, 0x00, 0x00,
+	// 491 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x93, 0xcf, 0x8e, 0xd3, 0x3c,
+	0x14, 0xc5, 0x93, 0xf9, 0x32, 0xe9, 0xf4, 0xf6, 0xeb, 0x02, 0x33, 0xa0, 0xd0, 0x45, 0xe8, 0x64,
+	0x35, 0x12, 0x1a, 0x47, 0x82, 0x11, 0x42, 0x20, 0x21, 0xd1, 0x15, 0x65, 0x40, 0x8c, 0x2c, 0x56,
+	0x6c, 0x90, 0x93, 0xb8, 0x69, 0xd4, 0xc4, 0x8e, 0xf2, 0x07, 0xe1, 0xb7, 0x60, 0xc9, 0x0e, 0x1e,
+	0x86, 0xc5, 0x2c, 0x67, 0xc9, 0x12, 0xda, 0x17, 0x41, 0xb1, 0x9d, 0x52, 0x10, 0x65, 0x15, 0xdf,
+	0xeb, 0xdf, 0x71, 0x8e, 0xef, 0x91, 0xe1, 0x24, 0x16, 0x75, 0x21, 0xea, 0x30, 0xae, 0x64, 0xd9,
+	0x88, 0x70, 0xc5, 0x64, 0x95, 0xf1, 0x34, 0x6c, 0x64, 0xc9, 0x6a, 0x5c, 0x56, 0xa2, 0x11, 0xe8,
+	0x96, 0x46, 0xb0, 0x46, 0xb0, 0x41, 0x26, 0xc7, 0xa9, 0x48, 0x85, 0x22, 0xc2, 0x6e, 0xa5, 0xe1,
+	0xc9, 0x9d, 0x54, 0x88, 0x34, 0x67, 0xa1, 0xaa, 0xa2, 0x76, 0x11, 0x52, 0x2e, 0xf5, 0x56, 0xf0,
+	0xf5, 0x00, 0x5c, 0xc2, 0x62, 0x51, 0x25, 0x08, 0x81, 0xc3, 0x69, 0xc1, 0x3c, 0x7b, 0x6a, 0x9f,
+	0x0e, 0x89, 0x5a, 0xa3, 0x33, 0x18, 0x94, 0x6d, 0xf4, 0x6e, 0xc5, 0xa4, 0x77, 0x30, 0xb5, 0x4f,
+	0x47, 0xf7, 0x8f, 0xb1, 0x3e, 0x0b, 0xf7, 0x67, 0xe1, 0x67, 0x5c, 0x12, 0xb7, 0x6c, 0xa3, 0x0b,
+	0x26, 0xd1, 0x23, 0x38, 0xcc, 0x45, 0x4c, 0x73, 0xef, 0x3f, 0x05, 0x4f, 0xf1, 0x5f, 0x5d, 0xe2,
+	0x97, 0x1d, 0x33, 0xe7, 0x0b, 0xf1, 0xdc, 0x22, 0x5a, 0x80, 0x9e, 0x80, 0x9b, 0xb3, 0x24, 0x65,
+	0x95, 0xe7, 0x28, 0xe9, 0xc9, 0x3e, 0xa9, 0x82, 0x8c, 0xd6, 0x48, 0xd0, 0x53, 0x18, 0x88, 0xc5,
+	0x22, 0xcf, 0x38, 0xf3, 0x0e, 0x95, 0x3a, 0xd8, 0xa3, 0x7e, 0xad, 0x29, 0x23, 0xef, 0x45, 0x9d,
+	0xed, 0xa2, 0xcd, 0x9b, 0xcc, 0x73, 0xff, 0x69, 0xfb, 0x55, 0xc7, 0xf4, 0xb6, 0x95, 0x60, 0xe6,
+	0x82, 0x93, 0x35, 0xac, 0x08, 0x28, 0x0c, 0xb7, 0x97, 0x42, 0x18, 0x06, 0x65, 0x95, 0xbd, 0xbf,
+	0x60, 0x52, 0xcd, 0x72, 0xdf, 0xd0, 0x7a, 0x08, 0xf9, 0x00, 0x7a, 0x7e, 0x6f, 0x64, 0xc9, 0xd4,
+	0x9c, 0x87, 0x64, 0xa7, 0xf3, 0xd8, 0xf9, 0xf4, 0xe5, 0xae, 0x15, 0xbc, 0x00, 0xf8, 0x75, 0x79,
+	0xf4, 0x10, 0x9c, 0x92, 0x36, 0x4b, 0xf3, 0x83, 0x7d, 0xf7, 0x9d, 0xcd, 0x2f, 0xcf, 0xcf, 0x2f,
+	0x69, 0x45, 0x8b, 0x9a, 0x28, 0xde, 0x9c, 0xf5, 0xd9, 0x86, 0xd1, 0xce, 0x1e, 0xf2, 0xba, 0x98,
+	0xab, 0x52, 0xd4, 0x3a, 0xfd, 0x31, 0xe9, 0x4b, 0x34, 0x81, 0xa3, 0x58, 0x64, 0x7c, 0xeb, 0x6c,
+	0x4c, 0xb6, 0x75, 0xa7, 0xa2, 0x71, 0x2c, 0x5a, 0xde, 0xa8, 0xbc, 0xc7, 0xa4, 0x2f, 0xd1, 0x6d,
+	0x70, 0xe3, 0x25, 0xe5, 0x29, 0x53, 0x69, 0x1e, 0x11, 0x53, 0xa1, 0x00, 0xfe, 0xa7, 0x49, 0x52,
+	0xb1, 0xba, 0x9e, 0xf3, 0x84, 0x7d, 0x50, 0x69, 0x8d, 0xc9, 0x6f, 0x3d, 0xe3, 0xf0, 0x26, 0x8c,
+	0x76, 0xc2, 0x32, 0xcd, 0x1b, 0x30, 0xdc, 0x66, 0xa0, 0x5b, 0xb3, 0xf9, 0xd5, 0x0f, 0xdf, 0xba,
+	0x5a, 0xfb, 0xf6, 0xf5, 0xda, 0xb7, 0xbf, 0xaf, 0x7d, 0xfb, 0xe3, 0xc6, 0xb7, 0xae, 0x37, 0xbe,
+	0xf5, 0x6d, 0xe3, 0x5b, 0x6f, 0xef, 0xa5, 0x59, 0xb3, 0x6c, 0x23, 0x1c, 0x8b, 0x22, 0xec, 0xdf,
+	0x94, 0xfa, 0x9c, 0xd5, 0xc9, 0xea, 0x8f, 0xe7, 0x15, 0xb9, 0x2a, 0x9d, 0x07, 0x3f, 0x03, 0x00,
+	0x00, 0xff, 0xff, 0x7a, 0x96, 0x96, 0xc6, 0x7e, 0x03, 0x00, 0x00,
 }
 
-func (m *KeyringEntry) Marshal() (dAtA []byte, err error) {
+func (m *Record) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -380,12 +377,12 @@ func (m *KeyringEntry) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *KeyringEntry) MarshalTo(dAtA []byte) (int, error) {
+func (m *Record) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *KeyringEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Record) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -421,12 +418,12 @@ func (m *KeyringEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *KeyringEntry_Local) MarshalTo(dAtA []byte) (int, error) {
+func (m *Record_Local) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *KeyringEntry_Local) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Record_Local) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Local != nil {
 		{
@@ -442,12 +439,12 @@ func (m *KeyringEntry_Local) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *KeyringEntry_Ledger) MarshalTo(dAtA []byte) (int, error) {
+func (m *Record_Ledger) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *KeyringEntry_Ledger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Record_Ledger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Ledger != nil {
 		{
@@ -463,12 +460,12 @@ func (m *KeyringEntry_Ledger) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *KeyringEntry_Offline) MarshalTo(dAtA []byte) (int, error) {
+func (m *Record_Offline) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *KeyringEntry_Offline) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Record_Offline) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Offline != nil {
 		{
@@ -484,12 +481,12 @@ func (m *KeyringEntry_Offline) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	return len(dAtA) - i, nil
 }
-func (m *KeyringEntry_Multi) MarshalTo(dAtA []byte) (int, error) {
+func (m *Record_Multi) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *KeyringEntry_Multi) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Record_Multi) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	if m.Multi != nil {
 		{
@@ -567,13 +564,6 @@ func (m *LedgerInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.PubKeyType) > 0 {
-		i -= len(m.PubKeyType)
-		copy(dAtA[i:], m.PubKeyType)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.PubKeyType)))
-		i--
-		dAtA[i] = 0x12
-	}
 	if m.Path != nil {
 		{
 			size, err := m.Path.MarshalToSizedBuffer(dAtA[:i])
@@ -609,8 +599,8 @@ func (m *BIP44Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Adressindex != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Adressindex))
+	if m.AddressIndex != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.AddressIndex))
 		i--
 		dAtA[i] = 0x28
 	}
@@ -629,8 +619,8 @@ func (m *BIP44Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	if m.Cointype != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Cointype))
+	if m.CoinType != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.CoinType))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -662,13 +652,6 @@ func (m *OfflineInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.PubKeyType) > 0 {
-		i -= len(m.PubKeyType)
-		copy(dAtA[i:], m.PubKeyType)
-		i = encodeVarintTypes(dAtA, i, uint64(len(m.PubKeyType)))
-		i--
-		dAtA[i] = 0xa
-	}
 	return len(dAtA) - i, nil
 }
 
@@ -706,7 +689,7 @@ func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *KeyringEntry) Size() (n int) {
+func (m *Record) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -726,7 +709,7 @@ func (m *KeyringEntry) Size() (n int) {
 	return n
 }
 
-func (m *KeyringEntry_Local) Size() (n int) {
+func (m *Record_Local) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -738,7 +721,7 @@ func (m *KeyringEntry_Local) Size() (n int) {
 	}
 	return n
 }
-func (m *KeyringEntry_Ledger) Size() (n int) {
+func (m *Record_Ledger) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -750,7 +733,7 @@ func (m *KeyringEntry_Ledger) Size() (n int) {
 	}
 	return n
 }
-func (m *KeyringEntry_Offline) Size() (n int) {
+func (m *Record_Offline) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -762,7 +745,7 @@ func (m *KeyringEntry_Offline) Size() (n int) {
 	}
 	return n
 }
-func (m *KeyringEntry_Multi) Size() (n int) {
+func (m *Record_Multi) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -801,10 +784,6 @@ func (m *LedgerInfo) Size() (n int) {
 		l = m.Path.Size()
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = len(m.PubKeyType)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
 	return n
 }
 
@@ -817,8 +796,8 @@ func (m *BIP44Params) Size() (n int) {
 	if m.Purpose != 0 {
 		n += 1 + sovTypes(uint64(m.Purpose))
 	}
-	if m.Cointype != 0 {
-		n += 1 + sovTypes(uint64(m.Cointype))
+	if m.CoinType != 0 {
+		n += 1 + sovTypes(uint64(m.CoinType))
 	}
 	if m.Account != 0 {
 		n += 1 + sovTypes(uint64(m.Account))
@@ -826,8 +805,8 @@ func (m *BIP44Params) Size() (n int) {
 	if m.Change {
 		n += 2
 	}
-	if m.Adressindex != 0 {
-		n += 1 + sovTypes(uint64(m.Adressindex))
+	if m.AddressIndex != 0 {
+		n += 1 + sovTypes(uint64(m.AddressIndex))
 	}
 	return n
 }
@@ -838,10 +817,6 @@ func (m *OfflineInfo) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.PubKeyType)
-	if l > 0 {
-		n += 1 + l + sovTypes(uint64(l))
-	}
 	return n
 }
 
@@ -860,7 +835,7 @@ func sovTypes(x uint64) (n int) {
 func sozTypes(x uint64) (n int) {
 	return sovTypes(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *KeyringEntry) Unmarshal(dAtA []byte) error {
+func (m *Record) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -883,10 +858,10 @@ func (m *KeyringEntry) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: KeyringEntry: wiretype end group for non-group")
+			return fmt.Errorf("proto: Record: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: KeyringEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Record: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -990,7 +965,7 @@ func (m *KeyringEntry) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Item = &KeyringEntry_Local{v}
+			m.Item = &Record_Local{v}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -1025,7 +1000,7 @@ func (m *KeyringEntry) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Item = &KeyringEntry_Ledger{v}
+			m.Item = &Record_Ledger{v}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -1060,7 +1035,7 @@ func (m *KeyringEntry) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Item = &KeyringEntry_Offline{v}
+			m.Item = &Record_Offline{v}
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
@@ -1095,7 +1070,7 @@ func (m *KeyringEntry) Unmarshal(dAtA []byte) error {
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Item = &KeyringEntry_Multi{v}
+			m.Item = &Record_Multi{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1301,38 +1276,6 @@ func (m *LedgerInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PubKeyType", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.PubKeyType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])
@@ -1404,9 +1347,9 @@ func (m *BIP44Params) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Cointype", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CoinType", wireType)
 			}
-			m.Cointype = 0
+			m.CoinType = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1416,7 +1359,7 @@ func (m *BIP44Params) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Cointype |= uint32(b&0x7F) << shift
+				m.CoinType |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1462,9 +1405,9 @@ func (m *BIP44Params) Unmarshal(dAtA []byte) error {
 			m.Change = bool(v != 0)
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Adressindex", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AddressIndex", wireType)
 			}
-			m.Adressindex = 0
+			m.AddressIndex = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTypes
@@ -1474,7 +1417,7 @@ func (m *BIP44Params) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Adressindex |= uint32(b&0x7F) << shift
+				m.AddressIndex |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1529,38 +1472,6 @@ func (m *OfflineInfo) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: OfflineInfo: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PubKeyType", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.PubKeyType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTypes(dAtA[iNdEx:])

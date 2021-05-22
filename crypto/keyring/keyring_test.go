@@ -11,7 +11,6 @@ import (
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -978,7 +977,7 @@ func TestAltKeyring_Get(t *testing.T) {
 
 	key, err := kr.Key(uid)
 	require.NoError(t, err)
-	requireEqualKeyringEntry(t, mnemonic, key)
+	requireEqualRecord(t, mnemonic, key)
 }
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
@@ -994,7 +993,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	require.NoError(t, err)
 	key, err := kr.KeyByAddress(addr)
 	require.NoError(t, err)
-	requireEqualKeyringEntry(t, key, mnemonic)
+	requireEqualRecord(t, key, mnemonic)
 }
 
 func TestAltKeyring_Delete(t *testing.T) {
@@ -1305,7 +1304,7 @@ func TestBackendConfigConstructors(t *testing.T) {
 	require.Equal(t, "keyring-test", backend.PassPrefix)
 }
 
-func requireEqualKeyringEntry(t *testing.T, key *keyring.KeyringEntry, mnemonic *keyring.KeyringEntry) {
+func requireEqualRecord(t *testing.T, key *keyring.Record, mnemonic *keyring.Record) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 
 	keyAddr, err := key.GetAddress()
@@ -1323,4 +1322,4 @@ func requireEqualKeyringEntry(t *testing.T, key *keyring.KeyringEntry, mnemonic 
 	//	require.Equal(t, key.GetType(), mnemonic.GetType())
 }
 
-func accAddr(ke *keyring.KeyringEntry) (sdk.AccAddress, error) { return ke.GetAddress() }
+func accAddr(ke *keyring.Record) (sdk.AccAddress, error) { return ke.GetAddress() }

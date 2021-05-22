@@ -71,7 +71,7 @@ func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKey, error)
 
 // NewPrivKeySecp256k1 will generate a new key and store the public key for later use.
 // The request will require user confirmation and will show account and index in the device
-func NewPrivKeySecp256k1(path keyring.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
+func NewPrivKeySecp256k1(path hd.BIP44Params, hrp string) (types.LedgerPrivKey, string, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, "", err

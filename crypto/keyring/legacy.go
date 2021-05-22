@@ -18,7 +18,7 @@ import (
 
 // LegacyKeybase is implemented by the legacy keybase implementation.
 type LegacyKeybase interface {
-	List() ([]KeyringEntry, error)
+	List() ([]Record, error)
 	Export(name string) (armor string, err error)
 	ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
@@ -60,8 +60,8 @@ func newDBKeybase(db dbm.DB, cdc codec.Codec) dbKeybase {
 }
 
 // List returns the keys from storage in alphabetical order.
-func (kb dbKeybase) List() ([]*KeyringEntry, error) {
-	var res []*KeyringEntry
+func (kb dbKeybase) List() ([]*Record, error) {
+	var res []*Record
 
 	iter, err := kb.db.Iterator(nil, nil)
 	if err != nil {
@@ -78,7 +78,7 @@ func (kb dbKeybase) List() ([]*KeyringEntry, error) {
 			continue
 		}
 
-		ke := new(KeyringEntry)
+		ke := new(Record)
 		if err := kb.cdc.Unmarshal(iter.Value(), ke); err != nil {
 			return nil, err
 		}
@@ -90,7 +90,7 @@ func (kb dbKeybase) List() ([]*KeyringEntry, error) {
 }
 
 // Get returns the public information about one key.
-func (kb dbKeybase) Get(name string) (*KeyringEntry, error) {
+func (kb dbKeybase) Get(name string) (*Record, error) {
 	bs, err := kb.db.Get(infoKeyBz(name))
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (kb dbKeybase) Get(name string) (*KeyringEntry, error) {
 	if len(bs) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
-	ke := new(KeyringEntry)
+	ke := new(Record)
 	//return protoUnmarshalInfo(bs, kb.cdc)
 	if err := kb.cdc.Unmarshal(bs, ke); err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 		return nil, err
 	}
 
-	return ke.extractPrivKey()
+	return ke.extractPrivKeyFromLocalInfo()
 
 	/*
 		var priv types.PrivKey
@@ -169,7 +169,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 	}
 
 	//	info, err := protoUnmarshalInfo(bz, kb.cdc)
-	ke := KeyringEntry{}
+	ke := Record{}
 	if err := kb.cdc.Unmarshal(bz, &ke); err != nil {
 		return "", err
 	}

@@ -7,7 +7,7 @@ import "google/protobuf/any.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
 
-message KeyringEntry {
+message Record {
   string name = 1;
   google.protobuf.Any pub_key = 2;
 
@@ -31,23 +31,20 @@ message LedgerInfo {
   option (gogoproto.goproto_stringer) = false;
 
   BIP44Params path = 1;
-  string pubKeyType = 2;
 }
 
 message BIP44Params {
   option (gogoproto.goproto_stringer) = false;
 
   uint32 purpose = 1;
-	uint32 cointype = 2;
+	uint32 coinType = 2;
 	uint32 account = 3;
 	bool change = 4;
-	uint32 adressindex = 5;
+	uint32 addressIndex = 5;
 }
 
 message OfflineInfo {
   option (gogoproto.goproto_stringer) = false;
-
-  string pubKeyType = 1;
 }
 
 message MultiInfo {

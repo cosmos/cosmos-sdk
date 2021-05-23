@@ -61,8 +61,7 @@ var (
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
 type Keyring interface {
 	// List all keys.
-	// TODO either []*Record
-	List() ([]Record, error)
+	List() ([]*Record, error)
 
 	// Supported signing algorithms for Keyring and Ledger respectively.
 	SupportedAlgorithms() (SigningAlgoList, SigningAlgoList)
@@ -469,12 +468,12 @@ func wrapKeyNotFound(err error, msg string) error {
 	return err
 }
 
-func (ks keystore) List() ([]Record, error) {
+func (ks keystore) List() ([]*Record, error) {
 	if err := ks.checkMigrate(); err != nil {
 		return nil, err
 	}
 
-	var res []Record
+	var res []*Record
 
 	keys, err := ks.db.Keys()
 	if err != nil {
@@ -495,11 +494,11 @@ func (ks keystore) List() ([]Record, error) {
 		if len(item.Data) == 0 {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
-		var re Record
-		if err := ks.cdc.Unmarshal(item.Data, &ke); err != nil {
+		re := new(Record)
+		if err := ks.cdc.Unmarshal(item.Data, re); err != nil {
 			return nil, err
 		}
-		res = append(res, ke)
+		res = append(res, re)
 	}
 
 	return res, nil
@@ -578,11 +577,11 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 
-	ke := new(Record)
-	if err := ks.cdc.Unmarshal(bs.Data, ke); err != nil {
+	re := new(Record)
+	if err := ks.cdc.Unmarshal(bs.Data, re); err != nil {
 		return nil, err
 	}
-	return ke, nil
+	return re, nil
 	//	return protoUnmarshalInfo(bs.Data, ks.cdc)
 }
 
@@ -599,9 +598,9 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
-func SignWithLedger(ke *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
+func SignWithLedger(re *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
 
-	ledgerInfo := ke.GetLedger()
+	ledgerInfo := re.GetLedger()
 	if ledgerInfo == nil {
 		return nil, nil, errors.New("not a ledger object")
 	}
@@ -609,7 +608,7 @@ func SignWithLedger(ke *Record, msg []byte) (sig []byte, pub types.PubKey, err e
 	path := ledgerInfo.GetPath()
 
 	// TODO should I fix replace type from hd.BIP44Params to keyring.BUP44Params in NewPrivKeySecp256k1Unsafe
-	priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
+	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
 		return
 	}

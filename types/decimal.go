@@ -474,7 +474,11 @@ func (d Dec) String() string {
 	return string(bzStr)
 }
 
-func (d Dec) Float64() float64 {
+func (d Dec) Float64() (float64, error) {
+	return strconv.ParseFloat(d.String(), 64)
+}
+
+func (d Dec) MustFloat64() float64 {
 	if value, err := strconv.ParseFloat(d.String(), 64); err != nil {
 		panic(err)
 	} else {

@@ -115,7 +115,10 @@ func (s *decimalTestSuite) TestDecFloat64() {
 		{sdk.NewDecWithPrec(1009009009009009009, 17), 10.090090090090090090},
 	}
 	for tcIndex, tc := range tests {
-		s.Require().Equal(tc.want, tc.d.Float64(), "bad FLoat64(), index: %v", tcIndex)
+		value, err := tc.d.Float64()
+		s.Require().Nil(err, "error getting Float64(), index: %v", tcIndex)
+		s.Require().Equal(tc.want, value, "bad Float64(), index: %v", tcIndex)
+		s.Require().Equal(tc.want, tc.d.MustFloat64(), "bad MustFloat64(), index: %v", tcIndex)
 	}
 }
 

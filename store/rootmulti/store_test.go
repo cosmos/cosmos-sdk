@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
@@ -10,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -183,10 +185,62 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 }
 
+func TestMultiStoreRename(t *testing.T) {
+	f, err := os.OpenFile("/tmp/123.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	defer f.Close()
+	var db dbm.DB = dbm.NewMemDB()
+	store, tracer := newTracedStoreWithMounts(db, types.PruneNothing, f)
+	require.True(t, store.TracingEnabled())
+	require.NotNil(t, tracer)
+	err = store.LoadLatestVersion()
+	require.Nil(t, err)
+
+	// write some data in all stores
+	k1, v1 := []byte("first"), []byte("store")
+	s1, _ := store.getStoreByName(testStoreKey1.Name()).(types.KVStore)
+	require.NotNil(t, s1)
+	s1.Set(k1, v1)
+
+	k2, v2 := []byte("second"), []byte("restore")
+	s2, _ := store.getStoreByName(testStoreKey2.Name()).(types.KVStore)
+	require.NotNil(t, s2)
+	s2.Set(k2, v2)
+
+	k3, v3 := []byte("third"), []byte("dropped")
+	s3, _ := store.getStoreByName(testStoreKey3.Name()).(types.KVStore)
+	require.NotNil(t, s3)
+	s3.Set(k3, v3)
+
+	// do one commit
+	commitID := store.Commit()
+	expectedCommitID := getExpectedCommitID(store, 1)
+	checkStore(t, store, expectedCommitID, commitID)
+
+	ci, err := getCommitInfo(db, 1)
+	require.NoError(t, err)
+	require.Equal(t, int64(1), ci.Version)
+	require.Equal(t, 3, len(ci.StoreInfos))
+	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "store3"})
+
+	// Load without changes and make sure it is sensible
+	store, tracer = newTracedStoreWithMounts(db, types.PruneNothing, f)
+
+	err = store.LoadLatestVersion()
+	require.Nil(t, err)
+	commitID = getExpectedCommitID(store, 1)
+	checkStore(t, store, commitID, commitID)
+
+	// query data to see it was saved properly
+	s2, _ = store.getStoreByName("store2").(types.KVStore)
+	require.NotNil(t, s2)
+	require.Equal(t, v2, s2.Get(k2))
+}
+
 func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
-	store := newMultiStoreWithMounts(db, types.PruneNothing)
-	err := store.LoadLatestVersion()
+	f, err := os.OpenFile("trace_store.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
+	store, _ := newTracedStoreWithMounts(db, types.PruneNothing, f) // newMultiStoreWithMounts
+	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 
 	// write some data in all stores
@@ -218,22 +272,27 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, int64(1), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos))
 	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "store3"})
+	//for _, v := range ci.StoreInfos {
+	//	fmt.Printf("Name: %v\t\t Version: %v\n", v.Name, v.CommitId.Version)
+	//}
+	//fmt.Println("------------")
 
 	// Load without changes and make sure it is sensible
-	store = newMultiStoreWithMounts(db, types.PruneNothing)
+	store, _ = newTracedStoreWithMounts(db, types.PruneNothing, f)
 
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, 1)
 	checkStore(t, store, commitID, commitID)
 
-	// let's query data to see it was saved properly
+	// query data to see it was saved properly
 	s2, _ = store.getStoreByName("store2").(types.KVStore)
 	require.NotNil(t, s2)
 	require.Equal(t, v2, s2.Get(k2))
 
-	// now, let's load with upgrades...
-	restore, upgrades := newMultiStoreWithModifiedMounts(db, types.PruneNothing)
+	// load with upgrades...
+	restore, upgrades := newMultiStoreWithModifiedMounts(db, types.PruneNothing, f)
+	require.True(t, restore.TracingEnabled())
 	err = restore.LoadLatestVersionAndUpgrade(upgrades)
 	require.Nil(t, err)
 
@@ -278,7 +337,8 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	migratedID := restore.Commit()
 	require.Equal(t, migratedID.Version, int64(2))
 
-	reload, _ := newMultiStoreWithModifiedMounts(db, types.PruneNothing)
+	reload, _ := newMultiStoreWithModifiedMounts(db, types.PruneNothing, f)
+	require.True(t, reload.TracingEnabled())
 	err = reload.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, migratedID, reload.LastCommitID())
@@ -296,12 +356,34 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.NotNil(t, rl4)
 	require.Equal(t, v4, rl4.Get(k4))
 
+	// this store was renamed so it should no longer exists
+	bad, _ := reload.getStoreByName("store2").(types.KVStore)
+	require.Nil(t, bad)
+
+	// store was deleted, shouldn't have data
+	bad2, _ := reload.getStoreByName("store3").(types.KVStore)
+	it := bad2.Iterator(nil, nil)
+	vals := 0
+	for ; it.Valid(); it.Next() {
+		vals += 1
+	}
+	require.Zero(t, vals)
+
+	require.NoError(t, it.Close())
+
 	// check commitInfo in storage
 	ci, err = getCommitInfo(db, 2)
+	for _, v := range ci.StoreInfos {
+		fmt.Printf("Name: %v\t\t Version: %v\n", v.Name, v.CommitId.Version)
+	}
 	require.NoError(t, err)
 	require.Equal(t, int64(2), ci.Version)
-	require.Equal(t, 4, len(ci.StoreInfos), ci.StoreInfos)
-	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store3", "store4"})
+	require.Equal(t, 5, len(ci.StoreInfos), ci.StoreInfos)
+	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "restore2", "store3", "store4"})
+	scan := bufio.NewScanner(f)
+	for scan.Scan() {
+		fmt.Println(scan.Text())
+	}
 }
 
 func TestParsePath(t *testing.T) {
@@ -897,6 +979,18 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store
 	return store
 }
 
+func newTracedStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions, w io.Writer) (*Store, *types.MultiStore) {
+	store := NewStore(db)
+	store.pruningOpts = pruningOpts
+	tracer := store.SetTracer(w)
+
+	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey2, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
+
+	return store, &tracer
+}
+
 func newMultiStoreWithMixedMounts(db dbm.DB) *Store {
 	store := NewStore(db)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
@@ -966,8 +1060,10 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	return multiStore
 }
 
-func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions) (*Store, *types.StoreUpgrades) {
+// newMultiStoreWithModifiedMounts - adds store 4, renames store2 to restore2 and deletes store3
+func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions, w io.Writer) (*Store, *types.StoreUpgrades) {
 	store := NewStore(db)
+	store.SetTracer(w)
 	store.pruningOpts = pruningOpts
 
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)

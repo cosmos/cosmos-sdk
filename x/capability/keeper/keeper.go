@@ -42,11 +42,12 @@ type (
 	// by name, in addition to creating new capabilities & authenticating capabilities
 	// passed by other modules.
 	ScopedKeeper struct {
-		cdc      codec.BinaryMarshaler
-		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
-		capMap   map[uint64]*types.Capability
-		module   string
+		cdc         codec.BinaryMarshaler
+		storeKey    sdk.StoreKey
+		memKey      sdk.StoreKey
+		capMap      map[uint64]*types.Capability
+		module      string
+		initialized bool
 	}
 )
 
@@ -342,6 +343,18 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
 func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capability, bool) {
+	// Create a keeper that will set all in-memory mappings correctly into memstore and capmap if scoped keeper is not initialized yet.
+	// This ensures that the in-memory mappings are correctly filled in, in case this is a state-synced node.
+	// This is a temporary non-breaking fix, a future PR should store the reverse mapping in the persistent store and reconstruct forward mapping and capmap on the fly.
+	if !sk.initialized {
+		k := Keeper{
+			storeKey: sk.storeKey,
+			memKey:   sk.memKey,
+			capMap:   sk.capMap,
+		}
+		k.InitializeAndSeal(ctx)
+	}
+
 	if strings.TrimSpace(name) == "" {
 		return nil, false
 	}
@@ -358,6 +371,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 		// so we delete here to remove unnecessary values in map
 		// TODO: Delete index correctly from capMap by storing some reverse lookup
 		// in-memory map. Issue: https://github.com/cosmos/cosmos-sdk/issues/7805
+
 		return nil, false
 	}
 

@@ -1,6 +1,6 @@
 ---
-name: Refactor 
-about: Refactors production code, e.g. renames a variable.
+name: Other
+about: Other updates; no changes to production code.
 ---
 
 ## Description
@@ -15,14 +15,13 @@ closes: #XXXX
 ### Author Checklist
 
 *All items are required. Please add a note to the item if the item is not applicable and
-please add the appropriate links to any relevant follow up issues.*
+please add links to any relevant follow up issues.*
 
 I have done the following...
 
-- [ ] included the `refactor:` prefix in the PR title
+- [ ] included the appropriate prefix in the PR title
 - [ ] targeted the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
 - [ ] linked to the relevant issue or specification
-- [ ] followed the guidelines for [building modules](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules)
 - [ ] updated the necessary unit and integration [tests](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#testing)
 - [ ] added a changelog entry to `CHANGELOG.md`
 - [ ] included comments for [documenting Go code](https://blog.golang.org/godoc)
@@ -38,8 +37,4 @@ your handle next to the reviewed items if you did not review all items.*
 I have done the following...
 
 - [ ] confirmed all of the above items have been addressed
-- [ ] reviewed state machine logic
-- [ ] reviewed API design and naming
-- [ ] reviewed documentation is accurate
-- [ ] reviewed tests and test coverage
-- [ ] manually tested (if applicable)
+- [ ] ...

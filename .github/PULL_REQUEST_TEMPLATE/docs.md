@@ -14,16 +14,25 @@ closes: #XXXX
 
 ### Author Checklist
 
-*All items required. Please add a note if the item is not applicable.*
+*All items are required. Please add a note to the item if the item is not applicable and
+please add links to any relevant follow up issues.*
 
-- [ ] This PR does not change production code (i.e. it is a "docs" type)
-- [ ] This PR targets the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
-- [ ] This PR links to the GitHub issue that proposes these changes
-- [ ] I have reviewed "Files changed" and provided comments if necessary
-- [ ] I have confirmed that all required CI checks have passed
+I have done the following...
+
+- [ ] included the `docs:` prefix in the PR title
+- [ ] targeted the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
+- [ ] linked to the relevant issue or specification
+- [ ] reviewed "Files changed" and left comments if necessary
+- [ ] confirmed all CI checks have passed
 
 ### Reviewers Checklist
 
-*All items required. Please add your handle to the items you have reviewed.*
+*All items are required. Please add a note if the item is not applicable and please add
+your handle next to the reviewed items if you only reviewed selected items.*
 
+I have done the following...
+
+- [ ] confirmed all of the above items have been addressed
+- [ ] checked spelling and grammar
+- [ ] manually tested instructions
 - [ ] ...

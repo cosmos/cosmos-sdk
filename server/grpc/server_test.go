@@ -1,10 +1,10 @@
-// +build norace
-
 package grpc_test
 
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"testing"
 	"time"
 
@@ -34,6 +34,7 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
+	app     *simapp.SimApp
 	cfg     network.Config
 	network *network.Network
 	conn    *grpc.ClientConn
@@ -41,7 +42,7 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
+	app := simapp.Setup(false)
 	s.cfg = network.DefaultConfig()
 	s.cfg.NumValidators = 1
 	s.network = network.New(s.T(), s.cfg)
@@ -56,6 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		grpc.WithInsecure(), // Or else we get "no transport security set"
 	)
 	s.Require().NoError(err)
+	s.app = app
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -211,6 +213,25 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 			require.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestGRPCUnpacker() {
+	ir := s.app.InterfaceRegistry()
+	queryClient := stakingtypes.NewQueryClient(s.conn)
+	validator, err := queryClient.Validator(context.Background(),
+		&stakingtypes.QueryValidatorRequest{ValidatorAddr: s.network.Validators[0].ValAddress.String()})
+	require.NoError(s.T(), err)
+
+	// no unpacked interfaces yet, so ConsAddr will be nil
+	nilAddr, err := validator.Validator.GetConsAddr()
+	require.Error(s.T(), err)
+	require.Nil(s.T(), nilAddr)
+
+	// unpack the interfaces and now ConsAddr is not nil
+	err = validator.Validator.UnpackInterfaces(ir)
+	addr, err := validator.Validator.GetConsAddr()
+	require.NotNil(s.T(), addr)
+	require.NoError(s.T(), err)
 }
 
 // mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.

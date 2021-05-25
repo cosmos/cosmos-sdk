@@ -21,21 +21,15 @@ message Record {
 
 // Item is a keyring item stored in a keyring backend.
 message LocalInfo {
-  option (gogoproto.goproto_stringer) = false;
-
   google.protobuf.Any privKey = 1;
   string pubKeyType = 2;
 }
 
 message LedgerInfo {
-  option (gogoproto.goproto_stringer) = false;
-
   BIP44Params path = 1;
 }
 
 message BIP44Params {
-  option (gogoproto.goproto_stringer) = false;
-
   uint32 purpose = 1;
 	uint32 coinType = 2;
 	uint32 account = 3;
@@ -43,11 +37,7 @@ message BIP44Params {
 	uint32 addressIndex = 5;
 }
 
-message OfflineInfo {
-  option (gogoproto.goproto_stringer) = false;
-}
+message OfflineInfo {}
 
-message MultiInfo {
-  option (gogoproto.goproto_stringer) = false;
-}
+message MultiInfo {}
 

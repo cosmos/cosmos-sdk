@@ -122,15 +122,15 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	ke, err = kb.SavePubKey(o1, pub1)
+	re, err := kb.SavePubKey(o1, pub1)
 	require.Nil(t, err)
 
-	key1, err = ke.GetPubKey()
+	key1, err = re.GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 	require.Equal(t, pub1, key1)
 
-	require.Equal(t, o1, i.GetName())
+	require.Equal(t, o1, re.GetName())
 	keyS, err = kb.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))

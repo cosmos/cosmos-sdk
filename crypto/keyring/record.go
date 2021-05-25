@@ -26,7 +26,8 @@ func newLocalInfoItem(localInfo *LocalInfo) *Record_Local {
 }
 
 func newLedgerInfo(path *hd.BIP44Params) *LedgerInfo {
-	return &LedgerInfo{path}
+	newPath := &BIP44Params{path.Purpose,path.CoinType, path.Account, path.Change, path.AddressIndex}
+	return &LedgerInfo{newPath}
 }
 
 func newLedgerInfoItem(ledgerInfo *LedgerInfo) *Record_Ledger {
@@ -34,7 +35,8 @@ func newLedgerInfoItem(ledgerInfo *LedgerInfo) *Record_Ledger {
 }
 
 func (li LedgerInfo) GetPath() *hd.BIP44Params {
-	return li.Path
+	return &hd.BIP44Params{li.Path.Purpose, li.Path.CoinType, li.Path.Account, li.Path.Change, li.Path.AddressIndex}
+	
 }
 
 func newMultiInfo() *MultiInfo {

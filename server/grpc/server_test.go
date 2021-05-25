@@ -1,3 +1,5 @@
+// +build norace
+
 package grpc_test
 
 import (
@@ -42,7 +44,7 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-	app := simapp.Setup(false)
+	s.app = simapp.Setup(false)
 	s.cfg = network.DefaultConfig()
 	s.cfg.NumValidators = 1
 	s.network = network.New(s.T(), s.cfg)
@@ -57,7 +59,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		grpc.WithInsecure(), // Or else we get "no transport security set"
 	)
 	s.Require().NoError(err)
-	s.app = app
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -215,6 +216,8 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	}
 }
 
+// TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry unpack and extract the
+// ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
 func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 	ir := s.app.InterfaceRegistry()
 	queryClient := stakingtypes.NewQueryClient(s.conn)
@@ -229,6 +232,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 
 	// unpack the interfaces and now ConsAddr is not nil
 	err = validator.Validator.UnpackInterfaces(ir)
+	require.NoError(s.T(), err)
 	addr, err := validator.Validator.GetConsAddr()
 	require.NotNil(s.T(), addr)
 	require.NoError(s.T(), err)

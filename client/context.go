@@ -49,6 +49,7 @@ type Context struct {
 	NodeURI           string
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
+	Codec			  codec.Codec
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -235,6 +236,12 @@ func (ctx Context) WithViper(prefix string) Context {
 	return ctx
 }
 
+// WithCodec returns a copy of the Context with an updated Codec.
+func (ctx Context) WithCodec(cdc codec.Codec) Context {
+	ctx.Codec = cdc
+	return ctx
+}
+
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -329,7 +336,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		return addr, "", 0, nil
 	}
 
-	ke := new(keyring.KeyringEntry)
+	ke := new(keyring.Record)
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		ke, err = kr.KeyByAddress(addr)
 		if err != nil {
@@ -353,8 +360,8 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 // NewKeyringFromBackend gets a Keyring object from a backend
 func NewKeyringFromBackend(ctx Context, backend string) (keyring.Keyring, error) {
 	if ctx.GenerateOnly || ctx.Simulate {
-		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
+		return keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, ctx.KeyringDir, ctx.Input, ctx.Codec, ctx.KeyringOptions...)
 	}
 
-	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input, ctx.KeyringOptions...)
+	return keyring.New(sdk.KeyringServiceName(), backend, ctx.KeyringDir, ctx.Input, ctx.Codec, ctx.KeyringOptions...)
 }

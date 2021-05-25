@@ -86,6 +86,12 @@ func (re Record) GetAlgo() string {
 	return ""
 }
 
+// TODO remove it later
+func (re Record) GetType() KeyType {
+	return 0
+}
+
+
 func (re Record) extractPrivKeyFromLocalInfo() (cryptotypes.PrivKey, error) {
 	local := re.GetLocal()
 

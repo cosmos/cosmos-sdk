@@ -480,7 +480,7 @@ func (d Dec) Float64() (float64, error) {
 	return strconv.ParseFloat(d.String(), 64)
 }
 
-// Returns the float64 representation of a Dec.
+// MustFloat64 returns the float64 representation of a Dec.
 // Would panic if the conversion failed.
 func (d Dec) MustFloat64() float64 {
 	if value, err := strconv.ParseFloat(d.String(), 64); err != nil {

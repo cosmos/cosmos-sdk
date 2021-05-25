@@ -18,7 +18,7 @@ import (
 
 // LegacyKeybase is implemented by the legacy keybase implementation.
 type LegacyKeybase interface {
-	List() ([]Record, error)
+	List() ([]*Record, error)
 	Export(name string) (armor string, err error)
 	ExportPrivKey(name, decryptPassphrase, encryptPassphrase string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)

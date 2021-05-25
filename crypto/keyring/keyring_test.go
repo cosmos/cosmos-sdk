@@ -122,7 +122,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	ke, err = kb.SavePubKey(o1, pub1, hd.Ed25519Type)
+	ke, err = kb.SavePubKey(o1, pub1)
 	require.Nil(t, err)
 
 	key1, err = ke.GetPubKey()
@@ -534,7 +534,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	ke, err = cstore.SavePubKey(o1, pub1, hd.Ed25519Type)
+	ke, err = cstore.SavePubKey(o1, pub1)
 	require.Nil(t, err)
 
 	key, err := ke.GetPubKey()
@@ -1053,11 +1053,11 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	ke, err := kr.SavePubKey(key, pub, hd.Secp256k1.Name())
+	ke, err := kr.SavePubKey(key, pub)
 	require.Nil(t, err)
-	key, err := ke.GetPubKey()
+	pubKey, err := ke.GetPubKey()
 	require.NoError(t, err)
-	require.Equal(t, pub, key)
+	require.Equal(t, pub, pubKey)
 	require.Equal(t, key, ke.GetName())
 	require.Equal(t, hd.Secp256k1.Name(), ke.GetAlgo())
 

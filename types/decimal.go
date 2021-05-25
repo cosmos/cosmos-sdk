@@ -474,7 +474,7 @@ func (d Dec) String() string {
 	return string(bzStr)
 }
 
-// Returns the float64 representation of a Dec.
+// Float64 returns the float64 representation of a Dec.
 // Will return the error if the conversion failed.
 func (d Dec) Float64() (float64, error) {
 	return strconv.ParseFloat(d.String(), 64)

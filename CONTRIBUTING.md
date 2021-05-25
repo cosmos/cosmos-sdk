@@ -97,6 +97,8 @@ If you open a PR on the Cosmos SDK, it is mandatory to update the relevant docum
 - If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the `docs/interfaces/` folder.
 - If your changes relate to a module, please update the module's spec in `x/moduleName/docs/spec/`.
 
+When writing documentation, follow the [Documentation Writing Guidelines](./docs/DOC_WRITING_GUIDELINES.md).
+
 ## Forking
 
 Please note that Go requires code to live under absolute paths, which complicates forking.

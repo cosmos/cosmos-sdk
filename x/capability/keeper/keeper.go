@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
+var initialized = false
+
 type (
 	// Keeper defines the capability module's keeper. It is responsible for provisioning,
 	// tracking, and authenticating capabilities at runtime. During application
@@ -211,6 +213,7 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 		return nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
 	}
 	store := ctx.KVStore(sk.storeKey)
+	fmt.Println(sk.initialized)
 
 	if _, ok := sk.GetCapability(ctx, name); ok {
 		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
@@ -346,13 +349,18 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 	// Create a keeper that will set all in-memory mappings correctly into memstore and capmap if scoped keeper is not initialized yet.
 	// This ensures that the in-memory mappings are correctly filled in, in case this is a state-synced node.
 	// This is a temporary non-breaking fix, a future PR should store the reverse mapping in the persistent store and reconstruct forward mapping and capmap on the fly.
-	if !sk.initialized {
+	if !initialized {
+		fmt.Println("initializing", sk.module)
+		// create context with infinite gas meter to avoid app state mismatch.
+		initCtx := ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 		k := Keeper{
+			cdc:      sk.cdc,
 			storeKey: sk.storeKey,
 			memKey:   sk.memKey,
 			capMap:   sk.capMap,
 		}
-		k.InitializeAndSeal(ctx)
+		k.InitializeAndSeal(initCtx)
+		initialized = true
 	}
 
 	if strings.TrimSpace(name) == "" {
@@ -380,6 +388,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 		panic("capability found in memstore is missing from map")
 	}
 
+	fmt.Println("set bool", sk.initialized)
 	return cap, true
 }
 

@@ -386,7 +386,6 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 		panic("capability found in memstore is missing from map")
 	}
 
-	fmt.Println("set bool", sk.initialized)
 	return cap, true
 }
 

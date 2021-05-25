@@ -65,7 +65,7 @@ The NFT conforms to the following specifications:
     ```
   * Data: This mutable field allows attaching special information to the NFT, for example:
     * metadata such as title of the work and URI
-    * immutable data and parameters (such actual NFT data, hash or seed for generators), 
+    * immutable data and parameters (such actual NFT data, hash or seed for generators)
     * mutable data and parameters that change when transferring or when certain criteria are met (such as provenance)
       
     This ADR doesn't specify values that this field can take; however, best practices recommend upper-level NFT modules clearly specify its contents.

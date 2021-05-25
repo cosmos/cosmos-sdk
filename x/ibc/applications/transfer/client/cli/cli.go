@@ -19,6 +19,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryDenomTrace(),
 		GetCmdQueryDenomTraces(),
 		GetCmdParams(),
+		GetCmdQueryEscrowAddress(),
 	)
 
 	return queryCmd

@@ -78,15 +78,19 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 func (suite *KeeperTestSuite) TestNewCapability() {
 	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
 
+	fmt.Println("hello")
 	got, ok := sk.GetCapability(suite.ctx, "transfer")
 	suite.Require().False(ok)
 	suite.Require().Nil(got)
+	fmt.Println("byte")
 
 	cap, err := sk.NewCapability(suite.ctx, "transfer")
 	suite.Require().NoError(err)
 	suite.Require().NotNil(cap)
 
+	fmt.Println("what")
 	got, ok = sk.GetCapability(suite.ctx, "transfer")
+	fmt.Println("why")
 	suite.Require().True(ok)
 	suite.Require().Equal(cap, got)
 	suite.Require().True(cap == got, "expected memory addresses to be equal")

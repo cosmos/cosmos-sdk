@@ -94,7 +94,7 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{id}";
   }
 
-  // NFTs queries all proposals based on the optional onwer.
+  // NFTs queries all NFTs based on the optional onwer.
   rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts";
   }

@@ -28,7 +28,7 @@ Considering generic usage and compatibility of interchain protocols including IB
 
 This design idea can enable composability that application-specific functions should be managed by other modules on Cosmos Hub or on other Zones by importing the NFT module.
 
-For example, NFTs can be grouped into collections in a collectibles module to define the behaviors such as minting, burning, transferring, etc.
+For example, NFTs can be grouped into collections in a collectibles module to define the behaviors such as minting, burning, etc.
 
 The current design is based on the work done by [IRISnet team](https://github.com/irisnet/irismod/tree/master/modules/nft) and an older implementation in the [Cosmos repository](https://github.com/cosmos/modules/tree/master/incubator/nft).
 
@@ -52,14 +52,29 @@ type NFT interface {
 The NFT conforms to the following specifications:
   * The Id is an immutable field used as a unique identifier. NFT identifiers don't currently have a naming convention but
     can be used in association with existing Hub attributes, e.g., defining an NFT's identifier as an immutable Hub address allows its integration into existing Hub account management modules. 
-    We envision that identifiers can accommodate mint and transfer actions. 
+    We envision that identifiers can accommodate mint and transfer actions.
+    The Id is also the primary index for storing NFTs.
+    ```
+    id (string) --> NFT (bytes)
+    ```
   * Owner: This mutable field represents the current account owner (on the Hub) of the NFT, i.e., the account that will have authorization
     to perform various activities in the future. This can be a user, a module account, or potentially a future NFT module that adds capabilities.
+    Owner is also the secondary index for storing NFT IDs owned by an address
+    ```
+    owner (address) --> []string
+    ```
   * Data: This mutable field allows for attaching pertinent metadata to the NFT, e.g., to record special parameter change upon transferring or criteria being met.
     The data field is used to maintain special information, such as name and URI. Currently, there is no convention for the data placed into this field,
     however, best practices recommend defining clear specifications that apply to each specific NFT type.
 
-We will also create `NFT` as the default implementation of the `NFT` interface:
+The logic for transferring the ownership of an NFT to another address (no coins involved) should also be defined in this module
+```go
+func (k Keeper) TransferOwnership(nftID string, currentOwner, newOwner sdk.AccAddress) error
+```
+
+Other behaviors of NFT, including minting, burning and other business-logic implementation should be defined in other upper-level modules that import this NFT module.
+
+We will also create `BaseNFT` as the default implementation of the `NFT` interface:
 ```proto
 message BaseNFT {
   option (gogoproto.equal) = true;

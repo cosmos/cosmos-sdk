@@ -213,7 +213,6 @@ func (sk ScopedKeeper) NewCapability(ctx sdk.Context, name string) (*types.Capab
 		return nil, sdkerrors.Wrap(types.ErrInvalidCapabilityName, "capability name cannot be empty")
 	}
 	store := ctx.KVStore(sk.storeKey)
-	fmt.Println(sk.initialized)
 
 	if _, ok := sk.GetCapability(ctx, name); ok {
 		return nil, sdkerrors.Wrapf(types.ErrCapabilityTaken, fmt.Sprintf("module: %s, name: %s", sk.module, name))
@@ -350,7 +349,6 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 	// This ensures that the in-memory mappings are correctly filled in, in case this is a state-synced node.
 	// This is a temporary non-breaking fix, a future PR should store the reverse mapping in the persistent store and reconstruct forward mapping and capmap on the fly.
 	if !initialized {
-		fmt.Println("initializing", sk.module)
 		// create context with infinite gas meter to avoid app state mismatch.
 		initCtx := ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 		k := Keeper{

@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -185,63 +187,43 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 }
 
-func TestMultiStoreRename(t *testing.T) {
-	f, err := os.OpenFile("/tmp/123.txt", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
-	defer f.Close()
-	var db dbm.DB = dbm.NewMemDB()
-	store, tracer := newTracedStoreWithMounts(db, types.PruneNothing, f)
-	require.True(t, store.TracingEnabled())
-	require.NotNil(t, tracer)
-	err = store.LoadLatestVersion()
-	require.Nil(t, err)
+func TestAlteredStores(t *testing.T) {
+	tracerKey1 := types.NewKVStoreKey("tracer1")
+	tracerKey2 := types.NewKVStoreKey("tracer2")
+	//tracerKey3 := types.NewKVStoreKey("tracer3")
 
-	// write some data in all stores
-	k1, v1 := []byte("first"), []byte("store")
-	s1, _ := store.getStoreByName(testStoreKey1.Name()).(types.KVStore)
-	require.NotNil(t, s1)
-	s1.Set(k1, v1)
+	tdb := dbadapter.Store{DB: dbm.NewMemDB()}
+	var buf bytes.Buffer
+	tc := types.TraceContext(map[string]interface{}{})
+	ts := tracekv.NewStore(tdb, &buf, tc)
+	buf.Reset()
+	ts.Set([]byte("lol"), []byte("haha"))
+	//v := ts.Get([]byte("lol"))
+	//fmt.Println(v)
+	//fmt.Println(buf.String())
 
-	k2, v2 := []byte("second"), []byte("restore")
-	s2, _ := store.getStoreByName(testStoreKey2.Name()).(types.KVStore)
-	require.NotNil(t, s2)
-	s2.Set(k2, v2)
+	tdb1 := dbadapter.Store{DB: dbm.NewMemDB()}
+	ts1 := tracekv.NewStore(tdb1, &buf, tc)
+	ts1.Set([]byte("oops"), []byte("i did it again"))
 
-	k3, v3 := []byte("third"), []byte("dropped")
-	s3, _ := store.getStoreByName(testStoreKey3.Name()).(types.KVStore)
-	require.NotNil(t, s3)
-	s3.Set(k3, v3)
-
-	// do one commit
-	commitID := store.Commit()
-	expectedCommitID := getExpectedCommitID(store, 1)
-	checkStore(t, store, expectedCommitID, commitID)
-
-	ci, err := getCommitInfo(db, 1)
+	db1 := dbm.NewMemDB()
+	store := NewStore(db1)
+	store.MountStoreWithDB(tracerKey1, types.StoreTypeIAVL, tdb.DB)
+	store.MountStoreWithDB(tracerKey2, types.StoreTypeIAVL, tdb1.DB)
+	err := store.LoadLatestVersion()
 	require.NoError(t, err)
-	require.Equal(t, int64(1), ci.Version)
-	require.Equal(t, 3, len(ci.StoreInfos))
-	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "store3"})
 
-	// Load without changes and make sure it is sensible
-	store, tracer = newTracedStoreWithMounts(db, types.PruneNothing, f)
-
-	err = store.LoadLatestVersion()
-	require.Nil(t, err)
-	commitID = getExpectedCommitID(store, 1)
-	checkStore(t, store, commitID, commitID)
-
-	// query data to see it was saved properly
-	s2, _ = store.getStoreByName("store2").(types.KVStore)
-	require.NotNil(t, s2)
-	require.Equal(t, v2, s2.Get(k2))
 }
 
 func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	f, err := os.OpenFile("trace_store.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
-	store, _ := newTracedStoreWithMounts(db, types.PruneNothing, f) // newMultiStoreWithMounts
+	store, _ := newTracedStoreWithMounts(db, types.PruneNothing, f)
+	require.True(t, store.TracingEnabled())
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
+	//memDB := dbadapter.Store{DB: store.db}
+	//ts := tracekv.NewStore(memDB, f, types.TraceContext{})
 
 	// write some data in all stores
 	k1, v1 := []byte("first"), []byte("store")
@@ -279,7 +261,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	// Load without changes and make sure it is sensible
 	store, _ = newTracedStoreWithMounts(db, types.PruneNothing, f)
-
+	require.True(t, store.TracingEnabled())
 	err = store.LoadLatestVersion()
 	require.Nil(t, err)
 	commitID = getExpectedCommitID(store, 1)

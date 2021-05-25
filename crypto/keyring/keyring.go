@@ -132,7 +132,7 @@ type Importer interface {
 type LegacyInfoImporter interface {
 	// ImportInfo import a keyring.Info into the current keyring.
 	// It is used to migrate multisig, ledger, and public key Info structure.
-	ImportInfo(oldInfo Info) error
+	ImportInfo(oldInfo LegacyInfo) error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -294,10 +294,8 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
-	// TODO fix PubKeyType
-	//pubKeyTYpe has only only Local right? ke.GetLocal().PubKeyType
-	var i SignatureAlgo = algo
-	_, err = ks.writeLocalKey(uid, privKey, i)
+
+	_, err = ks.writeLocalKey(uid, privKey, algo)
 	if err != nil {
 		return err
 	}
@@ -536,7 +534,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 
 	return ke, mnemonic, nil
 }
-
+// TODO keep or remove SignatureAlgo???
 func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (*Record, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
@@ -556,8 +554,8 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	if _, err := ks.KeyByAddress(address); err == nil {
 		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
 	}
-
-	return ks.writeLocalKey(name, privKey, algo)
+	
+	return ks.writeLocalKey(name, privKey, string(algo.Name()))
 }
 
 func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
@@ -566,7 +564,6 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 
 func (ks keystore) key(infoKey string) (*Record, error) {
 	if err := ks.checkMigrate(); err != nil {
-		// TODO return nil or Record{} here?
 		return nil, err
 	}
 	bs, err := ks.db.Get(infoKey)
@@ -780,20 +777,18 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	}
 }
 
-// TODO handle SignatureAlgo uses tring instead
-func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo SignatureAlgo) (*Record, error) {
+
+func (ks keystore) writeLocalKey(name string, priv types.PrivKey, pubKeyType string) (*Record, error) {
 	// encrypt private key using keyring
 
 	apk, err := codectypes.NewAnyWithValue(priv)
 	if err != nil {
 		return nil, err
 	}
-	// TODO what to do with PubKeyType as second argument
-	// cast algo to the string?
-	localInfo := newLocalInfo(apk, algo)
+	localInfo := newLocalInfo(apk, pubKeyType)
 	localInfoItem := newLocalInfoItem(localInfo)
-	ke := NewRecord(name, apk, localInfoItem)
-	if err := ks.writeRecord(ke); err != nil {
+	re := NewRecord(name, apk, localInfoItem)
+	if err := ks.writeRecord(re); err != nil {
 		return nil, err
 	}
 	/*
@@ -805,7 +800,7 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo Signature
 		return info, nil
 	*/
 
-	return ke, nil
+	return re, nil
 }
 
 // declare writeRecord(re Record)

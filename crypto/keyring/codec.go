@@ -14,10 +14,10 @@ func init() {
 // TODO how to remove Info entirely?
 // rename to LegacyInfo
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*Info)(nil), nil)
+	cdc.RegisterInterface((*LegacyInfo)(nil), nil)
 	cdc.RegisterConcrete(hd.BIP44Params{}, "crypto/keys/hd/BIP44Params", nil)
-	cdc.RegisterConcrete(LocalInfo{}, "crypto/keys/LocalInfo", nil)
-	cdc.RegisterConcrete(LedgerInfo{}, "crypto/keys/LedgerInfo", nil)
-	cdc.RegisterConcrete(OfflineInfo{}, "crypto/keys/OfflineInfo", nil)
-	cdc.RegisterConcrete(MultiInfo{}, "crypto/keys/MultiInfo", nil)
+	cdc.RegisterConcrete(legacyLocalInfo{}, "crypto/keys/LocalInfo", nil)
+	cdc.RegisterConcrete(legacyLedgerInfo{}, "crypto/keys/LedgerInfo", nil)
+	cdc.RegisterConcrete(legacyOfflineInfo{}, "crypto/keys/OfflineInfo", nil)
+	cdc.RegisterConcrete(legacyMultiInfo{}, "crypto/keys/MultiInfo", nil)
 }

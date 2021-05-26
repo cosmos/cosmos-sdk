@@ -1,6 +1,6 @@
 ---
-name: Refactor 
-about: Refactors production code, e.g. renames a variable.
+name: Feature / Fix / Refactor
+about: Adds a feature, fixes a bug, refactors code; changes production code.
 ---
 
 ## Description
@@ -15,15 +15,16 @@ closes: #XXXX
 ### Author Checklist
 
 *All items are required. Please add a note to the item if the item is not applicable and
-please add the appropriate links to any relevant follow up issues.*
+please add links to any relevant follow up issues.*
 
-I have done the following...
+I have...
 
-- [ ] included the `refactor:` prefix in the PR title
+- [ ] included the correct [type prefix](https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.json) in the PR title
+- [ ] added `!` to the type prefix if API or client breaking change
 - [ ] targeted the correct branch (see [PR Targeting](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#pr-targeting))
-- [ ] linked to the relevant issue or specification
+- [ ] provided a link to the relevant issue or specification
 - [ ] followed the guidelines for [building modules](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules)
-- [ ] updated the necessary unit and integration [tests](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#testing)
+- [ ] included the necessary unit and integration [tests](https://github.com/cosmos/cosmos-sdk/blob/master/CONTRIBUTING.md#testing)
 - [ ] added a changelog entry to `CHANGELOG.md`
 - [ ] included comments for [documenting Go code](https://blog.golang.org/godoc)
 - [ ] updated the relevant documentation or specification
@@ -33,11 +34,13 @@ I have done the following...
 ### Reviewers Checklist
 
 *All items are required. Please add a note if the item is not applicable and please add
-your handle next to the reviewed items if you did not review all items.*
+your handle next to the reviewed items if you only reviewed selected items.*
 
-I have done the following...
+I have...
 
-- [ ] confirmed all of the above items have been addressed
+- [ ] confirmed the correct [type prefix](https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.json) in the PR title
+- [ ] confirmed `!` in the type prefix if API or client breaking change
+- [ ] confirmed all author checklist items have been addressed 
 - [ ] reviewed state machine logic
 - [ ] reviewed API design and naming
 - [ ] reviewed documentation is accurate

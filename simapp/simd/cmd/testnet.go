@@ -48,7 +48,7 @@ var (
 	flagPrintMnemonic     = "print-mnemonic"
 )
 
-type initOptions struct {
+type initArgs struct {
 	algo              string
 	chainID           string
 	keyringBackend    string
@@ -123,7 +123,7 @@ Example:
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			args := initOptions{}
+			args := initArgs{}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
 			args.keyringBackend, _ = cmd.Flags().GetString(flags.FlagKeyringBackend)
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
@@ -197,7 +197,7 @@ func initTestnetFiles(
 	nodeConfig *tmconfig.Config,
 	mbm module.BasicManager,
 	genBalIterator banktypes.GenesisBalancesIterator,
-	args initOptions,
+	args initArgs,
 ) error {
 
 	if args.chainID == "" {

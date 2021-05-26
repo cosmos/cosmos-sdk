@@ -48,6 +48,31 @@ var (
 	flagPrintMnemonic     = "print-mnemonic"
 )
 
+type initOptions struct {
+	algo              string
+	chainID           string
+	keyringBackend    string
+	minGasPrices      string
+	nodeDaemonHome    string
+	nodeDirPrefix     string
+	numValidators     int
+	outputDir         string
+	startingIPAddress string
+}
+
+type startArgs struct {
+	algo          string
+	apiAddress    string
+	chainID       string
+	enableLogging bool
+	grpcAddress   string
+	minGasPrices  string
+	numValidators int
+	outputDir     string
+	printMnemonic bool
+	rpcAddress    string
+}
+
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
@@ -98,20 +123,18 @@ Example:
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			outputDir, _ := cmd.Flags().GetString(flagOutputDir)
-			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-			minGasPrices, _ := cmd.Flags().GetString(server.FlagMinGasPrices)
-			nodeDirPrefix, _ := cmd.Flags().GetString(flagNodeDirPrefix)
-			nodeDaemonHome, _ := cmd.Flags().GetString(flagNodeDaemonHome)
-			startingIPAddress, _ := cmd.Flags().GetString(flagStartingIPAddress)
-			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
-			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			args := initOptions{}
+			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
+			args.keyringBackend, _ = cmd.Flags().GetString(flags.FlagKeyringBackend)
+			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
+			args.minGasPrices, _ = cmd.Flags().GetString(server.FlagMinGasPrices)
+			args.nodeDirPrefix, _ = cmd.Flags().GetString(flagNodeDirPrefix)
+			args.nodeDaemonHome, _ = cmd.Flags().GetString(flagNodeDaemonHome)
+			args.startingIPAddress, _ = cmd.Flags().GetString(flagStartingIPAddress)
+			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
+			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
-			return initTestnetFiles(
-				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
-				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
-			)
+			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
 
 		},
 	}
@@ -139,19 +162,19 @@ Example:
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 
-			outputDir, _ := cmd.Flags().GetString(flagOutputDir)
-			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-			minGasPrices, _ := cmd.Flags().GetString(server.FlagMinGasPrices)
-			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
-			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
-			enableLogging, _ := cmd.Flags().GetBool(flagEnableLogging)
-			rpcAddress, _ := cmd.Flags().GetString(flagRPCAddress)
-			apiAddress, _ := cmd.Flags().GetString(flagAPIAddress)
-			grpcAddress, _ := cmd.Flags().GetString(flagGRPCAddress)
-			printMnemonic, _ := cmd.Flags().GetBool(flagPrintMnemonic)
+			args := startArgs{}
+			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
+			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
+			args.minGasPrices, _ = cmd.Flags().GetString(server.FlagMinGasPrices)
+			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
+			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			args.enableLogging, _ = cmd.Flags().GetBool(flagEnableLogging)
+			args.rpcAddress, _ = cmd.Flags().GetString(flagRPCAddress)
+			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
+			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
+			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
 
-			return startTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators, enableLogging,
-				rpcAddress, apiAddress, grpcAddress, printMnemonic)
+			return startTestnet(cmd, args)
 
 		},
 	}
@@ -174,31 +197,23 @@ func initTestnetFiles(
 	nodeConfig *tmconfig.Config,
 	mbm module.BasicManager,
 	genBalIterator banktypes.GenesisBalancesIterator,
-	outputDir,
-	chainID,
-	minGasPrices,
-	nodeDirPrefix,
-	nodeDaemonHome,
-	startingIPAddress,
-	keyringBackend,
-	algoStr string,
-	numValidators int,
+	args initOptions,
 ) error {
 
-	if chainID == "" {
-		chainID = "chain-" + tmrand.NewRand().Str(6)
+	if args.chainID == "" {
+		args.chainID = "chain-" + tmrand.NewRand().Str(6)
 	}
 
-	nodeIDs := make([]string, numValidators)
-	valPubKeys := make([]cryptotypes.PubKey, numValidators)
+	nodeIDs := make([]string, args.numValidators)
+	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)
 
 	simappConfig := srvconfig.DefaultConfig()
-	simappConfig.MinGasPrices = minGasPrices
+	simappConfig.MinGasPrices = args.minGasPrices
 	simappConfig.API.Enable = true
 	simappConfig.Telemetry.Enabled = true
 	simappConfig.Telemetry.PrometheusRetentionTime = 60
 	simappConfig.Telemetry.EnableHostnameLabel = false
-	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", chainID}}
+	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", args.chainID}}
 
 	var (
 		genAccounts []authtypes.GenesisAccount
@@ -208,50 +223,50 @@ func initTestnetFiles(
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
 	// generate private keys, node IDs, and initial transactions
-	for i := 0; i < numValidators; i++ {
-		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
-		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
-		gentxsDir := filepath.Join(outputDir, "gentxs")
+	for i := 0; i < args.numValidators; i++ {
+		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
+		nodeDir := filepath.Join(args.outputDir, nodeDirName, args.nodeDaemonHome)
+		gentxsDir := filepath.Join(args.outputDir, "gentxs")
 
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
-			_ = os.RemoveAll(outputDir)
+			_ = os.RemoveAll(args.outputDir)
 			return err
 		}
 
 		nodeConfig.Moniker = nodeDirName
 
-		ip, err := getIP(i, startingIPAddress)
+		ip, err := getIP(i, args.startingIPAddress)
 		if err != nil {
-			_ = os.RemoveAll(outputDir)
+			_ = os.RemoveAll(args.outputDir)
 			return err
 		}
 
 		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(nodeConfig)
 		if err != nil {
-			_ = os.RemoveAll(outputDir)
+			_ = os.RemoveAll(args.outputDir)
 			return err
 		}
 
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 		genFiles = append(genFiles, nodeConfig.GenesisFile())
 
-		kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, nodeDir, inBuf)
+		kb, err := keyring.New(sdk.KeyringServiceName(), args.keyringBackend, nodeDir, inBuf)
 		if err != nil {
 			return err
 		}
 
 		keyringAlgos, _ := kb.SupportedAlgorithms()
-		algo, err := keyring.NewSigningAlgoFromString(algoStr, keyringAlgos)
+		algo, err := keyring.NewSigningAlgoFromString(args.algo, keyringAlgos)
 		if err != nil {
 			return err
 		}
 
 		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
 		if err != nil {
-			_ = os.RemoveAll(outputDir)
+			_ = os.RemoveAll(args.outputDir)
 			return err
 		}
 
@@ -299,7 +314,7 @@ func initTestnetFiles(
 
 		txFactory := tx.Factory{}
 		txFactory = txFactory.
-			WithChainID(chainID).
+			WithChainID(args.chainID).
 			WithMemo(memo).
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
@@ -320,19 +335,19 @@ func initTestnetFiles(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config/app.toml"), simappConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mbm, chainID, genAccounts, genBalances, genFiles, numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {
 		return err
 	}
 
 	err := collectGenFiles(
-		clientCtx, nodeConfig, chainID, nodeIDs, valPubKeys, numValidators,
-		outputDir, nodeDirPrefix, nodeDaemonHome, genBalIterator,
+		clientCtx, nodeConfig, args.chainID, nodeIDs, valPubKeys, args.numValidators,
+		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator,
 	)
 	if err != nil {
 		return err
 	}
 
-	cmd.PrintErrf("Successfully initialized %d node directories\n", numValidators)
+	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
 	return nil
 }
 
@@ -471,26 +486,25 @@ func writeFile(name string, dir string, contents []byte) error {
 }
 
 // startTestnet starts an in-process testnet
-func startTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,
-	numValidators int, enableLogging bool, rpcAddress, apiAddress, grpcAddress string, printMnemonic bool) error {
+func startTestnet(cmd *cobra.Command, args startArgs) error {
 	networkConfig := network.DefaultConfig()
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
 	// is non-empty
-	if chainID != "" {
-		networkConfig.ChainID = chainID
+	if args.chainID != "" {
+		networkConfig.ChainID = args.chainID
 	}
-	networkConfig.SigningAlgo = algo
-	networkConfig.MinGasPrices = minGasPrices
-	networkConfig.NumValidators = numValidators
-	networkConfig.EnableTMLogging = enableLogging
-	networkConfig.RPCAddress = rpcAddress
-	networkConfig.APIAddress = apiAddress
-	networkConfig.GRPCAddress = grpcAddress
-	networkConfig.PrintMnemonic = printMnemonic
+	networkConfig.SigningAlgo = args.algo
+	networkConfig.MinGasPrices = args.minGasPrices
+	networkConfig.NumValidators = args.numValidators
+	networkConfig.EnableTMLogging = args.enableLogging
+	networkConfig.RPCAddress = args.rpcAddress
+	networkConfig.APIAddress = args.apiAddress
+	networkConfig.GRPCAddress = args.grpcAddress
+	networkConfig.PrintMnemonic = args.printMnemonic
 	networkLogger := network.NewCLILogger(cmd)
 
-	baseDir := fmt.Sprintf("%s/%s", testnetsDir, networkConfig.ChainID)
+	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)
 	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
 		return fmt.Errorf(
 			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",

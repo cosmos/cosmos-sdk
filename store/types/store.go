@@ -65,7 +65,7 @@ type StoreRename struct {
 	NewKey string `json:"new_key"`
 }
 
-// IsDeleted returns true if the given key should be added
+// IsAdded returns true if the given key should be added
 func (s *StoreUpgrades) IsAdded(key string) bool {
 	if s == nil {
 		return false

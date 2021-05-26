@@ -223,6 +223,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 				return errors.Wrapf(err, "failed to load old store %s", oldName)
 			}
 
+			// this line ensures that renamed stores get deleted.
 			newStores[oldKey] = oldStore
 
 			// move all data

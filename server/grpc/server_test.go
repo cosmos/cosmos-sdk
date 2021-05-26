@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	rpb "google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
@@ -20,6 +21,7 @@ import (
 	reflectionv1 "github.com/cosmos/cosmos-sdk/client/grpc/reflection"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	reflectionv2 "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,11 +31,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
+	app     *simapp.SimApp
 	cfg     network.Config
 	network *network.Network
 	conn    *grpc.ClientConn
@@ -41,7 +45,7 @@ type IntegrationTestSuite struct {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
-
+	s.app = simapp.Setup(false)
 	s.cfg = network.DefaultConfig()
 	s.cfg.NumValidators = 1
 
@@ -213,6 +217,28 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 			require.Contains(t, err.Error(), tt.wantErr)
 		})
 	}
+}
+
+// TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry unpack and extract the
+// ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
+func (s *IntegrationTestSuite) TestGRPCUnpacker() {
+	ir := s.app.InterfaceRegistry()
+	queryClient := stakingtypes.NewQueryClient(s.conn)
+	validator, err := queryClient.Validator(context.Background(),
+		&stakingtypes.QueryValidatorRequest{ValidatorAddr: s.network.Validators[0].ValAddress.String()})
+	require.NoError(s.T(), err)
+
+	// no unpacked interfaces yet, so ConsAddr will be nil
+	nilAddr, err := validator.Validator.GetConsAddr()
+	require.Error(s.T(), err)
+	require.Nil(s.T(), nilAddr)
+
+	// unpack the interfaces and now ConsAddr is not nil
+	err = validator.Validator.UnpackInterfaces(ir)
+	require.NoError(s.T(), err)
+	addr, err := validator.Validator.GetConsAddr()
+	require.NotNil(s.T(), addr)
+	require.NoError(s.T(), err)
 }
 
 // mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.

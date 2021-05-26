@@ -197,7 +197,8 @@ The above `Profile` example is a fictive example used for educational purposes. 
 - the `sdk.Msg` interface for encoding different `Msg`s in a transaction,
 - the `AccountI` interface for encodinig different types of accounts (similar to the above example) in the x/auth query responses,
 - the `Evidencei` interface for encoding different types of evidences in the x/evidence module,
-- the `AuthorizationI` interface for encoding different types of x/authz authorizations.
+- the `AuthorizationI` interface for encoding different types of x/authz authorizations,
+- the [`Validator`](https://github.com/cosmos/cosmos-sdk/blob/v0.42.5/x/staking/types/staking.pb.go#L306-L337) struct that contains information about a validator. 
 
 A real-life example of encoding the pubkey as `Any` inside the Validator struct in x/staking is shown in the following example:
 

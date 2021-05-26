@@ -53,6 +53,7 @@ if input key is empty, or input data contains empty key.
 * [#9088](https://github.com/cosmos/cosmos-sdk/pull/9088) Added implementation to ADR-28 Derived Addresses.
 * [\#9133](https://github.com/cosmos/cosmos-sdk/pull/9133) Added hooks for governance actions.
 * (x/staking) [\#9214](https://github.com/cosmos/cosmos-sdk/pull/9214) Added `new_shares` attribute inside `EventTypeDelegate` event.
+* [\#9382](https://github.com/cosmos/cosmos-sdk/pull/9382) feat: add Dec.Float64() function.
 
 ### Client Breaking Changes
 
@@ -128,6 +129,7 @@ if input key is empty, or input data contains empty key.
 
 ### Improvements
 
+* (baseapp, types) [#\9390](https://github.com/cosmos/cosmos-sdk/pull/9390) Add current block header hash to `Context`
 * (x/bank) [\#8614](https://github.com/cosmos/cosmos-sdk/issues/8614) Add `Name` and `Symbol` fields to denom metadata
 * (x/auth) [\#8522](https://github.com/cosmos/cosmos-sdk/pull/8522) Allow to query all stored accounts
 * (crypto/types) [\#8600](https://github.com/cosmos/cosmos-sdk/pull/8600) `CompactBitArray`: optimize the `NumTrueBitsBefore` method and add an `Equal` method.

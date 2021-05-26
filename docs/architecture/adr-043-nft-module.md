@@ -63,9 +63,14 @@ The NFT conforms to the following specifications:
     ```
     owner (address) --> []string
     ```
-  * Data: This mutable field allows for attaching pertinent metadata to the NFT, e.g., to record special parameter change upon transferring or criteria being met.
-    The data field is used to maintain special information, such as name and URI. Currently, there is no convention for the data placed into this field,
-    however, best practices recommend defining clear specifications that apply to each specific NFT type.
+  * Data: This mutable field allows attaching special information to the NFT, for example:
+    * metadata such as title of the work and URI
+    * immutable data and parameters (such actual NFT data, hash or seed for generators)
+    * mutable data and parameters that change when transferring or when certain criteria are met (such as provenance)
+      
+    This ADR doesn't specify values that this field can take; however, best practices recommend upper-level NFT modules clearly specify its contents.
+    Although the value of this field doesn't provide additional context required to manage NFT records, which means that the field can technically be removed from the specification, 
+    the field's existence allows basic informational/UI functionality.
 
 The logic for transferring the ownership of an NFT to another address (no coins involved) should also be defined in this module
 ```go

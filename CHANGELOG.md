@@ -72,6 +72,7 @@ if input key is empty, or input data contains empty key.
   * via legacy `msg.Type()` (e.g. `message.action='send'`) is being deprecated, new `Msg`s won't emit these events.
   * Please use concrete `Msg` TypeURLs instead (e.g. `message.action='/cosmos.bank.v1beta1.MsgSend'`).
 * [\#9291](https://github.com/cosmos/cosmos-sdk/pull/9291) Migration scripts prior to v0.38 have been removed from the CLI `migrate` command. The oldest supported migration is v0.39->v0.42.
+* [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
 
 ### API Breaking Changes
 
@@ -111,6 +112,7 @@ if input key is empty, or input data contains empty key.
   * The `RegisterCustomTypeURL` function and the `cosmos.base.v1beta1.ServiceMsg` interface have been removed from the interface registry.
 * (codec) [\#9251](https://github.com/cosmos/cosmos-sdk/pull/9251) Rename `clientCtx.JSONMarshaler` to `clientCtx.JSONCodec` as per #9226.
 * (x/bank) [\#9271](https://github.com/cosmos/cosmos-sdk/pull/9271) SendEnabledCoin(s) renamed to IsSendEnabledCoin(s) to better reflect its functionality.
+* [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) The `New` method for the network package now returns an error.
 
 
 ### State Machine Breaking

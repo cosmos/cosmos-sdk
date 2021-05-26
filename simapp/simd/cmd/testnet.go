@@ -108,7 +108,7 @@ Example:
 			numValidators, _ := cmd.Flags().GetInt(flagNumValidators)
 			algo, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
-			return InitTestnetFiles(
+			return initTestnetFiles(
 				clientCtx, cmd, config, mbm, genBalIterator, outputDir, chainID, minGasPrices,
 				nodeDirPrefix, nodeDaemonHome, startingIPAddress, keyringBackend, algo, numValidators,
 			)
@@ -135,7 +135,7 @@ and generate "v" directories, populated with necessary validator configuration f
 (private validator, genesis, config, etc.).
 
 Example:
-	simd testnet --v 4 --output-dir ./output
+	simd testnet --v 4 --output-dir ./.testnets
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 
@@ -150,7 +150,7 @@ Example:
 			grpcAddress, _ := cmd.Flags().GetString(flagGRPCAddress)
 			printMnemonic, _ := cmd.Flags().GetBool(flagPrintMnemonic)
 
-			return StartTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators, enableLogging,
+			return startTestnet(cmd, outputDir, chainID, minGasPrices, algo, numValidators, enableLogging,
 				rpcAddress, apiAddress, grpcAddress, printMnemonic)
 
 		},
@@ -167,8 +167,8 @@ Example:
 
 const nodeDirPerm = 0755
 
-// InitTestnetFiles initializes testnet files for a testnet to be run in a separate process
-func InitTestnetFiles(
+// initTestnetFiles initializes testnet files for a testnet to be run in a separate process
+func initTestnetFiles(
 	clientCtx client.Context,
 	cmd *cobra.Command,
 	nodeConfig *tmconfig.Config,
@@ -470,8 +470,8 @@ func writeFile(name string, dir string, contents []byte) error {
 	return nil
 }
 
-// StartTestnet starts an in-process testnet
-func StartTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,
+// startTestnet starts an in-process testnet
+func startTestnet(cmd *cobra.Command, testnetsDir string, chainID string, minGasPrices string, algo string,
 	numValidators int, enableLogging bool, rpcAddress, apiAddress, grpcAddress string, printMnemonic bool) error {
 	networkConfig := network.DefaultConfig()
 

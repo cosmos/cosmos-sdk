@@ -7,8 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -185,34 +183,6 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 }
 
-func TestAlteredStores(t *testing.T) {
-	tracerKey1 := types.NewKVStoreKey("tracer1")
-	tracerKey2 := types.NewKVStoreKey("tracer2")
-	//tracerKey3 := types.NewKVStoreKey("tracer3")
-
-	tdb := dbadapter.Store{DB: dbm.NewMemDB()}
-	var buf bytes.Buffer
-	tc := types.TraceContext(map[string]interface{}{})
-	ts := tracekv.NewStore(tdb, &buf, tc)
-	buf.Reset()
-	ts.Set([]byte("lol"), []byte("haha"))
-	//v := ts.Get([]byte("lol"))
-	//fmt.Println(v)
-	//fmt.Println(buf.String())
-
-	tdb1 := dbadapter.Store{DB: dbm.NewMemDB()}
-	ts1 := tracekv.NewStore(tdb1, &buf, tc)
-	ts1.Set([]byte("oops"), []byte("i did it again"))
-
-	db1 := dbm.NewMemDB()
-	store := NewStore(db1)
-	store.MountStoreWithDB(tracerKey1, types.StoreTypeIAVL, tdb.DB)
-	store.MountStoreWithDB(tracerKey2, types.StoreTypeIAVL, tdb1.DB)
-	err := store.LoadLatestVersion()
-	require.NoError(t, err)
-
-}
-
 func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := newMultiStoreWithMounts(db, types.PruneNothing)
@@ -331,7 +301,6 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(2), ci.Version)
 	require.Equal(t, 3, len(ci.StoreInfos), ci.StoreInfos)
-	//require.Equal(t, 5, len(ci.StoreInfos), ci.StoreInfos)
 	checkContains(t, ci.StoreInfos, []string{"store1", "restore2", "store4"})
 }
 
@@ -915,7 +884,6 @@ var (
 	testStoreKey1 = types.NewKVStoreKey("store1")
 	testStoreKey2 = types.NewKVStoreKey("store2")
 	testStoreKey3 = types.NewKVStoreKey("store3")
-	testNewKey2   = types.NewKVStoreKey("new2")
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts types.PruningOptions) *Store {
@@ -998,11 +966,6 @@ func newMultiStoreWithGeneratedData(db dbm.DB, stores uint8, storeKeys uint64) *
 	return multiStore
 }
 
-// newMultiStoreWithModifiedMounts - mounts the following stores:
-// store1
-// restore2
-// store3
-// store4
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts types.PruningOptions) (*Store, *types.StoreUpgrades) {
 	store := NewStore(db)
 	store.pruningOpts = pruningOpts

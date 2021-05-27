@@ -46,7 +46,6 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 	require.Equal(t, int64(1), commitID.Version)
 }
 
-// checkStore checks that the kvStore exists and that the kv[k] == v.
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
 	rs := rootmulti.NewStore(db)
 	rs.SetPruning(store.PruneNothing)
@@ -116,31 +115,27 @@ func TestSetLoader(t *testing.T) {
 			// prepare a db with some data
 			db := dbm.NewMemDB()
 
-			// initialize the store. this boots up a kvstore
-			// and sets store[k] = v.
 			initStore(t, db, tc.origStoreKey, k, v)
 
-			// load the app the origStore
+			// load the app with the existing db
 			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(store.PruneNothing)}
+
 			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))
 			err := origapp.LoadLatestVersion()
 			require.Nil(t, err)
 
-			// execute blocks 2 - 4
 			for i := int64(2); i <= upgradeHeight-1; i++ {
 				origapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
 				res := origapp.Commit()
 				require.NotNil(t, res.Data)
 			}
 
-			// this only runs for the second tc
-			// it renames the store from foo to bar
 			if tc.setLoader != nil {
 				opts = append(opts, tc.setLoader)
 			}
 
-			// new baseapp with loadStoreKey
+			// load the new app with the original app db
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err = app.LoadLatestVersion()

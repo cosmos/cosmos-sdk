@@ -482,10 +482,10 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	// create some keys
 	_, err = cstore.Key(n1)
 	require.Error(t, err)
-	ke, _, err := cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	re, _, err := cstore.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 
 	require.NoError(t, err)
-	require.Equal(t, n1, i.GetName())
+	require.Equal(t, n1, re.GetName())
 	_, _, err = cstore.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.NoError(t, err)
 
@@ -533,16 +533,16 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	ke, err = cstore.SaveOfflineKey(o1, pub1)
+	re, err = cstore.SaveOfflineKey(o1, pub1)
 	require.Nil(t, err)
 
-	key, err := ke.GetPubKey()
+	key, err := re.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, pub1, key)
 
-	require.Equal(t, o1, ke.GetName())
-	require.NotNil(t, ke.GetOffline())
-	require.Equal(t, hd.Ed25519Type, ke.GetAlgo())
+	require.Equal(t, o1, re.GetName())
+	require.NotNil(t, re.GetOffline())
+	require.Equal(t, hd.Ed25519Type, re.GetAlgo())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
@@ -724,11 +724,11 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	cstore := keyring.NewInMemory(encCfg.Marshaler)
 
 	// CreateMnemonic a private-public key pair and ensure consistency
-	ke, _, err := cstore.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	re, _, err := cstore.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.Nil(t, err)
-	require.NotEqual(t, info, "")
-	require.Equal(t, ke.GetName(), "john")
-	key, err := ke.GetPubKey()
+	require.NotEqual(t, re, "")
+	require.Equal(t, re.GetName(), "john")
+	key, err := re.GetPubKey()
 	require.NoError(t, err)
 	addr := key.Address()
 	john, err := cstore.Key("john")

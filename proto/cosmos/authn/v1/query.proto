@@ -18,11 +18,6 @@ service Query {
     rpc Accounts(QueryAccountsRequest) returns (QueryAccountsResponse) {
         option (google.api.http).get = "/cosmos/auth/v1beta1/accounts";
     }
-
-    // Params queries all parameters.
-    rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-        option (google.api.http).get = "/cosmos/auth/v1beta1/params";
-    }
 }
 
 message QueryAccountRequest {
@@ -44,13 +39,4 @@ message QueryAccountsResponse {
 
     // pagination defines the pagination in the response.
     cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryParamsRequest is the request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is the response type for the Query/Params RPC method.
-message QueryParamsResponse {
-    // params defines the parameters of the module.
-    Params params = 1;
 }

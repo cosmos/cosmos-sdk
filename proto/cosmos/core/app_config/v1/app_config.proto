@@ -1,0 +1,14 @@
+syntax = "proto3";
+package cosmos.core.app_config.v1;
+
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/core/app_config";
+
+message AppConfig {
+    map<string, google.protobuf.Any> modules = 1;
+    repeated google.protobuf.Any tx_middleware = 2;
+    repeated string init_genesis = 3;
+    repeated string begin_block = 4;
+    repeated string end_block = 5;
+}

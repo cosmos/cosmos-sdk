@@ -3,6 +3,8 @@ package cosmos.authn.v1;
 
 import "cosmos/authn/v1/account.proto";
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/authn";
+
 message GenesisState {
     // accounts are the accounts present at genesis.
     repeated Account accounts = 1;

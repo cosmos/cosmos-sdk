@@ -5,8 +5,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/gogo/protobuf/proto"
-
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -17,7 +15,7 @@ type HasTxMiddleware interface {
 }
 
 type TxMiddlewareRegistrar interface {
-	RegisterTxMiddlewareFactory(configType proto.Message, factory TxMiddlewareFactory)
+	RegisterTxMiddlewareFactory(configType interface{}, factory TxMiddlewareFactory)
 }
 
 type TxMiddlewareFactory func(config interface{}) TxMiddleware

@@ -29,12 +29,12 @@ I have...
 ### Reviewers Checklist
 
 *All items are required. Please add a note if the item is not applicable and please add
-your handle next to the reviewed items if you only reviewed selected items.*
+your handle next to the items reviewed if you only reviewed selected items.*
 
 I have...
 
 - [ ] confirmed the correct `docs:` prefix in the PR title
-- [ ] confirmed all of the above items have been addressed
+- [ ] confirmed all author checklist items have been addressed 
 - [ ] confirmed that this PR only changes documentation
 - [ ] reviewed content for consistency
 - [ ] reviewed content for thoroughness

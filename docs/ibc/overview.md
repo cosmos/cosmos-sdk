@@ -1,6 +1,6 @@
 <!-- order: 1 -->
 
- # IBC Overview
+# IBC Overview
 
 Learn what IBC is, its components, and use cases. {synopsis}
 

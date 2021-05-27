@@ -5,6 +5,7 @@
 - 28/10/2020 - Initial draft
 
 ## Authors
+
 - Antoine Herzog (@antoineherzog)
 - Zaki Manian (@zmanian)
 - Aleksandr Bezobchuk (alexanderbez) [1]
@@ -18,7 +19,8 @@ Draft
 
 Currently, in the SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
 
-This specification serves the purpose of covering every use case, this means that cosmos-sdk applications developers decide how to serialize and represent `Data` to users. 
+This specification serves the purpose of covering every use case, this means that cosmos-sdk applications developers decide how to serialize and represent `Data` to users.
+
 ## Context
 
 Having the ability to sign messages off-chain has proven to be a fundamental aspect of nearly any blockchain. The notion of signing messages off-chain has many added benefits such as saving on computational costs and reducing transaction throughput and overhead. Within the context of the Cosmos, some of the major applications of signing such data includes, but is not limited to, providing a cryptographic secure and verifiable means of proving validator identity and possibly associating it with some other framework or organization. In addition, having the ability to sign Cosmos messages with a Ledger or similar HSM device.
@@ -36,7 +38,7 @@ Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SI
 A spec should include an `auth_info` that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
 Create the `offchain` proto definitions, we extend the auth module with `offchain` package to offer functionalities to verify and sign offline messages.
- 
+
 An offchain transaction follows these rules:
 
 - the memo must be empty
@@ -51,10 +53,10 @@ The first message added to the `offchain` package is `MsgSignData`.
 
 `MsgSignData` allows developers to sign arbitrary bytes valid offchain only. Where `Signer` is the account address of the signer. `Data` is arbitrary bytes which can represent `text`, `files`, `object`s. It's applications developers decision how `Data` should be deserialized, serialized and the object it can represent in their context.
 
-It's applications developers decision how `Data` should be treated, by treated we mean the serialization and deserialization process and the Object `Data` should represent. 
-
+It's applications developers decision how `Data` should be treated, by treated we mean the serialization and deserialization process and the Object `Data` should represent.
 
 Proto definition:
+
 ```proto
 // MsgSignData defines an arbitrary, general-purpose, off-chain message
 message MsgSignData {
@@ -64,7 +66,9 @@ message MsgSignData {
     bytes Data = 2 [(gogoproto.jsontag) = "data"];
 }
 ```
+
 Signed MsgSignData json example:
+
 ```json
 {
   "type": "cosmos-sdk/StdTx",
@@ -98,7 +102,7 @@ Signed MsgSignData json example:
 
 ## Consequences
 
-There is a specification on how messages, that are not meant to be broadcast to a live chain, should be formed. 
+There is a specification on how messages, that are not meant to be broadcast to a live chain, should be formed.
 
 ### Backwards Compatibility
 

@@ -3,6 +3,7 @@ package cosmos.crypto.keyring;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "cosmos/crypto/hd/hd.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
@@ -26,15 +27,7 @@ message LocalInfo {
 }
 
 message LedgerInfo {
-  BIP44Params path = 1;
-}
-
-message BIP44Params {
-  uint32 purpose = 1;
-	uint32 coinType = 2;
-	uint32 account = 3;
-	bool change = 4;
-	uint32 addressIndex = 5;
+  hd.BIP44Params path = 1;
 }
 
 message OfflineInfo {}

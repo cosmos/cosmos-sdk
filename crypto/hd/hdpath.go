@@ -17,6 +17,7 @@ import (
 // To receive a canonical string representation ala
 // m / purpose' / coinType' / account' / change / addressIndex
 // call String() on a BIP44Params instance.
+/*
 type BIP44Params struct {
 	Purpose      uint32 `json:"purpose"`
 	CoinType     uint32 `json:"coinType"`
@@ -24,6 +25,7 @@ type BIP44Params struct {
 	Change       bool   `json:"change"`
 	AddressIndex uint32 `json:"addressIndex"`
 }
+*/
 
 // NewParams creates a BIP 44 parameter object from the params:
 // m / purpose' / coinType' / account' / change / addressIndex
@@ -152,6 +154,7 @@ func (p BIP44Params) DerivationPath() []uint32 {
 
 // String returns the full absolute HD path of the BIP44 (https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) params:
 // m / purpose' / coin_type' / account' / change / address_index
+/*
 func (p BIP44Params) String() string {
 	var changeStr string
 	if p.Change {
@@ -166,6 +169,7 @@ func (p BIP44Params) String() string {
 		changeStr,
 		p.AddressIndex)
 }
+*/
 
 // ComputeMastersFromSeed returns the master secret key's, and chain code.
 func ComputeMastersFromSeed(seed []byte) (secret [32]byte, chainCode [32]byte) {

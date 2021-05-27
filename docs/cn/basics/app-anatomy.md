@@ -67,9 +67,9 @@ Blockchain Node |  |           Consensus           |  |
 - 使用模块管理器，在每个应用程序的模块 的 InitGenesis，BegingBlocker 和 EndBlocker 函数之间设置执行顺序。 请注意，并非所有模块都实现这些功能。
 - 模块实现这些功能。
 - 设置其余的应用程序参数：
-  - `InitChainer` 于在应用程序首次启动时对其进行初始化。
-  - `BeginBlocker`，`EndBlocker`：在每个块的开始和结尾处调用。
-  - `anteHandler`：用于处理费用和签名验证。
+    - `InitChainer` 于在应用程序首次启动时对其进行初始化。
+    - `BeginBlocker`，`EndBlocker`：在每个块的开始和结尾处调用。
+    - `anteHandler`：用于处理费用和签名验证。
 - 挂载存储.
 - 返回应用实例.
 
@@ -179,7 +179,7 @@ AppModule 在模块上公开了一组有用的方法，这些方法有助于将�
 `keeper` 类型定义通常包括：
 
 - 多重存储中模块存储的`密钥`。
-  - 参考**其他模块的`keepers`**。 仅当 `keeper` 需要访问其他模块的存储（从它们读取或写入）时才需要。
+    - 参考**其他模块的`keepers`**。 仅当 `keeper` 需要访问其他模块的存储（从它们读取或写入）时才需要。
 - 对应用程序的`编解码器`的引用。 `keeper` 需要它在存储结构之前序列化处理，或在检索它们时将反序列化处理，因为存储仅接受 `[]bytes` 作为值。
 
 与类型定义一起，keeper.go 文件的一个重要组成部分是 Keeper 的构造函数 NewKeeper。 该函数实例化上面定义的类型的新 `keeper`，并带有 `codec`，存储 `keys` 以及可能引用其他模块的 `keeper` 作为参数。从应用程序的构造函数中调用 `NewKeeper` 函数。文件的其余部分定义了 `keeper` 的方法，主要是 getter 和 setter。

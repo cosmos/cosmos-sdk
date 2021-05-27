@@ -225,40 +225,6 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	conf.SetRoot(rootDir)
 
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
-
-	appConf, err := config.ParseConfig(rootViper)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
-	}
-
-	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
-		config.WriteConfigFile(appCfgFilePath, appConf)
-	}
-
-	// app.toml config file exist
-	rootViper.SetConfigType("toml")
-	rootViper.SetConfigName("app")
-	rootViper.AddConfigPath(configPath)
-
-	// reading config from app.toml 
-	if err := rootViper.ReadInConfig(); err != nil {
-		return nil, err
-	}
-	// unmarshalling to appConf
-	if err := rootViper.Unmarshal(appConf); err != nil {
-		return nil, err
-	}
-    // TODO play with prefixes envVars and flags
-	if appConf.BaseConfig.MinGasPrices == ""{
-		return nil, fmt.Errorf("MinGasPrices must not be empty")
-	}
-	
-	if err := rootViper.MergeInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to merge configuration: %w", err)
-	}
-
-	/*
-	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
 		appConf, err := config.ParseConfig(rootViper)
 		if err != nil {
@@ -267,17 +233,14 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 		config.WriteConfigFile(appCfgFilePath, appConf)
 	}
 
-
 	rootViper.SetConfigType("toml")
 	rootViper.SetConfigName("app")
 	rootViper.AddConfigPath(configPath)
 
-
 	if err := rootViper.MergeInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
-	*/
-
+	
 	return conf, nil
 }
 

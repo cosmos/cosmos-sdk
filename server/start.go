@@ -274,8 +274,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	ctx.Logger.Debug("initialization: tmNode started")
 
 	config := config.GetConfig(ctx.Viper)
-	if !config.ValidateBasic() {
-		return fmt.Errorf("MinGasPrices is not empty")
+	if err := config.ValidateBasic(); err != nil  {
+		return err
 	}
 
 	// Add the tx service to the gRPC router. We only need to register this

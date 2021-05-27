@@ -89,9 +89,8 @@ type Keyring interface {
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
 
-	// SavePubKey stores a public key and returns the persisted Info structure.
-	// TODO it persists only Offline key, does it sound ok?
-	SavePubKey(uid string, pubkey types.PubKey) (*Record, error)
+	// SaveOfflineKey stores a public key and returns the persisted Info structure.
+	SaveOfflineKey(uid string, pubkey types.PubKey) (*Record, error)
 
 	// SaveMultisig stores and returns a new multsig (offline) key reference.
 	SaveMultisig(uid string, pubkey types.PubKey) (*Record, error)
@@ -407,7 +406,7 @@ func (ks keystore) SaveMultisig(uid string, pubkey types.PubKey) (*Record, error
 	return ks.writeMultisigKey(uid, pubkey)
 }
 
-func (ks keystore) SavePubKey(uid string, pubkey types.PubKey) (*Record, error) {
+func (ks keystore) SaveOfflineKey(uid string, pubkey types.PubKey) (*Record, error) {
 	return ks.writeOfflineKey(uid, pubkey)
 }
 
@@ -1018,6 +1017,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 	})
 
 	return nil
+
 }
 
 type unsafeKeystore struct {

@@ -31,7 +31,6 @@ func init() {
 	crypto.BcryptSecurityParameter = 1
 }
 
-
 func TestNewKeyring(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
@@ -122,7 +121,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	re, err := kb.SavePubKey(o1, pub1)
+	re, err := kb.SaveOfflineKey(o1, pub1)
 	require.Nil(t, err)
 
 	key1, err = re.GetPubKey()
@@ -534,7 +533,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	ke, err = cstore.SavePubKey(o1, pub1)
+	ke, err = cstore.SaveOfflineKey(o1, pub1)
 	require.Nil(t, err)
 
 	key, err := ke.GetPubKey()
@@ -1040,7 +1039,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	require.Empty(t, list)
 }
 
-func TestAltKeyring_SavePubKey(t *testing.T) {
+func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
@@ -1053,7 +1052,7 @@ func TestAltKeyring_SavePubKey(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	ke, err := kr.SavePubKey(key, pub)
+	ke, err := kr.SaveOfflineKey(key, pub)
 	require.Nil(t, err)
 	pubKey, err := ke.GetPubKey()
 	require.NoError(t, err)

@@ -13,7 +13,6 @@ DRAFT
 This ADR defines a generic NFT module of `x/nft` which supports NFTs as a `proto.Any` and contains `NFT` as the default implementation.
 
 ## Context
-``
 NFTs are more digital assets than only crypto arts, which is very helpful for accruing value to ATOM. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
 
 As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:

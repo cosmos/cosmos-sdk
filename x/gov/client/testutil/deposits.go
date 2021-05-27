@@ -1,10 +1,7 @@
-// +build norace
-
 package testutil
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -13,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
@@ -70,8 +66,8 @@ func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	// waiting for proposal to expires
-	time.Sleep(30 * time.Second)
+	// waiting for voting period to end
+	time.Sleep(20 * time.Second)
 
 	// query deposit
 	args = []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
@@ -121,8 +117,8 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
-	// waiting for proposal to expires
-	time.Sleep(30 * time.Second)
+	// waiting for voting period to end
+	time.Sleep(20 * time.Second)
 
 	// query deposit
 	var depositRes types.Deposit
@@ -143,16 +139,4 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	s.Require().Equal(len(depositsRes), 1)
 	// verify initial deposit
 	s.Require().Equal(depositsRes[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String())
-}
-
-func TestDepositTestSuite(t *testing.T) {
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-	genesisState := types.DefaultGenesisState()
-	genesisState.DepositParams = types.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, types.DefaultMinDepositTokens)), time.Duration(30)*time.Second)
-	genesisState.VotingParams = types.NewVotingParams(time.Duration(20) * time.Second)
-	bz, err := cfg.Codec.MarshalJSON(genesisState)
-	require.NoError(t, err)
-	cfg.GenesisState["gov"] = bz
-	suite.Run(t, NewDepositTestSuite(cfg))
 }

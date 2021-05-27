@@ -926,6 +926,7 @@ func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (*Record, err
 
 func (ks keystore) checkMigrate() error {
 	var version uint32 = 0
+	// 1.Get a key data
 	item, err := ks.db.Get(VERSION_KEY)
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
@@ -970,6 +971,15 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
 
+		//2.try to deserialize using amino not proto
+	    //3.if any above will fail - then we will need to log an error and continue, there can be other reasons, or a key could be already migrated to proto.
+	 	_, err = unmarshalInfo(item.Data)
+		if err != nil {
+			// should i return or or justp rint an eror in this case
+		}
+
+		//4.serialize info using proto
+	    // are you sure that i have to serialize in this case? not deserrialize using proto
 		var re Record
 		if err := ks.cdc.Unmarshal(item.Data, &re); err != nil {
 			return err
@@ -982,7 +992,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			return err
 		}
 
-		// TODO make sure migration is correct, discussw ith Robert
+		//5.overwrite the keyring entry with
 		ks.db.Set(keyring.Item{
 			Key:         key.String(),
 			Data:        versionBytes,
@@ -998,19 +1008,16 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			})
 		*/
 	}
+    // 6. at the end of the loop update version
+	var versionBytes = make([]byte, 4)
+	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
+	ks.db.Set(keyring.Item{
+		Key:         "migration",
+		Data:        versionBytes,
+		Description: "SDK kerying version",
+	})
 
 	return nil
-
-	/*
-		var versionBytes = make([]byte, 4)
-		binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
-		ks.db.Set(keyring.Item{
-			Key:         "migration",
-			Data:        versionBytes,
-			Description: "SDK kerying version",
-		})
-	*/
-
 }
 
 type unsafeKeystore struct {

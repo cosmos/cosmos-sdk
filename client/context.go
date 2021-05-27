@@ -336,25 +336,25 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		return addr, "", 0, nil
 	}
 
-	ke := new(keyring.Record)
+	re := new(keyring.Record)
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
-		ke, err = kr.KeyByAddress(addr)
+		re, err = kr.KeyByAddress(addr)
 		if err != nil {
 			return nil, "", 0, err
 		}
 	} else {
-		ke, err = kr.Key(from)
+		re, err = kr.Key(from)
 		if err != nil {
 			return nil, "", 0, err
 		}
 	}
 
-	addr, err := ke.GetAddress()
+	addr, err := re.GetAddress()
 	if err != nil {
 		return nil, "", 0, err
 	}
 	
-	return addr, ke.GetName(), ke.GetType(), nil
+	return addr, re.GetName(), re.GetType(), nil
 }
 
 // NewKeyringFromBackend gets a Keyring object from a backend

@@ -3,6 +3,8 @@ package module
 import (
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/core/module/app"
+
 	"github.com/cosmos/cosmos-sdk/core/module"
 	"github.com/cosmos/cosmos-sdk/x/authn"
 )
@@ -22,4 +24,12 @@ func (h handler) ConfigType() proto.Message {
 func (h handler) New(config proto.Message) module.ModuleHandler {
 	mod := config.(*authn.Module)
 	return handler{mod}
+}
+
+type AppModuleDeps struct {
+	Key app.RootModuleKey
+}
+
+func (h handler) NewAppModule(deps AppModuleDeps) app.Module {
+	panic("TODO")
 }

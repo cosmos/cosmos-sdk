@@ -3,8 +3,6 @@ package app
 import (
 	"encoding/json"
 
-	"github.com/gogo/protobuf/proto"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 
@@ -33,14 +31,4 @@ type EndBlocker interface {
 	Module
 
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
-}
-
-type HasTxMiddleware interface {
-	Module
-
-	RegisterTxMiddleware(registrar TxMiddlewareRegistrar)
-}
-
-type TxMiddlewareRegistrar interface {
-	RegisterTxMiddlewareFactory(configType proto.Message, factory TxMiddlewareFactory)
 }

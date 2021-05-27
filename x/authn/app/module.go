@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -11,8 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/core/module/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/authn"
 )
 
@@ -45,18 +42,7 @@ func (m *Module) RegisterQueryServices(registrar grpc.ServiceRegistrar) {
 }
 
 func (m *Module) RegisterTxMiddleware(registrar app.TxMiddlewareRegistrar) {
-	registrar.RegisterTxMiddlewareFactory(&authn.ValidateMemoMiddleware{}, func(i interface{}) app.TxMiddleware {
-		cfg := i.(*authn.ValidateMemoMiddleware)
-		return func(ctx context.Context, tx tx.Tx, next app.TxMiddleware) error {
-			memoLength := len(tx.Body.Memo)
-			if uint64(memoLength) > cfg.MaxMemoCharacters {
-				return sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
-					"maximum number of characters is %d but received %d characters",
-					cfg.MaxMemoCharacters, memoLength,
-				)
-			}
-
-			return nil
-		}
+	registrar.RegisterTxMiddlewareFactory(&authn.ValidateMemoMiddleware{}, func(config interface{}) app.TxMiddleware {
+		return validateMemoMiddlewareHandler{config.(*authn.ValidateMemoMiddleware)}
 	})
 }

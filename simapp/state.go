@@ -108,10 +108,20 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic(err)
 		}
 
-		bankState.Balances = append(bankState.Balances, banktypes.Balance{
-			Address: authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String(),
-			Coins:   sdk.NewCoins(notBondedCoins),
-		})
+		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
+		var found bool
+		for _, balance := range bankState.Balances {
+			if balance.Address == stakingAddr {
+				found = true
+				break
+			}
+		}
+		if !found {
+			bankState.Balances = append(bankState.Balances, banktypes.Balance{
+				Address: stakingAddr,
+				Coins:   sdk.NewCoins(notBondedCoins),
+			})
+		}
 
 		// change appState back
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)

@@ -25,17 +25,14 @@ proto
 - `{module_name}.proto`: The module's common message type definitions.
 - `event.proto`: The module's message type definitions related to events.
 - `genesis.proto`: The module's message type definitions related to genesis state.
-- `query.proto`: The module's service and message type definitions related to the query service.
-- `tx.proto`: The module's service and message type definitions related to the message service.
+- `query.proto`: The module's Query service and related message type definitions.
+- `tx.proto`: The module's Msg service and related message type definitions.
 
 ```shell
 x/{module_name}
 ├── client
 │   ├── cli
 │   │   ├── query.go
-│   │   └── tx.go
-│   ├── rest
-│   │   ├── query.go
 │   │   └── tx.go
 │   └── testutil
 │       ├── cli_test.go
@@ -79,7 +76,7 @@ x/{module_name}
 └── tx.pb.go
 ```
 
-- `client/`: The module's CLI and REST client functionality implementation and the module's integration testing suite.
+- `client/`: The module's CLI client functionality implementation and the module's integration testing suite.
 - `exported/`: The module's exported types - typically interface types. If a module relies on keepers from another module, it is expected to receive the keepers as interface contracts through the `expected_keepers.go` file (see below) in order to avoid a direct dependency on the module implementing the keepers. However, these interface contracts can define methods that operate on and/or return types that are specific to the module that is implementing the keepers and this is where `exported/` comes into play. The interface types that are defined in `exported/` use canonical types, allowing for the module to receive the keepers as interface contracts through the `expected_keepers.go` file. This pattern allows for code to remain DRY and also alleviates import cycle chaos.
 - `keeper/`: The module's `Keeper` and `MsgServer` implementation.
 - `module/`: The module's `AppModule` and `AppModuleBasic` implementation.

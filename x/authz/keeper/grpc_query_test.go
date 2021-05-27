@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/stretchr/testify/require"
 )
 
 func (suite *TestSuite) TestGRPCQueryAuthorization() {

@@ -65,7 +65,7 @@ func TestInitGenesis(t *testing.T) {
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
 		simapp.FundModuleAccount(
-			app,
+			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
 			sdk.NewCoins(
@@ -183,7 +183,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
 		simapp.FundModuleAccount(
-			app,
+			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
 			sdk.NewCoins(sdk.NewCoin(params.BondDenom, bondedPoolAmt)),

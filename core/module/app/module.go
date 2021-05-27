@@ -3,6 +3,8 @@ package app
 import (
 	"encoding/json"
 
+	"github.com/gogo/protobuf/proto"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 
@@ -40,5 +42,5 @@ type HasTxMiddleware interface {
 }
 
 type TxMiddlewareRegistrar interface {
-	RegisterHandler(handler TxMiddlewareHandler)
+	RegisterTxMiddlewareFactory(configType proto.Message, factory TxMiddlewareFactory)
 }

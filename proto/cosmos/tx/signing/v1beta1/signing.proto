@@ -21,6 +21,8 @@ enum SignMode {
   // from SIGN_MODE_DIRECT
   SIGN_MODE_TEXTUAL = 2;
 
+  SIGN_MODE_DIRECT_AUX = 3;
+
   // SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
   // Amino JSON and will be removed in the future
   SIGN_MODE_LEGACY_AMINO_JSON = 127;

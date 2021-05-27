@@ -91,6 +91,7 @@ func TestSetLoader(t *testing.T) {
 		loadStoreKey string
 	}{
 		"don't set loader": {
+			setLoader:    nil,
 			origStoreKey: "foo",
 			loadStoreKey: "foo",
 		},
@@ -157,7 +158,6 @@ func TestSetLoader(t *testing.T) {
 
 			// check db is properly updated
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)
-			checkStore(t, db, upgradeHeight, tc.loadStoreKey, []byte(tc.origStoreKey), nil)
 		})
 	}
 }

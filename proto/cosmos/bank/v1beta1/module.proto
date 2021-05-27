@@ -1,0 +1,8 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+message Module {
+    repeated string send_deny_list = 1;
+}

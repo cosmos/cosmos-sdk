@@ -1,12 +1,9 @@
 syntax = "proto3";
 package cosmos.authn.v1;
 
-import "cosmos/authn/v1/authn.proto";
+import "cosmos/authn/v1/account.proto";
 
 message GenesisState {
-    // params defines all the parameters of the module.
-    Params params = 1;
-
     // accounts are the accounts present at genesis.
-    repeated Account accounts = 2;
+    repeated Account accounts = 1;
 }

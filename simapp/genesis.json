@@ -1,0 +1,75 @@
+{
+  "genesis_time": "",
+  "chain_id": "test123",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "22020096",
+      "max_gas": "-1",
+      "time_iota_ms": "1000"
+    },
+    "evidence": {
+      "max_age_num_blocks": "100000",
+      "max_age_duration": "172800000000000",
+      "max_num": 50,
+      "proof_trial_period": "50000"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    }
+  },
+  "app_hash": "",
+  "app_state": {
+    "app_config": {
+      "modules": {
+        "authn": {
+          "@type": "cosmos.authn.v1.Module",
+          "bech32_address_prefix": "sim"
+        },
+        "bank": {
+          "@type": "cosmos.bank.v1beta1.Module",
+          "send_deny_list": []
+        }
+      },
+      "tx_middleware": [
+        {
+          "@type": "cosmos.authn.v1.ValidateMemoMiddleware",
+          "max_memo_characters": 256
+        },
+        {
+          "@type": "cosmos.authn.v1.ConsumeGasForTxSizeMiddleware",
+          "tx_size_cost_per_byte": 100
+        },
+        {
+          "@type": "cosmos.bank.v1beta1.DeductFeeMiddleware"
+        },
+        {
+          "@type": "cosmos.authn.v1.SetPubKeyMiddleware"
+        },
+        {
+          "@type": "cosmos.authn.v1.ValidateSigCountMiddleware",
+          "tx_sig_limit": 7
+        },
+        {
+          "@type": "cosmos.authn.v1.SigGasConsumeMiddleware",
+          "sig_verify_cost_ed25519": 1000,
+          "sig_verify_cost_secp256k1": 500,
+          "allowed_pub_key_types": [
+            "cosmos.crypto.secp256k1.PubKey",
+            "cosmos.crypto.secp256r1.PubKey"
+          ]
+        },
+        {
+          "@type": "cosmos.authn.v1.SigVerificationMiddleware"
+        },
+        {
+          "@type": "cosmos.authn.v1.IncrementSequenceMiddleware"
+        }
+      ],
+      "init_genesis": [ "authn", "bank"],
+      "begin_block": ["authn", "bank"],
+      "end_block": ["bank", "authn"]
+    }
+  }
+}

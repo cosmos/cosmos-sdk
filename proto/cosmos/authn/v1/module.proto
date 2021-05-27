@@ -1,0 +1,8 @@
+syntax = "proto3";
+package cosmos.authn.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/authn";
+
+message Module {
+    string bech32_address_prefix = 6;
+}

@@ -3,7 +3,7 @@ package cosmos.authn.v1;
 
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
-import "cosmos/authn/v1/authn.proto";
+import "cosmos/authn/v1/account.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/authn";

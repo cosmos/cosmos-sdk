@@ -375,6 +375,8 @@ func (rs *Store) Commit() types.CommitID {
 	for sk, _ := range rs.removalMap {
 		if _, ok := rs.stores[sk]; ok {
 			delete(rs.stores, sk)
+			delete(rs.storesParams, sk)
+			delete(rs.keysByName, sk.Name())
 		}
 	}
 

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -24,4 +26,16 @@ func RegisterModuleHandler(handler ModuleHandler) {
 	}
 
 	registry[typ] = handler
+}
+
+type ModuleSet struct {
+	handlers map[string]ModuleHandler
+}
+
+func NewModuleSet(moduleConfigs map[string]*types.Any) *ModuleSet {
+	panic("TODO")
+}
+
+func (ms *ModuleSet) Each(f func(name string, handler ModuleHandler)) {
+	panic("TODO")
 }

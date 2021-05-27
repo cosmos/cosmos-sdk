@@ -7,8 +7,13 @@ option go_package = "github.com/cosmos/cosmos-sdk/core/app_config";
 
 message AppConfig {
     map<string, google.protobuf.Any> modules = 1;
-    repeated google.protobuf.Any tx_middleware = 2;
-    repeated string init_genesis = 3;
-    repeated string begin_block = 4;
-    repeated string end_block = 5;
+    ABCIHandlers abci = 2;
+}
+
+message ABCIHandlers {
+    repeated string init_genesis = 1;
+    repeated string begin_block = 2;
+    repeated string end_block = 3;
+    string tx_handler = 4;
+    string info_handler = 5;
 }

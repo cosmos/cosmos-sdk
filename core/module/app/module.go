@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -8,14 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Module interface {
 	RegisterTypes(codectypes.InterfaceRegistry)
 
-	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
-	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
+	InitGenesis(context.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
+	ExportGenesis(context.Context, codec.JSONCodec) json.RawMessage
 
 	RegisterMsgServices(grpc.ServiceRegistrar)
 	RegisterQueryServices(grpc.ServiceRegistrar)
@@ -24,11 +24,11 @@ type Module interface {
 type BeginBlocker interface {
 	Module
 
-	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+	BeginBlock(context.Context, abci.RequestBeginBlock)
 }
 
 type EndBlocker interface {
 	Module
 
-	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
+	EndBlock(context.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }

@@ -24,11 +24,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type AppConfig struct {
-	Modules      map[string]*types.Any `protobuf:"bytes,1,rep,name=modules,proto3" json:"modules,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	TxMiddleware []*types.Any          `protobuf:"bytes,2,rep,name=tx_middleware,json=txMiddleware,proto3" json:"tx_middleware,omitempty"`
-	InitGenesis  []string              `protobuf:"bytes,3,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
-	BeginBlock   []string              `protobuf:"bytes,4,rep,name=begin_block,json=beginBlock,proto3" json:"begin_block,omitempty"`
-	EndBlock     []string              `protobuf:"bytes,5,rep,name=end_block,json=endBlock,proto3" json:"end_block,omitempty"`
+	Modules map[string]*types.Any `protobuf:"bytes,1,rep,name=modules,proto3" json:"modules,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Abci    *ABCIHandlers         `protobuf:"bytes,2,opt,name=abci,proto3" json:"abci,omitempty"`
 }
 
 func (m *AppConfig) Reset()         { *m = AppConfig{} }
@@ -71,37 +68,93 @@ func (m *AppConfig) GetModules() map[string]*types.Any {
 	return nil
 }
 
-func (m *AppConfig) GetTxMiddleware() []*types.Any {
+func (m *AppConfig) GetAbci() *ABCIHandlers {
 	if m != nil {
-		return m.TxMiddleware
+		return m.Abci
 	}
 	return nil
 }
 
-func (m *AppConfig) GetInitGenesis() []string {
+type ABCIHandlers struct {
+	InitGenesis []string `protobuf:"bytes,1,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
+	BeginBlock  []string `protobuf:"bytes,2,rep,name=begin_block,json=beginBlock,proto3" json:"begin_block,omitempty"`
+	EndBlock    []string `protobuf:"bytes,3,rep,name=end_block,json=endBlock,proto3" json:"end_block,omitempty"`
+	TxHandler   string   `protobuf:"bytes,4,opt,name=tx_handler,json=txHandler,proto3" json:"tx_handler,omitempty"`
+	InfoHandler string   `protobuf:"bytes,5,opt,name=info_handler,json=infoHandler,proto3" json:"info_handler,omitempty"`
+}
+
+func (m *ABCIHandlers) Reset()         { *m = ABCIHandlers{} }
+func (m *ABCIHandlers) String() string { return proto.CompactTextString(m) }
+func (*ABCIHandlers) ProtoMessage()    {}
+func (*ABCIHandlers) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67d11620ac2d3428, []int{1}
+}
+func (m *ABCIHandlers) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ABCIHandlers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ABCIHandlers.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ABCIHandlers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ABCIHandlers.Merge(m, src)
+}
+func (m *ABCIHandlers) XXX_Size() int {
+	return m.Size()
+}
+func (m *ABCIHandlers) XXX_DiscardUnknown() {
+	xxx_messageInfo_ABCIHandlers.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ABCIHandlers proto.InternalMessageInfo
+
+func (m *ABCIHandlers) GetInitGenesis() []string {
 	if m != nil {
 		return m.InitGenesis
 	}
 	return nil
 }
 
-func (m *AppConfig) GetBeginBlock() []string {
+func (m *ABCIHandlers) GetBeginBlock() []string {
 	if m != nil {
 		return m.BeginBlock
 	}
 	return nil
 }
 
-func (m *AppConfig) GetEndBlock() []string {
+func (m *ABCIHandlers) GetEndBlock() []string {
 	if m != nil {
 		return m.EndBlock
 	}
 	return nil
 }
 
+func (m *ABCIHandlers) GetTxHandler() string {
+	if m != nil {
+		return m.TxHandler
+	}
+	return ""
+}
+
+func (m *ABCIHandlers) GetInfoHandler() string {
+	if m != nil {
+		return m.InfoHandler
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*AppConfig)(nil), "cosmos.core.app_config.v1.AppConfig")
 	proto.RegisterMapType((map[string]*types.Any)(nil), "cosmos.core.app_config.v1.AppConfig.ModulesEntry")
+	proto.RegisterType((*ABCIHandlers)(nil), "cosmos.core.app_config.v1.ABCIHandlers")
 }
 
 func init() {
@@ -109,29 +162,31 @@ func init() {
 }
 
 var fileDescriptor_67d11620ac2d3428 = []byte{
-	// 342 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0x4f, 0x4b, 0xfb, 0x30,
-	0x1c, 0xc6, 0x97, 0xf5, 0xb7, 0x9f, 0x36, 0x9b, 0x20, 0xc1, 0x43, 0x37, 0xa1, 0x4e, 0x4f, 0x63,
-	0x68, 0xca, 0xf4, 0xa2, 0xde, 0x36, 0x51, 0x0f, 0x32, 0x90, 0x1e, 0xbd, 0x94, 0xfe, 0xc9, 0x6a,
-	0x58, 0x9b, 0x94, 0x36, 0x9d, 0xeb, 0xbb, 0xf0, 0x55, 0x89, 0xc7, 0x1d, 0x3d, 0xca, 0xf6, 0x46,
-	0x24, 0x89, 0x1b, 0x43, 0xd8, 0x29, 0xc9, 0xf3, 0x7c, 0xbe, 0x4f, 0x1e, 0xf8, 0xc2, 0x7e, 0xc8,
-	0x8b, 0x94, 0x17, 0x4e, 0xc8, 0x73, 0xe2, 0xf8, 0x59, 0xe6, 0x85, 0x9c, 0x4d, 0x68, 0xec, 0xcc,
-	0x06, 0x5b, 0x2f, 0x9c, 0xe5, 0x5c, 0x70, 0xd4, 0xd6, 0x2c, 0x96, 0x2c, 0xde, 0x72, 0x67, 0x83,
-	0x4e, 0x3b, 0xe6, 0x3c, 0x4e, 0x88, 0xa3, 0xc0, 0xa0, 0x9c, 0x38, 0x3e, 0xab, 0xf4, 0xd4, 0xd9,
-	0x47, 0x1d, 0x9a, 0xc3, 0x2c, 0xbb, 0x53, 0x2c, 0x7a, 0x82, 0x7b, 0x29, 0x8f, 0xca, 0x84, 0x14,
-	0x16, 0xe8, 0x1a, 0xbd, 0xe6, 0xe5, 0x00, 0xef, 0x4c, 0xc5, 0x9b, 0x31, 0x3c, 0xd6, 0x33, 0xf7,
-	0x4c, 0xe4, 0x95, 0xbb, 0x4e, 0x40, 0x37, 0xf0, 0x40, 0xcc, 0xbd, 0x94, 0x46, 0x51, 0x42, 0xde,
-	0xfc, 0x9c, 0x58, 0x75, 0x15, 0x79, 0x84, 0x75, 0x1b, 0xbc, 0x6e, 0x83, 0x87, 0xac, 0x72, 0x5b,
-	0x62, 0x3e, 0xde, 0x90, 0xe8, 0x14, 0xb6, 0x28, 0xa3, 0xc2, 0x8b, 0x09, 0x23, 0x05, 0x2d, 0x2c,
-	0xa3, 0x6b, 0xf4, 0x4c, 0xb7, 0x29, 0xb5, 0x47, 0x2d, 0xa1, 0x13, 0xd8, 0x0c, 0x48, 0x4c, 0x99,
-	0x17, 0x24, 0x3c, 0x9c, 0x5a, 0xff, 0x14, 0x01, 0x95, 0x34, 0x92, 0x0a, 0x3a, 0x86, 0x26, 0x61,
-	0xd1, 0xaf, 0xdd, 0x50, 0xf6, 0x3e, 0x61, 0x91, 0x32, 0x3b, 0xcf, 0xb0, 0xb5, 0x5d, 0x1a, 0x1d,
-	0x42, 0x63, 0x4a, 0x2a, 0x0b, 0x74, 0x41, 0xcf, 0x74, 0xe5, 0x15, 0xf5, 0x61, 0x63, 0xe6, 0x27,
-	0xa5, 0x6c, 0x0d, 0x76, 0xb6, 0xd6, 0xc8, 0x6d, 0xfd, 0x1a, 0x8c, 0x1e, 0x3e, 0x97, 0x36, 0x58,
-	0x2c, 0x6d, 0xf0, 0xbd, 0xb4, 0xc1, 0xfb, 0xca, 0xae, 0x2d, 0x56, 0x76, 0xed, 0x6b, 0x65, 0xd7,
-	0x5e, 0xce, 0x63, 0x2a, 0x5e, 0xcb, 0x00, 0x87, 0x3c, 0x75, 0x36, 0xfb, 0x94, 0xc7, 0x45, 0x11,
-	0x4d, 0xff, 0xae, 0x36, 0xf8, 0xaf, 0x3e, 0xb8, 0xfa, 0x09, 0x00, 0x00, 0xff, 0xff, 0x2c, 0xd8,
-	0x10, 0xd6, 0xfb, 0x01, 0x00, 0x00,
+	// 381 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xcb, 0x4e, 0xea, 0x40,
+	0x1c, 0xc6, 0x19, 0x2e, 0xe7, 0x9c, 0x4e, 0x59, 0x9c, 0x4c, 0xce, 0xa2, 0x70, 0x62, 0x45, 0x36,
+	0x12, 0xa2, 0xd3, 0x80, 0x1b, 0xa3, 0x2b, 0x20, 0xde, 0x62, 0x4c, 0x4c, 0x97, 0x6e, 0x9a, 0x5e,
+	0x86, 0x32, 0xa1, 0xcc, 0x34, 0xbd, 0x10, 0xfa, 0x16, 0xbe, 0x8a, 0x6f, 0xe1, 0x92, 0xa5, 0x4b,
+	0x03, 0x0b, 0x5f, 0xc3, 0x74, 0xa6, 0x90, 0xc6, 0x44, 0x57, 0x6d, 0xbf, 0xef, 0xf7, 0x7d, 0xff,
+	0xf9, 0x37, 0x03, 0xfb, 0x2e, 0x8f, 0x17, 0x3c, 0x36, 0x5c, 0x1e, 0x11, 0xc3, 0x0e, 0x43, 0xcb,
+	0xe5, 0x6c, 0x4a, 0x7d, 0x63, 0x39, 0x28, 0x7d, 0xe1, 0x30, 0xe2, 0x09, 0x47, 0x2d, 0xc9, 0xe2,
+	0x9c, 0xc5, 0x25, 0x77, 0x39, 0x68, 0xb7, 0x7c, 0xce, 0xfd, 0x80, 0x18, 0x02, 0x74, 0xd2, 0xa9,
+	0x61, 0xb3, 0x4c, 0xa6, 0xba, 0x1f, 0x00, 0x2a, 0xa3, 0x30, 0x9c, 0x08, 0x16, 0xdd, 0xc3, 0xdf,
+	0x0b, 0xee, 0xa5, 0x01, 0x89, 0x35, 0xd0, 0xa9, 0xf5, 0xd4, 0xe1, 0x00, 0x7f, 0xdb, 0x8a, 0xf7,
+	0x31, 0xfc, 0x20, 0x33, 0x57, 0x2c, 0x89, 0x32, 0x73, 0xd7, 0x80, 0x2e, 0x61, 0xdd, 0x76, 0x5c,
+	0xaa, 0x55, 0x3b, 0xa0, 0xa7, 0x0e, 0x8f, 0x7f, 0x6a, 0x1a, 0x4f, 0xee, 0x6e, 0x6d, 0xe6, 0x05,
+	0x24, 0x8a, 0x4d, 0x11, 0x6a, 0x3f, 0xc2, 0x66, 0xb9, 0x15, 0xfd, 0x85, 0xb5, 0x39, 0xc9, 0x34,
+	0xd0, 0x01, 0x3d, 0xc5, 0xcc, 0x5f, 0x51, 0x1f, 0x36, 0x96, 0x76, 0x90, 0x92, 0xa2, 0xff, 0x1f,
+	0x96, 0x4b, 0xe2, 0xdd, 0x92, 0x78, 0xc4, 0x32, 0x53, 0x22, 0x17, 0xd5, 0x73, 0xd0, 0x7d, 0x01,
+	0xb0, 0x59, 0x1e, 0x84, 0x8e, 0x60, 0x93, 0x32, 0x9a, 0x58, 0x3e, 0x61, 0x24, 0xa6, 0x72, 0x63,
+	0xc5, 0x54, 0x73, 0xed, 0x46, 0x4a, 0xe8, 0x10, 0xaa, 0x0e, 0xf1, 0x29, 0xb3, 0x9c, 0x80, 0xbb,
+	0x73, 0xad, 0x2a, 0x08, 0x28, 0xa4, 0x71, 0xae, 0xa0, 0xff, 0x50, 0x21, 0xcc, 0x2b, 0xec, 0x9a,
+	0xb0, 0xff, 0x10, 0xe6, 0x49, 0xf3, 0x00, 0xc2, 0x64, 0x65, 0xcd, 0xe4, 0x3c, 0xad, 0x2e, 0x8e,
+	0xae, 0x24, 0xab, 0xe2, 0x00, 0x72, 0xfe, 0x94, 0xef, 0x81, 0x86, 0x00, 0xd4, 0x5c, 0x2b, 0x90,
+	0xf1, 0xf5, 0xeb, 0x46, 0x07, 0xeb, 0x8d, 0x0e, 0xde, 0x37, 0x3a, 0x78, 0xde, 0xea, 0x95, 0xf5,
+	0x56, 0xaf, 0xbc, 0x6d, 0xf5, 0xca, 0xd3, 0x89, 0x4f, 0x93, 0x59, 0xea, 0x60, 0x97, 0x2f, 0x8c,
+	0xfd, 0x25, 0xc9, 0x1f, 0xa7, 0xb1, 0x37, 0xff, 0x7a, 0x5f, 0x9c, 0x5f, 0xe2, 0xa7, 0x9c, 0x7d,
+	0x06, 0x00, 0x00, 0xff, 0xff, 0x86, 0x7e, 0x44, 0xf1, 0x50, 0x02, 0x00, 0x00,
 }
 
 func (m *AppConfig) Marshal() (dAtA []byte, err error) {
@@ -154,46 +209,17 @@ func (m *AppConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.EndBlock) > 0 {
-		for iNdEx := len(m.EndBlock) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.EndBlock[iNdEx])
-			copy(dAtA[i:], m.EndBlock[iNdEx])
-			i = encodeVarintAppConfig(dAtA, i, uint64(len(m.EndBlock[iNdEx])))
-			i--
-			dAtA[i] = 0x2a
-		}
-	}
-	if len(m.BeginBlock) > 0 {
-		for iNdEx := len(m.BeginBlock) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.BeginBlock[iNdEx])
-			copy(dAtA[i:], m.BeginBlock[iNdEx])
-			i = encodeVarintAppConfig(dAtA, i, uint64(len(m.BeginBlock[iNdEx])))
-			i--
-			dAtA[i] = 0x22
-		}
-	}
-	if len(m.InitGenesis) > 0 {
-		for iNdEx := len(m.InitGenesis) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.InitGenesis[iNdEx])
-			copy(dAtA[i:], m.InitGenesis[iNdEx])
-			i = encodeVarintAppConfig(dAtA, i, uint64(len(m.InitGenesis[iNdEx])))
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if len(m.TxMiddleware) > 0 {
-		for iNdEx := len(m.TxMiddleware) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.TxMiddleware[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintAppConfig(dAtA, i, uint64(size))
+	if m.Abci != nil {
+		{
+			size, err := m.Abci.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
 			}
-			i--
-			dAtA[i] = 0x12
+			i -= size
+			i = encodeVarintAppConfig(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x12
 	}
 	if len(m.Modules) > 0 {
 		for k := range m.Modules {
@@ -217,6 +243,70 @@ func (m *AppConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i--
 			dAtA[i] = 0xa
 			i = encodeVarintAppConfig(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ABCIHandlers) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ABCIHandlers) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ABCIHandlers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.InfoHandler) > 0 {
+		i -= len(m.InfoHandler)
+		copy(dAtA[i:], m.InfoHandler)
+		i = encodeVarintAppConfig(dAtA, i, uint64(len(m.InfoHandler)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.TxHandler) > 0 {
+		i -= len(m.TxHandler)
+		copy(dAtA[i:], m.TxHandler)
+		i = encodeVarintAppConfig(dAtA, i, uint64(len(m.TxHandler)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.EndBlock) > 0 {
+		for iNdEx := len(m.EndBlock) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.EndBlock[iNdEx])
+			copy(dAtA[i:], m.EndBlock[iNdEx])
+			i = encodeVarintAppConfig(dAtA, i, uint64(len(m.EndBlock[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.BeginBlock) > 0 {
+		for iNdEx := len(m.BeginBlock) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.BeginBlock[iNdEx])
+			copy(dAtA[i:], m.BeginBlock[iNdEx])
+			i = encodeVarintAppConfig(dAtA, i, uint64(len(m.BeginBlock[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.InitGenesis) > 0 {
+		for iNdEx := len(m.InitGenesis) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.InitGenesis[iNdEx])
+			copy(dAtA[i:], m.InitGenesis[iNdEx])
+			i = encodeVarintAppConfig(dAtA, i, uint64(len(m.InitGenesis[iNdEx])))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -254,12 +344,19 @@ func (m *AppConfig) Size() (n int) {
 			n += mapEntrySize + 1 + sovAppConfig(uint64(mapEntrySize))
 		}
 	}
-	if len(m.TxMiddleware) > 0 {
-		for _, e := range m.TxMiddleware {
-			l = e.Size()
-			n += 1 + l + sovAppConfig(uint64(l))
-		}
+	if m.Abci != nil {
+		l = m.Abci.Size()
+		n += 1 + l + sovAppConfig(uint64(l))
 	}
+	return n
+}
+
+func (m *ABCIHandlers) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	if len(m.InitGenesis) > 0 {
 		for _, s := range m.InitGenesis {
 			l = len(s)
@@ -277,6 +374,14 @@ func (m *AppConfig) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovAppConfig(uint64(l))
 		}
+	}
+	l = len(m.TxHandler)
+	if l > 0 {
+		n += 1 + l + sovAppConfig(uint64(l))
+	}
+	l = len(m.InfoHandler)
+	if l > 0 {
+		n += 1 + l + sovAppConfig(uint64(l))
 	}
 	return n
 }
@@ -447,7 +552,7 @@ func (m *AppConfig) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TxMiddleware", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Abci", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -474,12 +579,64 @@ func (m *AppConfig) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TxMiddleware = append(m.TxMiddleware, &types.Any{})
-			if err := m.TxMiddleware[len(m.TxMiddleware)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if m.Abci == nil {
+				m.Abci = &ABCIHandlers{}
+			}
+			if err := m.Abci.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppConfig(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ABCIHandlers) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppConfig
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ABCIHandlers: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ABCIHandlers: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InitGenesis", wireType)
 			}
@@ -511,7 +668,7 @@ func (m *AppConfig) Unmarshal(dAtA []byte) error {
 			}
 			m.InitGenesis = append(m.InitGenesis, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 4:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BeginBlock", wireType)
 			}
@@ -543,7 +700,7 @@ func (m *AppConfig) Unmarshal(dAtA []byte) error {
 			}
 			m.BeginBlock = append(m.BeginBlock, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
-		case 5:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EndBlock", wireType)
 			}
@@ -574,6 +731,70 @@ func (m *AppConfig) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.EndBlock = append(m.EndBlock, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxHandler", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppConfig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TxHandler = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InfoHandler", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppConfig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InfoHandler = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package cosmos.core.tx.v1;
+
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/core/tx";
+
+message Module {
+    repeated google.protobuf.Any middleware = 1;
+}
+

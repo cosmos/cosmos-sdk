@@ -26,6 +26,38 @@
   
     - [Query](#cosmos.auth.v1beta1.Query)
   
+- [cosmos/authn/v1/account.proto](#cosmos/authn/v1/account.proto)
+    - [Account](#cosmos.authn.v1.Account)
+  
+- [cosmos/authn/v1/genesis.proto](#cosmos/authn/v1/genesis.proto)
+    - [GenesisState](#cosmos.authn.v1.GenesisState)
+  
+- [cosmos/authn/v1/middleware.proto](#cosmos/authn/v1/middleware.proto)
+    - [ConsumeGasForTxSizeMiddleware](#cosmos.authn.v1.ConsumeGasForTxSizeMiddleware)
+    - [IncrementSequenceMiddleware](#cosmos.authn.v1.IncrementSequenceMiddleware)
+    - [SetPubKeyMiddleware](#cosmos.authn.v1.SetPubKeyMiddleware)
+    - [SigGasConsumeMiddleware](#cosmos.authn.v1.SigGasConsumeMiddleware)
+    - [SigVerificationMiddleware](#cosmos.authn.v1.SigVerificationMiddleware)
+    - [ValidateMemoMiddleware](#cosmos.authn.v1.ValidateMemoMiddleware)
+    - [ValidateSigCountMiddleware](#cosmos.authn.v1.ValidateSigCountMiddleware)
+  
+- [cosmos/authn/v1/module.proto](#cosmos/authn/v1/module.proto)
+    - [Module](#cosmos.authn.v1.Module)
+  
+- [cosmos/authn/v1/query.proto](#cosmos/authn/v1/query.proto)
+    - [QueryAccountRequest](#cosmos.authn.v1.QueryAccountRequest)
+    - [QueryAccountResponse](#cosmos.authn.v1.QueryAccountResponse)
+    - [QueryAccountsRequest](#cosmos.authn.v1.QueryAccountsRequest)
+    - [QueryAccountsResponse](#cosmos.authn.v1.QueryAccountsResponse)
+  
+    - [Query](#cosmos.authn.v1.Query)
+  
+- [cosmos/authn/v1/tx.proto](#cosmos/authn/v1/tx.proto)
+    - [MsgSetCredentialRequest](#cosmos.authn.v1.MsgSetCredentialRequest)
+    - [MsgSetCredentialResponse](#cosmos.authn.v1.MsgSetCredentialResponse)
+  
+    - [Msg](#cosmos.authn.v1.Msg)
+  
 - [cosmos/authz/v1beta1/authz.proto](#cosmos/authz/v1beta1/authz.proto)
     - [GenericAuthorization](#cosmos.authz.v1beta1.GenericAuthorization)
     - [Grant](#cosmos.authz.v1beta1.Grant)
@@ -84,9 +116,26 @@
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
     - [Supply](#cosmos.bank.v1beta1.Supply)
   
+- [cosmos/bank/v1beta1/denom_manager.proto](#cosmos/bank/v1beta1/denom_manager.proto)
+    - [OnBurnRequest](#cosmos.bank.v1beta1.OnBurnRequest)
+    - [OnBurnResponse](#cosmos.bank.v1beta1.OnBurnResponse)
+    - [OnMintRequest](#cosmos.bank.v1beta1.OnMintRequest)
+    - [OnMintResponse](#cosmos.bank.v1beta1.OnMintResponse)
+    - [OnSendRequest](#cosmos.bank.v1beta1.OnSendRequest)
+    - [OnSendResponse](#cosmos.bank.v1beta1.OnSendResponse)
+  
+    - [DenomManager](#cosmos.bank.v1beta1.DenomManager)
+  
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
     - [GenesisState](#cosmos.bank.v1beta1.GenesisState)
+  
+- [cosmos/bank/v1beta1/middleware.proto](#cosmos/bank/v1beta1/middleware.proto)
+    - [DeductFeeMiddleware](#cosmos.bank.v1beta1.DeductFeeMiddleware)
+  
+- [cosmos/bank/v1beta1/module.proto](#cosmos/bank/v1beta1/module.proto)
+    - [Module](#cosmos.bank.v1beta1.Module)
+    - [Module.DenomManagersEntry](#cosmos.bank.v1beta1.Module.DenomManagersEntry)
   
 - [cosmos/bank/v1beta1/query.proto](#cosmos/bank/v1beta1/query.proto)
     - [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest)
@@ -200,6 +249,17 @@
 - [cosmos/capability/v1beta1/genesis.proto](#cosmos/capability/v1beta1/genesis.proto)
     - [GenesisOwners](#cosmos.capability.v1beta1.GenesisOwners)
     - [GenesisState](#cosmos.capability.v1beta1.GenesisState)
+  
+- [cosmos/collectible/v1alpha1/plugin.proto](#cosmos/collectible/v1alpha1/plugin.proto)
+    - [CollectibleDenomManager](#cosmos.collectible.v1alpha1.CollectibleDenomManager)
+  
+- [cosmos/core/app_config/v1/app_config.proto](#cosmos/core/app_config/v1/app_config.proto)
+    - [ABCIHandlers](#cosmos.core.app_config.v1.ABCIHandlers)
+    - [AppConfig](#cosmos.core.app_config.v1.AppConfig)
+    - [AppConfig.ModulesEntry](#cosmos.core.app_config.v1.AppConfig.ModulesEntry)
+  
+- [cosmos/core/tx/v1/module.proto](#cosmos/core/tx/v1/module.proto)
+    - [Module](#cosmos.core.tx.v1.Module)
   
 - [cosmos/crisis/v1beta1/genesis.proto](#cosmos/crisis/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.crisis.v1beta1.GenesisState)
@@ -862,6 +922,350 @@ Query defines the gRPC querier service.
 | `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authn/v1/account.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authn/v1/account.proto
+
+
+
+<a name="cosmos.authn.v1.Account"></a>
+
+### Account
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `credential` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `account_number` | [uint64](#uint64) |  |  |
+| `sequence` | [uint64](#uint64) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authn/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authn/v1/genesis.proto
+
+
+
+<a name="cosmos.authn.v1.GenesisState"></a>
+
+### GenesisState
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [Account](#cosmos.authn.v1.Account) | repeated | accounts are the accounts present at genesis. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authn/v1/middleware.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authn/v1/middleware.proto
+
+
+
+<a name="cosmos.authn.v1.ConsumeGasForTxSizeMiddleware"></a>
+
+### ConsumeGasForTxSizeMiddleware
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_size_cost_per_byte` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authn.v1.IncrementSequenceMiddleware"></a>
+
+### IncrementSequenceMiddleware
+
+
+
+
+
+
+
+<a name="cosmos.authn.v1.SetPubKeyMiddleware"></a>
+
+### SetPubKeyMiddleware
+
+
+
+
+
+
+
+<a name="cosmos.authn.v1.SigGasConsumeMiddleware"></a>
+
+### SigGasConsumeMiddleware
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sig_verify_cost_ed25519` | [uint64](#uint64) |  |  |
+| `sig_verify_cost_secp256k1` | [uint64](#uint64) |  |  |
+| `allowed_pub_key_types` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.authn.v1.SigVerificationMiddleware"></a>
+
+### SigVerificationMiddleware
+
+
+
+
+
+
+
+<a name="cosmos.authn.v1.ValidateMemoMiddleware"></a>
+
+### ValidateMemoMiddleware
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `max_memo_characters` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authn.v1.ValidateSigCountMiddleware"></a>
+
+### ValidateSigCountMiddleware
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tx_sig_limit` | [uint64](#uint64) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authn/v1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authn/v1/module.proto
+
+
+
+<a name="cosmos.authn.v1.Module"></a>
+
+### Module
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bech32_address_prefix` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authn/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authn/v1/query.proto
+
+
+
+<a name="cosmos.authn.v1.QueryAccountRequest"></a>
+
+### QueryAccountRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authn.v1.QueryAccountResponse"></a>
+
+### QueryAccountResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account` | [Account](#cosmos.authn.v1.Account) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authn.v1.QueryAccountsRequest"></a>
+
+### QueryAccountsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.authn.v1.QueryAccountsResponse"></a>
+
+### QueryAccountsResponse
+QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [Account](#cosmos.authn.v1.Account) | repeated | accounts are the existing accounts |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.authn.v1.Query"></a>
+
+### Query
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Account` | [QueryAccountRequest](#cosmos.authn.v1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.authn.v1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
+| `Accounts` | [QueryAccountsRequest](#cosmos.authn.v1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.authn.v1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/authn/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/authn/v1/tx.proto
+
+
+
+<a name="cosmos.authn.v1.MsgSetCredentialRequest"></a>
+
+### MsgSetCredentialRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `credential` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="cosmos.authn.v1.MsgSetCredentialResponse"></a>
+
+### MsgSetCredentialResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.authn.v1.Msg"></a>
+
+### Msg
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `SetCredential` | [MsgSetCredentialRequest](#cosmos.authn.v1.MsgSetCredentialRequest) | [MsgSetCredentialResponse](#cosmos.authn.v1.MsgSetCredentialResponse) |  | |
 
  <!-- end services -->
 
@@ -1642,6 +2046,117 @@ This message is deprecated now that supply is indexed by denom.
 
 
 
+<a name="cosmos/bank/v1beta1/denom_manager.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/denom_manager.proto
+
+
+
+<a name="cosmos.bank.v1beta1.OnBurnRequest"></a>
+
+### OnBurnRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `burner` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.OnBurnResponse"></a>
+
+### OnBurnResponse
+
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.OnMintRequest"></a>
+
+### OnMintRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minter` | [string](#string) |  |  |
+| `receiver` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.OnMintResponse"></a>
+
+### OnMintResponse
+
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.OnSendRequest"></a>
+
+### OnSendRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `receiver` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.OnSendResponse"></a>
+
+### OnSendResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.bank.v1beta1.DenomManager"></a>
+
+### DenomManager
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `OnMint` | [OnMintRequest](#cosmos.bank.v1beta1.OnMintRequest) | [OnMintResponse](#cosmos.bank.v1beta1.OnMintResponse) |  | |
+| `OnSend` | [OnSendRequest](#cosmos.bank.v1beta1.OnSendRequest) | [OnSendResponse](#cosmos.bank.v1beta1.OnSendResponse) |  | |
+| `OnBurn` | [OnBurnRequest](#cosmos.bank.v1beta1.OnBurnRequest) | [OnBurnResponse](#cosmos.bank.v1beta1.OnBurnResponse) |  | |
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/bank/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -1678,6 +2193,80 @@ GenesisState defines the bank module's genesis state.
 | `balances` | [Balance](#cosmos.bank.v1beta1.Balance) | repeated | balances is an array containing the balances of all the accounts. |
 | `supply` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | supply represents the total supply. If it is left empty, then supply will be calculated based on the provided balances. Otherwise, it will be used to validate that the sum of the balances equals this amount. |
 | `denom_metadata` | [Metadata](#cosmos.bank.v1beta1.Metadata) | repeated | denom_metadata defines the metadata of the differents coins. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/v1beta1/middleware.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/middleware.proto
+
+
+
+<a name="cosmos.bank.v1beta1.DeductFeeMiddleware"></a>
+
+### DeductFeeMiddleware
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/v1beta1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/v1beta1/module.proto
+
+
+
+<a name="cosmos.bank.v1beta1.Module"></a>
+
+### Module
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `send_deny_list` | [string](#string) | repeated |  |
+| `denom_managers` | [Module.DenomManagersEntry](#cosmos.bank.v1beta1.Module.DenomManagersEntry) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.Module.DenomManagersEntry"></a>
+
+### Module.DenomManagersEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
 
 
@@ -3140,6 +3729,130 @@ GenesisState defines the capability module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `index` | [uint64](#uint64) |  | index is the capability global index. |
 | `owners` | [GenesisOwners](#cosmos.capability.v1beta1.GenesisOwners) | repeated | owners represents a map from index to owners of the capability index index key is string to allow amino marshalling. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/collectible/v1alpha1/plugin.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/collectible/v1alpha1/plugin.proto
+
+
+
+<a name="cosmos.collectible.v1alpha1.CollectibleDenomManager"></a>
+
+### CollectibleDenomManager
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/core/app_config/v1/app_config.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/core/app_config/v1/app_config.proto
+
+
+
+<a name="cosmos.core.app_config.v1.ABCIHandlers"></a>
+
+### ABCIHandlers
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `init_genesis` | [string](#string) | repeated |  |
+| `begin_block` | [string](#string) | repeated |  |
+| `end_block` | [string](#string) | repeated |  |
+| `tx_handler` | [string](#string) |  |  |
+| `info_handler` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.core.app_config.v1.AppConfig"></a>
+
+### AppConfig
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `modules` | [AppConfig.ModulesEntry](#cosmos.core.app_config.v1.AppConfig.ModulesEntry) | repeated |  |
+| `abci` | [ABCIHandlers](#cosmos.core.app_config.v1.ABCIHandlers) |  |  |
+
+
+
+
+
+
+<a name="cosmos.core.app_config.v1.AppConfig.ModulesEntry"></a>
+
+### AppConfig.ModulesEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/core/tx/v1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/core/tx/v1/module.proto
+
+
+
+<a name="cosmos.core.tx.v1.Module"></a>
+
+### Module
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `middleware` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
 
 
 
@@ -6182,9 +6895,9 @@ AuthorizationType defines the type of staking module authorization type
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | AUTHORIZATION_TYPE_UNSPECIFIED | 0 | AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type |
-| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines an authorization type for MsgDelegate |
-| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for MsgUndelegate |
-| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for MsgBeginRedelegate |
+| AUTHORIZATION_TYPE_DELEGATE | 1 | AUTHORIZATION_TYPE_DELEGATE defines an authorization type for Msg/Delegate |
+| AUTHORIZATION_TYPE_UNDELEGATE | 2 | AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for Msg/Undelegate |
+| AUTHORIZATION_TYPE_REDELEGATE | 3 | AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for Msg/BeginRedelegate |
 
 
  <!-- end enums -->
@@ -7167,7 +7880,7 @@ of coins from a delegator and source validator to a destination validator.
 <a name="cosmos.staking.v1beta1.MsgBeginRedelegateResponse"></a>
 
 ### MsgBeginRedelegateResponse
-MsgBeginRedelegateResponse defines the MsgBeginRedelegate response type.
+MsgBeginRedelegateResponse defines the Msg/BeginRedelegate response type.
 
 
 | Field | Type | Label | Description |
@@ -7203,7 +7916,7 @@ MsgCreateValidator defines a SDK message for creating a new validator.
 <a name="cosmos.staking.v1beta1.MsgCreateValidatorResponse"></a>
 
 ### MsgCreateValidatorResponse
-MsgCreateValidatorResponse defines the MsgCreateValidator response type.
+MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
 
 
 
@@ -7231,7 +7944,7 @@ from a delegator to a validator.
 <a name="cosmos.staking.v1beta1.MsgDelegateResponse"></a>
 
 ### MsgDelegateResponse
-MsgDelegateResponse defines the MsgDelegate response type.
+MsgDelegateResponse defines the Msg/Delegate response type.
 
 
 
@@ -7259,7 +7972,7 @@ MsgEditValidator defines a SDK message for editing an existing validator.
 <a name="cosmos.staking.v1beta1.MsgEditValidatorResponse"></a>
 
 ### MsgEditValidatorResponse
-MsgEditValidatorResponse defines the MsgEditValidator response type.
+MsgEditValidatorResponse defines the Msg/EditValidator response type.
 
 
 
@@ -7287,7 +8000,7 @@ delegate and a validator.
 <a name="cosmos.staking.v1beta1.MsgUndelegateResponse"></a>
 
 ### MsgUndelegateResponse
-MsgUndelegateResponse defines the MsgUndelegate response type.
+MsgUndelegateResponse defines the Msg/Undelegate response type.
 
 
 | Field | Type | Label | Description |

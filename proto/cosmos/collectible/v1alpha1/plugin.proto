@@ -1,0 +1,6 @@
+syntax = "proto3";
+package cosmos.collectible.v1alpha1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/collectible";
+
+message CollectibleDenomManager {}

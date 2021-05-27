@@ -6,7 +6,12 @@
     },
     "bank": {
       "@type": "cosmos.bank.v1beta1.Module",
-      "send_deny_list": []
+      "send_deny_list": [],
+      "denom_managers": {
+        "coll": {
+          "@type": "cosmos.collectible.v1alpha1.CollectibleDenomManager"
+        }
+      }
     }
   },
   "tx_middleware": [

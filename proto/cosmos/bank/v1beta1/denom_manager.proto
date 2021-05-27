@@ -1,0 +1,36 @@
+syntax = "proto3";
+package cosmos.bank.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
+
+service DenomManager {
+    rpc OnMint(OnMintRequest) returns (OnMintResponse);
+    rpc OnSend(OnSendRequest) returns (OnSendResponse);
+    rpc OnBurn(OnBurnRequest) returns (OnBurnResponse);
+}
+
+message OnMintRequest {
+    string minter = 1;
+    string receiver = 2;
+    string denom = 3;
+    string amount = 4;
+}
+
+message OnMintResponse {}
+
+message OnSendRequest {
+    string sender = 1;
+    string receiver = 2;
+    string denom = 3;
+    string amount = 4;
+}
+
+message OnSendResponse {}
+
+message OnBurnRequest {
+    string burner = 1;
+    string denom = 2;
+    string amount = 3;
+}
+
+message OnBurnResponse {}

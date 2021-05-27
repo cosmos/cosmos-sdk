@@ -306,3 +306,7 @@ func GetConfig(v *viper.Viper) Config {
 		},
 	}
 }
+
+func (c Config) ValidateBasic() bool {
+	return c.BaseConfig.MinGasPrices != ""
+}

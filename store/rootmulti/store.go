@@ -372,7 +372,7 @@ func (rs *Store) Commit() types.CommitID {
 	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
 
 	// remove remnants of removed stores
-	for sk, _ := range rs.removalMap {
+	for sk := range rs.removalMap {
 		if _, ok := rs.stores[sk]; ok {
 			delete(rs.stores, sk)
 			delete(rs.storesParams, sk)

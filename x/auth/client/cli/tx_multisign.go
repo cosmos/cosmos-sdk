@@ -86,15 +86,24 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		multisigInfo, err := getMultisigInfo(clientCtx, args[1])
+		kr, err := getMultisigRecord(clientCtx, args[1])
+		if err != nil {
+			return err
+		}
+		pubKey, err := kr.GetPubKey()
 		if err != nil {
 			return err
 		}
 
-		multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
-		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
+		addr, err := kr.GetAddress()
+		if err != nil {
+			return err
+		}
+
+		//multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
+		//multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
-			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 			if err != nil {
 				return err
 			}
@@ -127,7 +136,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				}
 			}
 		}
-
+		// TODO how to deal with multisigPub and multisigSig ?
 		sigV2 := signingtypes.SignatureV2{
 			PubKey:   multisigPub,
 			Data:     multisigSig,
@@ -141,6 +150,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
+		// TODO how i deal with aminoJSON here?
 		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
 
 		var json []byte
@@ -155,7 +165,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				Tx:   stdTx,
 				Mode: "block|sync|async",
 			}
-
+			// TODO how i can handle it?
 			json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
 
 		} else {
@@ -254,7 +264,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
-		multisigInfo, err := getMultisigInfo(clientCtx, args[1])
+		multisigInfo, err := getMultisigRecord(clientCtx, args[1])
 		if err != nil {
 			return err
 		}
@@ -392,15 +402,15 @@ func readSignaturesFromFile(ctx client.Context, filename string) (sigs []signing
 	return sigs, nil
 }
 
-func getMultisigInfo(clientCtx client.Context, name string) (keyring.Info, error) {
+func getMultisigRecord(clientCtx client.Context, name string) (*keyring.Record, error) {
 	kb := clientCtx.Keyring
-	multisigInfo, err := kb.Key(name)
+	multisigRecord, err := kb.Key(name)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting keybase multisig account")
 	}
-	if multisigInfo.GetType() != keyring.TypeMulti {
-		return nil, fmt.Errorf("%q must be of type %s: %s", name, keyring.TypeMulti, multisigInfo.GetType())
+	if multisigRecord.GetType() != keyring.TypeMulti {
+		return nil, fmt.Errorf("%q must be of type %s: %s", name, keyring.TypeMulti, multisigRecord.GetType())
 	}
 
-	return multisigInfo, nil
+	return multisigRecord, nil
 }

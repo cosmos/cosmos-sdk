@@ -182,6 +182,7 @@ In addition to serving as a whitelist, `InterfaceRegistry` can also serve
 to communicate the list of concrete types that satisfy an interface to clients.
 
 In .proto files:
+
 * fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
 using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
 * interface implementations should be annotated with `cosmos_proto.implements_interface`
@@ -210,7 +211,7 @@ Note that `InterfaceRegistry` usage does not deviate from standard protobuf
 usage of `Any`, it just introduces a security and introspection layer for
 golang usage.
 
-`InterfaceRegistry` will be a member of `ProtoCodec` 
+`InterfaceRegistry` will be a member of `ProtoCodec`
 described above. In order for modules to register interface types, app modules
 can optionally implement the following interface:
 

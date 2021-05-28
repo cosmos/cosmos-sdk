@@ -30,7 +30,7 @@ type GenesisState struct {
 	// signing_infos represents a map between validator addresses and their
 	// signing infos.
 	SigningInfos []SigningInfo `protobuf:"bytes,2,rep,name=signing_infos,json=signingInfos,proto3" json:"signing_infos" yaml:"signing_infos"`
-	// signing_infos represents a map between validator addresses and their
+	// missed_blocks represents a map between validator addresses and their
 	// missed blocks.
 	MissedBlocks []ValidatorMissedBlocks `protobuf:"bytes,3,rep,name=missed_blocks,json=missedBlocks,proto3" json:"missed_blocks" yaml:"missed_blocks"`
 }

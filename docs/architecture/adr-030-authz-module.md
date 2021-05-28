@@ -19,6 +19,7 @@ on behalf of that account to other accounts.
 ## Context
 
 The concrete use cases which motivated this module include:
+
 - the desire to delegate the ability to vote on proposals to other accounts besides the account which one has
 delegated stake
 - "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/cosmos/cosmos-sdk/issues/4480) which

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -44,5 +45,27 @@ func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgrad
 
 	return &types.QueryUpgradedConsensusStateResponse{
 		UpgradedConsensusState: consState,
+	}, nil
+}
+
+// ModuleVersions implements the Query/QueryModuleVersions gRPC method
+func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersionsRequest) (*types.QueryModuleVersionsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	// check if a specific module was requested
+	if len(req.ModuleName) > 0 {
+		if version, ok := k.getModuleVersion(ctx, req.ModuleName); ok {
+			// return the requested module
+			res := []*types.ModuleVersion{{Name: req.ModuleName, Version: version}}
+			return &types.QueryModuleVersionsResponse{ModuleVersions: res}, nil
+		}
+		// module requested, but not found
+		return nil, errors.Wrapf(errors.ErrNotFound, "x/upgrade: QueryModuleVersions module %s not found", req.ModuleName)
+	}
+
+	// if no module requested return all module versions from state
+	mv := k.GetModuleVersions(ctx)
+	return &types.QueryModuleVersionsResponse{
+		ModuleVersions: mv,
 	}, nil
 }

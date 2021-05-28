@@ -10,6 +10,7 @@ parent:
 ## Contents
 
 ## Abstract
+
 `x/authz` is an implementation of a Cosmos SDK module, per [ADR 30](../../../architecture/adr-030-authz-module.md), that allows
 granting arbitrary privileges from one account (the granter) to another account (the grantee). Authorizations must be granted for a particular Msg service method one by one using an implementation of the `Authorization` interface.
 

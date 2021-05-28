@@ -309,7 +309,7 @@ func GetConfig(v *viper.Viper) Config {
 
 func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
-		return fmt.Errorf("Please set min gas price in app.toml or flag or env var")
+		return fmt.Errorf("please set min gas price in app.toml or flag or env var")
 	}
 
 	return nil

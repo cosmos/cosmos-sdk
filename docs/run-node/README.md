@@ -14,4 +14,4 @@ This folder contains documentation on how to run a node and interact with it.
 4. [Generating, Signing and Broadcasting Transactions](./txs.md)
 5. [Cosmos Upgrade Manager](./cosmovisor.md)
 6. [Rosetta API](./rosetta.md)
-7. [Simapp Testnet](./simapp-testnet.md)
+7. [Running a Testnet](./run-testnet.md)

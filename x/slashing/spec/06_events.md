@@ -15,7 +15,6 @@ The slashing module emits the following events/tags:
 | message | module        | slashing        |
 | message | sender        | {validatorAddress} |
 
-
 ## Keeper
 
 ## BeginBlocker: HandleValidatorSignature
@@ -35,13 +34,11 @@ The slashing module emits the following events/tags:
 | liveness | missed_blocks | {missedBlocksCounter}       |
 | liveness | height        | {blockHeight}               |
 
-
 ### Slash
 
 + same as `"slash"` event from `HandleValidatorSignature`, but without the `jailed` attribute.
 
 ### Jail
-
 
 | Type  | Attribute Key | Attribute Value    |
 | ----- | ------------- | ------------------ |

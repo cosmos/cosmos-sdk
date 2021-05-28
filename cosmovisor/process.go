@@ -15,25 +15,25 @@ import (
 
 // LaunchProcess runs a subprocess and returns when the subprocess exits,
 // either when it dies, or *after* a successful upgrade.
-func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, error) {
+func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, string, error) {
 	bin, err := cfg.CurrentBin()
 	if err != nil {
-		return false, fmt.Errorf("error creating symlink to genesis: %w", err)
+		return false, "", fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
 
 	if err := EnsureBinary(bin); err != nil {
-		return false, fmt.Errorf("current binary invalid: %w", err)
+		return false, "", fmt.Errorf("current binary invalid: %w", err)
 	}
 
 	cmd := exec.Command(bin, args...)
 	outpipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	errpipe, err := cmd.StderrPipe()
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	scanOut := bufio.NewScanner(io.TeeReader(outpipe, stdout))
@@ -51,7 +51,7 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	scanErr.Buffer(bufErr, maxCapacity)
 
 	if err := cmd.Start(); err != nil {
-		return false, fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)
+		return false, "", fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)
 	}
 
 	sigs := make(chan os.Signal, 1)
@@ -66,14 +66,14 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	// three ways to exit - command ends, find regexp in scanOut, find regexp in scanErr
 	upgradeInfo, err := WaitForUpgradeOrExit(cmd, scanOut, scanErr)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	if upgradeInfo != nil {
-		return true, DoUpgrade(cfg, upgradeInfo)
+		return true, upgradeInfo.Height, DoUpgrade(cfg, upgradeInfo)
 	}
 
-	return false, nil
+	return false, "", nil
 }
 
 // WaitResult is used to wrap feedback on cmd state with some mutex logic.

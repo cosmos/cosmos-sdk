@@ -20,17 +20,19 @@ func TestWaitForInfo(t *testing.T) {
 			write: []string{"some", "random\ninfo\n"},
 		},
 		"match name with no info": {
-			write: []string{"first line\n", `UPGRADE "myname" NEEDED at height: 123: `, "\nnext line\n"},
+			write: []string{"first line\n", `UPGRADE "myname" NEEDED at Height: 125: `, "\nnext line\n"},
 			expectUpgrade: &cosmovisor.UpgradeInfo{
-				Name: "myname",
-				Info: "",
+				Name:   "myname",
+				Height: "125",
+				Info:   "",
 			},
 		},
 		"match name with info": {
-			write: []string{"first line\n", `UPGRADE "take2" NEEDED at height: 123:   DownloadData here!`, "\nnext line\n"},
+			write: []string{"first line\n", `UPGRADE "take2" NEEDED at Height: 123:   DownloadData here!`, "\nnext line\n"},
 			expectUpgrade: &cosmovisor.UpgradeInfo{
-				Name: "take2",
-				Info: "DownloadData",
+				Name:   "take2",
+				Height: "123",
+				Info:   "DownloadData",
 			},
 		},
 	}

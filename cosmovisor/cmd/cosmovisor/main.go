@@ -21,10 +21,18 @@ func Run(args []string) error {
 		return err
 	}
 
-	doUpgrade, err := cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
-	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
-	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		doUpgrade, err = cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
+	// clone args to prevent attaching useless --unsafe-skip-upgrades flags a lot
+	originArgs := args
+
+	var doUpgrade bool
+	var height string
+	for {
+		if doUpgrade, height, err = cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr); cfg.RestartAfterUpgrade && err == nil && doUpgrade {
+			args = append(originArgs, fmt.Sprintf("--unsafe-skip-upgrades=%s", height))
+		} else {
+			break
+		}
 	}
+
 	return err
 }

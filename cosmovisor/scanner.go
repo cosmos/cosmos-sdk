@@ -14,9 +14,8 @@ var upgradeRegex = regexp.MustCompile(`UPGRADE "(.*)" NEEDED at ((Height): (\d+)
 
 // UpgradeInfo is the details from the regexp
 type UpgradeInfo struct {
-	Name   string
-	Height string
-	Info   string
+	Name string
+	Info string
 }
 
 // WaitForUpdate will listen to the scanner until a line matches upgradeRegexp.
@@ -29,9 +28,8 @@ func WaitForUpdate(scanner *bufio.Scanner) (*UpgradeInfo, error) {
 		if upgradeRegex.MatchString(line) {
 			subs := upgradeRegex.FindStringSubmatch(line)
 			info := UpgradeInfo{
-				Name:   subs[1],
-				Height: subs[4],
-				Info:   subs[5],
+				Name: subs[1],
+				Info: subs[5],
 			}
 			return &info, nil
 		}

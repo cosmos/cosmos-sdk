@@ -240,7 +240,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 	if err := rootViper.MergeInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to merge configuration: %w", err)
 	}
-	
+
 	return conf, nil
 }
 

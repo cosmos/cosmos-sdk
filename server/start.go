@@ -122,7 +122,7 @@ which accepts a path for the resulting pprof file.
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(serverCtx, appCreator)
 			}
-			
+
 			serverCtx.Logger.Info("starting ABCI with Tendermint")
 
 			// amino is needed here for backwards compatibility of REST routes
@@ -274,7 +274,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	ctx.Logger.Debug("initialization: tmNode started")
 
 	config := config.GetConfig(ctx.Viper)
-	if err := config.ValidateBasic(); err != nil  {
+	if err := config.ValidateBasic(); err != nil {
 		return err
 	}
 

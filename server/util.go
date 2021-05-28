@@ -230,6 +230,7 @@ func interceptConfigs(rootViper *viper.Viper) (*tmcfg.Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 		}
+		
 		config.WriteConfigFile(appCfgFilePath, appConf)
 	}
 

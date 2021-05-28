@@ -53,12 +53,8 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 }
 
 // GetSigners gets the granter account associated with an allowance
-func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{granter}
+func (msg MsgGrantAllowance) GetSigners() []string {
+	return []string{msg.Granter}
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -101,10 +97,6 @@ func (msg MsgRevokeAllowance) ValidateBasic() error {
 
 // GetSigners gets the granter address associated with an Allowance
 // to revoke.
-func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{granter}
+func (msg MsgRevokeAllowance) GetSigners() []string {
+	return []string{msg.Granter}
 }

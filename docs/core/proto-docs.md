@@ -258,6 +258,9 @@
     - [AppConfig](#cosmos.core.app_config.v1.AppConfig)
     - [AppConfig.ModulesEntry](#cosmos.core.app_config.v1.AppConfig.ModulesEntry)
   
+- [cosmos/core/app_config/v1/default_middleware.proto](#cosmos/core/app_config/v1/default_middleware.proto)
+    - [DefaultTxMiddleware](#cosmos.core.app_config.v1.DefaultTxMiddleware)
+  
 - [cosmos/core/tx/v1/module.proto](#cosmos/core/tx/v1/module.proto)
     - [Module](#cosmos.core.tx.v1.Module)
   
@@ -3822,6 +3825,42 @@ GenesisState defines the capability module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `key` | [string](#string) |  |  |
 | `value` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/core/app_config/v1/default_middleware.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/core/app_config/v1/default_middleware.proto
+
+
+
+<a name="cosmos.core.app_config.v1.DefaultTxMiddleware"></a>
+
+### DefaultTxMiddleware
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `max_memo_characters` | [uint64](#uint64) |  |  |
+| `tx_size_cost_per_byte` | [uint64](#uint64) |  |  |
+| `tx_sig_limit` | [uint64](#uint64) |  |  |
+| `sig_verify_cost_ed25519` | [uint64](#uint64) |  |  |
+| `sig_verify_cost_secp256k1` | [uint64](#uint64) |  |  |
+| `allowed_pub_key_types` | [string](#string) | repeated |  |
 
 
 

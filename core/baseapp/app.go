@@ -1,19 +1,13 @@
-package app_config
+package baseapp
 
 import (
 	"context"
 
 	"github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/core/module/app"
 )
 
 type baseApp struct {
 	ctx context.Context
-
-	appModules    map[string]app.Module
-	beginBlockers []app.BeginBlocker
-	endBlockers   []app.EndBlocker
 }
 
 var _ types.Application = &baseApp{}
@@ -23,7 +17,7 @@ func (a baseApp) Info(info types.RequestInfo) types.ResponseInfo {
 }
 
 func (a baseApp) SetOption(option types.RequestSetOption) types.ResponseSetOption {
-	panic("implement me")
+	return types.ResponseSetOption{}
 }
 
 func (a baseApp) Query(query types.RequestQuery) types.ResponseQuery {
@@ -39,9 +33,7 @@ func (a baseApp) InitChain(chain types.RequestInitChain) types.ResponseInitChain
 }
 
 func (a baseApp) BeginBlock(req types.RequestBeginBlock) types.ResponseBeginBlock {
-	for _, bb := range a.beginBlockers {
-		bb.BeginBlock(a.ctx, req)
-	}
+	panic("TODO")
 }
 
 func (a baseApp) DeliverTx(tx types.RequestDeliverTx) types.ResponseDeliverTx {

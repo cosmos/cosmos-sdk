@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/core/app_config"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/core/module/app"
@@ -27,7 +29,7 @@ func (v validateMemoMiddlewareHandler) validate(tx tx.Tx) error {
 	return nil
 }
 
-func (v validateMemoMiddlewareHandler) OnCheckTx(ctx context.Context, tx tx.Tx, req abci.RequestCheckTx, next app.TxHandler) (abci.ResponseCheckTx, error) {
+func (v validateMemoMiddlewareHandler) OnCheckTx(ctx context.Context, tx tx.Tx, req abci.RequestCheckTx, next app_config.TxHandler) (abci.ResponseCheckTx, error) {
 	err := v.validate(tx)
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
@@ -36,7 +38,7 @@ func (v validateMemoMiddlewareHandler) OnCheckTx(ctx context.Context, tx tx.Tx, 
 	return next.CheckTx(ctx, tx, req)
 }
 
-func (v validateMemoMiddlewareHandler) OnDeliverTx(ctx context.Context, tx tx.Tx, req abci.RequestDeliverTx, next app.TxHandler) (abci.ResponseDeliverTx, error) {
+func (v validateMemoMiddlewareHandler) OnDeliverTx(ctx context.Context, tx tx.Tx, req abci.RequestDeliverTx, next app_config.TxHandler) (abci.ResponseDeliverTx, error) {
 	err := v.validate(tx)
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err

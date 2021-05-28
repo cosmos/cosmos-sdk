@@ -4,31 +4,30 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-type Module interface {
-	RegisterTypes(codectypes.InterfaceRegistry)
-
+type GenesisHandler interface {
 	InitGenesis(context.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(context.Context, codec.JSONCodec) json.RawMessage
+}
 
-	RegisterMsgServices(grpc.ServiceRegistrar)
+type QueryHandler interface {
 	RegisterQueryServices(grpc.ServiceRegistrar)
 }
 
-type BeginBlocker interface {
-	Module
+type Handler interface {
+	QueryHandler
 
+	RegisterMsgServices(grpc.ServiceRegistrar)
+}
+
+type BeginBlocker interface {
 	BeginBlock(context.Context, abci.RequestBeginBlock)
 }
 
 type EndBlocker interface {
-	Module
-
 	EndBlock(context.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }

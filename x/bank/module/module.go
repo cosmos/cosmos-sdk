@@ -32,6 +32,6 @@ type AppModuleDeps struct {
 	AuthnMsgClient   authn.MsgClient
 }
 
-func (h handler) NewAppModule(deps AppModuleDeps) app.Module {
+func (h handler) NewAppModule(deps AppModuleDeps) app.Handler {
 	panic("TODO")
 }

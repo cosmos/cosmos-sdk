@@ -15,8 +15,22 @@
     },
     "upgrade": {
       "@type": "cosmos.upgrade.v1beta1.Module"
-    },
-    "tx": {
+    }
+  },
+  "abci": {
+    "init_genesis": [
+      "authn",
+      "bank"
+    ],
+    "begin_block": [
+      "authn",
+      "bank"
+    ],
+    "end_block": [
+      "bank",
+      "authn"
+    ],
+    "tx_module": {
       "@type": "cosmos.core.tx.v1.Module",
       "middleware": [
         {
@@ -53,22 +67,7 @@
           "@type": "cosmos.authn.v1.IncrementSequenceMiddleware"
         }
       ]
-    }
-  },
-  "abci": {
-    "init_genesis": [
-      "authn",
-      "bank"
-    ],
-    "begin_block": [
-      "authn",
-      "bank"
-    ],
-    "end_block": [
-      "bank",
-      "authn"
-    ],
-    "tx_handler": "tx",
+    },
     "info_handler": "upgrade"
   }
 }

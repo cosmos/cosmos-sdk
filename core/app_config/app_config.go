@@ -2,37 +2,27 @@ package app_config
 
 import (
 	"github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/core/module"
-	"github.com/cosmos/cosmos-sdk/core/module/app"
 )
 
 func Compose(config AppConfig) (types.Application, error) {
-	moduleSet := module.NewModuleSet(config.Modules)
+	//moduleSet := module.NewModuleSet(config.Modules)
 
-	appModules := make(map[string]app.Module)
-	moduleSet.Each(func(name string, handler module.ModuleHandler) {
-		// TODO
-	})
+	//appModules := make(map[string]app.Module)
+	//moduleSet.Each(func(name string, handler module.ModuleHandler) {
+	//	// TODO
+	//})
 
-	bapp := &baseApp{}
+	//bapp := &baseapp.baseApp{}
+	//
+	//for _, m := range config.Abci.BeginBlock {
+	//	bapp.beginBlockers = append(bapp.beginBlockers, appModules[m].(app.BeginBlocker))
+	//}
+	//
+	//for _, m := range config.Abci.EndBlock {
+	//	bapp.endBlockers = append(bapp.endBlockers, appModules[m].(app.EndBlocker))
+	//}
+	//
+	//return bapp, nil
 
-	var beginBlockers []app.BeginBlocker
-	for _, m := range config.Abci.BeginBlock {
-		mod, ok := appModules[m]
-		if !ok {
-			panic("TODO")
-		}
-
-		beginBlocker, ok := mod.(app.BeginBlocker)
-		if !ok {
-			panic("TODO")
-		}
-
-		beginBlockers = append(beginBlockers, beginBlocker)
-	}
-
-	bapp.beginBlockers = beginBlockers
-
-	return bapp, nil
+	panic("TODO")
 }

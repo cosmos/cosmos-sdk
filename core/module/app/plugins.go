@@ -2,9 +2,7 @@ package app
 
 import "google.golang.org/grpc"
 
-type HasPlugins interface {
-	Module
-
+type PluginProvider interface {
 	RegisterPlugins(registrar PluginRegistrar)
 }
 

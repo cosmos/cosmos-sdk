@@ -5,7 +5,7 @@ import (
 )
 
 type EventListener interface {
-	Module
+	Handler
 
 	RegisterEventListeners(EventListenerRegistrar)
 }

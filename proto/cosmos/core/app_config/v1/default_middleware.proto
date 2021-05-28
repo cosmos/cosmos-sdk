@@ -1,0 +1,13 @@
+syntax = "proto3";
+package cosmos.core.app_config.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/core/app_config";
+
+message DefaultTxMiddleware {
+    uint64 max_memo_characters     = 1;
+    uint64 tx_size_cost_per_byte   = 2;
+    uint64 tx_sig_limit = 3;
+    uint64 sig_verify_cost_ed25519 = 4;
+    uint64 sig_verify_cost_secp256k1 = 5;
+    repeated string allowed_pub_key_types = 6;
+}

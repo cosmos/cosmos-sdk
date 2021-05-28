@@ -53,7 +53,7 @@ func (k Keeper) revertCreateValidatorMsg(ctx sdk.Context, msg *types.MsgCreateVa
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Value.Denom != bondDenom {
-		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Value.Denom, bondDenom)
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid coin denomination: got %s, expected %s", msg.Value.Denom, bondDenom)
 	}
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -152,7 +152,7 @@ func (k Keeper) executeQueuedDelegationMsg(ctx sdk.Context, msg *types.MsgDelega
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	// NOTE: source funds are always unbonded
@@ -197,7 +197,7 @@ func (k Keeper) revertDelegationMsg(ctx sdk.Context, msg *types.MsgDelegate) err
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+		return sdkerrors.ErrInvalidRequest.Wrapf("invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount))
@@ -228,7 +228,7 @@ func (k Keeper) executeQueuedBeginRedelegateMsg(ctx sdk.Context, msg *types.MsgB
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return time.Time{}, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+		return time.Time{}, sdkerrors.ErrInvalidRequest.Wrapf("invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
@@ -291,7 +291,7 @@ func (k Keeper) executeQueuedUndelegateMsg(ctx sdk.Context, msg *types.MsgUndele
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return time.Time{}, sdkerrors.Wrapf(types.ErrBadDenom, "got %s, expected %s", msg.Amount.Denom, bondDenom)
+		return time.Time{}, sdkerrors.ErrInvalidRequest.Wrapf("invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom)
 	}
 
 	completionTime, err := k.Undelegate(ctx, delegatorAddress, addr, shares)

@@ -111,10 +111,13 @@ Flags are added to commands directly (generally in the [module's CLI file](../bu
 ## Environment variables
 
 Each flag is bound to it's respecteve named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows to reduce amount of flags typed for routine operations. For example instead of:
+
 ```sh
 gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>
 ```
+
 this will be more convinient:
+
 ```sh
 # define env variables in .env, .envrc etc
 GAIA_HOME=<path to home>

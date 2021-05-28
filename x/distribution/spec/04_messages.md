@@ -16,7 +16,7 @@ Response:
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.42.4/proto/cosmos/distribution/v1beta1/tx.proto#L29-L37
 
 ```go
-func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error 
+func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error
 	if k.blockedAddrs[withdrawAddr.String()] {
 		fail with "`{withdrawAddr}` is not allowed to receive external funds"
 	}

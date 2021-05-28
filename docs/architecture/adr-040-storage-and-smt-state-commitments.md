@@ -8,11 +8,9 @@
 
 DRAFT Not Implemented
 
-
 ## Abstract
 
 Sparse Merke Tree ([SMT](https://osf.io/8mcnh/)) is a version of a Merkle Tree with various storage and performance optimizations. This ADR defines a separation of state commitments from data storage and the SDK transition from IAVL to SMT.
-
 
 ## Context
 
@@ -30,7 +28,6 @@ In the current design, IAVL is used for both data storage and as a Merkle Tree f
 
 Moreover, the IAVL project lacks support and a maintainer and we already see better and well-established alternatives. Instead of optimizing the IAVL, we are looking into other solutions for both storage and state commitments.
 
-
 ## Decision
 
 We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedgers' SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
@@ -39,7 +36,6 @@ The storage model presented here doesn't deal with data structure nor serializat
 
 ### Decouple state commitment from storage
 
-
 Separation of storage and commitment (by the SMT) will allow the optimization of different components according to their usage and access patterns.
 
 `SS` (SMT) is used to commit to a data and compute merkle proofs. `SC` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SC` will store each `(key, value)` pair directly (map key -> value).
@@ -47,16 +43,17 @@ Separation of storage and commitment (by the SMT) will allow the optimization of
 SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is stored in a path (we hash a key to evenly distribute keys in the tree) and `hash(key, value)` in a leaf. Since we don't know a structure of a value (in particular if it contains the key) we hash both the key and the value in the `SC` leaf.
 
 For data access we propose 2 additional KV buckets (namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
+
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
 2. B2: `hash(key, value) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(key, value))`. So, we can get an object value by composing `SMT_path → B2 → B1`.
 3. we could use more buckets to optimize the app usage if needed.
 
 Above, we propose to use a KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
 
-
 ### Requirements
 
 State Storage requirements:
+
 + range queries
 + quick (key, value) access
 + creating a snapshot
@@ -64,15 +61,14 @@ State Storage requirements:
 + pruning (garbage collection)
 
 State Commitment requirements:
+
 + fast updates
 + tree path should be short
 + pruning (garbage collection)
 
-
 ### LazyLedger SMT for State Commitment
 
 A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intractable size. The assumption here is that as the size of the tree is intractable, there would only be a few leaf nodes with valid data blocks relative to the tree size, rendering a sparse tree.
-
 
 ### Snapshots for storage sync and state versioning
 
@@ -87,32 +83,28 @@ A new `SS` snapshot will be created in every `EndBlocker` and identified by a bl
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
-Number of historical versions for `abci.Query` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
+Number of historical versions for `abci.RequestQuery` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
 
 Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it creates new nodes on the update path, without removing the old one. Since we are snapshoting each block, we need to update that mechanism to immediately remove orphaned nodes from the storage. This is a safe operation - snapshots will keep track of the records which should be available for past versions.
 
 To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height.
 
-
 #### Accessing old state versions
 
-One of the functional requirements is to access old state. This is done through `abci.Query` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.Query` is configurable. Accessing an old state is done by using available snapshots.
-`abci.Query` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine).
+One of the functional requirements is to access old state. This is done through `abci.RequestQuery` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.RequestQuery` is configurable. Accessing an old state is done by using available snapshots.
+`abci.RequestQuery` doesn't need old state of `SC`. So, for efficiency, we should keep `SC` and `SS` in different databases (however using the same DB engine).
 
 Moreover, SDK could provide a way to directly access the state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
 We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a versioning and snapshot mechanism for querying old state with regards to the database we evaluated.
 
-
 ### State Proofs
 
 For any object stored in State Store (SS), we have corresponding object in `SC`. A proof for object `V` identified by a key `K` is a branch of `SC`, where the path corresponds to the key `hash(K)`, and the leaf is `hash(K, V)`.
 
-
 ### Rollbacks
 
 We need to be able to process transactions and roll-back state updates if a transaction fails. This can be done in the following way: during transaction processing, we keep all state change requests (writes) in a `CacheWrapper` abstraction (as it's done today). Once we finish the block processing, in the `Endblocker`,  we commit a root store - at that time, all changes are written to the SMT and to the `SS` and a snapshot is created.
-
 
 ### Committing to an object without saving it
 
@@ -156,7 +148,6 @@ Where `store.Code(prefix)` is a Huffman Code of `prefix` in the given `store`.
 
 ## Consequences
 
-
 ### Backwards Compatibility
 
 This ADR doesn't introduce any SDK level API changes.
@@ -180,13 +171,11 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 
 + Deprecating IAVL, which is one of the core proposals of Cosmos Whitepaper.
 
-
-## Alternative designs.
+## Alternative designs
 
 Most of the alternative designs were evaluated in [state commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h).
 
 Ethereum research published [Verkle Tire](https://notes.ethereum.org/_N1mutVERDKtqGIEYc-Flw#fnref1) - an idea of combining polynomial commitments with merkle tree in order to reduce the tree height. This concept has a very good potential, but we think it's too early to implement it. The current, SMT based design could be easily updated to the Verkle Tire once other research implement all necessary libraries. The main advantage of the design described in this ADR is the separation of state commitments from the data storage and designing a more powerful interface.
-
 
 ## Further Discussions
 
@@ -201,7 +190,6 @@ Use of RDBMS instead of simple KV store for state. Use of RDBMS will require an 
 ### Off Chain Store
 
 We were discussing use case where modules can use a support database, which is not automatically committed. Module will responsible for having a sound storage model and can optionally use the feature discussed in __Committing to an object without saving it_ section.
-
 
 ## References
 

@@ -2,14 +2,13 @@
 order: 3
 -->
 
-
 # SDK 애플리케이션 아키텍쳐
 
 ## 상태 기계 (state machine)
 
 블록체인 애플리케이션은 근본적으로 [결정론적 복제 상태 기계(replicated deterministic state machine)](https://ko.wikipedia.org/wiki/%EC%83%81%ED%83%9C_%EA%B8%B0%EA%B3%84_%EB%B3%B5%EC%A0%9C)입니다.
 
-상태 기계는 특정 시점에 오직 하나의 상태를 유지하는 있는 컴퓨터 공학 개념입니다. 여기서 '상태 기계' 개념에는 시스템의 현 상태를 뜻하는 '상태(state)'가 있으며, 상태의 변경을 유발하는 
+상태 기계는 특정 시점에 오직 하나의 상태를 유지하는 있는 컴퓨터 공학 개념입니다. 여기서 '상태 기계' 개념에는 시스템의 현 상태를 뜻하는 '상태(state)'가 있으며, 상태의 변경을 유발하는
 트랜잭션(transaction)'이 있습니다.
 
 `S` 라는 상태와 `T` 라는 트랜잭션이 있는 경우, 상태 기계는 `S'`라는 새로운 상태를 리턴합니다.
@@ -40,7 +39,6 @@ order: 3
 
 개발자는 코스모스 SDK를 사용하여 상태 기계만을 정의하면 되며, 해당 상태를 네트워크에 복제하는 기능은 [*텐더민트*](https://tendermint.com/docs/introduction/introduction.html)가 제공합니다.
 
-
 ```
                 ^  +-------------------------------+  ^
                 |  |                               |  |   코스모스 SDK로 개발
@@ -63,7 +61,7 @@ order: 3
 
 ## ABCI
 
-텐더민트는 ABCI라를 인터페이스를 사용해 트랜잭션을 애플리케이션에게 전달합니다. 이는 어플리케이션이 반드시 구현해야하는 부분입니다. 
+텐더민트는 ABCI라를 인터페이스를 사용해 트랜잭션을 애플리케이션에게 전달합니다. 이는 어플리케이션이 반드시 구현해야하는 부분입니다.
 
 ```
 +---------------------+
@@ -83,18 +81,18 @@ order: 3
 +---------------------+
 ```
 
-**텐더민트는 오직 거래의 bytes 값들만 취급하지 실제 그 bytes 들이 어떤 의미를 가지고 있는지는 파악하지 않습니다.** 텐더민트가 하는 일은 이 거래 bytes 들을 결정론적으로 나열하는 것 뿐입니다. 텐더민트는 이 bytes 들을 ABCI 를 통해서 어플리케이션에 넘겨주고, 그 메세지에 담겨있는 거래들이 잘 처리되었는지 안되었는지를 확인해주는 return code 를 기다립니다. 
+**텐더민트는 오직 거래의 bytes 값들만 취급하지 실제 그 bytes 들이 어떤 의미를 가지고 있는지는 파악하지 않습니다.** 텐더민트가 하는 일은 이 거래 bytes 들을 결정론적으로 나열하는 것 뿐입니다. 텐더민트는 이 bytes 들을 ABCI 를 통해서 어플리케이션에 넘겨주고, 그 메세지에 담겨있는 거래들이 잘 처리되었는지 안되었는지를 확인해주는 return code 를 기다립니다.
 
 아래에 ABCI 의 메세지들 중 가장 중요한 것들을 나열해놓았습니다:
 
-- `CheckTx`: 텐더민트 코어로부터 거래를 받게 될 때, 이 거래는 어플리케이션에 넘겨져서 몇 가지 기본 요건을 충족하는지 확인합니다. `CheckTx` 는 풀노드의 mempool을 스팸행위로 부터 보호하는데 사용됩니다. "Ante Handler" 라고 불리우는 특별한 handler 는 일련의 검증 과정을 실행하는데 사용됩니다. 예를 들면, 충분한 수수료가 있는지, 그리고 서명이 유효한지 확인합니다. 만약 검사 결과가 유효한 경우 되면, 해당 거래는 [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality)에 추가되고 피어 노드에게 전달됩니다. 참고로 트랜잭션이 블록에 추가되기 전까지는 `CheckTx` 과정이 진행되지 않습니다. (즉, 상태의 변경이 일어나지 않습니다.) 
+- `CheckTx`: 텐더민트 코어로부터 거래를 받게 될 때, 이 거래는 어플리케이션에 넘겨져서 몇 가지 기본 요건을 충족하는지 확인합니다. `CheckTx` 는 풀노드의 mempool을 스팸행위로 부터 보호하는데 사용됩니다. "Ante Handler" 라고 불리우는 특별한 handler 는 일련의 검증 과정을 실행하는데 사용됩니다. 예를 들면, 충분한 수수료가 있는지, 그리고 서명이 유효한지 확인합니다. 만약 검사 결과가 유효한 경우 되면, 해당 거래는 [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality)에 추가되고 피어 노드에게 전달됩니다. 참고로 트랜잭션이 블록에 추가되기 전까지는 `CheckTx` 과정이 진행되지 않습니다. (즉, 상태의 변경이 일어나지 않습니다.)
 
-- `DeliverTx` : 텐더민트 코어가 [유효한 블록](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation)을 전달받는 경우, 각 블록의 트래잭션은 `DeliverTx`를 통해 애플리케이션에 전달합니다. 이 단계에서 상태 변경이 일어납니다. `AnteHandler`는 트랜잭션에 포함된 각 메세지를 검증하기 위해 다시 실행됩니다. 
+- `DeliverTx` : 텐더민트 코어가 [유효한 블록](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation)을 전달받는 경우, 각 블록의 트래잭션은 `DeliverTx`를 통해 애플리케이션에 전달합니다. 이 단계에서 상태 변경이 일어납니다. `AnteHandler`는 트랜잭션에 포함된 각 메세지를 검증하기 위해 다시 실행됩니다.
 
 - `BeginBlock`/`EndBlock` : 해당 메세지는 블록내 트랜잭션 유뮤와는 별개로 블록 시작과 끝 단계에서 실행됩니다. 여기에서 로직의 자동 실행을 설정하는 것이 유용합니다. 하지만 복잡한 연산 또는 루프는 블록체인의 속도를 저하할 수 있으며, 무한 루프의 경우 블록체인을 멈출 수 있습니다.
 
-ABCI 메소드와 타입에 대해서 더 자세하게 싶다면, [텐더민트 문서](https://tendermint.com/docs/spec/abci/abci.html#overview)를 참고하세요. 
+ABCI 메소드와 타입에 대해서 더 자세하게 싶다면, [텐더민트 문서](https://tendermint.com/docs/spec/abci/abci.html#overview)를 참고하세요.
 
-텐더민트 위에 구현된 모든 어플리케이션은 하위 텐더민트 엔진과 소통하기 위해 ABCI 인터페이스를 구현해야만 합니다. 물론 코스모스 SDK를 사용하는 경우, 코스모스 SDK가 [baseapp](https://cosmos.network/docs/intro/sdk-design.html#baseapp) 의 형태로 일종의 템플릿를 제공합니다. 
+텐더민트 위에 구현된 모든 어플리케이션은 하위 텐더민트 엔진과 소통하기 위해 ABCI 인터페이스를 구현해야만 합니다. 물론 코스모스 SDK를 사용하는 경우, 코스모스 SDK가 [baseapp](https://cosmos.network/docs/intro/sdk-design.html#baseapp) 의 형태로 일종의 템플릿를 제공합니다.
 
 ### 다음은 [SDK 설계 원칙에 대해서 알아보세요](https://cosmos.network/docs/intro/sdk-design.html#baseapp)  

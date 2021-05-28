@@ -52,13 +52,13 @@ To smoothen the update to the latest stable release, the SDK includes a set of C
 ### What qualifies as a Stable Release Update (SRU)
 
 * **High-impact bugs**
-  * Bugs that may directly cause a security vulnerability.
-  * *Severe regressions* from a Cosmos-SDK's previous release. This includes all sort of issues
+    * Bugs that may directly cause a security vulnerability.
+    * *Severe regressions* from a Cosmos-SDK's previous release. This includes all sort of issues
     that may cause the core packages or the `x/` modules unusable.
-  * Bugs that may cause **loss of user's data**.
+    * Bugs that may cause **loss of user's data**.
 * Other safe cases:
-  * Bugs which don't fit in the aforementioned categories for which an obvious safe patch is known.
-  * Relatively small yet strictly non-breaking changes that introduce forward-compatible client
+    * Bugs which don't fit in the aforementioned categories for which an obvious safe patch is known.
+    * Relatively small yet strictly non-breaking changes that introduce forward-compatible client
     features to smoothen the migration to successive releases.
 
 ### What does not qualify as SRU
@@ -71,17 +71,17 @@ To smoothen the update to the latest stable release, the SDK includes a set of C
 
 Pull requests that fix bugs that fall in the following categories do not require a **Stable Release Exception** to be granted to be included in a stable point-release:
 
- * **Severe regressions**.
- * Bugs that may cause **client applications** to be **largely unusable**.
- * Bugs that may cause **state corruption or data loss**.
- * Bugs that may directly or indirectly cause a **security vulnerability**.
+* **Severe regressions**.
+* Bugs that may cause **client applications** to be **largely unusable**.
+* Bugs that may cause **state corruption or data loss**.
+* Bugs that may directly or indirectly cause a **security vulnerability**.
 
 ## What pull requests will NOT be automatically included in stable point-releases
 
 As rule of thumb, the following changes will **NOT** be automatically accepted into stable point-releases:
 
- * **State machine changes**.
- * **Client application's code-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
+* **State machine changes**.
+* **Client application's code-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
 
  In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
 
@@ -89,9 +89,11 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 
 1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [0.42 «Stargate»](https://github.com/cosmos/cosmos-sdk/labels/0.42%20LTS%20%28Stargate%29) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
- * **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
- * A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
- * A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
+
+* **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
+* A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
+* A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
+
 3. **Stable Release Managers** will review and discuss the PR. Once *consensus* surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective point-release target branch (e.g. `release/v0.42.x`) and the PR included in the point-release's respective milestone (e.g. `0.42.5`).
 
 ### Stable Release Exception - Bug template
@@ -119,9 +121,10 @@ according to the [stable release policy](#stable-release-policy) and [release pr
 Decisions are made by consensus.
 
 Their responsibilites include:
- * Driving the Stable Release Exception process.
- * Approving/rejecting proposed changes to a stable release series.
- * Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
+
+* Driving the Stable Release Exception process.
+* Approving/rejecting proposed changes to a stable release series.
+* Executing the release process of stable point-releases in compliance with the [Point Release Procedure](CONTRIBUTING.md).
 
 The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
 

@@ -6,8 +6,13 @@ import "google/protobuf/any.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/core/app_config";
 
 message AppConfig {
-    map<string, google.protobuf.Any> modules = 1;
+    repeated ModuleConfig modules = 1;
     ABCIHandlers abci = 2;
+}
+
+message ModuleConfig {
+    google.protobuf.Any module = 1;
+    string name = 2;
 }
 
 message ABCIHandlers {

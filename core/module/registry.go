@@ -36,5 +36,3 @@ func (r *registry) Register(constructor interface{}) {
 
 	r.hmap[configArg] = constructor
 }
-
-type container

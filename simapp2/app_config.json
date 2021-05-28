@@ -1,22 +1,31 @@
 {
-  "modules": {
-    "authn": {
-      "@type": "cosmos.authn.v1.Module",
-      "bech32_address_prefix": "sim"
+  "modules": [
+    {
+      "name": "authn",
+      "module": {
+        "@type": "cosmos.authn.v1.Module",
+        "bech32_address_prefix": "sim"
+      }
     },
-    "bank": {
-      "@type": "cosmos.bank.v1beta1.Module",
-      "send_deny_list": [],
-      "denom_managers": {
-        "coll": {
-          "@type": "cosmos.collectible.v1alpha1.CollectibleDenomManager"
+    {
+      "name": "bank",
+      "module": {
+        "@type": "cosmos.bank.v1beta1.Module",
+        "send_deny_list": [],
+        "denom_managers": {
+          "coll": {
+            "@type": "cosmos.collectible.v1alpha1.CollectibleDenomManager"
+          }
         }
       }
     },
-    "upgrade": {
-      "@type": "cosmos.upgrade.v1beta1.Module"
+    {
+      "name": "upgrade",
+      "module": {
+        "@type": "cosmos.upgrade.v1beta1.Module"
+      }
     }
-  },
+  ],
   "abci": {
     "init_genesis": [
       "authn",

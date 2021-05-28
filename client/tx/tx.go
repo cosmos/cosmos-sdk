@@ -54,7 +54,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
 func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
-	txf, err := prepareFactory(clientCtx, txf)
+	txf, err := txf.Prepare(clientCtx)
 	if err != nil {
 		return err
 	}
@@ -203,36 +203,6 @@ func CalculateGas(
 	}
 
 	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
-}
-
-// prepareFactory ensures the account defined by ctx.GetFromAddress() exists and
-// if the account number and/or the account sequence number are zero (not set),
-// they will be queried for and set on the provided Factory. A new Factory with
-// the updated fields will be returned.
-func prepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
-	from := clientCtx.GetFromAddress()
-
-	if err := txf.accountRetriever.EnsureExists(clientCtx, from); err != nil {
-		return txf, err
-	}
-
-	initNum, initSeq := txf.accountNumber, txf.sequence
-	if initNum == 0 || initSeq == 0 {
-		num, seq, err := txf.accountRetriever.GetAccountNumberSequence(clientCtx, from)
-		if err != nil {
-			return txf, err
-		}
-
-		if initNum == 0 {
-			txf = txf.WithAccountNumber(num)
-		}
-
-		if initSeq == 0 {
-			txf = txf.WithSequence(seq)
-		}
-	}
-
-	return txf, nil
 }
 
 // SignWithPrivKey signs a given tx with the given private key, and returns the

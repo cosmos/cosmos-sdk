@@ -291,3 +291,35 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 
 	return f.txConfig.TxEncoder()(txb.GetTx())
 }
+
+// Prepare ensures the account defined by ctx.GetFromAddress() exists and
+// if the account number and/or the account sequence number are zero (not set),
+// they will be queried for and set on the provided Factory. A new Factory with
+// the updated fields will be returned.
+func (f Factory) Prepare(clientCtx client.Context) (Factory, error) {
+	fc := f
+
+	from := clientCtx.GetFromAddress()
+
+	if err := fc.accountRetriever.EnsureExists(clientCtx, from); err != nil {
+		return fc, err
+	}
+
+	initNum, initSeq := fc.accountNumber, fc.sequence
+	if initNum == 0 || initSeq == 0 {
+		num, seq, err := fc.accountRetriever.GetAccountNumberSequence(clientCtx, from)
+		if err != nil {
+			return fc, err
+		}
+
+		if initNum == 0 {
+			fc = fc.WithAccountNumber(num)
+		}
+
+		if initSeq == 0 {
+			fc = fc.WithSequence(seq)
+		}
+	}
+
+	return fc, nil
+}

@@ -117,7 +117,7 @@ We identified use-cases, where modules will need to save an object commitment wi
 IAVL based store adds additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using it's own instance of IAVL, but in the current implementation, all instances share the same database.
 The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync problems (eg: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
 
-We propose to remove the MultiStore from the SDK, and use a single instance of `SC`. To improve usability, we should extend the `KVStore` interface with _prefix store_:
+We propose to remove the MultiStore from the SDK, and use a single instance of `SC`. To improve usability, we should extend the `KVStore` interface with _prefix store_. Each module reserves a key address space using a Module Store Key. This key is prefixed to all KV operations.
 
 ```
 type KVStore interface {
@@ -135,9 +135,9 @@ for each OP in [Get Has, Set, ...]
     store.WithPrefix(prefix).OP(key) == store.OP(prefix + key)
 ```
 
-#### Optimization: use compression for prefix keys
+### Optimization: compress module keys
 
-Moreover we can consider a compression of prefix keys using Huffman Coding. It will require a knowledge of used prefixes. And for best results it will need an frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding the above invariant should have the following shape:
+We can consider a compression of prefix keys using Huffman Coding. It will require a knowledge of used prefixes (module store keys) a priori. And for best results it will need an frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding the above invariant should have the following form:
 
 ```
 for each OP in [Get Has, Set, ...]
@@ -146,6 +146,14 @@ for each OP in [Get Has, Set, ...]
 
 Where `store.Code(prefix)` is a Huffman Code of `prefix` in the given `store`.
 
+To avoid conflicts in the address space, we need to assure that in the set of prefix codes, there are not two elements where one is a prefix of another:
+
+```
+for each k1, k2 \in {store.Code(p): p \in StoreModuleKeys}
+    assert( !k1.hasPrefix(k2) )
+```
+
+NOTE: We need to assure that the codes won't change. Huffman Coding depends on the keys and it's frequencies - so we would need to generate the codes and then fix the mapping in a static variable.
 
 ## Consequences
 

@@ -100,8 +100,8 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		//multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
-		//multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
+		multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
+		multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 		if !clientCtx.Offline {
 			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 			if err != nil {
@@ -136,7 +136,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				}
 			}
 		}
-		// TODO how to deal with multisigPub and multisigSig ?
+
 		sigV2 := signingtypes.SignatureV2{
 			PubKey:   multisigPub,
 			Data:     multisigSig,
@@ -150,7 +150,6 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 
 		sigOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 
-		// TODO how i deal with aminoJSON here?
 		aminoJSON, _ := cmd.Flags().GetBool(flagAmino)
 
 		var json []byte
@@ -165,7 +164,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				Tx:   stdTx,
 				Mode: "block|sync|async",
 			}
-			// TODO how i can handle it?
+			
 			json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
 
 		} else {

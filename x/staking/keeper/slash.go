@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -139,6 +140,15 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		"validator", validator.GetOperator().String(),
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
+	)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			slashingtypes.EventTypeSlash,
+			sdk.NewAttribute(slashingtypes.AttributeKeyAddress, consAddr.String()),
+			sdk.NewAttribute(slashingtypes.AttributeKeyPower, fmt.Sprintf("%d", power)),
+			sdk.NewAttribute(slashingtypes.AttributeKeyAddress, consAddr.String()),
+			sdk.NewAttribute(slashingtypes.AttributeKeyAmountSlashed, tokensToBurn.String()),
+		),
 	)
 }
 

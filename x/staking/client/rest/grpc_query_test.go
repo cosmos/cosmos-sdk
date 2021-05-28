@@ -890,7 +890,7 @@ func (s *IntegrationTestSuite) TestQueuedQueryRedelegationsGRPC() {
 			s.Require().NoError(err)
 			var redelegations types.QueryRedelegationsResponse
 
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &redelegations)
+			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &redelegations)
 
 			if tc.error {
 				s.Require().Error(err)

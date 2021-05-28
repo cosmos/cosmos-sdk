@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		val.ValAddress,
 		val2.ValAddress,
 		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 254000), //  202954 is the required
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 274000), //  202954 is the required
 	)
 
 	s.Require().NoError(err)
@@ -198,8 +198,6 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			h, _ := s.network.LatestHeight()
-			fmt.Println(h, 0)
 			cmd := cli.NewCreateValidatorCmd()
 			clientCtx := val.ClientCtx
 
@@ -356,9 +354,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 			clientCtx := val.ClientCtx
 			if !tc.expErr {
 				h, _ := s.network.LatestHeight()
-				fmt.Println(h)
-				h2, err := s.network.WaitForHeightWithTimeout(h+11, 20*time.Second)
-				fmt.Println(h2)
+				_, err := s.network.WaitForHeightWithTimeout(h+11, 30*time.Second)
 				s.Require().NoError(err)
 			}
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

@@ -60,7 +60,7 @@ func TestContainer(t *testing.T) {
 		},
 		Scope: "b",
 	}))
-	require.NoError(t, c.ProvideForScope(
+	require.NoError(t, c.ProvideScoped(
 		ScopedProvider{
 			Constructor: func(scope Scope, deps []reflect.Value) ([]reflect.Value, error) {
 				return []reflect.Value{reflect.ValueOf(storeKey{name: scope})}, nil

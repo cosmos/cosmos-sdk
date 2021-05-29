@@ -5,6 +5,10 @@ import (
 	"reflect"
 )
 
+// Container is a low-level dependency injection container which manages dependencies
+// based on scopes and security policies. All providers can be run in a scope which
+// may provide certain dependencies specifically for that scope or provide/deny access
+// to dependencies based on that scope.
 type Container struct {
 	providers      map[Key]*node
 	scopeProviders map[Key]*scopeNode
@@ -15,12 +19,16 @@ type Container struct {
 	scopedValues map[Scope]map[Key]reflect.Value
 }
 
-type secureValue struct {
-	value           reflect.Value
-	securityChecker SecurityChecker
+func NewContainer() *Container {
+	return &Container{
+		providers:      map[Key]*node{},
+		scopeProviders: map[Key]*scopeNode{},
+		nodes:          nil,
+		scopeNodes:     nil,
+		values:         map[Key]secureValue{},
+		scopedValues:   map[Scope]map[Key]reflect.Value{},
+	}
 }
-
-type SecurityChecker func(scope Scope) error
 
 type Key struct {
 	Type reflect.Type
@@ -35,6 +43,10 @@ type node struct {
 	err    error
 }
 
+// Provider is a general dependency provider. Its scope parameter is used
+// to receive scoped dependencies and gain access to general dependencies within
+// its security policy. Access to dependencies provided by this provider can optionally
+// be restricted to certain scopes based on SecurityCheckers.
 type Provider struct {
 	Constructor      func(deps []reflect.Value) ([]reflect.Value, error)
 	Needs            []Key
@@ -50,12 +62,25 @@ type scopeNode struct {
 	errsForScope   map[Scope]error
 }
 
+// ScopedProvider provides scoped dependencies. Its constructor function will provide
+// dependencies specific to the scope parameter. Instead of providing general dependencies
+// with restricted access based on security checkers, ScopedProvider provides potentially different
+// dependency instances to different scopes. It is assumed that a scoped provider
+// can provide a dependency for any valid scope passed to it, although it can return an error
+// to deny access.
 type ScopedProvider struct {
 	Constructor func(scope Scope, deps []reflect.Value) ([]reflect.Value, error)
 	Needs       []Key
 	Provides    []Key
 	Scope       Scope
 }
+
+type secureValue struct {
+	value           reflect.Value
+	securityChecker SecurityChecker
+}
+
+type SecurityChecker func(scope Scope) error
 
 func (c *Container) Provide(provider Provider) error {
 	n := &node{
@@ -76,7 +101,7 @@ func (c *Container) Provide(provider Provider) error {
 	return nil
 }
 
-func (c *Container) ProvideForScope(provider ScopedProvider) error {
+func (c *Container) ProvideScoped(provider ScopedProvider) error {
 	n := &scopeNode{
 		ScopedProvider: provider,
 		calledForScope: map[Scope]bool{},
@@ -260,15 +285,4 @@ func (c *Container) InitializeAll() error {
 		}
 	}
 	return nil
-}
-
-func NewContainer() *Container {
-	return &Container{
-		providers:      map[Key]*node{},
-		scopeProviders: map[Key]*scopeNode{},
-		nodes:          nil,
-		scopeNodes:     nil,
-		values:         map[Key]secureValue{},
-		scopedValues:   map[Scope]map[Key]reflect.Value{},
-	}
 }

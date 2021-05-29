@@ -424,7 +424,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationsResponseCode() {
 
 	_, statusCode, err := getRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", val.APIAddress, newAddr.String()))
 	s.Require().NoError(err)
-	s.Require().Equal(404, statusCode)
+	s.Require().Equal(200, statusCode)
 }
 
 func getRequest(url string) ([]byte, int, error) {

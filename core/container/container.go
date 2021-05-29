@@ -32,11 +32,11 @@ func NewContainer() *Container {
 }
 
 type Input struct {
-	Key      Key
+	Key
 	Optional bool
 }
 
-type SecureOutput struct {
+type Output struct {
 	Key
 	SecurityChecker SecurityChecker
 }
@@ -48,7 +48,7 @@ type Key struct {
 type Scope string
 
 type node struct {
-	*Provider
+	Provider
 	called bool
 	values []reflect.Value
 	err    error
@@ -60,20 +60,22 @@ type node struct {
 // be restricted to certain scopes based on SecurityCheckers.
 type Provider struct {
 	// Constructor provides the dependencies
-	Constructor func(deps []reflect.Value) ([]reflect.Value, error)
+	Constructor func(deps []reflect.Value, scope Scope) ([]reflect.Value, error)
 
 	// Needs are the keys for dependencies the constructor needs
 	Needs []Input
 
 	// Needs are the keys for dependencies the constructor provides
-	Provides []SecureOutput
+	Provides []Output
 
 	// Scope is the scope within which the constructor runs
 	Scope Scope
+
+	IsScopeProvider bool
 }
 
 type scopeNode struct {
-	*ScopeProvider
+	Provider
 	calledForScope map[Scope]bool
 	valuesForScope map[Scope][]reflect.Value
 	errsForScope   map[Scope]error
@@ -108,45 +110,74 @@ type secureValue struct {
 
 type SecurityChecker func(scope Scope) error
 
-func (c *Container) RegisterProvider(provider *Provider) error {
-	n := &node{
-		Provider: provider,
-		called:   false,
-	}
-
-	c.nodes = append(c.nodes, n)
-
-	for _, key := range provider.Provides {
-		if c.providers[key.Key] != nil {
-			return fmt.Errorf("TODO")
+func (c *Container) RegisterProvider(provider Provider) error {
+	if !provider.IsScopeProvider {
+		n := &node{
+			Provider: provider,
+			called:   false,
 		}
 
-		c.providers[key.Key] = n
+		c.nodes = append(c.nodes, n)
+
+		for _, key := range provider.Provides {
+			if c.providers[key.Key] != nil {
+				return fmt.Errorf("TODO")
+			}
+
+			if c.scopeProviders[key.Key] != nil {
+				return fmt.Errorf("TODO")
+			}
+
+			c.providers[key.Key] = n
+		}
+	} else {
+		n := &scopeNode{
+			Provider:       provider,
+			calledForScope: map[Scope]bool{},
+			valuesForScope: map[Scope][]reflect.Value{},
+			errsForScope:   map[Scope]error{},
+		}
+
+		c.scopeNodes = append(c.scopeNodes, n)
+
+		for _, key := range provider.Provides {
+			if c.providers[key.Key] != nil {
+				return fmt.Errorf("TODO")
+			}
+
+			if c.scopeProviders[key.Key] != nil {
+				return fmt.Errorf("TODO")
+			}
+
+			c.scopeProviders[key.Key] = n
+		}
+
+		return nil
 	}
 
 	return nil
 }
 
-func (c *Container) RegisterScopeProvider(provider *ScopeProvider) error {
-	n := &scopeNode{
-		ScopeProvider:  provider,
-		calledForScope: map[Scope]bool{},
-		valuesForScope: map[Scope][]reflect.Value{},
-		errsForScope:   map[Scope]error{},
-	}
-
-	c.scopeNodes = append(c.scopeNodes, n)
-
-	for _, key := range provider.Provides {
-		if c.scopeProviders[key] != nil {
-			return fmt.Errorf("TODO")
-		}
-
-		c.scopeProviders[key] = n
-	}
-
-	return nil
-}
+//func (c *Container) RegisterScopeProvider(provider *ScopeProvider) error {
+//	n := &scopeNode{
+//		ScopeProvider:  provider,
+//		calledForScope: map[Scope]bool{},
+//		valuesForScope: map[Scope][]reflect.Value{},
+//		errsForScope:   map[Scope]error{},
+//	}
+//
+//	c.scopeNodes = append(c.scopeNodes, n)
+//
+//	for _, key := range provider.Provides {
+//		if c.scopeProviders[key] != nil {
+//			return fmt.Errorf("TODO")
+//		}
+//
+//		c.scopeProviders[key] = n
+//	}
+//
+//	return nil
+//}
 
 func (c *Container) resolve(scope Scope, input Input, stack map[interface{}]bool) (reflect.Value, error) {
 	if scope != "" {
@@ -181,7 +212,7 @@ func (c *Container) resolve(scope Scope, input Input, stack map[interface{}]bool
 				deps = append(deps, res)
 			}
 
-			res, err := provider.Constructor(scope, deps)
+			res, err := provider.Constructor(deps, scope)
 			provider.calledForScope[scope] = true
 			if err != nil {
 				provider.errsForScope[scope] = err
@@ -192,14 +223,14 @@ func (c *Container) resolve(scope Scope, input Input, stack map[interface{}]bool
 
 			for i, val := range res {
 				p := provider.Provides[i]
-				if _, ok := c.scopedValues[scope][p]; ok {
+				if _, ok := c.scopedValues[scope][p.Key]; ok {
 					return reflect.Value{}, fmt.Errorf("value provided twice")
 				}
 
 				if c.scopedValues[scope] == nil {
 					c.scopedValues[scope] = map[Key]reflect.Value{}
 				}
-				c.scopedValues[scope][p] = val
+				c.scopedValues[scope][p.Key] = val
 			}
 
 			val, ok := c.scopedValues[scope][input.Key]
@@ -241,6 +272,10 @@ func (c *Container) resolve(scope Scope, input Input, stack map[interface{}]bool
 		return val, err
 	}
 
+	if input.Optional {
+		return reflect.Zero(input.Type), nil
+	}
+
 	return reflect.Value{}, fmt.Errorf("no provider")
 }
 
@@ -262,7 +297,7 @@ func (c *Container) execNode(provider *node, stack map[interface{}]bool) error {
 		deps = append(deps, res)
 	}
 
-	res, err := provider.Constructor(deps)
+	res, err := provider.Constructor(deps, "")
 	provider.called = true
 	if err != nil {
 		provider.err = err
@@ -328,7 +363,9 @@ func (StructArgs) isStructArgs() {}
 
 type isStructArgs interface{ isStructArgs() }
 
-var isStructArgsTyp = reflect.TypeOf((*isStructArgs)(nil))
+var structArgsType = reflect.TypeOf(StructArgs{})
+
+var isStructArgsTyp = reflect.TypeOf((*isStructArgs)(nil)).Elem()
 
 var scopeTyp = reflect.TypeOf(Scope(""))
 
@@ -350,28 +387,37 @@ func TypeToInput(typ reflect.Type) ([]Input, InMarshaler, error) {
 
 		for i := 0; i < nFields; i++ {
 			field := typ.Field(i)
-			fieldInputs, m, err := TypeToInput(field.Type)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			optionalTag, ok := field.Tag.Lookup("optional")
-			if ok {
-				if len(fieldInputs) == 1 {
-					if optionalTag != "true" {
-						return nil, nil, fmt.Errorf("true is the only valid value for the optional tag, got %s", optionalTag)
-					}
-					fieldInputs[0].Optional = true
-				} else if len(fieldInputs) > 1 {
-					return nil, nil, fmt.Errorf("optional tag cannot be applied to nested StructArgs")
+			if field.Type == structArgsType {
+				marshalers = append(marshalers, inFieldMarshaler{
+					n: 0,
+					inMarshaler: func(values []reflect.Value) reflect.Value {
+						return reflect.ValueOf(StructArgs{})
+					},
+				})
+			} else {
+				fieldInputs, m, err := TypeToInput(field.Type)
+				if err != nil {
+					return nil, nil, err
 				}
-			}
 
-			res = append(res, fieldInputs...)
-			marshalers = append(marshalers, inFieldMarshaler{
-				n:           len(fieldInputs),
-				inMarshaler: m,
-			})
+				optionalTag, ok := field.Tag.Lookup("optional")
+				if ok {
+					if len(fieldInputs) == 1 {
+						if optionalTag != "true" {
+							return nil, nil, fmt.Errorf("true is the only valid value for the optional tag, got %s", optionalTag)
+						}
+						fieldInputs[0].Optional = true
+					} else if len(fieldInputs) > 1 {
+						return nil, nil, fmt.Errorf("optional tag cannot be applied to nested StructArgs")
+					}
+				}
+
+				res = append(res, fieldInputs...)
+				marshalers = append(marshalers, inFieldMarshaler{
+					n:           len(fieldInputs),
+					inMarshaler: m,
+				})
+			}
 		}
 
 		return res, structMarshaler(typ, marshalers), nil
@@ -388,10 +434,10 @@ func TypeToInput(typ reflect.Type) ([]Input, InMarshaler, error) {
 	}
 }
 
-func TypeToOutput(typ reflect.Type, securityContext func(scope Scope, tag string) error) ([]SecureOutput, OutMarshaler, error) {
+func TypeToOutput(typ reflect.Type, securityContext func(scope Scope, tag string) error) ([]Output, OutMarshaler, error) {
 	if typ.AssignableTo(isStructArgsTyp) && typ.Kind() == reflect.Struct {
 		nFields := typ.NumField()
-		var res []SecureOutput
+		var res []Output
 		var marshalers []OutMarshaler
 
 		for i := 0; i < nFields; i++ {
@@ -429,7 +475,7 @@ func TypeToOutput(typ reflect.Type, securityContext func(scope Scope, tag string
 	} else if typ == scopeTyp {
 		return nil, nil, fmt.Errorf("can't convert type %T to %T", Scope(""), Input{})
 	} else {
-		return []SecureOutput{{
+		return []Output{{
 				Key: Key{
 					Type: typ,
 				},
@@ -441,7 +487,7 @@ func TypeToOutput(typ reflect.Type, securityContext func(scope Scope, tag string
 
 func structMarshaler(typ reflect.Type, marshalers []inFieldMarshaler) func([]reflect.Value) reflect.Value {
 	return func(values []reflect.Value) reflect.Value {
-		structInst := reflect.New(typ)
+		structInst := reflect.Zero(typ)
 
 		for i, m := range marshalers {
 			val := m.inMarshaler(values[:m.n])
@@ -458,90 +504,108 @@ func (c *Container) Provide(constructor interface{}) error {
 }
 
 func (c *Container) ProvideWithScope(constructor interface{}, scope Scope) error {
-	p, sp, err := ConstructorToProvider(constructor, scope, c.securityContext)
+	p, err := ConstructorToProvider(constructor, scope, c.securityContext)
 	if err != nil {
 		return err
 	}
 
-	if p != nil {
-		return c.RegisterProvider(p)
-	}
-
-	if sp != nil {
-		return c.RegisterScopeProvider(sp)
-	}
-
-	return fmt.Errorf("unexpected case")
+	return c.RegisterProvider(p)
 }
 
-func ConstructorToProvider(constructor interface{}, scope Scope, securityContext func(scope Scope, tag string) error) (*Provider, *ScopeProvider, error) {
+func ConstructorToProvider(constructor interface{}, scope Scope, securityContext func(scope Scope, tag string) error) (Provider, error) {
 	ctrTyp := reflect.TypeOf(constructor)
 	if ctrTyp.Kind() != reflect.Func {
-		return nil, nil, fmt.Errorf("expected function got %T", constructor)
+		return Provider{}, fmt.Errorf("expected function got %T", constructor)
 	}
 
 	numIn := ctrTyp.NumIn()
-	numOut := ctrTyp.NumIn()
+	numOut := ctrTyp.NumOut()
 
 	var scopeProvider bool
+	i := 0
 	if numIn >= 1 {
 		if in0 := ctrTyp.In(0); in0 == scopeTyp {
 			scopeProvider = true
+			i = 1
 		}
 	}
 
-	if !scopeProvider {
-		var inputs []Input
-		var inMarshalers []inFieldMarshaler
-		for i := 0; i < numIn; i++ {
-			in, inMarshaler, err := TypeToInput(ctrTyp.In(i))
-			if err != nil {
-				return nil, nil, err
-			}
-			inputs = append(inputs, in...)
-			inMarshalers = append(inMarshalers, inFieldMarshaler{
-				n:           len(in),
-				inMarshaler: inMarshaler,
-			})
+	var inputs []Input
+	var inMarshalers []inFieldMarshaler
+	for ; i < numIn; i++ {
+		in, inMarshaler, err := TypeToInput(ctrTyp.In(i))
+		if err != nil {
+			return Provider{}, err
+		}
+		inputs = append(inputs, in...)
+		inMarshalers = append(inMarshalers, inFieldMarshaler{
+			n:           len(in),
+			inMarshaler: inMarshaler,
+		})
+	}
+
+	var outputs []Output
+	var outMarshalers []OutMarshaler
+	for i := 0; i < numOut; i++ {
+		out, outMarshaler, err := TypeToOutput(ctrTyp.Out(i), securityContext)
+		if err != nil {
+			return Provider{}, err
+		}
+		outputs = append(outputs, out...)
+		outMarshalers = append(outMarshalers, outMarshaler)
+	}
+
+	ctrVal := reflect.ValueOf(constructor)
+	provideCtr := func(deps []reflect.Value, scope Scope) ([]reflect.Value, error) {
+		var inVals []reflect.Value
+
+		if scopeProvider {
+			inVals = append(inVals, reflect.ValueOf(scope))
 		}
 
-		var outputs []SecureOutput
-		var outMarshalers []OutMarshaler
+		nInMarshalers := len(inMarshalers)
+		for i = 0; i < nInMarshalers; i++ {
+			m := inMarshalers[i]
+			inVals = append(inVals, m.inMarshaler(deps[:m.n]))
+			deps = deps[m.n:]
+		}
+
+		outVals := ctrVal.Call(inVals)
+
+		var provides []reflect.Value
 		for i := 0; i < numOut; i++ {
-			out, outMarshaler, err := TypeToOutput(ctrTyp.Out(i), securityContext)
-			if err != nil {
-				return nil, nil, err
-			}
-			outputs = append(outputs, out...)
-			outMarshalers = append(outMarshalers, outMarshaler)
+			provides = append(provides, outMarshalers[i](outVals[i])...)
 		}
 
-		ctrVal := reflect.ValueOf(constructor)
-		provideCtr := func(deps []reflect.Value) ([]reflect.Value, error) {
-			inVals := make([]reflect.Value, numIn)
-			for i := 0; i < numIn; i++ {
-				m := inMarshalers[i]
-				inVals[i] = m.inMarshaler(deps[m.n:])
-				deps = deps[:m.n]
-			}
-
-			outVals := ctrVal.Call(inVals)
-
-			var provides []reflect.Value
-			for i := 0; i < numOut; i++ {
-				provides = append(provides, outMarshalers[i](outVals[i])...)
-			}
-
-			return outVals, nil
-		}
-
-		return &Provider{
-			Constructor: provideCtr,
-			Needs:       inputs,
-			Provides:    outputs,
-			Scope:       scope,
-		}, nil, nil
-	} else {
-
+		return outVals, nil
 	}
+
+	return Provider{
+		Constructor:     provideCtr,
+		Needs:           inputs,
+		Provides:        outputs,
+		Scope:           scope,
+		IsScopeProvider: scopeProvider,
+	}, nil
+}
+
+func (c *Container) Invoke(fn interface{}) error {
+	fnTyp := reflect.TypeOf(fn)
+	if fnTyp.Kind() != reflect.Func {
+		return fmt.Errorf("expected function got %T", fn)
+	}
+
+	numIn := fnTyp.NumIn()
+	in := make([]reflect.Value, numIn)
+	for i := 0; i < numIn; i++ {
+		val, err := c.Resolve("", Key{Type: fnTyp.In(i)})
+		if err != nil {
+			return err
+		}
+		in[i] = val
+	}
+
+	_ = reflect.ValueOf(fn).Call(in)
+
+	return nil
 }

@@ -8,17 +8,18 @@ import (
 
 	tx2 "github.com/cosmos/cosmos-sdk/types/tx"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	"google.golang.org/grpc"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/core/module/app"
 	"github.com/cosmos/cosmos-sdk/core/tx"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"google.golang.org/grpc"
 )
 
-func init() {
-	app.RegisterAppModule(appModule{})
-}
+//func init() {
+//	app.RegisterAppModule(appModule{})
+//}
 
 type appModule struct {
 	Config *tx.Module
@@ -49,7 +50,7 @@ func (a appModule) RegisterQueryServices(registrar grpc.ServiceRegistrar) {}
 
 func (a appModule) TxHandler(params app_config.TxHandlerParams) app_config.TxHandler {
 	return txHandler{
-		Module:    a.Module,
+		Module:    a.Config,
 		msgRouter: params.MsgRouter,
 	}
 }
@@ -64,10 +65,10 @@ type MiddlewareRegistrar interface {
 
 type MiddlewareFactory func(config interface{}) Middleware
 
-type Middleware interface {
-	OnCheckTx(ctx context.Context, tx tx2.Tx, req abci.RequestCheckTx, next TxHandler) (abci.ResponseCheckTx, error)
-	OnDeliverTx(ctx context.Context, tx tx2.Tx, req abci.RequestDeliverTx, next TxHandler) (abci.ResponseDeliverTx, error)
-}
+//type Middleware interface {
+//	OnCheckTx(ctx context.Context, tx tx2.Tx, req abci.RequestCheckTx, next TxHandler) (abci.ResponseCheckTx, error)
+//	OnDeliverTx(ctx context.Context, tx tx2.Tx, req abci.RequestDeliverTx, next TxHandler) (abci.ResponseDeliverTx, error)
+//}
 
 type TxHandler interface {
 	CheckTx(ctx context.Context, tx tx2.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error)
@@ -86,3 +87,5 @@ func (t txHandler) CheckTx(ctx context.Context, req abci.RequestCheckTx) (abci.R
 func (t txHandler) DeliverTx(ctx context.Context, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	panic("implement me")
 }
+
+type Middleware func(TxHandler) TxHandler

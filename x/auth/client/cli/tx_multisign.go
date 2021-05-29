@@ -263,7 +263,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
-		multisigInfo, err := getMultisigRecord(clientCtx, args[1])
+		kr, err := getMultisigRecord(clientCtx, args[1])
 		if err != nil {
 			return err
 		}
@@ -278,8 +278,13 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			signatureBatch = append(signatureBatch, sigs)
 		}
 
+		addr, err := kr.GetAddress()
+		if err != nil {
+			return err
+		}
+
 		if !clientCtx.Offline {
-			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, multisigInfo.GetAddress())
+			accnum, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 			if err != nil {
 				return err
 			}
@@ -301,8 +306,11 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-
-			multisigPub := multisigInfo.GetPubKey().(*kmultisig.LegacyAminoPubKey)
+			pubKey, err := kr.GetPubKey()
+			if err != nil {
+				return err
+			}
+			multisigPub := pubKey.(*kmultisig.LegacyAminoPubKey)
 			multisigSig := multisig.NewMultisig(len(multisigPub.PubKeys))
 			signingData := signing.SignerData{
 				ChainID:       txFactory.ChainID(),

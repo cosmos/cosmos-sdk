@@ -48,10 +48,20 @@ type node struct {
 // its security policy. Access to dependencies provided by this provider can optionally
 // be restricted to certain scopes based on SecurityCheckers.
 type Provider struct {
-	Constructor      func(deps []reflect.Value) ([]reflect.Value, error)
-	Needs            []Key
-	Provides         []Key
-	Scope            Scope
+	// Constructor provides the dependencies
+	Constructor func(deps []reflect.Value) ([]reflect.Value, error)
+
+	// Needs are the keys for dependencies the constructor needs
+	Needs []Key
+
+	// Needs are the keys for dependencies the constructor provides
+	Provides []Key
+
+	// Scope is the scope within which the constructor runs
+	Scope Scope
+
+	// SecurityCheckers are optional security checker functions for the dependencies provided
+	// by the constructor.
 	SecurityCheckers []SecurityChecker
 }
 
@@ -69,10 +79,18 @@ type scopeNode struct {
 // can provide a dependency for any valid scope passed to it, although it can return an error
 // to deny access.
 type ScopedProvider struct {
+
+	// Constructor provides dependencies for the provided scope
 	Constructor func(scope Scope, deps []reflect.Value) ([]reflect.Value, error)
-	Needs       []Key
-	Provides    []Key
-	Scope       Scope
+
+	// Needs are the keys for dependencies the constructor needs
+	Needs []Key
+
+	// Needs are the keys for dependencies the constructor provides
+	Provides []Key
+
+	// Scope is the scope within which the constructor runs
+	Scope Scope
 }
 
 type secureValue struct {
@@ -180,14 +198,12 @@ func (c *Container) resolve(scope Scope, key Key, stack map[interface{}]bool) (r
 		}
 	}
 
-	if val, ok := c.values[key]; ok {
-		if val.securityChecker != nil {
-			if err := val.securityChecker(scope); err != nil {
-				return reflect.Value{}, err
-			}
+	if val, ok, err := c.getValue(scope, key); ok {
+		if err != nil {
+			return reflect.Value{}, err
 		}
 
-		return val.value, nil
+		return val, nil
 	}
 
 	if provider, ok := c.providers[key]; ok {
@@ -204,18 +220,12 @@ func (c *Container) resolve(scope Scope, key Key, stack map[interface{}]bool) (r
 			return reflect.Value{}, err
 		}
 
-		val, ok := c.values[key]
+		val, ok, err := c.getValue(scope, key)
 		if !ok {
 			return reflect.Value{}, fmt.Errorf("internal error: bug")
 		}
 
-		if val.securityChecker != nil {
-			if err := val.securityChecker(scope); err != nil {
-				return reflect.Value{}, err
-			}
-		}
-
-		return val.value, nil
+		return val, err
 	}
 
 	return reflect.Value{}, fmt.Errorf("no provider")
@@ -266,6 +276,20 @@ func (c *Container) execNode(provider *node, stack map[interface{}]bool) error {
 	}
 
 	return nil
+}
+
+func (c *Container) getValue(scope Scope, key Key) (reflect.Value, bool, error) {
+	if val, ok := c.values[key]; ok {
+		if val.securityChecker != nil {
+			if err := val.securityChecker(scope); err != nil {
+				return reflect.Value{}, true, err
+			}
+		}
+
+		return val.value, true, nil
+	}
+
+	return reflect.Value{}, false, nil
 }
 
 func (c *Container) Resolve(scope Scope, key Key) (reflect.Value, error) {

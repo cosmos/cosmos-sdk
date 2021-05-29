@@ -5,27 +5,27 @@ order: 6
 # Vesting
 
 - [Vesting](#vesting)
-  - [Intro and Requirements](#intro-and-requirements)
-  - [Note](#note)
-  - [Vesting Account Types](#vesting-account-types)
-  - [Vesting Account Specification](#vesting-account-specification)
-    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
-    - [Periodic Vesting Accounts](#periodic-vesting-accounts)
-      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
-    - [Transferring/Sending](#transferringsending)
-      - [Keepers/Handlers](#keepershandlers)
-    - [Delegating](#delegating)
-      - [Keepers/Handlers](#keepershandlers-1)
-    - [Undelegating](#undelegating)
-      - [Keepers/Handlers](#keepershandlers-2)
-  - [Keepers & Handlers](#keepers--handlers)
-  - [Genesis Initialization](#genesis-initialization)
-  - [Examples](#examples)
-    - [Simple](#simple)
-    - [Slashing](#slashing)
-    - [Periodic Vesting](#periodic-vesting)
-  - [Glossary](#glossary)
+    - [Intro and Requirements](#intro-and-requirements)
+    - [Note](#note)
+    - [Vesting Account Types](#vesting-account-types)
+    - [Vesting Account Specification](#vesting-account-specification)
+        - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+            - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+        - [Periodic Vesting Accounts](#periodic-vesting-accounts)
+            - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+        - [Transferring/Sending](#transferringsending)
+            - [Keepers/Handlers](#keepershandlers)
+        - [Delegating](#delegating)
+            - [Keepers/Handlers](#keepershandlers-1)
+        - [Undelegating](#undelegating)
+            - [Keepers/Handlers](#keepershandlers-2)
+    - [Keepers & Handlers](#keepers--handlers)
+    - [Genesis Initialization](#genesis-initialization)
+    - [Examples](#examples)
+        - [Simple](#simple)
+        - [Slashing](#slashing)
+        - [Periodic Vesting](#periodic-vesting)
+    - [Glossary](#glossary)
 
 ## Intro and Requirements
 
@@ -89,16 +89,21 @@ type VestingAccount interface {
   GetEndTime()   int64
 }
 ```
+
 ### BaseVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L10-L33
 
 ### ContinuousVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L35-L43
 
 ### DelayedVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L45-L53
 
 ### Period
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L56-L62
 
 ```go
@@ -108,6 +113,7 @@ type Periods []Period
 ```
 
 ### PeriodicVestingAccount
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/vesting/v1beta1/vesting.proto#L64-L73
 
 In order to facilitate less ad-hoc type checking and assertions and to support

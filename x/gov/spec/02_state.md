@@ -12,12 +12,15 @@ parameter set, either to modify a value or add/remove a parameter field, a new
 parameter set has to be created and the previous one rendered inactive.
 
 ### DepositParams
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L127-L145
 
 ### VotingParams
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L147-L156
 
 ### TallyParams
+
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/gov/v1beta1/gov.proto#L158-L183
 
 Parameters are stored in a global `GlobalParams` KVStore.

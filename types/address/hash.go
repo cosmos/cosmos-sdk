@@ -13,6 +13,7 @@ import (
 // Len is the length of base addresses
 const Len = sha256.Size
 
+// Addressable represents any type from which we can derive an address.
 type Addressable interface {
 	Address() []byte
 }

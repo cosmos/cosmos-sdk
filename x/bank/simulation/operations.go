@@ -12,6 +12,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -58,7 +59,7 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, toSimAcc, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+		from, to, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
@@ -69,9 +70,39 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "skip all transfers"), nil, nil
 		}
 
-		msg := types.NewMsgSend(simAccount.Address, toSimAcc.Address, coins)
+		msg := types.NewMsgSend(from.Address, to.Address, coins)
 
-		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{simAccount.PrivKey})
+		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+	}
+}
+
+// SimulateMsgSendToModuleAccount tests and runs a single msg send where both
+// accounts already exist.
+func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		from := accs[0]
+
+		to := getModuleAccounts(ak, ctx, moduleAccCount)[0]
+
+		spendable := bk.SpendableCoins(ctx, from.Address)
+		coins := simtypes.RandSubsetCoins(r, spendable)
+
+		// Check send_enabled status of each coin denom
+		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
+		}
+
+		msg := types.NewMsgSend(from.Address, to.Address, coins)
+
+		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
@@ -150,11 +181,11 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		var totalSentCoins sdk.Coins
 		for i := range inputs {
 			// generate random input fields, ignore to address
-			simAccount, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
+			from, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 			// make sure account is fresh and not used in previous input
-			for usedAddrs[simAccount.Address.String()] {
-				simAccount, _, coins, skip = randomSendFields(r, ctx, accs, bk, ak)
+			for usedAddrs[from.Address.String()] {
+				from, _, coins, skip = randomSendFields(r, ctx, accs, bk, ak)
 			}
 
 			if skip {
@@ -162,13 +193,13 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			}
 
 			// set input address in used address map
-			usedAddrs[simAccount.Address.String()] = true
+			usedAddrs[from.Address.String()] = true
 
 			// set signer privkey
-			privs[i] = simAccount.PrivKey
+			privs[i] = from.PrivKey
 
 			// set next input and accumulate total sent coins
-			inputs[i] = types.NewInput(simAccount.Address, coins)
+			inputs[i] = types.NewInput(from.Address, coins)
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 
@@ -195,8 +226,8 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		}
 
 		// remove any output that has no coins
-		i := 0
-		for i < len(outputs) {
+
+		for i := 0; i < len(outputs); {
 			if outputs[i].Coins.Empty() {
 				outputs[i] = outputs[len(outputs)-1]
 				outputs = outputs[:len(outputs)-1]
@@ -210,7 +241,73 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			Inputs:  inputs,
 			Outputs: outputs,
 		}
+		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+		}
 
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+	}
+}
+
+// SimulateMsgMultiSendToModuleAccount sends coins to Module Accounts
+func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, moduleAccCount int) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		inputs := make([]types.Input, 2)
+		outputs := make([]types.Output, moduleAccCount)
+		// collect signer privKeys
+		privs := make([]cryptotypes.PrivKey, len(inputs))
+
+		var totalSentCoins sdk.Coins
+		for i := range inputs {
+			sender := accs[i]
+			privs[i] = sender.PrivKey
+			spendable := bk.SpendableCoins(ctx, sender.Address)
+			coins := simtypes.RandSubsetCoins(r, spendable)
+			inputs[i] = types.NewInput(sender.Address, coins)
+			totalSentCoins = totalSentCoins.Add(coins...)
+		}
+
+		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
+		}
+
+		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccCount)
+		for i := range outputs {
+			var outCoins sdk.Coins
+			// split total sent coins into random subsets for output
+			if i == len(outputs)-1 {
+				outCoins = totalSentCoins
+			} else {
+				// take random subset of remaining coins for output
+				// and update remaining coins
+				outCoins = simtypes.RandSubsetCoins(r, totalSentCoins)
+				totalSentCoins = totalSentCoins.Sub(outCoins)
+			}
+
+			outputs[i] = types.NewOutput(moduleAccounts[i].Address, outCoins)
+		}
+
+		// remove any output that has no coins
+
+		for i := 0; i < len(outputs); {
+			if outputs[i].Coins.Empty() {
+				outputs[i] = outputs[len(outputs)-1]
+				outputs = outputs[:len(outputs)-1]
+			} else {
+				// continue onto next coin
+				i++
+			}
+		}
+
+		msg := &types.MsgMultiSend{
+			Inputs:  inputs,
+			Outputs: outputs,
+		}
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
@@ -291,25 +388,44 @@ func randomSendFields(
 	r *rand.Rand, ctx sdk.Context, accs []simtypes.Account, bk keeper.Keeper, ak types.AccountKeeper,
 ) (simtypes.Account, simtypes.Account, sdk.Coins, bool) {
 
-	simAccount, _ := simtypes.RandomAcc(r, accs)
-	toSimAcc, _ := simtypes.RandomAcc(r, accs)
+	from, _ := simtypes.RandomAcc(r, accs)
+	to, _ := simtypes.RandomAcc(r, accs)
 
 	// disallow sending money to yourself
-	for simAccount.PubKey.Equals(toSimAcc.PubKey) {
-		toSimAcc, _ = simtypes.RandomAcc(r, accs)
+	for from.PubKey.Equals(to.PubKey) {
+		to, _ = simtypes.RandomAcc(r, accs)
 	}
 
-	acc := ak.GetAccount(ctx, simAccount.Address)
+	acc := ak.GetAccount(ctx, from.Address)
 	if acc == nil {
-		return simAccount, toSimAcc, nil, true
+		return from, to, nil, true
 	}
 
 	spendable := bk.SpendableCoins(ctx, acc.GetAddress())
 
 	sendCoins := simtypes.RandSubsetCoins(r, spendable)
 	if sendCoins.Empty() {
-		return simAccount, toSimAcc, nil, true
+		return from, to, nil, true
 	}
 
-	return simAccount, toSimAcc, sendCoins, false
+	return from, to, sendCoins, false
+}
+
+func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount int) []simtypes.Account {
+
+	moduleAccounts := make([]simtypes.Account, moduleAccCount)
+
+	for i := 0; i < moduleAccCount; i++ {
+		addr := ak.GetModuleAddress(distributiontypes.ModuleName)
+		acc := ak.GetAccount(ctx, addr)
+		mAcc := simtypes.Account{
+			Address: acc.GetAddress(),
+			PrivKey: nil,
+			ConsKey: nil,
+			PubKey:  acc.GetPubKey(),
+		}
+		moduleAccounts[i] = mAcc
+	}
+
+	return moduleAccounts
 }

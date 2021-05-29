@@ -2,55 +2,62 @@ package module
 
 import (
 	"fmt"
+	"reflect"
 )
 
-type container struct {
+type Container struct {
 	providers      map[Key]*node
 	scopeProviders map[Key]*scopeNode
 	nodes          []*node
 	scopeNodes     []*scopeNode
 
-	values       map[Key]interface{}
-	scopedValues map[string]map[Key]interface{}
+	values       map[Key]secureValue
+	scopedValues map[Scope]map[Key]reflect.Value
 }
+
+type secureValue struct {
+	value           reflect.Value
+	securityChecker SecurityChecker
+}
+
+type SecurityChecker func(scope Scope) error
 
 type Key struct {
-	Type interface{}
+	Type reflect.Type
 }
 
-type Value struct {
-	Key   Key
-	Value interface{}
-}
+type Scope = string
 
 type node struct {
 	Provider
 	called bool
-	values []Value
+	values []reflect.Value
 	err    error
 }
 
 type Provider struct {
-	Constructor func(deps []interface{}) ([]interface{}, error)
-	Needs       []Key
-	Provides    []Key
-	Scope       string
+	Constructor      func(deps []reflect.Value) ([]reflect.Value, error)
+	Needs            []Key
+	Provides         []Key
+	Scope            Scope
+	SecurityCheckers []SecurityChecker
 }
 
 type scopeNode struct {
 	ScopedProvider
-	calledForScope map[string]bool
-	valuesForScope map[string][]Value
-	errsForScope   map[string]error
+	calledForScope map[Scope]bool
+	valuesForScope map[Scope][]reflect.Value
+	errsForScope   map[Scope]error
 }
 
 type ScopedProvider struct {
-	Constructor func(scope string, deps []interface{}) ([]interface{}, error)
+	Constructor func(scope Scope, deps []reflect.Value) ([]reflect.Value, error)
 	Needs       []Key
 	Provides    []Key
+	Scope       Scope
 }
 
-func (c *container) Provide(provider Provider) error {
+func (c *Container) Provide(provider Provider) error {
 	n := &node{
 		Provider: provider,
 		called:   false,
@@ -69,12 +76,12 @@ func (c *container) Provide(provider Provider) error {
 	return nil
 }
 
-func (c *container) ProvideForScope(provider ScopedProvider) error {
+func (c *Container) ProvideForScope(provider ScopedProvider) error {
 	n := &scopeNode{
 		ScopedProvider: provider,
-		calledForScope: map[string]bool{},
-		valuesForScope: map[string][]Value{},
-		errsForScope:   map[string]error{},
+		calledForScope: map[Scope]bool{},
+		valuesForScope: map[Scope][]reflect.Value{},
+		errsForScope:   map[Scope]error{},
 	}
 
 	c.scopeNodes = append(c.scopeNodes, n)
@@ -90,7 +97,7 @@ func (c *container) ProvideForScope(provider ScopedProvider) error {
 	return nil
 }
 
-func (c *container) resolve(scope string, key Key, stack map[interface{}]bool) (interface{}, error) {
+func (c *Container) resolve(scope Scope, key Key, stack map[interface{}]bool) (reflect.Value, error) {
 	if scope != "" {
 		if val, ok := c.scopedValues[scope][key]; ok {
 			return val, nil
@@ -98,21 +105,21 @@ func (c *container) resolve(scope string, key Key, stack map[interface{}]bool) (
 
 		if provider, ok := c.scopeProviders[key]; ok {
 			if stack[provider] {
-				return nil, fmt.Errorf("fatal: cycle detected")
+				return reflect.Value{}, fmt.Errorf("fatal: cycle detected")
 			}
 
 			if provider.calledForScope[scope] {
-				return nil, fmt.Errorf("error: %v", provider.errsForScope[scope])
+				return reflect.Value{}, fmt.Errorf("error: %v", provider.errsForScope[scope])
 			}
 
-			var deps []interface{}
+			var deps []reflect.Value
 			for _, need := range provider.Needs {
 				stack[provider] = true
-				res, err := c.resolve(scope, need, stack)
+				res, err := c.resolve(provider.Scope, need, stack)
 				delete(stack, provider)
 
 				if err != nil {
-					return nil, err
+					return reflect.Value{}, err
 				}
 
 				deps = append(deps, res)
@@ -122,24 +129,26 @@ func (c *container) resolve(scope string, key Key, stack map[interface{}]bool) (
 			provider.calledForScope[scope] = true
 			if err != nil {
 				provider.errsForScope[scope] = err
-				return nil, err
+				return reflect.Value{}, err
 			}
+
+			provider.valuesForScope[scope] = res
 
 			for i, val := range res {
 				p := provider.Provides[i]
 				if _, ok := c.scopedValues[scope][p]; ok {
-					return nil, fmt.Errorf("value provided twice")
+					return reflect.Value{}, fmt.Errorf("value provided twice")
 				}
 
 				if c.scopedValues[scope] == nil {
-					c.scopedValues[scope] = map[Key]interface{}{}
+					c.scopedValues[scope] = map[Key]reflect.Value{}
 				}
 				c.scopedValues[scope][p] = val
 			}
 
 			val, ok := c.scopedValues[scope][key]
 			if !ok {
-				return nil, fmt.Errorf("internal error: bug")
+				return reflect.Value{}, fmt.Errorf("internal error: bug")
 			}
 
 			return val, nil
@@ -147,75 +156,119 @@ func (c *container) resolve(scope string, key Key, stack map[interface{}]bool) (
 	}
 
 	if val, ok := c.values[key]; ok {
-		return val, nil
+		if val.securityChecker != nil {
+			if err := val.securityChecker(scope); err != nil {
+				return reflect.Value{}, err
+			}
+		}
+
+		return val.value, nil
 	}
 
 	if provider, ok := c.providers[key]; ok {
 		if stack[provider] {
-			return nil, fmt.Errorf("fatal: cycle detected")
+			return reflect.Value{}, fmt.Errorf("fatal: cycle detected")
 		}
 
 		if provider.called {
-			return nil, fmt.Errorf("error: %v", provider.err)
+			return reflect.Value{}, fmt.Errorf("error: %v", provider.err)
 		}
 
-		var deps []interface{}
-		for _, need := range provider.Needs {
-			stack[provider] = true
-			res, err := c.resolve(provider.Scope, need, stack)
-			delete(stack, provider)
-
-			if err != nil {
-				return nil, err
-			}
-
-			deps = append(deps, res)
-		}
-
-		res, err := provider.Constructor(deps)
-		provider.called = true
+		err := c.execNode(provider, stack)
 		if err != nil {
-			provider.err = err
-			return nil, err
-		}
-
-		for i, val := range res {
-			p := provider.Provides[i]
-			if _, ok := c.values[p]; ok {
-				return nil, fmt.Errorf("value provided twice")
-			}
-
-			c.values[p] = val
+			return reflect.Value{}, err
 		}
 
 		val, ok := c.values[key]
 		if !ok {
-			return nil, fmt.Errorf("internal error: bug")
+			return reflect.Value{}, fmt.Errorf("internal error: bug")
 		}
 
-		return val, nil
+		if val.securityChecker != nil {
+			if err := val.securityChecker(scope); err != nil {
+				return reflect.Value{}, err
+			}
+		}
+
+		return val.value, nil
 	}
 
-	return nil, fmt.Errorf("no provider")
+	return reflect.Value{}, fmt.Errorf("no provider")
 }
 
-func (c *container) Resolve(scope string, key Key) (interface{}, error) {
-	return c.resolve(scope, key, map[interface{}]bool{})
+func (c *Container) execNode(provider *node, stack map[interface{}]bool) error {
+	if provider.called {
+		return provider.err
+	}
+
+	var deps []reflect.Value
+	for _, need := range provider.Needs {
+		stack[provider] = true
+		res, err := c.resolve(provider.Scope, need, stack)
+		delete(stack, provider)
+
+		if err != nil {
+			return err
+		}
+
+		deps = append(deps, res)
+	}
+
+	res, err := provider.Constructor(deps)
+	provider.called = true
+	if err != nil {
+		provider.err = err
+		return err
+	}
+
+	provider.values = res
+
+	for i, val := range res {
+		p := provider.Provides[i]
+		if _, ok := c.values[p]; ok {
+			return fmt.Errorf("value provided twice")
+		}
+
+		var secChecker SecurityChecker
+		if i < len(provider.SecurityCheckers) {
+			secChecker = provider.SecurityCheckers[i]
+		}
+
+		c.values[p] = secureValue{
+			value:           val,
+			securityChecker: secChecker,
+		}
+	}
+
+	return nil
 }
 
-type Container interface {
-	Provide(provider Provider) error
-	ProvideForScope(provider ScopedProvider) error
-	Resolve(scope string, key Key) (interface{}, error)
+func (c *Container) Resolve(scope Scope, key Key) (reflect.Value, error) {
+	val, err := c.resolve(scope, key, map[interface{}]bool{})
+	if err != nil {
+		return reflect.Value{}, err
+	}
+	return val, nil
 }
 
-func NewContainer() Container {
-	return &container{
+// InitializeAll attempts to call all providers instantiating the dependencies they provide
+func (c *Container) InitializeAll() error {
+	for _, node := range c.nodes {
+		err := c.execNode(node, map[interface{}]bool{})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func NewContainer() *Container {
+	return &Container{
 		providers:      map[Key]*node{},
 		scopeProviders: map[Key]*scopeNode{},
 		nodes:          nil,
 		scopeNodes:     nil,
-		values:         map[Key]interface{}{},
-		scopedValues:   map[string]map[Key]interface{}{},
+		values:         map[Key]secureValue{},
+		scopedValues:   map[Scope]map[Key]reflect.Value{},
 	}
 }

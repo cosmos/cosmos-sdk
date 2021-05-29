@@ -23,8 +23,6 @@ package module
 //	handlers map[string]ModuleHandler
 //}
 //
-//type ModuleConfigSet = map[string]*types.Any
-//
 //func NewModuleSet(moduleConfigs ModuleConfigSet) *ModuleSet {
 //	panic("TODO")
 //}

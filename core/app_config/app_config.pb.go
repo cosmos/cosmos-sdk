@@ -24,8 +24,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type AppConfig struct {
-	Modules map[string]*types.Any `protobuf:"bytes,1,rep,name=modules,proto3" json:"modules,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Abci    *ABCIHandlers         `protobuf:"bytes,2,opt,name=abci,proto3" json:"abci,omitempty"`
+	Modules []*ModuleConfig `protobuf:"bytes,1,rep,name=modules,proto3" json:"modules,omitempty"`
+	Abci    *ABCIHandlers   `protobuf:"bytes,2,opt,name=abci,proto3" json:"abci,omitempty"`
 }
 
 func (m *AppConfig) Reset()         { *m = AppConfig{} }
@@ -61,7 +61,7 @@ func (m *AppConfig) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_AppConfig proto.InternalMessageInfo
 
-func (m *AppConfig) GetModules() map[string]*types.Any {
+func (m *AppConfig) GetModules() []*ModuleConfig {
 	if m != nil {
 		return m.Modules
 	}
@@ -75,19 +75,71 @@ func (m *AppConfig) GetAbci() *ABCIHandlers {
 	return nil
 }
 
+type ModuleConfig struct {
+	Module *types.Any `protobuf:"bytes,1,opt,name=module,proto3" json:"module,omitempty"`
+	Name   string     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (m *ModuleConfig) Reset()         { *m = ModuleConfig{} }
+func (m *ModuleConfig) String() string { return proto.CompactTextString(m) }
+func (*ModuleConfig) ProtoMessage()    {}
+func (*ModuleConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67d11620ac2d3428, []int{1}
+}
+func (m *ModuleConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleConfig.Merge(m, src)
+}
+func (m *ModuleConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleConfig proto.InternalMessageInfo
+
+func (m *ModuleConfig) GetModule() *types.Any {
+	if m != nil {
+		return m.Module
+	}
+	return nil
+}
+
+func (m *ModuleConfig) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
 type ABCIHandlers struct {
-	InitGenesis []string `protobuf:"bytes,1,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
-	BeginBlock  []string `protobuf:"bytes,2,rep,name=begin_block,json=beginBlock,proto3" json:"begin_block,omitempty"`
-	EndBlock    []string `protobuf:"bytes,3,rep,name=end_block,json=endBlock,proto3" json:"end_block,omitempty"`
-	TxHandler   string   `protobuf:"bytes,4,opt,name=tx_handler,json=txHandler,proto3" json:"tx_handler,omitempty"`
-	InfoHandler string   `protobuf:"bytes,5,opt,name=info_handler,json=infoHandler,proto3" json:"info_handler,omitempty"`
+	InitGenesis []string   `protobuf:"bytes,1,rep,name=init_genesis,json=initGenesis,proto3" json:"init_genesis,omitempty"`
+	BeginBlock  []string   `protobuf:"bytes,2,rep,name=begin_block,json=beginBlock,proto3" json:"begin_block,omitempty"`
+	EndBlock    []string   `protobuf:"bytes,3,rep,name=end_block,json=endBlock,proto3" json:"end_block,omitempty"`
+	TxModule    *types.Any `protobuf:"bytes,4,opt,name=tx_module,json=txModule,proto3" json:"tx_module,omitempty"`
+	InfoHandler string     `protobuf:"bytes,5,opt,name=info_handler,json=infoHandler,proto3" json:"info_handler,omitempty"`
 }
 
 func (m *ABCIHandlers) Reset()         { *m = ABCIHandlers{} }
 func (m *ABCIHandlers) String() string { return proto.CompactTextString(m) }
 func (*ABCIHandlers) ProtoMessage()    {}
 func (*ABCIHandlers) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67d11620ac2d3428, []int{1}
+	return fileDescriptor_67d11620ac2d3428, []int{2}
 }
 func (m *ABCIHandlers) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -137,11 +189,11 @@ func (m *ABCIHandlers) GetEndBlock() []string {
 	return nil
 }
 
-func (m *ABCIHandlers) GetTxHandler() string {
+func (m *ABCIHandlers) GetTxModule() *types.Any {
 	if m != nil {
-		return m.TxHandler
+		return m.TxModule
 	}
-	return ""
+	return nil
 }
 
 func (m *ABCIHandlers) GetInfoHandler() string {
@@ -153,7 +205,7 @@ func (m *ABCIHandlers) GetInfoHandler() string {
 
 func init() {
 	proto.RegisterType((*AppConfig)(nil), "cosmos.core.app_config.v1.AppConfig")
-	proto.RegisterMapType((map[string]*types.Any)(nil), "cosmos.core.app_config.v1.AppConfig.ModulesEntry")
+	proto.RegisterType((*ModuleConfig)(nil), "cosmos.core.app_config.v1.ModuleConfig")
 	proto.RegisterType((*ABCIHandlers)(nil), "cosmos.core.app_config.v1.ABCIHandlers")
 }
 
@@ -162,31 +214,30 @@ func init() {
 }
 
 var fileDescriptor_67d11620ac2d3428 = []byte{
-	// 381 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xcb, 0x4e, 0xea, 0x40,
-	0x1c, 0xc6, 0x19, 0x2e, 0xe7, 0x9c, 0x4e, 0x59, 0x9c, 0x4c, 0xce, 0xa2, 0x70, 0x62, 0x45, 0x36,
-	0x12, 0xa2, 0xd3, 0x80, 0x1b, 0xa3, 0x2b, 0x20, 0xde, 0x62, 0x4c, 0x4c, 0x97, 0x6e, 0x9a, 0x5e,
-	0x86, 0x32, 0xa1, 0xcc, 0x34, 0xbd, 0x10, 0xfa, 0x16, 0xbe, 0x8a, 0x6f, 0xe1, 0x92, 0xa5, 0x4b,
-	0x03, 0x0b, 0x5f, 0xc3, 0x74, 0xa6, 0x90, 0xc6, 0x44, 0x57, 0x6d, 0xbf, 0xef, 0xf7, 0x7d, 0xff,
-	0xf9, 0x37, 0x03, 0xfb, 0x2e, 0x8f, 0x17, 0x3c, 0x36, 0x5c, 0x1e, 0x11, 0xc3, 0x0e, 0x43, 0xcb,
-	0xe5, 0x6c, 0x4a, 0x7d, 0x63, 0x39, 0x28, 0x7d, 0xe1, 0x30, 0xe2, 0x09, 0x47, 0x2d, 0xc9, 0xe2,
-	0x9c, 0xc5, 0x25, 0x77, 0x39, 0x68, 0xb7, 0x7c, 0xce, 0xfd, 0x80, 0x18, 0x02, 0x74, 0xd2, 0xa9,
-	0x61, 0xb3, 0x4c, 0xa6, 0xba, 0x1f, 0x00, 0x2a, 0xa3, 0x30, 0x9c, 0x08, 0x16, 0xdd, 0xc3, 0xdf,
-	0x0b, 0xee, 0xa5, 0x01, 0x89, 0x35, 0xd0, 0xa9, 0xf5, 0xd4, 0xe1, 0x00, 0x7f, 0xdb, 0x8a, 0xf7,
-	0x31, 0xfc, 0x20, 0x33, 0x57, 0x2c, 0x89, 0x32, 0x73, 0xd7, 0x80, 0x2e, 0x61, 0xdd, 0x76, 0x5c,
-	0xaa, 0x55, 0x3b, 0xa0, 0xa7, 0x0e, 0x8f, 0x7f, 0x6a, 0x1a, 0x4f, 0xee, 0x6e, 0x6d, 0xe6, 0x05,
-	0x24, 0x8a, 0x4d, 0x11, 0x6a, 0x3f, 0xc2, 0x66, 0xb9, 0x15, 0xfd, 0x85, 0xb5, 0x39, 0xc9, 0x34,
-	0xd0, 0x01, 0x3d, 0xc5, 0xcc, 0x5f, 0x51, 0x1f, 0x36, 0x96, 0x76, 0x90, 0x92, 0xa2, 0xff, 0x1f,
-	0x96, 0x4b, 0xe2, 0xdd, 0x92, 0x78, 0xc4, 0x32, 0x53, 0x22, 0x17, 0xd5, 0x73, 0xd0, 0x7d, 0x01,
-	0xb0, 0x59, 0x1e, 0x84, 0x8e, 0x60, 0x93, 0x32, 0x9a, 0x58, 0x3e, 0x61, 0x24, 0xa6, 0x72, 0x63,
-	0xc5, 0x54, 0x73, 0xed, 0x46, 0x4a, 0xe8, 0x10, 0xaa, 0x0e, 0xf1, 0x29, 0xb3, 0x9c, 0x80, 0xbb,
-	0x73, 0xad, 0x2a, 0x08, 0x28, 0xa4, 0x71, 0xae, 0xa0, 0xff, 0x50, 0x21, 0xcc, 0x2b, 0xec, 0x9a,
-	0xb0, 0xff, 0x10, 0xe6, 0x49, 0xf3, 0x00, 0xc2, 0x64, 0x65, 0xcd, 0xe4, 0x3c, 0xad, 0x2e, 0x8e,
-	0xae, 0x24, 0xab, 0xe2, 0x00, 0x72, 0xfe, 0x94, 0xef, 0x81, 0x86, 0x00, 0xd4, 0x5c, 0x2b, 0x90,
-	0xf1, 0xf5, 0xeb, 0x46, 0x07, 0xeb, 0x8d, 0x0e, 0xde, 0x37, 0x3a, 0x78, 0xde, 0xea, 0x95, 0xf5,
-	0x56, 0xaf, 0xbc, 0x6d, 0xf5, 0xca, 0xd3, 0x89, 0x4f, 0x93, 0x59, 0xea, 0x60, 0x97, 0x2f, 0x8c,
-	0xfd, 0x25, 0xc9, 0x1f, 0xa7, 0xb1, 0x37, 0xff, 0x7a, 0x5f, 0x9c, 0x5f, 0xe2, 0xa7, 0x9c, 0x7d,
-	0x06, 0x00, 0x00, 0xff, 0xff, 0x86, 0x7e, 0x44, 0xf1, 0x50, 0x02, 0x00, 0x00,
+	// 361 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x52, 0x3d, 0x4f, 0xfa, 0x40,
+	0x1c, 0xe6, 0x80, 0x3f, 0x7f, 0xfa, 0x2b, 0xd3, 0xc5, 0xa1, 0x68, 0x52, 0x91, 0x45, 0x63, 0xf0,
+	0x1a, 0x74, 0x74, 0x2a, 0x24, 0xbe, 0x0c, 0x26, 0xa6, 0xa3, 0x4b, 0xd3, 0x97, 0xa3, 0x5c, 0x68,
+	0xef, 0x1a, 0x5a, 0x08, 0x7c, 0x06, 0x17, 0xbf, 0x94, 0x89, 0x23, 0xa3, 0xa3, 0x81, 0x2f, 0x62,
+	0x7a, 0x57, 0x4c, 0x63, 0xa2, 0x4e, 0xed, 0x3d, 0x6f, 0xf7, 0x3c, 0xc9, 0xc1, 0x79, 0x20, 0xb2,
+	0x44, 0x64, 0x56, 0x20, 0xe6, 0xd4, 0xf2, 0xd2, 0xd4, 0x0d, 0x04, 0x9f, 0xb0, 0xc8, 0x5a, 0x0e,
+	0x2b, 0x27, 0x92, 0xce, 0x45, 0x2e, 0x70, 0x57, 0x69, 0x49, 0xa1, 0x25, 0x15, 0x76, 0x39, 0x3c,
+	0xec, 0x46, 0x42, 0x44, 0x31, 0xb5, 0xa4, 0xd0, 0x5f, 0x4c, 0x2c, 0x8f, 0xaf, 0x95, 0xab, 0xff,
+	0x8c, 0x40, 0xb3, 0xd3, 0x74, 0x2c, 0xb5, 0xd8, 0x86, 0xff, 0x89, 0x08, 0x17, 0x31, 0xcd, 0x0c,
+	0xd4, 0x6b, 0x9c, 0xe9, 0x97, 0xa7, 0xe4, 0xc7, 0x54, 0xf2, 0x20, 0x95, 0xca, 0xe9, 0xec, 0x7d,
+	0xf8, 0x1a, 0x9a, 0x9e, 0x1f, 0x30, 0xa3, 0xde, 0x43, 0x7f, 0xf8, 0xed, 0xd1, 0xf8, 0xfe, 0xce,
+	0xe3, 0x61, 0x4c, 0xe7, 0x99, 0x23, 0x4d, 0xfd, 0x47, 0xe8, 0x54, 0x53, 0xf1, 0x00, 0x5a, 0x2a,
+	0xd7, 0x40, 0x32, 0xee, 0x80, 0xa8, 0x25, 0x64, 0xbf, 0x84, 0xd8, 0x7c, 0xed, 0x94, 0x1a, 0x8c,
+	0xa1, 0xc9, 0xbd, 0x84, 0xca, 0xab, 0x35, 0x47, 0xfe, 0xf7, 0x5f, 0x11, 0x74, 0xaa, 0x17, 0xe1,
+	0x13, 0xe8, 0x30, 0xce, 0x72, 0x37, 0xa2, 0x9c, 0x66, 0x4c, 0xed, 0xd4, 0x1c, 0xbd, 0xc0, 0x6e,
+	0x15, 0x84, 0x8f, 0x41, 0xf7, 0x69, 0xc4, 0xb8, 0xeb, 0xc7, 0x22, 0x98, 0x19, 0x75, 0xa9, 0x00,
+	0x09, 0x8d, 0x0a, 0x04, 0x1f, 0x81, 0x46, 0x79, 0x58, 0xd2, 0x0d, 0x49, 0xb7, 0x29, 0x0f, 0x15,
+	0x39, 0x04, 0x2d, 0x5f, 0xb9, 0x65, 0xed, 0xe6, 0x2f, 0xb5, 0xdb, 0xf9, 0x4a, 0x8d, 0x55, 0x9d,
+	0x26, 0xc2, 0x9d, 0xaa, 0x92, 0xc6, 0x3f, 0x39, 0x40, 0x2f, 0xb0, 0xb2, 0xf7, 0xe8, 0xe6, 0x6d,
+	0x6b, 0xa2, 0xcd, 0xd6, 0x44, 0x1f, 0x5b, 0x13, 0xbd, 0xec, 0xcc, 0xda, 0x66, 0x67, 0xd6, 0xde,
+	0x77, 0x66, 0xed, 0x69, 0x10, 0xb1, 0x7c, 0xba, 0xf0, 0x49, 0x20, 0x12, 0xeb, 0xeb, 0xb9, 0x14,
+	0x9f, 0x8b, 0x2c, 0x9c, 0x7d, 0x7f, 0x39, 0x7e, 0x4b, 0x56, 0xb8, 0xfa, 0x0c, 0x00, 0x00, 0xff,
+	0xff, 0xaf, 0xe3, 0x53, 0x2a, 0x5a, 0x02, 0x00, 0x00,
 }
 
 func (m *AppConfig) Marshal() (dAtA []byte, err error) {
@@ -222,30 +273,60 @@ func (m *AppConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 	}
 	if len(m.Modules) > 0 {
-		for k := range m.Modules {
-			v := m.Modules[k]
-			baseI := i
-			if v != nil {
-				{
-					size, err := v.MarshalToSizedBuffer(dAtA[:i])
-					if err != nil {
-						return 0, err
-					}
-					i -= size
-					i = encodeVarintAppConfig(dAtA, i, uint64(size))
+		for iNdEx := len(m.Modules) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Modules[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
 				}
-				i--
-				dAtA[i] = 0x12
+				i -= size
+				i = encodeVarintAppConfig(dAtA, i, uint64(size))
 			}
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintAppConfig(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintAppConfig(dAtA, i, uint64(baseI-i))
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ModuleConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintAppConfig(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Module != nil {
+		{
+			size, err := m.Module.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAppConfig(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -277,10 +358,15 @@ func (m *ABCIHandlers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	if len(m.TxHandler) > 0 {
-		i -= len(m.TxHandler)
-		copy(dAtA[i:], m.TxHandler)
-		i = encodeVarintAppConfig(dAtA, i, uint64(len(m.TxHandler)))
+	if m.TxModule != nil {
+		{
+			size, err := m.TxModule.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAppConfig(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0x22
 	}
@@ -332,20 +418,30 @@ func (m *AppConfig) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Modules) > 0 {
-		for k, v := range m.Modules {
-			_ = k
-			_ = v
-			l = 0
-			if v != nil {
-				l = v.Size()
-				l += 1 + sovAppConfig(uint64(l))
-			}
-			mapEntrySize := 1 + len(k) + sovAppConfig(uint64(len(k))) + l
-			n += mapEntrySize + 1 + sovAppConfig(uint64(mapEntrySize))
+		for _, e := range m.Modules {
+			l = e.Size()
+			n += 1 + l + sovAppConfig(uint64(l))
 		}
 	}
 	if m.Abci != nil {
 		l = m.Abci.Size()
+		n += 1 + l + sovAppConfig(uint64(l))
+	}
+	return n
+}
+
+func (m *ModuleConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Module != nil {
+		l = m.Module.Size()
+		n += 1 + l + sovAppConfig(uint64(l))
+	}
+	l = len(m.Name)
+	if l > 0 {
 		n += 1 + l + sovAppConfig(uint64(l))
 	}
 	return n
@@ -375,8 +471,8 @@ func (m *ABCIHandlers) Size() (n int) {
 			n += 1 + l + sovAppConfig(uint64(l))
 		}
 	}
-	l = len(m.TxHandler)
-	if l > 0 {
+	if m.TxModule != nil {
+		l = m.TxModule.Size()
 		n += 1 + l + sovAppConfig(uint64(l))
 	}
 	l = len(m.InfoHandler)
@@ -450,105 +546,10 @@ func (m *AppConfig) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Modules == nil {
-				m.Modules = make(map[string]*types.Any)
+			m.Modules = append(m.Modules, &ModuleConfig{})
+			if err := m.Modules[len(m.Modules)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
-			var mapkey string
-			var mapvalue *types.Any
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowAppConfig
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowAppConfig
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthAppConfig
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthAppConfig
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var mapmsglen int
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowAppConfig
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapmsglen |= int(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					if mapmsglen < 0 {
-						return ErrInvalidLengthAppConfig
-					}
-					postmsgIndex := iNdEx + mapmsglen
-					if postmsgIndex < 0 {
-						return ErrInvalidLengthAppConfig
-					}
-					if postmsgIndex > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = &types.Any{}
-					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
-						return err
-					}
-					iNdEx = postmsgIndex
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipAppConfig(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthAppConfig
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Modules[mapkey] = mapvalue
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -585,6 +586,124 @@ func (m *AppConfig) Unmarshal(dAtA []byte) error {
 			if err := m.Abci.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppConfig(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppConfig
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Module", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppConfig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Module == nil {
+				m.Module = &types.Any{}
+			}
+			if err := m.Module.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppConfig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppConfig
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -734,9 +853,9 @@ func (m *ABCIHandlers) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TxHandler", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TxModule", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppConfig
@@ -746,23 +865,27 @@ func (m *ABCIHandlers) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthAppConfig
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthAppConfig
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TxHandler = string(dAtA[iNdEx:postIndex])
+			if m.TxModule == nil {
+				m.TxModule = &types.Any{}
+			}
+			if err := m.TxModule.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {

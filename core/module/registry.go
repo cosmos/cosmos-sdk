@@ -4,12 +4,19 @@ import (
 	"reflect"
 )
 
-type registry struct {
+type Registry struct {
 	hmap        map[reflect.Type]interface{}
 	handlerType reflect.Type
 }
 
-func (r *registry) Register(constructor interface{}) {
+func NewRegistry(handlerType interface{}) *Registry {
+	return &Registry{
+		hmap:        map[reflect.Type]interface{}{},
+		handlerType: reflect.TypeOf(handlerType),
+	}
+}
+
+func (r *Registry) Register(constructor interface{}) {
 	typ := reflect.TypeOf(constructor)
 	if typ.Kind() != reflect.Func {
 		panic("TODO")
@@ -35,4 +42,8 @@ func (r *registry) Register(constructor interface{}) {
 	}
 
 	r.hmap[configArg] = constructor
+}
+
+func (r *Registry) Resolve(configType interface{}) interface{} {
+	return r.hmap[reflect.TypeOf(configType)]
 }

@@ -1,6 +1,7 @@
 package module
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,60 +23,60 @@ type keeperB struct {
 func TestContainer(t *testing.T) {
 	c := NewContainer()
 	require.NoError(t, c.Provide(Provider{
-		Constructor: func(deps []interface{}) ([]interface{}, error) {
-			return []interface{}{keeperA{deps[0].(storeKey)}}, nil
+		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
+			return []reflect.Value{reflect.ValueOf(keeperA{deps[0].Interface().(storeKey)})}, nil
 		},
 		Needs: []Key{
 			{
-				Type: storeKey{},
+				Type: reflect.TypeOf(storeKey{}),
 			},
 		},
 		Provides: []Key{
 			{
-				Type: (*keeperA)(nil),
+				Type: reflect.TypeOf((*keeperA)(nil)),
 			},
 		},
 		Scope: "a",
 	}))
 	require.NoError(t, c.Provide(Provider{
-		Constructor: func(deps []interface{}) ([]interface{}, error) {
-			return []interface{}{keeperB{
-				key: deps[0].(storeKey),
-				a:   deps[1].(keeperA),
-			}}, nil
+		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
+			return []reflect.Value{reflect.ValueOf(keeperB{
+				key: deps[0].Interface().(storeKey),
+				a:   deps[1].Interface().(keeperA),
+			})}, nil
 		},
 		Needs: []Key{
 			{
-				Type: storeKey{},
+				Type: reflect.TypeOf(storeKey{}),
 			},
 			{
-				Type: (*keeperA)(nil),
+				Type: reflect.TypeOf((*keeperA)(nil)),
 			},
 		},
 		Provides: []Key{
 			{
-				Type: (*keeperB)(nil),
+				Type: reflect.TypeOf((*keeperB)(nil)),
 			},
 		},
 		Scope: "b",
 	}))
 	require.NoError(t, c.ProvideForScope(
 		ScopedProvider{
-			Constructor: func(scope string, deps []interface{}) ([]interface{}, error) {
-				return []interface{}{storeKey{name: scope}}, nil
+			Constructor: func(scope Scope, deps []reflect.Value) ([]reflect.Value, error) {
+				return []reflect.Value{reflect.ValueOf(storeKey{name: scope})}, nil
 			},
 			Needs: nil,
 			Provides: []Key{
 				{
-					Type: storeKey{},
+					Type: reflect.TypeOf(storeKey{}),
 				},
 			},
 		},
 	))
 
-	res, err := c.Resolve("b", Key{Type: (*keeperB)(nil)})
+	res, err := c.Resolve("b", Key{Type: reflect.TypeOf((*keeperB)(nil))})
 	require.NoError(t, err)
-	b := res.(keeperB)
+	b := res.Interface().(keeperB)
 	t.Logf("%+v", b)
 	require.Equal(t, "b", b.key.name)
 	require.Equal(t, "a", b.a.key.name)
@@ -84,36 +85,36 @@ func TestContainer(t *testing.T) {
 func TestCycle(t *testing.T) {
 	c := NewContainer()
 	require.NoError(t, c.Provide(Provider{
-		Constructor: func(deps []interface{}) ([]interface{}, error) {
+		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
 			return nil, nil
 		},
 		Needs: []Key{
 			{
-				Type: (*keeperB)(nil),
+				Type: reflect.TypeOf((*keeperB)(nil)),
 			},
 		},
 		Provides: []Key{
 			{
-				Type: (*keeperA)(nil),
+				Type: reflect.TypeOf((*keeperA)(nil)),
 			},
 		},
 	}))
 	require.NoError(t, c.Provide(Provider{
-		Constructor: func(deps []interface{}) ([]interface{}, error) {
+		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
 			return nil, nil
 		},
 		Needs: []Key{
 			{
-				Type: (*keeperA)(nil),
+				Type: reflect.TypeOf((*keeperA)(nil)),
 			},
 		},
 		Provides: []Key{
 			{
-				Type: (*keeperB)(nil),
+				Type: reflect.TypeOf((*keeperB)(nil)),
 			},
 		},
 	}))
 
-	_, err := c.Resolve("b", Key{Type: (*keeperB)(nil)})
+	_, err := c.Resolve("b", Key{Type: reflect.TypeOf((*keeperB)(nil))})
 	require.EqualError(t, err, "fatal: cycle detected")
 }

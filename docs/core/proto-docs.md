@@ -256,7 +256,7 @@
 - [cosmos/core/app_config/v1/app_config.proto](#cosmos/core/app_config/v1/app_config.proto)
     - [ABCIHandlers](#cosmos.core.app_config.v1.ABCIHandlers)
     - [AppConfig](#cosmos.core.app_config.v1.AppConfig)
-    - [AppConfig.ModulesEntry](#cosmos.core.app_config.v1.AppConfig.ModulesEntry)
+    - [ModuleConfig](#cosmos.core.app_config.v1.ModuleConfig)
   
 - [cosmos/core/app_config/v1/default_middleware.proto](#cosmos/core/app_config/v1/default_middleware.proto)
     - [DefaultTxMiddleware](#cosmos.core.app_config.v1.DefaultTxMiddleware)
@@ -3791,7 +3791,7 @@ GenesisState defines the capability module's genesis state.
 | `init_genesis` | [string](#string) | repeated |  |
 | `begin_block` | [string](#string) | repeated |  |
 | `end_block` | [string](#string) | repeated |  |
-| `tx_handler` | [string](#string) |  |  |
+| `tx_module` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `info_handler` | [string](#string) |  |  |
 
 
@@ -3807,7 +3807,7 @@ GenesisState defines the capability module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `modules` | [AppConfig.ModulesEntry](#cosmos.core.app_config.v1.AppConfig.ModulesEntry) | repeated |  |
+| `modules` | [ModuleConfig](#cosmos.core.app_config.v1.ModuleConfig) | repeated |  |
 | `abci` | [ABCIHandlers](#cosmos.core.app_config.v1.ABCIHandlers) |  |  |
 
 
@@ -3815,16 +3815,16 @@ GenesisState defines the capability module's genesis state.
 
 
 
-<a name="cosmos.core.app_config.v1.AppConfig.ModulesEntry"></a>
+<a name="cosmos.core.app_config.v1.ModuleConfig"></a>
 
-### AppConfig.ModulesEntry
+### ModuleConfig
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `module` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `name` | [string](#string) |  |  |
 
 
 

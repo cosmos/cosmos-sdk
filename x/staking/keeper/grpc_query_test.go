@@ -288,16 +288,19 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 		msg      string
 		malleate func()
 		expPass  bool
+		expErr   bool
 	}{
 		{"empty request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{}
 			},
 			false,
+			true,
 		}, {"invalid request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrs[4].String()}
 			},
+			false,
 			false,
 		},
 		{"valid request",
@@ -306,6 +309,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
 			true,
+			false,
 		},
 	}
 
@@ -313,11 +317,16 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorDelegations(gocontext.Background(), req)
-			if tc.expPass {
+			if tc.expPass && !tc.expErr {
+				suite.NoError(err)
+				suite.NotNil(res.Pagination.NextKey)
 				suite.Equal(uint64(2), res.Pagination.Total)
 				suite.Len(res.DelegationResponses, 1)
 				suite.Equal(1, len(res.DelegationResponses))
 				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
+			} else if !tc.expPass && !tc.expErr {
+				suite.NoError(err)
+				suite.Nil(res.DelegationResponses)
 			} else {
 				suite.Error(err)
 				suite.Nil(res)

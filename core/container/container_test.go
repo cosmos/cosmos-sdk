@@ -1,4 +1,4 @@
-package module
+package container
 
 import (
 	"reflect"
@@ -22,7 +22,7 @@ type keeperB struct {
 
 func TestContainer(t *testing.T) {
 	c := NewContainer()
-	require.NoError(t, c.Provide(Provider{
+	require.NoError(t, c.RegisterProvider(Provider{
 		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
 			return []reflect.Value{reflect.ValueOf(keeperA{deps[0].Interface().(storeKey)})}, nil
 		},
@@ -38,30 +38,36 @@ func TestContainer(t *testing.T) {
 		},
 		Scope: "a",
 	}))
-	require.NoError(t, c.Provide(Provider{
+	require.NoError(t, c.RegisterProvider(Provider{
 		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
 			return []reflect.Value{reflect.ValueOf(keeperB{
 				key: deps[0].Interface().(storeKey),
 				a:   deps[1].Interface().(keeperA),
 			})}, nil
 		},
-		Needs: []Key{
+		Needs: []Input{
 			{
-				Type: reflect.TypeOf(storeKey{}),
+				Key: Key{
+					Type: reflect.TypeOf(storeKey{}),
+				},
 			},
 			{
-				Type: reflect.TypeOf((*keeperA)(nil)),
+				Key: Key{
+					Type: reflect.TypeOf((*keeperA)(nil)),
+				},
 			},
 		},
-		Provides: []Key{
+		Provides: []SecureOutput{
 			{
-				Type: reflect.TypeOf((*keeperB)(nil)),
+				Key: Key{
+					Type: reflect.TypeOf((*keeperB)(nil)),
+				},
 			},
 		},
 		Scope: "b",
 	}))
-	require.NoError(t, c.ProvideScoped(
-		ScopedProvider{
+	require.NoError(t, c.RegisterScopeProvider(
+		ScopeProvider{
 			Constructor: func(scope Scope, deps []reflect.Value) ([]reflect.Value, error) {
 				return []reflect.Value{reflect.ValueOf(storeKey{name: scope})}, nil
 			},
@@ -84,7 +90,7 @@ func TestContainer(t *testing.T) {
 
 func TestCycle(t *testing.T) {
 	c := NewContainer()
-	require.NoError(t, c.Provide(Provider{
+	require.NoError(t, c.RegisterProvider(Provider{
 		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
 			return nil, nil
 		},
@@ -99,7 +105,7 @@ func TestCycle(t *testing.T) {
 			},
 		},
 	}))
-	require.NoError(t, c.Provide(Provider{
+	require.NoError(t, c.RegisterProvider(Provider{
 		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
 			return nil, nil
 		},

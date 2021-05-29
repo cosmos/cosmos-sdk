@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	container2 "github.com/cosmos/cosmos-sdk/core/container"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/tendermint/tendermint/abci/types"
 
@@ -14,7 +16,7 @@ import (
 
 func Compose(config AppConfig, moduleRegistry *module.Registry) (types.Application, error) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	container := module.NewContainer()
+	container := container2.NewContainer()
 	modSet := &moduleSet{
 		container: container,
 		modMap:    map[string]app.Handler{},
@@ -62,7 +64,7 @@ func Compose(config AppConfig, moduleRegistry *module.Registry) (types.Applicati
 }
 
 type moduleSet struct {
-	container *module.Container
+	container *container2.Container
 	modMap    map[string]app.Handler
 	configMap map[string]*ModuleConfig
 }
@@ -95,16 +97,16 @@ func (ms *moduleSet) addModule(interfaceRegistry codectypes.InterfaceRegistry, r
 	ctrTyp := ctrVal.Type()
 
 	numIn := ctrTyp.NumIn()
-	var needs []module.Key
+	var needs []container2.Key
 	for i := 1; i < numIn; i++ {
 		argTy := ctrTyp.In(i)
-		needs = append(needs, module.Key{
+		needs = append(needs, container2.Key{
 			Type: argTy,
 		})
 	}
 
 	numOut := ctrTyp.NumIn()
-	var provides []module.Key
+	var provides []container2.Key
 	for i := 1; i < numOut; i++ {
 		argTy := ctrTyp.Out(i)
 
@@ -113,12 +115,12 @@ func (ms *moduleSet) addModule(interfaceRegistry codectypes.InterfaceRegistry, r
 			continue
 		}
 
-		provides = append(provides, module.Key{
+		provides = append(provides, container2.Key{
 			Type: argTy,
 		})
 	}
 
-	return ms.container.Provide(module.Provider{
+	return ms.container.RegisterProvider(container2.Provider{
 		Constructor: func(deps []reflect.Value) ([]reflect.Value, error) {
 			args := []reflect.Value{reflect.ValueOf(msg)}
 			args = append(args, deps...)

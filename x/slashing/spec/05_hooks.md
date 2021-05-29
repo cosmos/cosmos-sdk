@@ -16,7 +16,6 @@ The following hooks impact the slashing state:
 + `AfterValidatorCreated` stores a validator's consensus key.
 + `AfterValidatorRemoved` removes a validator's consensus key.
 
-
 ## Validator Bonded
 
 Upon successful first-time bonding of a new validator, we create a new `ValidatorSigningInfo` structure for the

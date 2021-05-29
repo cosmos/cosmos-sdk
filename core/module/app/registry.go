@@ -2,7 +2,7 @@ package app
 
 import "github.com/cosmos/cosmos-sdk/core/module"
 
-var defaultRegistry = module.NewRegistry((*Handler)(nil))
+var defaultRegistry = module.NewRegistry((interface{})(nil), (*Handler)(nil))
 
 func DefaultRegistry() *module.Registry {
 	return defaultRegistry

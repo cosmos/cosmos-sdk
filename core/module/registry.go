@@ -6,12 +6,14 @@ import (
 
 type Registry struct {
 	hmap        map[reflect.Type]interface{}
+	configType  reflect.Type
 	handlerType reflect.Type
 }
 
-func NewRegistry(handlerType interface{}) *Registry {
+func NewRegistry(configType interface{}, handlerType interface{}) *Registry {
 	return &Registry{
 		hmap:        map[reflect.Type]interface{}{},
+		configType:  reflect.TypeOf(configType),
 		handlerType: reflect.TypeOf(handlerType),
 	}
 }
@@ -26,9 +28,12 @@ func (r *Registry) Register(constructor interface{}) {
 		panic("TODO")
 	}
 
-	configArg := typ.In(0)
+	configType := typ.In(0)
+	if !configType.AssignableTo(r.configType) {
+		panic("TODO")
+	}
 
-	if _, ok := r.hmap[configArg]; ok {
+	if _, ok := r.hmap[configType]; ok {
 		panic("TODO")
 	}
 
@@ -41,7 +46,7 @@ func (r *Registry) Register(constructor interface{}) {
 		panic("TODO")
 	}
 
-	r.hmap[configArg] = constructor
+	r.hmap[configType] = constructor
 }
 
 func (r *Registry) Resolve(configType interface{}) interface{} {

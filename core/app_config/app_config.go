@@ -18,6 +18,7 @@ func Compose(config AppConfig, moduleRegistry *module.Registry) (types.Applicati
 	modSet := &moduleSet{
 		container: container,
 		modMap:    map[string]app.Handler{},
+		configMap: map[string]*ModuleConfig{},
 	}
 
 	for _, mod := range config.Modules {
@@ -63,13 +64,22 @@ func Compose(config AppConfig, moduleRegistry *module.Registry) (types.Applicati
 type moduleSet struct {
 	container *module.Container
 	modMap    map[string]app.Handler
+	configMap map[string]*ModuleConfig
 }
 
 func (ms *moduleSet) addModule(interfaceRegistry codectypes.InterfaceRegistry, registry *module.Registry, config *ModuleConfig) error {
+	ms.configMap[config.Name] = config
+
 	msg, err := interfaceRegistry.Resolve(config.Module.TypeUrl)
 	if err != nil {
 		return err
 	}
+
+	// TODO:
+	//typeProvider, ok := msg.(codec.TypeProvider)
+	//if !ok {
+	//  typeProvider.RegisterTypes(interfaceRegistry)
+	//}
 
 	err = proto.Unmarshal(config.Module.Value, msg)
 	if err != nil {
@@ -142,7 +152,18 @@ func (ms *moduleSet) addModule(interfaceRegistry codectypes.InterfaceRegistry, r
 }
 
 func (ms *moduleSet) initialize() error {
-	return ms.container.InitializeAll()
+	err := ms.container.InitializeAll()
+	if err != nil {
+		return err
+	}
+
+	for name := range ms.configMap {
+		if ms.modMap[name] == nil {
+			return fmt.Errorf("module %s failed to initialize", name)
+		}
+	}
+
+	return nil
 }
 
 func isErrorTyp(ty reflect.Type) bool {

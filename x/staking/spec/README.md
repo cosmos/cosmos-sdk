@@ -43,6 +43,7 @@ network.
     - [MsgDelegate](03_messages.md#msgdelegate)
     - [MsgUndelegate](03_messages.md#msgundelegate)
     - [MsgBeginRedelegate](03_messages.md#msgbeginredelegate)
+    - [MsgRotateConsPubKey]
 4. **[Begin-Block](04_begin_block.md)**
     - [Historical Info Tracking](04_begin_block.md#historical-info-tracking)
 5. **[End-Block](05_end_block.md)**

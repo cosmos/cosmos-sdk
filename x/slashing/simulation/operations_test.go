@@ -123,7 +123,7 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, simapp.FundAccount(app, ctx, account.Address, initCoins))
+		require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
 	return accounts

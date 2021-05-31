@@ -39,15 +39,19 @@
 `CheckTx`와 `DeliverTx` 외에도 베이스앱은 다음과 같은 ABCI 메시지를 처리합니다.
 
 ### Info
+
 TODO complete description (추후 업데이트 예정)
 
 ### SetOption
+
 TODO complete description (추후 업데이트 예정)
 
 ### Query
+
 TODO complete description (추후 업데이트 예정)
 
 ### InitChain
+
 TODO complete description (추후 업데이트 예정)
 
 체인 시동(chain initialization) 단계에서 `InitChain`은 `CommitMultiStore`에 직접적으로 할당되어 있는 시동 로직을 실행합니다. check state와 deliver state는 정의된 ChainID로 시작됩니다.
@@ -55,14 +59,16 @@ TODO complete description (추후 업데이트 예정)
 참고할 것은 InitChain 이후에 커밋을 실행하지 않습니다. 그렇기 때문에 블록 1의 BeginBlock은 InitChain이 시작한대로 deliver state에서 시작됩니다.
 
 ### BeginBlock
+
 TODO complete description (추후 업데이트 예정)
 
 ### EndBlock
+
 TODO complete description (추후 업데이트 예정)
 
 ### Commit
-TODO complete description (추후 업데이트 예정)
 
+TODO complete description (추후 업데이트 예정)
 
 ## 가스 관리(Gas Management)
 
@@ -71,7 +77,6 @@ TODO complete description (추후 업데이트 예정)
 InitChain 실행 단계에서 블록 가스 미터는 제네시스 트랜잭션을 처리하기 위하여 무한대 가스 수량을 기준으로 시작됩니다.
 
 또한, InitChain의 리퀘스트 메시지에는 genesis.json 파일이 정의하는 ConsensusParams가 포함되어있습니다.
-
 
 ### 가스: BeginBlock
 
@@ -82,4 +87,3 @@ InitChain 실행 단계에서 블록 가스 미터는 제네시스 트랜잭션�
 특정 트랜잭션이 실행되기 전, `BlockGasMeter`를 우선 확인하여 남은 가스가 있는지 확인합니다. 만약 남은 가스가 없다면 `DeliverTx`는 즉시 에러를 리턴합니다.
 
 트랜잭션이 처리된 후, 사용된 가스는 (설정된 가스 리밋에 따라) `BlockGasMeter`에서 차감됩니다. 만약 잔류 가스가 가스 미터의 한도를 초과할 경우, `DeliverTx`는 에러를 리턴하고 해당 트랜잭션은 커밋되지 않습니다.
-

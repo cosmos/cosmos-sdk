@@ -1,21 +1,21 @@
 # Contributing
 
 - [Contributing](#contributing)
-  - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-  - [Pull Requests](#pull-requests)
-    - [Process for reviewing PRs](#process-for-reviewing-prs)
-    - [Updating Documentation](#updating-documentation)
-  - [Forking](#forking)
-  - [Dependencies](#dependencies)
-  - [Protobuf](#protobuf)
-  - [Testing](#testing)
-  - [Branching Model and Release](#branching-model-and-release)
-    - [PR Targeting](#pr-targeting)
-    - [Development Procedure](#development-procedure)
-    - [Pull Merge Procedure](#pull-merge-procedure)
-    - [Release Procedure](#release-procedure)
-    - [Point Release Procedure](#point-release-procedure)
-  - [Code Owner Membership](#code-owner-membership)
+    - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+    - [Pull Requests](#pull-requests)
+        - [Process for reviewing PRs](#process-for-reviewing-prs)
+        - [Updating Documentation](#updating-documentation)
+    - [Forking](#forking)
+    - [Dependencies](#dependencies)
+    - [Protobuf](#protobuf)
+    - [Testing](#testing)
+    - [Branching Model and Release](#branching-model-and-release)
+        - [PR Targeting](#pr-targeting)
+        - [Development Procedure](#development-procedure)
+        - [Pull Merge Procedure](#pull-merge-procedure)
+        - [Release Procedure](#release-procedure)
+        - [Point Release Procedure](#point-release-procedure)
+    - [Code Owner Membership](#code-owner-membership)
 
 Thank you for considering making contributions to Cosmos-SDK and related
 repositories!
@@ -80,12 +80,12 @@ All PRs require two Reviews before merge (except docs changes, or variable name-
 
 - `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests locally and thoroughly reviewed it.
 - `Approval` through the GH UI means that you understand the code, documentation/spec is updated in the right places, you have pulled down and tested the code locally. In addition:
-  - You must also think through anything which ought to be included but is not
-  - You must think through whether any added code could be partially combined (DRYed) with existing code
-  - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
-  - Naming must be consistent with conventions and the rest of the codebase
-  - Code must live in a reasonable location, considering dependency structures (e.g. not importing testing modules in production code, or including example code modules in production code).
-  - if you approve of the PR, you are responsible for fixing any of the issues mentioned here and more
+    - You must also think through anything which ought to be included but is not
+    - You must think through whether any added code could be partially combined (DRYed) with existing code
+    - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
+    - Naming must be consistent with conventions and the rest of the codebase
+    - Code must live in a reasonable location, considering dependency structures (e.g. not importing testing modules in production code, or including example code modules in production code).
+    - if you approve of the PR, you are responsible for fixing any of the issues mentioned here and more
 - If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
 
@@ -96,6 +96,8 @@ If you open a PR on the Cosmos SDK, it is mandatory to update the relevant docum
 - If your change relates to the core SDK (baseapp, store, ...), please update the `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
 - If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the `docs/interfaces/` folder.
 - If your changes relate to a module, please update the module's spec in `x/moduleName/docs/spec/`.
+
+When writing documentation, follow the [Documentation Writing Guidelines](./docs/DOC_WRITING_GUIDELINES.md).
 
 ## Forking
 
@@ -166,7 +168,7 @@ For example, in vscode your `.vscode/settings.json` should look like:
 
 ## Testing
 
-Tests can be ran by running `make test` at the top level of the SDK repository. 
+Tests can be ran by running `make test` at the top level of the SDK repository.
 
 We expect tests to use `require` or `assert` rather than `t.Skip` or `t.Fail`,
 unless there is a reason to do otherwise.
@@ -204,7 +206,7 @@ The SDK utilizes [semantic versioning](https://semver.org/).
 Ensure that you base and target your PR on the `master` branch.
 
 All feature additions should be targeted against `master`. Bug fixes for an outstanding release candidate
-should be targeted against the release candidate branch. 
+should be targeted against the release candidate branch.
 
 ### Development Procedure
 
@@ -227,10 +229,10 @@ should be targeted against the release candidate branch.
 - Create the release candidate branch `rc/v*` (going forward known as **RC**)
   and ensure it's protected against pushing from anyone except the release
   manager/coordinator
-  - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+    - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
 - On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
-  - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
-  - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
+    - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
+    - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.
 - Kick off a large round of simulation testing (e.g. 400 seeds for 2k blocks)
 - If errors are found during the simulation testing, commit the fixes to `master`
   and create a new `RC` branch (making sure to increment the `rcN`)
@@ -312,21 +314,20 @@ have had acted maliciously or grossly negligent, code-owner privileges may be
 stripped with no prior warning or consent from the member in question.
 
 Other potential removal criteria:
-  * Missing 3 scheduled meetings results in ICF evaluating whether the member should be
+
+* Missing 3 scheduled meetings results in ICF evaluating whether the member should be
     removed / replaced
-  * Violation of Code of Conduct
+* Violation of Code of Conduct
 
 Earning this privilege should be considered to be no small feat and is by no
 means guaranteed by any quantifiable metric. It is a symbol of great trust of
 the community of this project.
 
-
 ## Concept & Release Approval Process
 
 The process for how Cosmos SDK maintainers take features and ADRs from concept to release
-is broken up into three distinct stages: **Strategy Discovery**, **Concept Approval**, and 
+is broken up into three distinct stages: **Strategy Discovery**, **Concept Approval**, and
 **Implementation & Release Approval**
-
 
 ### Strategy Discovery
 
@@ -352,8 +353,9 @@ If an individual Pull Request for an ADR needs more time than 2 weeks to reach r
 in current state (`Draft` or `Proposed`), with its contents updated to summarize
 the current state of its discussion.
 
-If an ADR is taking longer than 4 weeks to reach a final conclusion, the **Concept Approval Committee** 
+If an ADR is taking longer than 4 weeks to reach a final conclusion, the **Concept Approval Committee**
 should convene to rectify the situation by either:
+
 - unanimously setting a new time bound period for this ADR
 - making changes to the Concept Approval Process (as outlined here)
 - making changes to the members of the Concept Approval Committee
@@ -376,8 +378,8 @@ Members must:
 * Be active contributors to the SDK, and furthermore should be continuously making substantial contributions
   to the project's codebase, review process, documentation and ADRs
 * Have stake in the Cosmos SDK project, represented by:
-  * Being a client / user of the Comsos SDK
-  * "[giving back](https://www.debian.org/social_contract)" to the software
+    * Being a client / user of the Comsos SDK
+    * "[giving back](https://www.debian.org/social_contract)" to the software
 * Delegate representation in case of vacation or absence
 
 Code owners need to maintain participation in the process, ideally as members of **Concept Approval Committee**
@@ -396,7 +398,7 @@ well as for PRs made as part of a release process:
 * Code reviewers should ensure the PR does exactly what the ADR said it should
 * Code reviewers should have more senior engineering capability
 * 1/2 approval is required from the **primary repo maintainers** in `CODEOWNERS`
- 
+
 *Note: For any major or minor release series denoted as a "Stable Release" (e.g. v0.39 "Launchpad"), a separate release
 committee is often established. Stable Releases, and their corresponding release committees are documented
 separately in [STABLE_RELEASES.md](./STABLE_RELEASES.md)*

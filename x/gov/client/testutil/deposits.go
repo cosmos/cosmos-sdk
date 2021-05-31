@@ -161,11 +161,10 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 	if exceptErr {
 		s.Require().Error(err)
 		return nil
-	} else {
-		s.Require().NoError(err)
-		s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositsRes))
-		return depositsRes
 	}
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositsRes))
+	return depositsRes
 }
 
 func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool) *types.Deposit {

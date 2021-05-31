@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
 //TODO replace Info by reyring entry in client/reys
-// check  newLedgerInfo, newLocalInfo, newMultiInfo in whole codebase
-// TODO count how many times newLedgerInfo or newLocalInfo is used and perhaps consider create a separate functions for that
+// check  NewLedgerInfo, newLocalInfo, newMultiInfo in whole codebase
+// TODO count how many times NewLedgerInfo or newLocalInfo is used and perhaps consider create a separate functions for that
 func NewRecord(name string, pubKey *codectypes.Any, item isRecord_Item) *Record {
 	return &Record{name, pubKey, item}
 }
@@ -25,32 +25,32 @@ func newLocalInfoItem(localInfo *LocalInfo) *Record_Local {
 	return &Record_Local{localInfo}
 }
 
-func newLedgerInfo(path *hd.BIP44Params) *LedgerInfo {
+func NewLedgerInfo(path *hd.BIP44Params) *LedgerInfo {
 	return &LedgerInfo{path}
 }
 
-func newLedgerInfoItem(ledgerInfo *LedgerInfo) *Record_Ledger {
+func NewLedgerInfoItem(ledgerInfo *LedgerInfo) *Record_Ledger {
 	return &Record_Ledger{ledgerInfo}
 }
 
 func (li LedgerInfo) GetPath() *hd.BIP44Params {
 	return &hd.BIP44Params{li.Path.Purpose, li.Path.CoinType, li.Path.Account, li.Path.Change, li.Path.AddressIndex}
-	
+
 }
 
-func newMultiInfo() *MultiInfo {
+func NewMultiInfo() *MultiInfo {
 	return &MultiInfo{}
 }
 
-func newMultiInfoItem(multiInfo *MultiInfo) *Record_Multi {
+func NewMultiInfoItem(multiInfo *MultiInfo) *Record_Multi {
 	return &Record_Multi{multiInfo}
 }
 
-func newOfflineInfo() *OfflineInfo {
+func NewOfflineInfo() *OfflineInfo {
 	return &OfflineInfo{}
 }
 
-func newOfflineInfoItem(offlineInfo *OfflineInfo) *Record_Offline {
+func NewOfflineInfoItem(offlineInfo *OfflineInfo) *Record_Offline {
 	return &Record_Offline{offlineInfo}
 }
 
@@ -61,7 +61,7 @@ func (re Record) GetName() string {
 func (re Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := re.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, fmt.Errorf("Unable to cast Pubrey to cryptotypes.PubKey")
+		return nil, fmt.Errorf("Unable to cast PubKey to cryptotypes.PubKey")
 	}
 	return pk, nil
 }
@@ -89,7 +89,6 @@ func (re Record) GetAlgo() string {
 func (re Record) GetType() KeyType {
 	return 0
 }
-
 
 func (re Record) extractPrivKeyFromLocalInfo() (cryptotypes.PrivKey, error) {
 	local := re.GetLocal()

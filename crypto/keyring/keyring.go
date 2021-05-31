@@ -57,7 +57,6 @@ var (
 	VERSION_KEY                        = string([]byte{0})
 )
 
-
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
 type Keyring interface {
 	// List all keys.
@@ -125,7 +124,6 @@ type Importer interface {
 	// ImportPubKey imports ASCII armored public keys.
 	ImportPubKey(uid string, armor string) error
 }
-
 
 // TODO try to remove to see where it is used
 // LegacyInfoImporter is implemented by key stores that support import of Info types.
@@ -326,7 +324,6 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	return nil
 }
 
-
 // ImportInfo implements Importer.MigrateInfo.
 // TODO do i need it or not
 /*
@@ -368,7 +365,6 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 	return ks.Sign(ke.GetName(), msg)
 }
 
-
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
 
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
@@ -390,10 +386,10 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	return ks.writeLedgerKey(uid, apk, hdPath)
 }
 
-func (ks keystore) writeLedgerKey(name string, pubKey *codectypes.Any, path *hd.BIP44Params,) (*Record, error) {
+func (ks keystore) writeLedgerKey(name string, pubKey *codectypes.Any, path *hd.BIP44Params) (*Record, error) {
 
-	ledgerInfo := newLedgerInfo(path)
-	ledgerInfoItem := newLedgerInfoItem(ledgerInfo)
+	ledgerInfo := NewLedgerInfo(path)
+	ledgerInfoItem := NewLedgerInfoItem(ledgerInfo)
 	re := NewRecord(name, pubKey, ledgerInfoItem)
 	if err := ks.writeRecord(re); err != nil {
 		return nil, err
@@ -535,6 +531,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 
 	return ke, mnemonic, nil
 }
+
 // TODO keep or remove SignatureAlgo???
 func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (*Record, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
@@ -555,7 +552,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	if _, err := ks.KeyByAddress(address); err == nil {
 		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
 	}
-	
+
 	return ks.writeLocalKey(name, privKey, string(algo.Name()))
 }
 
@@ -872,8 +869,8 @@ func (ks keystore) writeOfflineKey(name string, pub types.PubKey) (*Record, erro
 	if err != nil {
 		return nil, err
 	}
-	offlineInfo := newOfflineInfo()
-	offlineInfoItem := newOfflineInfoItem(offlineInfo)
+	offlineInfo := NewOfflineInfo()
+	offlineInfoItem := NewOfflineInfoItem(offlineInfo)
 	ke := NewRecord(name, apk, offlineInfoItem)
 
 	if err := ks.writeRecord(ke); err != nil {
@@ -883,7 +880,7 @@ func (ks keystore) writeOfflineKey(name string, pub types.PubKey) (*Record, erro
 	return ke, nil
 
 	/*
-		info := newOfflineInfo(name, pub, algo)
+		info := NewOfflineInfo(name, pub, algo)
 		err := ks.writeRecord(info)
 		if err != nil {
 			return nil, err
@@ -901,8 +898,8 @@ func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (*Record, err
 		return nil, err
 	}
 
-	multiInfo := newMultiInfo()
-	multiInfoItem := newMultiInfoItem(multiInfo)
+	multiInfo := NewMultiInfo()
+	multiInfoItem := NewMultiInfoItem(multiInfo)
 	re := NewRecord(name, apk, multiInfoItem)
 	if err = ks.writeRecord(re); err != nil {
 		return nil, err
@@ -971,14 +968,14 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		}
 
 		//2.try to deserialize using amino not proto
-	    //3.if any above will fail - then we will need to log an error and continue, there can be other reasons, or a key could be already migrated to proto.
-	 	_, err = unmarshalInfo(item.Data)
+		//3.if any above will fail - then we will need to log an error and continue, there can be other reasons, or a key could be already migrated to proto.
+		_, err = unmarshalInfo(item.Data)
 		if err != nil {
 			// should i return or or justp rint an eror in this case
 		}
 
 		//4.serialize info using proto
-	    // are you sure that i have to serialize in this case? not deserrialize using proto
+		// are you sure that i have to serialize in this case? not deserrialize using proto
 		var re Record
 		if err := ks.cdc.Unmarshal(item.Data, &re); err != nil {
 			return err
@@ -1007,7 +1004,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			})
 		*/
 	}
-    // 6. at the end of the loop update version
+	// 6. at the end of the loop update version
 	var versionBytes = make([]byte, 4)
 	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
 	ks.db.Set(keyring.Item{

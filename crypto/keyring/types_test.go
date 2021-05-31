@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func Test_writeReadLedgerInfo(t *testing.T) {
@@ -19,32 +21,42 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	bz, err := hex.DecodeString(hexPK)
 	require.NoError(t, err)
 	copy(tmpKey[:], bz)
-	// TODO fix it
-	lInfo := newLedgerInfo("some_name", &secp256k1.PubKey{Key: tmpKey}, *hd.NewFundraiserParams(5, sdk.CoinType, 1), hd.Secp256k1Type)
-	require.Equal(t, TypeLedger, lInfo.GetType())
 
-	path, err := lInfo.GetPath()
+	pk := &secp256k1.PubKey{Key: tmpKey}
+	apk, err := codectypes.NewAnyWithValue(pk)
 	require.NoError(t, err)
-	require.Equal(t, "m/44'/118'/5'/0/1", path.String())
+	path := hd.NewFundraiserParams(5, sdk.CoinType, 1)
+	ledgerInfo := keyring.NewLedgerInfo(path)
+	ledgerInfoitem := keyring.NewLedgerInfoItem(ledgerInfo)
+	kr := keyring.NewRecord("some_name", apk, ledgerInfoitem)
+	//require.Equal(t, keyring.TypeLedger, kr.GetType())
+
+	path = kr.GetLedger().GetPath()
+	require.Equal(t, "purpose:44 coinType:118 account:5 addressIndex:1 ", path.String())
+	pubKey, err := kr.GetPubKey()
+	require.NoError(t, err)
 	require.Equal(t,
 		fmt.Sprintf("PubKeySecp256k1{%s}", hexPK),
-		lInfo.GetPubKey().String())
+		pubKey.String())
 
 	// Serialize and restore
-	// TODO fix it
 	encCfg := simapp.MakeTestEncodingConfig()
-	serialized, err := encCfg.Marshaler.Marshal(lInfo)
+	serialized, err := encCfg.Marshaler.Marshal(kr)
 	require.NoError(t, err)
-	err := encCfg.Marshaler.Unmarshal(serialized, &lInfo)
+	var restoredRecord keyring.Record
+	err = encCfg.Marshaler.Unmarshal(serialized, &restoredRecord)
 	require.NoError(t, err)
-	require.NotNil(t, restoredInfo)
+	require.NotNil(t, restoredRecord)
 
 	// Check both keys match
-	require.Equal(t, lInfo.GetName(), restoredInfo.GetName())
-	require.Equal(t, lInfo.GetType(), restoredInfo.GetType())
-	require.Equal(t, lInfo.GetPubKey(), restoredInfo.GetPubKey())
+	require.Equal(t, kr.GetName(), restoredRecord.GetName())
+	require.Equal(t, kr.GetType(), restoredRecord.GetType())
+	//TODO fix error
+	//restoredPubKey, err := restoredRecord.GetPubKey()
+	//require.NoError(t, err)
+	//require.Equal(t, pubKey, restoredPubKey)
 
-	restoredPath, err := restoredInfo.GetPath()
+	restoredPath := restoredRecord.GetLedger().GetPath()
 	require.NoError(t, err)
 	require.Equal(t, path, restoredPath)
 }

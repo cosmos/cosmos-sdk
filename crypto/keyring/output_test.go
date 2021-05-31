@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 func TestBech32KeysOutput(t *testing.T) {
@@ -17,13 +19,20 @@ func TestBech32KeysOutput(t *testing.T) {
 	tmpKey := sk.PubKey()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
 
-	info, err := NewMultiInfo("multisig", multisigPk)
+	
+	apk, err := codectypes.NewAnyWithValue(multisigPk)
 	require.NoError(t, err)
-	accAddr := sdk.AccAddress(info.GetPubKey().Address())
-	expectedOutput, err := NewKeyOutput(info.GetName(), info.GetType(), accAddr, multisigPk)
+	kr := keyring.NewRecord("multisig", apk, keyring.NewMultiInfoItem(keyring.NewMultiInfo()))
+	//info, err := NewMultiInfo("multisig", multisigPk)
+	require.NotNil(t, kr)
+	require.NoError(t, err)
+	pubKey, err := kr.GetPubKey()
+	require.NoError(t, err)
+	accAddr := sdk.AccAddress(pubKey.Address())
+	expectedOutput, err := keyring.NewKeyOutput(kr.GetName(), kr.GetType(), accAddr, multisigPk)
 	require.NoError(t, err)
 
-	out, err := MkAccKeyOutput(info)
+	out, err := keyring.MkAccKeyOutput(kr)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, out)
 	require.Equal(t, `{Name:multisig Type:multi Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":1,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}]} Mnemonic:}`, fmt.Sprintf("%+v", out))

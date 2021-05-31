@@ -1,4 +1,4 @@
-package keyring
+package  keyring
 
 import (
 	"fmt"
@@ -91,7 +91,7 @@ type legacyLedgerInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) LegacyInfo {
+func NewLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) LegacyInfo {
 	return &legacyLedgerInfo{
 		Name:   name,
 		PubKey: pub,
@@ -139,7 +139,7 @@ type legacyOfflineInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func newlegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
+func NewlegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
 	return &legacyOfflineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -195,7 +195,7 @@ type legacyMultiInfo struct {
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func NewMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
+func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
 		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}

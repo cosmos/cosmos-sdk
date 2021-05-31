@@ -242,6 +242,25 @@ func (k BaseSendKeeper) clearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 	}
 }
 
+// initBalances sets the balance (multiple coins) for an account by address.
+// An error is returned upon failure.
+func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
+	accountStore := k.getAccountStore(ctx, addr)
+	for _, balance := range balances {
+		if !balance.IsValid() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
+		}
+
+		// Bank invariants require to not store zero balances.
+		if !balance.IsZero() {
+			bz := k.cdc.MustMarshal(&balance)
+			accountStore.Set([]byte(balance.Denom), bz)
+		}
+	}
+
+	return nil
+}
+
 // setBalances sets the balance (multiple coins) for an account by address. It will
 // clear out all balances prior to setting the new coins as to set existing balances
 // to zero if they don't exist in amt. An error is returned upon failure.

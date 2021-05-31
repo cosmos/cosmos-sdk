@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -33,7 +34,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	// add coins to the module account
 	macc := app.DistrKeeper.GetDistributionAccount(ctx)
 	balances := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
-	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, macc.GetName(), amount))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, macc.GetName(), amount))
 
 	app.AccountKeeper.SetModuleAccount(ctx, macc)
 

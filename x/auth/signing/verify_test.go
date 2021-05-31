@@ -11,6 +11,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -40,9 +41,9 @@ func TestVerifySignature(t *testing.T) {
 	_ = app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
 	balances := sdk.NewCoins(sdk.NewInt64Coin("atom", 200))
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr, balances))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
 	acc, err := ante.GetSignerAcc(ctx, app.AccountKeeper, addr)
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr, balances))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr, balances))
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})

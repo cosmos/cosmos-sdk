@@ -175,9 +175,8 @@ func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID strin
 	if exceptErr {
 		s.Require().Error(err)
 		return nil
-	} else {
-		s.Require().NoError(err)
-		s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositRes))
-		return &depositRes
 	}
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositRes))
+	return &depositRes
 }

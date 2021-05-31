@@ -414,8 +414,9 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegationsResponseCode() {
+func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	val := s.network.Validators[0]
+	baseURL := val.APIAddress
 
 	// Create new account in the keyring.
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -425,25 +426,6 @@ func (s *IntegrationTestSuite) TestQueryDelegationsResponseCode() {
 	_, statusCode, err := getRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", val.APIAddress, newAddr.String()))
 	s.Require().NoError(err)
 	s.Require().Equal(200, statusCode)
-}
-
-func getRequest(url string) ([]byte, int, error) {
-	res, err := http.Get(url) // nolint:gosec
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, res.StatusCode, err
-	}
-
-	if err = res.Body.Close(); err != nil {
-		return nil, res.StatusCode, err
-	}
-
-	return body, res.StatusCode, nil
-}
-
-func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
 
 	testCases := []struct {
 		name         string
@@ -502,6 +484,20 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 			}
 		})
 	}
+}
+
+func getRequest(url string) ([]byte, int, error) {
+	res, err := http.Get(url) // nolint:gosec
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, res.StatusCode, err
+	}
+
+	if err = res.Body.Close(); err != nil {
+		return nil, res.StatusCode, err
+	}
+
+	return body, res.StatusCode, nil
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {

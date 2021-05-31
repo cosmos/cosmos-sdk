@@ -418,14 +418,10 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// Create new account in the keyring.
+	// Create new account in the keyring for address without delegations.
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-	_, statusCode, err := getRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", val.APIAddress, newAddr.String()))
-	s.Require().NoError(err)
-	s.Require().Equal(200, statusCode)
 
 	testCases := []struct {
 		name         string
@@ -464,6 +460,19 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 					types.NewDelegationResp(val.Address, val.ValAddress, sdk.NewDecFromInt(cli.DefaultTokens), sdk.NewCoin(sdk.DefaultBondDenom, cli.DefaultTokens)),
 				},
 				Pagination: &query.PageResponse{Total: 1},
+			},
+		},
+		{
+			"address without delegations",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", baseURL, newAddr.String()),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&types.QueryDelegatorDelegationsResponse{},
+			&types.QueryDelegatorDelegationsResponse{
+				DelegationResponses: types.DelegationResponses{},
+				Pagination:          &query.PageResponse{Total: 0},
 			},
 		},
 	}

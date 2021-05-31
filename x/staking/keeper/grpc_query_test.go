@@ -285,22 +285,23 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 	var req *types.QueryDelegatorDelegationsRequest
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
-		expErr   bool
+		msg       string
+		malleate  func()
+		onSuccess func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse)
+		expErr    bool
 	}{
 		{"empty request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{}
 			},
-			false,
+			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {},
 			true,
-		}, {"invalid request",
+		},
+		{"invalid request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrs[4].String()}
 			},
-			false,
+			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {},
 			false,
 		},
 		{"valid request",
@@ -308,7 +309,12 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc.String(),
 					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
 			},
-			true,
+			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {
+				suite.Equal(uint64(2), response.Pagination.Total)
+				suite.Len(response.DelegationResponses, 1)
+				suite.Equal(1, len(response.DelegationResponses))
+				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), response.DelegationResponses[0].Balance)
+			},
 			false,
 		},
 	}
@@ -317,19 +323,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.NotNil(res.Pagination.NextKey)
-				suite.Equal(uint64(2), res.Pagination.Total)
-				suite.Len(res.DelegationResponses, 1)
-				suite.Equal(1, len(res.DelegationResponses))
-				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
-			} else if !tc.expPass && !tc.expErr {
-				suite.NoError(err)
-				suite.Nil(res.DelegationResponses)
-			} else {
+			if tc.expErr {
 				suite.Error(err)
-				suite.Nil(res)
+			} else {
+				suite.NoError(err)
+				tc.onSuccess(suite, res)
 			}
 		})
 	}

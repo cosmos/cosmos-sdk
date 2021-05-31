@@ -4,8 +4,6 @@ package rest_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -493,20 +491,6 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 			}
 		})
 	}
-}
-
-func getRequest(url string) ([]byte, int, error) {
-	res, err := http.Get(url) // nolint:gosec
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, res.StatusCode, err
-	}
-
-	if err = res.Body.Close(); err != nil {
-		return nil, res.StatusCode, err
-	}
-
-	return body, res.StatusCode, nil
 }
 
 func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {

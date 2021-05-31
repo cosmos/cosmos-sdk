@@ -230,6 +230,7 @@ should be targeted against the release candidate branch.
   and ensure it's protected against pushing from anyone except the release
   manager/coordinator
     - **no PRs targeting this branch should be merged unless exceptional circumstances arise**
+- Bump defaultCosmosSDKVersion in `version/version.go`
 - On the `RC` branch, prepare a new version section in the `CHANGELOG.md`
     - All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
     - Copy the entries into a `RELEASE_CHANGELOG.md`, this is needed so the bot knows which entries to add to the release page on github.

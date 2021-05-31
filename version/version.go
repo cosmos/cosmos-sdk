@@ -34,28 +34,34 @@ var (
 	Commit = ""
 	// build tags
 	BuildTags = ""
+	// Cosmos-SDK version
+	CosmosSDKVersion = defaultCosmosSDKVersion
 )
+
+const defaultCosmosSDKVersion = "0.42.5"
 
 // Info defines the application version information.
 type Info struct {
-	Name      string     `json:"name" yaml:"name"`
-	AppName   string     `json:"server_name" yaml:"server_name"`
-	Version   string     `json:"version" yaml:"version"`
-	GitCommit string     `json:"commit" yaml:"commit"`
-	BuildTags string     `json:"build_tags" yaml:"build_tags"`
-	GoVersion string     `json:"go" yaml:"go"`
-	BuildDeps []buildDep `json:"build_deps" yaml:"build_deps"`
+	Name             string     `json:"name" yaml:"name"`
+	AppName          string     `json:"server_name" yaml:"server_name"`
+	Version          string     `json:"version" yaml:"version"`
+	GitCommit        string     `json:"commit" yaml:"commit"`
+	BuildTags        string     `json:"build_tags" yaml:"build_tags"`
+	GoVersion        string     `json:"go" yaml:"go"`
+	BuildDeps        []buildDep `json:"build_deps" yaml:"build_deps"`
+	CosmosSdkVersion string     `json:"cosmos_sdk_version" yaml:"cosmos_sdk_version"`
 }
 
 func NewInfo() Info {
 	return Info{
-		Name:      Name,
-		AppName:   AppName,
-		Version:   Version,
-		GitCommit: Commit,
-		BuildTags: BuildTags,
-		GoVersion: fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
-		BuildDeps: depsFromBuildInfo(),
+		Name:             Name,
+		AppName:          AppName,
+		Version:          Version,
+		GitCommit:        Commit,
+		BuildTags:        BuildTags,
+		GoVersion:        fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
+		BuildDeps:        depsFromBuildInfo(),
+		CosmosSdkVersion: CosmosSDKVersion,
 	}
 }
 

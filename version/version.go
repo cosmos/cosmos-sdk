@@ -34,7 +34,7 @@ var (
 	Commit = ""
 	// build tags
 	BuildTags = ""
-	// Cosmos-SDK version
+	// cosmos-sdk version
 	CosmosSDKVersion = defaultCosmosSDKVersion
 )
 

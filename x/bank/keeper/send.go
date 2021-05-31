@@ -227,21 +227,6 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 	return nil
 }
 
-// clearBalances removes all balances for a given account by address.
-func (k BaseSendKeeper) clearBalances(ctx sdk.Context, addr sdk.AccAddress) {
-	keys := [][]byte{}
-	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
-		keys = append(keys, []byte(balance.Denom))
-		return false
-	})
-
-	accountStore := k.getAccountStore(ctx, addr)
-
-	for _, key := range keys {
-		accountStore.Delete(key)
-	}
-}
-
 // initBalances sets the balance (multiple coins) for an account by address.
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
@@ -255,22 +240,6 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 		if !balance.IsZero() {
 			bz := k.cdc.MustMarshal(&balance)
 			accountStore.Set([]byte(balance.Denom), bz)
-		}
-	}
-
-	return nil
-}
-
-// setBalances sets the balance (multiple coins) for an account by address. It will
-// clear out all balances prior to setting the new coins as to set existing balances
-// to zero if they don't exist in amt. An error is returned upon failure.
-func (k BaseSendKeeper) setBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	k.clearBalances(ctx, addr)
-
-	for _, balance := range balances {
-		err := k.setBalance(ctx, addr, balance)
-		if err != nil {
-			return err
 		}
 	}
 

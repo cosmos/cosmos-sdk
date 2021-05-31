@@ -36,15 +36,11 @@ The current design is based on the work done by [IRISnet team](https://github.co
 
 We will create a module `x/nft` which only stores NFTs by id and owner.
 
-The interface for the `x/nft` module:
-
-```go
-// NFT is an interface used to store NFTs at a given id.
-type NFT interface {
-    GetId() string // define a simple identifier for the NFT 
-    GetOwner() sdk.AccAddress // the current owner's address
-    GetData() string // specialized metadata to accompany the nft
-    Validate() error 
+```proto
+message NFT {
+  string id    = 1;
+  string owner = 2;
+  google.protobuf.Any data = 3;
 }
 ```
 
@@ -78,17 +74,6 @@ func (k Keeper) TransferOwnership(nftID string, currentOwner, newOwner sdk.AccAd
 
 Other behaviors of NFT, including minting, burning and other business-logic implementation should be defined in other upper-level modules that import this NFT module.
 
-We will also create `BaseNFT` as the default implementation of the `NFT` interface:
-```proto
-message BaseNFT {
-  option (gogoproto.equal) = true;
-
-  string id    = 1;
-  string owner = 2;
-  string data  = 3;
-}
-```
-
 The query service methods for the `x/nft` module are:
 ```proto
 service Query {
@@ -111,7 +96,7 @@ message QueryNFTRequest {
 
 // QueryNFTResponse is the response type for the Query/NFT RPC method
 message QueryNFTResponse {
-  google.protobuf.Any nft = 1 [(cosmos_proto.accepts_interface) = "NFT", (gogoproto.customname) = "NFT"];
+  NFT nft = 1;
 }
 
 // QueryNFTsRequest is the request type for the Query/NFTs RPC method
@@ -122,12 +107,10 @@ message QueryNFTsRequest {
 
 // QueryNFTsResponse is the response type for the Query/NFTs RPC method
 message QueryNFTsResponse {
-  repeated google.protobuf.Any nfts = 1 [(cosmos_proto.accepts_interface) = "NFT", (gogoproto.customname) = "NFTs"];
+  repeated NFT nfts = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 ```
-
-
 
 ## Consequences
 

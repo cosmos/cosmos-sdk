@@ -22,25 +22,23 @@ import (
 // at the lastest state available.
 // Issue: https://github.com/cosmos/cosmos-sdk/issues/6567
 func QueryTendermintProof(clientCtx client.Context, key []byte) ([]byte, []byte, clienttypes.Height, error) {
-	height := clientCtx.Height
-
 	// ABCI queries at heights 1, 2 or less than or equal to 0 are not supported.
 	// Base app does not support queries for height less than or equal to 1.
 	// Therefore, a query at height 2 would be equivalent to a query at height 3.
 	// A height of 0 will query with the lastest state.
-	if height != 0 && height <= 2 {
+	if clientCtx.Height != 0 && clientCtx.Height <= 2 {
 		return nil, nil, clienttypes.Height{}, fmt.Errorf("proof queries at height <= 2 are not supported")
 	}
 
 	// Use the IAVL height if a valid tendermint height is passed in.
 	// A height of 0 will query with the latest state.
-	if height != 0 {
-		height--
+	if clientCtx.Height != 0 {
+		clientCtx.Height = clientCtx.Height - 1
 	}
 
 	req := abci.RequestQuery{
 		Path:   fmt.Sprintf("store/%s/key", host.StoreKey),
-		Height: height,
+		Height: clientCtx.Height,
 		Data:   key,
 		Prove:  true,
 	}

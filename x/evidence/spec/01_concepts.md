@@ -66,7 +66,7 @@ The `Handler` (defined below) is responsible for executing the entirety of the
 business logic for handling `Evidence`. This typically includes validating the
 evidence, both stateless checks via `ValidateBasic` and stateful checks via any
 keepers provided to the `Handler`. In addition, the `Handler` may also perform
-capabilities such as slashing and jailing a validator. All `Evidence` handled 
+capabilities such as slashing and jailing a validator. All `Evidence` handled
 by the `Handler` should be persisted.
 
 ```go

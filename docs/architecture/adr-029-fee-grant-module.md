@@ -115,6 +115,7 @@ message MsgGrantAllowance {
 ```
 
 In order to use allowances in transactions, we add a new field `granter` to the transaction `Fee` type:
+
 ```proto
 package cosmos.tx.v1beta1;
 

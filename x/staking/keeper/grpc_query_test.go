@@ -315,7 +315,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {
 				suite.Equal(uint64(0), response.Pagination.Total)
 				suite.Len(response.DelegationResponses, 0)
-				suite.Equal(0, len(response.DelegationResponses))
 			},
 			false,
 		},
@@ -328,7 +327,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 			func(suite *KeeperTestSuite, response *types.QueryDelegatorDelegationsResponse) {
 				suite.Equal(uint64(2), response.Pagination.Total)
 				suite.Len(response.DelegationResponses, 1)
-				suite.Equal(1, len(response.DelegationResponses))
 				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), response.DelegationResponses[0].Balance)
 			},
 			false,

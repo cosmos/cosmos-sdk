@@ -1,7 +1,9 @@
----
-name: Feature / Fix / Refactor
-about: Adds a feature, fixes a bug, refactors code; changes production code.
----
+<!--
+The default pull request template is for types feat, fix, or refactor.
+For other templates, add one of the following parameters to the url:
+- template=docs.md
+- template=other.md
+-->
 
 ## Description
 

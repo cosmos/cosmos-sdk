@@ -1,8 +1,3 @@
----
-name: Other
-about: Other updates; does not change production code.
----
-
 ## Description
 
 Closes: #XXXX

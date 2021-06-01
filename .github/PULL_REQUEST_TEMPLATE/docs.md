@@ -1,8 +1,3 @@
----
-name: Docs
-about: Updates documentation, including specifications.
----
-
 ## Description
 
 Closes: #XXXX

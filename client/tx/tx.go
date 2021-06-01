@@ -24,6 +24,23 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+func ValidateMsg(msg sdk.Msg) error {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	signers := msg.GetSigners()
+	for _, signer := range signers {
+		_, err = sdk.AccAddressFromBech32(signer)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) error {
@@ -39,7 +56,7 @@ func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msg
 	// Right now, we're factorizing that call inside this function.
 	// ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
 	for _, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
+		if err := ValidateMsg(msg); err != nil {
 			return err
 		}
 	}

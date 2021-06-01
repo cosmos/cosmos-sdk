@@ -4,6 +4,10 @@
 
 ## Table of Contents
 
+- [cosmos/auth/module/v1/module.proto](#cosmos/auth/module/v1/module.proto)
+    - [Module](#cosmos.auth.module.v1.Module)
+    - [Permission](#cosmos.auth.module.v1.Permission)
+  
 - [cosmos/auth/v1beta1/auth.proto](#cosmos/auth/v1beta1/auth.proto)
     - [BaseAccount](#cosmos.auth.v1beta1.BaseAccount)
     - [ModuleAccount](#cosmos.auth.v1beta1.ModuleAccount)
@@ -586,6 +590,54 @@
     - [PermanentLockedAccount](#cosmos.vesting.v1beta1.PermanentLockedAccount)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="cosmos/auth/module/v1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/auth/module/v1/module.proto
+
+
+
+<a name="cosmos.auth.module.v1.Module"></a>
+
+### Module
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `permissions` | [Permission](#cosmos.auth.module.v1.Permission) | repeated |  |
+| `account_constructor` | [google.protobuf.Any](#google.protobuf.Any) |  | account_constructor is an optional AccountI constructor config object that can be provided to override the default BaseAccount constructor. The provided config object must have an `NewAccount() AccountI` method defined. If this is left empty, the default constructor will be used |
+
+
+
+
+
+
+<a name="cosmos.auth.module.v1.Permission"></a>
+
+### Permission
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `permissions` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 

@@ -360,3 +360,7 @@ type GenesisAccount interface {
 
 	Validate() error
 }
+
+type AccountConstructor interface {
+	NewAccount() AccountI
+}

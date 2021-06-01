@@ -124,32 +124,43 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 }
 
 func (s *DepositTestSuite) TestRejectedProposalDeposits() {
-	val0 := s.network.Validators[0]
-	clientCtx := val0.ClientCtx
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
 	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens)
 
 	// create a proposal with deposit
-	_, err := MsgSubmitProposal(clientCtx, val0.Address.String(),
+	_, err := MsgSubmitProposal(clientCtx, val.Address.String(),
 		"Text Proposal 4", "Where is the title!?", types.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit))
 	s.Require().NoError(err)
 
+	// query deposits
+	var deposits types.QueryDepositsResponse
+	args := []string{"4", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	cmd := cli.GetCmdQueryDeposits()
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &deposits))
+	s.Require().Equal(len(deposits.Deposits), 1)
+	// verify initial deposit
+	s.Require().Equal(deposits.Deposits[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String())
+
 	// vote
-	_, err = MsgVote(clientCtx, val0.Address.String(), "4", "no")
+	_, err = MsgVote(clientCtx, val.Address.String(), "4", "no")
 	s.Require().NoError(err)
 
 	time.Sleep(20 * time.Second)
 
-	args := []string{"4", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
-	cmd := cli.GetCmdQueryProposal()
+	args = []string{"4", fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	cmd = cli.GetCmdQueryProposal()
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
 	// query deposits
-	deposits := s.queryDeposits(val0, "4", false)
-	s.Require().Equal(len(deposits), 1)
+	depositsRes := s.queryDeposits(val, "4", false)
+	s.Require().Equal(len(depositsRes), 1)
 	// verify initial deposit
-	s.Require().Equal(deposits[0].Amount.String(), initialDeposit.String())
+	s.Require().Equal(depositsRes[0].Amount.String(), initialDeposit.String())
 
 }
 

@@ -327,11 +327,18 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
+containerMarkdownLintImage=tmknom/markdownlint
+containerMarkdownLint=cosmos-sdk-markdownlint
+containerMarkdownLintFix=cosmos-sdk-markdownlint-fix
+
 lint:
 	golangci-lint run --out-format=tab
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(containerMarkdownLintImage); fi
 
 lint-fix:
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(containerMarkdownLintImage) . --fix; fi
+
 .PHONY: lint lint-fix
 
 format:

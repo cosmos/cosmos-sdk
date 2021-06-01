@@ -8,14 +8,15 @@ There are two ways in which you can customize and extend the implementation with
 
 ### Message extension
 
-In order to make an `sdk.Msg` understandable by rosetta the only thing which is required is adding the methods to your message that satisfy the `rosetta.Msg` interface. 
-Examples on how to do so can be found in the staking types such as `MsgDelegate`, or in bank types such as `MsgSend`. 
+In order to make an `sdk.Msg` understandable by rosetta the only thing which is required is adding the methods to your message that satisfy the `rosetta.Msg` interface.
+Examples on how to do so can be found in the staking types such as `MsgDelegate`, or in bank types such as `MsgSend`.
 
 ### Client interface override
 
 In case more customization is required, it's possible to embed the Client type and override the methods which require customizations.
 
 Example:
+
 ```go
 package custom_client
 import (
@@ -56,7 +57,7 @@ Note: errors must be registered before cosmos-rosetta-gateway's `Server`.`Start`
 
 ## Integration in app.go
 
-To integrate rosetta as a command in your application, in app.go, in your root command simply use the `server.RosettaCommand` method. 
+To integrate rosetta as a command in your application, in app.go, in your root command simply use the `server.RosettaCommand` method.
 
 Example:
 

@@ -2,6 +2,7 @@ package module
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/container"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -11,15 +12,19 @@ import (
 )
 
 type Inputs struct {
+	container.StructArgs
+
 	Codec                   codec.Codec
-	StoreKey                sdk.StoreKey
+	Key                     *sdk.KVStoreKey
 	ParamStore              paramtypes.Subspace
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn
 }
 
 type Outputs struct {
+	container.StructArgs
+
 	ViewKeeper types.ViewKeeper
-	Keeper     types.Keeper `security:"admin"`
+	Keeper     types.Keeper `security-role:"admin"`
 }
 
 func (m Module) NewAppModule(inputs Inputs) (module.AppModule, Outputs, error) {
@@ -42,7 +47,7 @@ func (m Module) NewAppModule(inputs Inputs) (module.AppModule, Outputs, error) {
 		perms[perm.Address] = perm.Permissions
 	}
 
-	keeper := authkeeper.NewAccountKeeper(inputs.Codec, inputs.StoreKey, inputs.ParamStore, newAccFn, perms)
+	keeper := authkeeper.NewAccountKeeper(inputs.Codec, inputs.Key, inputs.ParamStore, newAccFn, perms)
 	appMod := auth.NewAppModule(inputs.Codec, keeper, inputs.RandomGenesisAccountsFn)
 
 	return appMod, Outputs{

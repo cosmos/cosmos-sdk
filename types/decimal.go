@@ -474,6 +474,22 @@ func (d Dec) String() string {
 	return string(bzStr)
 }
 
+// Float64 returns the float64 representation of a Dec.
+// Will return the error if the conversion failed.
+func (d Dec) Float64() (float64, error) {
+	return strconv.ParseFloat(d.String(), 64)
+}
+
+// MustFloat64 returns the float64 representation of a Dec.
+// Would panic if the conversion failed.
+func (d Dec) MustFloat64() float64 {
+	if value, err := strconv.ParseFloat(d.String(), 64); err != nil {
+		panic(err)
+	} else {
+		return value
+	}
+}
+
 //     ____
 //  __|    |__   "chop 'em
 //       ` \     round!"

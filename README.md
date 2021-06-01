@@ -40,9 +40,6 @@ parent:
     <img alt="Lint Satus" src="https://github.com/cosmos/cosmos-sdk/workflows/Lint/badge.svg" />
 </div>
 
-
-
-
 The Cosmos-SDK is a framework for building blockchain applications in Golang.
 It is being used to build [`Gaia`](https://github.com/cosmos/gaia), the first implementation of the Cosmos Hub.
 
@@ -65,7 +62,7 @@ The Cosmos Hub application, `gaia`, has moved to its [own repository](https://gi
 
 ## Interblockchain Communication (IBC)
 
-The IBC module for the SDK has moved to its [own repository](https://github.com/cosmos/ibc-go). Go there to build and integrate with the IBC module. 
+The IBC module for the SDK has moved to its [own repository](https://github.com/cosmos/ibc-go). Go there to build and integrate with the IBC module.
 
 ## Starport
 

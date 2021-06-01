@@ -231,7 +231,8 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
 	accountStore := k.getAccountStore(ctx, addr)
-	for _, balance := range balances {
+	for i := range balances {
+		balance := balances[i]
 		if !balance.IsValid() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 		}

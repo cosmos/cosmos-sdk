@@ -5,7 +5,7 @@ import (
 	v040distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v040"
 )
 
-// MigrateStore performs in-place store migrations from v0.40 to v0.42. The
+// MigrateStore performs in-place store migrations from v0.40 to v0.43. The
 // migration includes:
 //
 // - Change addresses to be length-prefixed.

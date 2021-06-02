@@ -49,7 +49,7 @@ func (a *PeriodicAllowance) Accept(ctx sdk.Context, fee sdk.Coins, _ []sdk.Msg) 
 
 // tryResetPeriod will check if the PeriodReset has been hit. If not, it is a no-op.
 // If we hit the reset period, it will top up the PeriodCanSpend amount to
-// min(PeriodicSpendLimit, a.Basic.SpendLimit) so it is never more than the maximum allowed.
+// min(PeriodSpendLimit, Basic.SpendLimit) so it is never more than the maximum allowed.
 // It will also update the PeriodReset. If we are within one Period, it will update from the
 // last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
 // If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
@@ -57,10 +57,16 @@ func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
 	if blockTime.Before(a.PeriodReset) {
 		return
 	}
-	// set CanSpend to the lesser of PeriodSpendLimit and the TotalLimit
+
+	// set PeriodCanSpend to the lesser of Basic.SpendLimit and PeriodSpendLimit
 	if _, isNeg := a.Basic.SpendLimit.SafeSub(a.PeriodSpendLimit); isNeg {
 		a.PeriodCanSpend = a.Basic.SpendLimit
 	} else {
+		a.PeriodCanSpend = a.PeriodSpendLimit
+	}
+
+	// if Basic.SpendLimit is not set, reset to PeriodSpendLimit
+	if a.Basic.SpendLimit.Empty() {
 		a.PeriodCanSpend = a.PeriodSpendLimit
 	}
 

@@ -961,10 +961,11 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		}
 
 		//2.try to deserialize using amino not proto
-		//3.if any above will fail - then we will need to log an error and continue, there can be other reasons, or a key could be already migrated to proto.
+		
 		_, err = unmarshalInfo(item.Data)
 		if err != nil {
-			// should i return or or justp rint an eror in this case
+			//3.if any above will fail - then we will need to log an error and continue, there can be other reasons, or a key could be already migrated to proto.
+			// output error and continue 
 		}
 
 		//4.serialize info using proto

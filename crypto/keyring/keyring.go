@@ -541,7 +541,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	// create master key and derive first key for keyring
 	derivedPriv, err := algo.Derive()(mnemonic, bip39Passphrase, hdPath)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to derive private key, err - %s", err)
+		return nil, err
 	}
 
 	privKey := algo.Generate()(derivedPriv)
@@ -798,7 +798,6 @@ func (ks keystore) writeRecord(re *Record) error {
 	key := infoKeyBz(re.GetName())
 
 	serializedRecord, err := ks.cdc.Marshal(re)
-	fmt.Println("serializedRecord:" + string(serializedRecord))
 	if err != nil {
 		return fmt.Errorf("Unable to serialize record, err - %s", err)
 	}

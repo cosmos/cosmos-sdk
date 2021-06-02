@@ -20,11 +20,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(err)
 		}
 
-<<<<<<< HEAD
-		if err := k.SetBalances(ctx, addr, balance.Coins); err != nil {
-=======
 		if err := k.initBalances(ctx, addr, balance.Coins); err != nil {
->>>>>>> 2ae787548 (fix: Bank module init genesis optimization (#9428))
 			panic(fmt.Errorf("error on setting balances %w", err))
 		}
 

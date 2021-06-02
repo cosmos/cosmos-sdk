@@ -225,7 +225,6 @@ func (k BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 	return nil
 }
 
-<<<<<<< HEAD
 // ClearBalances removes all balances for a given account by address.
 func (k BaseSendKeeper) ClearBalances(ctx sdk.Context, addr sdk.AccAddress) {
 	keys := [][]byte{}
@@ -253,11 +252,18 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 		err := k.SetBalance(ctx, addr, balance)
 		if err != nil {
 			return err
-=======
+		}
+	}
+
+	return nil
+}
+
 // initBalances sets the balance (multiple coins) for an account by address.
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	accountStore := k.getAccountStore(ctx, addr)
+	store := ctx.KVStore(k.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
 	for i := range balances {
 		balance := balances[i]
 		if !balance.IsValid() {
@@ -266,9 +272,8 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 
 		// Bank invariants require to not store zero balances.
 		if !balance.IsZero() {
-			bz := k.cdc.MustMarshal(&balance)
+			bz := k.cdc.MustMarshalBinaryBare(&balance)
 			accountStore.Set([]byte(balance.Denom), bz)
->>>>>>> 2ae787548 (fix: Bank module init genesis optimization (#9428))
 		}
 	}
 

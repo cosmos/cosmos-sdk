@@ -34,8 +34,7 @@ func NewLedgerInfoItem(ledgerInfo *LedgerInfo) *Record_Ledger {
 }
 
 func (li LedgerInfo) GetPath() *hd.BIP44Params {
-	return &hd.BIP44Params{li.Path.Purpose, li.Path.CoinType, li.Path.Account, li.Path.Change, li.Path.AddressIndex}
-
+	return li.Path
 }
 
 func NewMultiInfo() *MultiInfo {
@@ -60,6 +59,7 @@ func (re Record) GetName() string {
 
 func (re Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := re.PubKey.GetCachedValue().(cryptotypes.PubKey)
+        // TODO fix an error Unable to cast PubKey to cryptotypes.PubKey
 	if !ok {
 		return nil, fmt.Errorf("Unable to cast PubKey to cryptotypes.PubKey")
 	}

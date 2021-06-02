@@ -524,12 +524,12 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 		bip39Passphrase = DefaultBIP39Passphrase
 	}
 
-	ke, err := ks.NewAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
+	re, err := ks.NewAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return ke, mnemonic, nil
+	return re, mnemonic, nil
 }
 
 // TODO keep or remove SignatureAlgo???
@@ -541,7 +541,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	// create master key and derive first key for keyring
 	derivedPriv, err := algo.Derive()(mnemonic, bip39Passphrase, hdPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Unable to derive private key, err - %s", err)
 	}
 
 	privKey := algo.Generate()(derivedPriv)
@@ -550,7 +550,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	// if found
 	address := sdk.AccAddress(privKey.PubKey().Address())
 	if _, err := ks.KeyByAddress(address); err == nil {
-		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
+		return nil, err
 	}
 
 	return ks.writeLocalKey(name, privKey, string(algo.Name()))
@@ -778,26 +778,19 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 func (ks keystore) writeLocalKey(name string, priv types.PrivKey, pubKeyType string) (*Record, error) {
 	// encrypt private key using keyring
 
-	apk, err := codectypes.NewAnyWithValue(priv)
+	apk, err := codectypes.NewAnyWithValue(priv.PubKey())
 	if err != nil {
 		return nil, err
 	}
+
 	localInfo := newLocalInfo(apk, pubKeyType)
 	localInfoItem := newLocalInfoItem(localInfo)
-	re := NewRecord(name, apk, localInfoItem)
-	if err := ks.writeRecord(re); err != nil {
+	kr := NewRecord(name, apk, localInfoItem)
+	if err := ks.writeRecord(kr); err != nil {
 		return nil, err
 	}
-	/*
-		pub := priv.PubKey()
-		info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshal(priv)), algo)
-		if err := ks.writeRecord(info); err != nil {
-			return nil, err
-		}
-		return info, nil
-	*/
 
-	return re, nil
+	return kr, nil
 }
 
 // declare writeRecord(re Record)
@@ -805,8 +798,9 @@ func (ks keystore) writeRecord(re *Record) error {
 	key := infoKeyBz(re.GetName())
 
 	serializedRecord, err := ks.cdc.Marshal(re)
+	fmt.Println("serializedRecord:" + string(serializedRecord))
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to serialize record, err - %s", err)
 	}
 
 	exists, err := ks.existsInDb(re)
@@ -827,7 +821,7 @@ func (ks keystore) writeRecord(re *Record) error {
 
 	addr, err := re.GetAddress()
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to get record address, err - %s", err)
 	}
 
 	err = ks.db.Set(keyring.Item{

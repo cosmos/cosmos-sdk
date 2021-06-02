@@ -5,6 +5,7 @@
 ## Table of Contents
 
 - [cosmos/app/v1/config.proto](#cosmos/app/v1/config.proto)
+    - [ABCIHandlers](#cosmos.app.v1.ABCIHandlers)
     - [Config](#cosmos.app.v1.Config)
     - [ModuleConfig](#cosmos.app.v1.ModuleConfig)
   
@@ -348,6 +349,9 @@
 - [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
   
+- [cosmos/gov/module/v1/module.proto](#cosmos/gov/module/v1/module.proto)
+    - [Module](#cosmos.gov.module.v1.Module)
+  
 - [cosmos/gov/v1beta1/gov.proto](#cosmos/gov/v1beta1/gov.proto)
     - [Deposit](#cosmos.gov.v1beta1.Deposit)
     - [DepositParams](#cosmos.gov.v1beta1.DepositParams)
@@ -612,6 +616,23 @@
 
 
 
+<a name="cosmos.app.v1.ABCIHandlers"></a>
+
+### ABCIHandlers
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `init_genesis` | [string](#string) | repeated |  |
+| `begin_block` | [string](#string) | repeated |  |
+| `end_block` | [string](#string) | repeated |  |
+
+
+
+
+
+
 <a name="cosmos.app.v1.Config"></a>
 
 ### Config
@@ -621,6 +642,7 @@
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `modules` | [ModuleConfig](#cosmos.app.v1.ModuleConfig) | repeated |  |
+| `abci` | [ABCIHandlers](#cosmos.app.v1.ABCIHandlers) |  |  |
 
 
 
@@ -5007,6 +5029,32 @@ GenesisState defines the raw genesis transaction in JSON.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gen_txs` | [bytes](#bytes) | repeated | gen_txs defines the genesis transactions. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/gov/module/v1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/gov/module/v1/module.proto
+
+
+
+<a name="cosmos.gov.module.v1.Module"></a>
+
+### Module
+
 
 
 

@@ -1,0 +1,8 @@
+syntax = "proto3";
+package cosmos.gov.module.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/gov/module";
+
+message Module {
+
+}

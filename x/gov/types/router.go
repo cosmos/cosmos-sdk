@@ -12,10 +12,15 @@ var _ Router = (*router)(nil)
 //
 // TODO: Use generic router (ref #3976).
 type Router interface {
-	AddRoute(r string, h Handler) (rtr Router)
+	Registrar
+
 	HasRoute(r string) bool
 	GetRoute(path string) (h Handler)
 	Seal()
+}
+
+type Registrar interface {
+	AddRoute(r string, h Handler) (rtr Router)
 }
 
 type router struct {

@@ -92,7 +92,7 @@ func NewApp(config *app.Config) (*AppProvider, error) {
 		}
 
 		// register DI providers
-		if provisioner, ok := cfg.(Provisioner); ok {
+		if provisioner, ok := cfg.(app.Provisioner); ok {
 			provisioner.Provision(ctr)
 		}
 	}

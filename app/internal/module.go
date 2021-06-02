@@ -2,7 +2,6 @@ package internal
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/container"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
@@ -16,8 +15,4 @@ type TypeProvider interface {
 
 type Handler interface {
 	RegisterServices(configurator module.Configurator)
-}
-
-type Provisioner interface {
-	Provision(registrar container.Registrar)
 }

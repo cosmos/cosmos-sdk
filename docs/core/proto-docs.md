@@ -4,7 +4,13 @@
 
 ## Table of Contents
 
+- [cosmos/app/v1/config.proto](#cosmos/app/v1/config.proto)
+    - [Config](#cosmos.app.v1.Config)
+    - [ModuleConfig](#cosmos.app.v1.ModuleConfig)
+  
 - [cosmos/auth/module/v1/module.proto](#cosmos/auth/module/v1/module.proto)
+    - [DefaultAccountConstructor](#cosmos.auth.module.v1.DefaultAccountConstructor)
+    - [DefaultRandomGenesisAccountsProvider](#cosmos.auth.module.v1.DefaultRandomGenesisAccountsProvider)
     - [Module](#cosmos.auth.module.v1.Module)
     - [Permission](#cosmos.auth.module.v1.Permission)
   
@@ -69,6 +75,9 @@
     - [MsgRevokeResponse](#cosmos.authz.v1beta1.MsgRevokeResponse)
   
     - [Msg](#cosmos.authz.v1beta1.Msg)
+  
+- [cosmos/bank/module/v1/module.proto](#cosmos/bank/module/v1/module.proto)
+    - [Module](#cosmos.bank.module.v1.Module)
   
 - [cosmos/base/v1beta1/coin.proto](#cosmos/base/v1beta1/coin.proto)
     - [Coin](#cosmos.base.v1beta1.Coin)
@@ -596,10 +605,77 @@
 
 
 
+<a name="cosmos/app/v1/config.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/app/v1/config.proto
+
+
+
+<a name="cosmos.app.v1.Config"></a>
+
+### Config
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `modules` | [ModuleConfig](#cosmos.app.v1.ModuleConfig) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.app.v1.ModuleConfig"></a>
+
+### ModuleConfig
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `config` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `name` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/auth/module/v1/module.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/auth/module/v1/module.proto
+
+
+
+<a name="cosmos.auth.module.v1.DefaultAccountConstructor"></a>
+
+### DefaultAccountConstructor
+
+
+
+
+
+
+
+<a name="cosmos.auth.module.v1.DefaultRandomGenesisAccountsProvider"></a>
+
+### DefaultRandomGenesisAccountsProvider
+
+
+
+
 
 
 
@@ -613,6 +689,7 @@
 | ----- | ---- | ----- | ----------- |
 | `permissions` | [Permission](#cosmos.auth.module.v1.Permission) | repeated |  |
 | `account_constructor` | [google.protobuf.Any](#google.protobuf.Any) |  | account_constructor is an optional AccountI constructor config object that can be provided to override the default BaseAccount constructor. The provided config object must have an `NewAccount() AccountI` method defined. If this is left empty, the default constructor will be used |
+| `random_genesis_accounts_provider` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
 
 
@@ -1442,6 +1519,37 @@ Msg defines the authz Msg service.
 | `Grant` | [MsgGrant](#cosmos.authz.v1beta1.MsgGrant) | [MsgGrantResponse](#cosmos.authz.v1beta1.MsgGrantResponse) | Grant grants the provided authorization to the grantee on the granter's account with the provided expiration time. If there is already a grant for the given (granter, grantee, Authorization) triple, then the grant will be overwritten. | |
 | `Exec` | [MsgExec](#cosmos.authz.v1beta1.MsgExec) | [MsgExecResponse](#cosmos.authz.v1beta1.MsgExecResponse) | Exec attempts to execute the provided messages using authorizations granted to the grantee. Each message should have only one signer corresponding to the granter of the authorization. | |
 | `Revoke` | [MsgRevoke](#cosmos.authz.v1beta1.MsgRevoke) | [MsgRevokeResponse](#cosmos.authz.v1beta1.MsgRevokeResponse) | Revoke revokes any authorization corresponding to the provided method name on the granter's account that has been granted to the grantee. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/bank/module/v1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/bank/module/v1/module.proto
+
+
+
+<a name="cosmos.bank.module.v1.Module"></a>
+
+### Module
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `blocked_addrs` | [string](#string) | repeated | TODO: this shouldn't be a config param, rather we should have a more generic solution, such as: blocked module accounts should register themselves in genesis |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

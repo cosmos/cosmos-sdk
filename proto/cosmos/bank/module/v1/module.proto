@@ -1,0 +1,10 @@
+syntax = "proto3";
+package cosmos.bank.module.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/bank/module";
+
+message Module {
+    // TODO: this shouldn't be a config param, rather we should have a more generic
+    // solution, such as: blocked module accounts should register themselves in genesis
+    repeated string blocked_addrs = 1;
+}

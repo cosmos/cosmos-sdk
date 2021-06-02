@@ -12,6 +12,7 @@ import (
 
 type Inputs struct {
 	container.StructArgs
+
 	Codec        codec.BinaryCodec
 	LegacyAmino  *codec.LegacyAmino
 	Key          *sdk.KVStoreKey

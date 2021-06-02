@@ -13,9 +13,15 @@ message Module {
     // an `NewAccount() AccountI` method defined. If this is left empty, the default constructor
     // will be used
     google.protobuf.Any account_constructor = 2;
+
+    google.protobuf.Any random_genesis_accounts_provider = 3;
 }
 
 message Permission {
     string address = 1;
     repeated string permissions = 2;
 }
+
+message DefaultAccountConstructor {}
+
+message DefaultRandomGenesisAccountsProvider {}

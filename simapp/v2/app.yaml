@@ -1,0 +1,7 @@
+modules:
+  - config:
+      @type: cosmos.auth.module.v1.Module
+  - config:
+      @type: cosmos.bank.module.v1.Module
+  - config:
+      @type: cosmos.params.module.v1.Module

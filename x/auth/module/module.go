@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -14,10 +15,9 @@ import (
 type Inputs struct {
 	container.StructArgs
 
-	Codec                   codec.Codec
-	Key                     *sdk.KVStoreKey
-	ParamStore              paramtypes.Subspace
-	RandomGenesisAccountsFn types.RandomGenesisAccountsFn
+	Codec      codec.Codec
+	Key        *sdk.KVStoreKey
+	ParamStore paramtypes.Subspace
 }
 
 type Outputs struct {
@@ -28,18 +28,14 @@ type Outputs struct {
 }
 
 func (m Module) NewAppModule(inputs Inputs) (module.AppModule, Outputs, error) {
-	newAccFn := func() types.AccountI {
-		return &types.BaseAccount{}
-	}
+	var accCtr types.AccountConstructor
 	if m.AccountConstructor != nil {
-		var accCtr types.AccountConstructor
 		err := inputs.Codec.UnpackAny(m.AccountConstructor, &accCtr)
 		if err != nil {
 			return nil, Outputs{}, err
 		}
-		newAccFn = func() types.AccountI {
-			return accCtr.NewAccount()
-		}
+	} else {
+		accCtr = DefaultAccountConstructor{}
 	}
 
 	perms := map[string][]string{}
@@ -47,8 +43,22 @@ func (m Module) NewAppModule(inputs Inputs) (module.AppModule, Outputs, error) {
 		perms[perm.Address] = perm.Permissions
 	}
 
-	keeper := authkeeper.NewAccountKeeper(inputs.Codec, inputs.Key, inputs.ParamStore, newAccFn, perms)
-	appMod := auth.NewAppModule(inputs.Codec, keeper, inputs.RandomGenesisAccountsFn)
+	var randomGenesisAccountsProvider types.RandomGenesisAccountsProvider
+	if m.RandomGenesisAccountsProvider != nil {
+		err := inputs.Codec.UnpackAny(m.RandomGenesisAccountsProvider, &randomGenesisAccountsProvider)
+		if err != nil {
+			return nil, Outputs{}, err
+		}
+	} else {
+		randomGenesisAccountsProvider = DefaultRandomGenesisAccountsProvider{}
+	}
+
+	keeper := authkeeper.NewAccountKeeper(inputs.Codec, inputs.Key, inputs.ParamStore, func() types.AccountI {
+		return accCtr.NewAccount()
+	}, perms)
+	appMod := auth.NewAppModule(inputs.Codec, keeper, func(simState *module.SimulationState) types.GenesisAccounts {
+		return randomGenesisAccountsProvider.RandomGenesisAccounts(simState)
+	})
 
 	return appMod, Outputs{
 		ViewKeeper: viewOnlyKeeper{keeper},
@@ -86,3 +96,11 @@ func (v viewOnlyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) typ
 }
 
 var _ types.ViewKeeper = viewOnlyKeeper{}
+
+func (m DefaultAccountConstructor) NewAccount() types.AccountI {
+	return &types.BaseAccount{}
+}
+
+func (m DefaultRandomGenesisAccountsProvider) RandomGenesisAccounts(simState *module.SimulationState) types.GenesisAccounts {
+	return simulation.RandomGenesisAccounts(simState)
+}

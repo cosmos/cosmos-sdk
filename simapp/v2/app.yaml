@@ -5,3 +5,5 @@ modules:
       @type: cosmos.bank.module.v1.Module
   - config:
       @type: cosmos.params.module.v1.Module
+  - config:
+      @type: cosmos.gov.module.v1.Module

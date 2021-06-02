@@ -3,6 +3,8 @@ package cli
 import (
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/app/internal"
+
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
@@ -46,7 +48,7 @@ func Run(options Options) {
 }
 
 func newRootCmd(options Options) *cobra.Command {
-	a, err := app.NewApp(options.DefaultAppConfig)
+	a, err := internal.NewApp(options.DefaultAppConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +91,7 @@ func newRootCmd(options Options) *cobra.Command {
 	return rootCmd
 }
 
-func initRootCmd(options Options, rootCmd *cobra.Command, a *app.AppProvider) {
+func initRootCmd(options Options, rootCmd *cobra.Command, a *internal.AppProvider) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 

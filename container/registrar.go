@@ -1,5 +1,5 @@
 package container
 
 type Registrar interface {
-	RegisterProvider(fn interface{}) error
+	Provide(fn interface{}) error
 }

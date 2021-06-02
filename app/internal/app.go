@@ -1,30 +1,135 @@
-package app
+package internal
 
 import (
+	"errors"
+	"io"
+	"path/filepath"
+
+	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/api"
+	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/spf13/cast"
+	dbm "github.com/tendermint/tm-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	grpc1 "github.com/gogo/protobuf/grpc"
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/server/api"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
-type app struct {
+// NewApp is an AppCreator
+func (ap *AppProvider) AppCreator(
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	appOpts servertypes.AppOptions,
+) servertypes.Application {
+	var cache sdk.MultiStorePersistentCache
+
+	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
+		cache = store.NewCommitKVStoreCacheManager()
+	}
+
+	skipUpgradeHeights := make(map[int64]bool)
+	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
+		skipUpgradeHeights[int64(h)] = true
+	}
+
+	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	snapshotDB, err := sdk.NewLevelDB("metadata", snapshotDir)
+	if err != nil {
+		panic(err)
+	}
+	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
+	if err != nil {
+		panic(err)
+	}
+
+	return ap.newApp(
+		logger, db, traceStore, true, skipUpgradeHeights,
+		cast.ToString(appOpts.Get(flags.FlagHome)),
+		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		appOpts,
+		baseapp.SetPruning(pruningOpts),
+		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
+		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
+		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
+		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
+		baseapp.SetInterBlockCache(cache),
+		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
+		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
+		baseapp.SetSnapshotStore(snapshotStore),
+		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
+		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+	)
+}
+
+func (ap *AppProvider) newApp(
+	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
+	homePath string, invCheckPeriod uint,
+	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+) *theApp {
+	return &theApp{}
+}
+
+// AppExport creates a new app (optionally at a given height) and exports state.
+func (ap *AppProvider) AppExportor(
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
+	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
+
+	var a *theApp
+	homePath, ok := appOpts.Get(flags.FlagHome).(string)
+	if !ok || homePath == "" {
+		return servertypes.ExportedApp{}, errors.New("application home not set")
+	}
+
+	if height != -1 {
+		a = ap.newApp(logger, db, traceStore, false, map[int64]bool{}, homePath, uint(1), appOpts)
+
+		if err := a.LoadVersion(height); err != nil {
+			return servertypes.ExportedApp{}, err
+		}
+	} else {
+		a = ap.newApp(logger, db, traceStore, true, map[int64]bool{}, homePath, uint(1), appOpts)
+	}
+
+	return a.exportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+}
+
+type theApp struct {
 	*baseapp.BaseApp
 	appProvider *AppProvider
 	mm          module.Manager
 }
 
-var _ servertypes.Application = &app{}
+var _ servertypes.Application = &theApp{}
 
-func (a *app) exportAppStateAndValidators(
+func (a *theApp) RegisterAPIRoutes(server *api.Server, config config.APIConfig) {
+	panic("implement me")
+}
+
+func (a *theApp) RegisterTxService(clientCtx client.Context) {
+	panic("implement me")
+}
+
+func (a *theApp) RegisterTendermintService(clientCtx client.Context) {
+	panic("implement me")
+}
+
+func (a *theApp) exportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs []string,
 ) (servertypes.ExportedApp, error) {
 	//// as if they could withdraw from the start of the next block
@@ -54,75 +159,7 @@ func (a *app) exportAppStateAndValidators(
 	//}, err
 }
 
-func (a *app) Info(info abci.RequestInfo) abci.ResponseInfo {
-	panic("implement me")
-}
-
-func (a *app) SetOption(option abci.RequestSetOption) abci.ResponseSetOption {
-	panic("implement me")
-}
-
-func (a *app) Query(query abci.RequestQuery) abci.ResponseQuery {
-	panic("implement me")
-}
-
-func (a *app) CheckTx(checkTx abci.RequestCheckTx) abci.ResponseCheckTx {
-	panic("implement me")
-}
-
-func (a *app) InitChain(chain abci.RequestInitChain) abci.ResponseInitChain {
-	panic("implement me")
-}
-
-func (a *app) BeginBlock(block abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	panic("implement me")
-}
-
-func (a *app) DeliverTx(deliverTx abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	panic("implement me")
-}
-
-func (a *app) EndBlock(block abci.RequestEndBlock) abci.ResponseEndBlock {
-	panic("implement me")
-}
-
-func (a *app) Commit() abci.ResponseCommit {
-	panic("implement me")
-}
-
-func (a *app) ListSnapshots(listSnapshots abci.RequestListSnapshots) abci.ResponseListSnapshots {
-	panic("implement me")
-}
-
-func (a *app) OfferSnapshot(snapshot abci.RequestOfferSnapshot) abci.ResponseOfferSnapshot {
-	panic("implement me")
-}
-
-func (a *app) LoadSnapshotChunk(chunk abci.RequestLoadSnapshotChunk) abci.ResponseLoadSnapshotChunk {
-	panic("implement me")
-}
-
-func (a *app) ApplySnapshotChunk(chunk abci.RequestApplySnapshotChunk) abci.ResponseApplySnapshotChunk {
-	panic("implement me")
-}
-
-func (a *app) RegisterAPIRoutes(a2 *api.Server, config config.APIConfig) {
-	panic("implement me")
-}
-
-func (a *app) RegisterGRPCServer(context client.Context, g grpc1.Server) {
-	panic("implement me")
-}
-
-func (a *app) RegisterTxService(clientCtx client.Context) {
-	panic("implement me")
-}
-
-func (a *app) RegisterTendermintService(clientCtx client.Context) {
-	panic("implement me")
-}
-
-func (a *app) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
+func (a *theApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
 	panic("TODO")
 	//applyAllowedAddrs := false
 	//

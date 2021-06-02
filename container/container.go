@@ -9,7 +9,7 @@ func NewContainer() *Container {
 	panic("TODO")
 }
 
-func (c *Container) RegisterProvider(fn interface{}) error {
+func (c *Container) Provide(fn interface{}) error {
 	panic("implement me")
 }
 

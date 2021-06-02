@@ -32,8 +32,8 @@ func (m Module) NewAppModule(inputs Inputs) (module.AppModule, Outputs, error) {
 	return appMod, Outputs{Keeper: keeper}, nil
 }
 
-func (m Module) Provide(registrar container.Registrar) error {
-	return registrar.RegisterProvider(func(scope container.Scope, keeper paramskeeper.Keeper) types.Subspace {
+func (m Module) Provision(registrar container.Registrar) error {
+	return registrar.Provide(func(scope container.Scope, keeper paramskeeper.Keeper) types.Subspace {
 		return keeper.Subspace(string(scope))
 	})
 }

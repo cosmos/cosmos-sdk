@@ -87,13 +87,16 @@ func NewApp(config *app.Config) (*AppProvider, error) {
 		moduleConfigMap[name] = modConfig
 
 		// register types
-		if typeProvider, ok := cfg.(TypeProvider); ok {
-			typeProvider.RegisterInterfaces(interfaceRegistry)
+		if typeProvider, ok := cfg.(app.TypeProvider); ok {
+			typeProvider.RegisterTypes(interfaceRegistry)
 		}
 
 		// register DI providers
 		if provisioner, ok := cfg.(app.Provisioner); ok {
-			provisioner.Provision(ctr)
+			err = provisioner.Provision(ctr)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

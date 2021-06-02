@@ -1,15 +1,27 @@
 package module
 
 import (
+	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/app/cli"
+	"github.com/cosmos/cosmos-sdk/app/compat"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+)
+
+var (
+	_ app.TypeProvider = Module{}
+	_ app.Provisioner  = Module{}
 )
 
 type Inputs struct {
@@ -27,75 +39,90 @@ type Outputs struct {
 	Keeper     types.Keeper `security-role:"admin"`
 }
 
-func (m Module) NewAppModule(inputs Inputs) (module.AppModule, Outputs, error) {
-	var accCtr types.AccountConstructor
-	if m.AccountConstructor != nil {
-		err := inputs.Codec.UnpackAny(m.AccountConstructor, &accCtr)
-		if err != nil {
-			return nil, Outputs{}, err
-		}
-	} else {
-		accCtr = DefaultAccountConstructor{}
-	}
+func (m Module) RegisterTypes(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
+}
 
-	perms := map[string][]string{}
-	for _, perm := range m.Permissions {
-		perms[perm.Address] = perm.Permissions
-	}
-
-	var randomGenesisAccountsProvider types.RandomGenesisAccountsProvider
-	if m.RandomGenesisAccountsProvider != nil {
-		err := inputs.Codec.UnpackAny(m.RandomGenesisAccountsProvider, &randomGenesisAccountsProvider)
-		if err != nil {
-			return nil, Outputs{}, err
-		}
-	} else {
-		randomGenesisAccountsProvider = DefaultRandomGenesisAccountsProvider{}
-	}
-
-	keeper := authkeeper.NewAccountKeeper(inputs.Codec, inputs.Key, inputs.ParamStore, func() types.AccountI {
-		return accCtr.NewAccount()
-	}, perms)
-	appMod := auth.NewAppModule(inputs.Codec, keeper, func(simState *module.SimulationState) types.GenesisAccounts {
-		return randomGenesisAccountsProvider.RandomGenesisAccounts(simState)
+func (m Module) Provision(registrar container.Registrar) error {
+	// provide AccountRetriever
+	err := registrar.Provide(func() client.AccountRetriever {
+		return types.AccountRetriever{}
 	})
+	if err != nil {
+		return err
+	}
 
-	return appMod, Outputs{
-		ViewKeeper: viewOnlyKeeper{keeper},
-		Keeper:     keeper,
-	}, nil
+	// provide CLI handlers
+	err = registrar.Provide(func(configurator cli.Configurator) {
+		configurator.RootQueryCommand().AddCommand(
+			authcmd.GetAccountCmd(),
+			authcmd.QueryTxsByEventsCmd(),
+			authcmd.QueryTxCmd(),
+		)
+
+		configurator.RootTxCommand().AddCommand(
+			authcmd.GetSignCommand(),
+			authcmd.GetSignBatchCommand(),
+			authcmd.GetMultiSignCommand(),
+			authcmd.GetMultiSignBatchCmd(),
+			authcmd.GetValidateSignaturesCommand(),
+			flags.LineBreak,
+			authcmd.GetBroadcastCommand(),
+			authcmd.GetEncodeCommand(),
+			authcmd.GetDecodeCommand(),
+			flags.LineBreak,
+		)
+
+		compat.RegisterAppModuleBasic(configurator, auth.AppModuleBasic{})
+	})
+	if err != nil {
+		return err
+	}
+
+	// provide app handlers
+	return registrar.Provide(
+		func(configurator app.Configurator, inputs Inputs) (Outputs, error) {
+			var accCtr types.AccountConstructor
+			if m.AccountConstructor != nil {
+				err := inputs.Codec.UnpackAny(m.AccountConstructor, &accCtr)
+				if err != nil {
+					return Outputs{}, err
+				}
+			} else {
+				accCtr = DefaultAccountConstructor{}
+			}
+
+			perms := map[string][]string{}
+			for _, perm := range m.Permissions {
+				perms[perm.Address] = perm.Permissions
+			}
+
+			var randomGenesisAccountsProvider types.RandomGenesisAccountsProvider
+			if m.RandomGenesisAccountsProvider != nil {
+				err := inputs.Codec.UnpackAny(m.RandomGenesisAccountsProvider, &randomGenesisAccountsProvider)
+				if err != nil {
+					return Outputs{}, err
+				}
+			} else {
+				randomGenesisAccountsProvider = DefaultRandomGenesisAccountsProvider{}
+			}
+
+			keeper := authkeeper.NewAccountKeeper(inputs.Codec, inputs.Key, inputs.ParamStore, func() types.AccountI {
+				return accCtr.NewAccount()
+			}, perms)
+			appMod := auth.NewAppModule(inputs.Codec, keeper, func(simState *module.SimulationState) types.GenesisAccounts {
+				return randomGenesisAccountsProvider.RandomGenesisAccounts(simState)
+			})
+
+			compat.RegisterAppModule(configurator, appMod)
+
+			return Outputs{
+				ViewKeeper: viewOnlyKeeper{keeper},
+				Keeper:     keeper,
+			}, nil
+		},
+	)
 }
-
-// viewOnlyKeeper wraps the full keeper in a view-only interface which can't be easily type cast to the full keeper interface
-type viewOnlyKeeper struct {
-	k authkeeper.AccountKeeper
-}
-
-func (v viewOnlyKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
-	return v.k.GetAccount(ctx, addr)
-}
-
-func (v viewOnlyKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
-	return v.k.GetModuleAddress(moduleName)
-}
-
-func (v viewOnlyKeeper) ValidatePermissions(macc types.ModuleAccountI) error {
-	return v.k.ValidatePermissions(macc)
-}
-
-func (v viewOnlyKeeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string) {
-	return v.GetModuleAddressAndPermissions(moduleName)
-}
-
-func (v viewOnlyKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleAccountI, []string) {
-	return v.GetModuleAccountAndPermissions(ctx, moduleName)
-}
-
-func (v viewOnlyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI {
-	return v.k.GetModuleAccount(ctx, moduleName)
-}
-
-var _ types.ViewKeeper = viewOnlyKeeper{}
 
 func (m DefaultAccountConstructor) NewAccount() types.AccountI {
 	return &types.BaseAccount{}

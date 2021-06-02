@@ -2,10 +2,11 @@ package module
 
 import (
 	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -13,13 +14,12 @@ import (
 )
 
 var (
-	_ app.Provisioner = &Module{}
+	_ app.TypeProvider = &Module{}
+	_ app.Provisioner  = &Module{}
 )
 
-func (m *Module) Provision(registrar container.Registrar) error {
-	return registrar.Provide(func() govtypes.Router {
-		return govtypes.NewRouter()
-	})
+func (m *Module) RegisterTypes(registry types.InterfaceRegistry) {
+	govtypes.RegisterInterfaces(registry)
 }
 
 type Inputs struct {
@@ -40,18 +40,29 @@ type Outputs struct {
 	container.StructArgs
 }
 
-func (m *Module) NewAppHandler(inputs Inputs) (module.AppModule, Outputs) {
-	k := govkeeper.NewKeeper(
-		inputs.Codec,
-		inputs.Key,
-		inputs.ParamStore,
-		inputs.AuthKeeper,
-		inputs.BankKeeper,
-		inputs.StakingKeeper,
-		inputs.Router,
-	)
+func (m *Module) Provision(registrar container.Registrar) error {
+	err := registrar.Provide(func(configurator app.Configurator, inputs Inputs) Outputs {
+		k := govkeeper.NewKeeper(
+			inputs.Codec,
+			inputs.Key,
+			inputs.ParamStore,
+			inputs.AuthKeeper,
+			inputs.BankKeeper,
+			inputs.StakingKeeper,
+			inputs.Router,
+		)
 
-	am := gov.NewAppModule(inputs.Codec, k, inputs.AuthKeeper, inputs.BankKeeper)
+		am := gov.NewAppModule(inputs.Codec, k, inputs.AuthKeeper, inputs.BankKeeper)
+		compat.RegisterAppModule(configurator, am)
 
-	return am, Outputs{}
+		return Outputs{}
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return registrar.Provide(func() govtypes.Router {
+		return govtypes.NewRouter()
+	})
 }

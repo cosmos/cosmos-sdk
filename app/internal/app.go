@@ -7,6 +7,9 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/spf13/cast"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -15,8 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/spf13/cast"
-	dbm "github.com/tendermint/tm-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -32,6 +33,16 @@ func (ap *AppProvider) AppCreator(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
+	err := ap.container.Provide(KVStoreKeyProvider)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ap.container.Provide(ConfiguratorProvider)
+	if err != nil {
+		panic(err)
+	}
+
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {

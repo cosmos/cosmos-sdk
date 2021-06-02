@@ -2,10 +2,10 @@ package module
 
 import (
 	"github.com/cosmos/cosmos-sdk/app"
+	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/container"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -33,16 +33,21 @@ type Outputs struct {
 	Keeper paramskeeper.Keeper `security-role:"admin"`
 }
 
-func (m Module) NewAppHandler(inputs Inputs) (module.AppModule, Outputs, error) {
-	keeper := paramskeeper.NewKeeper(inputs.Codec, inputs.LegacyAmino, inputs.Key, inputs.TransientKey)
-	appMod := params.NewAppModule(keeper)
-
-	inputs.GovRouter.AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(keeper))
-
-	return appMod, Outputs{Keeper: keeper}, nil
-}
-
 func (m Module) Provision(registrar container.Registrar) error {
+	err := registrar.Provide(func(configurator app.Configurator, inputs Inputs) Outputs {
+		keeper := paramskeeper.NewKeeper(inputs.Codec, inputs.LegacyAmino, inputs.Key, inputs.TransientKey)
+		appMod := params.NewAppModule(keeper)
+
+		compat.RegisterAppModule(configurator, appMod)
+
+		inputs.GovRouter.AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(keeper))
+
+		return Outputs{Keeper: keeper}
+	})
+	if err != nil {
+		return err
+	}
+
 	return registrar.Provide(func(scope container.Scope, keeper paramskeeper.Keeper) types.Subspace {
 		return keeper.Subspace(string(scope))
 	})

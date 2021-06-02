@@ -19,7 +19,6 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingcli "github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -137,11 +136,12 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
+		// NOTE: moved these to the auth module:
+		//authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
 		rpc.BlockCommand(),
-		authcmd.QueryTxsByEventsCmd(),
-		authcmd.QueryTxCmd(),
+		//authcmd.QueryTxsByEventsCmd(),
+		//authcmd.QueryTxCmd(),
 	)
 
 	simapp.ModuleBasics.AddQueryCommands(cmd)
@@ -160,16 +160,17 @@ func txCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetSignCommand(),
-		authcmd.GetSignBatchCommand(),
-		authcmd.GetMultiSignCommand(),
-		authcmd.GetMultiSignBatchCmd(),
-		authcmd.GetValidateSignaturesCommand(),
-		flags.LineBreak,
-		authcmd.GetBroadcastCommand(),
-		authcmd.GetEncodeCommand(),
-		authcmd.GetDecodeCommand(),
-		flags.LineBreak,
+		// NOTE: moved these to the auth module:
+		//authcmd.GetSignCommand(),
+		//authcmd.GetSignBatchCommand(),
+		//authcmd.GetMultiSignCommand(),
+		//authcmd.GetMultiSignBatchCmd(),
+		//authcmd.GetValidateSignaturesCommand(),
+		//flags.LineBreak,
+		//authcmd.GetBroadcastCommand(),
+		//authcmd.GetEncodeCommand(),
+		//authcmd.GetDecodeCommand(),
+		//flags.LineBreak,
 		vestingcli.GetTxCmd(),
 	)
 

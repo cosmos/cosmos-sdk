@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

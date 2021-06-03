@@ -10,7 +10,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -88,7 +87,7 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 		if err != nil {
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, TypeMsgGrantAllowance, spendableCoins, ctx, granter, ak, bk, types.ModuleName)
+		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, protoCdc, msg, TypeMsgGrantAllowance, spendableCoins, ctx, granter, ak, bk, feegrant.ModuleName)
 	}
 }
 
@@ -131,6 +130,6 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 
 		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, TypeMsgRevokeAllowance, spendableCoins, ctx, granter, ak, bk, types.ModuleName)
+		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, protoCdc, &msg, TypeMsgRevokeAllowance, spendableCoins, ctx, granter, ak, bk, feegrant.ModuleName)
 	}
 }

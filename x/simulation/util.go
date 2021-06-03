@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
@@ -84,12 +83,12 @@ func GenAndDeliverTxWithRandFees(
 
 	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg)
 	if hasNeg {
-		return simtypes.NoOpMsg(types.ModuleName, msgType, "message doesn't leave room for fees"), nil, err
+		return simtypes.NoOpMsg(moduleName, msgType, "message doesn't leave room for fees"), nil, err
 	}
 
 	fees, err = simtypes.RandomFees(r, ctx, coins)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(moduleName, msgType, "unable to generate fees"), nil, err
 	}
 	return GenAndDeliverTx(app, txGen, cdc, msg, msgType, fees, ctx, simAccount, ak, moduleName)
 }
@@ -119,12 +118,12 @@ func GenAndDeliverTx(
 	)
 
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(moduleName, msgType, "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to deliver tx"), nil, err
+		return simtypes.NoOpMsg(moduleName, msgType, "unable to deliver tx"), nil, err
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil

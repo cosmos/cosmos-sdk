@@ -38,20 +38,20 @@ func (k Keeper) NFTs(c context.Context, req *types.QueryNFTsRequest) (*types.Que
 	store := ctx.KVStore(k.storeKey)
 
 	prefixStore := prefix.NewStore(store, types.NFTKey)
-	onResult := k.onQueryAllNFTs
+	onResult := onQueryAllNFTs
 	if len(req.Owner) > 0 {
 		owner, err := sdk.AccAddressFromBech32(req.Owner)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
-		prefixStore = k.getOwnerStore(ctx, owner)
-		onResult = k.onQueryNFTsByOwner
+		prefixStore = k.GetOwnerStore(ctx, owner)
+		onResult = onQueryNFTsByOwner
 	}
 
 	var nfts []*types.NFT
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination,
 		func(key []byte, value []byte, accumulate bool) (bool, error) {
-			return onResult(ctx, nfts)(key, value, accumulate)
+			return onResult(ctx, k, nfts)(key, value, accumulate)
 		},
 	)
 
@@ -64,7 +64,7 @@ func (k Keeper) NFTs(c context.Context, req *types.QueryNFTsRequest) (*types.Que
 	}, nil
 }
 
-func (k Keeper) onQueryAllNFTs(ctx sdk.Context, nfts []*types.NFT) func(key, value []byte, accumulate bool) (bool, error) {
+func onQueryAllNFTs(_ sdk.Context, k Keeper, nfts []*types.NFT) func(key, value []byte, accumulate bool) (bool, error) {
 	return func(key, value []byte, accumulate bool) (bool, error) {
 		var nft types.NFT
 		if err := k.cdc.UnmarshalBinaryBare(value, &nft); err != nil {
@@ -78,10 +78,9 @@ func (k Keeper) onQueryAllNFTs(ctx sdk.Context, nfts []*types.NFT) func(key, val
 	}
 }
 
-func (k Keeper) onQueryNFTsByOwner(ctx sdk.Context, nfts []*types.NFT) func(key, value []byte, accumulate bool) (bool, error) {
+func onQueryNFTsByOwner(ctx sdk.Context, k Keeper, nfts []*types.NFT) func(key, value []byte, accumulate bool) (bool, error) {
 	return func(key, value []byte, accumulate bool) (bool, error) {
-		id := string(value)
-		if nft, has := k.GetNFT(ctx, id); has && accumulate {
+		if nft, has := k.GetNFT(ctx, types.GetNFTID(value)); has && accumulate {
 			nfts = append(nfts, &nft)
 		}
 		return true, nil

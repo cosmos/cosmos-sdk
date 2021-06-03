@@ -405,9 +405,6 @@
 - [cosmos/nft/v1beta1/nft.proto](#cosmos/nft/v1beta1/nft.proto)
     - [NFT](#cosmos.nft.v1beta1.NFT)
   
-- [cosmos/nft/v1beta1/genesis.proto](#cosmos/nft/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.nft.v1beta1.GenesisState)
-  
 - [cosmos/nft/v1beta1/query.proto](#cosmos/nft/v1beta1/query.proto)
     - [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest)
     - [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse)
@@ -5783,37 +5780,6 @@ NFT defines a base NFT type.
 | `id` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
 | `data` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/nft/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/nft/v1beta1/genesis.proto
-
-
-
-<a name="cosmos.nft.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the NFT module's genesis state
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
 
 
 

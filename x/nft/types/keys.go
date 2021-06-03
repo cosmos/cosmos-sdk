@@ -21,11 +21,23 @@ var (
 // GetNFTKey creates the key for nft
 // VALUE: nft
 func GetNFTKey(id string) []byte {
-	return append(NFTKey, []byte(id)...)
+	return append(NFTKey, GetNFTIDBytes(id)...)
 }
 
 // GetNFTByOwnerKey creates the key for nft id
 // VALUE: nft id
 func GetNFTByOwnerKey(owner sdk.AccAddress) []byte {
 	return append(NFTByOwnerKey, address.MustLengthPrefix(owner)...)
+}
+
+// GetNFTIDBytes returns the byte representation of the nftID
+func GetNFTIDBytes(id string) []byte {
+	// TODO
+	return []byte(id)
+}
+
+// GetNFTID returns nftID by the byte representation of the nftID
+func GetNFTID(idBytes []byte) string {
+	// TODO
+	return string(idBytes)
 }

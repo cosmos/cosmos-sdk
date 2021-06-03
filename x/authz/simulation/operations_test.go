@@ -10,7 +10,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -22,9 +21,8 @@ import (
 type SimTestSuite struct {
 	suite.Suite
 
-	ctx      sdk.Context
-	app      *simapp.SimApp
-	protoCdc *codec.ProtoCodec
+	ctx sdk.Context
+	app *simapp.SimApp
 }
 
 func (suite *SimTestSuite) SetupTest() {
@@ -32,7 +30,6 @@ func (suite *SimTestSuite) SetupTest() {
 	app := simapp.Setup(checkTx)
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{})
-	suite.protoCdc = codec.NewProtoCodec(suite.app.InterfaceRegistry())
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -40,7 +37,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
-		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc, suite.protoCdc,
+		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc,
 	)
 
 	// setup 3 accounts
@@ -104,7 +101,7 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 	grantee := accounts[1]
 
 	// execute operation
-	op := simulation.SimulateMsgGrant(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgGrant(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -141,7 +138,7 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgRevoke(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.protoCdc)
+	op := simulation.SimulateMsgRevoke(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper)
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
@@ -176,7 +173,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	suite.Require().NoError(err)
 
 	// execute operation
-	op := simulation.SimulateMsgExec(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec(), suite.protoCdc)
+	op := simulation.SimulateMsgExec(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AuthzKeeper, suite.app.AppCodec())
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 

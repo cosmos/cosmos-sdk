@@ -4,10 +4,11 @@ package cosmos.nft.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/nft/v1beta1/nft.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/nft/types";
 
 // GenesisState defines the NFT module's genesis state
 message GenesisState {
-  repeated google.protobuf.Any nfts = 1 [(cosmos_proto.accepts_interface) = "NFTI", (gogoproto.customname) = "NFTs"];
+  repeated NFT nfts = 1 [(gogoproto.customname) = "NFTs"];
 }

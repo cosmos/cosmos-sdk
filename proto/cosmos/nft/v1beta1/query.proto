@@ -6,6 +6,7 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/nft/v1beta1/nft.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/nft/types";
 
@@ -30,17 +31,17 @@ message QueryNFTRequest {
 
 // QueryNFTResponse is the response type for the Query/NFT RPC method
 message QueryNFTResponse {
-  google.protobuf.Any nft = 1 [(cosmos_proto.accepts_interface) = "NFTI", (gogoproto.customname) = "NFT"];
+  NFT nft = 1 [(gogoproto.customname) = "NFT"];
 }
 
 // QueryNFTsRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
-  string                                 owner      = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  string                                owner      = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryNFTsResponse is the response type for the Query/NFTs RPC method
 message QueryNFTsResponse {
-  repeated google.protobuf.Any nfts = 1 [(cosmos_proto.accepts_interface) = "NFTI", (gogoproto.customname) = "NFTs"];
+  repeated NFT                           nfts       = 1 [(gogoproto.customname) = "NFTs"];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

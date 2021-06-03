@@ -22,6 +22,8 @@ type AnyUnpacker interface {
 	UnpackAny(any *Any, iface interface{}) error
 }
 
+type TypeRegistry = InterfaceRegistry
+
 // InterfaceRegistry provides a mechanism for registering interfaces and
 // implementations that can be safely unpacked from Any
 type InterfaceRegistry interface {

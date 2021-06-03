@@ -546,6 +546,9 @@
   
     - [SignMode](#cosmos.tx.signing.v1beta1.SignMode)
   
+- [cosmos/tx/module/v1/module.proto](#cosmos/tx/module/v1/module.proto)
+    - [Module](#cosmos.tx.module.v1.Module)
+  
 - [cosmos/tx/v1beta1/tx.proto](#cosmos/tx/v1beta1/tx.proto)
     - [AuthInfo](#cosmos.tx.v1beta1.AuthInfo)
     - [Fee](#cosmos.tx.v1beta1.Fee)
@@ -627,6 +630,7 @@
 | `init_genesis` | [string](#string) | repeated |  |
 | `begin_block` | [string](#string) | repeated |  |
 | `end_block` | [string](#string) | repeated |  |
+| `tx_handler` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
 
 
@@ -7666,6 +7670,37 @@ SignMode represents a signing mode with its own security guarantees.
 | SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT |
 | SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future |
 
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/tx/module/v1/module.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/tx/module/v1/module.proto
+
+
+
+<a name="cosmos.tx.module.v1.Module"></a>
+
+### Module
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `enabled_sign_modes` | [cosmos.tx.signing.v1beta1.SignMode](#cosmos.tx.signing.v1beta1.SignMode) | repeated | enabled_sign_modes is the list of enabled sign modes. It will fallback to the default value of [SIGN_MODE_DIRECT, SIGN_MODE_LEGACY_AMINO_JSON] if left empty. |
+
+
+
+
+
+ <!-- end messages -->
 
  <!-- end enums -->
 

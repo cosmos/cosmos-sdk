@@ -1,0 +1,13 @@
+syntax = "proto3";
+package cosmos.tx.module.v1;
+
+import "cosmos/tx/signing/v1beta1/signing.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/tx/module";
+
+message Module {
+    // enabled_sign_modes is the list of enabled sign modes. It will fallback
+    // to the default value of [SIGN_MODE_DIRECT, SIGN_MODE_LEGACY_AMINO_JSON]
+    // if left empty.
+    repeated cosmos.tx.signing.v1beta1.SignMode enabled_sign_modes = 1;
+}

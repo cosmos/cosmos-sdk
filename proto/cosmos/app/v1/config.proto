@@ -19,4 +19,5 @@ message ABCIHandlers {
     repeated string init_genesis = 1;
     repeated string begin_block = 2;
     repeated string end_block = 3;
+    google.protobuf.Any tx_handler = 4;
 }

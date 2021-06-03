@@ -80,8 +80,8 @@ func (msg MsgGrantAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error 
 // NewMsgRevokeAllowance returns a message to revoke a fee allowance for a given
 // granter and grantee
 //nolint:interfacer
-func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) MsgRevokeAllowance {
-	return MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
+func NewMsgRevokeAllowance(granter sdk.AccAddress, grantee sdk.AccAddress) *MsgRevokeAllowance {
+	return &MsgRevokeAllowance{Granter: granter.String(), Grantee: grantee.String()}
 }
 
 // ValidateBasic implements the sdk.Msg interface.

@@ -5,12 +5,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -78,15 +78,6 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 		account := ak.GetAccount(ctx, granter.Address)
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
-		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
-		}
-
-		spendableCoins = spendableCoins.Sub(fees)
-		if spendableCoins.Empty() {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
-		}
 
 		oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 		msg, err := feegrant.NewMsgGrantAllowance(&feegrant.BasicAllowance{
@@ -97,28 +88,7 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 		if err != nil {
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
-			txGen,
-			[]sdk.Msg{msg},
-			fees,
-			helpers.DefaultGenTxGas,
-			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
-			granter.PrivKey,
-		)
-
-		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "unable to generate mock tx"), nil, err
-		}
-
-		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-
-		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
-		}
-		return simtypes.NewOperationMsg(msg, true, "", protoCdc), nil, err
+		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, TypeMsgGrantAllowance, spendableCoins, ctx, granter, ak, bk, types.ModuleName)
 	}
 }
 
@@ -158,30 +128,9 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 
 		account := ak.GetAccount(ctx, granter.Address)
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
-		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
-		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
-		}
 
 		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
 
-		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
-			txGen,
-			[]sdk.Msg{&msg},
-			fees,
-			helpers.DefaultGenTxGas,
-			chainID,
-			[]uint64{account.GetAccountNumber()},
-			[]uint64{account.GetSequence()},
-			granter.PrivKey,
-		)
-
-		if err != nil {
-			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgRevokeAllowance, err.Error()), nil, err
-		}
-
-		_, _, err = app.Deliver(txGen.TxEncoder(), tx)
-		return simtypes.NewOperationMsg(&msg, true, "", protoCdc), nil, err
+		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, TypeMsgRevokeAllowance, spendableCoins, ctx, granter, ak, bk, types.ModuleName)
 	}
 }

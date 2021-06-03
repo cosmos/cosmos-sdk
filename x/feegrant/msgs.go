@@ -3,14 +3,18 @@ package feegrant
 import (
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 var (
-	_, _ sdk.Msg                       = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
+	_, _ sdk.Msg            = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{} // For amino support.
+
+	_ types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
@@ -61,6 +65,21 @@ func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
+// Type implements the LegacyMsg.Type method.
+func (msg MsgGrantAllowance) Type() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// Route implements the LegacyMsg.Type method.
+func (msg MsgGrantAllowance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// Route implements the LegacyMsg.Type method.
+func (msg MsgGrantAllowance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+}
+
 // GetFeeAllowanceI returns unpacked FeeAllowance
 func (msg MsgGrantAllowance) GetFeeAllowanceI() (FeeAllowanceI, error) {
 	allowance, ok := msg.Allowance.GetCachedValue().(FeeAllowanceI)
@@ -107,4 +126,19 @@ func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{granter}
+}
+
+// Type implements the LegacyMsg.Type method.
+func (msg MsgRevokeAllowance) Type() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// Route implements the LegacyMsg.Type method.
+func (msg MsgRevokeAllowance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// Route implements the LegacyMsg.Type method.
+func (msg MsgRevokeAllowance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }

@@ -59,6 +59,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	granter := val.Address
 	grantee := s.network.Validators[1].Address
 
+	s.createGrant(granter, grantee)
+
+	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
+		SpendLimit: sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100))),
+	})
+	s.Require().NoError(err)
+
+	s.addedGrant = grant
+	s.addedGranter = granter
+	s.addedGrantee = grantee
+}
+
+// createGrant creates a new basic allowance fee grant from granter to grantee.
+func (s *IntegrationTestSuite) createGrant(granter, grantee sdk.Address) {
+	val := s.network.Validators[0]
+
 	clientCtx := val.ClientCtx
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -81,20 +97,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	cmd := cli.NewCmdFeeGrant()
 
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
-	s.addedGranter = granter
-	s.addedGrantee = grantee
-
-	grant, err := feegrant.NewGrant(granter, grantee, &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(fee),
-	})
-	s.Require().NoError(err)
-
-	s.addedGrant = grant
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -297,6 +303,20 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"valid basic fee grant with amino",
+			append(
+				[]string{
+					granter.String(),
+					"cosmos1v57fx2l2rt6ehujuu99u2fw05779m5e2ux4z2h",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				commonFlags...,
 			),
@@ -507,6 +527,11 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 	}
 
+	// Create new fee grant specifically to test amino.
+	aminoGrantee, err := sdk.AccAddressFromBech32("cosmos16ydaqh0fcnh4qt7a3jme4mmztm2qel5axcpw00")
+	s.Require().NoError(err)
+	s.createGrant(granter, aminoGrantee)
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -557,6 +582,19 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 					granter.String(),
 					grantee.String(),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"Valid revoke with amino",
+			append(
+				[]string{
+					granter.String(),
+					aminoGrantee.String(),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
 				commonFlags...,
 			),

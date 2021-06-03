@@ -5,6 +5,7 @@ order: 1
 # Concepts
 
 ## Authorization and Grant
+
 `x/authz` module defines interfaces and messages grant authorizations to perform actions
 on behalf of one account to other accounts. The design is defined in the [ADR 030](../../../architecture/adr-030-authz-module.md).
 
@@ -12,7 +13,6 @@ Grant is an allowance to execute a Msg by the grantee on behalf of the granter.
 Authorization is an interface which must be implemented by a concrete authorization logic to validate and execute grants. They are extensible and can be defined for any Msg service method even outside of the module where the Msg method is defined. See the `SendAuthorization` example in the next section for more details.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/authz/authorizations.go#L11-L25
-
 
 ## Built-in Authorizations
 
@@ -27,7 +27,6 @@ Cosmos-SDK `x/authz` module comes with following authorization types
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/x/bank/types/send_authorization.go#L25-L40
 
 - `spent_limit` keeps track of how many coins are left in the authorization.
-
 
 ### GenericAuthorization
 

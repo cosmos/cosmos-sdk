@@ -20,7 +20,6 @@ The message handling should fail if:
 - provided `Grant.Authorization` is not implemented.
 - `Authorization.MsgTypeURL()` is not defined in the router (there is no defined handler in the app router to handle that Msg types).
 
-
 ## MsgRevoke
 
 A grant can be removed with the `MsgRevoke` message.

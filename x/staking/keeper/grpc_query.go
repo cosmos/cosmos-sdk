@@ -281,11 +281,6 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if delegations == nil {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"unable to find delegations for address %s", req.DelegatorAddr)
-	}
 	delegationResps, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

@@ -6,8 +6,8 @@ import (
 )
 
 type AppProvider struct {
+	*ModuleContainer
 	config          *app.Config
-	container       *ModuleContainer
 	moduleConfigMap map[string]*app.ModuleConfig
 }
 

@@ -3,6 +3,9 @@ package cli
 import (
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/app/internal"
 
 	"github.com/spf13/cobra"
@@ -47,20 +50,32 @@ func Run(options Options) {
 }
 
 func newRootCmd(options Options) *cobra.Command {
-	a, err := internal.NewApp(options.DefaultAppConfig)
+	a, err := internal.NewAppProvider(options.DefaultAppConfig)
 	if err != nil {
 		panic(err)
 	}
 
 	initClientCtx := client.Context{}.
-		WithJSONCodec(a.Codec()).
-		WithInterfaceRegistry(a.InterfaceRegistry()).
-		WithTxConfig(a.TxConfig()).
-		WithLegacyAmino(a.Amino()).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(options.DefaultHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
+
+	err = a.Invoke(func(
+		codec codec.JSONCodec,
+		registry codectypes.InterfaceRegistry,
+		txConfig client.TxConfig,
+		amino *codec.LegacyAmino,
+	) {
+		initClientCtx = initClientCtx.
+			WithJSONCodec(codec).
+			WithInterfaceRegistry(registry).
+			WithTxConfig(txConfig).
+			WithLegacyAmino(amino)
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	rootCmd := &cobra.Command{
 		Use:   "simd",
@@ -85,12 +100,12 @@ func newRootCmd(options Options) *cobra.Command {
 		},
 	}
 
-	initRootCmd(options, rootCmd, a)
+	initRootCmd(options, rootCmd, a, initClientCtx)
 
 	return rootCmd
 }
 
-func initRootCmd(options Options, rootCmd *cobra.Command, a *internal.AppProvider) {
+func initRootCmd(options Options, rootCmd *cobra.Command, a *internal.AppProvider, clientCtx client.Context) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -98,7 +113,7 @@ func initRootCmd(options Options, rootCmd *cobra.Command, a *internal.AppProvide
 		genutilcli.InitCmd(simapp.ModuleBasics, options.DefaultHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, options.DefaultHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, a.TxConfig(), banktypes.GenesisBalancesIterator{}, options.DefaultHome),
+		genutilcli.GenTxCmd(simapp.ModuleBasics, clientCtx.TxConfig, banktypes.GenesisBalancesIterator{}, options.DefaultHome),
 		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
 		//AddGenesisAccountCmd(options.DefaultHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
@@ -118,7 +133,7 @@ func initRootCmd(options Options, rootCmd *cobra.Command, a *internal.AppProvide
 	)
 
 	// add rosetta
-	rootCmd.AddCommand(server.RosettaCommand(a.InterfaceRegistry(), a.Codec()))
+	rootCmd.AddCommand(server.RosettaCommand(clientCtx.InterfaceRegistry, clientCtx.JSONCodec))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {

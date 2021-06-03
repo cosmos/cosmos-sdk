@@ -158,6 +158,12 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.jailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info("validator jailed", "validator", consAddr)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			slashingtypes.EventTypeJailed,
+			sdk.NewAttribute(slashingtypes.AttributeKeyAddress, consAddr.String()),
+		),
+	)
 }
 
 // unjail a validator

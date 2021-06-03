@@ -72,12 +72,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.sk.Jail(ctx, consAddr)
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeJailed,
-			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
-		),
-	)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {

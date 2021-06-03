@@ -77,7 +77,7 @@ Cosmos SDK 使用一套称之为 [BIP32](https://github.com/bitcoin/bips/blob/ma
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/crypto/keys/lazy_keybase.go
 
-`lazyKeybase` 是 `dbKeybase` 的一个简单包装，它仅在要执行操作时锁定数据库，并在之后立即将其解锁。使用 `lazyKeybase`[命令行界面](../interfaces/cli.md) 可以在 [rest server](../interfaces/rest.md)运行时创建新的账户，它也可以同时传递多个 CLI 命令
+`lazyKeybase` 是 `dbKeybase` 的一个简单包装，它仅在要执行操作时锁定数据库，并在之后立即将其解锁。使用 `lazyKeybase`[命令行界面](../core/cli.md) 可以在 [rest server](../core/grpc_rest.md)运行时创建新的账户，它也可以同时传递多个 CLI 命令
 
 ## 地址和公钥
 

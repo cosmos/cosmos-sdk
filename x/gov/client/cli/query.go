@@ -364,8 +364,14 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			// check to see if the proposal is in the store
+<<<<<<< HEAD
 			_, err = queryClient.Proposal(
 				context.Background(),
+=======
+			ctx := cmd.Context()
+			proposalRes, err := queryClient.Proposal(
+				ctx,
+>>>>>>> 66ee994ce (fix: x/gov deposits querier (Initial Deposit) (#9288))
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
@@ -377,6 +383,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
+<<<<<<< HEAD
 			res, err := queryClient.Deposit(
 				context.Background(),
 				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: args[1]},
@@ -387,15 +394,33 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			deposit := res.GetDeposit()
 			if deposit.Empty() {
+=======
+			var deposit types.Deposit
+			propStatus := proposalRes.Proposal.Status
+			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
+>>>>>>> 66ee994ce (fix: x/gov deposits querier (Initial Deposit) (#9288))
 				params := types.NewQueryDepositParams(proposalID, depositorAddr)
 				resByTxQuery, err := gcutils.QueryDepositByTxQuery(clientCtx, params)
 				if err != nil {
 					return err
 				}
+<<<<<<< HEAD
 				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &deposit)
+=======
+				clientCtx.JSONCodec.MustUnmarshalJSON(resByTxQuery, &deposit)
+				return clientCtx.PrintProto(&deposit)
 			}
 
-			return clientCtx.PrintProto(&deposit)
+			res, err := queryClient.Deposit(
+				ctx,
+				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: args[1]},
+			)
+			if err != nil {
+				return err
+>>>>>>> 66ee994ce (fix: x/gov deposits querier (Initial Deposit) (#9288))
+			}
+
+			return clientCtx.PrintProto(&res.Deposit)
 		},
 	}
 

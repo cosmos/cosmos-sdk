@@ -132,8 +132,8 @@ func initRootCmd(options Options, rootCmd *cobra.Command, a *internal.AppProvide
 		keys.Commands(options.DefaultHome),
 	)
 
-	// add rosetta
-	rootCmd.AddCommand(server.RosettaCommand(clientCtx.InterfaceRegistry, clientCtx.JSONCodec))
+	// TODO: add rosetta
+	// rootCmd.AddCommand(server.RosettaCommand(clientCtx.InterfaceRegistry, clientCtx.JSONCodec))
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {

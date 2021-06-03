@@ -31,8 +31,8 @@ func NewAppProvider(config *app.Config) (*AppProvider, error) {
 	}
 
 	return &AppProvider{
+		ModuleContainer: ctr,
 		config:          config,
-		container:       ctr,
 		moduleConfigMap: moduleConfigMap,
 	}, nil
 }

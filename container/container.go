@@ -21,10 +21,17 @@ func (c *Container) Invoke(fn interface{}) error {
 	panic("TODO")
 }
 
-// InitializeAll attempts to initialize all registered providers in the container.
+// TryInitializeAll attempts to initialize all registered providers in the container.
 // It returns an error if a provider returns an error. If a given provider has
 // dependencies which cannot be resolved, an error is not returned and instead
 // that provider is not called.
+func (c *Container) TryInitializeAll() error {
+	panic("TODO")
+}
+
+// InitializeAll attempts to initialize all registered providers in the container.
+// It returns an error if a provider returns an error or a dependency in the graph
+// cannot be satisfied.
 func (c *Container) InitializeAll() error {
 	panic("TODO")
 }

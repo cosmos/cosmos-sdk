@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -22,7 +21,7 @@ import (
 // CONTRACT:
 //    Infraction was committed at the current height or at a past height,
 //    not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) sdk.Int {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -46,7 +45,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", consAddr.String(),
 		)
-		return
+		return sdk.NewInt(0)
 	}
 
 	// should not be slashing an unbonded validator
@@ -141,15 +140,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			slashingtypes.EventTypeSlash,
-			sdk.NewAttribute(slashingtypes.AttributeKeyAddress, consAddr.String()),
-			sdk.NewAttribute(slashingtypes.AttributeKeyPower, fmt.Sprintf("%d", power)),
-			sdk.NewAttribute(slashingtypes.AttributeKeyAddress, consAddr.String()),
-			sdk.NewAttribute(slashingtypes.AttributeKeyAmountSlashed, tokensToBurn.String()),
-		),
-	)
+	return tokensToBurn
 }
 
 // jail a validator
@@ -158,12 +149,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.jailValidator(ctx, validator)
 	logger := k.Logger(ctx)
 	logger.Info("validator jailed", "validator", consAddr)
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			slashingtypes.EventTypeJailed,
-			sdk.NewAttribute(slashingtypes.AttributeKeyAddress, consAddr.String()),
-		),
-	)
 }
 
 // unjail a validator

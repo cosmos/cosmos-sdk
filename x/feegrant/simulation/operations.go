@@ -95,9 +95,9 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         TypeMsgGrantAllowance,
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      granter,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      feegrant.ModuleName,
 			CoinsSpentInMsg: spendableCoins,
 		}
@@ -152,9 +152,9 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 			Cdc:             nil,
 			Msg:             &msg,
 			MsgType:         TypeMsgRevokeAllowance,
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      granter,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      feegrant.ModuleName,
 			CoinsSpentInMsg: spendableCoins,
 		}

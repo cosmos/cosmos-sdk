@@ -242,15 +242,15 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 		}
 
 		txCtx := simulation.OperationInput{
-			App:        app,
-			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:        nil,
-			Msg:        msg,
-			MsgType:    msg.Type(),
-			Ctx:        ctx,
-			SimAccount: simAccount,
-			Ak:         ak,
-			ModuleName: types.ModuleName,
+			App:           app,
+			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)
@@ -298,9 +298,9 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -350,9 +350,9 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}

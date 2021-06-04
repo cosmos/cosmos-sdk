@@ -152,15 +152,15 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		}
 
 		txCtx := simulation.OperationInput{
-			App:        app,
-			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:        nil,
-			Msg:        msg,
-			MsgType:    msg.Type(),
-			Ctx:        ctx,
-			SimAccount: simAccount,
-			Ak:         ak,
-			ModuleName: types.ModuleName,
+			App:           app,
+			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)
@@ -215,9 +215,9 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -275,15 +275,15 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		txCtx := simulation.OperationInput{
-			App:        app,
-			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:        nil,
-			Msg:        msg,
-			MsgType:    msg.Type(),
-			Ctx:        ctx,
-			SimAccount: simAccount,
-			Ak:         ak,
-			ModuleName: types.ModuleName,
+			App:           app,
+			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)
@@ -357,9 +357,9 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -458,9 +458,9 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}

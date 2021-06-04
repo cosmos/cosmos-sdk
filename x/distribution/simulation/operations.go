@@ -101,9 +101,9 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -142,9 +142,9 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -186,9 +186,9 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 			Cdc:             nil,
 			Msg:             msg,
 			MsgType:         msg.Type(),
-			Ctx:             ctx,
+			Context:         ctx,
 			SimAccount:      simAccount,
-			Ak:              ak,
+			AccountKeeper:   ak,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -230,15 +230,15 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
 
 		txCtx := simulation.OperationInput{
-			App:        app,
-			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:        nil,
-			Msg:        msg,
-			MsgType:    msg.Type(),
-			Ctx:        ctx,
-			SimAccount: funder,
-			Ak:         ak,
-			ModuleName: types.ModuleName,
+			App:           app,
+			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    funder,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)

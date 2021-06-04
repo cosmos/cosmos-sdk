@@ -70,17 +70,17 @@ type OperationInput struct {
 	Msg             sdk.Msg
 	MsgType         string
 	CoinsSpentInMsg sdk.Coins
-	Ctx             sdk.Context
+	Context         sdk.Context
 	SimAccount      simtypes.Account
-	Ak              AccountKeeper
-	Bk              BankKeeper
+	AccountKeeper   AccountKeeper
+	Bankkeeper      BankKeeper
 	ModuleName      string
 }
 
 // GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
 func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := txCtx.Ak.GetAccount(txCtx.Ctx, txCtx.SimAccount.Address)
-	spendable := txCtx.Bk.SpendableCoins(txCtx.Ctx, account.GetAddress())
+	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
+	spendable := txCtx.Bankkeeper.SpendableCoins(txCtx.Context, account.GetAddress())
 
 	var fees sdk.Coins
 	var err error
@@ -90,7 +90,7 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
 	}
 
-	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Ctx, coins)
+	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
 	if err != nil {
 		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
 	}
@@ -99,13 +99,13 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 
 // GenAndDeliverTx generates a transactions and delivers it.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := txCtx.Ak.GetAccount(txCtx.Ctx, txCtx.SimAccount.Address)
+	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
 	tx, err := helpers.GenTx(
 		txCtx.TxGen,
 		[]sdk.Msg{txCtx.Msg},
 		fees,
 		helpers.DefaultGenTxGas,
-		txCtx.Ctx.ChainID(),
+		txCtx.Context.ChainID(),
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
 		txCtx.SimAccount.PrivKey,

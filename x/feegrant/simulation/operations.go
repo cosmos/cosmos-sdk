@@ -27,7 +27,6 @@ var (
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec,
 	ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper,
-	protoCdc *codec.ProtoCodec,
 ) simulation.WeightedOperations {
 
 	var (
@@ -50,17 +49,17 @@ func WeightedOperations(
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgGrantAllowance,
-			SimulateMsgGrantAllowance(ak, bk, k, protoCdc),
+			SimulateMsgGrantAllowance(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgRevokeAllowance,
-			SimulateMsgRevokeAllowance(ak, bk, k, protoCdc),
+			SimulateMsgRevokeAllowance(ak, bk, k),
 		),
 	}
 }
 
 // SimulateMsgGrantAllowance generates MsgGrantAllowance with random values.
-func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
+func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -107,7 +106,7 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 }
 
 // SimulateMsgRevokeAllowance generates a MsgRevokeAllowance with random values.
-func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper, protoCdc *codec.ProtoCodec) simtypes.Operation {
+func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

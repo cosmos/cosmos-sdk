@@ -132,7 +132,7 @@ func TestFileStreamingService(t *testing.T) {
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)
 	require.Equal(t, testDir, testStreamingService.writeDir)
-	require.Equal(t, testMarshaller, testStreamingService.marshaller)
+	require.Equal(t, testMarshaller, testStreamingService.codec)
 	testListener1 = testStreamingService.listeners[mockStoreKey1][0]
 	testListener2 = testStreamingService.listeners[mockStoreKey2][0]
 	wg := new(sync.WaitGroup)
@@ -147,9 +147,9 @@ func TestFileStreamingService(t *testing.T) {
 }
 
 func testListenBeginBlock(t *testing.T) {
-	expectedBeginBlockReqBytes, err := testMarshaller.MarshalBinaryBare(&testBeginBlockReq)
+	expectedBeginBlockReqBytes, err := testMarshaller.Marshal(&testBeginBlockReq)
 	require.Nil(t, err)
-	expectedBeginBlockResBytes, err := testMarshaller.MarshalBinaryBare(&testBeginBlockRes)
+	expectedBeginBlockResBytes, err := testMarshaller.Marshal(&testBeginBlockRes)
 	require.Nil(t, err)
 
 	// write state changes
@@ -158,21 +158,21 @@ func testListenBeginBlock(t *testing.T) {
 	testListener1.OnWrite(mockStoreKey1, mockKey3, mockValue3, false)
 
 	// expected KV pairs
-	expectedKVPair1, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair1, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey1,
 		Value:    mockValue1,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair2, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey2,
 		Value:    mockValue2,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair3, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey3,
 		Value:    mockValue3,
@@ -201,9 +201,9 @@ func testListenBeginBlock(t *testing.T) {
 }
 
 func testListenDeliverTx1(t *testing.T) {
-	expectedDeliverTxReq1Bytes, err := testMarshaller.MarshalBinaryBare(&testDeliverTxReq1)
+	expectedDeliverTxReq1Bytes, err := testMarshaller.Marshal(&testDeliverTxReq1)
 	require.Nil(t, err)
-	expectedDeliverTxRes1Bytes, err := testMarshaller.MarshalBinaryBare(&testDeliverTxRes1)
+	expectedDeliverTxRes1Bytes, err := testMarshaller.Marshal(&testDeliverTxRes1)
 	require.Nil(t, err)
 
 	// write state changes
@@ -212,21 +212,21 @@ func testListenDeliverTx1(t *testing.T) {
 	testListener1.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
 
 	// expected KV pairs
-	expectedKVPair1, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair1, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey1,
 		Value:    mockValue1,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair2, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey2,
 		Value:    mockValue2,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair3, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
 		Value:    mockValue3,
@@ -255,9 +255,9 @@ func testListenDeliverTx1(t *testing.T) {
 }
 
 func testListenDeliverTx2(t *testing.T) {
-	expectedDeliverTxReq2Bytes, err := testMarshaller.MarshalBinaryBare(&testDeliverTxReq2)
+	expectedDeliverTxReq2Bytes, err := testMarshaller.Marshal(&testDeliverTxReq2)
 	require.Nil(t, err)
-	expectedDeliverTxRes2Bytes, err := testMarshaller.MarshalBinaryBare(&testDeliverTxRes2)
+	expectedDeliverTxRes2Bytes, err := testMarshaller.Marshal(&testDeliverTxRes2)
 	require.Nil(t, err)
 
 	// write state changes
@@ -266,21 +266,21 @@ func testListenDeliverTx2(t *testing.T) {
 	testListener1.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
 
 	// expected KV pairs
-	expectedKVPair1, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair1, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey1,
 		Value:    mockValue1,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair2, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
 		Value:    mockValue2,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair3, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
 		Value:    mockValue3,
@@ -309,9 +309,9 @@ func testListenDeliverTx2(t *testing.T) {
 }
 
 func testListenEndBlock(t *testing.T) {
-	expectedEndBlockReqBytes, err := testMarshaller.MarshalBinaryBare(&testEndBlockReq)
+	expectedEndBlockReqBytes, err := testMarshaller.Marshal(&testEndBlockReq)
 	require.Nil(t, err)
-	expectedEndBlockResBytes, err := testMarshaller.MarshalBinaryBare(&testEndBlockRes)
+	expectedEndBlockResBytes, err := testMarshaller.Marshal(&testEndBlockRes)
 	require.Nil(t, err)
 
 	// write state changes
@@ -320,21 +320,21 @@ func testListenEndBlock(t *testing.T) {
 	testListener1.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
 
 	// expected KV pairs
-	expectedKVPair1, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair1, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey1,
 		Value:    mockValue1,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair2, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
 		Value:    mockValue2,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair3, err := testMarshaller.MarshalBinaryBare(&types.StoreKVPair{
+	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
 		Value:    mockValue3,

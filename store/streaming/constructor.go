@@ -15,7 +15,7 @@ import (
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (baseapp.StreamingService, error)
+type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryCodec) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -64,7 +64,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 }
 
 // FileStreamingConstructor is the streaming.ServiceConstructor function for creating a FileStreamingService
-func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (baseapp.StreamingService, error) {
+func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryCodec) (baseapp.StreamingService, error) {
 	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
 	fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
@@ -72,7 +72,7 @@ func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, 
 
 // LoadStreamingServices is a function for loading StreamingServices onto the BaseApp using the provided AppOptions, codec, and keys
 // It returns the WaitGroup and quit channel used to synchronize with the streaming services and any error that occurs during the setup
-func LoadStreamingServices(bApp *baseapp.BaseApp, appOpts serverTypes.AppOptions, appCodec codec.Marshaler, keys map[string]*sdk.KVStoreKey) (*sync.WaitGroup, chan struct{}, error) {
+func LoadStreamingServices(bApp *baseapp.BaseApp, appOpts serverTypes.AppOptions, appCodec codec.BinaryCodec, keys map[string]*sdk.KVStoreKey) (*sync.WaitGroup, chan struct{}, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
 	wg := new(sync.WaitGroup)
 	quitChan := make(chan struct{})

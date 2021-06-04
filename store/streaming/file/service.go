@@ -41,7 +41,7 @@ type StreamingService struct {
 	srcChan            <-chan []byte                          // the channel that all of the WriteListeners write their data out to
 	filePrefix         string                                 // optional prefix for each of the generated files
 	writeDir           string                                 // directory to write files into
-	marshaller         codec.BinaryMarshaler                  // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	codec              codec.BinaryCodec                      // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	stateCache         [][]byte                               // cache the protobuf binary encoded StoreKVPairs in the order they are received
 	currentBlockNumber int64                                  // the current block number
 	currentTxIndex     int64                                  // the index of the current tx
@@ -67,10 +67,10 @@ func (iw *IntermediateWriter) Write(b []byte) (int, error) {
 }
 
 // NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, m codec.BinaryMarshaler) (*StreamingService, error) {
+func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, c codec.BinaryCodec) (*StreamingService, error) {
 	listenChan := make(chan []byte)
 	iw := NewIntermediateWriter(listenChan)
-	listener := types.NewStoreKVPairWriteListener(iw, m)
+	listener := types.NewStoreKVPairWriteListener(iw, c)
 	listeners := make(map[sdk.StoreKey][]types.WriteListener, len(storeKeys))
 	// in this case, we are using the same listener for each Store
 	for _, key := range storeKeys {
@@ -86,7 +86,7 @@ func NewStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, 
 		srcChan:    listenChan,
 		filePrefix: filePrefix,
 		writeDir:   writeDir,
-		marshaller: m,
+		codec:      c,
 		stateCache: make([][]byte, 0),
 	}, nil
 }
@@ -106,7 +106,7 @@ func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestB
 		return err
 	}
 	// write req to file
-	lengthPrefixedReqBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&req)
+	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestB
 	// reset cache
 	fss.stateCache = nil
 	// write res to file
-	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 		return err
 	}
 	// write req to file
-	lengthPrefixedReqBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&req)
+	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 	// reset cache
 	fss.stateCache = nil
 	// write res to file
-	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEnd
 		return err
 	}
 	// write req to file
-	lengthPrefixedReqBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&req)
+	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEnd
 	// reset cache
 	fss.stateCache = nil
 	// write res to file
-	lengthPrefixedResBytes, err := fss.marshaller.MarshalBinaryLengthPrefixed(&res)
+	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
 	if err != nil {
 		return err
 	}
@@ -234,9 +234,9 @@ func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
 	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0600)
 }
 
+// Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received
 // Do we need this and an intermediate writer? We could just write directly to the buffer on calls to Write
 // But then we don't support a Stream interface, which could be needed for other types of streamers
-// Stream spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs and caches them in the order they were received
 func (fss *StreamingService) Stream(wg *sync.WaitGroup, quitChan <-chan struct{}) {
 	wg.Add(1)
 	go func() {

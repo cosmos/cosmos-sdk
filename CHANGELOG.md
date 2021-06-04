@@ -211,6 +211,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#8460](https://github.com/cosmos/cosmos-sdk/pull/8460) Ensure b.ReportAllocs() in all the benchmarks
 * [\#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix upgrade tx commands not showing up in CLI
 
+
 ### Bug Fixes
 
 * (x/gov) [\#8813](https://github.com/cosmos/cosmos-sdk/pull/8813) fix `{appd} q gov deposits [proposal-id]`, `GET /gov/proposals/{proposal_id}/deposits` to include initial deposit.

@@ -55,6 +55,7 @@ if input key is empty, or input data contains empty key.
 * [\#9133](https://github.com/cosmos/cosmos-sdk/pull/9133) Added hooks for governance actions.
 * (x/staking) [\#9214](https://github.com/cosmos/cosmos-sdk/pull/9214) Added `new_shares` attribute inside `EventTypeDelegate` event.
 * [\#9382](https://github.com/cosmos/cosmos-sdk/pull/9382) feat: add Dec.Float64() function.
+* [\#9457](https://github.com/cosmos/cosmos-sdk/pull/9457) Add amino support for x/authz and x/feegrant Msgs.
 
 ### Client Breaking Changes
 

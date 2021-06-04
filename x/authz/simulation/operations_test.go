@@ -36,7 +36,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	cdc := suite.app.AppCodec()
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
+	weightedOps := simulation.WeightedOperations(appParams, cdc, suite.app.AccountKeeper,
 		suite.app.BankKeeper, suite.app.AuthzKeeper, cdc,
 	)
 
@@ -55,7 +55,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests

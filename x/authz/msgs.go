@@ -72,12 +72,12 @@ func (msg MsgGrant) Type() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// Route implements the LegacyMsg.Route method.
 func (msg MsgGrant) Route() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrant) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
@@ -165,12 +165,12 @@ func (msg MsgRevoke) Type() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// Route implements the LegacyMsg.Route method.
 func (msg MsgRevoke) Route() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevoke) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
@@ -236,12 +236,12 @@ func (msg MsgExec) Type() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// Route implements the LegacyMsg.Route method.
 func (msg MsgExec) Route() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgExec) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }

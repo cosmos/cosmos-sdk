@@ -70,12 +70,12 @@ func (msg MsgGrantAllowance) Type() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// Route implements the LegacyMsg.Route method.
 func (msg MsgGrantAllowance) Route() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrantAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
@@ -133,12 +133,12 @@ func (msg MsgRevokeAllowance) Type() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// Route implements the LegacyMsg.Route method.
 func (msg MsgRevokeAllowance) Route() string {
 	return sdk.MsgTypeURL(&msg)
 }
 
-// Route implements the LegacyMsg.Type method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevokeAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }

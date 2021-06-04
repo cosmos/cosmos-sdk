@@ -94,7 +94,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
@@ -135,7 +135,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
@@ -179,7 +179,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
@@ -229,7 +229,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			App:        app,
 			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:        nil,

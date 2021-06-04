@@ -241,7 +241,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			}
 		}
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			App:        app,
 			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:        nil,
@@ -291,7 +291,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
@@ -343,7 +343,7 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,

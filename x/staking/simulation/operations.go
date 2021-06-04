@@ -151,7 +151,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to create CreateValidator message"), nil, err
 		}
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			App:        app,
 			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:        nil,
@@ -208,7 +208,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
@@ -274,7 +274,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			App:        app,
 			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:        nil,
@@ -350,7 +350,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
@@ -451,7 +451,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 			sdk.NewCoin(k.BondDenom(ctx), redAmt),
 		)
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,

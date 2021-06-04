@@ -88,7 +88,7 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
@@ -145,7 +145,7 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 
 		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
 
-		txCtx := simulation.TxContext{
+		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
 			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,

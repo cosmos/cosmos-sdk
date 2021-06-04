@@ -61,8 +61,8 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 	return bz
 }
 
-// TxContext is a struct that holds all the needed values to generate a tx and deliver it
-type TxContext struct {
+// OperationInput is a struct that holds all the needed values to generate a tx and deliver it
+type OperationInput struct {
 	R               *rand.Rand
 	App             *baseapp.BaseApp
 	TxGen           client.TxConfig
@@ -78,7 +78,7 @@ type TxContext struct {
 }
 
 // GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
-func GenAndDeliverTxWithRandFees(txCtx TxContext) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.Ak.GetAccount(txCtx.Ctx, txCtx.SimAccount.Address)
 	spendable := txCtx.Bk.SpendableCoins(txCtx.Ctx, account.GetAddress())
 
@@ -98,7 +98,7 @@ func GenAndDeliverTxWithRandFees(txCtx TxContext) (simtypes.OperationMsg, []simt
 }
 
 // GenAndDeliverTx generates a transactions and delivers it.
-func GenAndDeliverTx(txCtx TxContext, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.Ak.GetAccount(txCtx.Ctx, txCtx.SimAccount.Address)
 	tx, err := helpers.GenTx(
 		txCtx.TxGen,

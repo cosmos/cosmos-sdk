@@ -91,8 +91,8 @@ timestamp.`,
 }
 
 type InputPeriod struct {
-	Coins string `json:"coins"`
-	Time  int64  `json:"unix_time"`
+	Coins  string `json:"coins"`
+	Length int64  `json:"length_seconds"`
 }
 
 // NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
@@ -101,7 +101,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
-		Long: `Create a new vesting account funded with an allocation of tokens. This takes a destingation address and 
+		Long: `Create a new vesting account funded with an allocation of tokens. This takes a destination address and 
 		a period json file. 
 		Where periods.json contains:
 
@@ -110,11 +110,11 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 [
 {
   "coins": "10test",
-  "unix_time":1620016673
+  "length_seconds":1620016673
  },
  {
 	"coins": "10test",
-	"unix_time":1620026673
+	"length_seconds":1620026673
    },
 ]
 		`,
@@ -149,7 +149,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				period := types.Period{Length: p.Time, Amount: amount}
+				period := types.Period{Length: p.Length, Amount: amount}
 				periods = append(periods, period)
 			}
 

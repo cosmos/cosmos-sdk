@@ -17,10 +17,12 @@ For example, let's say a user wants to implement some custom signature verificat
 One approach is to use the [ModuleManager](https://godoc.org/github.com/cosmos/cosmos-sdk/types/module) and have each module implement its own antehandler if it requires custom antehandler logic. The ModuleManager can then be passed in an AnteHandler order in the same way it has an order for BeginBlockers and EndBlockers. The ModuleManager returns a single AnteHandler function that will take in a tx and run each module's `AnteHandle` in the specified order. The module manager's AnteHandler is set as the baseapp's AnteHandler.
 
 Pros:
+
 1. Simple to implement
 2. Utilizes the existing ModuleManager architecture
 
 Cons:
+
 1. Improves granularity but still cannot get more granular than a per-module basis. e.g. If auth's `AnteHandle` function is in charge of validating memo and signatures, users cannot swap the signature-checking functionality while keeping the rest of auth's `AnteHandle` functionality.
 2. Module AnteHandler are run one after the other. There is no way for one AnteHandler to wrap or "decorate" another.
 
@@ -53,10 +55,12 @@ func (example Decorator) Deliver(ctx Context, store KVStore, tx Tx, next Deliver
 ```
 
 Pros:
+
 1. Weave Decorators can wrap over the next decorator/handler in the chain. The ability to both pre-process and post-process may be useful in certain settings.
 2. Provides a nested modular structure that isn't possible in the solution above, while also allowing for a linear one-after-the-other structure like the solution above.
 
 Cons:
+
 1. It is hard to understand at first glance the state updates that would occur after a Decorator runs given the `ctx`, `store`, and `tx`. A Decorator can have an arbitrary number of nested Decorators being called within its function body, each possibly doing some pre- and post-processing before calling the next decorator on the chain. Thus to understand what a Decorator is doing, one must also understand what every other decorator further along the chain is also doing. This can get quite complicated to understand. A linear, one-after-the-other approach while less powerful, may be much easier to reason about.
 
 ### Chained Micro-Functions
@@ -65,17 +69,17 @@ The benefit of Weave's approach is that the Decorators can be very concise, whic
 
 Another approach is to split the AnteHandler functionality into tightly scoped "micro-functions", while preserving the one-after-the-other ordering that would come from the ModuleManager approach.
 
-We can then have a way to chain these micro-functions so that they run one after the other. Modules may define multiple ante micro-functions and then also provide a default per-module AnteHandler that implements a default, suggested order for these micro-functions. 
+We can then have a way to chain these micro-functions so that they run one after the other. Modules may define multiple ante micro-functions and then also provide a default per-module AnteHandler that implements a default, suggested order for these micro-functions.
 
 Users can order the AnteHandlers easily by simply using the ModuleManager. The ModuleManager will take in a list of AnteHandlers and return a single AnteHandler that runs each AnteHandler in the order of the list provided. If the user is comfortable with the default ordering of each module, this is as simple as providing a list with each module's antehandler (exactly the same as BeginBlocker and EndBlocker).
 
 If however, users wish to change the order or add, modify, or delete ante micro-functions in anyway; they can always define their own ante micro-functions and add them explicitly to the list that gets passed into module manager.
 
-#### Default Workflow:
+#### Default Workflow
 
 This is an example of a user's AnteHandler if they choose not to make any custom micro-functions.
 
-##### SDK code:
+##### SDK code
 
 ```go
 // Chains together a list of AnteHandler micro-functions that get run one after the other.
@@ -137,7 +141,7 @@ func (mm ModuleManager) GetAnteHandler() AnteHandler {
 }
 ```
 
-##### User Code:
+##### User Code
 
 ```go
 // Note: Since user is not making any custom modifications, we can just SetAnteHandlerOrder with the default AnteHandlers provided by each module in our preferred order
@@ -166,11 +170,13 @@ moduleManager.SetAnteHandlerOrder([]AnteHandler(ValidateMemo, CustomSigVerify, D
 ```
 
 Pros:
+
 1. Allows for ante functionality to be as modular as possible.
 2. For users that do not need custom ante-functionality, there is little difference between how antehandlers work and how BeginBlock and EndBlock work in ModuleManager.
 3. Still easy to understand
 
 Cons:
+
 1. Cannot wrap antehandlers with decorators like you can with Weave.
 
 ### Simple Decorators

@@ -37,5 +37,5 @@ func (p Plan) ShouldExecute(ctx sdk.Context) bool {
 
 // DueAt is a string representation of when this plan is due to be executed
 func (p Plan) DueAt() string {
-	return fmt.Sprintf("Height: %d", p.Height)
+	return fmt.Sprintf("height: %d", p.Height)
 }

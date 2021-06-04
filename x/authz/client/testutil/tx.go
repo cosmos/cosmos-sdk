@@ -353,6 +353,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 		},
 	)
 	s.Require().NoError(err)

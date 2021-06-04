@@ -59,14 +59,9 @@ func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
 	}
 
 	// set PeriodCanSpend to the lesser of Basic.SpendLimit and PeriodSpendLimit
-	if _, isNeg := a.Basic.SpendLimit.SafeSub(a.PeriodSpendLimit); isNeg {
+	if _, isNeg := a.Basic.SpendLimit.SafeSub(a.PeriodSpendLimit); isNeg && !a.Basic.SpendLimit.Empty() {
 		a.PeriodCanSpend = a.Basic.SpendLimit
 	} else {
-		a.PeriodCanSpend = a.PeriodSpendLimit
-	}
-
-	// if Basic.SpendLimit is not set, reset to PeriodSpendLimit
-	if a.Basic.SpendLimit.Empty() {
 		a.PeriodCanSpend = a.PeriodSpendLimit
 	}
 

@@ -41,7 +41,7 @@ func (k Keeper) GetNFT(ctx sdk.Context, id string) (nft types.NFT, has bool) {
 		return nft, false
 	}
 	k.cdc.MustUnmarshalBinaryBare(bz, &nft)
-	return nft, false
+	return nft, true
 }
 
 // IteratorNFTsByOwner iterator all the nft with a given owner.

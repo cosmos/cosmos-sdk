@@ -64,20 +64,16 @@ func (k Keeper) TransferOwnership(ctx sdk.Context, id string,
 	if !has {
 		return sdkerrors.Wrapf(types.ErrNoNFTFound, "%s", id)
 	}
-
 	// check the ownership
 	if currentOwner.String() != nft.Owner {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "the owner of the nft is %s", nft.Owner)
 	}
-
-	idBytes := types.MarshalNFTID(nft.Id)
 	// remove nft from current owner store
 	currentOwnerStore := k.getOwnerStore(ctx, currentOwner)
-	currentOwnerStore.Delete(idBytes)
+	currentOwnerStore.Delete(types.MarshalNFTID(nft.Id))
 
 	nft.Owner = newOwner.String()
-	newOwnerStore := k.getOwnerStore(ctx, newOwner)
-	newOwnerStore.Set(idBytes, idBytes)
+	k.SetNFT(ctx, nft)
 	return nil
 }
 

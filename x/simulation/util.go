@@ -61,6 +61,7 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 	return bz
 }
 
+// TxContext is a struct that holds all the needed values to generate a tx and deliver it
 type TxContext struct {
 	R               *rand.Rand
 	App             *baseapp.BaseApp

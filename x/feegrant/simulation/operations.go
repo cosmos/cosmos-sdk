@@ -87,7 +87,22 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 		if err != nil {
 			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, err.Error()), nil, err
 		}
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, protoCdc, msg, TypeMsgGrantAllowance, spendableCoins, ctx, granter, ak, bk, feegrant.ModuleName)
+
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         TypeMsgGrantAllowance,
+			Ctx:             ctx,
+			SimAccount:      granter,
+			Ak:              ak,
+			ModuleName:      feegrant.ModuleName,
+			CoinsSpentInMsg: spendableCoins,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -130,6 +145,20 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 
 		msg := feegrant.NewMsgRevokeAllowance(granterAddr, granteeAddr)
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, protoCdc, &msg, TypeMsgRevokeAllowance, spendableCoins, ctx, granter, ak, bk, feegrant.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             &msg,
+			MsgType:         TypeMsgRevokeAllowance,
+			Ctx:             ctx,
+			SimAccount:      granter,
+			Ak:              ak,
+			ModuleName:      feegrant.ModuleName,
+			CoinsSpentInMsg: spendableCoins,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }

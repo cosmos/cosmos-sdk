@@ -17,8 +17,6 @@ import (
 func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
-	suite.Run(t, NewIntegrationTestSuite(cfg))
-
 	genesisState := types.DefaultGenesisState()
 	genesisState.DepositParams = types.NewDepositParams(sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, types.DefaultMinDepositTokens)), time.Duration(15)*time.Second)
 	genesisState.VotingParams = types.NewVotingParams(time.Duration(5) * time.Second)

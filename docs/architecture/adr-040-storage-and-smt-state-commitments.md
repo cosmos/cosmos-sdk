@@ -48,7 +48,7 @@ For data access we propose 2 additional KV buckets (namespaces for the key-value
 2. B2: `hash(key, value) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(key, value))`. So, we can get an object value by composing `SMT_path → B2 → B1`.
 3. we could use more buckets to optimize the app usage if needed.
 
-We propose to use a KV database for both `SS` and `SC` - each run by it's own database instance. This design allows to separate the `SS` and `SC` in different hardware units and support for more complex setup scenarios and to improve DB performance (essentially this will create 2 store shards: one for `SS` and another for `SC`). Moreover we will be able to configure database for `SS` and `SC` separately.
+We propose to use a KV database for both `SS` and `SC` - each run by its own database instance. This design allows for the separation of `SS` and `SC` into different hardware units, providing support for more complex setup scenarios and improving DB performance (essentially this will create two store shards: one for `SS` and another for `SC`). Moreover, we will be able to configure databases for `SS` and `SC` separately.
 
 ### Requirements
 
@@ -64,7 +64,7 @@ State Commitment requirements:
 
 + fast updates
 + tree path should be short
-+ query historical commitment proofs using ICS-23 standard.
++ query historical commitment proofs using ICS-23 standard
 + pruning (garbage collection)
 
 ### LazyLedger SMT for State Commitment
@@ -75,7 +75,7 @@ A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intrac
 
 Below, with simple _snapshot_ we refer to a database snapshot mechanism, not to a _ABCI snapshot sync_. The latter will be referred as _snapshot sync_ (which will directly use DB snapshot as described below).
 
-Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big). Usually a snapshot mechanism is based on a _copy on write_ and it allows to efficiently deliver DB state at a certain stage.
+Database snapshot is a view of DB state at a certain time or transaction. It's not a full copy of a database (it would be too big). Usually a snapshot mechanism is based on a _copy on write_ and it allows DB state to be efficiently delivered at a certain stage.
 Some DB engines support snapshotting. Hence, we propose to reuse that functionality for the state sync and versioning (described below). We limit the supported DB engines to ones which efficiently implement snapshots. In a final section we discuss the evaluated DBs.
 
 One of the Stargate core features is a _snapshot sync_ delivered in the `/snapshot` package. It provides a way to trustlessly sync a blockchain without repeating all transactions from the genesis. This feature is implemented in SDK and requires storage support. Currently IAVL is the only supported backend. It works by streaming to a client a snapshot of a `SS` at a certain version together with a header chain.
@@ -86,16 +86,16 @@ NOTE: For the SDK storage, we may consider splitting that interface into `Commit
 
 Number of historical versions for `abci.RequestQuery` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
 
-Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it creates new nodes on the update path, without removing the old one. Since we are snapshoting each block, we need to change that mechanism to immediately remove orphaned nodes from the database. This is a safe operation - snapshots will keep track of the records and make it available when accessing past versions.
+Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it creates new nodes on the update path, without removing the old one. Since we are snapshotting each block, we need to change that mechanism to immediately remove orphaned nodes from the database. This is a safe operation - snapshots will keep track of the records and make it available when accessing past versions.
 
-To manage the active snapshots we will either us a DB _max number of snapshots_ option (if available), or will remove DB snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height and calling a store function to remove past versions.
+To manage the active snapshots we will either use a DB _max number of snapshots_ option (if available), or we will remove DB snapshots in the `EndBlocker`. The latter option can be done efficiently by identifying snapshots with block height and calling a store function to remove past versions.
 
 #### Accessing old state versions
 
 One of the functional requirements is to access old state. This is done through `abci.RequestQuery` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.RequestQuery` is configurable. Accessing an old state is done by using available snapshots.
 `abci.RequestQuery` doesn't need old state of `SC` unless the `prove=true` parameter is set. The SMT merkle proof must be included in the `abci.ResponseQuery` only if both `SC` and `SS` have a snapshot for requested version.
 
-Moreover, SDK could provide a way to directly access a historical state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
+Moreover, the SDK could provide a way to directly access a historical state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
 We positively [validated](https://github.com/cosmos/cosmos-sdk/discussions/8297) a versioning and snapshot mechanism for querying old state with regards to the database we evaluated.
 
@@ -114,10 +114,10 @@ We identified use-cases, where modules will need to save an object commitment wi
 
 ### Remove MultiStore
 
-IAVL based store adds additional layer in the SDK store construction - the `MultiStore` structure. The multi store exists to support the modularity of the Cosmos SDK - each module is using it's own instance of IAVL, but in the current implementation, all instances share the same database.
+IAVL based store adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database.
 The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync problems (eg: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
 
-We propose to remove the MultiStore concept from the SDK, and use a single instance of `SC` and `SS` in a `rootStore` object. To avoid confusions, we should rename `MultiStore` interface to `RootStore` interface and make sure that the `rootStore` object will implement it.
+We propose to remove the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `rootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore` and make sure that the `rootStore` object implements `RootStore`.
 
 Moreover, to improve usability, we should extend the `KVStore` interface with _prefix store_. This will allow module developers to bind a store to a namespace for module sub-components:
 
@@ -139,7 +139,7 @@ for each OP in [Get Has, Set, ...]
 
 ### Optimization: compress module keys
 
-We can consider a compression of prefix keys using Huffman Coding. It will require a knowledge of used prefixes (module store keys) a priori. And for best results it will need an frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding the above invariant should have the following form:
+We can consider a compression of prefix keys using Huffman Coding. It will require a knowledge of used prefixes (module store keys) a priori. And for best results it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding, the above invariant should have the following form:
 
 ```
 for each OP in [Get Has, Set, ...]
@@ -155,7 +155,7 @@ for each k1, k2 \in {store.Code(p): p \in StoreModuleKeys}
     assert( !k1.hasPrefix(k2) )
 ```
 
-NOTE: We need to assure that the codes won't change. Huffman Coding depends on the keys and it's frequencies - so we would need to generate the codes and then fix the mapping in a static variable.
+NOTE: We need to assure that the codes won't change. Huffman Coding depends on the keys and its frequency - so we would need to generate the codes and then fix the mapping in a static variable.
 
 ## Consequences
 
@@ -170,7 +170,7 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 + Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
 + Performance improvements.
 + Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, LazyLedger.
-+ Multistore removal fixes a long standing issues with current MultiStore design.
++ Multistore removal fixes a longstanding issue with the current MultiStore design.
 
 
 ### Negative

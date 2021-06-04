@@ -94,7 +94,21 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -121,7 +135,21 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 
 		msg := types.NewMsgWithdrawDelegatorReward(simAccount.Address, validator.GetOperator())
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -151,7 +179,21 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 		msg := types.NewMsgWithdrawValidatorCommission(validator.GetOperator())
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -187,6 +229,18 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 		msg := types.NewMsgFundCommunityPool(fundAmount, funder.Address)
 
-		return simulation.GenAndDeliverTx(app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), fees, ctx, funder, ak, types.ModuleName)
+		txCtx := simulation.TxContext{
+			App:        app,
+			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:        nil,
+			Msg:        msg,
+			MsgType:    msg.Type(),
+			Ctx:        ctx,
+			SimAccount: funder,
+			Ak:         ak,
+			ModuleName: types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTx(txCtx, fees)
 	}
 }

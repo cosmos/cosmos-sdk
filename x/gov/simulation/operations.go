@@ -241,7 +241,19 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Ke
 			}
 		}
 
-		return simulation.GenAndDeliverTx(app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), fees, ctx, simAccount, ak, types.ModuleName)
+		txCtx := simulation.TxContext{
+			App:        app,
+			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:        nil,
+			Msg:        msg,
+			MsgType:    msg.Type(),
+			Ctx:        ctx,
+			SimAccount: simAccount,
+			Ak:         ak,
+			ModuleName: types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTx(txCtx, fees)
 	}
 }
 
@@ -279,7 +291,21 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -317,7 +343,21 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 

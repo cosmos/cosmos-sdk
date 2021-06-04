@@ -151,7 +151,19 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to create CreateValidator message"), nil, err
 		}
 
-		return simulation.GenAndDeliverTx(app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), fees, ctx, simAccount, ak, types.ModuleName)
+		txCtx := simulation.TxContext{
+			App:        app,
+			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:        nil,
+			Msg:        msg,
+			MsgType:    msg.Type(),
+			Ctx:        ctx,
+			SimAccount: simAccount,
+			Ak:         ak,
+			ModuleName: types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTx(txCtx, fees)
 	}
 }
 
@@ -196,7 +208,21 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 
 		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -248,7 +274,19 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
-		return simulation.GenAndDeliverTx(app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), fees, ctx, simAccount, ak, types.ModuleName)
+		txCtx := simulation.TxContext{
+			App:        app,
+			TxGen:      simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:        nil,
+			Msg:        msg,
+			MsgType:    msg.Type(),
+			Ctx:        ctx,
+			SimAccount: simAccount,
+			Ak:         ak,
+			ModuleName: types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTx(txCtx, fees)
 	}
 }
 
@@ -312,7 +350,21 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
@@ -399,6 +451,20 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 			sdk.NewCoin(k.BondDenom(ctx), redAmt),
 		)
 
-		return simulation.GenAndDeliverTxWithRandFees(r, app, simappparams.MakeTestEncodingConfig().TxConfig, nil, msg, msg.Type(), spendable, ctx, simAccount, ak, bk, types.ModuleName)
+		txCtx := simulation.TxContext{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Ctx:             ctx,
+			SimAccount:      simAccount,
+			Ak:              ak,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }

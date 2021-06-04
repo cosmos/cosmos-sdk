@@ -61,71 +61,64 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 	return bz
 }
 
+type TxContext struct {
+	R               *rand.Rand
+	App             *baseapp.BaseApp
+	TxGen           client.TxConfig
+	Cdc             *codec.ProtoCodec
+	Msg             sdk.Msg
+	MsgType         string
+	CoinsSpentInMsg sdk.Coins
+	Ctx             sdk.Context
+	SimAccount      simtypes.Account
+	Ak              AccountKeeper
+	Bk              BankKeeper
+	ModuleName      string
+}
+
 // GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
-func GenAndDeliverTxWithRandFees(
-	r *rand.Rand,
-	app *baseapp.BaseApp,
-	txGen client.TxConfig,
-	cdc *codec.ProtoCodec,
-	msg sdk.Msg,
-	msgType string,
-	coinsSpentInMsg sdk.Coins,
-	ctx sdk.Context,
-	simAccount simtypes.Account,
-	ak AccountKeeper,
-	bk BankKeeper,
-	moduleName string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := ak.GetAccount(ctx, simAccount.Address)
-	spendable := bk.SpendableCoins(ctx, account.GetAddress())
+func GenAndDeliverTxWithRandFees(txCtx TxContext) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	account := txCtx.Ak.GetAccount(txCtx.Ctx, txCtx.SimAccount.Address)
+	spendable := txCtx.Bk.SpendableCoins(txCtx.Ctx, account.GetAddress())
 
 	var fees sdk.Coins
 	var err error
 
-	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg)
+	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg)
 	if hasNeg {
-		return simtypes.NoOpMsg(moduleName, msgType, "message doesn't leave room for fees"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
 	}
 
-	fees, err = simtypes.RandomFees(r, ctx, coins)
+	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Ctx, coins)
 	if err != nil {
-		return simtypes.NoOpMsg(moduleName, msgType, "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
 	}
-	return GenAndDeliverTx(app, txGen, cdc, msg, msgType, fees, ctx, simAccount, ak, moduleName)
+	return GenAndDeliverTx(txCtx, fees)
 }
 
 // GenAndDeliverTx generates a transactions and delivers it.
-func GenAndDeliverTx(
-	app *baseapp.BaseApp,
-	txGen client.TxConfig,
-	cdc *codec.ProtoCodec,
-	msg sdk.Msg,
-	msgType string,
-	fees sdk.Coins,
-	ctx sdk.Context,
-	simAccount simtypes.Account,
-	ak AccountKeeper,
-	moduleName string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-	account := ak.GetAccount(ctx, simAccount.Address)
+func GenAndDeliverTx(txCtx TxContext, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	account := txCtx.Ak.GetAccount(txCtx.Ctx, txCtx.SimAccount.Address)
 	tx, err := helpers.GenTx(
-		txGen,
-		[]sdk.Msg{msg},
+		txCtx.TxGen,
+		[]sdk.Msg{txCtx.Msg},
 		fees,
 		helpers.DefaultGenTxGas,
-		ctx.ChainID(),
+		txCtx.Ctx.ChainID(),
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
-		simAccount.PrivKey,
+		txCtx.SimAccount.PrivKey,
 	)
 
 	if err != nil {
-		return simtypes.NoOpMsg(moduleName, msgType, "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
 	}
 
-	_, _, err = app.Deliver(txGen.TxEncoder(), tx)
+	_, _, err = txCtx.App.Deliver(txCtx.TxGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(moduleName, msgType, "unable to deliver tx"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, err
 	}
 
-	return simtypes.NewOperationMsg(msg, true, "", cdc), nil, nil
+	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
 
 }

@@ -44,7 +44,7 @@ func (k Keeper) NFTs(c context.Context, req *types.QueryNFTsRequest) (*types.Que
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
-		prefixStore = k.GetOwnerStore(ctx, owner)
+		prefixStore = k.getOwnerStore(ctx, owner)
 		onResult = onQueryNFTsByOwner
 	}
 
@@ -80,7 +80,7 @@ func onQueryAllNFTs(_ sdk.Context, k Keeper, nfts []*types.NFT) func(key, value 
 
 func onQueryNFTsByOwner(ctx sdk.Context, k Keeper, nfts []*types.NFT) func(key, value []byte, accumulate bool) (bool, error) {
 	return func(key, value []byte, accumulate bool) (bool, error) {
-		if nft, has := k.GetNFT(ctx, types.GetNFTID(value)); has && accumulate {
+		if nft, has := k.GetNFT(ctx, types.UnmarshalNFTID(value)); has && accumulate {
 			nfts = append(nfts, &nft)
 		}
 		return true, nil

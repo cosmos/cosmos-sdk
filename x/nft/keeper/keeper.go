@@ -24,17 +24,13 @@ func NewKeeper(cdc codec.BinaryMarshaler, key sdk.StoreKey) Keeper {
 
 // SetNFT set the nft to the store
 func (k Keeper) SetNFT(ctx sdk.Context, nft types.NFT) {
-	owner, err := sdk.AccAddressFromBech32(nft.Owner)
-	if err != nil {
-		panic(err)
-	}
-
+	owner, _ := sdk.AccAddressFromBech32(nft.Owner)
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(&nft)
 	store.Set(types.GetNFTKey(nft.Id), bz)
 
-	ownerStore := k.GetOwnerStore(ctx, owner)
-	ownerStore.Set(types.GetNFTIDBytes(nft.Id), types.GetNFTIDBytes(nft.Id))
+	ownerStore := k.getOwnerStore(ctx, owner)
+	ownerStore.Set(types.MarshalNFTID(nft.Id), types.MarshalNFTID(nft.Id))
 }
 
 // GetNFT returns the nft with a given id.
@@ -50,7 +46,7 @@ func (k Keeper) GetNFT(ctx sdk.Context, id string) (nft types.NFT, has bool) {
 
 // IteratorNFTsByOwner iterator all the nft with a given owner.
 func (k Keeper) IteratorNFTsByOwner(ctx sdk.Context, owner sdk.AccAddress, fn func(nft types.NFT)) {
-	ownerStore := k.GetOwnerStore(ctx, owner)
+	ownerStore := k.getOwnerStore(ctx, owner)
 	it := ownerStore.Iterator(nil, nil)
 	defer it.Close()
 	for ; it.Valid(); it.Next() {
@@ -61,6 +57,7 @@ func (k Keeper) IteratorNFTsByOwner(ctx sdk.Context, owner sdk.AccAddress, fn fu
 	}
 }
 
+// TransferOwnership transfer the ownership of an NFT to another address
 func (k Keeper) TransferOwnership(ctx sdk.Context, id string,
 	currentOwner, newOwner sdk.AccAddress) error {
 	nft, has := k.GetNFT(ctx, id)
@@ -73,19 +70,19 @@ func (k Keeper) TransferOwnership(ctx sdk.Context, id string,
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "the owner of the nft is %s", nft.Owner)
 	}
 
-	idBytes := types.GetNFTIDBytes(nft.Id)
+	idBytes := types.MarshalNFTID(nft.Id)
 	// remove nft from current owner store
-	currentOwnerStore := k.GetOwnerStore(ctx, currentOwner)
+	currentOwnerStore := k.getOwnerStore(ctx, currentOwner)
 	currentOwnerStore.Delete(idBytes)
 
 	nft.Owner = newOwner.String()
-	newOwnerStore := k.GetOwnerStore(ctx, newOwner)
+	newOwnerStore := k.getOwnerStore(ctx, newOwner)
 	newOwnerStore.Set(idBytes, idBytes)
 	return nil
 }
 
-// GetOwnerStore gets the account store of the given address.
-func (k Keeper) GetOwnerStore(ctx sdk.Context, owner sdk.AccAddress) prefix.Store {
+// getOwnerStore gets the account store of the given address.
+func (k Keeper) getOwnerStore(ctx sdk.Context, owner sdk.AccAddress) prefix.Store {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetNFTByOwnerKey(owner))
 }

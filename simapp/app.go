@@ -86,6 +86,10 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz/types"
 
+	nft "github.com/cosmos/cosmos-sdk/x/nft"
+	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	nfttypes "github.com/cosmos/cosmos-sdk/x/nft/types"
+
 	// unnamed import of statik for swagger UI support
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
@@ -118,6 +122,7 @@ var (
 		evidence.AppModuleBasic{},
 		authz.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		nft.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -167,6 +172,7 @@ type SimApp struct {
 	AuthzKeeper      authzkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
+	NFTkeeper        nftkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -208,7 +214,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey, feegranttypes.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		authztypes.StoreKey,
+		authztypes.StoreKey, nfttypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -284,6 +290,7 @@ func NewSimApp(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
+	app.NFTkeeper = nftkeeper.NewKeeper(appCodec, keys[authtypes.StoreKey])
 
 	/****  Module Options ****/
 
@@ -313,6 +320,7 @@ func NewSimApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		authz.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		nft.NewAppModule(appCodec, app.NFTkeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

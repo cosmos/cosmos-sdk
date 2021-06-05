@@ -79,6 +79,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
 var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
+var typeMsgSubmitProposal = sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
@@ -258,6 +259,22 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			0,
 			false,
 		},
+		{
+			"Valid tx with amino",
+			[]string{
+				grantee.String(),
+				"generic",
+				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			},
+			0,
+			false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -324,6 +341,23 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	)
 	s.Require().NoError(err)
 
+	// generic-authorization used for amino testing
+	_, err = ExecGrant(
+		val,
+		[]string{
+			grantee.String(),
+			"generic",
+			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgSubmitProposal),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+		},
+	)
+	s.Require().NoError(err)
+
 	testCases := []struct {
 		name         string
 		args         []string
@@ -377,6 +411,20 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			&sdk.TxResponse{}, 0,
+			false,
+		},
+		{
+			"Valid tx with amino",
+			[]string{
+				grantee.String(),
+				typeMsgSubmitProposal,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 			},
 			&sdk.TxResponse{}, 0,
 			false,
@@ -507,6 +555,19 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 			},
 			&sdk.TxResponse{},
 			0,
+			false,
+		},
+		{
+			"valid tx with amino",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			},
+			&sdk.TxResponse{}, 0,
 			false,
 		},
 	}

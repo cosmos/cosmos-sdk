@@ -610,10 +610,10 @@ func TestSlashAmount(t *testing.T) {
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
 	burnedCoins := app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
-	require.Greater(t, sdk.NewInt(0), burnedCoins)
+	require.True(t, burnedCoins.GT(sdk.ZeroInt()))
 
 	// test the case where the validator was not found, which should return no coins
 	_, addrVals := generateAddresses(app, ctx, 100)
 	noBurned := app.StakingKeeper.Slash(ctx, sdk.ConsAddress(addrVals[0]), ctx.BlockHeight(), 10, fraction)
-	require.Equal(t, sdk.NewInt(0), noBurned)
+	require.True(t, sdk.NewInt(0).Equal(noBurned))
 }

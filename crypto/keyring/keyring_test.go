@@ -48,7 +48,7 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "foo", re.GetName())
 }
 
-/* fix migration before fixing thist test
+/*
 func TestKeyManagementKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
@@ -146,7 +146,6 @@ func TestKeyManagementKeyRing(t *testing.T) {
 }
 */
 
-/* fix migration before fixing this test
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -171,7 +170,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
-	require.NoError(t, err) // TODO fix checkMigrate
+	require.NoError(t, err) // fix not a keyring.ErrKeyNotFounde rr
 
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)
@@ -232,7 +231,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
-*/
+
 
 /* fix migration before fixing this test
 func TestExportImportKeyRing(t *testing.T) {

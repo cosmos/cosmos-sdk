@@ -337,12 +337,12 @@ func (ks keystore) ImportInfo(oldInfo LegacyInfo) error {
 */
 
 func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
-	ke, err := ks.Key(uid)
+	kr, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	priv, err := ke.extractPrivKeyFromLocalInfo()
+	priv, err := kr.extractPrivKeyFromLocalInfo()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -572,11 +572,11 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 
-	re := new(Record)
-	if err := ks.cdc.Unmarshal(bs.Data, re); err != nil {
+	kr := new(Record)
+	if err := ks.cdc.Unmarshal(bs.Data, kr); err != nil {
 		return nil, err
 	}
-	return re, nil
+	return kr, nil
 	//	return protoUnmarshalInfo(bs.Data, ks.cdc)
 }
 
@@ -919,7 +919,7 @@ func (ks keystore) checkMigrate() error {
 	item, err := ks.db.Get(VERSION_KEY)
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
-			return err
+			return fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
 		}
 		// key not found, all good: assume version = 0
 	} else {
@@ -935,7 +935,8 @@ func (ks keystore) checkMigrate() error {
 
 func (ks keystore) migrate(version uint32, i keyring.Item) error {
 	if version == CURRENT_VERSION {
-		return nil
+		// return nil
+		return fmt.Errorf("versions match")
 	}
 	if version > CURRENT_VERSION {
 		return sdkerrors.ErrInvalidVersion.Wrapf(
@@ -944,7 +945,8 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 	}
 	keys, err := ks.db.Keys()
 	if err != nil {
-		return err
+		// return err
+		return fmt.Errorf("Keys() error, err: %s", err)
 	}
 
 	for _, key := range keys {
@@ -953,35 +955,41 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		}
 		item, err := ks.db.Get(key)
 		if err != nil {
-			return err
+			//return err
+			return fmt.Errorf("Get error, err - %s", err)
 		}
 
 		if len(item.Data) == 0 {
-			return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+			// return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+			return fmt.Errorf("sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key), err: %s", sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
 		}
 
 		//2.try to deserialize using amino not proto
 		
 		legacyInfo, err := unmarshalInfo(item.Data)
 		if err != nil {
-			fmt.Println(err) 
+			unmarshalErr := fmt.Errorf("unmarshalInfo(item.Data), err - %s", err)
+			fmt.Println(unmarshalErr) 
 			continue
 		}
 
 		//4.serialize info using proto
 		kr, err := convertFromLegacyInfo(legacyInfo)
 		if err != nil {
-			return err
+			// return err
+			return fmt.Errorf("convertFromLegacyInfo, err - %s", err)
 		}
 
 		krBytes, err := ks.cdc.Marshal(kr)
 		if err != nil {
-			return err
+			// return err
+			return fmt.Errorf("ks.cdc.Marshal(kr), err - %s", err)
 		}
 
 		key, err := kr.GetPubKey()
 		if err != nil {
-			return err
+			//return err
+			return fmt.Errorf("kr.GetPubKey(), err - %s", err)
 		}
 
 		//5.overwrite the keyring entry with

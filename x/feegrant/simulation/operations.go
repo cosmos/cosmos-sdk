@@ -76,6 +76,9 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 		account := ak.GetAccount(ctx, granter.Address)
 
 		spendableCoins := bk.SpendableCoins(ctx, account.GetAddress())
+		if spendableCoins.Empty() {
+			return simtypes.NoOpMsg(feegrant.ModuleName, TypeMsgGrantAllowance, "unable to grant empty coins as SpendLimit"), nil, nil
+		}
 
 		oneYear := ctx.BlockTime().AddDate(1, 0, 0)
 		msg, err := feegrant.NewMsgGrantAllowance(&feegrant.BasicAllowance{
@@ -97,6 +100,7 @@ func SimulateMsgGrantAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeeper
 			Context:         ctx,
 			SimAccount:      granter,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      feegrant.ModuleName,
 			CoinsSpentInMsg: spendableCoins,
 		}
@@ -154,6 +158,7 @@ func SimulateMsgRevokeAllowance(ak feegrant.AccountKeeper, bk feegrant.BankKeepe
 			Context:         ctx,
 			SimAccount:      granter,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      feegrant.ModuleName,
 			CoinsSpentInMsg: spendableCoins,
 		}

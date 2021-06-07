@@ -77,7 +77,7 @@ Cosmos SDK v0.40 uses Protobuf services to define state transitions (`Msg`s) and
 
 #### `Msg` Service
 
-For migrating `Msg`s, the handler pattern (inside the `handler.go` file) is deprecated. You may still keep it if you wish to support `Msg`s defined in older versions of the SDK. However, it is strongly recommended to add a `Msg` service to your Protobuf files, and each old `Msg` should be converted into a service method. Taking [x/bank's](../../x/bank/spec/README.md) `MsgSend` as an example, we have a corresponding `cosmos.bank.v1beta1.Msg/Send` service method:
+The handler pattern (inside the `handler.go` file) for handling `Msg`s is deprecated. You may still keep it if you wish to support `Msg`s defined in pre-Stargate versions of the SDK. However, it is strongly recommended to add a `Msg` service to your Protobuf files, and each old `Msg` handler should be converted into a service method. Taking [x/bank's](../../x/bank/spec/README.md) `MsgSend` as an example, we have a corresponding `/cosmos.bank.v1beta1.MsgSend` RPC:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/bank/v1beta1/tx.proto#L10-L31
 
@@ -89,7 +89,7 @@ For more information, please check our [`Msg` service guide](../building-modules
 
 #### `Query` Service
 
-For migrating state queries, the querier pattern (inside the `querier.go` file) is deprecated. You may still keep this file to support legacy queries, but it is strongly recommended to use a Protobuf `Query` service to handle state queries.
+The querier pattern (inside the `querier.go` file) for handling state queries is deprecated. You may still keep this file to support legacy queries, but it is strongly recommended to use a Protobuf `Query` service to handle state queries.
 
 Each query endpoint is now defined as a separate service method in the `Query` service. Still taking `x/bank` as an example, here are the queries to fetch an account's balances:
 
@@ -117,17 +117,17 @@ If you wish to expose your `Query` endpoints as REST endpoints (as proposed in t
 
 If you still use Amino (which is deprecated since Stargate), you must register related types using the `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)` method (previously it was called  `RegisterCodec(cdc *codec.Codec)`).
 
-Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules must implement. This method must register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example from x/bank is given below:
+Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules must implement. This method must register the interfaces that Protobuf messages implement, as well as the service request `Msg`s used in the module. An example from x/bank is given below:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/types/codec.go#L21-L34
 
 ### Keeper
 
-The `Keeper` constructor now takes a `codec.Marshaler` instead of a concrete Amino codec. This `codec.Marshaler` is used to encode types as binary and save the bytes into the state. With an interface, you can define `codec.Marshaler` to be Amino or Protobuf on an app level, and keepers will use that encoding library to encode state. Please note that Amino is deprecated in v0.40, and we strongly recommend to use Protobuf. Internally, the SDK still uses Amino in a couple of places (legacy REST API, x/params, keyring...), but Amino is planned to be removed in a future release.
+The `Keeper` constructor now takes a `codec.Codec` instead of a concrete Amino codec. This `codec.Codec` is used to encode types as binary and save the bytes into the state. With an interface, you can define `codec.Codec` to be Amino or Protobuf on an app level, and keepers will use that encoding library to encode state. Please note that Amino is deprecated in v0.40, and we strongly recommend to use Protobuf. Internally, the SDK still uses Amino in a couple of places (legacy REST API, x/params, keyring...), but Amino is planned to be removed in a future release.
 
 Keeping Amino for now can be useful if you wish to update to SDK v0.40 without doing a chain upgrade with a genesis migration. This will not require updating the stores, so you can migrate to Cosmos SDK v0.40 with less effort. However, as Amino will be removed in a future release, the chain migration with genesis export/import will need to be performed then.
 
-Related to the keepers, each module's `AppModuleBasic` now also includes this `codec.Marshaler`:
+Related to the keepers, each module's `AppModuleBasic` now also includes this `codec.Codec`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/module.go#L35-L38
 
@@ -146,7 +146,7 @@ clientCtx, err := client.GetClientTxContext(cmd)
 
 Some other flags helper functions are transformed: `flags.PostCommands(cmds ...*cobra.Command) []*cobra.Command` and `flags.GetCommands(...)` usage is now replaced by `flags.AddTxFlagsToCmd(cmd *cobra.Command)` and `flags.AddQueryFlagsToCmd(cmd *cobra.Command)` respectively.
 
-Moreover, new CLI commands don't take any codec as input anymore. Instead, the `clientCtx` can be retrieved from the `cmd` itself using the `GetClient{Query,Tx}Context` function above, and the codec as `clientCtx.JSONMarshaler`.
+Moreover, new CLI commands don't take any codec as input anymore. Instead, the `clientCtx` can be retrieved from the `cmd` itself using the `GetClient{Query,Tx}Context` function above, and the codec as `clientCtx.JSONCodec`.
 
 ```diff
 // v0.39
@@ -157,7 +157,7 @@ Moreover, new CLI commands don't take any codec as input anymore. Instead, the `
 // v0.40
 + func NewSendTxCmd() *cobra.Command {
 +	clientCtx, err := client.GetClientTxContext(cmd)
-+	clientCtx.JSONMarshaler.MarshalJSON(...)
++	clientCtx.JSONCodec.MarshalJSON(...)
 +}
 ```
 
@@ -173,12 +173,12 @@ A number of other smaller breaking changes are also noteworthy.
 | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `alias.go` file                                                               | Removed                                                                                              | `alias` usage is removed, please see [#6311](https://github.com/cosmos/cosmos-sdk/issues/6311) for details.                                                                                                           |
 | `codec.New()`                                                                 | `codec.NewLegacyAmino()`                                                                             | Simple rename.                                                                                                                                                                                                        |
-| `DefaultGenesis()`                                                            | `DefaultGenesis(cdc codec.JSONMarshaler)`                                                            | `DefaultGenesis` takes a codec argument now                                                                                                                                                                           |
-| `ValidateGenesis()`                                                           | `ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage)`       | `ValidateGenesis` now requires `Marshaler`, `TxEncodingConfig`, `json.RawMessage` as input.                                                                                                                           |
+| `DefaultGenesis()`                                                            | `DefaultGenesis(cdc codec.JSONCodec)`                                                            | `DefaultGenesis` takes a codec argument now                                                                                                                                                                           |
+| `ValidateGenesis()`                                                           | `ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage)`       | `ValidateGenesis` now requires `Marshaler`, `TxEncodingConfig`, `json.RawMessage` as input.                                                                                                                           |
 | `Route() string`                                                              | `Route() sdk.Route`                                                                                  | For legacy handlers, return type of `Route()` method is changed from `string` to `"github.com/cosmos/cosmos-sdk/types".Route`. It should return a `NewRoute()` which includes `RouterKey` and `NewHandler` as params. |
 | `QuerierHandler`                                                              | `LegacyQuerierHandler`                                                                               | Simple rename.                                                                                                                                                                                                        |
-| `InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate`   | InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate   | `InitGenesis` now takes a codec input.                                                                                                                                                                                |
-| `ExportGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate` | ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate | `ExportGenesis` now takes a codec input.                                                                                                                                                                              |
+| `InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate`   | InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate   | `InitGenesis` now takes a codec input.                                                                                                                                                                                |
+| `ExportGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate` | ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate | `ExportGenesis` now takes a codec input.                                                                                                                                                                              |
 
 ## Updating Your App
 
@@ -215,7 +215,7 @@ These codecs are used to populate the following fields on your app (again, we ar
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L146-L153
 
-As explained in the [modules migration section](#updating-modules), some functions and structs in modules require an additional `codec.Marshaler` argument. You should pass `app.appCodec` in these cases, and this will be the default codec used throughout the app.
+As explained in the [modules migration section](#updating-modules), some functions and structs in modules require an additional `codec.Codec` argument. You should pass `app.appCodec` in these cases, and this will be the default codec used throughout the app.
 
 ### Registering Non-Module Protobuf Services
 
@@ -224,7 +224,7 @@ We described in the [modules migration section](#updating-modules) `Query` and `
 - the [Tx Service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/tx/v1beta1/service.proto), to perform operations on transactions,
 - the [Tendermint service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/base/tendermint/v1beta1/query.proto), to have a more idiomatic interface to the [Tendermint RPC](https://docs.tendermint.com/master/rpc/).
 
-These services are optional, if you wish to use them, or if you wish to add more module-agnostic Protobuf services into your app, then you need to add them inside `app.go`:
+These services are optional. To use them, or if you wish to add more module-agnostic Protobuf services into your app, you need to register them inside `app.go`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L577-L585
 

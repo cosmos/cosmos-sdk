@@ -10,72 +10,72 @@ type AminoCodec struct {
 	*LegacyAmino
 }
 
-var _ Marshaler = &AminoCodec{}
+var _ Codec = &AminoCodec{}
 
 // NewAminoCodec returns a reference to a new AminoCodec
 func NewAminoCodec(codec *LegacyAmino) *AminoCodec {
 	return &AminoCodec{LegacyAmino: codec}
 }
 
-// MarshalBinaryBare implements BinaryMarshaler.MarshalBinaryBare method.
-func (ac *AminoCodec) MarshalBinaryBare(o ProtoMarshaler) ([]byte, error) {
-	return ac.LegacyAmino.MarshalBinaryBare(o)
+// Marshal implements BinaryMarshaler.Marshal method.
+func (ac *AminoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
+	return ac.LegacyAmino.Marshal(o)
 }
 
-// MustMarshalBinaryBare implements BinaryMarshaler.MustMarshalBinaryBare method.
-func (ac *AminoCodec) MustMarshalBinaryBare(o ProtoMarshaler) []byte {
-	return ac.LegacyAmino.MustMarshalBinaryBare(o)
+// MustMarshal implements BinaryMarshaler.MustMarshal method.
+func (ac *AminoCodec) MustMarshal(o ProtoMarshaler) []byte {
+	return ac.LegacyAmino.MustMarshal(o)
 }
 
-// MarshalBinaryLengthPrefixed implements BinaryMarshaler.MarshalBinaryLengthPrefixed method.
-func (ac *AminoCodec) MarshalBinaryLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
-	return ac.LegacyAmino.MarshalBinaryLengthPrefixed(o)
+// MarshalLengthPrefixed implements BinaryMarshaler.MarshalLengthPrefixed method.
+func (ac *AminoCodec) MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
+	return ac.LegacyAmino.MarshalLengthPrefixed(o)
 }
 
-// MustMarshalBinaryLengthPrefixed implements BinaryMarshaler.MustMarshalBinaryLengthPrefixed method.
-func (ac *AminoCodec) MustMarshalBinaryLengthPrefixed(o ProtoMarshaler) []byte {
-	return ac.LegacyAmino.MustMarshalBinaryLengthPrefixed(o)
+// MustMarshalLengthPrefixed implements BinaryMarshaler.MustMarshalLengthPrefixed method.
+func (ac *AminoCodec) MustMarshalLengthPrefixed(o ProtoMarshaler) []byte {
+	return ac.LegacyAmino.MustMarshalLengthPrefixed(o)
 }
 
-// UnmarshalBinaryBare implements BinaryMarshaler.UnmarshalBinaryBare method.
-func (ac *AminoCodec) UnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) error {
-	return ac.LegacyAmino.UnmarshalBinaryBare(bz, ptr)
+// Unmarshal implements BinaryMarshaler.Unmarshal method.
+func (ac *AminoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
+	return ac.LegacyAmino.Unmarshal(bz, ptr)
 }
 
-// MustUnmarshalBinaryBare implements BinaryMarshaler.MustUnmarshalBinaryBare method.
-func (ac *AminoCodec) MustUnmarshalBinaryBare(bz []byte, ptr ProtoMarshaler) {
-	ac.LegacyAmino.MustUnmarshalBinaryBare(bz, ptr)
+// MustUnmarshal implements BinaryMarshaler.MustUnmarshal method.
+func (ac *AminoCodec) MustUnmarshal(bz []byte, ptr ProtoMarshaler) {
+	ac.LegacyAmino.MustUnmarshal(bz, ptr)
 }
 
-// UnmarshalBinaryLengthPrefixed implements BinaryMarshaler.UnmarshalBinaryLengthPrefixed method.
-func (ac *AminoCodec) UnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
-	return ac.LegacyAmino.UnmarshalBinaryLengthPrefixed(bz, ptr)
+// UnmarshalLengthPrefixed implements BinaryMarshaler.UnmarshalLengthPrefixed method.
+func (ac *AminoCodec) UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
+	return ac.LegacyAmino.UnmarshalLengthPrefixed(bz, ptr)
 }
 
-// MustUnmarshalBinaryLengthPrefixed implements BinaryMarshaler.MustUnmarshalBinaryLengthPrefixed method.
-func (ac *AminoCodec) MustUnmarshalBinaryLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
-	ac.LegacyAmino.MustUnmarshalBinaryLengthPrefixed(bz, ptr)
+// MustUnmarshalLengthPrefixed implements BinaryMarshaler.MustUnmarshalLengthPrefixed method.
+func (ac *AminoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
+	ac.LegacyAmino.MustUnmarshalLengthPrefixed(bz, ptr)
 }
 
-// MarshalJSON implements JSONMarshaler.MarshalJSON method,
+// MarshalJSON implements JSONCodec.MarshalJSON method,
 // it marshals to JSON using legacy amino codec.
 func (ac *AminoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	return ac.LegacyAmino.MarshalJSON(o)
 }
 
-// MustMarshalJSON implements JSONMarshaler.MustMarshalJSON method,
+// MustMarshalJSON implements JSONCodec.MustMarshalJSON method,
 // it executes MarshalJSON except it panics upon failure.
 func (ac *AminoCodec) MustMarshalJSON(o proto.Message) []byte {
 	return ac.LegacyAmino.MustMarshalJSON(o)
 }
 
-// UnmarshalJSON implements JSONMarshaler.UnmarshalJSON method,
+// UnmarshalJSON implements JSONCodec.UnmarshalJSON method,
 // it unmarshals from JSON using legacy amino codec.
 func (ac *AminoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	return ac.LegacyAmino.UnmarshalJSON(bz, ptr)
 }
 
-// MustUnmarshalJSON implements JSONMarshaler.MustUnmarshalJSON method,
+// MustUnmarshalJSON implements JSONCodec.MustUnmarshalJSON method,
 // it executes UnmarshalJSON except it panics upon failure.
 func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 	ac.LegacyAmino.MustUnmarshalJSON(bz, ptr)
@@ -83,23 +83,23 @@ func (ac *AminoCodec) MustUnmarshalJSON(bz []byte, ptr proto.Message) {
 
 // MarshalInterface is a convenience function for amino marshaling interfaces.
 // The `i` must be an interface.
-// NOTE: to marshal a concrete type, you should use MarshalBinaryBare instead
+// NOTE: to marshal a concrete type, you should use Marshal instead
 func (ac *AminoCodec) MarshalInterface(i proto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}
-	return ac.LegacyAmino.MarshalBinaryBare(i)
+	return ac.LegacyAmino.Marshal(i)
 }
 
 // UnmarshalInterface is a convenience function for amino unmarshaling interfaces.
 // `ptr` must be a pointer to an interface.
-// NOTE: to unmarshal a concrete type, you should use UnmarshalBinaryBare instead
+// NOTE: to unmarshal a concrete type, you should use Unmarshal instead
 //
 // Example:
 //   var x MyInterface
 //   err := cdc.UnmarshalInterface(bz, &x)
 func (ac *AminoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
-	return ac.LegacyAmino.UnmarshalBinaryBare(bz, ptr)
+	return ac.LegacyAmino.Unmarshal(bz, ptr)
 }
 
 // MarshalInterfaceJSON is a convenience function for amino marshaling interfaces.

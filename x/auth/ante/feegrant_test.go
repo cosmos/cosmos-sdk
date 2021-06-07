@@ -21,7 +21,7 @@ import (
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
@@ -46,21 +46,21 @@ func (suite *AnteTestSuite) TestDeductFeesNoDelegation() {
 	priv5, _, addr5 := testdata.KeyTestPubAddr()
 
 	// Set addr1 with insufficient funds
-	err := simapp.FundAccount(suite.app, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
+	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(10))})
 	suite.Require().NoError(err)
 
 	// Set addr2 with more funds
-	err = simapp.FundAccount(suite.app, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
+	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, []sdk.Coin{sdk.NewCoin("atom", sdk.NewInt(99999))})
 	suite.Require().NoError(err)
 
 	// grant fee allowance from `addr2` to `addr3` (plenty to pay)
-	err = app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr3, &types.BasicFeeAllowance{
+	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr3, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 500)),
 	})
 	suite.Require().NoError(err)
 
 	// grant low fee allowance (20atom), to check the tx requesting more than allowed.
-	err = app.FeeGrantKeeper.GrantFeeAllowance(ctx, addr2, addr4, &types.BasicFeeAllowance{
+	err = app.FeeGrantKeeper.GrantAllowance(ctx, addr2, addr4, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewInt64Coin("atom", 20)),
 	})
 	suite.Require().NoError(err)

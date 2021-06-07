@@ -52,7 +52,6 @@ high to justify its usage. However for queries this is not a concern, and
 providing generic module-level queries that use `Any` does not preclude apps
 from also providing app-level queries that return use the app-level `oneof`s.
 
-
 A hypothetical example for the `gov` module would look something like:
 
 ```proto
@@ -126,7 +125,6 @@ The signature for this method matches the existing
 `RegisterServer` method on the GRPC `Server` type where `handler` is the custom
 query server implementation described above.
 
-
 GRPC-like requests are routed by the service name (ex. `cosmos_sdk.x.bank.v1.Query`)
 and method name (ex. `QueryBalance`) combined with `/`s to form a full
 method name (ex. `/cosmos_sdk.x.bank.v1.Query/QueryBalance`). This gets translated
@@ -140,7 +138,7 @@ there is a quite natural mapping of GRPC-like rpc methods to the existing
 
 This basic specification allows us to reuse protocol buffer `service` definitions
 for ABCI custom queries substantially reducing the need for manual decoding and
-encoding in query methods. 
+encoding in query methods.
 
 ### GRPC Protocol Support
 
@@ -178,7 +176,7 @@ service Query {
 }
 ```
 
-grpc-gateway will work direcly against the GRPC proxy described above which will 
+grpc-gateway will work direcly against the GRPC proxy described above which will
 translate requests to ABCI queries under the hood. grpc-gateway can also
 generate Swagger definitions automatically.
 
@@ -211,7 +209,7 @@ we have tweaked the grpc codegen to use an interface rather than concrete type
 for the generated client struct. This allows us to also reuse the GRPC infrastructure
 for ABCI client queries.
 
-1Context` will receive a new method `QueryConn` that returns a `ClientConn`
+1Context`will receive a new method`QueryConn`that returns a`ClientConn`
 that routes calls to ABCI queries
 
 Clients (such as CLI methods) will then be able to call query methods like this:

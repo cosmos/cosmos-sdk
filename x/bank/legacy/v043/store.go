@@ -12,7 +12,7 @@ import (
 // migrateSupply migrates the supply to be stored by denom key instead in a
 // single blob.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7092
-func migrateSupply(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
+func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	// Old supply was stored as a single blob under the SupplyKey.
 	var oldSupplyI v040bank.SupplyI
 	err := cdc.UnmarshalInterface(store.Get(v040bank.SupplyKey), &oldSupplyI)
@@ -69,13 +69,13 @@ func migrateBalanceKeys(store sdk.KVStore) {
 	}
 }
 
-// MigrateStore performs in-place store migrations from v0.40 to v0.42. The
+// MigrateStore performs in-place store migrations from v0.40 to v0.43. The
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
 // - Change balances prefix to 1 byte
 // - Change supply to be indexed by denom
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
 	migrateBalanceKeys(store)

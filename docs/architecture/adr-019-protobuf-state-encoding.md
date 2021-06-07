@@ -6,7 +6,7 @@
 - 2020 Feb 24: Updates to handle messages with interface fields
 - 2020 Apr 27: Convert usages of `oneof` for interfaces to `Any`
 - 2020 May 15: Describe `cosmos_proto` extensions and amino compatibility
-- 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Marshaler` interface.
+- 2020 Dec 4: Move and rename `MarshalAny` and `UnmarshalAny` into the `codec.Codec` interface.
 - 2021 Feb 24: Remove mentions of `HybridCodec`, which has been abandoned in [#6843](https://github.com/cosmos/cosmos-sdk/pull/6843).
 
 ## Status
@@ -92,7 +92,7 @@ Example:
     // ...
   }
 
-  bz := cdc.MustMarshalBinaryBare(ts)
+  bz := cdc.MustMarshal(ts)
 ```
 
 However, modules can vary greatly in purpose and design and so we must support the ability for modules
@@ -106,7 +106,7 @@ Example:
 // x/auth/types/codec.go
 
 type Codec interface {
-  codec.Marshaler
+  codec.Codec
 
   MarshalAccount(acc exported.Account) ([]byte, error)
   UnmarshalAccount(bz []byte) (exported.Account, error)
@@ -182,6 +182,7 @@ In addition to serving as a whitelist, `InterfaceRegistry` can also serve
 to communicate the list of concrete types that satisfy an interface to clients.
 
 In .proto files:
+
 * fields which accept interfaces should be annotated with `cosmos_proto.accepts_interface`
 using the same full-qualified name passed as `protoName` to `InterfaceRegistry.RegisterInterface`
 * interface implementations should be annotated with `cosmos_proto.implements_interface`
@@ -210,7 +211,7 @@ Note that `InterfaceRegistry` usage does not deviate from standard protobuf
 usage of `Any`, it just introduces a security and introspection layer for
 golang usage.
 
-`InterfaceRegistry` will be a member of `ProtoCodec` 
+`InterfaceRegistry` will be a member of `ProtoCodec`
 described above. In order for modules to register interface types, app modules
 can optionally implement the following interface:
 
@@ -231,11 +232,11 @@ The SDK will provide support methods `MarshalInterface` and `UnmarshalInterface`
 import "github.com/cosmos/cosmos-sdk/codec"
 
 // note: eviexported.Evidence is an interface type
-func MarshalEvidence(cdc codec.BinaryMarshaler, e eviexported.Evidence) ([]byte, error) {
+func MarshalEvidence(cdc codec.BinaryCodec, e eviexported.Evidence) ([]byte, error) {
 	return cdc.MarshalInterface(e)
 }
 
-func UnmarshalEvidence(cdc codec.BinaryMarshaler, bz []byte) (eviexported.Evidence, error) {
+func UnmarshalEvidence(cdc codec.BinaryCodec, bz []byte) (eviexported.Evidence, error) {
 	var evi eviexported.Evidence
 	err := cdc.UnmarshalInterface(&evi, bz)
     return err, nil

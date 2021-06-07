@@ -83,7 +83,7 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-[`Msg`s](../core/transactions.md#messages) are extracted from `Tx` and `ValidateBasic`, a method of the `Msg` interface implemented by the module developer, is run for each one. It should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+[`sdk.Msg`s](../core/transactions.md#messages) are extracted from `Tx`, and `ValidateBasic`, a method of the `sdk.Msg` interface implemented by the module developer, is run for each one. `ValidateBasic` should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as the account balance of an address.
 
 ### AnteHandler
 
@@ -199,12 +199,11 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
 - **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
   [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
-  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](../building-modules/msg-services.md).
-  For legacy `Msg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
+  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
+  For `LegacyMsg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
-- **`Msg` service:** The `Msg` service, a step up from `AnteHandler`, is responsible for executing each
-  message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined
-  within a module `Msg` protobuf service and writes to the appropriate stores within the module.
+- **`Msg` service:** a Protobuf `Msg` service, a step up from `AnteHandler`, is responsible for executing each
+  message in the `Tx` and causes state transitions to persist in `deliverTxState`.
 
 - **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the

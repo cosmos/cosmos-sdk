@@ -2,9 +2,9 @@
 order: 6
 -->
 
-# Tags
+# Events
 
-The slashing module emits the following events/tags:
+The slashing module emits the following events:
 
 ## MsgServer
 

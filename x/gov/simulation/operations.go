@@ -301,6 +301,7 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -353,6 +354,7 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}

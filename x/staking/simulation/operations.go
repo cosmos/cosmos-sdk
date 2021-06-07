@@ -360,6 +360,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -461,6 +462,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}

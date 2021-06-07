@@ -104,6 +104,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -145,6 +146,7 @@ func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKee
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}
@@ -189,6 +191,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}

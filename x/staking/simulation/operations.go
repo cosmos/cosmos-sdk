@@ -218,6 +218,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
+			Bankkeeper:      bk,
 			ModuleName:      types.ModuleName,
 			CoinsSpentInMsg: spendable,
 		}

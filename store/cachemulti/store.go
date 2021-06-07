@@ -184,7 +184,7 @@ func (cms Store) GetStore(key types.StoreKey) types.Store {
 func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := cms.stores[key]
 	if key == nil || store == nil {
-		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
+		panic(fmt.Sprintf("kv store with key %s has not been registered in stores", key))
 	}
 	return store.(types.KVStore)
 }

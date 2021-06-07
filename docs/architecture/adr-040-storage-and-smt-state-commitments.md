@@ -121,7 +121,7 @@ We propose to remove the multistore concept from the SDK, and to use a single in
 
 Moreover, to improve usability, we should extend the `KVStore` interface with _prefix store_. This will allow module developers to bind a store to a namespace for module sub-components:
 
-```
+```go
 type KVStore interface {
     ... current KVStore
 

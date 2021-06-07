@@ -139,7 +139,7 @@ for each OP in [Get Has, Set, ...]
 
 ### Optimization: compress module keys
 
-We can consider a compression of prefix keys using Huffman Coding. It will require a knowledge of used prefixes (module store keys) a priori. And for best results it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding, the above invariant should have the following form:
+We can consider a compression of prefix keys using [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding). It will require knowledge of used prefixes (module store keys) a priori. And for best results, it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding, the above invariant should have the following form:
 
 ```
 for each OP in [Get Has, Set, ...]

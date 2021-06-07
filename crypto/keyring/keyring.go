@@ -962,22 +962,24 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 
 		//2.try to deserialize using amino not proto
 		
-		_, err = unmarshalInfo(item.Data)
+		legacyInfo, err := unmarshalInfo(item.Data)
 		if err != nil {
-			//3.if any above will fail - then we will need to log an error and continue, there can be other reasons, or a key could be already migrated to proto.
-			// output error and continue 
+			fmt.Println(err) 
+			continue
 		}
 
 		//4.serialize info using proto
-		// are you sure that i have to serialize in this case? not deserrialize using proto
-		var re Record
-		if err := ks.cdc.Unmarshal(item.Data, &re); err != nil {
+		kr, err := convertFromLegacyInfo(legacyInfo)
+		if err != nil {
 			return err
 		}
 
-		var versionBytes = make([]byte, 4)
-		binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
-		key, err := re.GetPubKey()
+		krBytes, err := ks.cdc.Marshal(kr)
+		if err != nil {
+			return err
+		}
+
+		key, err := kr.GetPubKey()
 		if err != nil {
 			return err
 		}
@@ -985,24 +987,15 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		//5.overwrite the keyring entry with
 		ks.db.Set(keyring.Item{
 			Key:         key.String(),
-			Data:        versionBytes,
+			Data:        krBytes,
 			Description: "SDK kerying version",
 		})
-		/*
-			var versionBytes = make([]byte, 4)
-			binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
-			ks.db.Set(keyring.Item{
-				Key:         info.GetKey().String(),
-				Data:        versionBytes,
-				Description: "SDK kerying version",
-			})
-		*/
 	}
 	// 6. at the end of the loop update version
 	var versionBytes = make([]byte, 4)
 	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
 	ks.db.Set(keyring.Item{
-		Key:         "migration",
+		Key:         "migration", // key is incorrect perhaps Version_Key
 		Data:        versionBytes,
 		Description: "SDK kerying version",
 	})

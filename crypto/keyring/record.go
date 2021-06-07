@@ -175,3 +175,37 @@ func (p BIP44Params) String() string {
 		p.Adressindex)
 }
 */
+// TODO add tests
+func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
+
+	name := info.GetName()
+	apk, err := codectypes.NewAnyWithValue(info.GetPubKey())
+	if err != nil {
+		return nil, err
+	}
+	
+	var item isRecord_Item
+
+	switch info.GetType() {
+	case TypeLocal:
+		algo := info.GetAlgo()
+		localInfo := newLocalInfo(apk, string(algo))
+		item = newLocalInfoItem(localInfo)
+	case TypeOffline:
+		offlineInfo := NewOfflineInfo()
+		item = NewOfflineInfoItem(offlineInfo)
+	case TypeLedger:
+		path, err := info.GetPath()
+		if err != nil {
+			return nil, err
+		}
+		ledgerInfo := NewLedgerInfo(path)
+		item = NewLedgerInfoItem(ledgerInfo)
+	case TypeMulti:
+		multiInfo := NewMultiInfo()
+		item = NewMultiInfoItem(multiInfo)
+	}
+
+	kr := NewRecord(name, apk, item)
+	return kr, nil
+}

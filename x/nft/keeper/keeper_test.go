@@ -98,3 +98,22 @@ func (suite *KeeperTestSuite) TestTransferOwnership() {
 	suite.Require().Len(expectdNFTs, 1)
 	suite.Require().Equal(expectdNFTs[0].Owner, suite.addrs[1].String())
 }
+
+func (suite *KeeperTestSuite) TestRemoveNFT() {
+	nft := types.NFT{
+		Id:    "painting1",
+		Owner: suite.addrs[0].String(),
+		Data:  nil,
+	}
+	suite.app.NFTkeeper.SetNFT(suite.ctx, nft)
+
+	expect, has := suite.app.NFTkeeper.GetNFT(suite.ctx, nft.Id)
+	suite.Require().True(has)
+	suite.Require().EqualValues(expect, nft)
+
+	err := suite.app.NFTkeeper.RemoveNFT(suite.ctx, nft.Id)
+	suite.Require().NoError(err)
+
+	_, has = suite.app.NFTkeeper.GetNFT(suite.ctx, nft.Id)
+	suite.Require().False(has)
+}

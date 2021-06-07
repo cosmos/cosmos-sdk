@@ -77,6 +77,22 @@ func (k Keeper) TransferOwnership(ctx sdk.Context, id string,
 	return nil
 }
 
+// RemoveNFT remove the nft from store.
+func (k Keeper) RemoveNFT(ctx sdk.Context, id string) error {
+	nft, has := k.GetNFT(ctx, id)
+	if !has {
+		return sdkerrors.Wrapf(types.ErrNoNFTFound, "%s", id)
+	}
+	// delete nft
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetNFTKey(id))
+
+	owner, _ := sdk.AccAddressFromBech32(nft.Owner)
+	ownerStore := k.getOwnerStore(ctx, owner)
+	ownerStore.Delete(types.MarshalNFTID(nft.Id))
+	return nil
+}
+
 // getOwnerStore gets the account store of the given address.
 func (k Keeper) getOwnerStore(ctx sdk.Context, owner sdk.AccAddress) prefix.Store {
 	store := ctx.KVStore(k.storeKey)

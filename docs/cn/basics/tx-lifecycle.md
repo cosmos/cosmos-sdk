@@ -6,7 +6,7 @@
 
 ### Transaction 的创建
 
-命令行界面是主要的应用程序界面之一，`Tx` 可以由用户输入[以下命令](https://docs.cosmos.network/master/interfaces/cli.html)来创建，其中 `[command]` 是 `Tx` 的类型，`[args]` 是相关参数，`[flags]` 是相关配置例如 gas price：
+命令行界面是主要的应用程序界面之一，`Tx` 可以由用户输入[以下命令](https://docs.cosmos.network/master/core/cli.html)来创建，其中 `[command]` 是 `Tx` 的类型，`[args]` 是相关参数，`[flags]` 是相关配置例如 gas price：
 
 ```bash
 [appname] tx [command] [args] [flags]
@@ -18,7 +18,7 @@
 
 #### Gas 和 Fee
 
-此外，用户可以使用这几个[参数](https://docs.cosmos.network/master/interfaces/cli.html)来表明他们愿意支付多少 [fee](https://docs.cosmos.network/master/basics/gas-fees.html)：
+此外，用户可以使用这几个[参数](https://docs.cosmos.network/master/core/cli.html)来表明他们愿意支付多少 [fee](https://docs.cosmos.network/master/basics/gas-fees.html)：
 
 - `--gas` 指的是 [gas](https://docs.cosmos.network/master/basics/gas-fees.html) 的数量，gas 代表 `Tx` 消耗的计算资源，需要消耗多少 gas 取决于具体的 `Tx`，在 `Tx` 执行之前无法被精确计算出来，但可以通过在 `--gas` 后带上参数 `auto` 来进行估算。
 - `--gas-adjustment`（可选）可用于适当的增加 `gas`，以避免其被低估。例如，用户可以将 `gas-adjustment` 设为 1.5，那么被指定的 gas 将是被估算 gas 的 1.5 倍。
@@ -39,7 +39,7 @@ appcli tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --
 
 #### 其他的 Transaction 创建方法
 
-命令行是与应用程序进行交互的一种简便方法，但是 `Tx` 也可以使用 [REST interface](https://docs.cosmos.network/master/interfaces/rest.html) 或应用程序开发人员定义的某些其他入口点来创建命令行。从用户的角度来看，交互方式取决于他们正在使用的是页面还是钱包（例如， `Tx` 使用 [Lunie.io](https://lunie.io/#/) 创建并使用 Ledger Nano S 对其进行签名）。
+命令行是与应用程序进行交互的一种简便方法，但是 `Tx` 也可以使用 [REST interface](https://docs.cosmos.network/master/core/grpc_rest.html) 或应用程序开发人员定义的某些其他入口点来创建命令行。从用户的角度来看，交互方式取决于他们正在使用的是页面还是钱包（例如， `Tx` 使用 [Lunie.io](https://lunie.io/#/) 创建并使用 Ledger Nano S 对其进行签名）。
 
 ## 添加到交易池
 

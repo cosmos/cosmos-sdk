@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,7 @@ import (
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // the total amount of defined parameters changes, all of which have random valid values.
 func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) simulation.ContentSimulatorFn {
+	numProposals := 0
 	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content {
 
 		lenParamChange := len(paramChangePool)
@@ -43,10 +45,14 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 			paramChanges[i] = proposal.NewParamChange(spc.Subspace(), spc.Key(), spc.SimValue()(r))
 		}
 
+		title := fmt.Sprintf("title from SimulateParamChangeProposalContent-%d", numProposals)
+		desc := fmt.Sprintf("desc from SimulateParamChangeProposalContent-%d. Random short desc: %s",
+			numProposals, simulation.RandStringOfLength(r, 20))
+		numProposals += 1
 		return proposal.NewParameterChangeProposal(
-			simulation.RandStringOfLength(r, 140),  // title
-			simulation.RandStringOfLength(r, 5000), // description
-			paramChanges,                           // set of changes
+			title,        // title
+			desc,         // description
+			paramChanges, // set of changes
 		)
 	}
 }

@@ -28,17 +28,18 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 
 		for i := 0; i < numChanges; i++ {
 			spc := paramChangePool[r.Intn(len(paramChangePool))]
+			composedkey := spc.ComposedKey()
 
 			// do not include duplicate parameter changes for a given subspace/key
-			_, ok := paramChangesKeys[spc.ComposedKey()]
+			_, ok := paramChangesKeys[composedkey]
 			for ok {
 				spc = paramChangePool[r.Intn(len(paramChangePool))]
-				_, ok = paramChangesKeys[spc.ComposedKey()]
+				_, ok = paramChangesKeys[composedkey]
 			}
 
 			// add a new distinct parameter to the set of changes and register the key
 			// to avoid further duplicates
-			paramChangesKeys[spc.ComposedKey()] = struct{}{}
+			paramChangesKeys[composedkey] = struct{}{}
 			paramChanges[i] = proposal.NewParamChange(spc.Subspace(), spc.Key(), spc.SimValue()(r))
 		}
 

@@ -43,7 +43,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 		title := fmt.Sprintf("title from SimulateParamChangeProposalContent-%d", numProposals)
 		desc := fmt.Sprintf("desc from SimulateParamChangeProposalContent-%d. Random short desc: %s",
 			numProposals, simulation.RandStringOfLength(r, 20))
-		numProposals += 1
+		numProposals++
 		return proposal.NewParameterChangeProposal(
 			title,        // title
 			desc,         // description

@@ -130,6 +130,7 @@ if input key is empty, or input data contains empty key.
 
 ### Improvements
 
+* (x/params) [\#9481](https://github.com/cosmos/cosmos-sdk/issues/9481) Speedup simulator for parameter change proposals.
 * (store) [\#9403](https://github.com/cosmos/cosmos-sdk/pull/9403) Add `RefundGas` function to `GasMeter` interface
 * (baseapp, types) [\#9390](https://github.com/cosmos/cosmos-sdk/pull/9390) Add current block header hash to `Context`
 * (x/staking) [\#9423](https://github.com/cosmos/cosmos-sdk/pull/9423) Staking delegations now returns empty list instead of rpc error when no records found.

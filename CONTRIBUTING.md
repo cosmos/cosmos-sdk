@@ -3,7 +3,9 @@
 - [Contributing](#contributing)
     - [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
     - [Pull Requests](#pull-requests)
-        - [Process for reviewing PRs](#process-for-reviewing-prs)
+        - [Pull Request Templates](#pull-request-templates)
+        - [Requesting Reviews](#requesting-reviews)
+        - [Reviewing Pull Requests](#reviewing-pull-requests)
         - [Updating Documentation](#updating-documentation)
     - [Forking](#forking)
     - [Dependencies](#dependencies)
@@ -87,24 +89,24 @@ There are currently three PR templates. The [default template](./.github/PULL_RE
 In order to accomodate the review process, the author of the PR must complete the author checklist
 to the best of their abilities before marking the PR as "Ready for Review". If you would like to
 receive early feedback on the PR, open the PR as a "Draft" and leave a comment in the PR indicating
-that you would like early feedback.
+that you would like early feedback and tagging whoever you would like to receive feedback from.
 
 ### Reviewing Pull Requests
 
 All PRs require at least two reviews before they can be merged (one review might be acceptable in
 the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or [other](./.github/PULL_REQUEST_TEMPLATE/other.md) changes that do not affect production code). Each PR template has a
 reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
-for all checked items unless they have indicated otherwise by leaving their handle next to specific items. 
-In addition, please use the following review explanations:
+for all checked items unless they have indicated otherwise by leaving their handle next to specific
+items. In addition, please use the following review explanations:
 
-- `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests locally and thoroughly reviewed it.
-- `Approval` means that you have completed some or all of the reviewer checklist items (i.e. reviewed state machine logic, reviewed API design and naming, reviewed documentation is accurate, etc.). If you only reviewed selected items, you have added your handle next to the items that you have reviewed. In addition:
+- `LGTM` without an explicit approval means that the changes look good, but you haven't thoroughly reviewed the reviewer checklist items.
+- `Approval` means that you have completed some or all of the reviewer checklist items. If you only reviewed selected items, you have added your handle next to the items that you have reviewed. In addition, please follow these guidelines:
     - You must also think through anything which ought to be included but is not
     - You must think through whether any added code could be partially combined (DRYed) with existing code
     - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
     - Naming must be consistent with conventions and the rest of the codebase
     - Code must live in a reasonable location, considering dependency structures (e.g. not importing testing modules in production code, or including example code modules in production code).
-    - if you approve of the PR, you are responsible for fixing any of the issues mentioned here and more
+    - If you approve of the PR, you are responsible for fixing any of the issues mentioned here and in the reviewer checklist.
 - If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
 

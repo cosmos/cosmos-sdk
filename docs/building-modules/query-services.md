@@ -66,7 +66,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 }
 ```
 
-This simple switch returns a `querier` function specific to the type of the received `query`. At this point of the [query lifecycle](../interfaces/query-lifecycle.md), the first element of the `path` (`path[0]`) contains the type of the query. The following elements are either empty or contain arguments needed to process the query. 
+This simple switch returns a `querier` function specific to the type of the received `query`. At this point of the [query lifecycle](../basics/query-lifecycle.md), the first element of the `path` (`path[0]`) contains the type of the query. The following elements are either empty or contain arguments needed to process the query.
 
 The `querier` functions themselves are pretty straighforward. They generally fetch a value or values from the state using the [`keeper`](./keeper.md). Then, they marshall the value(s) using the [`codec`](../core/encoding.md) and return the `[]byte` obtained as result. 
 

@@ -2,7 +2,7 @@
 
 '서비스 제공자'는 코스모스 SDK 기반 블록체인(코스모스 허브도 포함됩니다)과 교류하는 서비스를 엔드유저에게 제공하는 특정 인원/기관을 뜻합니다. 이 문서는 주로 토큰 인터랙션에 대한 정보를 다룹니다.
 
-다음 항목은 [Light-Client](https://github.com/cosmos/cosmos-sdk/tree/master/docs/interfaces/lite) 기능을 제공하려는 월렛 개발자들에게 해당하지 않습니다. 서비스 제공자는 엔드 유저와 블록체인을 이어주는 신뢰할 수 있는 기관/개인입니다.
+다음 항목은 [Light-Client](https://docs.tendermint.com/master/tendermint-core/light-client.html) 기능을 제공하려는 월렛 개발자들에게 해당하지 않습니다. 서비스 제공자는 엔드 유저와 블록체인을 이어주는 신뢰할 수 있는 기관/개인입니다.
 
 ## 보편적 아키텍처 설명
 

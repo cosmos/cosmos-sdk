@@ -106,7 +106,7 @@ items. In addition, please use the following review explanations:
     - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
     - Naming must be consistent with conventions and the rest of the codebase
     - Code must live in a reasonable location, considering dependency structures (e.g. not importing testing modules in production code, or including example code modules in production code).
-    - If you approve of the PR, you are responsible for fixing any of the issues mentioned here and in the reviewer checklist.
+    - If you approve of the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
 - If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
 

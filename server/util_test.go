@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server/config"
 )
 
 var CancelledInPreRun = errors.New("Canelled in prerun")
@@ -399,3 +400,26 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
 	}
 }
+
+func TestStartCmdwithEmptyandNonEmptyMinGasPrices(t *testing.T){
+
+	// first case - raise an error
+	tempDir := t.TempDir()
+	cmd := StartCmd(nil, tempDir)
+
+
+	// MinGasPrices ="0.22  -> no error raised
+	cfg := config.DefaultConfig()
+	cfg.BaseConfig.MinGasPrices ="0.22"
+
+	cmd.PreRunE = preRunETestImpl
+
+	serverCtx := &Context{}
+	ctx := context.WithValue(context.Background(), ServerContextKey, serverCtx)
+
+	if err := cmd.ExecuteContext(ctx); err != CancelledInPreRun {
+		t.Fatalf("function failed with [%T] %v", err, err)
+	}
+	
+}
+

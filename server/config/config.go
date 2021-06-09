@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strings"
+	"errors"
 
 	"github.com/spf13/viper"
 
@@ -20,6 +21,8 @@ const (
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
 )
+
+var ErrMinGasPrices = errors.New("please set min gas price in app.toml or flag or env var")
 
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
@@ -309,7 +312,7 @@ func GetConfig(v *viper.Viper) Config {
 
 func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
-		return fmt.Errorf("please set min gas price in app.toml or flag or env var")
+		return ErrMinGasPrices
 	}
 
 	return nil

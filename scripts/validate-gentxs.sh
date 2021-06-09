@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-DAEMON_HOME="/tmp/regen$(date +%s)"
+DAEMON_HOME="/tmp/simd$(date +%s)"
 RANDOM_KEY="randomvalidatorkey"
 
 #############################################
 # Ensure to set the below ENV settings  #
 #############################################
 
-# DAEMON=regen
+# DAEMON=simd
 # CHAIN_ID=testnet-1
 # DENOM=ustake
 # GH_URL=github.com/cosmos/cosmos-sdk

@@ -964,17 +964,21 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			return fmt.Errorf("sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key), err: %s", sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
 		}
 
-		//2.try to deserialize using amino not proto
-		
-		legacyInfo, err := unmarshalInfo(item.Data)
+		// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
+		kr := new(Record)
+		if err := ks.cdc.Unmarshal(item.Data, kr); err == nil {
+			continue
+		}
+
+		legacyInfo, err := unmarshalInfo(item.Data);
 		if err != nil {
 			unmarshalErr := fmt.Errorf("unmarshalInfo(item.Data), err - %s", err)
 			fmt.Println(unmarshalErr) 
 			continue
 		}
-
+			
 		//4.serialize info using proto
-		kr, err := convertFromLegacyInfo(legacyInfo)
+		kr, err = convertFromLegacyInfo(legacyInfo)
 		if err != nil {
 			// return err
 			return fmt.Errorf("convertFromLegacyInfo, err - %s", err)
@@ -1003,7 +1007,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 	var versionBytes = make([]byte, 4)
 	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
 	ks.db.Set(keyring.Item{
-		Key:         "migration", // key is incorrect perhaps Version_Key
+		Key:         VERSION_KEY,
 		Data:        versionBytes,
 		Description: "SDK kerying version",
 	})

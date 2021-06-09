@@ -22,7 +22,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs types.GenesisState) {
 // ExportGenesis returns the ibc connection submodule's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	return types.GenesisState{
-		Connections:           k.GetAllConnections(ctx),
-		ClientConnectionPaths: k.GetAllClientConnectionPaths(ctx),
+		Connections:            k.GetAllConnections(ctx),
+		ClientConnectionPaths:  k.GetAllClientConnectionPaths(ctx),
+		NextConnectionSequence: k.GetNextConnectionSequence(ctx),
 	}
 }

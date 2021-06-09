@@ -60,10 +60,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 		panic(err)
 	}
 	return types.GenesisState{
-		Clients:          genClients,
-		ClientsMetadata:  clientsMetadata,
-		ClientsConsensus: k.GetAllConsensusStates(ctx),
-		Params:           k.GetParams(ctx),
-		CreateLocalhost:  false,
+		Clients:            genClients,
+		ClientsMetadata:    clientsMetadata,
+		ClientsConsensus:   k.GetAllConsensusStates(ctx),
+		Params:             k.GetParams(ctx),
+		CreateLocalhost:    false,
+		NextClientSequence: k.GetNextClientSequence(ctx),
 	}
 }

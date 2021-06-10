@@ -401,7 +401,7 @@
   
     - [Query](#cosmos.mint.v1beta1.Query)
   
-- [cosmos/orm/codec.proto](#cosmos/orm/codec.proto)
+- [cosmos/orm/testdata/codec.proto](#cosmos/orm/testdata/codec.proto)
     - [GroupInfo](#cosmos.orm.testdata.GroupInfo)
     - [GroupMember](#cosmos.orm.testdata.GroupMember)
   
@@ -5724,10 +5724,10 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="cosmos/orm/codec.proto"></a>
+<a name="cosmos/orm/testdata/codec.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/orm/codec.proto
+## cosmos/orm/testdata/codec.proto
 
 
 

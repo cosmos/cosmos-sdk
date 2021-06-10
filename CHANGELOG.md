@@ -57,6 +57,7 @@ if input key is empty, or input data contains empty key.
 * (x/staking) [\#9214](https://github.com/cosmos/cosmos-sdk/pull/9214) Added `new_shares` attribute inside `EventTypeDelegate` event.
 * [\#9382](https://github.com/cosmos/cosmos-sdk/pull/9382) feat: add Dec.Float64() function.
 * [\#9457](https://github.com/cosmos/cosmos-sdk/pull/9457) Add amino support for x/authz and x/feegrant Msgs.
+* [\#9498](https://github.com/cosmos/cosmos-sdk/pull/9498) Added `Codec: codec.Codec` attribute to `client/Context` structure.
 
 ### Client Breaking Changes
 
@@ -155,7 +156,7 @@ if input key is empty, or input data contains empty key.
 ### Deprecated
 
 * (grpc) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `tx` field in `SimulateRequest` has been deprecated, prefer to pass `tx_bytes` instead.
-* (sdk types) [\#xxx]() `clientContext.JSONCodec`
+* (sdk types) [\#9498](https://github.com/cosmos/cosmos-sdk/pull/9498) `clientContext.JSONCodec` will be removed in the next version. use `clientContext.Codec` instead.
 
 
 ## [v0.42.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.4) - 2021-04-08

@@ -25,7 +25,7 @@ type Context struct {
 	FromAddress sdk.AccAddress
 	Client      rpcclient.Client
 	ChainID     string
-	// Deprecated: JSONCodec codec will be changed to Codec: codec.Codec
+	// Deprecated: Codec codec will be changed to Codec: codec.Codec
 	JSONCodec         codec.JSONCodec
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
@@ -82,8 +82,8 @@ func (ctx Context) WithJSONCodec(m codec.JSONCodec) Context {
 
 // WithCodec returns a copy of the Context with an updated Codec.
 func (ctx Context) WithCodec(m codec.Codec) Context {
-	ctx.Codec = m
 	ctx.JSONCodec = m
+	ctx.Codec = m
 	return ctx
 }
 
@@ -266,7 +266,7 @@ func (ctx Context) PrintBytes(o []byte) error {
 // will be JSON encoded using ctx.JSONCodec. An error is returned upon failure.
 func (ctx Context) PrintProto(toPrint proto.Message) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
-	out, err := ctx.JSONCodec.MarshalJSON(toPrint)
+	out, err := ctx.Codec.MarshalJSON(toPrint)
 	if err != nil {
 		return err
 	}

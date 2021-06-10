@@ -489,10 +489,12 @@ func (ks keystore) List() ([]*Record, error) {
 		if len(item.Data) == 0 {
 			return nil, sdkerrors.ErrKeyNotFound.Wrap(key)
 		}
-		k := new(Record)
-		if err := ks.cdc.Unmarshal(item.Data, k); err != nil {
-			return nil, err
+
+		k, err := ks.protoUnmarshalRecord(item.Data)
+		if err != nil {
+			return nil,err 
 		}
+
 		res = append(res, k)
 	}
 
@@ -571,12 +573,7 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 
-	k := new(Record)
-	if err := ks.cdc.Unmarshal(bs.Data, k); err != nil {
-		return nil, err
-	}
-	return k, nil
-	//	return protoUnmarshalInfo(bs.Data, ks.cdc)
+	return ks.protoUnmarshalRecord(bs.Data)
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
@@ -914,8 +911,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		}
 
 		// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
-		k := new(Record)
-		if err := ks.cdc.Unmarshal(item.Data, k); err == nil {
+		if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
 			continue
 		}
 
@@ -962,8 +958,17 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 	})
 
 	return nil
-
 }
+
+func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
+	k := new(Record)
+	if err := ks.cdc.Unmarshal(bz, k); err != nil {
+		return nil, err
+	}
+	
+	return k, nil
+}
+
 
 type unsafeKeystore struct {
 	keystore

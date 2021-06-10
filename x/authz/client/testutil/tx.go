@@ -470,7 +470,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	)
 	s.Require().NoError(err)
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	// waiting for authorization to expires
@@ -511,7 +511,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	s.Require().NoError(err)
 
 	// msg vote
-	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1beta1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
+	voteTx := fmt.Sprintf(`{"body":{"messages":[{"@type":"/cosmos.gov.v1.MsgVote","proposal_id":"1","voter":"%s","option":"VOTE_OPTION_YES"}],"memo":"","timeout_height":"0","extension_options":[],"non_critical_extension_options":[]},"auth_info":{"signer_infos":[],"fee":{"amount":[],"gas_limit":"200000","payer":"","granter":""}},"signatures":[]}`, val.Address.String())
 	execMsg := testutil.WriteToNewTempFile(s.T(), voteTx)
 
 	testCases := []struct {

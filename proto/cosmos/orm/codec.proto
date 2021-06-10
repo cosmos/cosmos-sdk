@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package testdata;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/orm/testdata";
+
+message GroupInfo {
+  uint64 group_id = 1;
+  string description = 2;
+  bytes admin = 3 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+}
+
+message GroupMember {
+  bytes group = 1 [ (gogoproto.casttype) =
+                        "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  bytes member = 2 [ (gogoproto.casttype) =
+                         "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+  uint64 weight = 3;
+}

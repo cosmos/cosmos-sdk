@@ -762,15 +762,7 @@ func (ks keystore) writeLocalKey(name string, pubKey types.PubKey) (*Record, err
 	return k, nil
 }
 
-// declare writeRecord(re Record)
 func (ks keystore) writeRecord(k *Record) error {
-	key := infoKeyBz(k.GetName())
-
-	serializedRecord, err := ks.cdc.Marshal(k)
-	if err != nil {
-		return fmt.Errorf("Unable to serialize record, err - %s", err)
-	}
-
 	exists, err := ks.existsInDb(k)
 	if err != nil {
 		return err
@@ -779,11 +771,18 @@ func (ks keystore) writeRecord(k *Record) error {
 		return errors.New("public key already exist in keybase")
 	}
 
-	err = ks.db.Set(keyring.Item{
+	serializedRecord, err := ks.cdc.Marshal(k)
+	if err != nil {
+		return fmt.Errorf("Unable to serialize record, err - %s", err)
+	}
+
+	key := infoKeyBz(k.GetName())
+	item := keyring.Item{
 		Key:  string(key),
 		Data: serializedRecord,
-	})
-	if err != nil {
+	}
+
+	if err := ks.db.Set(item); err != nil {
 		return err
 	}
 
@@ -792,11 +791,12 @@ func (ks keystore) writeRecord(k *Record) error {
 		return fmt.Errorf("Unable to get record address, err - %s", err)
 	}
 
-	err = ks.db.Set(keyring.Item{
+	item = keyring.Item{
 		Key:  addrHexKeyAsString(addr),
 		Data: key,
-	})
-	if err != nil {
+	}
+
+	if err := ks.db.Set(item); err != nil {
 		return err
 	}
 

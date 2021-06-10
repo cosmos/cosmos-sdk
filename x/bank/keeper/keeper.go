@@ -287,6 +287,29 @@ func (k BaseKeeper) SendCoinsFromAccountToModule(
 	return k.SendCoins(ctx, senderAddr, recipientAcc.GetAddress(), amt)
 }
 
+// SendCoinsFromModuleToAccountOriginalVesting does existing bank keeper logic for SendCoinsFromModuleToAccount,
+// except the recipient account should have its original vesting increment if its a vesting account.
+// If recipient is a regular account, just do a normal send
+func (k BaseKeeper) SendCoinsFromModuleToAccountOriginalVesting(
+	ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins,
+) error {
+
+	err := k.SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt)
+	if err != nil {
+		return err
+	}
+
+	recipientAcc := k.ak.GetAccount(ctx, recipientAddr)
+	switch recipientAcc.(type) {
+	case vestexported.DelayedVestingAccount:
+		recipientAcc = recipientAcc.(vestexported.DelayedVestingAccount).AddToOriginalVestedCoins(amt)
+		k.ak.SetAccount(ctx, recipientAcc)
+	default:
+	}
+
+	return nil
+}
+
 // DelegateCoinsFromAccountToModule delegates coins and transfers them from a
 // delegator account to a module account. It will panic if the module account
 // does not exist or is unauthorized.

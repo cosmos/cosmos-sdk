@@ -549,6 +549,11 @@ func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(blockTime))
 }
 
+func (dva DelayedVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) DelayedVestingAccount {
+	dva.OriginalVesting = dva.OriginalVesting.Add(coins...)
+	return dva
+}
+
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.

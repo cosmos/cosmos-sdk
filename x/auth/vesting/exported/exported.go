@@ -39,3 +39,10 @@ type VestingAccount interface {
 	GetDelegatedFree() sdk.Coins
 	GetDelegatedVesting() sdk.Coins
 }
+
+// DelayedVestingAccount defines an account type that vests coins via a delayed vesting schedule.
+type DelayedVestingAccount interface {
+	VestingAccount
+
+	AddToOriginalVestedCoins(coins sdk.Coins) DelayedVestingAccount
+}

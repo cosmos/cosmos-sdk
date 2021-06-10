@@ -826,6 +826,8 @@ func (suite *IntegrationTestSuite) TestDelayedVestingAccountSend() {
 	app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr3, authtypes.FeeCollectorName, inflationCoins)
 	app.BankKeeper.SendCoinsFromModuleToAccountOriginalVesting(ctx, authtypes.FeeCollectorName, addr1, inflationCoins)
 
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins.Add(inflationCoins...)))
+
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins.Add(inflationCoins...)))

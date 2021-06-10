@@ -16,41 +16,32 @@ func NewRecord(name string, pubKey *codectypes.Any, item isRecord_Item) *Record 
 	return &Record{name, pubKey, item}
 }
 
-// TODO do we need two separate functions? does it mare sense to declare function if it is callede only one time NO two times yes?
-func newLocalInfo(apk *codectypes.Any, pubKeyType string) *LocalInfo {
-	return &LocalInfo{apk, pubKeyType}
+func newLocalRecord(apk *codectypes.Any, pubKeyType string) *Record_Local {
+	return &Record_Local{apk, pubKeyType}
 }
 
-func newLocalInfoItem(localInfo *LocalInfo) *Record_Local {
-	return &Record_Local{localInfo}
+func newLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
+	return &Record_Local_{localRecord}
 }
 
-func NewLedgerInfo(path *hd.BIP44Params) *LedgerInfo {
-	return &LedgerInfo{path}
+func NewLedgerRecord(path *hd.BIP44Params) *Record_Ledger {
+	return &Record_Ledger{path}
 }
 
-func NewLedgerInfoItem(ledgerInfo *LedgerInfo) *Record_Ledger {
-	return &Record_Ledger{ledgerInfo}
+func NewLedgerRecordItem(ledgerRecord *Record_Ledger) *Record_Ledger_ {
+	return &Record_Ledger_{ledgerRecord}
 }
 
-func (li LedgerInfo) GetPath() *hd.BIP44Params {
-	return li.Path
+func (rl *Record_Ledger) GetPath() *hd.BIP44Params {
+	return rl.Path
 }
 
-func NewMultiInfo() *MultiInfo {
-	return &MultiInfo{}
+func NewEmptyRecord() *Record_Empty {
+	return &Record_Empty{}
 }
 
-func NewMultiInfoItem(multiInfo *MultiInfo) *Record_Multi {
-	return &Record_Multi{multiInfo}
-}
-
-func NewOfflineInfo() *OfflineInfo {
-	return &OfflineInfo{}
-}
-
-func NewOfflineInfoItem(offlineInfo *OfflineInfo) *Record_Offline {
-	return &Record_Offline{offlineInfo}
+func NewEmptyRecordItem(re *Record_Empty) *Record_Empty_ {
+	return &Record_Empty_{re}
 }
 
 func (re Record) GetName() string {
@@ -189,21 +180,21 @@ func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	switch info.GetType() {
 	case TypeLocal:
 		algo := info.GetAlgo()
-		localInfo := newLocalInfo(apk, string(algo))
-		item = newLocalInfoItem(localInfo)
+		localRecord := newLocalRecord(apk, string(algo))
+		item = newLocalRecordItem(localRecord)
 	case TypeOffline:
-		offlineInfo := NewOfflineInfo()
-		item = NewOfflineInfoItem(offlineInfo)
+		emptyRecord := NewEmptyRecord()
+		item = NewEmptyRecordItem(emptyRecord)
 	case TypeLedger:
 		path, err := info.GetPath()
 		if err != nil {
 			return nil, err
 		}
-		ledgerInfo := NewLedgerInfo(path)
-		item = NewLedgerInfoItem(ledgerInfo)
+		ledgerRecord := NewLedgerRecord(path)
+		item = NewLedgerRecordItem(ledgerRecord)
 	case TypeMulti:
-		multiInfo := NewMultiInfo()
-		item = NewMultiInfoItem(multiInfo)
+		emptyRecord := NewEmptyRecord()
+		item = NewEmptyRecordItem(emptyRecord)
 	}
 
 	kr := NewRecord(name, apk, item)

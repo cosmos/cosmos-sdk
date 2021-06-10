@@ -388,9 +388,9 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 
 func (ks keystore) writeLedgerKey(name string, pubKey *codectypes.Any, path *hd.BIP44Params) (*Record, error) {
 
-	ledgerInfo := NewLedgerInfo(path)
-	ledgerInfoItem := NewLedgerInfoItem(ledgerInfo)
-	k := NewRecord(name, pubKey, ledgerInfoItem)
+	ledgerRecord := NewLedgerRecord(path)
+	ledgerRecordItem := NewLedgerRecordItem(ledgerRecord)
+	k := NewRecord(name, pubKey, ledgerRecordItem)
 	if err := ks.writeRecord(k); err != nil {
 		return nil, err
 	}
@@ -752,9 +752,9 @@ func (ks keystore) writeLocalKey(name string, pubKey types.PubKey) (*Record, err
 		return nil, err
 	}
 
-	localInfo := newLocalInfo(apk, pubKey.Type())
-	localInfoItem := newLocalInfoItem(localInfo)
-	k := NewRecord(name, apk, localInfoItem)
+	localRecord := newLocalRecord(apk, pubKey.Type())
+	localRecordItem := newLocalRecordItem(localRecord)
+	k := NewRecord(name, apk, localRecordItem)
 	if err := ks.writeRecord(k); err != nil {
 		return nil, err
 	}
@@ -831,9 +831,9 @@ func (ks keystore) writeOfflineKey(name string, pub types.PubKey) (*Record, erro
 	if err != nil {
 		return nil, err
 	}
-	offlineInfo := NewOfflineInfo()
-	offlineInfoItem := NewOfflineInfoItem(offlineInfo)
-	k := NewRecord(name, apk, offlineInfoItem)
+	emptyRecord := NewEmptyRecord()
+	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
+	k := NewRecord(name, apk, emptyRecordItem)
 
 	if err := ks.writeRecord(k); err != nil {
 		return nil, err
@@ -849,9 +849,9 @@ func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (*Record, err
 		return nil, err
 	}
 
-	multiInfo := NewMultiInfo()
-	multiInfoItem := NewMultiInfoItem(multiInfo)
-	k := NewRecord(name, apk, multiInfoItem)
+	emptyRecord := NewEmptyRecord()
+	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
+	k := NewRecord(name, apk, emptyRecordItem)
 	if err = ks.writeRecord(k); err != nil {
 		return nil, err
 	}

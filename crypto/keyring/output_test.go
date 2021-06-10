@@ -22,7 +22,7 @@ func TestBech32KeysOutput(t *testing.T) {
 	
 	apk, err := codectypes.NewAnyWithValue(multisigPk)
 	require.NoError(t, err)
-	kr := keyring.NewRecord("multisig", apk, keyring.NewMultiInfoItem(keyring.NewMultiInfo()))
+	kr := keyring.NewRecord("multisig", apk, keyring.NewEmptyRecordItem(keyring.NewEmptyRecord()))
 	//info, err := NewMultiInfo("multisig", multisigPk)
 	require.NotNil(t, kr)
 	require.NoError(t, err)

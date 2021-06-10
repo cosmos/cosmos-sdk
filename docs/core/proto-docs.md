@@ -402,8 +402,8 @@
     - [Query](#cosmos.mint.v1beta1.Query)
   
 - [cosmos/orm/codec.proto](#cosmos/orm/codec.proto)
-    - [GroupInfo](#testdata.GroupInfo)
-    - [GroupMember](#testdata.GroupMember)
+    - [GroupInfo](#cosmos.orm.GroupInfo)
+    - [GroupMember](#cosmos.orm.GroupMember)
   
 - [cosmos/params/v1beta1/params.proto](#cosmos/params/v1beta1/params.proto)
     - [ParamChange](#cosmos.params.v1beta1.ParamChange)
@@ -5731,10 +5731,10 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="testdata.GroupInfo"></a>
+<a name="cosmos.orm.GroupInfo"></a>
 
 ### GroupInfo
-
+GroupInfo represents the high-level on-chain information for a group.
 
 
 | Field | Type | Label | Description |
@@ -5748,10 +5748,10 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="testdata.GroupMember"></a>
+<a name="cosmos.orm.GroupMember"></a>
 
 ### GroupMember
-
+GroupMember represents the relationship between a group and a member.
 
 
 | Field | Type | Label | Description |

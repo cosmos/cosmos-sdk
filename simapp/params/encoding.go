@@ -10,7 +10,8 @@ import (
 // This is provided for compatibility between protobuf and amino implementations.
 type EncodingConfig struct {
 	InterfaceRegistry types.InterfaceRegistry
-	Marshaler         codec.Codec
-	TxConfig          client.TxConfig
-	Amino             *codec.LegacyAmino
+	// Deprecated: this field wil lbe renamed to Codec
+	Marshaler codec.Codec
+	TxConfig  client.TxConfig
+	Amino     *codec.LegacyAmino
 }

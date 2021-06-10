@@ -22,10 +22,12 @@ import (
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-	FromAddress       sdk.AccAddress
-	Client            rpcclient.Client
-	ChainID           string
+	FromAddress sdk.AccAddress
+	Client      rpcclient.Client
+	ChainID     string
+	// Deprecated: JSONCodec codec will be changed to Codec: codec.Codec
 	JSONCodec         codec.JSONCodec
+	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
 	Keyring           keyring.Keyring
@@ -72,8 +74,15 @@ func (ctx Context) WithInput(r io.Reader) Context {
 	return ctx
 }
 
-// WithJSONCodec returns a copy of the Context with an updated JSONCodec.
+// Deprecated: WithJSONCodec returns a copy of the Context with an updated JSONCodec.
 func (ctx Context) WithJSONCodec(m codec.JSONCodec) Context {
+	ctx.JSONCodec = m
+	return ctx
+}
+
+// WithCodec returns a copy of the Context with an updated Codec.
+func (ctx Context) WithCodec(m codec.Codec) Context {
+	ctx.Codec = m
 	ctx.JSONCodec = m
 	return ctx
 }

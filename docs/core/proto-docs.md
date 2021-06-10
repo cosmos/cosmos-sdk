@@ -335,54 +335,54 @@
 - [cosmos/genutil/v1beta1/genesis.proto](#cosmos/genutil/v1beta1/genesis.proto)
     - [GenesisState](#cosmos.genutil.v1beta1.GenesisState)
   
-- [cosmos/gov/v1beta1/gov.proto](#cosmos/gov/v1beta1/gov.proto)
-    - [Deposit](#cosmos.gov.v1beta1.Deposit)
-    - [DepositParams](#cosmos.gov.v1beta1.DepositParams)
-    - [Proposal](#cosmos.gov.v1beta1.Proposal)
-    - [TallyParams](#cosmos.gov.v1beta1.TallyParams)
-    - [TallyResult](#cosmos.gov.v1beta1.TallyResult)
-    - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
-    - [Vote](#cosmos.gov.v1beta1.Vote)
-    - [VotingParams](#cosmos.gov.v1beta1.VotingParams)
-    - [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption)
+- [cosmos/gov/v1/gov.proto](#cosmos/gov/v1/gov.proto)
+    - [Deposit](#cosmos.gov.v1.Deposit)
+    - [DepositParams](#cosmos.gov.v1.DepositParams)
+    - [Proposal](#cosmos.gov.v1.Proposal)
+    - [TallyParams](#cosmos.gov.v1.TallyParams)
+    - [TallyResult](#cosmos.gov.v1.TallyResult)
+    - [TextProposal](#cosmos.gov.v1.TextProposal)
+    - [Vote](#cosmos.gov.v1.Vote)
+    - [VotingParams](#cosmos.gov.v1.VotingParams)
+    - [WeightedVoteOption](#cosmos.gov.v1.WeightedVoteOption)
   
-    - [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus)
-    - [VoteOption](#cosmos.gov.v1beta1.VoteOption)
+    - [ProposalStatus](#cosmos.gov.v1.ProposalStatus)
+    - [VoteOption](#cosmos.gov.v1.VoteOption)
   
-- [cosmos/gov/v1beta1/genesis.proto](#cosmos/gov/v1beta1/genesis.proto)
-    - [GenesisState](#cosmos.gov.v1beta1.GenesisState)
+- [cosmos/gov/v1/genesis.proto](#cosmos/gov/v1/genesis.proto)
+    - [GenesisState](#cosmos.gov.v1.GenesisState)
   
-- [cosmos/gov/v1beta1/query.proto](#cosmos/gov/v1beta1/query.proto)
-    - [QueryDepositRequest](#cosmos.gov.v1beta1.QueryDepositRequest)
-    - [QueryDepositResponse](#cosmos.gov.v1beta1.QueryDepositResponse)
-    - [QueryDepositsRequest](#cosmos.gov.v1beta1.QueryDepositsRequest)
-    - [QueryDepositsResponse](#cosmos.gov.v1beta1.QueryDepositsResponse)
-    - [QueryParamsRequest](#cosmos.gov.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#cosmos.gov.v1beta1.QueryParamsResponse)
-    - [QueryProposalRequest](#cosmos.gov.v1beta1.QueryProposalRequest)
-    - [QueryProposalResponse](#cosmos.gov.v1beta1.QueryProposalResponse)
-    - [QueryProposalsRequest](#cosmos.gov.v1beta1.QueryProposalsRequest)
-    - [QueryProposalsResponse](#cosmos.gov.v1beta1.QueryProposalsResponse)
-    - [QueryTallyResultRequest](#cosmos.gov.v1beta1.QueryTallyResultRequest)
-    - [QueryTallyResultResponse](#cosmos.gov.v1beta1.QueryTallyResultResponse)
-    - [QueryVoteRequest](#cosmos.gov.v1beta1.QueryVoteRequest)
-    - [QueryVoteResponse](#cosmos.gov.v1beta1.QueryVoteResponse)
-    - [QueryVotesRequest](#cosmos.gov.v1beta1.QueryVotesRequest)
-    - [QueryVotesResponse](#cosmos.gov.v1beta1.QueryVotesResponse)
+- [cosmos/gov/v1/query.proto](#cosmos/gov/v1/query.proto)
+    - [QueryDepositRequest](#cosmos.gov.v1.QueryDepositRequest)
+    - [QueryDepositResponse](#cosmos.gov.v1.QueryDepositResponse)
+    - [QueryDepositsRequest](#cosmos.gov.v1.QueryDepositsRequest)
+    - [QueryDepositsResponse](#cosmos.gov.v1.QueryDepositsResponse)
+    - [QueryParamsRequest](#cosmos.gov.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#cosmos.gov.v1.QueryParamsResponse)
+    - [QueryProposalRequest](#cosmos.gov.v1.QueryProposalRequest)
+    - [QueryProposalResponse](#cosmos.gov.v1.QueryProposalResponse)
+    - [QueryProposalsRequest](#cosmos.gov.v1.QueryProposalsRequest)
+    - [QueryProposalsResponse](#cosmos.gov.v1.QueryProposalsResponse)
+    - [QueryTallyResultRequest](#cosmos.gov.v1.QueryTallyResultRequest)
+    - [QueryTallyResultResponse](#cosmos.gov.v1.QueryTallyResultResponse)
+    - [QueryVoteRequest](#cosmos.gov.v1.QueryVoteRequest)
+    - [QueryVoteResponse](#cosmos.gov.v1.QueryVoteResponse)
+    - [QueryVotesRequest](#cosmos.gov.v1.QueryVotesRequest)
+    - [QueryVotesResponse](#cosmos.gov.v1.QueryVotesResponse)
   
-    - [Query](#cosmos.gov.v1beta1.Query)
+    - [Query](#cosmos.gov.v1.Query)
   
-- [cosmos/gov/v1beta1/tx.proto](#cosmos/gov/v1beta1/tx.proto)
-    - [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit)
-    - [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse)
-    - [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal)
-    - [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse)
-    - [MsgVote](#cosmos.gov.v1beta1.MsgVote)
-    - [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse)
-    - [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted)
-    - [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse)
+- [cosmos/gov/v1/tx.proto](#cosmos/gov/v1/tx.proto)
+    - [MsgDeposit](#cosmos.gov.v1.MsgDeposit)
+    - [MsgDepositResponse](#cosmos.gov.v1.MsgDepositResponse)
+    - [MsgSubmitProposal](#cosmos.gov.v1.MsgSubmitProposal)
+    - [MsgSubmitProposalResponse](#cosmos.gov.v1.MsgSubmitProposalResponse)
+    - [MsgVote](#cosmos.gov.v1.MsgVote)
+    - [MsgVoteResponse](#cosmos.gov.v1.MsgVoteResponse)
+    - [MsgVoteWeighted](#cosmos.gov.v1.MsgVoteWeighted)
+    - [MsgVoteWeightedResponse](#cosmos.gov.v1.MsgVoteWeightedResponse)
   
-    - [Msg](#cosmos.gov.v1beta1.Msg)
+    - [Msg](#cosmos.gov.v1.Msg)
   
 - [cosmos/mint/v1beta1/mint.proto](#cosmos/mint/v1beta1/mint.proto)
     - [Minter](#cosmos.mint.v1beta1.Minter)
@@ -553,23 +553,23 @@
   
     - [Service](#cosmos.tx.v1beta1.Service)
   
-- [cosmos/upgrade/v1beta1/upgrade.proto](#cosmos/upgrade/v1beta1/upgrade.proto)
-    - [CancelSoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal)
-    - [ModuleVersion](#cosmos.upgrade.v1beta1.ModuleVersion)
-    - [Plan](#cosmos.upgrade.v1beta1.Plan)
-    - [SoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.SoftwareUpgradeProposal)
+- [cosmos/upgrade/v1/upgrade.proto](#cosmos/upgrade/v1/upgrade.proto)
+    - [CancelSoftwareUpgradeProposal](#cosmos.upgrade.v1.CancelSoftwareUpgradeProposal)
+    - [ModuleVersion](#cosmos.upgrade.v1.ModuleVersion)
+    - [Plan](#cosmos.upgrade.v1.Plan)
+    - [SoftwareUpgradeProposal](#cosmos.upgrade.v1.SoftwareUpgradeProposal)
   
-- [cosmos/upgrade/v1beta1/query.proto](#cosmos/upgrade/v1beta1/query.proto)
-    - [QueryAppliedPlanRequest](#cosmos.upgrade.v1beta1.QueryAppliedPlanRequest)
-    - [QueryAppliedPlanResponse](#cosmos.upgrade.v1beta1.QueryAppliedPlanResponse)
-    - [QueryCurrentPlanRequest](#cosmos.upgrade.v1beta1.QueryCurrentPlanRequest)
-    - [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse)
-    - [QueryModuleVersionsRequest](#cosmos.upgrade.v1beta1.QueryModuleVersionsRequest)
-    - [QueryModuleVersionsResponse](#cosmos.upgrade.v1beta1.QueryModuleVersionsResponse)
-    - [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest)
-    - [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse)
+- [cosmos/upgrade/v1/query.proto](#cosmos/upgrade/v1/query.proto)
+    - [QueryAppliedPlanRequest](#cosmos.upgrade.v1.QueryAppliedPlanRequest)
+    - [QueryAppliedPlanResponse](#cosmos.upgrade.v1.QueryAppliedPlanResponse)
+    - [QueryCurrentPlanRequest](#cosmos.upgrade.v1.QueryCurrentPlanRequest)
+    - [QueryCurrentPlanResponse](#cosmos.upgrade.v1.QueryCurrentPlanResponse)
+    - [QueryModuleVersionsRequest](#cosmos.upgrade.v1.QueryModuleVersionsRequest)
+    - [QueryModuleVersionsResponse](#cosmos.upgrade.v1.QueryModuleVersionsResponse)
+    - [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1.QueryUpgradedConsensusStateRequest)
+    - [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1.QueryUpgradedConsensusStateResponse)
   
-    - [Query](#cosmos.upgrade.v1beta1.Query)
+    - [Query](#cosmos.upgrade.v1.Query)
   
 - [cosmos/vesting/v1beta1/tx.proto](#cosmos/vesting/v1beta1/tx.proto)
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
@@ -4859,14 +4859,14 @@ GenesisState defines the raw genesis transaction in JSON.
 
 
 
-<a name="cosmos/gov/v1beta1/gov.proto"></a>
+<a name="cosmos/gov/v1/gov.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/gov/v1beta1/gov.proto
+## cosmos/gov/v1/gov.proto
 
 
 
-<a name="cosmos.gov.v1beta1.Deposit"></a>
+<a name="cosmos.gov.v1.Deposit"></a>
 
 ### Deposit
 Deposit defines an amount deposited by an account address to an active
@@ -4884,7 +4884,7 @@ proposal.
 
 
 
-<a name="cosmos.gov.v1beta1.DepositParams"></a>
+<a name="cosmos.gov.v1.DepositParams"></a>
 
 ### DepositParams
 DepositParams defines the params for deposits on governance proposals.
@@ -4900,7 +4900,7 @@ DepositParams defines the params for deposits on governance proposals.
 
 
 
-<a name="cosmos.gov.v1beta1.Proposal"></a>
+<a name="cosmos.gov.v1.Proposal"></a>
 
 ### Proposal
 Proposal defines the core field members of a governance proposal.
@@ -4910,8 +4910,8 @@ Proposal defines the core field members of a governance proposal.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  |  |
-| `final_tally_result` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  |  |
+| `status` | [ProposalStatus](#cosmos.gov.v1.ProposalStatus) |  |  |
+| `final_tally_result` | [TallyResult](#cosmos.gov.v1.TallyResult) |  |  |
 | `submit_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `deposit_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
@@ -4923,7 +4923,7 @@ Proposal defines the core field members of a governance proposal.
 
 
 
-<a name="cosmos.gov.v1beta1.TallyParams"></a>
+<a name="cosmos.gov.v1.TallyParams"></a>
 
 ### TallyParams
 TallyParams defines the params for tallying votes on governance proposals.
@@ -4940,7 +4940,7 @@ TallyParams defines the params for tallying votes on governance proposals.
 
 
 
-<a name="cosmos.gov.v1beta1.TallyResult"></a>
+<a name="cosmos.gov.v1.TallyResult"></a>
 
 ### TallyResult
 TallyResult defines a standard tally for a governance proposal.
@@ -4958,7 +4958,7 @@ TallyResult defines a standard tally for a governance proposal.
 
 
 
-<a name="cosmos.gov.v1beta1.TextProposal"></a>
+<a name="cosmos.gov.v1.TextProposal"></a>
 
 ### TextProposal
 TextProposal defines a standard text proposal whose changes need to be
@@ -4975,7 +4975,7 @@ manually updated in case of approval.
 
 
 
-<a name="cosmos.gov.v1beta1.Vote"></a>
+<a name="cosmos.gov.v1.Vote"></a>
 
 ### Vote
 Vote defines a vote on a governance proposal.
@@ -4986,14 +4986,14 @@ A Vote consists of a proposal ID, the voter, and the vote option.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1.WeightedVoteOption) | repeated |  |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.VotingParams"></a>
+<a name="cosmos.gov.v1.VotingParams"></a>
 
 ### VotingParams
 VotingParams defines the params for voting on governance proposals.
@@ -5008,7 +5008,7 @@ VotingParams defines the params for voting on governance proposals.
 
 
 
-<a name="cosmos.gov.v1beta1.WeightedVoteOption"></a>
+<a name="cosmos.gov.v1.WeightedVoteOption"></a>
 
 ### WeightedVoteOption
 WeightedVoteOption defines a unit of vote for vote split.
@@ -5016,7 +5016,7 @@ WeightedVoteOption defines a unit of vote for vote split.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
+| `option` | [VoteOption](#cosmos.gov.v1.VoteOption) |  |  |
 | `weight` | [string](#string) |  |  |
 
 
@@ -5026,7 +5026,7 @@ WeightedVoteOption defines a unit of vote for vote split.
  <!-- end messages -->
 
 
-<a name="cosmos.gov.v1beta1.ProposalStatus"></a>
+<a name="cosmos.gov.v1.ProposalStatus"></a>
 
 ### ProposalStatus
 ProposalStatus enumerates the valid statuses of a proposal.
@@ -5042,7 +5042,7 @@ ProposalStatus enumerates the valid statuses of a proposal.
 
 
 
-<a name="cosmos.gov.v1beta1.VoteOption"></a>
+<a name="cosmos.gov.v1.VoteOption"></a>
 
 ### VoteOption
 VoteOption enumerates the valid vote options for a given governance proposal.
@@ -5064,14 +5064,14 @@ VoteOption enumerates the valid vote options for a given governance proposal.
 
 
 
-<a name="cosmos/gov/v1beta1/genesis.proto"></a>
+<a name="cosmos/gov/v1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/gov/v1beta1/genesis.proto
+## cosmos/gov/v1/genesis.proto
 
 
 
-<a name="cosmos.gov.v1beta1.GenesisState"></a>
+<a name="cosmos.gov.v1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines the gov module's genesis state.
@@ -5080,12 +5080,12 @@ GenesisState defines the gov module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `starting_proposal_id` | [uint64](#uint64) |  | starting_proposal_id is the ID of the starting proposal. |
-| `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
-| `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defines all the votes present at genesis. |
-| `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated | proposals defines all the proposals present at genesis. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | params defines all the paramaters of related to deposit. |
-| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | params defines all the paramaters of related to voting. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | params defines all the paramaters of related to tally. |
+| `deposits` | [Deposit](#cosmos.gov.v1.Deposit) | repeated | deposits defines all the deposits present at genesis. |
+| `votes` | [Vote](#cosmos.gov.v1.Vote) | repeated | votes defines all the votes present at genesis. |
+| `proposals` | [Proposal](#cosmos.gov.v1.Proposal) | repeated | proposals defines all the proposals present at genesis. |
+| `deposit_params` | [DepositParams](#cosmos.gov.v1.DepositParams) |  | params defines all the paramaters of related to deposit. |
+| `voting_params` | [VotingParams](#cosmos.gov.v1.VotingParams) |  | params defines all the paramaters of related to voting. |
+| `tally_params` | [TallyParams](#cosmos.gov.v1.TallyParams) |  | params defines all the paramaters of related to tally. |
 
 
 
@@ -5101,14 +5101,14 @@ GenesisState defines the gov module's genesis state.
 
 
 
-<a name="cosmos/gov/v1beta1/query.proto"></a>
+<a name="cosmos/gov/v1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/gov/v1beta1/query.proto
+## cosmos/gov/v1/query.proto
 
 
 
-<a name="cosmos.gov.v1beta1.QueryDepositRequest"></a>
+<a name="cosmos.gov.v1.QueryDepositRequest"></a>
 
 ### QueryDepositRequest
 QueryDepositRequest is the request type for the Query/Deposit RPC method.
@@ -5124,7 +5124,7 @@ QueryDepositRequest is the request type for the Query/Deposit RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryDepositResponse"></a>
+<a name="cosmos.gov.v1.QueryDepositResponse"></a>
 
 ### QueryDepositResponse
 QueryDepositResponse is the response type for the Query/Deposit RPC method.
@@ -5132,14 +5132,14 @@ QueryDepositResponse is the response type for the Query/Deposit RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `deposit` | [Deposit](#cosmos.gov.v1beta1.Deposit) |  | deposit defines the requested deposit. |
+| `deposit` | [Deposit](#cosmos.gov.v1.Deposit) |  | deposit defines the requested deposit. |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.QueryDepositsRequest"></a>
+<a name="cosmos.gov.v1.QueryDepositsRequest"></a>
 
 ### QueryDepositsRequest
 QueryDepositsRequest is the request type for the Query/Deposits RPC method.
@@ -5155,7 +5155,7 @@ QueryDepositsRequest is the request type for the Query/Deposits RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryDepositsResponse"></a>
+<a name="cosmos.gov.v1.QueryDepositsResponse"></a>
 
 ### QueryDepositsResponse
 QueryDepositsResponse is the response type for the Query/Deposits RPC method.
@@ -5163,7 +5163,7 @@ QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `deposits` | [Deposit](#cosmos.gov.v1beta1.Deposit) | repeated |  |
+| `deposits` | [Deposit](#cosmos.gov.v1.Deposit) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
@@ -5171,7 +5171,7 @@ QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryParamsRequest"></a>
+<a name="cosmos.gov.v1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -5186,7 +5186,7 @@ QueryParamsRequest is the request type for the Query/Params RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryParamsResponse"></a>
+<a name="cosmos.gov.v1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is the response type for the Query/Params RPC method.
@@ -5194,16 +5194,16 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | voting_params defines the parameters related to voting. |
-| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
-| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | tally_params defines the parameters related to tally. |
+| `voting_params` | [VotingParams](#cosmos.gov.v1.VotingParams) |  | voting_params defines the parameters related to voting. |
+| `deposit_params` | [DepositParams](#cosmos.gov.v1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
+| `tally_params` | [TallyParams](#cosmos.gov.v1.TallyParams) |  | tally_params defines the parameters related to tally. |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.QueryProposalRequest"></a>
+<a name="cosmos.gov.v1.QueryProposalRequest"></a>
 
 ### QueryProposalRequest
 QueryProposalRequest is the request type for the Query/Proposal RPC method.
@@ -5218,7 +5218,7 @@ QueryProposalRequest is the request type for the Query/Proposal RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryProposalResponse"></a>
+<a name="cosmos.gov.v1.QueryProposalResponse"></a>
 
 ### QueryProposalResponse
 QueryProposalResponse is the response type for the Query/Proposal RPC method.
@@ -5226,14 +5226,14 @@ QueryProposalResponse is the response type for the Query/Proposal RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `proposal` | [Proposal](#cosmos.gov.v1beta1.Proposal) |  |  |
+| `proposal` | [Proposal](#cosmos.gov.v1.Proposal) |  |  |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.QueryProposalsRequest"></a>
+<a name="cosmos.gov.v1.QueryProposalsRequest"></a>
 
 ### QueryProposalsRequest
 QueryProposalsRequest is the request type for the Query/Proposals RPC method.
@@ -5241,7 +5241,7 @@ QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `proposal_status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  | proposal_status defines the status of the proposals. |
+| `proposal_status` | [ProposalStatus](#cosmos.gov.v1.ProposalStatus) |  | proposal_status defines the status of the proposals. |
 | `voter` | [string](#string) |  | voter defines the voter address for the proposals. |
 | `depositor` | [string](#string) |  | depositor defines the deposit addresses from the proposals. |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
@@ -5251,7 +5251,7 @@ QueryProposalsRequest is the request type for the Query/Proposals RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryProposalsResponse"></a>
+<a name="cosmos.gov.v1.QueryProposalsResponse"></a>
 
 ### QueryProposalsResponse
 QueryProposalsResponse is the response type for the Query/Proposals RPC
@@ -5260,7 +5260,7 @@ method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `proposals` | [Proposal](#cosmos.gov.v1beta1.Proposal) | repeated |  |
+| `proposals` | [Proposal](#cosmos.gov.v1.Proposal) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
@@ -5268,7 +5268,7 @@ method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryTallyResultRequest"></a>
+<a name="cosmos.gov.v1.QueryTallyResultRequest"></a>
 
 ### QueryTallyResultRequest
 QueryTallyResultRequest is the request type for the Query/Tally RPC method.
@@ -5283,7 +5283,7 @@ QueryTallyResultRequest is the request type for the Query/Tally RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryTallyResultResponse"></a>
+<a name="cosmos.gov.v1.QueryTallyResultResponse"></a>
 
 ### QueryTallyResultResponse
 QueryTallyResultResponse is the response type for the Query/Tally RPC method.
@@ -5291,14 +5291,14 @@ QueryTallyResultResponse is the response type for the Query/Tally RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tally` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  | tally defines the requested tally. |
+| `tally` | [TallyResult](#cosmos.gov.v1.TallyResult) |  | tally defines the requested tally. |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.QueryVoteRequest"></a>
+<a name="cosmos.gov.v1.QueryVoteRequest"></a>
 
 ### QueryVoteRequest
 QueryVoteRequest is the request type for the Query/Vote RPC method.
@@ -5314,7 +5314,7 @@ QueryVoteRequest is the request type for the Query/Vote RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryVoteResponse"></a>
+<a name="cosmos.gov.v1.QueryVoteResponse"></a>
 
 ### QueryVoteResponse
 QueryVoteResponse is the response type for the Query/Vote RPC method.
@@ -5322,14 +5322,14 @@ QueryVoteResponse is the response type for the Query/Vote RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `vote` | [Vote](#cosmos.gov.v1beta1.Vote) |  | vote defined the queried vote. |
+| `vote` | [Vote](#cosmos.gov.v1.Vote) |  | vote defined the queried vote. |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.QueryVotesRequest"></a>
+<a name="cosmos.gov.v1.QueryVotesRequest"></a>
 
 ### QueryVotesRequest
 QueryVotesRequest is the request type for the Query/Votes RPC method.
@@ -5345,7 +5345,7 @@ QueryVotesRequest is the request type for the Query/Votes RPC method.
 
 
 
-<a name="cosmos.gov.v1beta1.QueryVotesResponse"></a>
+<a name="cosmos.gov.v1.QueryVotesResponse"></a>
 
 ### QueryVotesResponse
 QueryVotesResponse is the response type for the Query/Votes RPC method.
@@ -5353,7 +5353,7 @@ QueryVotesResponse is the response type for the Query/Votes RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `votes` | [Vote](#cosmos.gov.v1beta1.Vote) | repeated | votes defined the queried votes. |
+| `votes` | [Vote](#cosmos.gov.v1.Vote) | repeated | votes defined the queried votes. |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
@@ -5367,34 +5367,34 @@ QueryVotesResponse is the response type for the Query/Votes RPC method.
  <!-- end HasExtensions -->
 
 
-<a name="cosmos.gov.v1beta1.Query"></a>
+<a name="cosmos.gov.v1.Query"></a>
 
 ### Query
 Query defines the gRPC querier service for gov module
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Proposal` | [QueryProposalRequest](#cosmos.gov.v1beta1.QueryProposalRequest) | [QueryProposalResponse](#cosmos.gov.v1beta1.QueryProposalResponse) | Proposal queries proposal details based on ProposalID. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}|
-| `Proposals` | [QueryProposalsRequest](#cosmos.gov.v1beta1.QueryProposalsRequest) | [QueryProposalsResponse](#cosmos.gov.v1beta1.QueryProposalsResponse) | Proposals queries all proposals based on given status. | GET|/cosmos/gov/v1beta1/proposals|
-| `Vote` | [QueryVoteRequest](#cosmos.gov.v1beta1.QueryVoteRequest) | [QueryVoteResponse](#cosmos.gov.v1beta1.QueryVoteResponse) | Vote queries voted information based on proposalID, voterAddr. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}|
-| `Votes` | [QueryVotesRequest](#cosmos.gov.v1beta1.QueryVotesRequest) | [QueryVotesResponse](#cosmos.gov.v1beta1.QueryVotesResponse) | Votes queries votes of a given proposal. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/votes|
-| `Params` | [QueryParamsRequest](#cosmos.gov.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.gov.v1beta1.QueryParamsResponse) | Params queries all parameters of the gov module. | GET|/cosmos/gov/v1beta1/params/{params_type}|
-| `Deposit` | [QueryDepositRequest](#cosmos.gov.v1beta1.QueryDepositRequest) | [QueryDepositResponse](#cosmos.gov.v1beta1.QueryDepositResponse) | Deposit queries single deposit information based proposalID, depositAddr. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}|
-| `Deposits` | [QueryDepositsRequest](#cosmos.gov.v1beta1.QueryDepositsRequest) | [QueryDepositsResponse](#cosmos.gov.v1beta1.QueryDepositsResponse) | Deposits queries all deposits of a single proposal. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits|
-| `TallyResult` | [QueryTallyResultRequest](#cosmos.gov.v1beta1.QueryTallyResultRequest) | [QueryTallyResultResponse](#cosmos.gov.v1beta1.QueryTallyResultResponse) | TallyResult queries the tally of a proposal vote. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/tally|
+| `Proposal` | [QueryProposalRequest](#cosmos.gov.v1.QueryProposalRequest) | [QueryProposalResponse](#cosmos.gov.v1.QueryProposalResponse) | Proposal queries proposal details based on ProposalID. | GET|/cosmos/gov/v1/proposals/{proposal_id}|
+| `Proposals` | [QueryProposalsRequest](#cosmos.gov.v1.QueryProposalsRequest) | [QueryProposalsResponse](#cosmos.gov.v1.QueryProposalsResponse) | Proposals queries all proposals based on given status. | GET|/cosmos/gov/v1/proposals|
+| `Vote` | [QueryVoteRequest](#cosmos.gov.v1.QueryVoteRequest) | [QueryVoteResponse](#cosmos.gov.v1.QueryVoteResponse) | Vote queries voted information based on proposalID, voterAddr. | GET|/cosmos/gov/v1/proposals/{proposal_id}/votes/{voter}|
+| `Votes` | [QueryVotesRequest](#cosmos.gov.v1.QueryVotesRequest) | [QueryVotesResponse](#cosmos.gov.v1.QueryVotesResponse) | Votes queries votes of a given proposal. | GET|/cosmos/gov/v1/proposals/{proposal_id}/votes|
+| `Params` | [QueryParamsRequest](#cosmos.gov.v1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.gov.v1.QueryParamsResponse) | Params queries all parameters of the gov module. | GET|/cosmos/gov/v1/params/{params_type}|
+| `Deposit` | [QueryDepositRequest](#cosmos.gov.v1.QueryDepositRequest) | [QueryDepositResponse](#cosmos.gov.v1.QueryDepositResponse) | Deposit queries single deposit information based proposalID, depositAddr. | GET|/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}|
+| `Deposits` | [QueryDepositsRequest](#cosmos.gov.v1.QueryDepositsRequest) | [QueryDepositsResponse](#cosmos.gov.v1.QueryDepositsResponse) | Deposits queries all deposits of a single proposal. | GET|/cosmos/gov/v1/proposals/{proposal_id}/deposits|
+| `TallyResult` | [QueryTallyResultRequest](#cosmos.gov.v1.QueryTallyResultRequest) | [QueryTallyResultResponse](#cosmos.gov.v1.QueryTallyResultResponse) | TallyResult queries the tally of a proposal vote. | GET|/cosmos/gov/v1/proposals/{proposal_id}/tally|
 
  <!-- end services -->
 
 
 
-<a name="cosmos/gov/v1beta1/tx.proto"></a>
+<a name="cosmos/gov/v1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/gov/v1beta1/tx.proto
+## cosmos/gov/v1/tx.proto
 
 
 
-<a name="cosmos.gov.v1beta1.MsgDeposit"></a>
+<a name="cosmos.gov.v1.MsgDeposit"></a>
 
 ### MsgDeposit
 MsgDeposit defines a message to submit a deposit to an existing proposal.
@@ -5411,7 +5411,7 @@ MsgDeposit defines a message to submit a deposit to an existing proposal.
 
 
 
-<a name="cosmos.gov.v1beta1.MsgDepositResponse"></a>
+<a name="cosmos.gov.v1.MsgDepositResponse"></a>
 
 ### MsgDepositResponse
 MsgDepositResponse defines the Msg/Deposit response type.
@@ -5421,7 +5421,7 @@ MsgDepositResponse defines the Msg/Deposit response type.
 
 
 
-<a name="cosmos.gov.v1beta1.MsgSubmitProposal"></a>
+<a name="cosmos.gov.v1.MsgSubmitProposal"></a>
 
 ### MsgSubmitProposal
 MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
@@ -5439,7 +5439,7 @@ proposal Content.
 
 
 
-<a name="cosmos.gov.v1beta1.MsgSubmitProposalResponse"></a>
+<a name="cosmos.gov.v1.MsgSubmitProposalResponse"></a>
 
 ### MsgSubmitProposalResponse
 MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
@@ -5454,7 +5454,7 @@ MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
 
 
 
-<a name="cosmos.gov.v1beta1.MsgVote"></a>
+<a name="cosmos.gov.v1.MsgVote"></a>
 
 ### MsgVote
 MsgVote defines a message to cast a vote.
@@ -5464,14 +5464,14 @@ MsgVote defines a message to cast a vote.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
+| `option` | [VoteOption](#cosmos.gov.v1.VoteOption) |  |  |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.MsgVoteResponse"></a>
+<a name="cosmos.gov.v1.MsgVoteResponse"></a>
 
 ### MsgVoteResponse
 MsgVoteResponse defines the Msg/Vote response type.
@@ -5481,7 +5481,7 @@ MsgVoteResponse defines the Msg/Vote response type.
 
 
 
-<a name="cosmos.gov.v1beta1.MsgVoteWeighted"></a>
+<a name="cosmos.gov.v1.MsgVoteWeighted"></a>
 
 ### MsgVoteWeighted
 MsgVoteWeighted defines a message to cast a vote.
@@ -5491,14 +5491,14 @@ MsgVoteWeighted defines a message to cast a vote.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
+| `options` | [WeightedVoteOption](#cosmos.gov.v1.WeightedVoteOption) | repeated |  |
 
 
 
 
 
 
-<a name="cosmos.gov.v1beta1.MsgVoteWeightedResponse"></a>
+<a name="cosmos.gov.v1.MsgVoteWeightedResponse"></a>
 
 ### MsgVoteWeightedResponse
 MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
@@ -5514,17 +5514,17 @@ MsgVoteWeightedResponse defines the Msg/VoteWeighted response type.
  <!-- end HasExtensions -->
 
 
-<a name="cosmos.gov.v1beta1.Msg"></a>
+<a name="cosmos.gov.v1.Msg"></a>
 
 ### Msg
 Msg defines the bank Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
-| `Vote` | [MsgVote](#cosmos.gov.v1beta1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1beta1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
-| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1beta1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1beta1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal. | |
-| `Deposit` | [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
+| `SubmitProposal` | [MsgSubmitProposal](#cosmos.gov.v1.MsgSubmitProposal) | [MsgSubmitProposalResponse](#cosmos.gov.v1.MsgSubmitProposalResponse) | SubmitProposal defines a method to create new proposal given a content. | |
+| `Vote` | [MsgVote](#cosmos.gov.v1.MsgVote) | [MsgVoteResponse](#cosmos.gov.v1.MsgVoteResponse) | Vote defines a method to add a vote on a specific proposal. | |
+| `VoteWeighted` | [MsgVoteWeighted](#cosmos.gov.v1.MsgVoteWeighted) | [MsgVoteWeightedResponse](#cosmos.gov.v1.MsgVoteWeightedResponse) | VoteWeighted defines a method to add a weighted vote on a specific proposal. | |
+| `Deposit` | [MsgDeposit](#cosmos.gov.v1.MsgDeposit) | [MsgDepositResponse](#cosmos.gov.v1.MsgDepositResponse) | Deposit defines a method to add deposit on a specific proposal. | |
 
  <!-- end services -->
 
@@ -7824,14 +7824,14 @@ Service defines a gRPC service for interacting with transactions.
 
 
 
-<a name="cosmos/upgrade/v1beta1/upgrade.proto"></a>
+<a name="cosmos/upgrade/v1/upgrade.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/upgrade/v1beta1/upgrade.proto
+## cosmos/upgrade/v1/upgrade.proto
 
 
 
-<a name="cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal"></a>
+<a name="cosmos.upgrade.v1.CancelSoftwareUpgradeProposal"></a>
 
 ### CancelSoftwareUpgradeProposal
 CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
@@ -7848,7 +7848,7 @@ upgrade.
 
 
 
-<a name="cosmos.upgrade.v1beta1.ModuleVersion"></a>
+<a name="cosmos.upgrade.v1.ModuleVersion"></a>
 
 ### ModuleVersion
 ModuleVersion specifies a module and its consensus version.
@@ -7864,7 +7864,7 @@ ModuleVersion specifies a module and its consensus version.
 
 
 
-<a name="cosmos.upgrade.v1beta1.Plan"></a>
+<a name="cosmos.upgrade.v1.Plan"></a>
 
 ### Plan
 Plan specifies information about a planned upgrade and when it should occur.
@@ -7881,7 +7881,7 @@ Plan specifies information about a planned upgrade and when it should occur.
 
 
 
-<a name="cosmos.upgrade.v1beta1.SoftwareUpgradeProposal"></a>
+<a name="cosmos.upgrade.v1.SoftwareUpgradeProposal"></a>
 
 ### SoftwareUpgradeProposal
 SoftwareUpgradeProposal is a gov Content type for initiating a software
@@ -7892,7 +7892,7 @@ upgrade.
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `plan` | [Plan](#cosmos.upgrade.v1beta1.Plan) |  |  |
+| `plan` | [Plan](#cosmos.upgrade.v1.Plan) |  |  |
 
 
 
@@ -7908,14 +7908,14 @@ upgrade.
 
 
 
-<a name="cosmos/upgrade/v1beta1/query.proto"></a>
+<a name="cosmos/upgrade/v1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/upgrade/v1beta1/query.proto
+## cosmos/upgrade/v1/query.proto
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryAppliedPlanRequest"></a>
+<a name="cosmos.upgrade.v1.QueryAppliedPlanRequest"></a>
 
 ### QueryAppliedPlanRequest
 QueryCurrentPlanRequest is the request type for the Query/AppliedPlan RPC
@@ -7931,7 +7931,7 @@ method.
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryAppliedPlanResponse"></a>
+<a name="cosmos.upgrade.v1.QueryAppliedPlanResponse"></a>
 
 ### QueryAppliedPlanResponse
 QueryAppliedPlanResponse is the response type for the Query/AppliedPlan RPC
@@ -7947,7 +7947,7 @@ method.
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryCurrentPlanRequest"></a>
+<a name="cosmos.upgrade.v1.QueryCurrentPlanRequest"></a>
 
 ### QueryCurrentPlanRequest
 QueryCurrentPlanRequest is the request type for the Query/CurrentPlan RPC
@@ -7958,7 +7958,7 @@ method.
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryCurrentPlanResponse"></a>
+<a name="cosmos.upgrade.v1.QueryCurrentPlanResponse"></a>
 
 ### QueryCurrentPlanResponse
 QueryCurrentPlanResponse is the response type for the Query/CurrentPlan RPC
@@ -7967,14 +7967,14 @@ method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `plan` | [Plan](#cosmos.upgrade.v1beta1.Plan) |  | plan is the current upgrade plan. |
+| `plan` | [Plan](#cosmos.upgrade.v1.Plan) |  | plan is the current upgrade plan. |
 
 
 
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryModuleVersionsRequest"></a>
+<a name="cosmos.upgrade.v1.QueryModuleVersionsRequest"></a>
 
 ### QueryModuleVersionsRequest
 QueryModuleVersionsRequest is the request type for the Query/ModuleVersions
@@ -7990,7 +7990,7 @@ RPC method.
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryModuleVersionsResponse"></a>
+<a name="cosmos.upgrade.v1.QueryModuleVersionsResponse"></a>
 
 ### QueryModuleVersionsResponse
 QueryModuleVersionsResponse is the response type for the Query/ModuleVersions
@@ -7999,14 +7999,14 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `module_versions` | [ModuleVersion](#cosmos.upgrade.v1beta1.ModuleVersion) | repeated | module_versions is a list of module names with their consensus versions. |
+| `module_versions` | [ModuleVersion](#cosmos.upgrade.v1.ModuleVersion) | repeated | module_versions is a list of module names with their consensus versions. |
 
 
 
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest"></a>
+<a name="cosmos.upgrade.v1.QueryUpgradedConsensusStateRequest"></a>
 
 ### QueryUpgradedConsensusStateRequest
 QueryUpgradedConsensusStateRequest is the request type for the Query/UpgradedConsensusState
@@ -8022,7 +8022,7 @@ RPC method.
 
 
 
-<a name="cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse"></a>
+<a name="cosmos.upgrade.v1.QueryUpgradedConsensusStateResponse"></a>
 
 ### QueryUpgradedConsensusStateResponse
 QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
@@ -8044,17 +8044,17 @@ RPC method.
  <!-- end HasExtensions -->
 
 
-<a name="cosmos.upgrade.v1beta1.Query"></a>
+<a name="cosmos.upgrade.v1.Query"></a>
 
 ### Query
 Query defines the gRPC upgrade querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CurrentPlan` | [QueryCurrentPlanRequest](#cosmos.upgrade.v1beta1.QueryCurrentPlanRequest) | [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse) | CurrentPlan queries the current upgrade plan. | GET|/cosmos/upgrade/v1beta1/current_plan|
-| `AppliedPlan` | [QueryAppliedPlanRequest](#cosmos.upgrade.v1beta1.QueryAppliedPlanRequest) | [QueryAppliedPlanResponse](#cosmos.upgrade.v1beta1.QueryAppliedPlanResponse) | AppliedPlan queries a previously applied upgrade plan by its name. | GET|/cosmos/upgrade/v1beta1/applied_plan/{name}|
-| `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier | GET|/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}|
-| `ModuleVersions` | [QueryModuleVersionsRequest](#cosmos.upgrade.v1beta1.QueryModuleVersionsRequest) | [QueryModuleVersionsResponse](#cosmos.upgrade.v1beta1.QueryModuleVersionsResponse) | ModuleVersions queries the list of module versions from state. | GET|/cosmos/upgrade/v1beta1/module_versions|
+| `CurrentPlan` | [QueryCurrentPlanRequest](#cosmos.upgrade.v1.QueryCurrentPlanRequest) | [QueryCurrentPlanResponse](#cosmos.upgrade.v1.QueryCurrentPlanResponse) | CurrentPlan queries the current upgrade plan. | GET|/cosmos/upgrade/v1/current_plan|
+| `AppliedPlan` | [QueryAppliedPlanRequest](#cosmos.upgrade.v1.QueryAppliedPlanRequest) | [QueryAppliedPlanResponse](#cosmos.upgrade.v1.QueryAppliedPlanResponse) | AppliedPlan queries a previously applied upgrade plan by its name. | GET|/cosmos/upgrade/v1/applied_plan/{name}|
+| `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier | GET|/cosmos/upgrade/v1/upgraded_consensus_state/{last_height}|
+| `ModuleVersions` | [QueryModuleVersionsRequest](#cosmos.upgrade.v1.QueryModuleVersionsRequest) | [QueryModuleVersionsResponse](#cosmos.upgrade.v1.QueryModuleVersionsResponse) | ModuleVersions queries the list of module versions from state. | GET|/cosmos/upgrade/v1/module_versions|
 
  <!-- end services -->
 

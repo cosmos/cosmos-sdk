@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package cosmos.gov.v1beta1;
+package cosmos.gov.v1;
 
 import "gogoproto/gogo.proto";
-import "cosmos/gov/v1beta1/gov.proto";
+import "cosmos/gov/v1/gov.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 

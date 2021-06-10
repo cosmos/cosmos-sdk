@@ -226,28 +226,28 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, opts ...Option) keystore {
 }
 
 func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
-	bz, err := ks.Key(uid)
+	k, err := ks.Key(uid)
 	if err != nil {
 		return "", err
 	}
 
-	if bz == nil {
+	if k == nil {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
-	key, err := bz.GetPubKey()
+	key, err := k.GetPubKey()
 	if err != nil {
 		return "", err
 	}
-	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(key), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(key), string(k.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
-	re, err := ks.KeyByAddress(address)
+	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return "", err
 	}
 
-	return ks.ExportPubKeyArmor(re.GetName())
+	return ks.ExportPubKeyArmor(k.GetName())
 }
 
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
@@ -256,31 +256,31 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 		return "", err
 	}
 
-	info, err := ks.Key(uid)
+	k, err := ks.Key(uid)
 	if err != nil {
 		return "", err
 	}
 
-	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(info.GetAlgo())), nil
+	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(k.GetAlgo())), nil
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
 func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
-	re, err := ks.Key(uid)
+	k, err := ks.Key(uid)
 	if err != nil {
 		return nil, err
 	}
 
-	return re.extractPrivKeyFromLocalInfo()
+	return k.extractPrivKeyFromLocalInfo()
 }
 
 func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
-	re, err := ks.KeyByAddress(address)
+	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return "", err
 	}
 
-	return ks.ExportPrivKeyArmor(re.GetName(), encryptPassphrase)
+	return ks.ExportPrivKeyArmor(k.GetName(), encryptPassphrase)
 }
 
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
@@ -337,12 +337,12 @@ func (ks keystore) ImportInfo(oldInfo LegacyInfo) error {
 */
 
 func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
-	kr, err := ks.Key(uid)
+	k, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	priv, err := kr.extractPrivKeyFromLocalInfo()
+	priv, err := k.extractPrivKeyFromLocalInfo()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -357,12 +357,12 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 }
 
 func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {
-	ke, err := ks.KeyByAddress(address)
+	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return ks.Sign(ke.GetName(), msg)
+	return ks.Sign(k.GetName(), msg)
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
@@ -390,12 +390,12 @@ func (ks keystore) writeLedgerKey(name string, pubKey *codectypes.Any, path *hd.
 
 	ledgerInfo := NewLedgerInfo(path)
 	ledgerInfoItem := NewLedgerInfoItem(ledgerInfo)
-	re := NewRecord(name, pubKey, ledgerInfoItem)
-	if err := ks.writeRecord(re); err != nil {
+	k := NewRecord(name, pubKey, ledgerInfoItem)
+	if err := ks.writeRecord(k); err != nil {
 		return nil, err
 	}
 
-	return re, nil
+	return k, nil
 }
 
 func (ks keystore) SaveMultisig(uid string, pubkey types.PubKey) (*Record, error) {
@@ -407,12 +407,12 @@ func (ks keystore) SaveOfflineKey(uid string, pubkey types.PubKey) (*Record, err
 }
 
 func (ks keystore) DeleteByAddress(address sdk.Address) error {
-	ke, err := ks.KeyByAddress(address)
+	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return err
 	}
 
-	err = ks.Delete(ke.GetName())
+	err = ks.Delete(k.GetName())
 	if err != nil {
 		return err
 	}
@@ -421,12 +421,12 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 }
 
 func (ks keystore) Delete(uid string) error {
-	ke, err := ks.Key(uid)
+	k, err := ks.Key(uid)
 	if err != nil {
 		return err
 	}
 
-	addr, err := ke.GetAddress()
+	addr, err := k.GetAddress()
 	if err != nil {
 		return err
 	}
@@ -489,11 +489,11 @@ func (ks keystore) List() ([]*Record, error) {
 		if len(item.Data) == 0 {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 		}
-		re := new(Record)
-		if err := ks.cdc.Unmarshal(item.Data, re); err != nil {
+		k := new(Record)
+		if err := ks.cdc.Unmarshal(item.Data, k); err != nil {
 			return nil, err
 		}
-		res = append(res, re)
+		res = append(res, k)
 	}
 
 	return res, nil
@@ -524,12 +524,12 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 		bip39Passphrase = DefaultBIP39Passphrase
 	}
 
-	re, err := ks.NewAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
+	k, err := ks.NewAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return re, mnemonic, nil
+	return k, mnemonic, nil
 }
 
 // TODO keep or remove SignatureAlgo???
@@ -572,11 +572,11 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 
-	kr := new(Record)
-	if err := ks.cdc.Unmarshal(bs.Data, kr); err != nil {
+	k := new(Record)
+	if err := ks.cdc.Unmarshal(bs.Data, k); err != nil {
 		return nil, err
 	}
-	return kr, nil
+	return k, nil
 	//	return protoUnmarshalInfo(bs.Data, ks.cdc)
 }
 
@@ -593,16 +593,15 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
-func SignWithLedger(re *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
+func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
 
-	ledgerInfo := re.GetLedger()
+	ledgerInfo := k.GetLedger()
 	if ledgerInfo == nil {
 		return nil, nil, errors.New("not a ledger object")
 	}
-	// TODO remove GetPath from keyringEntry, cause it relates to Ledger only
+
 	path := ledgerInfo.GetPath()
 
-	// TODO should I fix replace type from hd.BIP44Params to keyring.BUP44Params in NewPrivKeySecp256k1Unsafe
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
 		return
@@ -614,31 +613,6 @@ func SignWithLedger(re *Record, msg []byte) (sig []byte, pub types.PubKey, err e
 	}
 
 	return sig, priv.PubKey(), nil
-
-	/*
-		switch info.(type) {
-		case *LedgerInfo, LedgerInfo:
-		default:
-			return nil, nil, errors.New("not a ledger object")
-		}
-
-		path, err := info.GetPath()
-		if err != nil {
-			return err
-		}
-
-		priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
-		if err != nil {
-			return
-		}
-
-		sig, err = priv.Sign(msg)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		return sig, priv.PubKey(), nil
-	*/
 }
 
 func newOSBackendKeyringConfig(appName, dir string, buf io.Reader) keyring.Config {
@@ -785,24 +759,24 @@ func (ks keystore) writeLocalKey(name string, priv types.PrivKey, pubKeyType str
 
 	localInfo := newLocalInfo(apk, pubKeyType)
 	localInfoItem := newLocalInfoItem(localInfo)
-	kr := NewRecord(name, apk, localInfoItem)
-	if err := ks.writeRecord(kr); err != nil {
+	k := NewRecord(name, apk, localInfoItem)
+	if err := ks.writeRecord(k); err != nil {
 		return nil, err
 	}
 
-	return kr, nil
+	return k, nil
 }
 
 // declare writeRecord(re Record)
-func (ks keystore) writeRecord(re *Record) error {
-	key := infoKeyBz(re.GetName())
+func (ks keystore) writeRecord(k *Record) error {
+	key := infoKeyBz(k.GetName())
 
-	serializedRecord, err := ks.cdc.Marshal(re)
+	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
 		return fmt.Errorf("Unable to serialize record, err - %s", err)
 	}
 
-	exists, err := ks.existsInDb(re)
+	exists, err := ks.existsInDb(k)
 	if err != nil {
 		return err
 	}
@@ -818,7 +792,7 @@ func (ks keystore) writeRecord(re *Record) error {
 		return err
 	}
 
-	addr, err := re.GetAddress()
+	addr, err := k.GetAddress()
 	if err != nil {
 		return fmt.Errorf("Unable to get record address, err - %s", err)
 	}
@@ -836,8 +810,8 @@ func (ks keystore) writeRecord(re *Record) error {
 
 // existsInDb returns true if key is in DB. Error is returned only when we have error
 // different thant ErrKeyNotFound
-func (ks keystore) existsInDb(re *Record) (bool, error) {
-	addr, err := re.GetAddress()
+func (ks keystore) existsInDb(k *Record) (bool, error) {
+	addr, err := k.GetAddress()
 	if err != nil {
 		return false, err
 	}
@@ -847,7 +821,7 @@ func (ks keystore) existsInDb(re *Record) (bool, error) {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(infoKey(re.GetName())); err == nil {
+	if _, err := ks.db.Get(infoKey(k.GetName())); err == nil {
 		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
@@ -864,26 +838,15 @@ func (ks keystore) writeOfflineKey(name string, pub types.PubKey) (*Record, erro
 	}
 	offlineInfo := NewOfflineInfo()
 	offlineInfoItem := NewOfflineInfoItem(offlineInfo)
-	ke := NewRecord(name, apk, offlineInfoItem)
+	k := NewRecord(name, apk, offlineInfoItem)
 
-	if err := ks.writeRecord(ke); err != nil {
+	if err := ks.writeRecord(k); err != nil {
 		return nil, err
 	}
 
-	return ke, nil
-
-	/*
-		info := NewOfflineInfo(name, pub, algo)
-		err := ks.writeRecord(info)
-		if err != nil {
-			return nil, err
-		}
-
-		return info, nil
-	*/
+	return k, nil
 }
 
-// TODO writeRecord
 // writeMultisigKey investigate where thisf function is called maybe remove it
 func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (*Record, error) {
 	apk, err := codectypes.NewAnyWithValue(pub)
@@ -893,24 +856,12 @@ func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (*Record, err
 
 	multiInfo := NewMultiInfo()
 	multiInfoItem := NewMultiInfoItem(multiInfo)
-	re := NewRecord(name, apk, multiInfoItem)
-	if err = ks.writeRecord(re); err != nil {
+	k := NewRecord(name, apk, multiInfoItem)
+	if err = ks.writeRecord(k); err != nil {
 		return nil, err
 	}
 
-	return re, nil
-
-	/*
-		info, err := NewMultiInfo(name, pub)
-		if err != nil {
-			return nil, err
-		}
-		if err = ks.writeRecord(info); err != nil {
-			return nil, err
-		}
-
-		return info, nil
-	*/
+	return k, nil
 }
 
 func (ks keystore) checkMigrate() error {
@@ -965,8 +916,8 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		}
 
 		// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
-		kr := new(Record)
-		if err := ks.cdc.Unmarshal(item.Data, kr); err == nil {
+		k := new(Record)
+		if err := ks.cdc.Unmarshal(item.Data, k); err == nil {
 			continue
 		}
 
@@ -978,19 +929,19 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		}
 			
 		//4.serialize info using proto
-		kr, err = convertFromLegacyInfo(legacyInfo)
+		k, err = convertFromLegacyInfo(legacyInfo)
 		if err != nil {
 			// return err
 			return fmt.Errorf("convertFromLegacyInfo, err - %s", err)
 		}
 
-		krBytes, err := ks.cdc.Marshal(kr)
+		serializedRecord, err := ks.cdc.Marshal(k)
 		if err != nil {
 			// return err
 			return fmt.Errorf("ks.cdc.Marshal(kr), err - %s", err)
 		}
 
-		key, err := kr.GetPubKey()
+		key, err := k.GetPubKey()
 		if err != nil {
 			//return err
 			return fmt.Errorf("kr.GetPubKey(), err - %s", err)
@@ -999,7 +950,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		//5.overwrite the keyring entry with
 		ks.db.Set(keyring.Item{
 			Key:         key.String(),
-			Data:        krBytes,
+			Data:        serializedRecord,
 			Description: "SDK kerying version",
 		})
 	}

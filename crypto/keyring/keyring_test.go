@@ -19,6 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO set proper naming k for Record 
+
 const (
 	someKey = "theKey"
 	theID   = "theID"

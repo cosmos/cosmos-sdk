@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cosmos.orm;
+package cosmos.orm.testdata;
 
 import "gogoproto/gogo.proto";
 

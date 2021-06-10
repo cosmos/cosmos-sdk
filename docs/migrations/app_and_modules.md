@@ -146,7 +146,7 @@ clientCtx, err := client.GetClientTxContext(cmd)
 
 Some other flags helper functions are transformed: `flags.PostCommands(cmds ...*cobra.Command) []*cobra.Command` and `flags.GetCommands(...)` usage is now replaced by `flags.AddTxFlagsToCmd(cmd *cobra.Command)` and `flags.AddQueryFlagsToCmd(cmd *cobra.Command)` respectively.
 
-Moreover, new CLI commands don't take any codec as input anymore. Instead, the `clientCtx` can be retrieved from the `cmd` itself using the `GetClient{Query,Tx}Context` function above, and the codec as `clientCtx.JSONCodec`.
+Moreover, new CLI commands don't take any codec as input anymore. Instead, the `clientCtx` can be retrieved from the `cmd` itself using the `GetClient{Query,Tx}Context` function above, and the codec as `clientCtx.Codec`.
 
 ```diff
 // v0.39
@@ -154,10 +154,10 @@ Moreover, new CLI commands don't take any codec as input anymore. Instead, the `
 - 	cdc.MarshalJSON(...)
 - }
 
-// v0.40
+// v0.43
 + func NewSendTxCmd() *cobra.Command {
 +	clientCtx, err := client.GetClientTxContext(cmd)
-+	clientCtx.JSONCodec.MarshalJSON(...)
++	clientCtx.Codec.MarshalJSON(...)
 +}
 ```
 

@@ -9,8 +9,6 @@
 + Follow Google developer documentation [style guide](https://developers.google.com/style).
 + Check the meaning of words in Microsoft's [A-Z word list and term collections](https://docs.microsoft.com/en-us/style-guide/a-z-word-list-term-collections/term-collections/accessibility-terms) (use the search input!).
 
-
-
 ## Technical Writing Course
 
 Google provides a free [course](https://developers.google.com/tech-writing/overview) for technical writing.

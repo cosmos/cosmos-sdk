@@ -77,6 +77,11 @@ func (ctx Context) WithInput(r io.Reader) Context {
 // Deprecated: WithJSONCodec returns a copy of the Context with an updated JSONCodec.
 func (ctx Context) WithJSONCodec(m codec.JSONCodec) Context {
 	ctx.JSONCodec = m
+	// since we are using ctx.Codec everywhere in the SDK, for backward compatibility
+	// we need to try to set it here as well.
+	if c, ok := m.(codec.Codec); ok {
+		ctx.Codec = c
+	}
 	return ctx
 }
 

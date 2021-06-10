@@ -213,13 +213,14 @@
     - [PrivKey](#cosmos.crypto.ed25519.PrivKey)
     - [PubKey](#cosmos.crypto.ed25519.PubKey)
   
+- [cosmos/crypto/hd/hd.proto](#cosmos/crypto/hd/hd.proto)
+    - [BIP44Params](#cosmos.crypto.hd.BIP44Params)
+  
 - [cosmos/crypto/keyring/types.proto](#cosmos/crypto/keyring/types.proto)
-    - [BIP44Params](#cosmos.crypto.keyring.BIP44Params)
-    - [LedgerInfo](#cosmos.crypto.keyring.LedgerInfo)
-    - [LocalInfo](#cosmos.crypto.keyring.LocalInfo)
-    - [MultiInfo](#cosmos.crypto.keyring.MultiInfo)
-    - [OfflineInfo](#cosmos.crypto.keyring.OfflineInfo)
     - [Record](#cosmos.crypto.keyring.Record)
+    - [Record.Empty](#cosmos.crypto.keyring.Record.Empty)
+    - [Record.Ledger](#cosmos.crypto.keyring.Record.Ledger)
+    - [Record.Local](#cosmos.crypto.keyring.Record.Local)
   
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
@@ -3299,14 +3300,14 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
-<a name="cosmos/crypto/keyring/types.proto"></a>
+<a name="cosmos/crypto/hd/hd.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/crypto/keyring/types.proto
+## cosmos/crypto/hd/hd.proto
 
 
 
-<a name="cosmos.crypto.keyring.BIP44Params"></a>
+<a name="cosmos.crypto.hd.BIP44Params"></a>
 
 ### BIP44Params
 
@@ -3324,55 +3325,20 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
+ <!-- end messages -->
 
-<a name="cosmos.crypto.keyring.LedgerInfo"></a>
+ <!-- end enums -->
 
-### LedgerInfo
+ <!-- end HasExtensions -->
 
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `path` | [BIP44Params](#cosmos.crypto.keyring.BIP44Params) |  |  |
+ <!-- end services -->
 
 
 
+<a name="cosmos/crypto/keyring/types.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
 
-
-
-<a name="cosmos.crypto.keyring.LocalInfo"></a>
-
-### LocalInfo
-Item is a keyring item stored in a keyring backend.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `privKey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `pubKeyType` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.crypto.keyring.MultiInfo"></a>
-
-### MultiInfo
-
-
-
-
-
-
-
-<a name="cosmos.crypto.keyring.OfflineInfo"></a>
-
-### OfflineInfo
-
-
-
-
+## cosmos/crypto/keyring/types.proto
 
 
 
@@ -3386,10 +3352,50 @@ Item is a keyring item stored in a keyring backend.
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
 | `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `local` | [LocalInfo](#cosmos.crypto.keyring.LocalInfo) |  |  |
-| `ledger` | [LedgerInfo](#cosmos.crypto.keyring.LedgerInfo) |  |  |
-| `offline` | [OfflineInfo](#cosmos.crypto.keyring.OfflineInfo) |  |  |
-| `multi` | [MultiInfo](#cosmos.crypto.keyring.MultiInfo) |  |  |
+| `local` | [Record.Local](#cosmos.crypto.keyring.Record.Local) |  |  |
+| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.Record.Ledger) |  |  |
+| `empty` | [Record.Empty](#cosmos.crypto.keyring.Record.Empty) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.Record.Empty"></a>
+
+### Record.Empty
+
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.Record.Ledger"></a>
+
+### Record.Ledger
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `path` | [cosmos.crypto.hd.BIP44Params](#cosmos.crypto.hd.BIP44Params) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.Record.Local"></a>
+
+### Record.Local
+Item is a keyring item stored in a keyring backend.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `privKey` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `pubKeyType` | [string](#string) |  |  |
 
 
 

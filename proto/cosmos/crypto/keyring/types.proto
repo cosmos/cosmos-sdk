@@ -13,24 +13,18 @@ message Record {
   google.protobuf.Any pub_key = 2;
 
   oneof item {
-    LocalInfo local = 3;
-    LedgerInfo ledger  = 4;
-    OfflineInfo offline  = 5;
-    MultiInfo multi  = 6;
+    Local local = 3;
+    Ledger ledger  = 4;
+    Empty empty  = 5;
   }
+  
+  // Item is a keyring item stored in a keyring backend.
+  message Local {
+    google.protobuf.Any privKey = 1;
+    string pubKeyType = 2;
+  }
+  message Ledger {
+    hd.BIP44Params path = 1;
+  }
+  message Empty {}
 }
-
-// Item is a keyring item stored in a keyring backend.
-message LocalInfo {
-  google.protobuf.Any privKey = 1;
-  string pubKeyType = 2;
-}
-
-message LedgerInfo {
-  hd.BIP44Params path = 1;
-}
-
-message OfflineInfo {}
-
-message MultiInfo {}
-

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package cosmos.crypto.hd;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/hd";
+option (gogoproto.goproto_getters_all) = false;
+
+message BIP44Params  {
+	uint32 purpose = 1;
+	uint32 coinType = 2;
+	uint32 account = 3;
+	bool   change = 4;
+	uint32 addressIndex = 5;
+}

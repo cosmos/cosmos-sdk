@@ -31,3 +31,15 @@ func (p Proposals) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // Deposits is a collection of Deposit objects
 type Deposits []Deposit
+
+// Implements Content Interface
+var _ types.Content = &TextProposal{}
+
+// ProposalRoute returns the proposal router key
+func (tp *TextProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType is "Text"
+func (tp *TextProposal) ProposalType() string { return types.ProposalTypeText }
+
+// ValidateBasic validates the content's title and description of the proposal
+func (tp *TextProposal) ValidateBasic() error { return types.ValidateAbstract(tp) }

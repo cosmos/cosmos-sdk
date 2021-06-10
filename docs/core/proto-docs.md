@@ -393,7 +393,6 @@
     - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
     - [Vote](#cosmos.gov.v1beta1.Vote)
     - [VotingParams](#cosmos.gov.v1beta1.VotingParams)
-    - [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption)
   
     - [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus)
     - [VoteOption](#cosmos.gov.v1beta1.VoteOption)
@@ -587,6 +586,11 @@
     - [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1.QueryUpgradedConsensusStateResponse)
   
     - [Query](#cosmos.upgrade.v1.Query)
+  
+- [cosmos/upgrade/v1beta1/upgrade.proto](#cosmos/upgrade/v1beta1/upgrade.proto)
+    - [CancelSoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal)
+    - [Plan](#cosmos.upgrade.v1beta1.Plan)
+    - [SoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.SoftwareUpgradeProposal)
   
 - [cosmos/vesting/v1beta1/tx.proto](#cosmos/vesting/v1beta1/tx.proto)
     - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
@@ -5695,22 +5699,6 @@ VotingParams defines the params for voting on governance proposals.
 
 
 
-
-<a name="cosmos.gov.v1beta1.WeightedVoteOption"></a>
-
-### WeightedVoteOption
-WeightedVoteOption defines a unit of vote for vote split.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  |  |
-| `weight` | [string](#string) |  |  |
-
-
-
-
-
  <!-- end messages -->
 
 
@@ -8314,6 +8302,76 @@ Query defines the gRPC upgrade querier service.
 | `AppliedPlan` | [QueryAppliedPlanRequest](#cosmos.upgrade.v1.QueryAppliedPlanRequest) | [QueryAppliedPlanResponse](#cosmos.upgrade.v1.QueryAppliedPlanResponse) | AppliedPlan queries a previously applied upgrade plan by its name. | GET|/cosmos/upgrade/v1/applied_plan/{name}|
 | `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier | GET|/cosmos/upgrade/v1/upgraded_consensus_state/{last_height}|
 | `ModuleVersions` | [QueryModuleVersionsRequest](#cosmos.upgrade.v1.QueryModuleVersionsRequest) | [QueryModuleVersionsResponse](#cosmos.upgrade.v1.QueryModuleVersionsResponse) | ModuleVersions queries the list of module versions from state. | GET|/cosmos/upgrade/v1/module_versions|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/upgrade/v1beta1/upgrade.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/upgrade/v1beta1/upgrade.proto
+
+
+
+<a name="cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal"></a>
+
+### CancelSoftwareUpgradeProposal
+CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
+upgrade.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.upgrade.v1beta1.Plan"></a>
+
+### Plan
+Plan specifies information about a planned upgrade and when it should occur.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  | Sets the name for the upgrade. This name will be used by the upgraded version of the software to apply any special "on-upgrade" commands during the first BeginBlock method after the upgrade is applied. It is also used to detect whether a software version can handle a given upgrade. If no upgrade handler with this name has been set in the software, it will be assumed that the software is out-of-date when the upgrade Time or Height is reached and the software will exit. |
+| `time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The time after which the upgrade must be performed. Leave set to its zero value to use a pre-defined Height instead. |
+| `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
+| `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
+| `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | IBC-enabled chains can opt-in to including the upgraded client state in its upgrade plan This will make the chain commit to the correct upgraded (self) client state before the upgrade occurs, so that connecting chains can verify that the new upgraded client is valid by verifying a proof on the previous version of the chain. This will allow IBC connections to persist smoothly across planned chain upgrades |
+
+
+
+
+
+
+<a name="cosmos.upgrade.v1beta1.SoftwareUpgradeProposal"></a>
+
+### SoftwareUpgradeProposal
+SoftwareUpgradeProposal is a gov Content type for initiating a software
+upgrade.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `plan` | [Plan](#cosmos.upgrade.v1beta1.Plan) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
 
  <!-- end services -->
 

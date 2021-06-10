@@ -24,6 +24,8 @@ func TestMigrate(t *testing.T) {
 		WithLegacyAmino(encodingConfig.Amino).
 		WithJSONCodec(encodingConfig.Marshaler)
 
+	v040gov.RegisterInterfaces(clientCtx.InterfaceRegistry)
+
 	recipient, err := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
 	require.NoError(t, err)
 	govGenState := v036gov.GenesisState{
@@ -175,7 +177,9 @@ func TestMigrate(t *testing.T) {
 				"plan": {
 					"height": "123",
 					"info": "foo_upgrade_info",
-					"name": "foo_upgrade_name"
+					"name": "foo_upgrade_name",
+					"time": "0001-01-01T00:00:00Z",
+					"upgraded_client_state": null
 				},
 				"title": "foo_software_upgrade"
 			},

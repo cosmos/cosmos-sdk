@@ -9,6 +9,8 @@ import (
 
 // Migrate migrates exported state from v0.40 to a v0.43 genesis state.
 func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
+	v040gov.RegisterInterfaces(clientCtx.InterfaceRegistry)
+
 	// Migrate x/gov.
 	if appState[v040gov.ModuleName] != nil {
 		// unmarshal relative source genesis application state

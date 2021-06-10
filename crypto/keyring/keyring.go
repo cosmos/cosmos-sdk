@@ -288,12 +288,12 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
 
-	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
+	privKey, _, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
 	if err != nil {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
 
-	_, err = ks.writeLocalKey(uid, privKey, algo)
+	_, err = ks.writeLocalKey(uid, privKey.PubKey())
 	if err != nil {
 		return err
 	}
@@ -487,7 +487,7 @@ func (ks keystore) List() ([]*Record, error) {
 		}
 
 		if len(item.Data) == 0 {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+			return nil, sdkerrors.ErrKeyNotFound.Wrap(key)
 		}
 		k := new(Record)
 		if err := ks.cdc.Unmarshal(item.Data, k); err != nil {
@@ -532,7 +532,6 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 	return k, mnemonic, nil
 }
 
-// TODO keep or remove SignatureAlgo???
 func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (*Record, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
@@ -552,8 +551,8 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	if _, err := ks.KeyByAddress(address); err == nil {
 		return nil, err
 	}
-
-	return ks.writeLocalKey(name, privKey, string(algo.Name()))
+	
+	return ks.writeLocalKey(name, privKey.PubKey())
 }
 
 func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
@@ -749,15 +748,14 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	}
 }
 
-func (ks keystore) writeLocalKey(name string, priv types.PrivKey, pubKeyType string) (*Record, error) {
+func (ks keystore) writeLocalKey(name string, pubKey types.PubKey) (*Record, error) {
 	// encrypt private key using keyring
-
-	apk, err := codectypes.NewAnyWithValue(priv.PubKey())
+	apk, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
 		return nil, err
 	}
 
-	localInfo := newLocalInfo(apk, pubKeyType)
+	localInfo := newLocalInfo(apk, pubKey.Type())
 	localInfoItem := newLocalInfoItem(localInfo)
 	k := NewRecord(name, apk, localInfoItem)
 	if err := ks.writeRecord(k); err != nil {

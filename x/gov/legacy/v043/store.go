@@ -37,7 +37,7 @@ func migrateVote(oldVote v040gov.Vote) types.Vote {
 	return types.Vote{
 		ProposalId: oldVote.ProposalId,
 		Voter:      oldVote.Voter,
-		Options:    []types.WeightedVoteOption{{Option: oldVote.Option, Weight: sdk.NewDec(1)}},
+		Options:    []types.WeightedVoteOption{{Option: types.VoteOption(oldVote.Option), Weight: sdk.NewDec(1)}},
 	}
 }
 

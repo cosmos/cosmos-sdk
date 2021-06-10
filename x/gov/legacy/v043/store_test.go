@@ -28,7 +28,7 @@ func TestMigrateStore(t *testing.T) {
 	// Use dummy value for keys where we don't test values.
 	dummyValue := []byte("foo")
 	// Use real values for votes, as we're testing weighted votes.
-	oldVote := v040gov.Vote{ProposalId: 1, Voter: "foobar", Option: types.OptionNoWithVeto}
+	oldVote := v040gov.Vote{ProposalId: 1, Voter: "foobar", Option: v040gov.OptionNoWithVeto}
 	oldVoteValue := cdc.MustMarshal(&oldVote)
 	newVote := types.Vote{ProposalId: 1, Voter: "foobar", Options: types.WeightedVoteOptions{{Option: types.OptionNoWithVeto, Weight: sdk.NewDec(1)}}}
 	newVoteValue := cdc.MustMarshal(&newVote)

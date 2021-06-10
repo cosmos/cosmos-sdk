@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
 	v043gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v043"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func TestMigrateJSON(t *testing.T) {
@@ -26,11 +25,11 @@ func TestMigrateJSON(t *testing.T) {
 	require.NoError(t, err)
 	govGenState := &v040gov.GenesisState{
 		Votes: v040gov.Votes{
-			v040gov.NewVote(1, voter, types.OptionAbstain),
-			v040gov.NewVote(2, voter, types.OptionEmpty),
-			v040gov.NewVote(3, voter, types.OptionNo),
-			v040gov.NewVote(4, voter, types.OptionNoWithVeto),
-			v040gov.NewVote(5, voter, types.OptionYes),
+			v040gov.NewVote(1, voter, v040gov.OptionAbstain),
+			v040gov.NewVote(2, voter, v040gov.OptionEmpty),
+			v040gov.NewVote(3, voter, v040gov.OptionNo),
+			v040gov.NewVote(4, voter, v040gov.OptionNoWithVeto),
+			v040gov.NewVote(5, voter, v040gov.OptionYes),
 		},
 	}
 

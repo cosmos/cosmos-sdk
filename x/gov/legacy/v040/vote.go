@@ -8,12 +8,11 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewVote creates a new Vote instance
 //nolint:interfacer
-func NewVote(proposalID uint64, voter sdk.AccAddress, option types.VoteOption) Vote {
+func NewVote(proposalID uint64, voter sdk.AccAddress, option VoteOption) Vote {
 	return Vote{proposalID, voter.String(), option}
 }
 
@@ -58,20 +57,20 @@ func (v Vote) Empty() bool {
 
 // VoteOptionFromString returns a VoteOption from a string. It returns an error
 // if the string is invalid.
-func VoteOptionFromString(str string) (types.VoteOption, error) {
-	option, ok := types.VoteOption_value[str]
+func VoteOptionFromString(str string) (VoteOption, error) {
+	option, ok := VoteOption_value[str]
 	if !ok {
-		return types.OptionEmpty, fmt.Errorf("'%s' is not a valid vote option", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option", str)
 	}
-	return types.VoteOption(option), nil
+	return VoteOption(option), nil
 }
 
 // ValidVoteOption returns true if the vote option is valid and false otherwise.
-func ValidVoteOption(option types.VoteOption) bool {
-	if option == types.OptionYes ||
-		option == types.OptionAbstain ||
-		option == types.OptionNo ||
-		option == types.OptionNoWithVeto {
+func ValidVoteOption(option VoteOption) bool {
+	if option == OptionYes ||
+		option == OptionAbstain ||
+		option == OptionNo ||
+		option == OptionNoWithVeto {
 		return true
 	}
 	return false

@@ -301,11 +301,9 @@ func (k BaseKeeper) SendCoinsFromModuleToAccountOriginalVesting(
 	}
 
 	recipientAcc := k.ak.GetAccount(ctx, recipientAddr)
-	switch recipientAcc.(type) {
-	case vestexported.DelayedVestingAccount:
-		recipientAcc = recipientAcc.(vestexported.DelayedVestingAccount).AddToOriginalVestedCoins(amt)
-		k.ak.SetAccount(ctx, recipientAcc)
-	default:
+	if dva, ok := recipientAcc.(vestexported.VestingAccount); ok {
+		dva.AddToOriginalVestedCoins(amt)
+		k.ak.SetAccount(ctx, dva)
 	}
 
 	return nil

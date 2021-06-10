@@ -32,17 +32,13 @@ type VestingAccount interface {
 	GetVestedCoins(blockTime time.Time) sdk.Coins
 	GetVestingCoins(blockTime time.Time) sdk.Coins
 
+	// Mutates vesting account in place
+	AddToOriginalVestedCoins(coins sdk.Coins)
+
 	GetStartTime() int64
 	GetEndTime() int64
 
 	GetOriginalVesting() sdk.Coins
 	GetDelegatedFree() sdk.Coins
 	GetDelegatedVesting() sdk.Coins
-}
-
-// DelayedVestingAccount defines an account type that vests coins via a delayed vesting schedule.
-type DelayedVestingAccount interface {
-	VestingAccount
-
-	AddToOriginalVestedCoins(coins sdk.Coins) DelayedVestingAccount
 }

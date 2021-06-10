@@ -304,6 +304,12 @@ func (cva ContinuousVestingAccount) Validate() error {
 	return cva.BaseVestingAccount.Validate()
 }
 
+// AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
+func (pva *ContinuousVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
+	panic("AddToOriginalVestedCoins not implemented for ContinuousVestingAccount")
+	// pva.OriginalVesting = pva.OriginalVesting.Add(coins...)
+}
+
 func (cva ContinuousVestingAccount) String() string {
 	out, _ := cva.MarshalYAML()
 	return out.(string)
@@ -416,6 +422,12 @@ func (pva PeriodicVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins 
 // vesting, nil is returned.
 func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
 	return pva.OriginalVesting.Sub(pva.GetVestedCoins(blockTime))
+}
+
+// AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
+func (pva *PeriodicVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
+	panic("AddToOriginalVestedCoins not implemented for PeriodicVestingAccount")
+	// pva.OriginalVesting = pva.OriginalVesting.Add(coins...)
 }
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked).
@@ -549,9 +561,9 @@ func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(blockTime))
 }
 
-func (dva DelayedVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) DelayedVestingAccount {
+// AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
+func (dva *DelayedVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
 	dva.OriginalVesting = dva.OriginalVesting.Add(coins...)
-	return dva
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate

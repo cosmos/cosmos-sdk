@@ -802,16 +802,17 @@ func (suite *IntegrationTestSuite) TestDelayedVestingAccountSend() {
 	app, ctx := suite.app, suite.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
+	vestTime := 24 * time.Hour
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
-	inflationCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 200))
+	addedToVestingCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 25))
 
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 	addr3 := sdk.AccAddress([]byte("addr3_______________"))
 
 	bacc := authtypes.NewBaseAccountWithAddress(addr1)
-	vacc := vesting.NewDelayedVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix()+int64(12*60*60))
+	vacc := vesting.NewDelayedVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Add(vestTime).Unix())
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins))
@@ -819,20 +820,25 @@ func (suite *IntegrationTestSuite) TestDelayedVestingAccountSend() {
 	// require that no coins be sendable at the beginning of the vesting schedule
 	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
 
-	// receive some coins
-	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, origCoins.Add(sendCoins...)))
+	// Add some coins to addr3
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr3, addedToVestingCoins))
+	// Move it to a module account
+	err := app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr3, authtypes.FeeCollectorName, addedToVestingCoins)
+	suite.Require().NoError(err)
+	// Add to original vesting
+	err = app.BankKeeper.SendCoinsFromModuleToAccountOriginalVesting(ctx, authtypes.FeeCollectorName, addr1, addedToVestingCoins)
+	suite.Require().NoError(err)
 
-	app.BankKeeper.SetBalances(ctx, addr3, inflationCoins)
-	app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr3, authtypes.FeeCollectorName, inflationCoins)
-	app.BankKeeper.SendCoinsFromModuleToAccountOriginalVesting(ctx, authtypes.FeeCollectorName, addr1, inflationCoins)
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, addedToVestingCoins))
 
-	// TODO: I think it should fail here but no fail
-	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins.Add(inflationCoins...)))
-
-	// require that all vested coins are spendable plus any received
+	// require that all delayed vested coins are still not spendable after 12 hours
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins.Add(inflationCoins...)))
-	suite.Require().Equal(origCoins, app.BankKeeper.GetAllBalances(ctx, addr1))
+	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, addedToVestingCoins))
+	// require that all delayed vested coins are spendable after > 24 hours
+	ctx = ctx.WithBlockTime(now.Add(vestTime).Add(time.Second))
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, addedToVestingCoins.Add(origCoins...)))
+	suite.Require().True(app.BankKeeper.GetAllBalances(ctx, addr1).Empty())
+	suite.Require().Equal(origCoins.Add(addedToVestingCoins...), app.BankKeeper.GetAllBalances(ctx, addr2))
 }
 
 func (suite *IntegrationTestSuite) TestVestingAccountReceive() {

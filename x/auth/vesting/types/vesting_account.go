@@ -305,9 +305,9 @@ func (cva ContinuousVestingAccount) Validate() error {
 }
 
 // AddToOriginalVestedCoins adds more coins to an account that are subject to its initial vesting schedule
-func (pva *ContinuousVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
+func (cva *ContinuousVestingAccount) AddToOriginalVestedCoins(coins sdk.Coins) {
 	panic("AddToOriginalVestedCoins not implemented for ContinuousVestingAccount")
-	// pva.OriginalVesting = pva.OriginalVesting.Add(coins...)
+	// cva.OriginalVesting = cva.OriginalVesting.Add(coins...)
 }
 
 func (cva ContinuousVestingAccount) String() string {

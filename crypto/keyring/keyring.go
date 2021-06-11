@@ -775,13 +775,15 @@ func (ks keystore) writeRecord(k *Record) error {
 	if err != nil {
 		return fmt.Errorf("Unable to serialize record, err - %s", err)
 	}
-
+ 
 	key := infoKeyBz(k.GetName())
+	fmt.Println("key", key)
 	item := keyring.Item{
-		Key:  string(key),
+		Key:  string(key),// it is fetched by VERSION_KEY in checkMigrate
 		Data: serializedRecord,
 	}
-
+	fmt.Println("item Key", item.Key)
+	fmt.Println("item Data", string(item.Data))
 	if err := ks.db.Set(item); err != nil {
 		return err
 	}
@@ -793,7 +795,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	item = keyring.Item{
 		Key:  addrHexKeyAsString(addr),
-		Data: key,
+		Data: serialized
 	}
 
 	if err := ks.db.Set(item); err != nil {
@@ -923,7 +925,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		}
 			
 		//4.serialize info using proto
-		k, err = convertFromLegacyInfo(legacyInfo)
+		k, err := convertFromLegacyInfo(legacyInfo)
 		if err != nil {
 			// return err
 			return fmt.Errorf("convertFromLegacyInfo, err - %s", err)

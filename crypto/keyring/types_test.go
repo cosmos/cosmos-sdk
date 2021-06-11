@@ -41,7 +41,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 
 	// Serialize and restore
 	encCfg := simapp.MakeTestEncodingConfig()
-	serialized, err := encCfg.Marshaler.Marshal(kr)
+	serialized, err := encCfg.Marshaler.Marshal(k)
 	require.NoError(t, err)
 	var restoredRecord keyring.Record
 	err = encCfg.Marshaler.Unmarshal(serialized, &restoredRecord)

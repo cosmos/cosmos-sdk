@@ -31,6 +31,8 @@ func init() {
 	crypto.BcryptSecurityParameter = 1
 }
 
+//TODO architect table driven tests for migration
+
 func TestNewKeyring(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
@@ -148,6 +150,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 }
 */
 
+// TODO debug the test
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()

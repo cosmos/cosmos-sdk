@@ -44,7 +44,7 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	v036params.RegisterLegacyAminoCodec(v039Codec)
 	v038upgrade.RegisterLegacyAminoCodec(v039Codec)
 
-	v040Codec := clientCtx.JSONCodec
+	v040Codec := clientCtx.Codec
 	v040gov.RegisterInterfaces(clientCtx.InterfaceRegistry)
 
 	if appState[v038bank.ModuleName] != nil {

@@ -15,14 +15,14 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	if appState[v040gov.ModuleName] != nil {
 		// unmarshal relative source genesis application state
 		var oldGovState v040gov.GenesisState
-		clientCtx.JSONCodec.MustUnmarshalJSON(appState[v040gov.ModuleName], &oldGovState)
+		clientCtx.Codec.MustUnmarshalJSON(appState[v040gov.ModuleName], &oldGovState)
 
 		// delete deprecated x/gov genesis state
 		delete(appState, v040gov.ModuleName)
 
 		// Migrate relative source genesis application state and marshal it into
 		// the respective key.
-		appState[v043gov.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(v043gov.MigrateJSON(&oldGovState))
+		appState[v043gov.ModuleName] = clientCtx.Codec.MustMarshalJSON(v043gov.MigrateJSON(&oldGovState))
 	}
 
 	return appState

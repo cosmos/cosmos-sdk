@@ -76,7 +76,6 @@ if input key is empty, or input data contains empty key.
   * via legacy `msg.Type()` (e.g. `message.action='send'`) is being deprecated, new `Msg`s won't emit these events.
   * Please use concrete `Msg` TypeURLs instead (e.g. `message.action='/cosmos.bank.v1beta1.MsgSend'`).
 * [\#9291](https://github.com/cosmos/cosmos-sdk/pull/9291) Migration scripts prior to v0.38 have been removed from the CLI `migrate` command. The oldest supported migration is v0.39->v0.42.
-* [\#9492](https://github.com/cosmos/cosmos-sdk/pull/9492) Bump `gov` and `upgrade` proto packages from `v1beta1` to `v1`. If you are using these proto files, please make sure to update the proto files locally.
 
 ### API Breaking Changes
 
@@ -128,6 +127,10 @@ if input key is empty, or input data contains empty key.
 * (store) [\#8790](https://github.com/cosmos/cosmos-sdk/pull/8790) Reduce gas costs by 10x for transient store operations.
 * (x/staking) [\#8505](https://github.com/cosmos/cosmos-sdk/pull/8505) Convert staking power reduction into an on-chain parameter rather than a hardcoded in-code variable.
 * (x/bank) [\#9051](https://github.com/cosmos/cosmos-sdk/pull/9051) Supply value is stored as `sdk.Int` rather than `string`.
+
+### Protobuf Breaking Changes
+
+* [\#9492](https://github.com/cosmos/cosmos-sdk/pull/9492) Bump `gov` and `upgrade` proto packages from `v1beta1` to `v1`. If you are using these proto files, please make sure to update the proto files locally.
 
 ### Improvements
 

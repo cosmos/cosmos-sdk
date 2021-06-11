@@ -31,7 +31,7 @@ func TestMigrateJSON(t *testing.T) {
 
 	require.True(t, migrated.Params.PowerReduction.Equal(sdk.DefaultPowerReduction))
 
-	bz, err := clientCtx.JSONCodec.MarshalJSON(migrated)
+	bz, err := clientCtx.Codec.MarshalJSON(migrated)
 	require.NoError(t, err)
 
 	// Indent the JSON bz correctly.

@@ -56,8 +56,12 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 }
 
 func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
-	paramstore.WithKeyTable(types.ParamKeyTable())
-	paramstore.Set(ctx, types.KeyPowerReduction, sdk.DefaultPowerReduction)
+	if paramstore.HasKeyTable() {
+		paramstore.Set(ctx, types.KeyPowerReduction, sdk.DefaultPowerReduction)
+	} else {
+		paramstore.WithKeyTable(types.ParamKeyTable())
+		paramstore.Set(ctx, types.KeyPowerReduction, sdk.DefaultPowerReduction)
+	}
 }
 
 // MigrateStore performs in-place store migrations from v0.40 to v0.43. The

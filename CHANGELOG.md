@@ -128,7 +128,7 @@ if input key is empty, or input data contains empty key.
 * (x/staking) [\#8505](https://github.com/cosmos/cosmos-sdk/pull/8505) Convert staking power reduction into an on-chain parameter rather than a hardcoded in-code variable.
 * (x/bank) [\#9051](https://github.com/cosmos/cosmos-sdk/pull/9051) Supply value is stored as `sdk.Int` rather than `string`.
 
-### Protobuf Breaking Changes
+### Protobuf Changes
 
 * [\#9492](https://github.com/cosmos/cosmos-sdk/pull/9492) Bump `gov` and `upgrade` proto packages from `v1beta1` to `v1`. If you are using these proto files, please make sure to update the proto files locally.
 

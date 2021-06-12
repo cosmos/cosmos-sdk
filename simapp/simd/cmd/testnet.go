@@ -275,9 +275,6 @@ func initGenFiles(
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
-	if len(appGenState[authtypes.ModuleName]) == 0 {
-		panic("nothing to unmarshal")
-	}
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
 
 	accounts, err := authtypes.PackAccounts(genAccounts)
@@ -343,7 +340,7 @@ func collectGenFiles(
 			return err
 		}
 
-		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.JSONCodec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator)
 		if err != nil {
 			return err
 		}

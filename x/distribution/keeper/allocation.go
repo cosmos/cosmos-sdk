@@ -13,7 +13,7 @@ import (
 // AllocateTokens handles distribution of the collected fees
 // bondedVotes is a list of (validator address, validator voted on last block flag) for all
 // validators in the bonded set.
-func (k Keeper) AllocateTokens(
+func (k *Keeper) AllocateTokens(
 	ctx sdk.Context, sumPreviousPrecommitPower, totalPreviousPower int64,
 	previousProposer sdk.ConsAddress, bondedVotes []abci.VoteInfo,
 ) {
@@ -102,7 +102,7 @@ func (k Keeper) AllocateTokens(
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator, splitting according to commission
-func (k Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) {
+func (k *Keeper) AllocateTokensToValidator(ctx sdk.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) {
 	// split tokens between validator and delegators according to commission
 	commission := tokens.MulDec(val.GetCommission())
 	shared := tokens.Sub(commission)

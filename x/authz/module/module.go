@@ -42,8 +42,8 @@ func (AppModuleBasic) Name() string {
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	authz.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	authz.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	authz.RegisterQueryServer(cfg.QueryServer(), &am.keeper)
+	authz.RegisterMsgServer(cfg.MsgServer(), &am.keeper)
 }
 
 // RegisterLegacyAminoCodec registers the authz module's types for the given codec.

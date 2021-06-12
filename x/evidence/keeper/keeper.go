@@ -39,7 +39,7 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
@@ -63,7 +63,7 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 
 // GetEvidenceHandler returns a registered Handler for a given Evidence type. If
 // no handler exists, an error is returned.
-func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) {
+func (k *Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) {
 	if !k.router.HasRoute(evidenceRoute) {
 		return nil, sdkerrors.Wrap(types.ErrNoEvidenceHandlerExists, evidenceRoute)
 	}
@@ -75,7 +75,7 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // the corresponding registered Evidence Handler. An error is returned if no
 // registered Handler exists or if the Handler fails. Otherwise, the evidence is
 // persisted.
-func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
+func (k *Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) error {
 	if _, ok := k.GetEvidence(ctx, evidence.Hash()); ok {
 		return sdkerrors.Wrap(types.ErrEvidenceExists, evidence.Hash().String())
 	}
@@ -100,14 +100,14 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 }
 
 // SetEvidence sets Evidence by hash in the module's KVStore.
-func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
+func (k *Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 	store.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
-func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
+func (k *Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
 	bz := store.Get(hash)
@@ -121,7 +121,7 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Ev
 // IterateEvidence provides an interator over all stored Evidence objects. For
 // each Evidence object, cb will be called. If the cb returns true, the iterator
 // will close and stop.
-func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
+func (k *Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
 
@@ -136,7 +136,7 @@ func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool
 }
 
 // GetAllEvidence returns all stored Evidence objects.
-func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.Evidence) {
+func (k *Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.Evidence) {
 	k.IterateEvidence(ctx, func(e exported.Evidence) bool {
 		evidence = append(evidence, e)
 		return false
@@ -147,7 +147,7 @@ func (k Keeper) GetAllEvidence(ctx sdk.Context) (evidence []exported.Evidence) {
 
 // MustUnmarshalEvidence attempts to decode and return an Evidence object from
 // raw encoded bytes. It panics on error.
-func (k Keeper) MustUnmarshalEvidence(bz []byte) exported.Evidence {
+func (k *Keeper) MustUnmarshalEvidence(bz []byte) exported.Evidence {
 	evidence, err := k.UnmarshalEvidence(bz)
 	if err != nil {
 		panic(fmt.Errorf("failed to decode evidence: %w", err))
@@ -158,7 +158,7 @@ func (k Keeper) MustUnmarshalEvidence(bz []byte) exported.Evidence {
 
 // MustMarshalEvidence attempts to encode an Evidence object and returns the
 // raw encoded bytes. It panics on error.
-func (k Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
+func (k *Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
 	bz, err := k.MarshalEvidence(evidence)
 	if err != nil {
 		panic(fmt.Errorf("failed to encode evidence: %w", err))
@@ -168,13 +168,13 @@ func (k Keeper) MustMarshalEvidence(evidence exported.Evidence) []byte {
 }
 
 // MarshalEvidence protobuf serializes an Evidence interface
-func (k Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
+func (k *Keeper) MarshalEvidence(evidenceI exported.Evidence) ([]byte, error) {
 	return k.cdc.MarshalInterface(evidenceI)
 }
 
 // UnmarshalEvidence returns an Evidence interface from raw encoded evidence
 // bytes of a Proto-based Evidence type
-func (k Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
+func (k *Keeper) UnmarshalEvidence(bz []byte) (exported.Evidence, error) {
 	var evi exported.Evidence
 	return evi, k.cdc.UnmarshalInterface(bz, &evi)
 }

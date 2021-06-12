@@ -9,7 +9,7 @@ import (
 )
 
 // HandleValidatorSignature handles a validator signature, must be called once per validator per block.
-func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Address, power int64, signed bool) {
+func (k *Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Address, power int64, signed bool) {
 	logger := k.Logger(ctx)
 	height := ctx.BlockHeight()
 

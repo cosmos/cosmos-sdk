@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
+func (k *Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
 	_, found := k.GetValidatorSigningInfo(ctx, address)
 	if !found {
@@ -26,7 +26,7 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 }
 
 // AfterValidatorCreated adds the address-pubkey relation when a validator is created.
-func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+func (k *Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
 	validator := k.sk.Validator(ctx, valAddr)
 	consPk, err := validator.ConsPubKey()
 	if err != nil {
@@ -38,7 +38,7 @@ func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) e
 }
 
 // AfterValidatorRemoved deletes the address-pubkey relation when a validator is removed,
-func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) {
+func (k *Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) {
 	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
 }
 
@@ -50,8 +50,8 @@ type Hooks struct {
 var _ types.StakingHooks = Hooks{}
 
 // Return the wrapper struct
-func (k Keeper) Hooks() Hooks {
-	return Hooks{k}
+func (k *Keeper) Hooks() Hooks {
+	return Hooks{*k}
 }
 
 // Implements sdk.ValidatorHooks

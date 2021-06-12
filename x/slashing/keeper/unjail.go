@@ -8,7 +8,7 @@ import (
 
 // Unjail calls the staking Unjail function to unjail a validator if the
 // jailed period has concluded
-func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
+func (k *Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 	validator := k.sk.Validator(ctx, validatorAddr)
 	if validator == nil {
 		return types.ErrNoValidatorForAddress

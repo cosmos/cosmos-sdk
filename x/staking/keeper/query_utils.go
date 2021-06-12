@@ -6,7 +6,7 @@ import (
 )
 
 // Return all validators that a delegator is bonded to. If maxRetrieve is supplied, the respective amount will be returned.
-func (k Keeper) GetDelegatorValidators(
+func (k *Keeper) GetDelegatorValidators(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, maxRetrieve uint32,
 ) types.Validators {
 	validators := make([]types.Validator, maxRetrieve)
@@ -34,7 +34,7 @@ func (k Keeper) GetDelegatorValidators(
 }
 
 // return a validator that a delegator is bonded to
-func (k Keeper) GetDelegatorValidator(
+func (k *Keeper) GetDelegatorValidator(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 ) (validator types.Validator, err error) {
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
@@ -51,7 +51,7 @@ func (k Keeper) GetDelegatorValidator(
 }
 
 // return all delegations for a delegator
-func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
+func (k *Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
 	delegations := make([]types.Delegation, 0)
 
 	store := ctx.KVStore(k.storeKey)
@@ -72,7 +72,7 @@ func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAdd
 }
 
 // return all unbonding-delegations for a delegator
-func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.UnbondingDelegation {
+func (k *Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.UnbondingDelegation {
 	unbondingDelegations := make([]types.UnbondingDelegation, 0)
 
 	store := ctx.KVStore(k.storeKey)
@@ -91,7 +91,7 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 }
 
 // return all redelegations for a delegator
-func (k Keeper) GetAllRedelegations(
+func (k *Keeper) GetAllRedelegations(
 	ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress,
 ) []types.Redelegation {
 	store := ctx.KVStore(k.storeKey)

@@ -22,7 +22,7 @@ import (
 //
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
-func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equivocation) {
+func (k *Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equivocation) {
 	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress()
 

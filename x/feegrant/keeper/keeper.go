@@ -32,12 +32,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak feegrant.Account
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", feegrant.ModuleName))
 }
 
 // GrantAllowance creates a new grant
-func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
+func (k *Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
 
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
@@ -72,7 +72,7 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 }
 
 // revokeAllowance removes an existing grant
-func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
+func (k *Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) error {
 	_, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
@@ -95,7 +95,7 @@ func (k Keeper) revokeAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress
 // GetAllowance returns the allowance between the granter and grantee.
 // If there is none, it returns nil, nil.
 // Returns an error on parsing issues
-func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
+func (k *Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (feegrant.FeeAllowanceI, error) {
 	grant, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (k Keeper) GetAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress) (
 }
 
 // getGrant returns entire grant between both accounts
-func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
+func (k *Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.AccAddress) (*feegrant.Grant, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := feegrant.FeeAllowanceKey(granter, grantee)
 	bz := store.Get(key)
@@ -124,7 +124,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 // IterateAllFeeAllowances iterates over all the grants in the store.
 // Callback to get all data, returns true to stop, false to keep reading
 // Calling this without pagination is very expensive and only designed for export genesis
-func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.Grant) bool) error {
+func (k *Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.Grant) bool) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, feegrant.FeeAllowanceKeyPrefix)
 	defer iter.Close()
@@ -144,7 +144,7 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.
 }
 
 // UseGrantedFees will try to pay the given fee from the granter's account as requested by the grantee
-func (k Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
+func (k *Keeper) UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error {
 	f, err := k.getGrant(ctx, granter, grantee)
 	if err != nil {
 		return err
@@ -190,7 +190,7 @@ func emitUseGrantEvent(ctx sdk.Context, granter, grantee string) {
 }
 
 // InitGenesis will initialize the keeper from a *previously validated* GenesisState
-func (k Keeper) InitGenesis(ctx sdk.Context, data *feegrant.GenesisState) error {
+func (k *Keeper) InitGenesis(ctx sdk.Context, data *feegrant.GenesisState) error {
 	for _, f := range data.Allowances {
 		granter, err := sdk.AccAddressFromBech32(f.Granter)
 		if err != nil {
@@ -215,7 +215,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *feegrant.GenesisState) error 
 }
 
 // ExportGenesis will dump the contents of the keeper into a serializable GenesisState.
-func (k Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
+func (k *Keeper) ExportGenesis(ctx sdk.Context) (*feegrant.GenesisState, error) {
 	var grants []feegrant.Grant
 
 	err := k.IterateAllFeeAllowances(ctx, func(grant feegrant.Grant) bool {

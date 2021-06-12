@@ -14,7 +14,7 @@ type Hooks struct {
 var _ stakingtypes.StakingHooks = Hooks{}
 
 // Create new distribution hooks
-func (k Keeper) Hooks() Hooks { return Hooks{k} }
+func (k *Keeper) Hooks() Hooks { return Hooks{*k} }
 
 // initialize validator distribution record
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {

@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
-var _ types.MsgServer = Keeper{}
+var _ types.MsgServer = &Keeper{}
 
-func (k Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvariant) (*types.MsgVerifyInvariantResponse, error) {
+func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvariant) (*types.MsgVerifyInvariantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
 

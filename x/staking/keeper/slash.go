@@ -21,7 +21,7 @@ import (
 // CONTRACT:
 //    Infraction was committed at the current height or at a past height,
 //    not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
+func (k *Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -143,7 +143,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 }
 
 // jail a validator
-func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
+func (k *Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.jailValidator(ctx, validator)
 	logger := k.Logger(ctx)
@@ -151,7 +151,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 }
 
 // unjail a validator
-func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
+func (k *Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.unjailValidator(ctx, validator)
 	logger := k.Logger(ctx)
@@ -163,7 +163,7 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
-func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
+func (k *Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()
@@ -216,7 +216,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
+func (k *Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
 	totalSlashAmount = sdk.ZeroInt()

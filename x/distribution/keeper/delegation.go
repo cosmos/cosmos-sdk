@@ -10,7 +10,7 @@ import (
 )
 
 // initialize starting info for a new delegation
-func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
+func (k *Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
 	// period has already been incremented - we want to store the period ended by this delegation action
 	previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
 
@@ -28,7 +28,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 }
 
 // calculate the rewards accrued by a delegation between two periods
-func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingtypes.ValidatorI,
+func (k *Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingtypes.ValidatorI,
 	startingPeriod, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins) {
 	// sanity check
 	if startingPeriod > endingPeriod {
@@ -53,7 +53,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val stakingty
 }
 
 // calculate the total rewards accrued by a delegation
-func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
+func (k *Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI, endingPeriod uint64) (rewards sdk.DecCoins) {
 	// fetch starting info for delegation
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 
@@ -136,7 +136,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 	return rewards
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
+func (k *Keeper) withdrawDelegationRewards(ctx sdk.Context, val stakingtypes.ValidatorI, del stakingtypes.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
 		return nil, types.ErrEmptyDelegationDistInfo

@@ -32,12 +32,12 @@ func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryCodec, router *baseapp.Msg
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", authz.ModuleName))
 }
 
 // getGrant returns grant stored at skey.
-func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
+func (k *Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(skey)
 	if bz == nil {
@@ -47,7 +47,7 @@ func (k Keeper) getGrant(ctx sdk.Context, skey []byte) (grant authz.Grant, found
 	return grant, true
 }
 
-func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated authz.Authorization) error {
+func (k *Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated authz.Authorization) error {
 	skey := grantStoreKey(grantee, granter, updated.MsgTypeURL())
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
@@ -72,7 +72,7 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 
 // DispatchActions attempts to execute the provided messages via authorization
 // grants from the message signer to the grantee.
-func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
+func (k *Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) (*sdk.Result, error) {
 	var msgResult *sdk.Result
 	var err error
 	for _, msg := range msgs {
@@ -121,7 +121,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 // SaveGrant method grants the provided authorization to the grantee on the granter's account
 // with the provided expiration time. If there is an existing authorization grant for the
 // same `sdk.Msg` type, this grant overwrites that.
-func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
+func (k *Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, authorization authz.Authorization, expiration time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
 	grant, err := authz.NewGrant(authorization, expiration)
@@ -141,7 +141,7 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 
 // DeleteGrant revokes any authorization for the provided message type granted to the grantee
 // by the granter.
-func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
+func (k *Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) error {
 	store := ctx.KVStore(k.storeKey)
 	skey := grantStoreKey(grantee, granter, msgType)
 	_, found := k.getGrant(ctx, skey)
@@ -157,7 +157,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 }
 
 // GetAuthorizations Returns list of `Authorizations` granted to the grantee by the granter.
-func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) (authorizations []authz.Authorization) {
+func (k *Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) (authorizations []authz.Authorization) {
 	store := ctx.KVStore(k.storeKey)
 	key := grantStoreKey(grantee, granter, "")
 	iter := sdk.KVStorePrefixIterator(store, key)
@@ -173,7 +173,7 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 // GetCleanAuthorization returns an `Authorization` and it's expiration time for
 // (grantee, granter, message name) grant. If there is no grant `nil` is returned.
 // If the grant is expired, the grant is revoked, removed from the storage, and `nil` is returned.
-func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap authz.Authorization, expiration time.Time) {
+func (k *Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (cap authz.Authorization, expiration time.Time) {
 	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
 	if !found {
 		return nil, time.Time{}
@@ -189,7 +189,7 @@ func (k Keeper) GetCleanAuthorization(ctx sdk.Context, grantee sdk.AccAddress, g
 // IterateGrants iterates over all authorization grants
 // This function should be used with caution because it can involve significant IO operations.
 // It should not be used in query or msg services without charging additional gas.
-func (k Keeper) IterateGrants(ctx sdk.Context,
+func (k *Keeper) IterateGrants(ctx sdk.Context,
 	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, GrantKey)
@@ -205,7 +205,7 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
+func (k *Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 	var entries []authz.GrantAuthorization
 	k.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		exp := grant.Expiration
@@ -222,7 +222,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *authz.GenesisState {
 }
 
 // InitGenesis new authz genesis
-func (k Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
+func (k *Keeper) InitGenesis(ctx sdk.Context, data *authz.GenesisState) {
 	for _, entry := range data.Authorization {
 		grantee, err := sdk.AccAddressFromBech32(entry.Grantee)
 		if err != nil {

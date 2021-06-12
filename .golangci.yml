@@ -35,7 +35,7 @@ linters:
     - unparam
     - misspell
     # - wsl
-    - nolintlint
+    # - nolintlint
 
 issues:
   exclude-rules:

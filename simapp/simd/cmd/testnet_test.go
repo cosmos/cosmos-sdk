@@ -9,11 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authz "github.com/cosmos/cosmos-sdk/x/authz/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/viper"
@@ -21,17 +17,14 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
-var testMbm = module.NewBasicManager(genutil.AppModuleBasic{}, auth.AppModuleBasic{}, authz.AppModuleBasic{})
-
 func Test_TestnetCmd(t *testing.T) {
 	home := t.TempDir()
-	fmt.Println(home)
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 	require.NoError(t, err)
 
-	err = genutiltest.ExecInitCmd(testMbm, home, encodingConfig.Marshaler)
+	err = genutiltest.ExecInitCmd(simapp.ModuleBasics, home, encodingConfig.Marshaler)
 	require.NoError(t, err)
 
 	serverCtx := server.NewContext(viper.New(), cfg, logger)

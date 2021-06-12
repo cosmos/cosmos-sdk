@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 )
 
-func ExecGrantAuthorization(val *network.Validator, args []string) (testutil.BufferWriter, error) {
+func ExecGrant(val *network.Validator, args []string) (testutil.BufferWriter, error) {
 	cmd := cli.NewCmdGrantAuthorization()
 	clientCtx := val.ClientCtx
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)

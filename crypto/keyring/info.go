@@ -179,7 +179,7 @@ func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
 
 // Deprecated: this structure is not used anymore and it's here only to allow
 // decoding old multiInfo records from keyring.
-// The problem with legacy.Cdc.UnmarshalBinaryLengthPrefixed - the legacy codec doesn't
+// The problem with legacy.Cdc.UnmarshalLengthPrefixed - the legacy codec doesn't
 // tolerate extensibility.
 type multisigPubKeyInfo struct {
 	PubKey cryptotypes.PubKey `json:"pubkey"`
@@ -244,12 +244,12 @@ func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // encoding info
 func marshalInfo(i Info) []byte {
-	return legacy.Cdc.MustMarshalBinaryLengthPrefixed(i)
+	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }
 
 // decoding info
 func unmarshalInfo(bz []byte) (info Info, err error) {
-	err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 	_, ok := info.(multiInfo)
 	if ok {
 		var multi multiInfo
-		err = legacy.Cdc.UnmarshalBinaryLengthPrefixed(bz, &multi)
+		err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &multi)
 
 		return multi, err
 	}

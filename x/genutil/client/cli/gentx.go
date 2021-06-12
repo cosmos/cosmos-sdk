@@ -61,7 +61,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return err
 			}
-			cdc := clientCtx.JSONMarshaler
+			cdc := clientCtx.Codec
 
 			config := serverCtx.Config
 			config.SetRoot(clientCtx.HomeDir)
@@ -78,7 +78,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 
 			// read --pubkey, if empty take it from priv_validator.json
 			if val, _ := cmd.Flags().GetString(cli.FlagPubKey); val != "" {
-				err = clientCtx.JSONMarshaler.UnmarshalJSON([]byte(val), valPubKey)
+				err = clientCtx.Codec.UnmarshalJSON([]byte(val), valPubKey)
 				if err != nil {
 					return errors.Wrap(err, "failed to unmarshal consensus node public key")
 				}

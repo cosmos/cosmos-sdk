@@ -41,7 +41,7 @@ func TestContext_PrintObject(t *testing.T) {
 	// proto
 	//
 	registry := testdata.NewTestInterfaceRegistry()
-	ctx = ctx.WithJSONMarshaler(codec.NewProtoCodec(registry))
+	ctx = ctx.WithCodec(codec.NewProtoCodec(registry))
 
 	// json
 	buf := &bytes.Buffer{}

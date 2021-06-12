@@ -57,6 +57,7 @@ third-party modules.
 As a starting point, we should adopt all of the [DEFAULT](https://buf.build/docs/lint-checkers#default)
 checkers in [Buf's](https://buf.build) including [`PACKAGE_DIRECTORY_MATCH`](https://buf.build/docs/lint-checkers#file_layout),
 except:
+
 * [PACKAGE_VERSION_SUFFIX](https://buf.build/docs/lint-checkers#package_version_suffix)
 * [SERVICE_SUFFIX](https://buf.build/docs/lint-checkers#service_suffix)
 
@@ -118,6 +119,7 @@ to prevent such breakage.
 With that in mind, different stable versions (i.e. `v1` or `v2`) of a package should more or less be considered
 different packages and this should be last resort approach for upgrading protobuf schemas. Scenarios where creating
 a `v2` may make sense are:
+
 * we want to create a new module with similar functionality to an existing module and adding `v2` is the most natural
 way to do this. In that case, there are really just two different, but similar modules with different APIs.
 * we want to add a new revamped API for an existing module and it's just too cumbersome to add it to the existing package,
@@ -127,11 +129,12 @@ so putting it in `v2` is cleaner for users. In this case, care should be made to
 #### Guidelines on unstable (alpha and beta) package versions
 
 The following guidelines are recommended for marking packages as alpha or beta:
+
 * marking something as `alpha` or `beta` should be a last resort and just putting something in the
 stable package (i.e. `v1` or `v2`) should be preferred
 * a package *should* be marked as `alpha` *if and only if* there are active discussions to remove
 or significantly alter the package in the near future
-* a package *should* be marked as `beta` *if and only if* there is an active discussion to 
+* a package *should* be marked as `beta` *if and only if* there is an active discussion to
 significantly refactor/rework the functionality in the near future but not remove it
 * modules *can and should* have types in both stable (i.e. `v1` or `v2`) and unstable (`alpha` or `beta`) packages.
 
@@ -140,6 +143,7 @@ Whenever code is released into the wild, especially on a blockchain, there is a 
 cases, for instance with immutable smart contracts, a breaking change may be impossible to fix.
 
 When marking something as `alpha` or `beta`, maintainers should ask the questions:
+
 * what is the cost of asking others to change their code vs the benefit of us maintaining the optionality to change it?
 * what is the plan for moving this to `v1` and how will that affect users?
 
@@ -151,6 +155,7 @@ and so if they actually went and changed the package to `grpc.reflection.v1`, so
 they probably don't want to do that... So now the `v1alpha` package is more or less the de-facto `v1`. Let's not do that.
 
 The following are guidelines for working with non-stable packages:
+
 * [Buf's recommended version suffix](https://buf.build/docs/lint-checkers#package_version_suffix)
 (ex. `v1alpha1`) _should_ be used for non-stable packages
 * non-stable packages should generally be excluded from breaking change detection

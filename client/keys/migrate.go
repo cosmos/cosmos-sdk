@@ -89,7 +89,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(oldKeys) == 0 {
-		cmd.Print("Migration Aborted: no keys to migrate")
+		cmd.PrintErrln("Migration Aborted: no keys to migrate")
 		return nil
 	}
 

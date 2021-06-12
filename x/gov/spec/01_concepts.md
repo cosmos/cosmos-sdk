@@ -14,9 +14,9 @@ The governance process is divided in a few steps that are outlined below:
   confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
 - If the proposal involves a software upgrade:
-  - **Signal:** Validators start signaling that they are ready to switch to the
+    - **Signal:** Validators start signaling that they are ready to switch to the
     new version.
-  - **Switch:** Once more than 75% of validators have signaled that they are
+    - **Switch:** Once more than 75% of validators have signaled that they are
     ready to switch, their software automatically flips to the new version.
 
 ## Proposal submission
@@ -43,8 +43,8 @@ proposals:
   `SoftwareUpgradeProposals`.
 - `CommunityPoolSpendProposal` details a proposal for use of community funds,
   together with how many coins are proposed to be spent, and to which recipient account.
-- `ParameterChangeProposal` defines a proposal to change one or 
-  more parameters. If accepted, the requested parameter change is updated 
+- `ParameterChangeProposal` defines a proposal to change one or
+  more parameters. If accepted, the requested parameter change is updated
   automatically by the proposal handler upon conclusion of the voting period.
 - `CancelSoftwareUpgradeProposal` is a gov Content type for cancelling a software upgrade.
 
@@ -117,6 +117,20 @@ proposal but accept the result of the vote.
 
 _Note: from the UI, for urgent proposals we should maybe add a ‘Not Urgent’
 option that casts a `NoWithVeto` vote._
+
+### Weighted Votes
+
+[ADR-037](../../../docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
+
+Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+
+To represent weighted vote on chain, we use the following Protobuf message.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L32-L40
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L126-L137
+
+For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
 ### Quorum
 

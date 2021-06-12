@@ -5,6 +5,7 @@ This directory contains the files required to run the rosetta CI. It builds `sim
 ## docker-compose.yaml
 
 Builds:
+
 - cosmos-sdk simapp node, with prefixed data directory, keys etc. This is required to test historical balances.
 - faucet is required so we can test construction API, it was literally impossible to put there a deterministic address to request funds for
 - rosetta is the rosetta node used by rosetta-cli to interact with the cosmos-sdk app

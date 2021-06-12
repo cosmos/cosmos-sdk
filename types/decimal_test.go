@@ -29,7 +29,7 @@ func (s *decimalTestSuite) mustNewDecFromStr(str string) (d sdk.Dec) {
 	return d
 }
 
-// _______________________________________
+// ______________________________________
 
 func (s *decimalTestSuite) TestNewDecFromStr() {
 	largeBigInt, success := new(big.Int).SetString("3144605511029693144278234343371835", 10)

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// _______________________________________________________________________
+// ______________________________________________________________________
 // Validator Set
 
 // iterate through the validator set and perform the provided function
@@ -96,7 +96,11 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) types
 	return val
 }
 
+<<<<<<< HEAD
 // _______________________________________________________________________
+=======
+// ______________________________________________________________________
+>>>>>>> Fix silly lints
 // Delegation Set
 
 // Returns self as it is both a validatorset and delegationset

@@ -88,7 +88,7 @@ func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 }
 
-// ____________________________________________________________________________
+// ___________________________________________________________________________
 
 // AppModule implements an application module for the distribution module.
 type AppModule struct {
@@ -172,7 +172,7 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 	return []abci.ValidatorUpdate{}
 }
 
-// ____________________________________________________________________________
+// ___________________________________________________________________________
 
 // AppModuleSimulation functions
 

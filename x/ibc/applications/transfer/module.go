@@ -154,7 +154,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.V
 	return []abci.ValidatorUpdate{}
 }
 
-// ____________________________________________________________________________
+// ___________________________________________________________________________
 
 // AppModuleSimulation functions
 
@@ -183,7 +183,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 	return nil
 }
 
-// ____________________________________________________________________________
+// ___________________________________________________________________________
 
 // ValidateTransferChannelParams does validation of a newly created transfer channel. A transfer
 // channel must be UNORDERED, use the correct port (by default 'transfer'), and use the current

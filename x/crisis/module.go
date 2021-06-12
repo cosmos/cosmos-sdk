@@ -80,7 +80,7 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 }
 
-// ____________________________________________________________________________
+// ___________________________________________________________________________
 
 // AppModule implements an application module for the crisis module.
 type AppModule struct {

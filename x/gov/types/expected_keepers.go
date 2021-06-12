@@ -50,7 +50,7 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 }
 
-//_______________________________________________________________________________
+// ______________________________________________________________________________
 // Event Hooks
 // These can be utilized to communicate between a governance keeper and another
 // keepers.

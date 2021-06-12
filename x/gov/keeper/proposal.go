@@ -10,7 +10,7 @@ import (
 )
 
 // SubmitProposal create new proposal given a content
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, error) {
+func (keeper *Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, error) {
 	if !keeper.router.HasRoute(content.ProposalRoute()) {
 		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
@@ -55,7 +55,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 }
 
 // GetProposal get proposal from store by ProposalID
-func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Proposal, bool) {
+func (keeper *Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Proposal, bool) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	bz := store.Get(types.ProposalKey(proposalID))
@@ -70,7 +70,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 }
 
 // SetProposal set a proposal to store
-func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
+func (keeper *Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	bz := keeper.MustMarshalProposal(proposal)
@@ -79,7 +79,7 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 }
 
 // DeleteProposal deletes a proposal from store
-func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
+func (keeper *Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
@@ -91,7 +91,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 }
 
 // IterateProposals iterates over the all the proposals and performs a callback function
-func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper *Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
@@ -111,7 +111,7 @@ func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Pr
 }
 
 // GetProposals returns all the proposals from store
-func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
+func (keeper *Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 	keeper.IterateProposals(ctx, func(proposal types.Proposal) bool {
 		proposals = append(proposals, proposal)
 		return false
@@ -128,7 +128,7 @@ func (keeper Keeper) GetProposals(ctx sdk.Context) (proposals types.Proposals) {
 //
 // NOTE: If no filters are provided, all proposals will be returned in paginated
 // form.
-func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {
+func (keeper *Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryProposalsParams) types.Proposals {
 	proposals := keeper.GetProposals(ctx)
 	filteredProposals := make([]types.Proposal, 0, len(proposals))
 
@@ -166,7 +166,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 }
 
 // GetProposalID gets the highest proposal ID
-func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
+func (keeper *Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.ProposalIDKey)
 	if bz == nil {
@@ -178,12 +178,12 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err erro
 }
 
 // SetProposalID sets the new proposal ID to the store
-func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
+func (keeper *Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
-func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
+func (keeper *Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Proposal) {
 	proposal.VotingStartTime = ctx.BlockHeader().Time
 	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
 	proposal.VotingEndTime = proposal.VotingStartTime.Add(votingPeriod)
@@ -194,7 +194,7 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal types.Propos
 	keeper.InsertActiveProposalQueue(ctx, proposal.ProposalId, proposal.VotingEndTime)
 }
 
-func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
+func (keeper *Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
 	bz, err := keeper.cdc.Marshal(&proposal)
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func (keeper Keeper) MarshalProposal(proposal types.Proposal) ([]byte, error) {
 	return bz, nil
 }
 
-func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) error {
+func (keeper *Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) error {
 	err := keeper.cdc.Unmarshal(bz, proposal)
 	if err != nil {
 		return err
@@ -210,7 +210,7 @@ func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *types.Proposal) erro
 	return nil
 }
 
-func (keeper Keeper) MustMarshalProposal(proposal types.Proposal) []byte {
+func (keeper *Keeper) MustMarshalProposal(proposal types.Proposal) []byte {
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
 		panic(err)
@@ -218,7 +218,7 @@ func (keeper Keeper) MustMarshalProposal(proposal types.Proposal) []byte {
 	return bz
 }
 
-func (keeper Keeper) MustUnmarshalProposal(bz []byte, proposal *types.Proposal) {
+func (keeper *Keeper) MustUnmarshalProposal(bz []byte, proposal *types.Proposal) {
 	err := keeper.UnmarshalProposal(bz, proposal)
 	if err != nil {
 		panic(err)

@@ -30,12 +30,12 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey 
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+proposal.ModuleName)
 }
 
 // Allocate subspace used for keepers
-func (k Keeper) Subspace(s string) types.Subspace {
+func (k *Keeper) Subspace(s string) types.Subspace {
 	_, ok := k.spaces[s]
 	if ok {
 		panic("subspace already occupied")
@@ -52,7 +52,7 @@ func (k Keeper) Subspace(s string) types.Subspace {
 }
 
 // Get existing substore from keeper
-func (k Keeper) GetSubspace(s string) (types.Subspace, bool) {
+func (k *Keeper) GetSubspace(s string) (types.Subspace, bool) {
 	space, ok := k.spaces[s]
 	if !ok {
 		return types.Subspace{}, false

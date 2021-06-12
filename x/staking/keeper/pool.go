@@ -7,17 +7,17 @@ import (
 )
 
 // GetBondedPool returns the bonded tokens pool's module account
-func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool authtypes.ModuleAccountI) {
+func (k *Keeper) GetBondedPool(ctx sdk.Context) (bondedPool authtypes.ModuleAccountI) {
 	return k.authKeeper.GetModuleAccount(ctx, types.BondedPoolName)
 }
 
 // GetNotBondedPool returns the not bonded tokens pool's module account
-func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authtypes.ModuleAccountI) {
+func (k *Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authtypes.ModuleAccountI) {
 	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 
 // bondedTokensToNotBonded transfers coins from the bonded to the not bonded pool within staking
-func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, tokens sdk.Int) {
+func (k *Keeper) bondedTokensToNotBonded(ctx sdk.Context, tokens sdk.Int) {
 	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, types.NotBondedPoolName, coins); err != nil {
 		panic(err)
@@ -25,7 +25,7 @@ func (k Keeper) bondedTokensToNotBonded(ctx sdk.Context, tokens sdk.Int) {
 }
 
 // notBondedTokensToBonded transfers coins from the not bonded to the bonded pool within staking
-func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, tokens sdk.Int) {
+func (k *Keeper) notBondedTokensToBonded(ctx sdk.Context, tokens sdk.Int) {
 	coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), tokens))
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, types.BondedPoolName, coins); err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func (k Keeper) notBondedTokensToBonded(ctx sdk.Context, tokens sdk.Int) {
 }
 
 // burnBondedTokens removes coins from the bonded pool module account
-func (k Keeper) burnBondedTokens(ctx sdk.Context, amt sdk.Int) error {
+func (k *Keeper) burnBondedTokens(ctx sdk.Context, amt sdk.Int) error {
 	if !amt.IsPositive() {
 		// skip as no coins need to be burned
 		return nil
@@ -45,7 +45,7 @@ func (k Keeper) burnBondedTokens(ctx sdk.Context, amt sdk.Int) error {
 }
 
 // burnNotBondedTokens removes coins from the not bonded pool module account
-func (k Keeper) burnNotBondedTokens(ctx sdk.Context, amt sdk.Int) error {
+func (k *Keeper) burnNotBondedTokens(ctx sdk.Context, amt sdk.Int) error {
 	if !amt.IsPositive() {
 		// skip as no coins need to be burned
 		return nil
@@ -57,18 +57,18 @@ func (k Keeper) burnNotBondedTokens(ctx sdk.Context, amt sdk.Int) error {
 }
 
 // TotalBondedTokens total staking tokens supply which is bonded
-func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
+func (k *Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 	bondedPool := k.GetBondedPool(ctx)
 	return k.bankKeeper.GetBalance(ctx, bondedPool.GetAddress(), k.BondDenom(ctx)).Amount
 }
 
 // StakingTokenSupply staking tokens from the total supply
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
+func (k *Keeper) StakingTokenSupply(ctx sdk.Context) sdk.Int {
 	return k.bankKeeper.GetSupply(ctx, k.BondDenom(ctx)).Amount
 }
 
 // BondedRatio the fraction of the staking tokens which are currently bonded
-func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
+func (k *Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 	stakeSupply := k.StakingTokenSupply(ctx)
 	if stakeSupply.IsPositive() {
 		return k.TotalBondedTokens(ctx).ToDec().QuoInt(stakeSupply)

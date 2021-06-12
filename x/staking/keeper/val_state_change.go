@@ -14,7 +14,7 @@ import (
 
 // BlockValidatorUpdates calculates the ValidatorUpdates for the current block
 // Called in each EndBlock
-func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
+func (k *Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -109,7 +109,7 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
-func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate, err error) {
+func (k *Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate, err error) {
 	params := k.GetParams(ctx)
 	maxValidators := params.MaxValidators
 	powerReduction := params.PowerReduction
@@ -227,7 +227,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 // Validator state transitions
 
-func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k *Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsBonded() {
 		panic(fmt.Sprintf("bad state transition bondedToUnbonding, validator: %v\n", validator))
 	}
@@ -235,7 +235,7 @@ func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) (t
 	return k.beginUnbondingValidator(ctx, validator)
 }
 
-func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k *Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonding() {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
@@ -243,7 +243,7 @@ func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) (t
 	return k.bondValidator(ctx, validator)
 }
 
-func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k *Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	if !validator.IsUnbonded() {
 		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
 	}
@@ -252,7 +252,7 @@ func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) (ty
 }
 
 // UnbondingToUnbonded switches a validator from unbonding state to unbonded state
-func (k Keeper) UnbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k *Keeper) UnbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
 	if !validator.IsUnbonding() {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
@@ -261,7 +261,7 @@ func (k Keeper) UnbondingToUnbonded(ctx sdk.Context, validator types.Validator) 
 }
 
 // send a validator to jail
-func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
+func (k *Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
 	if validator.Jailed {
 		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
 	}
@@ -272,7 +272,7 @@ func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // remove a validator from jail
-func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
+func (k *Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 	if !validator.Jailed {
 		panic(fmt.Sprintf("cannot unjail already unjailed validator, validator: %v\n", validator))
 	}
@@ -283,7 +283,7 @@ func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // perform all the store operations for when a validator status becomes bonded
-func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k *Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	// delete the validator by power index, as the key will change
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
@@ -307,7 +307,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 }
 
 // perform all the store operations for when a validator begins unbonding
-func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
+func (k *Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	params := k.GetParams(ctx)
 
 	// delete the validator by power index, as the key will change
@@ -342,7 +342,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 }
 
 // perform all the store operations for when a validator status becomes unbonded
-func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k *Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	validator = validator.UpdateStatus(types.Unbonded)
 	k.SetValidator(ctx, validator)
 
@@ -354,7 +354,7 @@ func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Vali
 type validatorsByAddr map[string][]byte
 
 // get the last validator set
-func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) (validatorsByAddr, error) {
+func (k *Keeper) getLastValidatorsByAddr(ctx sdk.Context) (validatorsByAddr, error) {
 	last := make(validatorsByAddr)
 
 	iterator := k.LastValidatorsIterator(ctx)

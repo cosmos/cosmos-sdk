@@ -9,7 +9,7 @@ import (
 )
 
 // GetDeposit gets the deposit of a specific depositor on a specific proposal
-func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit types.Deposit, found bool) {
+func (keeper *Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(types.DepositKey(proposalID, depositorAddr))
 	if bz == nil {
@@ -22,7 +22,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 }
 
 // SetDeposit sets a Deposit to the gov store
-func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
+func (keeper *Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&deposit)
 	depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
@@ -34,7 +34,7 @@ func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit types.Deposit) {
 }
 
 // GetAllDeposits returns all the deposits from the store
-func (keeper Keeper) GetAllDeposits(ctx sdk.Context) (deposits types.Deposits) {
+func (keeper *Keeper) GetAllDeposits(ctx sdk.Context) (deposits types.Deposits) {
 	keeper.IterateAllDeposits(ctx, func(deposit types.Deposit) bool {
 		deposits = append(deposits, deposit)
 		return false
@@ -44,7 +44,7 @@ func (keeper Keeper) GetAllDeposits(ctx sdk.Context) (deposits types.Deposits) {
 }
 
 // GetDeposits returns all the deposits from a proposal
-func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits types.Deposits) {
+func (keeper *Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits types.Deposits) {
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
 		deposits = append(deposits, deposit)
 		return false
@@ -54,7 +54,7 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits t
 }
 
 // DeleteDeposits deletes all the deposits on a specific proposal without refunding them
-func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
+func (keeper *Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
@@ -73,7 +73,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 }
 
 // IterateAllDeposits iterates over the all the stored deposits and performs a callback function
-func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.Deposit) (stop bool)) {
+func (keeper *Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
 
@@ -91,7 +91,7 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit types.D
 }
 
 // IterateDeposits iterates over the all the proposals deposits and performs a callback function
-func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit types.Deposit) (stop bool)) {
+func (keeper *Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit types.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
 
@@ -110,7 +110,7 @@ func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func
 
 // AddDeposit adds or updates a deposit of a specific depositor on a specific proposal
 // Activates voting period when appropriate
-func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
+func (keeper *Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
 	// Checks to see if proposal exists
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
@@ -167,7 +167,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 }
 
 // RefundDeposits refunds and deletes all the deposits on a specific proposal
-func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
+func (keeper *Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {

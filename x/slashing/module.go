@@ -138,7 +138,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), &am.keeper)
 
 	m := keeper.NewMigrator(am.keeper)
 	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
@@ -149,7 +149,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.keeper, am.stakingKeeper, &genesisState)
+	InitGenesis(ctx, am.keeper, &am.stakingKeeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

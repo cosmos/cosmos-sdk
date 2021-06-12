@@ -120,7 +120,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the crisis module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(RouterKey, NewHandler(*am.keeper))
+	return sdk.NewRoute(RouterKey, NewHandler(am.keeper))
 }
 
 // QuerierRoute returns no querier route.

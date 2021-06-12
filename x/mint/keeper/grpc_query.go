@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
 // Params returns params of the mint module.
-func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k *Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
@@ -18,7 +18,7 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 }
 
 // Inflation returns minter.Inflation of the mint module.
-func (k Keeper) Inflation(c context.Context, _ *types.QueryInflationRequest) (*types.QueryInflationResponse, error) {
+func (k *Keeper) Inflation(c context.Context, _ *types.QueryInflationRequest) (*types.QueryInflationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	minter := k.GetMinter(ctx)
 
@@ -26,7 +26,7 @@ func (k Keeper) Inflation(c context.Context, _ *types.QueryInflationRequest) (*t
 }
 
 // AnnualProvisions returns minter.AnnualProvisions of the mint module.
-func (k Keeper) AnnualProvisions(c context.Context, _ *types.QueryAnnualProvisionsRequest) (*types.QueryAnnualProvisionsResponse, error) {
+func (k *Keeper) AnnualProvisions(c context.Context, _ *types.QueryAnnualProvisionsRequest) (*types.QueryAnnualProvisionsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	minter := k.GetMinter(ctx)
 

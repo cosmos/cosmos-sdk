@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
 // Proposal returns proposal details based on ProposalID
 func (q Keeper) Proposal(c context.Context, req *types.QueryProposalRequest) (*types.QueryProposalResponse, error) {

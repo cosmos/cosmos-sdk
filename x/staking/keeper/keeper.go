@@ -12,10 +12,10 @@ import (
 )
 
 // Implements ValidatorSet interface
-var _ types.ValidatorSet = Keeper{}
+var _ types.ValidatorSet = &Keeper{}
 
 // Implements DelegationSet interface
-var _ types.DelegationSet = Keeper{}
+var _ types.DelegationSet = &Keeper{}
 
 // keeper of the staking store
 type Keeper struct {
@@ -57,7 +57,7 @@ func NewKeeper(
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
@@ -73,7 +73,7 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 }
 
 // Load the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
+func (k *Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
 
@@ -88,7 +88,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 }
 
 // Set the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
+func (k *Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)

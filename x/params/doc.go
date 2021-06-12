@@ -85,21 +85,21 @@ Now we have access to the module's parameters that are namespaced using the keys
 		k.SetParams(ctx, gs.Params)
 	}
 
-	func (k Keeper) SetParams(ctx sdk.Context, params Params) {
+	func (k *Keeper) SetParams(ctx sdk.Context, params Params) {
 		k.paramSpace.SetParamSet(ctx, &params)
 	}
 
-	func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
+	func (k *Keeper) GetParams(ctx sdk.Context) (params Params) {
 		k.paramSpace.GetParamSet(ctx, &params)
 		return params
 	}
 
-	func (k Keeper) MyParam1(ctx sdk.Context) (res int64) {
+	func (k *Keeper) MyParam1(ctx sdk.Context) (res int64) {
 		k.paramSpace.Get(ctx, KeyParameter1, &res)
 		return res
 	}
 
-	func (k Keeper) MyParam2(ctx sdk.Context) (res bool) {
+	func (k *Keeper) MyParam2(ctx sdk.Context) (res bool) {
 		k.paramSpace.Get(ctx, KeyParameter2, &res)
 		return res
 	}

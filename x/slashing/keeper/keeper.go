@@ -35,12 +35,12 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, sk types.StakingKeeper, 
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // AddPubkey sets a address-pubkey relation
-func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
+func (k *Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 	bz, err := k.cdc.MarshalInterface(pubkey)
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey cryptotypes.PubKey) error {
 }
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
-func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
+func (k *Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.AddrPubkeyRelationKey(a))
 	if bz == nil {
@@ -64,7 +64,7 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes.
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
+func (k *Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
@@ -79,7 +79,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 
 // Jail attempts to jail a validator. The slash is delegated to the staking module
 // to make the necessary validator changes.
-func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
+func (k *Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
@@ -90,7 +90,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	k.sk.Jail(ctx, consAddr)
 }
 
-func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {
+func (k *Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.AddrPubkeyRelationKey(addr))
 }

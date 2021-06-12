@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-var _ authz.MsgServer = Keeper{}
+var _ authz.MsgServer = &Keeper{}
 
 // GrantAuthorization implements the MsgServer.Grant method.
-func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
+func (k *Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -40,7 +40,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 }
 
 // RevokeAuthorization implements the MsgServer.Revoke method.
-func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
+func (k *Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
@@ -60,7 +60,7 @@ func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgR
 }
 
 // Exec implements the MsgServer.Exec method.
-func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
+func (k *Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {

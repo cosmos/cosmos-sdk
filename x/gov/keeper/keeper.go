@@ -81,44 +81,44 @@ func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 }
 
 // Logger returns a module-specific logger.
-func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+func (keeper *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // Router returns the gov Keeper's Router
-func (keeper Keeper) Router() types.Router {
+func (keeper *Keeper) Router() types.Router {
 	return keeper.router
 }
 
 // GetGovernanceAccount returns the governance ModuleAccount
-func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccountI {
+func (keeper *Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccountI {
 	return keeper.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // ProposalQueues
 
 // InsertActiveProposalQueue inserts a ProposalID into the active proposal queue at endTime
-func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+func (keeper *Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.ActiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromActiveProposalQueue removes a proposalID from the Active Proposal Queue
-func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+func (keeper *Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
 // InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
-func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+func (keeper *Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.InactiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromInactiveProposalQueue removes a proposalID from the Inactive Proposal Queue
-func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+func (keeper *Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(types.InactiveProposalQueueKey(proposalID, endTime))
 }
@@ -127,7 +127,7 @@ func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper *Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
 	iterator := keeper.ActiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -146,7 +146,7 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.T
 
 // IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
+func (keeper *Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal types.Proposal) (stop bool)) {
 	iterator := keeper.InactiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -164,13 +164,13 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time
 }
 
 // ActiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Active Queue that expire by endTime
-func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+func (keeper *Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return store.Iterator(types.ActiveProposalQueuePrefix, sdk.PrefixEndBytes(types.ActiveProposalByTimeKey(endTime)))
 }
 
 // InactiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Inactive Queue that expire by endTime
-func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+func (keeper *Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return store.Iterator(types.InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
 }

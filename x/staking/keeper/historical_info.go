@@ -6,7 +6,7 @@ import (
 )
 
 // GetHistoricalInfo gets the historical info at a given height
-func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.HistoricalInfo, bool) {
+func (k *Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.HistoricalInfo, bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
 
@@ -19,7 +19,7 @@ func (k Keeper) GetHistoricalInfo(ctx sdk.Context, height int64) (types.Historic
 }
 
 // SetHistoricalInfo sets the historical info at a given height
-func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.HistoricalInfo) {
+func (k *Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.HistoricalInfo) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
 	value := k.cdc.MustMarshal(hi)
@@ -27,7 +27,7 @@ func (k Keeper) SetHistoricalInfo(ctx sdk.Context, height int64, hi *types.Histo
 }
 
 // DeleteHistoricalInfo deletes the historical info at a given height
-func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
+func (k *Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetHistoricalInfoKey(height)
 
@@ -37,7 +37,7 @@ func (k Keeper) DeleteHistoricalInfo(ctx sdk.Context, height int64) {
 // IterateHistoricalInfo provides an interator over all stored HistoricalInfo
 //  objects. For each HistoricalInfo object, cb will be called. If the cb returns
 // true, the iterator will close and stop.
-func (k Keeper) IterateHistoricalInfo(ctx sdk.Context, cb func(types.HistoricalInfo) bool) {
+func (k *Keeper) IterateHistoricalInfo(ctx sdk.Context, cb func(types.HistoricalInfo) bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.HistoricalInfoKey)
@@ -52,7 +52,7 @@ func (k Keeper) IterateHistoricalInfo(ctx sdk.Context, cb func(types.HistoricalI
 }
 
 // GetAllHistoricalInfo returns all stored HistoricalInfo objects.
-func (k Keeper) GetAllHistoricalInfo(ctx sdk.Context) []types.HistoricalInfo {
+func (k *Keeper) GetAllHistoricalInfo(ctx sdk.Context) []types.HistoricalInfo {
 	var infos []types.HistoricalInfo
 
 	k.IterateHistoricalInfo(ctx, func(histInfo types.HistoricalInfo) bool {
@@ -65,7 +65,7 @@ func (k Keeper) GetAllHistoricalInfo(ctx sdk.Context) []types.HistoricalInfo {
 
 // TrackHistoricalInfo saves the latest historical-info and deletes the oldest
 // heights that are below pruning height
-func (k Keeper) TrackHistoricalInfo(ctx sdk.Context) {
+func (k *Keeper) TrackHistoricalInfo(ctx sdk.Context) {
 	entryNum := k.HistoricalEntries(ctx)
 
 	// Prune store to ensure we only have parameter-defined historical entries.

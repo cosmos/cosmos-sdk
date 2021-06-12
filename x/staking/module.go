@@ -115,7 +115,7 @@ func (AppModule) Name() string {
 
 // RegisterInvariants registers the staking module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	keeper.RegisterInvariants(ir, am.keeper)
+	keeper.RegisterInvariants(ir, &am.keeper)
 }
 
 // Route returns the message routing key for the staking module.

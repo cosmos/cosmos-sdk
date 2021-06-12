@@ -126,7 +126,7 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 // InitializeIndex sets the index to one (or greater) in InitChain according
 // to the GenesisState. It must only be called once.
 // It will panic if the provided index is 0, or if the index is already set.
-func (k Keeper) InitializeIndex(ctx sdk.Context, index uint64) error {
+func (k *Keeper) InitializeIndex(ctx sdk.Context, index uint64) error {
 	if index == 0 {
 		panic("SetIndex requires index > 0")
 	}
@@ -142,13 +142,13 @@ func (k Keeper) InitializeIndex(ctx sdk.Context, index uint64) error {
 }
 
 // GetLatestIndex returns the latest index of the CapabilityKeeper
-func (k Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
+func (k *Keeper) GetLatestIndex(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	return types.IndexFromKey(store.Get(types.KeyIndex))
 }
 
 // SetOwners set the capability owners to the store
-func (k Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
+func (k *Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(index)
 
@@ -157,7 +157,7 @@ func (k Keeper) SetOwners(ctx sdk.Context, index uint64, owners types.Capability
 }
 
 // GetOwners returns the capability owners with a given index.
-func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners, bool) {
+func (k *Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners, bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
 	indexKey := types.IndexToKey(index)
 
@@ -174,7 +174,7 @@ func (k Keeper) GetOwners(ctx sdk.Context, index uint64) (types.CapabilityOwners
 // InitializeCapability takes in an index and an owners array. It creates the capability in memory
 // and sets the fwd and reverse keys for each owner in the memstore.
 // It is used during initialization from genesis.
-func (k Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
+func (k *Keeper) InitializeCapability(ctx sdk.Context, index uint64, owners types.CapabilityOwners) {
 
 	memStore := ctx.KVStore(k.memKey)
 

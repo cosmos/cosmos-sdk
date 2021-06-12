@@ -11,10 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-var _ proposal.QueryServer = Keeper{}
+var _ proposal.QueryServer = &Keeper{}
 
 // Params returns subspace params
-func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*proposal.QueryParamsResponse, error) {
+func (k *Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*proposal.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

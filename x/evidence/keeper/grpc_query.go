@@ -16,10 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
 // Evidence implements the Query/Evidence gRPC method
-func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
+func (k *Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -49,7 +49,7 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 }
 
 // AllEvidence implements the Query/AllEvidence gRPC method
-func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
+func (k *Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

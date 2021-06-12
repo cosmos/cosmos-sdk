@@ -285,7 +285,7 @@ func NewSimApp(
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
+		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, &app.SlashingKeeper,
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
@@ -300,7 +300,7 @@ func NewSimApp(
 	// must be passed by reference here.
 	app.mm = module.NewManager(
 		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
+			app.AccountKeeper, &app.StakingKeeper, app.BaseApp.DeliverTx,
 			encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
@@ -385,7 +385,7 @@ func NewSimApp(
 			AccountKeeper:   app.AccountKeeper,
 			BankKeeper:      app.BankKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
+			FeegrantKeeper:  &app.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)

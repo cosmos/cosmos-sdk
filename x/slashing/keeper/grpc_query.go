@@ -12,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k *Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -25,7 +25,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func (k Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoRequest) (*types.QuerySigningInfoResponse, error) {
+func (k *Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoRequest) (*types.QuerySigningInfoResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -48,7 +48,7 @@ func (k Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoReques
 	return &types.QuerySigningInfoResponse{ValSigningInfo: signingInfo}, nil
 }
 
-func (k Keeper) SigningInfos(c context.Context, req *types.QuerySigningInfosRequest) (*types.QuerySigningInfosResponse, error) {
+func (k *Keeper) SigningInfos(c context.Context, req *types.QuerySigningInfosRequest) (*types.QuerySigningInfosResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}

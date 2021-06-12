@@ -56,7 +56,7 @@ func (k Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvar
 		// logger := ctx.Logger().With("module", "x/crisis")
 		// logger.Error(fmt.Sprintf(
 		// "WARNING: insufficient funds to allocate to sender from fee pool, err: %s", err))
-		//}
+		// }
 
 		// TODO replace with circuit breaker
 		panic(res)

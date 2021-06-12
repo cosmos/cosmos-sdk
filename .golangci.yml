@@ -12,7 +12,7 @@ linters:
     - dogsled
     # - errcheck
     - goconst
-    - gocritic
+    # - gocritic
     - gofmt
     - goimports
     - golint

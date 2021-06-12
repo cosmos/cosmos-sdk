@@ -289,11 +289,7 @@ func initGenFiles(
 	var bankGenState banktypes.GenesisState
 	clientCtx.JSONCodec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
-	bankGenState.Balances = banktypes.SanitizeGenesisBalances(genBalances)
-	for _, bal := range bankGenState.Balances {
-		bankGenState.Supply.Add(bal.Coins...)
-	}
-
+	bankGenState.Balances = genBalances
 	appGenState[banktypes.ModuleName] = clientCtx.JSONCodec.MustMarshalJSON(&bankGenState)
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")

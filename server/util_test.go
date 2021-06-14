@@ -14,6 +14,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
 var CancelledInPreRun = errors.New("Canelled in prerun")
@@ -400,26 +402,69 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
 	}
 }
-
+ 
 func TestStartCmdwithEmptyandNonEmptyMinGasPrices(t *testing.T){
-
-	// first case - raise an error
+	
 	tempDir := t.TempDir()
-	cmd := StartCmd(nil, tempDir)
+	
+	var app types.AppCreator
 
-
-	// MinGasPrices ="0.22  -> no error raised
-	cfg := config.DefaultConfig()
-	cfg.BaseConfig.MinGasPrices ="0.22"
-
-	cmd.PreRunE = preRunETestImpl
+	// TODO fix panic on app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper) in func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) 
+	cmd := StartCmd(app, tempDir)  
+	
+	cmd.PreRunE = preRunETestImplMinGasPrices
 
 	serverCtx := &Context{}
 	ctx := context.WithValue(context.Background(), ServerContextKey, serverCtx)
 
-	if err := cmd.ExecuteContext(ctx); err != CancelledInPreRun {
+	if err := cmd.ExecuteContext(ctx); err != nil {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
+
+	t.Cleanup(func() { _ = os.RemoveAll(tempDir) })
 	
 }
+
+func preRunETestImplMinGasPrices(cmd *cobra.Command, args []string) error {
+
+	err := InterceptConfigsPreRunHandler(cmd)
+	if err != nil { return err}
+	
+	// Scenario 1 set appConf.BaseConfig.MinGasPrices ="0.22" => no error raised
+	// scanrio 2 doinjgn othing catch the error
+	serverCtx := GetServerContextFromCmd(cmd)
+	
+	rootViper := serverCtx.Viper
+	if rootViper == nil {
+		return errors.New("rootViper must not be nil")
+	}
+	
+	rootDir := rootViper.GetString(flags.FlagHome)
+	fmt.Println("rootDir=", rootDir)
+
+	configPath := filepath.Join(rootDir, "config")
+	fmt.Println("configPath=", configPath)
+
+	appCfgTempFilePath := filepath.Join(configPath, "app.toml")
+	fmt.Println("appCfgTempFilePath=", appCfgTempFilePath)
+	
+	appConf := config.DefaultConfig()
+	fmt.Println("appConf=", appConf)
+	
+	fmt.Println("before appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
+	appConf.BaseConfig.MinGasPrices = "0.22"
+	fmt.Println("after appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
+
+	config.WriteConfigFile(appCfgTempFilePath, appConf)
+
+	return nil
+
+}
+
+// TODO to import it from baseapp
+/*
+func defaultLogger() log.Logger {
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
+}
+*/
 

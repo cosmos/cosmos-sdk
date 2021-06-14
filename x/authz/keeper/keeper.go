@@ -115,6 +115,14 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 	}
 
+	// emit the events from the dispatched actions
+	events := msgResult.Events
+	eventsSDK := make([]sdk.Event, 0, len(events))
+	for i := 0; i < len(events); i++ {
+		eventsSDK = append(eventsSDK, sdk.Event(events[i]))
+	}
+	ctx.EventManager().EmitEvents(eventsSDK)
+
 	return msgResult, nil
 }
 

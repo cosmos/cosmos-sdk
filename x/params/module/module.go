@@ -24,7 +24,7 @@ type Inputs struct {
 	LegacyAmino  *codec.LegacyAmino
 	Key          *sdk.KVStoreKey
 	TransientKey *sdk.TransientStoreKey
-	GovRouter    govtypes.Router
+	GovRouter    govtypes.Router `optional:true`
 }
 
 type Outputs struct {
@@ -40,7 +40,9 @@ func (m Module) Provision(registrar container.Registrar) error {
 
 		compat.RegisterAppModule(configurator, appMod)
 
-		inputs.GovRouter.AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(keeper))
+		if inputs.GovRouter != nil {
+			inputs.GovRouter.AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(keeper))
+		}
 
 		return Outputs{Keeper: keeper}
 	})

@@ -222,7 +222,7 @@ func (d Dec) BigInt() *big.Int {
 func (d Dec) Add(d2 Dec) Dec {
 	res := new(big.Int).Add(d.i, d2.i)
 
-	if res.BitLen() > 255+DecimalPrecisionBits {
+	if res.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{res}
@@ -232,7 +232,7 @@ func (d Dec) Add(d2 Dec) Dec {
 func (d Dec) Sub(d2 Dec) Dec {
 	res := new(big.Int).Sub(d.i, d2.i)
 
-	if res.BitLen() > 255+DecimalPrecisionBits {
+	if res.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{res}
@@ -243,7 +243,7 @@ func (d Dec) Mul(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.i, d2.i)
 	chopped := chopPrecisionAndRound(mul)
 
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
+	if chopped.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
@@ -254,7 +254,7 @@ func (d Dec) MulTruncate(d2 Dec) Dec {
 	mul := new(big.Int).Mul(d.i, d2.i)
 	chopped := chopPrecisionAndTruncate(mul)
 
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
+	if chopped.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
@@ -264,7 +264,7 @@ func (d Dec) MulTruncate(d2 Dec) Dec {
 func (d Dec) MulInt(i Int) Dec {
 	mul := new(big.Int).Mul(d.i, i.i)
 
-	if mul.BitLen() > 255+DecimalPrecisionBits {
+	if mul.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{mul}
@@ -274,7 +274,7 @@ func (d Dec) MulInt(i Int) Dec {
 func (d Dec) MulInt64(i int64) Dec {
 	mul := new(big.Int).Mul(d.i, big.NewInt(i))
 
-	if mul.BitLen() > 255+DecimalPrecisionBits {
+	if mul.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{mul}
@@ -289,7 +289,7 @@ func (d Dec) Quo(d2 Dec) Dec {
 	quo := new(big.Int).Quo(mul, d2.i)
 	chopped := chopPrecisionAndRound(quo)
 
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
+	if chopped.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
@@ -304,7 +304,7 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 	quo := mul.Quo(mul, d2.i)
 	chopped := chopPrecisionAndTruncate(quo)
 
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
+	if chopped.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
@@ -319,7 +319,7 @@ func (d Dec) QuoRoundUp(d2 Dec) Dec {
 	quo := new(big.Int).Quo(mul, d2.i)
 	chopped := chopPrecisionAndRoundUp(quo)
 
-	if chopped.BitLen() > 255+DecimalPrecisionBits {
+	if chopped.BitLen() > (maxBitLen + DecimalPrecisionBits) {
 		panic("Int overflow")
 	}
 	return Dec{chopped}

@@ -172,7 +172,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
 		var pk cryptotypes.PubKey
-		err = ctx.JSONCodec.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
+		err = ctx.Codec.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
 		if err != nil {
 			return err
 		}

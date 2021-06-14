@@ -55,7 +55,7 @@ func ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			bz, err := clientCtx.JSONCodec.MarshalInterfaceJSON(sdkPK)
+			bz, err := clientCtx.Codec.MarshalInterfaceJSON(sdkPK)
 			if err != nil {
 				return err
 			}

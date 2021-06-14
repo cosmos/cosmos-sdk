@@ -290,7 +290,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
@@ -441,7 +441,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -584,7 +584,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
@@ -670,7 +670,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
@@ -767,7 +767,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
@@ -844,7 +844,7 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
@@ -985,7 +985,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
@@ -1062,7 +1062,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})

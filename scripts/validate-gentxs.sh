@@ -3,18 +3,48 @@
 DAEMON_HOME="/tmp/simd$(date +%s)"
 RANDOM_KEY="randomvalidatorkey"
 
-#############################################
-# Ensure to set the below ENV settings  #
-#############################################
+echo "#############################################"
+echo "### Ensure to set the below ENV settings ###"
+echo "#############################################"
+echo "
+DAEMON= # ex: simd
+CHAIN_ID= # ex: testnet-1
+DENOM= # ex: ustake
+GH_URL= # ex: https://github.com/cosmos/cosmos-sdk
+BINARY_VERSION= # ex :v0.43.0-beta1
+GO_VERSION=1.15.2
+PRELAUNCH_GENESIS_URL= # ex: https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/$CHAIN_ID/genesis-prelaunch.json
+GENTXS_DIR= # ex: ./$CHAIN_ID/gentxs"
+echo
 
-# DAEMON=simd
-# CHAIN_ID=testnet-1
-# DENOM=ustake
-# GH_URL=github.com/cosmos/cosmos-sdk
-# BINARY_VERSION=v0.43.0-beta1
-# GO_VERSION=1.15.2
-# PRELAUNCH_GENESIS_URL=https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/$CHAIN_ID/genesis-prelaunch.json
-# GENTXS_DIR=./$CHAIN_ID/gentxs
+if [[ -z "${GH_URL}" ]]; then
+  echo "GO_URL in not set, required. Ex: https://github.com/cosmos/cosmos-sdk"
+  exit 0
+fi
+if [[ -z "${DAEMON}" ]]; then
+  echo "DAEMON is not set, required. Ex: simd, gaiad etc"
+  exit 0
+fi
+if [[ -z "${DENOM}" ]]; then
+  echo "DENOM in not set, required. Ex: stake, uatom etc"
+  exit 0
+fi
+if [[ -z "${GO_VERSION}" ]]; then
+  echo "GO_VERSION in not set, required. Ex: 1.15.2, 1.16.6 etc."
+  exit 0
+fi
+if [[ -z "${CHAIN_ID}" ]]; then
+  echo "CHAIN_ID in not set, required."
+  exit 0
+fi
+if [[ -z "${PRELAUNCH_GENESIS_URL}" ]]; then
+  echo "PRELAUNCH_GENESIS_URL (genesis file url) in not set, required."
+  exit 0
+fi
+if [[ -z "${GENTXS_DIR}" ]]; then
+  echo "GENTXS_DIR in not set, required."
+  exit 0
+fi
 
 command_exists () {
     type "$1" &> /dev/null ;
@@ -43,7 +73,7 @@ else
 fi
 
 if [ "$(ls -A $GENTXS_DIR)" ]; then
-    for GENTX_FILE in *; do 
+    for GENTX_FILE in *; do
         if [ -f "$GENTX_FILE" ]; then
             set -e
 
@@ -51,19 +81,20 @@ if [ "$(ls -A $GENTXS_DIR)" ]; then
             echo $GENTX_FILE
 
             echo "...........Init a testnet.............."
-            go get $GH_URL
-            cd ~/go/src/$GH_URL
+            git clone $GH_URL $DAEMON
+            cd $DAEMON
             git fetch && git checkout $BINARY_VERSION
             make build
             chmod +x ./build/$DAEMON
 
-            ./build/$DAEMON keys add $RANDOM_KEY --keyring-backend test --home $DAEMON_HOME
-
             ./build/$DAEMON init --chain-id $CHAIN_ID validator --home $DAEMON_HOME
+
+            ./build/$DAEMON keys add $RANDOM_KEY --keyring-backend test --home $DAEMON_HOME
 
             echo "..........Fetching genesis......."
             rm -rf $DAEMON_HOME/config/genesis.json
-            curl -s $PRELAUNCH_GENESIS_URL >$DAEMON_HOME/config/genesis.json
+            echo $DAEMON_HOME
+            curl -K -s $PRELAUNCH_GENESIS_URL -o $DAEMON_HOME/config/genesis.json
 
             # this genesis time is different from original genesis time, just for validating gentx.
             sed -i '/genesis_time/c\   \"genesis_time\" : \"2021-01-01T00:00:00Z\",' $DAEMON_HOME/config/genesis.json

@@ -13,11 +13,11 @@ import (
 func StartGRPCWeb(grpcSrv *grpc.Server, config config.Config) (*http.Server, error) {
 	var options []grpcweb.Option
 	if config.API.EnableUnsafeCORS {
-		options = []grpcweb.Option{
+		options = append(options,
 			grpcweb.WithOriginFunc(func(origin string) bool {
 				return true
 			}),
-		}
+		)
 	}
 
 	wrappedServer := grpcweb.WrapServer(grpcSrv, options...)

@@ -140,6 +140,9 @@ type GRPCWebConfig struct {
 
 	// Address defines the gRPC-web server to listen on
 	Address string `mapstructure:"address"`
+
+	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
+	EnableUnsafeCORS bool `mapstructure:"enabled-unsafe-cors"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -297,8 +300,9 @@ func GetConfig(v *viper.Viper) Config {
 			Address: v.GetString("grpc.address"),
 		},
 		GRPCWeb: GRPCWebConfig{
-			Enable:  v.GetBool("grpc-web.enable"),
-			Address: v.GetString("grpc-web.address"),
+			Enable:           v.GetBool("grpc-web.enable"),
+			Address:          v.GetString("grpc-web.address"),
+			EnableUnsafeCORS: v.GetBool("grpc-web.enabled-unsafe-cors"),
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),

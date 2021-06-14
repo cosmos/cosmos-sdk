@@ -14,7 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/tendermint/tendermint/libs/log"
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 
@@ -406,7 +405,7 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 func TestStartCmdwithEmptyandNonEmptyMinGasPrices(t *testing.T){
 	
 	tempDir := t.TempDir()
-	
+
 	var app types.AppCreator
 
 	// TODO fix panic on app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper) in func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) 

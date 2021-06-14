@@ -795,7 +795,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	item = keyring.Item{
 		Key:  addrHexKeyAsString(addr),
-		Data: serialized
+		Data: serializedRecord,
 	}
 
 	if err := ks.db.Set(item); err != nil {

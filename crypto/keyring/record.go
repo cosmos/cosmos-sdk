@@ -86,6 +86,7 @@ func (re Record) extractPrivKeyFromLocalInfo() (cryptotypes.PrivKey, error) {
 
 	switch {
 	case local != nil:
+		fmt.Println("extractPrivKeyFromLocalInfo PrivKey", local.PrivKey)
 		privKey, ok := local.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
 		if !ok {
 			return nil, fmt.Errorf("unable to cast to cryptotypes.PrivKey")

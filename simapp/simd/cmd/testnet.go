@@ -289,8 +289,16 @@ func initGenFiles(
 	var bankGenState banktypes.GenesisState
 	clientCtx.JSONMarshaler.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
+<<<<<<< HEAD
 	bankGenState.Balances = genBalances
 	appGenState[banktypes.ModuleName] = clientCtx.JSONMarshaler.MustMarshalJSON(&bankGenState)
+=======
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(genBalances)
+	for _, bal := range bankGenState.Balances {
+		bankGenState.Supply = bankGenState.Supply.Add(bal.Coins...)
+	}
+	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
+>>>>>>> 179c819a9 (fix: testnet cli command update genesis supply (#9497))
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
 	if err != nil {

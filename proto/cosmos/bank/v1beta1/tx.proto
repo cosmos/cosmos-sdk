@@ -9,11 +9,15 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Msg defines the bank Msg service.
 service Msg {
+  rpc Mint(MsgMint) returns (MsgMintResponse);
+
   // Send defines a method for sending coins from one account to another account.
   rpc Send(MsgSend) returns (MsgSendResponse);
 
   // MultiSend defines a method for sending coins from some accounts to other accounts.
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
+
+  rpc Burn(MsgBurn) returns (MsgBurnResponse);
 }
 
 // MsgSend represents a message to send coins from one account to another.
@@ -40,3 +44,17 @@ message MsgMultiSend {
 
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
 message MsgMultiSendResponse {}
+
+message MsgMint {
+  string minter = 1;
+  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+message MsgMintResponse { }
+
+message MsgBurn {
+  string burner = 1;
+  repeated cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+message MsgBurnResponse { }

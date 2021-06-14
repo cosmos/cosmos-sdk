@@ -107,6 +107,10 @@
     - [Query](#cosmos.bank.v1beta1.Query)
   
 - [cosmos/bank/v1beta1/tx.proto](#cosmos/bank/v1beta1/tx.proto)
+    - [MsgBurn](#cosmos.bank.v1beta1.MsgBurn)
+    - [MsgBurnResponse](#cosmos.bank.v1beta1.MsgBurnResponse)
+    - [MsgMint](#cosmos.bank.v1beta1.MsgMint)
+    - [MsgMintResponse](#cosmos.bank.v1beta1.MsgMintResponse)
     - [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend)
     - [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse)
     - [MsgSend](#cosmos.bank.v1beta1.MsgSend)
@@ -1950,6 +1954,58 @@ Query defines the gRPC querier service.
 
 
 
+<a name="cosmos.bank.v1beta1.MsgBurn"></a>
+
+### MsgBurn
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `burner` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgBurnResponse"></a>
+
+### MsgBurnResponse
+
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgMint"></a>
+
+### MsgMint
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minter` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.MsgMintResponse"></a>
+
+### MsgMintResponse
+
+
+
+
+
+
+
 <a name="cosmos.bank.v1beta1.MsgMultiSend"></a>
 
 ### MsgMultiSend
@@ -2016,8 +2072,10 @@ Msg defines the bank Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Mint` | [MsgMint](#cosmos.bank.v1beta1.MsgMint) | [MsgMintResponse](#cosmos.bank.v1beta1.MsgMintResponse) |  | |
 | `Send` | [MsgSend](#cosmos.bank.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.bank.v1beta1.MsgSendResponse) | Send defines a method for sending coins from one account to another account. | |
 | `MultiSend` | [MsgMultiSend](#cosmos.bank.v1beta1.MsgMultiSend) | [MsgMultiSendResponse](#cosmos.bank.v1beta1.MsgMultiSendResponse) | MultiSend defines a method for sending coins from some accounts to other accounts. | |
+| `Burn` | [MsgBurn](#cosmos.bank.v1beta1.MsgBurn) | [MsgBurnResponse](#cosmos.bank.v1beta1.MsgBurnResponse) |  | |
 
  <!-- end services -->
 

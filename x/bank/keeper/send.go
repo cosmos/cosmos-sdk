@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,10 +42,13 @@ type BaseSendKeeper struct {
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
+
+	denomManagers map[string]DenomManager
 }
 
 func NewBaseSendKeeper(
 	cdc codec.BinaryCodec, storeKey sdk.StoreKey, ak types.AccountKeeper, paramSpace paramtypes.Subspace, blockedAddrs map[string]bool,
+	denomManagers map[string]DenomManager,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -53,6 +58,7 @@ func NewBaseSendKeeper(
 		storeKey:       storeKey,
 		paramSpace:     paramSpace,
 		blockedAddrs:   blockedAddrs,
+		denomManagers:  denomManagers,
 	}
 }
 
@@ -131,6 +137,16 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	for _, coin := range amt {
+		mgr := k.getDenomManager(coin.Denom)
+		if mgr != nil {
+			err := mgr.OnSend(ctx, fromAddr, toAddr, coin)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
@@ -287,4 +303,10 @@ func (k BaseSendKeeper) IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool {
 // receiving funds.
 func (k BaseSendKeeper) BlockedAddr(addr sdk.AccAddress) bool {
 	return k.blockedAddrs[addr.String()]
+}
+
+func (k BaseSendKeeper) getDenomManager(denom string) DenomManager {
+	parts := strings.Split(denom, "/")
+	namespace := parts[0]
+	return k.denomManagers[namespace]
 }

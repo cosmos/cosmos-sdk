@@ -83,16 +83,26 @@ func (k BaseKeeper) GetPaginatedTotalSupply(ctx sdk.Context, pagination *query.P
 
 // NewBaseKeeper returns a new BaseKeeper object with a given codec, dedicated
 // store key, an AccountKeeper implementation, and a parameter Subspace used to
-// store and fetch module parameters. The BaseKeeper also accepts a
+// store and fetch module parameters.
+//
+// The BaseKeeper also accepts a
 // blocklist map. This blocklist describes the set of addresses that are not allowed
 // to receive funds through direct and explicit actions, for example, by using a MsgSend or
 // by using a SendCoinsFromModuleToAccount execution.
+//
+// denomManagers specifies a map of DenomManager's which provide rules for minting, sending,
+// and burning coins. Denom managers are selected by the coin denom or denom namespace.
+// A denom is namespaced if it contains a "/" character. For a namespaced denom "foo/bar", the denom manager
+// "foo" would be used. For a non-namespaced denom "baz", the denom manager "baz" would be used.
+// If a denom manager is missing for a given denom or namespace, sends by default are allowed (if they are enabled)
+// and minting and burning are blocked.
 func NewBaseKeeper(
 	cdc codec.BinaryCodec,
 	storeKey sdk.StoreKey,
 	ak types.AccountKeeper,
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
+	denomManagers map[string]DenomManager,
 ) BaseKeeper {
 
 	// set KeyTable if it has not already been set
@@ -101,7 +111,7 @@ func NewBaseKeeper(
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs, denomManagers),
 		ak:             ak,
 		cdc:            cdc,
 		storeKey:       storeKey,

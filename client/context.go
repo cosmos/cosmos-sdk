@@ -25,8 +25,6 @@ type Context struct {
 	FromAddress sdk.AccAddress
 	Client      rpcclient.Client
 	ChainID     string
-	// Deprecated: Codec codec will be changed to Codec: codec.Codec
-	JSONCodec         codec.JSONCodec
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
@@ -74,20 +72,9 @@ func (ctx Context) WithInput(r io.Reader) Context {
 	return ctx
 }
 
-// Deprecated: WithJSONCodec returns a copy of the Context with an updated JSONCodec.
-func (ctx Context) WithJSONCodec(m codec.JSONCodec) Context {
-	ctx.JSONCodec = m
-	// since we are using ctx.Codec everywhere in the SDK, for backward compatibility
-	// we need to try to set it here as well.
-	if c, ok := m.(codec.Codec); ok {
-		ctx.Codec = c
-	}
-	return ctx
-}
 
 // WithCodec returns a copy of the Context with an updated Codec.
 func (ctx Context) WithCodec(m codec.Codec) Context {
-	ctx.JSONCodec = m
 	ctx.Codec = m
 	return ctx
 }

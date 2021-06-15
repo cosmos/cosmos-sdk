@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v043"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	v040staking "github.com/cosmos/cosmos-sdk/x/staking/legacy/v040"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -55,20 +54,11 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 	}
 }
 
-func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
-	if paramstore.HasKeyTable() {
-		paramstore.Set(ctx, types.KeyPowerReduction, sdk.DefaultPowerReduction)
-	} else {
-		paramstore.WithKeyTable(types.ParamKeyTable())
-		paramstore.Set(ctx, types.KeyPowerReduction, sdk.DefaultPowerReduction)
-	}
-}
-
 // MigrateStore performs in-place store migrations from v0.40 to v0.43. The
 // migration includes:
 //
 // - Setting the Power Reduction param in the paramstore
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, paramstore paramtypes.Subspace) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 
 	v043distribution.MigratePrefixAddress(store, v040staking.LastValidatorPowerKey)
@@ -83,8 +73,6 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, paramstore paramtypes.
 	migratePrefixAddressAddressAddress(store, v040staking.RedelegationKey)
 	migratePrefixAddressAddressAddress(store, v040staking.RedelegationByValSrcIndexKey)
 	migratePrefixAddressAddressAddress(store, v040staking.RedelegationByValDstIndexKey)
-
-	migrateParamsStore(ctx, paramstore)
 
 	return nil
 }

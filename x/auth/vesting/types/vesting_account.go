@@ -29,8 +29,6 @@ func NewBaseVestingAccount(baseAccount *authtypes.BaseAccount, originalVesting s
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,
-		DelegatedFree:    sdk.NewCoins(),
-		DelegatedVesting: sdk.NewCoins(),
 		EndTime:          endTime,
 	}
 }

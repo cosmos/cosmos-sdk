@@ -141,9 +141,6 @@ func (k BaseKeeper) DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr 
 		}
 	}
 
-	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
-		return sdkerrors.Wrap(err, "failed to track delegation")
-	}
 	// emit coin spent event
 	ctx.EventManager().EmitEvent(
 		types.NewCoinSpentEvent(delegatorAddr, amt),
@@ -445,23 +442,6 @@ func (k BaseKeeper) setSupply(ctx sdk.Context, coin sdk.Coin) {
 	} else {
 		supplyStore.Set([]byte(coin.GetDenom()), intBytes)
 	}
-}
-
-// trackDelegation tracks the delegation of the given account if it is a vesting account
-func (k BaseKeeper) trackDelegation(ctx sdk.Context, addr sdk.AccAddress, balance, amt sdk.Coins) error {
-	acc := k.ak.GetAccount(ctx, addr)
-	if acc == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
-	}
-
-	vacc, ok := acc.(vestexported.VestingAccount)
-	if ok {
-		// TODO: return error on account.TrackDelegation
-		vacc.TrackDelegation(ctx.BlockHeader().Time, balance, amt)
-		k.ak.SetAccount(ctx, acc)
-	}
-
-	return nil
 }
 
 // trackUndelegation trakcs undelegation of the given account if it is a vesting account

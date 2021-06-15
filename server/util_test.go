@@ -407,19 +407,8 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 func TestStartCmdwithEmptyandNonEmptyMinGasPrices(t *testing.T){
 	
 	tempDir := t.TempDir()
-
-	/*
-    github.com/cosmos/cosmos-sdk/simapp/simd/cmd.go
-	
-	a := appCreator{encodingConfig}
-	server.AddCommands(rootCmd, simapp.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
-
-
-	*/
-
-
 	encCfg := simapp.MakeTestEncodingConfig()
-	a := simd.AppCreator{encCfg}
+	a := simd.AppCreator{EncCfg: encCfg}
 	cmd := server.StartCmd(a.NewApp, tempDir)  
 	
 	cmd.PreRunE = preRunETestImplMinGasPrices
@@ -431,7 +420,7 @@ func TestStartCmdwithEmptyandNonEmptyMinGasPrices(t *testing.T){
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	t.Cleanup(func() { _ = os.RemoveAll(tempDir) })
+	// t.Cleanup(func() { _ = os.RemoveAll(tempDir) })
 	
 }
 
@@ -450,20 +439,20 @@ func preRunETestImplMinGasPrices(cmd *cobra.Command, args []string) error {
 	}
 	
 	rootDir := rootViper.GetString(flags.FlagHome)
-	fmt.Println("rootDir=", rootDir)
+	//fmt.Println("rootDir=", rootDir)
 
 	configPath := filepath.Join(rootDir, "config")
-	fmt.Println("configPath=", configPath)
+	//fmt.Println("configPath=", configPath)
 
 	appCfgTempFilePath := filepath.Join(configPath, "app.toml")
-	fmt.Println("appCfgTempFilePath=", appCfgTempFilePath)
+	//fmt.Println("appCfgTempFilePath=", appCfgTempFilePath)
 	
 	appConf := config.DefaultConfig()
-	fmt.Println("appConf=", appConf)
+	//fmt.Println("appConf=", appConf)
 	
-	fmt.Println("before appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
+	//fmt.Println("before appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
 	appConf.BaseConfig.MinGasPrices = "0.22"
-	fmt.Println("after appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
+	//fmt.Println("after appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
 
 	config.WriteConfigFile(appCfgTempFilePath, appConf)
 

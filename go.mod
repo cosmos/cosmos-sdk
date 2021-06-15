@@ -6,8 +6,8 @@ require (
 	github.com/99designs/keyring v1.1.6
 	github.com/armon/go-metrics v0.3.8
 	github.com/bgentry/speakeasy v0.1.0
-	github.com/btcsuite/btcd v0.21.0-beta
-	github.com/btcsuite/btcutil v1.0.2
+	github.com/btcsuite/btcd v0.22.0-beta
+	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/coinbase/rosetta-sdk-go v0.6.10
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/go-bip39 v1.0.0
@@ -32,8 +32,8 @@ require (
 	github.com/otiai10/copy v1.6.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.10.0
-	github.com/prometheus/common v0.27.0
+	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/common v0.29.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.22.0
@@ -50,7 +50,6 @@ require (
 	github.com/tendermint/tendermint v0.34.10
 	github.com/tendermint/tm-db v0.6.4
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
 	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0

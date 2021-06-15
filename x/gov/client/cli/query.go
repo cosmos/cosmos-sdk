@@ -238,7 +238,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 					return err
 				}
 
-				if err := clientCtx.JSONCodec.UnmarshalJSON(resByTxQuery, &vote); err != nil {
+				if err := clientCtx.Codec.UnmarshalJSON(resByTxQuery, &vote); err != nil {
 					return err
 				}
 			}

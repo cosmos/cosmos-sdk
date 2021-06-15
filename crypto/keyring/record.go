@@ -50,7 +50,6 @@ func (re Record) GetName() string {
 
 func (re Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := re.PubKey.GetCachedValue().(cryptotypes.PubKey)
-        // TODO fix an error Unable to cast PubKey to cryptotypes.PubKey
 	if !ok {
 		return nil, fmt.Errorf("Unable to cast PubKey to cryptotypes.PubKey")
 	}
@@ -81,19 +80,24 @@ func (re Record) GetType() KeyType {
 	return 0
 }
 
-func (re Record) extractPrivKeyFromLocalInfo() (cryptotypes.PrivKey, error) {
+func (re *Record) extractPrivKeyFromLocal() (cryptotypes.PrivKey, error) {
+	
 	local := re.GetLocal()
-
+	fmt.Println("extractPrivKeyFromLocal local PrivKey any", local.PrivKey)
+	"S�local PrivKey any &Any{TypeUrl:/cosmos.crypto.secp256k1.PrivKey,Value:[10 32 60 192 254 115 242 129 186 183 124 20 160 13 47 202 179 92 24 116 152 216 145 44 66 161 255 183 157 144 113 154 45 201],XXX_unrecognized:[]}"
+	fmt.Println("extractPrivKeyFromLocal local PubKeyType", local.PubKeyType)
+	"secp256k1"
+	
 	switch {
 	case local != nil:
-		fmt.Println("extractPrivKeyFromLocalInfo PrivKey", local.PrivKey)
-		privKey, ok := local.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
+		anyPrivKey := local.PrivKey
+		privKey, ok := anyPrivKey.GetCachedValue().(cryptotypes.PrivKey)
 		if !ok {
-			return nil, fmt.Errorf("unable to cast to cryptotypes.PrivKey")
+			return nil, fmt.Errorf("unable to unpack private key")
 		}
 		return privKey, nil
 	default:
-		return nil, fmt.Errorf("unable to export private rey object")
+		return nil, fmt.Errorf("unable to extract private key object")
 	}
 }
 
@@ -167,10 +171,11 @@ func (p BIP44Params) String() string {
 		p.Adressindex)
 }
 */
-// TODO add tests
+// TODO add tests INCORRECT LOCAL - does not include private key
 func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
-
+	fmt.Println("convertFromLegacyInfo")
 	name := info.GetName()
+
 	apk, err := codectypes.NewAnyWithValue(info.GetPubKey())
 	if err != nil {
 		return nil, err

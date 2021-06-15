@@ -31,7 +31,8 @@ func init() {
 	crypto.BcryptSecurityParameter = 1
 }
 
-//TODO architect table driven tests for migration
+//TODO architect table driven tests for migration 3 tests - 1, key of version 0, key of version 1, random bytes -> expected err
+
 
 func TestNewKeyring(t *testing.T) {
 	dir := t.TempDir()

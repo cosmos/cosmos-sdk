@@ -271,7 +271,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 		return nil, err
 	}
 
-	return k.extractPrivKeyFromLocalInfo()
+	return k.extractPrivKeyFromLocal()
 }
 
 func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
@@ -293,7 +293,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 		return errors.Wrap(err, "failed to decrypt private key")
 	}
 
-	_, err = ks.writeLocalKey(uid, privKey.PubKey())
+	_, err = ks.writeLocalKey(uid, privKey)
 	if err != nil {
 		return err
 	}
@@ -342,7 +342,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		return nil, nil, err
 	}
 
-	priv, err := k.extractPrivKeyFromLocalInfo()
+	priv, err := k.extractPrivKeyFromLocal()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -546,6 +546,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	}
 
 	privKey := algo.Generate()(derivedPriv)
+	fmt.Println("NewAccount privKey=", privKey)
 
 	// check if the a key already exists with the same address and return an error
 	// if found
@@ -554,7 +555,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 		return nil, err
 	}
 	
-	return ks.writeLocalKey(name, privKey.PubKey())
+	return ks.writeLocalKey(name, privKey)
 }
 
 func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
@@ -745,16 +746,21 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 	}
 }
 
-func (ks keystore) writeLocalKey(name string, pubKey types.PubKey) (*Record, error) {
+func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, error) {
 	// encrypt private key using keyring
-	apk, err := codectypes.NewAnyWithValue(pubKey)
+	anyPrivKey, err := codectypes.NewAnyWithValue(privKey)
+	if err != nil {
+		return nil, err
+	}
+	
+	anyPubKey, err := codectypes.NewAnyWithValue(privKey.PubKey())
 	if err != nil {
 		return nil, err
 	}
 
-	localRecord := newLocalRecord(apk, pubKey.Type())
+	localRecord := newLocalRecord(anyPrivKey, privKey.Type())
 	localRecordItem := newLocalRecordItem(localRecord)
-	k := NewRecord(name, apk, localRecordItem)
+	k := NewRecord(name, anyPubKey, localRecordItem)
 	if err := ks.writeRecord(k); err != nil {
 		return nil, err
 	}

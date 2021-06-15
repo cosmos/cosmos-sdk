@@ -117,7 +117,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 		return nil, err
 	}
 
-	return ke.extractPrivKeyFromLocalInfo()
+	return ke.extractPrivKeyFromLocal()
 
 	/*
 		var priv types.PrivKey

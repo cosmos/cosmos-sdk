@@ -81,7 +81,7 @@ func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String()
-	proposalId := s.proposalIDs[0]
+	proposalID := s.proposalIDs[0]
 
 	commonArgs := []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -102,7 +102,7 @@ func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 
 	// deposit more amount
 	extraDeposit := sendAmount.Sub(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(50)))
-	_, err = MsgDeposit(clientCtx, acc.String(), proposalId, extraDeposit.String())
+	_, err = MsgDeposit(clientCtx, acc.String(), proposalID, extraDeposit.String())
 	s.Require().NoError(err)
 
 	// waiting for voting period to end
@@ -111,12 +111,12 @@ func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 	s.Require().NoError(err)
 
 	// query deposit & verify initial deposit
-	deposit := s.queryDeposit(val, proposalId, false, "")
+	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
 	s.Require().Equal(deposit.Amount.String(), initialDeposit)
 
 	// query deposits
-	deposits := s.queryDeposits(val, proposalId, false, "")
+	deposits := s.queryDeposits(val, proposalID, false, "")
 	s.Require().NotNil(deposits)
 	s.Require().Len(deposits.Deposits, 2)
 	// verify initial deposit
@@ -127,11 +127,11 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	val := s.network.Validators[0]
 	// val2 := s.network.Validators[1]
 	clientCtx := val.ClientCtx
-	proposalId := s.proposalIDs[1]
+	proposalID := s.proposalIDs[1]
 
 	// deposit amount
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
-	_, err := MsgDeposit(clientCtx, val.Address.String(), proposalId, depositAmount)
+	_, err := MsgDeposit(clientCtx, val.Address.String(), proposalID, depositAmount)
 	s.Require().NoError(err)
 
 	// waiting for voting period to end
@@ -140,12 +140,12 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	s.Require().NoError(err)
 
 	// query deposit
-	deposit := s.queryDeposit(val, proposalId, false, "")
+	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
 	s.Require().Equal(deposit.Amount.String(), depositAmount)
 
 	// query deposits
-	deposits := s.queryDeposits(val, proposalId, false, "")
+	deposits := s.queryDeposits(val, proposalID, false, "")
 	s.Require().NotNil(deposits)
 	s.Require().Len(deposits.Deposits, 1)
 	// verify initial deposit
@@ -155,10 +155,10 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	proposalId := s.proposalIDs[2]
+	proposalID := s.proposalIDs[2]
 
 	// query proposal
-	args := []string{proposalId, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 	cmd := cli.GetCmdQueryProposal()
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -169,18 +169,18 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 	// query proposal
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().Error(err)
-	s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalId))
+	s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalID))
 }
 
 func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	initialDeposit := s.deposits[3]
-	proposalId := s.proposalIDs[3]
+	proposalID := s.proposalIDs[3]
 
 	// query deposits
 	var deposits types.QueryDepositsResponse
-	args := []string{proposalId, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 	cmd := cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -190,7 +190,7 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	s.Require().Equal(deposits.Deposits[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String())
 
 	// vote
-	_, err = MsgVote(clientCtx, val.Address.String(), proposalId, "no")
+	_, err = MsgVote(clientCtx, val.Address.String(), proposalID, "no")
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(3)
@@ -198,13 +198,13 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 
 	// time.Sleep(20 * time.Second)
 
-	args = []string{proposalId, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args = []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 	cmd = cli.GetCmdQueryProposal()
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 
 	// query deposits
-	depositsRes := s.queryDeposits(val, proposalId, false, "")
+	depositsRes := s.queryDeposits(val, proposalID, false, "")
 	s.Require().NotNil(depositsRes)
 	s.Require().Len(depositsRes.Deposits, 1)
 	// verify initial deposit

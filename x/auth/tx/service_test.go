@@ -5,8 +5,6 @@ package tx_test
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 	"time"
@@ -31,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -629,10 +628,10 @@ func (s *IntegrationTestSuite) TestMsgExecEvents() {
 	err = authclient.SignTx(txFactory, val1.ClientCtx, val1.Moniker, txBuilder, false, true)
 	s.Require().NoError(err)
 	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 	// broadcast the tx
 	_, err = s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txBytes, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 
 	// tx for grantee to use the granted funds with a MsgSend
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -642,7 +641,7 @@ func (s *IntegrationTestSuite) TestMsgExecEvents() {
 	})
 	var msg1 sdk.Msg = &msgExec
 	err = txBuilder2.SetMsgs(msg1)
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 	txBuilder2.SetFeeAmount(feeAmount)
 	txBuilder2.SetGasLimit(gasLimit)
 	txBuilder2.SetMemo("hello world")
@@ -652,11 +651,11 @@ func (s *IntegrationTestSuite) TestMsgExecEvents() {
 		WithTxConfig(val1.ClientCtx.TxConfig).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
 	err = authclient.SignTx(txFactory2, val1.ClientCtx, grantee.GetName(), txBuilder2, false, true)
-	require.NoError(s.T(), err)
+	s.Require().NoError(err)
 	txBytes2, err := val1.ClientCtx.TxConfig.TxEncoder()(txBuilder2.GetTx())
 	res, err := s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txBytes2, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
-	require.NoError(s.T(), s.network.WaitForNextBlock())
-	require.NoError(s.T(), err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(err)
 	logs := res.GetTxResponse().Logs
 
 	// make sure these events are included in the log
@@ -666,9 +665,9 @@ func (s *IntegrationTestSuite) TestMsgExecEvents() {
 		"message":       true,
 		"transfer":      true,
 	}
-	require.Len(s.T(), logs[0].Events, 4)
+	s.Require().Len(logs[0].Events, 4)
 	for _, e := range logs[0].Events {
-		require.True(s.T(), requiredEvents[e.Type])
+		s.Require().True(requiredEvents[e.Type])
 	}
 }
 

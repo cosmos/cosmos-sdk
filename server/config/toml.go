@@ -185,7 +185,7 @@ enable = {{ .GRPCWeb.Enable }}
 address = "{{ .GRPCWeb.Address }}"
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
-enabled-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
+enable-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
 
 ###############################################################################
 ###                        State Sync Configuration                         ###

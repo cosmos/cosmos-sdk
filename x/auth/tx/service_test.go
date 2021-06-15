@@ -569,7 +569,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 // Tests that all msg events included in an authz MsgExec tx
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/9501
-func (s *IntegrationTestSuite) TestMsgExecEvents() {
+func (s *IntegrationTestSuite) TestSim_MsgExecEvents() {
 	val1 := s.network.Validators[0]
 	val1.ClientCtx.Offline = true
 

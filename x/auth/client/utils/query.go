@@ -161,11 +161,11 @@ func getBlocksForTxResults(cliCtx context.CLIContext, resTxs []*ctypes.ResultTx)
 
 func formatTxResult(cdc *codec.Codec, resTx *ctypes.ResultTx, resBlock *ctypes.ResultBlock) (sdk.TxResponse, error) {
 	tx, err := parseTx(cdc, resTx.Tx)
+	resultTx := sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339))
 	if err != nil {
-		return sdk.TxResponse{}, err
+		resultTx.TxHash += "/" + hex.EncodeToString(resTx.Tx)
 	}
-
-	return sdk.NewResponseResultTx(resTx, tx, resBlock.Block.Time.Format(time.RFC3339)), nil
+	return resultTx, err
 }
 
 func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {

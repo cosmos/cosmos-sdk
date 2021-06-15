@@ -302,7 +302,7 @@ func GetConfig(v *viper.Viper) Config {
 		GRPCWeb: GRPCWebConfig{
 			Enable:           v.GetBool("grpc-web.enable"),
 			Address:          v.GetString("grpc-web.address"),
-			EnableUnsafeCORS: v.GetBool("grpc-web.enabled-unsafe-cors"),
+			EnableUnsafeCORS: v.GetBool("grpc-web.enable-unsafe-cors"),
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),

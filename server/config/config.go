@@ -142,7 +142,7 @@ type GRPCWebConfig struct {
 	Address string `mapstructure:"address"`
 
 	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
-	EnableUnsafeCORS bool `mapstructure:"enabled-unsafe-cors"`
+	EnableUnsafeCORS bool `mapstructure:"enable-unsafe-cors"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.

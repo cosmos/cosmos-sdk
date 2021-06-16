@@ -221,9 +221,19 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 	return conf, err
 }
 
+func SetConfigTemplate (customTemplate string) {
+	var err error
+
+	tmpl := template.New("appConfigFileTemplate")
+
+	if configTemplate, err = tmpl.Parse(customTemplate); err != nil {
+		panic(err)
+	}
+}
+
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(configFilePath string, config *Config) {
+func WriteConfigFile(configFilePath string, config interface{}) {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {

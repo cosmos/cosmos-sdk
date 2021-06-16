@@ -211,7 +211,6 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 }
 
 // legacyAminoCdc is used for the legacy REST API
-// TODO why we pass appCreator argument in startInProcess?
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir

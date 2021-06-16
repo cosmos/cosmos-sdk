@@ -22,8 +22,6 @@ const (
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
 )
 
-var ErrMinGasPrices = errors.New("please set min gas price in app.toml or flag or env var")
-
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
 	// The minimum gas prices a validator is willing to accept for processing a
@@ -312,7 +310,7 @@ func GetConfig(v *viper.Viper) Config {
 
 func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
-		return ErrMinGasPrices
+		return errors.New("please set min gas price in app.toml or flag or env var")
 	}
 
 	return nil

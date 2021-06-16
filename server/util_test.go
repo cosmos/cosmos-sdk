@@ -11,12 +11,14 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	simd "github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
-	"github.com/cosmos/cosmos-sdk/server"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
 var CancelledInPreRun = errors.New("Canelled in prerun")
@@ -403,67 +405,34 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
 	}
 }
- 
-func TestStartCmdwithEmptyandNonEmptyMinGasPrices(t *testing.T){
-	
+
+func TestEmptyMinGasPrices(t *testing.T) {
 	tempDir := t.TempDir()
+	err := os.Mkdir(filepath.Join(tempDir, "config"), os.ModePerm)
+	require.NoError(t, err)
 	encCfg := simapp.MakeTestEncodingConfig()
-	a := simd.AppCreator{EncCfg: encCfg}
-	cmd := server.StartCmd(a.NewApp, tempDir)  
-	
-	cmd.PreRunE = preRunETestImplMinGasPrices
 
-	serverCtx := &server.Context{}
+	// Run InitCmd to create necessary config files.
+	clientCtx := client.Context{}.WithHomeDir(tempDir).WithJSONCodec(encCfg.Marshaler)
+	serverCtx := server.NewDefaultContext()
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	cmd := genutilcli.InitCmd(simapp.ModuleBasics, tempDir)
+	cmd.SetArgs([]string{"appnode-test"})
+	err = cmd.ExecuteContext(ctx)
+	require.NoError(t, err)
 
-	if err := cmd.ExecuteContext(ctx); err != nil {
-		t.Fatalf("function failed with [%T] %v", err, err)
-	}
-
-	// t.Cleanup(func() { _ = os.RemoveAll(tempDir) })
-	
-}
-
-func preRunETestImplMinGasPrices(cmd *cobra.Command, args []string) error {
-
-	err := server.InterceptConfigsPreRunHandler(cmd)
-	if err != nil { return err}
-	
-	// Scenario 1 set appConf.BaseConfig.MinGasPrices ="0.22" => no error raised
-	// scanrio 2 doinjgn othing catch the error
-	serverCtx := server.GetServerContextFromCmd(cmd)
-	
-	rootViper := serverCtx.Viper
-	if rootViper == nil {
-		return errors.New("rootViper must not be nil")
-	}
-	
-	rootDir := rootViper.GetString(flags.FlagHome)
-	//fmt.Println("rootDir=", rootDir)
-
-	configPath := filepath.Join(rootDir, "config")
-	//fmt.Println("configPath=", configPath)
-
-	appCfgTempFilePath := filepath.Join(configPath, "app.toml")
-	//fmt.Println("appCfgTempFilePath=", appCfgTempFilePath)
-	
+	// Modify app.toml.
+	appCfgTempFilePath := filepath.Join(tempDir, "config", "app.toml")
 	appConf := config.DefaultConfig()
-	//fmt.Println("appConf=", appConf)
-	
-	//fmt.Println("before appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
-	appConf.BaseConfig.MinGasPrices = "0.22"
-	//fmt.Println("after appConf.BaseConfig.MinGasPrices=", appConf.BaseConfig.MinGasPrices)
-
+	appConf.BaseConfig.MinGasPrices = ""
 	config.WriteConfigFile(appCfgTempFilePath, appConf)
 
-	return nil
-
+	// Run StartCmd.
+	cmd = server.StartCmd(nil, tempDir)
+	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
+		return server.InterceptConfigsPreRunHandler(cmd)
+	}
+	err = cmd.ExecuteContext(ctx)
+	require.Errorf(t, err, "please set min gas price in app.toml or flag or env var")
 }
-
-// TODO to import it from baseapp
-/*
-func defaultLogger() log.Logger {
-	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
-}
-*/
-

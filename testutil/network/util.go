@@ -27,6 +27,10 @@ func startInProcess(cfg Config, val *Validator) error {
 	tmCfg := val.Ctx.Config
 	tmCfg.Instrumentation.Prometheus = false
 
+	if err := val.AppConfig.ValidateBasic(); err != nil {
+		return err
+	}
+
 	nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
 	if err != nil {
 		return err

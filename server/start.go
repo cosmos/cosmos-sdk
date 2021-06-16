@@ -245,10 +245,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if err != nil {
 		return err
 	}
-	fmt.Println("startInProcess ctx.Logger=", ctx.Logger)
-	fmt.Println("startInProcess db=", db)
-	fmt.Println("startInProcess traceWriter=", traceWriter)
-	fmt.Println("startInProcess ctx.Viper=", ctx.Viper)
+
+	config := config.GetConfig(ctx.Viper)
+	if err := config.ValidateBasic(); err != nil {
+		return err
+	}
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
@@ -277,11 +278,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 	ctx.Logger.Debug("initialization: tmNode started")
-
-	config := config.GetConfig(ctx.Viper)
-	if err := config.ValidateBasic(); err != nil {
-		return err
-	}
 
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if API or gRPC is enabled, and avoid doing so in the general

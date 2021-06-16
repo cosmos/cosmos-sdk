@@ -44,12 +44,8 @@ func NewEmptyRecordItem(re *Record_Empty) *Record_Empty_ {
 	return &Record_Empty_{re}
 }
 
-func (re Record) GetName() string {
-	return re.Name
-}
-
-func (re Record) GetPubKey() (cryptotypes.PubKey, error) {
-	pk, ok := re.PubKey.GetCachedValue().(cryptotypes.PubKey)
+func (k Record) GetPubKey() (cryptotypes.PubKey, error) {
+	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
 		return nil, fmt.Errorf("Unable to cast PubKey to cryptotypes.PubKey")
 	}
@@ -57,17 +53,17 @@ func (re Record) GetPubKey() (cryptotypes.PubKey, error) {
 }
 
 // GetType implements Info interface
-func (re Record) GetAddress() (types.AccAddress, error) {
-	pk, err := re.GetPubKey()
+func (k Record) GetAddress() (types.AccAddress, error) {
+	pk, err := k.GetPubKey()
 	if err != nil {
 		return nil, err
 	}
 	return pk.Address().Bytes(), nil
 }
 
-func (re Record) GetAlgo() string {
+func (k Record) GetAlgo() string {
 
-	if l := re.GetLocal(); l != nil {
+	if l := k.GetLocal(); l != nil {
 		return l.PubKeyType
 	}
 
@@ -76,13 +72,13 @@ func (re Record) GetAlgo() string {
 }
 
 // TODO remove it later
-func (re Record) GetType() KeyType {
+func (k Record) GetType() KeyType {
 	return 0
 }
 
-func (re *Record) extractPrivKeyFromLocal() (cryptotypes.PrivKey, error) {
+func (k *Record) extractPrivKeyFromLocal() (cryptotypes.PrivKey, error) {
 	
-	local := re.GetLocal()
+	local := k.GetLocal()
 	fmt.Println("extractPrivKeyFromLocal local PrivKey any", local.PrivKey)
 	//"S�local PrivKey any &Any{TypeUrl:/cosmos.crypto.secp256k1.PrivKey,Value:[10 32 60 192 254 115 242 129 186 183 124 20 160 13 47 202 179 92 24 116 152 216 145 44 66 161 255 183 157 144 113 154 45 201],XXX_unrecognized:[]}"
 	fmt.Println("extractPrivKeyFromLocal local PubKeyType", local.PubKeyType)
@@ -128,7 +124,7 @@ func protoMarshalInfo(i Info) ([]byte, error) {
 /*
 func protoUnmarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
 
-	var re Record // will not work cause we use any, use InterfaceRegistry
+	var k Record // will not work cause we use any, use InterfaceRegistry
 	// dont forget to merge master to my branch, UnmarshalBinaryBare has been renamed
 	// cdcc.Marshaler.UnmarshalBinaryBare()  // lire proto.UnMarshal but works with Any
 	if err := cdc.UnmarshalInterface(bz, &re); err != nil {
@@ -207,6 +203,6 @@ func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		item = NewEmptyRecordItem(emptyRecord)
 	}
 
-	kr := NewRecord(name, apk, item)
-	return kr, nil
+	k := NewRecord(name, apk, item)
+	return k, nil
 }

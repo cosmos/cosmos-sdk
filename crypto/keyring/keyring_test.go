@@ -176,7 +176,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
-	require.NoError(t, err) // fix not a keyring.ErrKeyNotFounde rr
+	require.NoError(t, err) // fix unable to unpack private key
 
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)

@@ -231,9 +231,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", err
 	}
 
-	if k == nil {
-		return "", fmt.Errorf("no key to export with name: %s", uid)
-	}
+
 	key, err := k.GetPubKey()
 	if err != nil {
 		return "", err
@@ -341,6 +339,12 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
+
+	fmt.Println("Sign Local unpacked privKey", k.GetLocal().PrivKey.GetCachedValue().(types.PrivKey))
+	fmt.Println("Sign k.Name", k.Name)
+	fmt.Println("Sign unpacked pubKey", k.PubKey.GetCachedValue().(types.PubKey))
+
 
 	priv, err := k.extractPrivKeyFromLocal()
 	if err != nil {
@@ -566,15 +570,35 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 	if err := ks.checkMigrate(); err != nil {
 		return nil, err
 	}
-	bs, err := ks.db.Get(infoKey)
+
+	fmt.Println("key before ks.db.Get(infoKey)")
+	fmt.Println("key infoKey", infoKey)
+	item, err := ks.db.Get(infoKey)
 	if err != nil {
 		return nil, wrapKeyNotFound(err, infoKey)
 	}
-	if len(bs.Data) == 0 {
+
+	fmt.Println("key item.Key", item.Key)
+	fmt.Println("key item.Data", string(item.Data))
+
+	if len(item.Data) == 0 {
+		fmt.Println("len(bs.Data) == 0")
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 
-	return ks.protoUnmarshalRecord(bs.Data)
+	fmt.Println("before ks.protoUnmarshalRecord(item.Data)")
+	k, err := ks.protoUnmarshalRecord(item.Data)
+	fmt.Println("key err", err.Error())
+	if k == nil {
+		fmt.Println("k == nil")
+	}
+	fmt.Println("key err", err.Error())
+	fmt.Println("key Local unpacked privKey", k.GetLocal().PrivKey.GetCachedValue().(types.PrivKey))
+	fmt.Println("key k.Name", k.Name)
+	fmt.Println("key unpacked pubKey", k.PubKey.GetCachedValue().(types.PubKey))
+
+
+	return k, nil
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
@@ -752,7 +776,7 @@ func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, e
 	if err != nil {
 		return nil, err
 	}
-	
+
 	anyPubKey, err := codectypes.NewAnyWithValue(privKey.PubKey())
 	if err != nil {
 		return nil, err
@@ -776,6 +800,9 @@ func (ks keystore) writeRecord(k *Record) error {
 	if exists {
 		return errors.New("public key already exist in keybase")
 	}
+	fmt.Println("writeRecord Local unpacked privKey", k.GetLocal().PrivKey.GetCachedValue().(types.PrivKey))
+	fmt.Println("writeRecord k.Name", k.Name)
+	fmt.Println("writeRecord unpacked pubKey", k.PubKey.GetCachedValue().(types.PubKey))
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
@@ -783,7 +810,7 @@ func (ks keystore) writeRecord(k *Record) error {
 	}
  
 	key := infoKeyBz(k.GetName())
-	fmt.Println("key", key)
+	fmt.Println("writeRecord key", string(key))
 	item := keyring.Item{
 		Key:  string(key),// it is fetched by VERSION_KEY in checkMigrate
 		Data: serializedRecord,
@@ -871,6 +898,8 @@ func (ks keystore) checkMigrate() error {
 	var version uint32 = 0
 	// 1.Get a key data
 	item, err := ks.db.Get(VERSION_KEY)
+	fmt.Println("checkMigrate() item.Key", item.Key)
+	fmt.Println("checkMigrate() item.Data", string(item.Data))
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
 			return fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
@@ -920,6 +949,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 
 		// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
 		if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
+			fmt.Println("protoUnmarshalRecord continue")
 			continue
 		}
 
@@ -973,7 +1003,17 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 	if err := ks.cdc.Unmarshal(bz, k); err != nil {
 		return nil, err
 	}
-	
+	fmt.Println("protoUnmarshalRecord k.Name", k.Name)
+	fmt.Println("protoUnmarshalRecord k packed pubKey", k.PubKey)
+	pub, ok := k.PubKey.GetCachedValue().(types.PubKey) 
+	fmt.Println("protoUnmarshalRecord k unpacked pub", pub)
+	fmt.Println("protoUnmarshalRecord k ok", ok)
+	local := k.GetLocal()
+	fmt.Println("protoUnmarshalRecord k local packed privKey", local.PrivKey)
+	fmt.Println("protoUnmarshalRecord k local pubkeyType", local.PubKeyType)
+	priv, ok := local.PrivKey.GetCachedValue().(types.PrivKey)
+	fmt.Println("protoUnmarshalRecord k.GetLocal() unpacked priv", priv)
+	fmt.Println("protoUnmarshalRecord k.GetLocal() ok", ok)
 	return k, nil
 }
 

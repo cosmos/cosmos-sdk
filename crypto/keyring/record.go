@@ -84,17 +84,21 @@ func (re *Record) extractPrivKeyFromLocal() (cryptotypes.PrivKey, error) {
 	
 	local := re.GetLocal()
 	fmt.Println("extractPrivKeyFromLocal local PrivKey any", local.PrivKey)
-	"S�local PrivKey any &Any{TypeUrl:/cosmos.crypto.secp256k1.PrivKey,Value:[10 32 60 192 254 115 242 129 186 183 124 20 160 13 47 202 179 92 24 116 152 216 145 44 66 161 255 183 157 144 113 154 45 201],XXX_unrecognized:[]}"
+	//"S�local PrivKey any &Any{TypeUrl:/cosmos.crypto.secp256k1.PrivKey,Value:[10 32 60 192 254 115 242 129 186 183 124 20 160 13 47 202 179 92 24 116 152 216 145 44 66 161 255 183 157 144 113 154 45 201],XXX_unrecognized:[]}"
 	fmt.Println("extractPrivKeyFromLocal local PubKeyType", local.PubKeyType)
-	"secp256k1"
+	//"secp256k1"
 	
 	switch {
 	case local != nil:
 		anyPrivKey := local.PrivKey
-		privKey, ok := anyPrivKey.GetCachedValue().(cryptotypes.PrivKey)
+		privKey := anyPrivKey.GetCachedValue().(cryptotypes.PrivKey)
+		fmt.Println("extractPrivKeyFromLocal privKey", privKey.String())
+		/*
+		fmt.Println("extractPrivKeyFromLocal ok", ok)
 		if !ok {
 			return nil, fmt.Errorf("unable to unpack private key")
 		}
+		*/
 		return privKey, nil
 	default:
 		return nil, fmt.Errorf("unable to extract private key object")

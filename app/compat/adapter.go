@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/cosmos/cosmos-sdk/app/cli"
+	grpc1 "github.com/gogo/protobuf/grpc"
+	"google.golang.org/grpc"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -14,33 +16,70 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-func RegisterAppModuleBasic(configurator cli.Configurator, module module.AppModuleBasic) {
-	configurator.SetTxCommand(module.GetTxCmd())
-	configurator.SetQueryCommand(module.GetQueryCmd())
-	configurator.SetGenesisHandler(module)
+func AppModuleBasicHandler(module module.AppModuleBasic) cli.Handler {
+	return cli.Handler{
+		BasicGenesisHandler: app.BasicGenesisHandler{
+			DefaultGenesis:  module.DefaultGenesis,
+			ValidateGenesis: module.ValidateGenesis,
+		},
+		TxCommand:    module.GetTxCmd(),
+		QueryCommand: module.GetQueryCmd(),
+	}
 }
 
-func RegisterAppModule(configurator app.Configurator, module module.AppModule) {
-	module.RegisterServices(configurator)
-	configurator.RegisterBeginBlocker(func(ctx context.Context, req abci.RequestBeginBlock) {
-		module.BeginBlock(types.UnwrapSDKContext(ctx), req)
+func AppModuleHandler(module module.AppModule) app.Handler {
+	cfg := &configurator{}
+	module.RegisterServices(cfg)
+	return app.Handler{
+		BasicGenesisHandler: app.BasicGenesisHandler{
+			DefaultGenesis:  module.DefaultGenesis,
+			ValidateGenesis: module.ValidateGenesis,
+		},
+		InitGenesis: func(ctx context.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
+			return module.InitGenesis(types.UnwrapSDKContext(ctx), jsonCodec, message)
+		},
+		ExportGenesis: func(ctx context.Context, jsonCodec codec.JSONCodec) json.RawMessage {
+			return module.ExportGenesis(types.UnwrapSDKContext(ctx), jsonCodec)
+		},
+		BeginBlocker: func(ctx context.Context, req abci.RequestBeginBlock) {
+			module.BeginBlock(types.UnwrapSDKContext(ctx), req)
+		},
+		EndBlocker: func(ctx context.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
+			return module.EndBlock(types.UnwrapSDKContext(ctx), req)
+		},
+		MsgServices:   cfg.msgServices,
+		QueryServices: cfg.queryServices,
+	}
+}
+
+type configurator struct {
+	msgServices   []app.ServiceImpl
+	queryServices []app.ServiceImpl
+}
+
+func (c *configurator) MsgServer() grpc1.Server {
+	return &serviceRegistrar{impls: c.msgServices}
+}
+
+func (c *configurator) QueryServer() grpc1.Server {
+	return &serviceRegistrar{impls: c.queryServices}
+}
+
+func (c *configurator) RegisterMigration(moduleName string, forVersion uint64, handler module.MigrationHandler) error {
+	return nil
+}
+
+var _ module.Configurator = &configurator{}
+
+type serviceRegistrar struct {
+	impls []app.ServiceImpl
+}
+
+func (s *serviceRegistrar) RegisterService(desc *grpc.ServiceDesc, impl interface{}) {
+	s.impls = append(s.impls, app.ServiceImpl{
+		Desc: desc,
+		Impl: impl,
 	})
-	configurator.RegisterEndBlocker(func(ctx context.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
-		return module.EndBlock(types.UnwrapSDKContext(ctx), req)
-	})
-	configurator.RegisterGenesisHandler(genesisWrapper{module})
 }
 
-type genesisWrapper struct {
-	module.AppModule
-}
-
-func (g genesisWrapper) InitGenesis(ctx context.Context, codec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
-	return g.AppModule.InitGenesis(types.UnwrapSDKContext(ctx), codec, message)
-}
-
-func (g genesisWrapper) ExportGenesis(ctx context.Context, codec codec.JSONCodec) json.RawMessage {
-	return g.AppModule.ExportGenesis(types.UnwrapSDKContext(ctx), codec)
-}
-
-var _ app.GenesisHandler = genesisWrapper{}
+var _ grpc.ServiceRegistrar = &serviceRegistrar{}

@@ -5,12 +5,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/container"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govmodule "github.com/cosmos/cosmos-sdk/x/gov/module"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"go.uber.org/dig"
 )
 
 var (
@@ -18,39 +18,40 @@ var (
 )
 
 type Inputs struct {
-	container.StructArgs
+	dig.In
 
-	Codec        codec.BinaryCodec
-	LegacyAmino  *codec.LegacyAmino
-	Key          *sdk.KVStoreKey
-	TransientKey *sdk.TransientStoreKey
-	GovRouter    govtypes.Router `optional:true`
+	Codec                codec.BinaryCodec
+	LegacyAmino          *codec.LegacyAmino
+	KeyProvider          app.KVStoreKeyProvider
+	TransientKeyProvider app.TransientStoreKeyProvider
 }
 
 type Outputs struct {
-	container.StructArgs
+	dig.Out
 
-	Keeper paramskeeper.Keeper `security-role:"admin"`
+	Handler          app.Handler         `group:"app.handler"`
+	GovRoute         govmodule.Route     `group:"cosmos.gov.v1.Route"`
+	Keeper           paramskeeper.Keeper `security-role:"admin"`
+	SubspaceProvider SubspaceProvider
 }
 
-func (m Module) Provision(registrar container.Registrar) error {
-	err := registrar.Provide(func(configurator app.Configurator, inputs Inputs) Outputs {
-		keeper := paramskeeper.NewKeeper(inputs.Codec, inputs.LegacyAmino, inputs.Key, inputs.TransientKey)
+type SubspaceProvider func(app.ModuleKey) types.Subspace
+
+func (m Module) Provision(key app.ModuleKey, registrar container.Registrar) error {
+	return registrar.Provide(func(inputs Inputs) Outputs {
+		keeper := paramskeeper.NewKeeper(inputs.Codec, inputs.LegacyAmino, inputs.KeyProvider(key), inputs.TransientKeyProvider(key))
 		appMod := params.NewAppModule(keeper)
 
-		compat.RegisterAppModule(configurator, appMod)
-
-		if inputs.GovRouter != nil {
-			inputs.GovRouter.AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(keeper))
+		return Outputs{
+			Handler: compat.AppModuleHandler(appMod),
+			Keeper:  keeper,
+			SubspaceProvider: func(key app.ModuleKey) types.Subspace {
+				return keeper.Subspace(key.Name())
+			},
+			GovRoute: govmodule.Route{
+				Path:    paramproposal.RouterKey,
+				Handler: params.NewParamChangeProposalHandler(keeper),
+			},
 		}
-
-		return Outputs{Keeper: keeper}
-	})
-	if err != nil {
-		return err
-	}
-
-	return registrar.Provide(func(scope container.Scope, keeper paramskeeper.Keeper) types.Subspace {
-		return keeper.Subspace(string(scope))
 	})
 }

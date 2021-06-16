@@ -6,11 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	parammodule "github.com/cosmos/cosmos-sdk/x/params/module"
+	"go.uber.org/dig"
 )
 
 var (
@@ -22,13 +22,18 @@ func (m *Module) RegisterTypes(registry types.InterfaceRegistry) {
 	govtypes.RegisterInterfaces(registry)
 }
 
-type Inputs struct {
-	container.StructArgs
+type Route struct {
+	Path    string
+	Handler govtypes.Handler
+}
 
-	Router     govtypes.Router
-	Codec      codec.Codec
-	Key        *sdk.KVStoreKey
-	ParamStore paramtypes.Subspace
+type Inputs struct {
+	dig.In
+
+	Codec            codec.Codec
+	KeyProvider      app.KVStoreKeyProvider
+	SubspaceProvider parammodule.SubspaceProvider
+	Routes           []Route `group:"cosmos.gov.v1.Route"`
 
 	// TODO: use keepers defined in their respective modules
 	AuthKeeper    govtypes.AccountKeeper
@@ -37,25 +42,32 @@ type Inputs struct {
 }
 
 type Outputs struct {
-	container.StructArgs
+	dig.Out
+
+	Handler app.Handler `group:"app.handler"`
 }
 
-func (m *Module) Provision(registrar container.Registrar) error {
-	err := registrar.Provide(func(configurator app.Configurator, inputs Inputs) Outputs {
+func (m *Module) Provision(key app.ModuleKey, registrar container.Registrar) error {
+	err := registrar.Provide(func(inputs Inputs) Outputs {
+		router := govtypes.NewRouter()
+		for _, route := range inputs.Routes {
+			router.AddRoute(route.Path, route.Handler)
+		}
 		k := govkeeper.NewKeeper(
 			inputs.Codec,
-			inputs.Key,
-			inputs.ParamStore,
+			inputs.KeyProvider(key),
+			inputs.SubspaceProvider(key),
 			inputs.AuthKeeper,
 			inputs.BankKeeper,
 			inputs.StakingKeeper,
-			inputs.Router,
+			router,
 		)
 
 		am := gov.NewAppModule(inputs.Codec, k, inputs.AuthKeeper, inputs.BankKeeper)
-		compat.RegisterAppModule(configurator, am)
 
-		return Outputs{}
+		return Outputs{
+			Handler: compat.AppModuleHandler(am),
+		}
 	})
 
 	if err != nil {

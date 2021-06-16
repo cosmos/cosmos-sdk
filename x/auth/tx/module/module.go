@@ -12,7 +12,7 @@ var (
 	_ app.Provisioner = Module{}
 )
 
-func (m Module) Provision(registrar container.Registrar) error {
+func (m Module) Provision(key app.ModuleKey, registrar container.Registrar) error {
 	return registrar.Provide(func(marshaler codec.ProtoCodecMarshaler) client.TxConfig {
 		signModes := m.EnabledSignModes
 		if signModes == nil {

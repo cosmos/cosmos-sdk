@@ -5,18 +5,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/app/cli"
 	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	parammodule "github.com/cosmos/cosmos-sdk/x/params/module"
+	"go.uber.org/dig"
 )
 
 var (
@@ -25,25 +23,32 @@ var (
 )
 
 type Inputs struct {
-	container.StructArgs
+	dig.In
 
-	Codec      codec.Codec
-	Key        *sdk.KVStoreKey
-	ParamStore paramtypes.Subspace
+	Codec            codec.Codec
+	KeyProvider      app.KVStoreKeyProvider
+	SubspaceProvider parammodule.SubspaceProvider
 }
 
 type Outputs struct {
-	container.StructArgs
+	dig.Out
 
+	Handler    app.Handler `group:"app.handler"`
 	ViewKeeper types.ViewKeeper
 	Keeper     types.Keeper `security-role:"admin"`
+}
+
+type CLIOutputs struct {
+	dig.Out
+
+	Handler cli.Handler `group:"cli.handler"`
 }
 
 func (m Module) RegisterTypes(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
 
-func (m Module) Provision(registrar container.Registrar) error {
+func (m Module) Provision(key app.ModuleKey, registrar container.Registrar) error {
 	// provide AccountRetriever
 	err := registrar.Provide(func() client.AccountRetriever {
 		return types.AccountRetriever{}
@@ -53,27 +58,30 @@ func (m Module) Provision(registrar container.Registrar) error {
 	}
 
 	// provide CLI handlers
-	err = registrar.Provide(func(configurator cli.Configurator) {
-		configurator.RootQueryCommand().AddCommand(
-			authcmd.GetAccountCmd(),
-			authcmd.QueryTxsByEventsCmd(),
-			authcmd.QueryTxCmd(),
-		)
+	err = registrar.Provide(func() CLIOutputs {
+		// TODO
+		//configurator.RootQueryCommand().AddCommand(
+		//	authcmd.GetAccountCmd(),
+		//	authcmd.QueryTxsByEventsCmd(),
+		//	authcmd.QueryTxCmd(),
+		//)
+		//
+		//configurator.RootTxCommand().AddCommand(
+		//	authcmd.GetSignCommand(),
+		//	authcmd.GetSignBatchCommand(),
+		//	authcmd.GetMultiSignCommand(),
+		//	authcmd.GetMultiSignBatchCmd(),
+		//	authcmd.GetValidateSignaturesCommand(),
+		//	flags.LineBreak,
+		//	authcmd.GetBroadcastCommand(),
+		//	authcmd.GetEncodeCommand(),
+		//	authcmd.GetDecodeCommand(),
+		//	flags.LineBreak,
+		//)
 
-		configurator.RootTxCommand().AddCommand(
-			authcmd.GetSignCommand(),
-			authcmd.GetSignBatchCommand(),
-			authcmd.GetMultiSignCommand(),
-			authcmd.GetMultiSignBatchCmd(),
-			authcmd.GetValidateSignaturesCommand(),
-			flags.LineBreak,
-			authcmd.GetBroadcastCommand(),
-			authcmd.GetEncodeCommand(),
-			authcmd.GetDecodeCommand(),
-			flags.LineBreak,
-		)
-
-		compat.RegisterAppModuleBasic(configurator, auth.AppModuleBasic{})
+		return CLIOutputs{
+			Handler: compat.AppModuleBasicHandler(auth.AppModuleBasic{}),
+		}
 	})
 	if err != nil {
 		return err
@@ -81,7 +89,7 @@ func (m Module) Provision(registrar container.Registrar) error {
 
 	// provide app handlers
 	return registrar.Provide(
-		func(configurator app.Configurator, inputs Inputs) (Outputs, error) {
+		func(inputs Inputs) (Outputs, error) {
 			var accCtr types.AccountConstructor
 			if m.AccountConstructor != nil {
 				err := inputs.Codec.UnpackAny(m.AccountConstructor, &accCtr)
@@ -107,18 +115,23 @@ func (m Module) Provision(registrar container.Registrar) error {
 				randomGenesisAccountsProvider = DefaultRandomGenesisAccountsProvider{}
 			}
 
-			keeper := authkeeper.NewAccountKeeper(inputs.Codec, inputs.Key, inputs.ParamStore, func() types.AccountI {
-				return accCtr.NewAccount()
-			}, perms)
+			keeper := authkeeper.NewAccountKeeper(
+				inputs.Codec,
+				inputs.KeyProvider(key),
+				inputs.SubspaceProvider(key),
+				func() types.AccountI {
+					return accCtr.NewAccount()
+				},
+				perms,
+			)
 			appMod := auth.NewAppModule(inputs.Codec, keeper, func(simState *module.SimulationState) types.GenesisAccounts {
 				return randomGenesisAccountsProvider.RandomGenesisAccounts(simState)
 			})
 
-			compat.RegisterAppModule(configurator, appMod)
-
 			return Outputs{
 				ViewKeeper: viewOnlyKeeper{keeper},
 				Keeper:     keeper,
+				Handler:    compat.AppModuleHandler(appMod),
 			}, nil
 		},
 	)

@@ -64,7 +64,7 @@ func (mc ModuleContainer) AddModule(scope container.Scope, config *codecTypes.An
 			ctr:   mc.Container,
 			scope: scope,
 		}
-		err := provisioner.Provision(registrar)
+		err := provisioner.Provision(nil, registrar)
 		if err != nil {
 			return err
 		}

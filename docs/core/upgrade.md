@@ -82,6 +82,32 @@ To learn more about configuring migration scripts for your modules, see the [Mig
 
 You can introduce entirely new modules to the application during an upgrade. New modules are recognized because they have not yet been registered in `x/upgrade`'s `VersionMap` store. In this case, `RunMigrations` calls the `InitGenesis` function from the corresponding module to set up its initial state.
 
+### Add StoreUpgrades for New Modules
+
+All chains which will run in-place store migrations will need to manually add storeloader for upgrades introducing new modules. So that the new module's stores are added to the multistore before the migrations begin.
+
+```golang
+upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+
+      // ...
+      // add store upgrades for new modules
+      // Example: 
+      //    Added: []string{"foo"},
+      // ...
+
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+```
+
 ## Overwriting Genesis Functions
 
 The Cosmos SDK offers modules that the application developer can import in their app. These modules often have an `InitGenesis` function already defined.

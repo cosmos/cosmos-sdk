@@ -22,9 +22,9 @@ import (
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
-	FromAddress sdk.AccAddress
-	Client      rpcclient.Client
-	ChainID     string
+	FromAddress       sdk.AccAddress
+	Client            rpcclient.Client
+	ChainID           string
 	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
@@ -71,7 +71,6 @@ func (ctx Context) WithInput(r io.Reader) Context {
 	ctx.Input = r
 	return ctx
 }
-
 
 // WithCodec returns a copy of the Context with an updated Codec.
 func (ctx Context) WithCodec(m codec.Codec) Context {

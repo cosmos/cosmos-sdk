@@ -10,7 +10,7 @@ import (
 // This is provided for compatibility between protobuf and amino implementations.
 type EncodingConfig struct {
 	InterfaceRegistry types.InterfaceRegistry
-	Codec codec.Codec
-	TxConfig  client.TxConfig
-	Amino     *codec.LegacyAmino
+	Codec             codec.Codec
+	TxConfig          client.TxConfig
+	Amino             *codec.LegacyAmino
 }

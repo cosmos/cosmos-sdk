@@ -51,6 +51,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (x/gov) [\#8813](https://github.com/cosmos/cosmos-sdk/pull/8813) fix `GET /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits` to include initial deposit
 
+### Improvements
+
+* (store) [\#9403](https://github.com/cosmos/cosmos-sdk/pull/9403) Add `RefundGas` function to `GasMeter` interface
 
 ## [v0.42.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.5) - 2021-05-18
 

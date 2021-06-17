@@ -42,7 +42,7 @@ message Plan {
 // SoftwareUpgradeProposal is a gov Content type for initiating a software
 // upgrade.
 message SoftwareUpgradeProposal {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
   string title       = 1;

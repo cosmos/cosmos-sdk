@@ -83,7 +83,7 @@ type DelegationSet interface {
 		fn func(index int64, delegation DelegationI) (stop bool))
 }
 
-//_______________________________________________________________________________
+// _______________________________________________________________________________
 // Event Hooks
 // These can be utilized to communicate between a staking keeper and another
 // keeper which must take particular actions when validators/delegators change

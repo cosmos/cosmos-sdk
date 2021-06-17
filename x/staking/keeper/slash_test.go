@@ -384,7 +384,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Equal(t, validator.GetStatus(), types.Unbonding)
 }
 
-//_________________________________________________________________________________
+// _________________________________________________________________________________
 // tests Slash at a previous height with a redelegation
 func TestSlashWithRedelegation(t *testing.T) {
 	app, ctx, addrDels, addrVals := bootstrapSlashTest(t, 10)

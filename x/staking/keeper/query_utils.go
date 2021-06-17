@@ -50,7 +50,7 @@ func (k Keeper) GetDelegatorValidator(
 	return validator, nil
 }
 
-//_____________________________________________________________________________________
+// _____________________________________________________________________________________
 
 // return all delegations for a delegator
 func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []types.Delegation {
@@ -59,7 +59,7 @@ func (k Keeper) GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAdd
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(delegator)
 
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
 
 	i := 0

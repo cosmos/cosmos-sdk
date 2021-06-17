@@ -21,7 +21,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-var cancelledInPreRun = errors.New("Canelled in prerun")
+var cancelledInPreRun = errors.New("Cancelled in prerun")
 
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
@@ -434,5 +434,5 @@ func TestEmptyMinGasPrices(t *testing.T) {
 		return server.InterceptConfigsPreRunHandler(cmd)
 	}
 	err = cmd.ExecuteContext(ctx)
-	require.Errorf(t, err, "please set min gas price in app.toml or flag or env var")
+	require.Errorf(t, err, config.ErrSetMinGasPrice.Error())
 }

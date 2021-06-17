@@ -34,11 +34,22 @@ var (
 	Commit = ""
 	// build tags
 	BuildTags = ""
-	// cosmos-sdk version
-	CosmosSDKVersion = defaultCosmosSDKVersion
 )
 
-const defaultCosmosSDKVersion = "0.42.5"
+func getSDKVersion() string {
+	deps, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unable to read deps"
+	}
+	var sdkVersion string
+	for _, dep := range deps.Deps {
+		if dep.Path == "github.com/cosmos/cosmos-sdk" {
+			sdkVersion = dep.Version
+		}
+	}
+
+	return sdkVersion
+}
 
 // Info defines the application version information.
 type Info struct {
@@ -53,6 +64,7 @@ type Info struct {
 }
 
 func NewInfo() Info {
+	sdkVersion := getSDKVersion()
 	return Info{
 		Name:             Name,
 		AppName:          AppName,
@@ -61,7 +73,7 @@ func NewInfo() Info {
 		BuildTags:        BuildTags,
 		GoVersion:        fmt.Sprintf("go version %s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH),
 		BuildDeps:        depsFromBuildInfo(),
-		CosmosSdkVersion: CosmosSDKVersion,
+		CosmosSdkVersion: sdkVersion,
 	}
 }
 

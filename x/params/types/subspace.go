@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/cosmos/cosmos-sdk/app"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -275,3 +277,5 @@ func (ros ReadOnlySubspace) Modified(ctx sdk.Context, key []byte) bool {
 func (ros ReadOnlySubspace) Name() string {
 	return ros.s.Name()
 }
+
+type SubspaceProvider func(app.ModuleKey) Subspace

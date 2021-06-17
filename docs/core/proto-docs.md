@@ -419,7 +419,7 @@
     - [Query](#cosmos.mint.v1beta1.Query)
   
 - [cosmos/params/module/v1/module.proto](#cosmos/params/module/v1/module.proto)
-    - [Module](#cosmos.params.modulev1beta1.Module)
+    - [Module](#cosmos.params.module.v1.Module)
   
 - [cosmos/params/v1beta1/params.proto](#cosmos/params/v1beta1/params.proto)
     - [ParamChange](#cosmos.params.v1beta1.ParamChange)
@@ -5942,7 +5942,7 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="cosmos.params.modulev1beta1.Module"></a>
+<a name="cosmos.params.module.v1.Module"></a>
 
 ### Module
 

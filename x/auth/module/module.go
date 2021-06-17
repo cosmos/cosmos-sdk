@@ -2,7 +2,6 @@ package module
 
 import (
 	"github.com/cosmos/cosmos-sdk/app"
-	"github.com/cosmos/cosmos-sdk/app/cli"
 	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,10 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/container"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	parammodule "github.com/cosmos/cosmos-sdk/x/params/module"
+	types2 "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/spf13/cobra"
 	"go.uber.org/dig"
 )
 
@@ -27,7 +28,7 @@ type Inputs struct {
 
 	Codec            codec.Codec
 	KeyProvider      app.KVStoreKeyProvider
-	SubspaceProvider parammodule.SubspaceProvider
+	SubspaceProvider types2.SubspaceProvider
 }
 
 type Outputs struct {
@@ -41,7 +42,8 @@ type Outputs struct {
 type CLIOutputs struct {
 	dig.Out
 
-	Handler cli.Handler `group:"cli.handler"`
+	TxCmd    *cobra.Command   `group:"cosmos.tx.v1.Command"`
+	QueryCmd []*cobra.Command `group:"cosmos.query.v1.Command,flatten"`
 }
 
 func (m Module) RegisterTypes(registry codectypes.InterfaceRegistry) {
@@ -59,28 +61,13 @@ func (m Module) Provision(key app.ModuleKey, registrar container.Registrar) erro
 
 	// provide CLI handlers
 	err = registrar.Provide(func() CLIOutputs {
-		// TODO
-		//configurator.RootQueryCommand().AddCommand(
-		//	authcmd.GetAccountCmd(),
-		//	authcmd.QueryTxsByEventsCmd(),
-		//	authcmd.QueryTxCmd(),
-		//)
-		//
-		//configurator.RootTxCommand().AddCommand(
-		//	authcmd.GetSignCommand(),
-		//	authcmd.GetSignBatchCommand(),
-		//	authcmd.GetMultiSignCommand(),
-		//	authcmd.GetMultiSignBatchCmd(),
-		//	authcmd.GetValidateSignaturesCommand(),
-		//	flags.LineBreak,
-		//	authcmd.GetBroadcastCommand(),
-		//	authcmd.GetEncodeCommand(),
-		//	authcmd.GetDecodeCommand(),
-		//	flags.LineBreak,
-		//)
-
+		am := auth.AppModuleBasic{}
 		return CLIOutputs{
-			Handler: compat.AppModuleBasicHandler(auth.AppModuleBasic{}),
+			TxCmd: am.GetTxCmd(),
+			QueryCmd: []*cobra.Command{
+				am.GetQueryCmd(),
+				authcmd.GetAccountCmd(),
+			},
 		}
 	})
 	if err != nil {
@@ -131,7 +118,7 @@ func (m Module) Provision(key app.ModuleKey, registrar container.Registrar) erro
 			return Outputs{
 				ViewKeeper: viewOnlyKeeper{keeper},
 				Keeper:     keeper,
-				Handler:    compat.AppModuleHandler(appMod),
+				Handler:    compat.AppModuleHandler(key.ID(), appMod),
 			}, nil
 		},
 	)

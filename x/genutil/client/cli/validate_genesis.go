@@ -4,18 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/spf13/cobra"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 const chainUpgradeGuide = "https://docs.cosmos.network/master/migrations/chain-upgrade-guide-040.html"
 
 // ValidateGenesisCmd takes a genesis file, and makes sure that it is valid.
-func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
+func ValidateGenesisCmd(validateGenesis func(
+	codec.JSONCodec,
+	client.TxEncodingConfig,
+	map[string]json.RawMessage,
+) error) *cobra.Command {
 	return &cobra.Command{
 		Use:   "validate-genesis [file]",
 		Args:  cobra.RangeArgs(0, 1),
@@ -44,7 +49,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 				return fmt.Errorf("error unmarshalling genesis doc %s: %s", genesis, err.Error())
 			}
 
-			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
+			if err = validateGenesis(cdc, clientCtx.TxConfig, genState); err != nil {
 				return fmt.Errorf("error validating genesis file %s: %s", genesis, err.Error())
 			}
 

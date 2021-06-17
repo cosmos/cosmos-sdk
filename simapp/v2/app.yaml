@@ -1,18 +1,18 @@
 modules:
   - name: auth
     config:
-      @type: cosmos.auth.module.v1.Module
+      '@type': cosmos.auth.module.v1.Module
   - name: bank
     config:
-      @type: cosmos.bank.module.v1.Module
+      '@type': cosmos.bank.module.v1.Module
   - name: params
     config:
-      @type: cosmos.params.module.v1.Module
+      '@type': cosmos.params.module.v1.Module
   - name: gov
     config:
-      @type: cosmos.gov.module.v1.Module
+      '@type': cosmos.gov.module.v1.Module
 abci:
   begin_block: [auth, bank]
   end_block: [gov]
   tx_handler:
-    @type: cosmos.tx.module.v1.Module
+    '@type': cosmos.tx.module.v1.Module

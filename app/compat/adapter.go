@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/app/cli"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	"google.golang.org/grpc"
 
@@ -16,30 +15,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-func AppModuleBasicHandler(module module.AppModuleBasic) cli.Handler {
-	return cli.Handler{
-		BasicGenesisHandler: app.BasicGenesisHandler{
-			DefaultGenesis:  module.DefaultGenesis,
-			ValidateGenesis: module.ValidateGenesis,
-		},
-		TxCommand:    module.GetTxCmd(),
-		QueryCommand: module.GetQueryCmd(),
-	}
-}
-
-func AppModuleHandler(module module.AppModule) app.Handler {
+func AppModuleHandler(id app.ModuleID, module module.AppModule) app.Handler {
 	cfg := &configurator{}
 	module.RegisterServices(cfg)
 	return app.Handler{
-		BasicGenesisHandler: app.BasicGenesisHandler{
-			DefaultGenesis:  module.DefaultGenesis,
-			ValidateGenesis: module.ValidateGenesis,
-		},
+		ID: id,
 		InitGenesis: func(ctx context.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
 			return module.InitGenesis(types.UnwrapSDKContext(ctx), jsonCodec, message)
-		},
-		ExportGenesis: func(ctx context.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-			return module.ExportGenesis(types.UnwrapSDKContext(ctx), jsonCodec)
 		},
 		BeginBlocker: func(ctx context.Context, req abci.RequestBeginBlock) {
 			module.BeginBlock(types.UnwrapSDKContext(ctx), req)

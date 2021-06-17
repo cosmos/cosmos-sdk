@@ -1,4 +1,4 @@
-go 1.15
+go 1.16
 
 module github.com/cosmos/cosmos-sdk
 
@@ -50,7 +50,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.10
 	github.com/tendermint/tm-db v0.6.4
-	go.uber.org/dig v1.11.0 // indirect
+	go.uber.org/dig v1.11.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/sys v0.0.0-20210510120138-977fb7262007 // indirect
 	google.golang.org/genproto v0.0.0-20210114201628-6edceaf6022f
@@ -59,6 +59,7 @@ require (
 	gopkg.in/ini.v1 v1.61.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	nhooyr.io/websocket v1.8.6 // indirect
+	sigs.k8s.io/yaml v1.2.0
 )
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2

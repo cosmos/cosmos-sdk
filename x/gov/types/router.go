@@ -75,3 +75,8 @@ func (rtr *router) GetRoute(path string) Handler {
 
 	return rtr.routes[path]
 }
+
+type Route struct {
+	Path    string
+	Handler Handler
+}

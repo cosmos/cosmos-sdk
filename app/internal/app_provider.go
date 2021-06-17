@@ -1,33 +1,47 @@
 package internal
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/app"
-	"github.com/cosmos/cosmos-sdk/container"
+	"github.com/cosmos/cosmos-sdk/app/query"
+	"github.com/cosmos/cosmos-sdk/x/genutil/provider"
 )
 
 type AppProvider struct {
-	*ModuleContainer
+	*app.ModuleContainer
 	config          *app.Config
 	moduleConfigMap map[string]*app.ModuleConfig
 }
 
-const txModuleScope container.Scope = "tx"
-
 func NewAppProvider(config *app.Config) (*AppProvider, error) {
-	ctr := NewModuleContainer()
+	ctr := app.NewModuleContainer()
 	moduleConfigMap := map[string]*app.ModuleConfig{}
 
-	err := ctr.AddModule(txModuleScope, config.Abci.TxHandler)
+	if config.Abci.TxHandler == nil {
+		return nil, fmt.Errorf("missing tx handler")
+	}
+	err := ctr.AddProtoModule("tx", config.Abci.TxHandler)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, modConfig := range config.Modules {
-		err = ctr.AddModule(container.Scope(modConfig.Name), modConfig.Config)
+		err = ctr.AddProtoModule(modConfig.Name, modConfig.Config)
 		if err != nil {
 			return nil, err
 		}
 		moduleConfigMap[modConfig.Name] = modConfig
+	}
+
+	err = ctr.Provide(provider.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ctr.Provide(query.Provider)
+	if err != nil {
+		return nil, err
 	}
 
 	return &AppProvider{

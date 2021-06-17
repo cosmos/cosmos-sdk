@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.params.modulev1beta1;
+package cosmos.params.module.v1;
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/params/module";
 

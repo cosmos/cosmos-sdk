@@ -33,16 +33,6 @@ func (ap *AppProvider) AppCreator(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-	err := ap.container.Provide(KVStoreKeyProvider)
-	if err != nil {
-		panic(err)
-	}
-
-	err = ap.container.Provide(ConfiguratorProvider)
-	if err != nil {
-		panic(err)
-	}
-
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {

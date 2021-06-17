@@ -1,16 +1,13 @@
 package app
 
 import (
-	"encoding/json"
-
-	"github.com/gogo/protobuf/proto"
-
-	"gopkg.in/yaml.v2"
+	"github.com/gogo/protobuf/jsonpb"
+	"sigs.k8s.io/yaml"
 )
 
 func ReadJSONConfig(bz []byte) (*Config, error) {
 	var cfg Config
-	err := proto.Unmarshal(bz, &cfg)
+	err := jsonpb.UnmarshalString(string(bz), &cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -19,13 +16,7 @@ func ReadJSONConfig(bz []byte) (*Config, error) {
 }
 
 func ReadYAMLConfig(bz []byte) (*Config, error) {
-	var cfg map[string]interface{}
-	err := yaml.Unmarshal(bz, &cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	jsonBz, err := json.Marshal(cfg)
+	jsonBz, err := yaml.YAMLToJSON(bz)
 	if err != nil {
 		return nil, err
 	}

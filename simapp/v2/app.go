@@ -8,6 +8,7 @@ import (
 
 	// Load Modules
 	_ "github.com/cosmos/cosmos-sdk/x/auth/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank/module"
 	_ "github.com/cosmos/cosmos-sdk/x/gov/module"
 	_ "github.com/cosmos/cosmos-sdk/x/params/module"

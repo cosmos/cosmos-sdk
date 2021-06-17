@@ -43,6 +43,7 @@ message Plan {
 // upgrade.
 message SoftwareUpgradeProposal {
   option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
 
   string title       = 1;
   string description = 2;

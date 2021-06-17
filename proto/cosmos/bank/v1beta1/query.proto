@@ -45,6 +45,10 @@ service Query {
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
   }
+
+  rpc DenomOwners(QueryDenomOwnersReqest) returns (QueryDenomOwnersResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/denoms/{denom}";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method.
@@ -156,4 +160,24 @@ message QueryDenomMetadataRequest {
 message QueryDenomMetadataResponse {
   // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryDenomOwnersReqest defines the request type for the DenomOwners RPC query,
+// which queries for a paginated set of all account holders of a particular
+// denomination.
+message QueryDenomOwnersReqest {
+  // denom defines the coin denomination to query all account holders for.
+  string denom = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
+message QueryDenomOwnersResponse {
+  // addresses defines the set of addresses that own a particular denomination.
+  repeated string addresses = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -49,7 +49,7 @@ service Query {
   // DenomOwners queries for all account addresses that own a particular token
   // deomination.
   rpc DenomOwners(QueryDenomOwnersReqest) returns (QueryDenomOwnersResponse) {
-    option (google.api.http).get = "/cosmos/bank/v1beta1/denoms/{denom}";
+    option (google.api.http).get = "/cosmos/bank/v1beta1/denom_owners/{denom}";
   }
 }
 

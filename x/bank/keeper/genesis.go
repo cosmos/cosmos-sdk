@@ -20,7 +20,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(err)
 		}
 
-		if err := k.SetBalances(ctx, addr, balance.Coins); err != nil {
+		if err := k.initBalances(ctx, addr, balance.Coins); err != nil {
 			panic(fmt.Errorf("error on setting balances %w", err))
 		}
 

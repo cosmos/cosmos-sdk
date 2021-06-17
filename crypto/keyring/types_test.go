@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -23,12 +22,11 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	copy(tmpKey[:], bz)
 
 	pk := &secp256k1.PubKey{Key: tmpKey}
-	apk, err := codectypes.NewAnyWithValue(pk)
-	require.NoError(t, err)
 	path := hd.NewFundraiserParams(5, sdk.CoinType, 1)
 	ledgerRecord := keyring.NewLedgerRecord(path)
 	ledgerRecordItem := keyring.NewLedgerRecordItem(ledgerRecord)
-	k := keyring.NewRecord("some_name", apk, ledgerRecordItem)
+	k, err := keyring.NewRecord("some_name", pk, ledgerRecordItem)
+	require.NoError(t, err)
 	//require.Equal(t, keyring.TypeLedger, kr.GetType())
 
 	path = k.GetLedger().GetPath()
@@ -49,7 +47,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	require.NotNil(t, restoredRecord)
 
 	// Check both keys match
-	require.Equal(t, k.GetName(), restoredRecord.GetName())
+	require.Equal(t, k.Name, restoredRecord.Name)
 	require.Equal(t, k.GetType(), restoredRecord.GetType())
 	//TODO fix error
 	//restoredPubKey, err := restoredRecord.GetPubKey()

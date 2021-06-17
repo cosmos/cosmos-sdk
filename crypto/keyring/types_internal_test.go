@@ -1,4 +1,4 @@
-package keyring
+package keyring_test
 
 import (
 	"testing"
@@ -9,6 +9,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 func TestRecordMarshaling(t *testing.T) {
@@ -20,22 +21,22 @@ func TestRecordMarshaling(t *testing.T) {
 
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
-	emptyRecord := NewEmptyRecord()
-	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
+	emptyRecord := keyring.NewEmptyRecord()
+	emptyRecordItem := keyring.NewEmptyRecordItem(emptyRecord)
 
-	r, err := NewRecord("testrecord", pk, emptyRecordItem)
-	require.NotNil(err)
+	r, err := keyring.NewRecord("testrecord", pk, emptyRecordItem)
+	require.NoError(err)
 
 	bz, err := cdc.Marshal(r)
-	require.NotNil(err)
+	require.NoError(err)
 
-	var r2 Record
-	require.NotNil(cdc.Unmarshal(bz, &r2))
+	var r2 keyring.Record
+	require.NoError(cdc.Unmarshal(bz, &r2))
 	require.Equal(r.Name, r2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.
 	require.True(r.PubKey.Equal(r2.PubKey))
 
 	pk2, err := r2.GetPubKey()
-	require.NotNil(err)
+	require.NoError(err)
 	require.True(pk.Equals(pk2))
 }

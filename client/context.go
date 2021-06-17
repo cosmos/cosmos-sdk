@@ -354,7 +354,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		return nil, "", 0, err
 	}
 	
-	return addr, re.GetName(), re.GetType(), nil
+	return addr, re.Name, re.GetType(), nil
 }
 
 // NewKeyringFromBackend gets a Keyring object from a backend

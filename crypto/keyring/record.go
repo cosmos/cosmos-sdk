@@ -196,12 +196,15 @@ func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 
 	switch info.GetType() {
 	case TypeLocal:
+		// TODO fix that
+		/* 
 		algo := info.GetAlgo()
 		localRecord, err := newLocalRecord(pk, string(algo))
 		if err != nil {
 			return nil, err
 		}
 		item = newLocalRecordItem(localRecord)
+		*/
 	case TypeOffline:
 		emptyRecord := NewEmptyRecord()
 		item = NewEmptyRecordItem(emptyRecord)

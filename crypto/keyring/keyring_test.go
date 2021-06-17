@@ -50,7 +50,7 @@ func TestNewKeyring(t *testing.T) {
 	mockIn.Reset("password\npassword\n")
 	re, _, err := kr.NewMnemonic("foo", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	require.Equal(t, "foo", re.GetName())
+	require.Equal(t, "foo", re.Name)
 }
 
 /*
@@ -231,7 +231,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NoError(t, kb.ImportPubKey(n3, armor))
 	i3, err := kb.Key(n3)
 	require.NoError(t, err)
-	require.Equal(t, i3.GetName(), n3)
+	require.Equal(t, i3.Name, n3)
 
 	_, _, err = kb.Sign(n3, d3)
 	require.Error(t, err)
@@ -1368,7 +1368,7 @@ func TestBackendConfigConstructors(t *testing.T) {
 }
 
 func requireEqualRecord(t *testing.T, key *keyring.Record, mnemonic *keyring.Record) {
-	require.Equal(t, key.GetName(), mnemonic.GetName())
+	require.Equal(t, key.Name, mnemonic.Name)
 
 	keyAddr, err := key.GetAddress()
 	require.NoError(t, err)

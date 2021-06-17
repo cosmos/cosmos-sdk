@@ -35,14 +35,14 @@ func TestLegacyKeybase(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keys))
 
-	armor, err := kb.ExportPubKey(keys[0].GetName())
+	armor, err := kb.ExportPubKey(keys[0].Name)
 	require.NoError(t, err)
 	require.NotEmpty(t, armor)
 
-	_, err = kb.ExportPrivKey(keys[0].GetName(), "12345678", "12345678")
+	_, err = kb.ExportPrivKey(keys[0].Name, "12345678", "12345678")
 	require.Error(t, err)
 
-	armoredInfo, err := kb.Export(keys[0].GetName())
+	armoredInfo, err := kb.Export(keys[0].Name)
 	require.NoError(t, err)
 	require.NotEmpty(t, armoredInfo)
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -19,9 +18,7 @@ func TestBech32KeysOutput(t *testing.T) {
 	tmpKey := sk.PubKey()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
 
-	apk, err := codectypes.NewAnyWithValue(multisigPk)
-	require.NoError(t, err)
-	kr, err := keyring.NewRecord("multisig", apk, keyring.NewEmptyRecordItem(keyring.NewEmptyRecord()))
+	kr, err := keyring.NewRecord("multisig", multisigPk, keyring.NewEmptyRecordItem(keyring.NewEmptyRecord()))
 	require.NotNil(t, err)
 	//info, err := NewMultiInfo("multisig", multisigPk)
 	require.NotNil(t, kr)
@@ -29,7 +26,7 @@ func TestBech32KeysOutput(t *testing.T) {
 	pubKey, err := kr.GetPubKey()
 	require.NoError(t, err)
 	accAddr := sdk.AccAddress(pubKey.Address())
-	expectedOutput, err := keyring.NewKeyOutput(kr.GetName(), kr.GetType(), accAddr, multisigPk)
+	expectedOutput, err := keyring.NewKeyOutput(kr.Name, kr.GetType(), accAddr, multisigPk)
 	require.NoError(t, err)
 
 	out, err := keyring.MkAccKeyOutput(kr)

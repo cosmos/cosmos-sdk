@@ -42,7 +42,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//__________________________________________________________________________________________
+// __________________________________________________________________________________________
 
 // AppModuleBasic is the standard form for basic non-dependant elements of an application module.
 type AppModuleBasic interface {
@@ -145,7 +145,7 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 	}
 }
 
-//_________________________________________________________
+// _________________________________________________________
 
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
@@ -179,7 +179,7 @@ type AppModule interface {
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
-//___________________________
+// ___________________________
 
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
@@ -216,7 +216,7 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 	return []abci.ValidatorUpdate{}
 }
 
-//____________________________________________________________________________
+// ____________________________________________________________________________
 
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules

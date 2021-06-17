@@ -66,7 +66,7 @@ func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
 // GetQueryCmd returns no root query command for the genutil module.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command { return nil }
 
-//____________________________________________________________________________
+// ____________________________________________________________________________
 
 // AppModule implements an application module for the genutil module.
 type AppModule struct {

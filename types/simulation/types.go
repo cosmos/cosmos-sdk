@@ -114,7 +114,7 @@ func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
 	eventLogger(om.Route, om.Name, pass)
 }
 
-//________________________________________________________________________
+// ________________________________________________________________________
 
 // FutureOperation is an operation which will be ran at the beginning of the
 // provided BlockHeight. If both a BlockHeight and BlockTime are specified, it

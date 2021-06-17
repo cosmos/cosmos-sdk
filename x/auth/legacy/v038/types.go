@@ -1,7 +1,6 @@
 package v038
 
 // DONTCOVER
-// nolint
 
 import (
 	"bytes"

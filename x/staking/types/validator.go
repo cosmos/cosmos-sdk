@@ -103,9 +103,7 @@ func (v Validators) Less(i, j int) bool {
 
 // Implements sort interface
 func (v Validators) Swap(i, j int) {
-	it := v[i]
-	v[i] = v[j]
-	v[j] = it
+	v[i], v[j] = v[j], v[i]
 }
 
 // ValidatorsByVotingPower implements sort.Interface for []Validator based on

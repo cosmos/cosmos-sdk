@@ -12,7 +12,6 @@ import (
 )
 
 // REST Variable names
-// nolint
 const (
 	RestParamsType     = "type"
 	RestProposalID     = "proposal-id"

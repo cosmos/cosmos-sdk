@@ -84,10 +84,10 @@ You can introduce entirely new modules to the application during an upgrade. New
 
 ### Add StoreUpgrades for New Modules
 
-All chains which will run in-place store migrations will need to manually add storeloader for upgrades introducing new modules. So that the new module's stores are added to the multistore before the migrations begin.
+All chains preparing to run in-place store migrations will need to manually add store upgrades for new modules and then configure the store loader to apply those upgrades. This ensures that the new module's stores are added to the multistore before the migrations begin.
 
 ```golang
-upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+  upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
 	}
@@ -95,11 +95,11 @@ upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 
-      // ...
-      // add store upgrades for new modules
-      // Example: 
-      //    Added: []string{"foo"},
-      // ...
+        // ...
+        // add store upgrades for new modules
+        // Example: 
+        //    Added: []string{"foo", "bar"},
+        // ...
 
 		}
 

@@ -103,6 +103,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	meter := types.NewGasMeter(10000)
 	blockGasMeter := types.NewGasMeter(20000)
 	minGasPrices := types.DecCoins{types.NewInt64DecCoin("feetoken", 1)}
+	headerHash := []byte("headerHash")
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
 	s.Require().Equal(header, ctx.BlockHeader())
@@ -114,7 +115,8 @@ func (s *contextTestSuite) TestContextWithCustom() {
 		WithVoteInfos(voteinfos).
 		WithGasMeter(meter).
 		WithMinGasPrices(minGasPrices).
-		WithBlockGasMeter(blockGasMeter)
+		WithBlockGasMeter(blockGasMeter).
+		WithHeaderHash(headerHash)
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(chainid, ctx.ChainID())
 	s.Require().Equal(ischeck, ctx.IsCheckTx())
@@ -124,6 +126,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(meter, ctx.GasMeter())
 	s.Require().Equal(minGasPrices, ctx.MinGasPrices())
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
+	s.Require().Equal(headerHash, ctx.HeaderHash().Bytes())
 	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
 
 	// test IsReCheckTx

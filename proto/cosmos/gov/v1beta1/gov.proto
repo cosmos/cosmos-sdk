@@ -129,11 +129,10 @@ message Vote {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.equal)            = false;
 
-  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string voter       = 2;
-  reserved 3;
-  reserved "option";
-  repeated WeightedVoteOption options = 4 [(gogoproto.nullable) = false];
+  uint64                      proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string                      voter       = 2;
+  VoteOption                  option      = 3;
+  repeated WeightedVoteOption options     = 4 [(gogoproto.nullable) = false];
 }
 
 // DepositParams defines the params for deposits on governance proposals.

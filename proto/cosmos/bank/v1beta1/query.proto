@@ -46,6 +46,8 @@ service Query {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
   }
 
+  // DenomOwners queries for all account addresses that own a particular token
+  // deomination.
   rpc DenomOwners(QueryDenomOwnersReqest) returns (QueryDenomOwnersResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms/{denom}";
   }

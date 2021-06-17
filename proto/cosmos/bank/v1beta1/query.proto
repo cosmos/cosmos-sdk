@@ -41,14 +41,15 @@ service Query {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
   }
 
-  // DenomsMetadata queries the client metadata for all registered coin denominations.
+  // DenomsMetadata queries the client metadata for all registered coin
+  // denominations.
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
   }
 
   // DenomOwners queries for all account addresses that own a particular token
-  // deomination.
-  rpc DenomOwners(QueryDenomOwnersReqest) returns (QueryDenomOwnersResponse) {
+  // denomination.
+  rpc DenomOwners(QueryDenomOwnersRequest) returns (QueryDenomOwnersResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denom_owners/{denom}";
   }
 }
@@ -164,10 +165,10 @@ message QueryDenomMetadataResponse {
   Metadata metadata = 1 [(gogoproto.nullable) = false];
 }
 
-// QueryDenomOwnersReqest defines the request type for the DenomOwners RPC query,
+// QueryDenomOwnersRequest defines the request type for the DenomOwners RPC query,
 // which queries for a paginated set of all account holders of a particular
 // denomination.
-message QueryDenomOwnersReqest {
+message QueryDenomOwnersRequest {
   // denom defines the coin denomination to query all account holders for.
   string denom = 1;
 

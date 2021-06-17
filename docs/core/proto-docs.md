@@ -95,6 +95,8 @@
     - [QueryBalanceResponse](#cosmos.bank.v1beta1.QueryBalanceResponse)
     - [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest)
     - [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse)
+    - [QueryDenomOwnersRequest](#cosmos.bank.v1beta1.QueryDenomOwnersRequest)
+    - [QueryDenomOwnersResponse](#cosmos.bank.v1beta1.QueryDenomOwnersResponse)
     - [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest)
     - [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse)
     - [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest)
@@ -1798,6 +1800,42 @@ method.
 
 
 
+<a name="cosmos.bank.v1beta1.QueryDenomOwnersRequest"></a>
+
+### QueryDenomOwnersRequest
+
+QueryDenomOwnersRequest defines the request type for the DenomOwners RPC query,
+which queries for a paginated set of all account holders of a particular
+denomination.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | denom defines the coin denomination to query all account holders for. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.bank.v1beta1.QueryDenomOwnersResponse"></a>
+
+### QueryDenomOwnersResponse
+
+QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `addresses` | [string](#string) | repeated | addresses defines the set of addresses that own a particular denomination. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
 <a name="cosmos.bank.v1beta1.QueryDenomsMetadataRequest"></a>
 
 ### QueryDenomsMetadataRequest
@@ -1938,6 +1976,7 @@ Query defines the gRPC querier service.
 | `Params` | [QueryParamsRequest](#cosmos.bank.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.bank.v1beta1.QueryParamsResponse) | Params queries the parameters of x/bank module. | GET|/cosmos/bank/v1beta1/params|
 | `DenomMetadata` | [QueryDenomMetadataRequest](#cosmos.bank.v1beta1.QueryDenomMetadataRequest) | [QueryDenomMetadataResponse](#cosmos.bank.v1beta1.QueryDenomMetadataResponse) | DenomsMetadata queries the client metadata of a given coin denomination. | GET|/cosmos/bank/v1beta1/denoms_metadata/{denom}|
 | `DenomsMetadata` | [QueryDenomsMetadataRequest](#cosmos.bank.v1beta1.QueryDenomsMetadataRequest) | [QueryDenomsMetadataResponse](#cosmos.bank.v1beta1.QueryDenomsMetadataResponse) | DenomsMetadata queries the client metadata for all registered coin denominations. | GET|/cosmos/bank/v1beta1/denoms_metadata|
+| `DenomOwners` | [QueryDenomOwnersRequest](#cosmos.bank.v1beta1.QueryDenomOwnersRequest) | [QueryDenomOwnersResponse](#cosmos.bank.v1beta1.QueryDenomOwnersResponse) | DenomOwners queries for all account addresses that own a particular token denomination. | GET|/cosmos/bank/v1beta1/denom_owners/{denom}|
 
  <!-- end services -->
 
@@ -8255,4 +8294,3 @@ still be used for delegating and for governance votes even while locked.
 | <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
-

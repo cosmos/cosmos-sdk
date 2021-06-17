@@ -39,6 +39,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [\#9385](https://github.com/cosmos/cosmos-sdk/pull/9385) Fix IBC `query ibc client header` cli command. Support historical queries for query header/node-state commands. 
+* [\#9401](https://github.com/cosmos/cosmos-sdk/pull/9401) Fixes incorrect export of IBC identifier sequences. Previously, the next identifier sequence for clients/connections/channels was not set during genesis export. This resulted in the next identifiers being generated on the new chain to reuse old identifiers (the sequences began again from 0).
+
+### Features
+
+* [\#9383](https://github.com/cosmos/cosmos-sdk/pull/9383) New CLI command `query ibc-transfer escrow-address <port> <channel id>` to get the escrow address for a channel; can be used to then query balance of escrowed tokens
 
 ## [v0.42.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.5) - 2021-05-18
 

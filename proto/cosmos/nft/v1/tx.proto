@@ -1,0 +1,56 @@
+syntax = "proto3";
+package cosmos.nft.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
+
+service Msg {
+    rpc IssueCollection(MsgIssueCollection) returns (MsgIssueCollectionResponse);
+
+    rpc MintNFT(MsgMintNFT) returns (MsgMintNFTResponse);
+
+    rpc EditNFT(MsgEditNFT) returns (MsgEditNFTResponse);
+
+    rpc BurnNFT(MsgBurnNFT) returns (MsgBurnNFTResponse);
+}
+
+message MsgIssueCollection {
+    string id = 1;
+    string name = 2;
+    string schema = 3;
+    string sender = 4;
+}
+
+message MsgIssueCollectionResponse {
+    string collection_id = 1;
+}
+
+message MsgEditNFT {
+    string id = 1;
+    string collection_id = 2;
+    string name = 3;
+    string uri = 4;
+    string data = 5;
+    string sender = 6;
+}
+
+message MsgEditNFTResponse {}
+
+message MsgMintNFT {
+    string id = 1;
+    string collection_id = 2;
+    string name = 3;
+    string uri = 4;
+    string data = 5;
+    string sender = 6;
+    string recipient = 7;
+}
+
+message MsgMintNFTResponse {}
+
+message MsgBurnNFT {
+    string id = 1;
+    string collection_id = 2;
+    string sender = 3;
+}
+
+message MsgBurnNFTResponse {}

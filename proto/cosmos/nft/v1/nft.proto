@@ -1,0 +1,46 @@
+syntax = "proto3";
+package cosmos.nft.v1;
+
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
+
+// BaseNFT defines a non-fungible token
+message BaseNFT {
+    string id = 1;
+    string name = 2;
+    string uri = 3;
+    string data = 4;
+    string owner = 5;
+}
+
+// CollectionInfo defines a type of NFT
+message CollectionInfo {
+    string id = 1;
+    string name = 2;
+    string schema = 3;
+    string creator = 4;
+}
+
+//// IDCollection defines a type of collection with specified ID
+//message IDCollection {
+//    option (gogoproto.equal) = true;
+//
+//    string denom_id = 1 [ (gogoproto.moretags) = "yaml:\"denom_id\"" ];
+//    repeated string token_ids = 2 [ (gogoproto.moretags) = "yaml:\"token_ids\"" ];
+//}
+//
+//// Owner defines a type of owner
+//message Owner {
+//    option (gogoproto.equal) = true;
+//
+//    string address = 1;
+//    repeated IDCollection id_collections = 2 [ (gogoproto.moretags) = "yaml:\"idcs\"", (gogoproto.customname) = "IDCollections", (gogoproto.nullable) = false ];
+//}
+//
+//// Collection defines a type of collection
+//message Collection {
+//    option (gogoproto.equal) = true;
+//
+//    Denom denom = 1 [ (gogoproto.nullable) = false ];
+//    repeated BaseNFT nfts = 2 [ (gogoproto.customname) = "NFTs", (gogoproto.nullable) = false ];
+//}

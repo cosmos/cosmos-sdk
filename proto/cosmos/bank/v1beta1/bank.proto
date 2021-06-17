@@ -89,4 +89,6 @@ message Metadata {
   // symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
   // be the same as the display.
   string symbol = 6;
+  // uri is an URI that describes the denom
+  string uri = 7;
 }

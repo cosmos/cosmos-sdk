@@ -401,6 +401,22 @@
   
     - [Query](#cosmos.mint.v1beta1.Query)
   
+- [cosmos/nft/v1/nft.proto](#cosmos/nft/v1/nft.proto)
+    - [BaseNFT](#cosmos.nft.v1.BaseNFT)
+    - [CollectionInfo](#cosmos.nft.v1.CollectionInfo)
+  
+- [cosmos/nft/v1/tx.proto](#cosmos/nft/v1/tx.proto)
+    - [MsgBurnNFT](#cosmos.nft.v1.MsgBurnNFT)
+    - [MsgBurnNFTResponse](#cosmos.nft.v1.MsgBurnNFTResponse)
+    - [MsgEditNFT](#cosmos.nft.v1.MsgEditNFT)
+    - [MsgEditNFTResponse](#cosmos.nft.v1.MsgEditNFTResponse)
+    - [MsgIssueCollection](#cosmos.nft.v1.MsgIssueCollection)
+    - [MsgIssueCollectionResponse](#cosmos.nft.v1.MsgIssueCollectionResponse)
+    - [MsgMintNFT](#cosmos.nft.v1.MsgMintNFT)
+    - [MsgMintNFTResponse](#cosmos.nft.v1.MsgMintNFTResponse)
+  
+    - [Msg](#cosmos.nft.v1.Msg)
+  
 - [cosmos/params/v1beta1/params.proto](#cosmos/params/v1beta1/params.proto)
     - [ParamChange](#cosmos.params.v1beta1.ParamChange)
     - [ParameterChangeProposal](#cosmos.params.v1beta1.ParameterChangeProposal)
@@ -1564,6 +1580,7 @@ a basic token.
 | `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
 | `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom) |
 | `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display. |
+| `uri` | [string](#string) |  | uri is an URI that describes the denom |
 
 
 
@@ -5715,6 +5732,209 @@ Query provides defines the gRPC querier service.
 | `Params` | [QueryParamsRequest](#cosmos.mint.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.mint.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/cosmos/mint/v1beta1/params|
 | `Inflation` | [QueryInflationRequest](#cosmos.mint.v1beta1.QueryInflationRequest) | [QueryInflationResponse](#cosmos.mint.v1beta1.QueryInflationResponse) | Inflation returns the current minting inflation value. | GET|/cosmos/mint/v1beta1/inflation|
 | `AnnualProvisions` | [QueryAnnualProvisionsRequest](#cosmos.mint.v1beta1.QueryAnnualProvisionsRequest) | [QueryAnnualProvisionsResponse](#cosmos.mint.v1beta1.QueryAnnualProvisionsResponse) | AnnualProvisions current minting annual provisions value. | GET|/cosmos/mint/v1beta1/annual_provisions|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/nft/v1/nft.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1/nft.proto
+
+
+
+<a name="cosmos.nft.v1.BaseNFT"></a>
+
+### BaseNFT
+BaseNFT defines a non-fungible token
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `uri` | [string](#string) |  |  |
+| `data` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1.CollectionInfo"></a>
+
+### CollectionInfo
+CollectionInfo defines a type of NFT
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `schema` | [string](#string) |  |  |
+| `creator` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/nft/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1/tx.proto
+
+
+
+<a name="cosmos.nft.v1.MsgBurnNFT"></a>
+
+### MsgBurnNFT
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `collection_id` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1.MsgBurnNFTResponse"></a>
+
+### MsgBurnNFTResponse
+
+
+
+
+
+
+
+<a name="cosmos.nft.v1.MsgEditNFT"></a>
+
+### MsgEditNFT
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `collection_id` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `uri` | [string](#string) |  |  |
+| `data` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1.MsgEditNFTResponse"></a>
+
+### MsgEditNFTResponse
+
+
+
+
+
+
+
+<a name="cosmos.nft.v1.MsgIssueCollection"></a>
+
+### MsgIssueCollection
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `schema` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1.MsgIssueCollectionResponse"></a>
+
+### MsgIssueCollectionResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `collection_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1.MsgMintNFT"></a>
+
+### MsgMintNFT
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `collection_id` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `uri` | [string](#string) |  |  |
+| `data` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1.MsgMintNFTResponse"></a>
+
+### MsgMintNFTResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.nft.v1.Msg"></a>
+
+### Msg
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `IssueCollection` | [MsgIssueCollection](#cosmos.nft.v1.MsgIssueCollection) | [MsgIssueCollectionResponse](#cosmos.nft.v1.MsgIssueCollectionResponse) |  | |
+| `MintNFT` | [MsgMintNFT](#cosmos.nft.v1.MsgMintNFT) | [MsgMintNFTResponse](#cosmos.nft.v1.MsgMintNFTResponse) |  | |
+| `EditNFT` | [MsgEditNFT](#cosmos.nft.v1.MsgEditNFT) | [MsgEditNFTResponse](#cosmos.nft.v1.MsgEditNFTResponse) |  | |
+| `BurnNFT` | [MsgBurnNFT](#cosmos.nft.v1.MsgBurnNFT) | [MsgBurnNFTResponse](#cosmos.nft.v1.MsgBurnNFTResponse) |  | |
 
  <!-- end services -->
 

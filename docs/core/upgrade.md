@@ -94,13 +94,10 @@ All chains preparing to run in-place store migrations will need to manually add 
 
 	if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-
-        // ...
-        // add store upgrades for new modules
-        // Example: 
-        //    Added: []string{"foo", "bar"},
-        // ...
-
+			// add store upgrades for new modules
+			// Example: 
+			//    Added: []string{"foo", "bar"},
+			// ...
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

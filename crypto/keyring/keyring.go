@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
@@ -231,7 +230,6 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", err
 	}
 
-
 	key, err := k.GetPubKey()
 	if err != nil {
 		return "", err
@@ -245,7 +243,7 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 		return "", err
 	}
 
-	return ks.ExportPubKeyArmor(k.GetName())
+	return ks.ExportPubKeyArmor(k.Name)
 }
 
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
@@ -278,7 +276,7 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 		return "", err
 	}
 
-	return ks.ExportPrivKeyArmor(k.GetName(), encryptPassphrase)
+	return ks.ExportPrivKeyArmor(k.Name, encryptPassphrase)
 }
 
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
@@ -326,8 +324,8 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 // TODO do i need it or not
 /*
 func (ks keystore) ImportInfo(oldInfo LegacyInfo) error {
-	if _, err := ks.Key(oldInfo.GetName()); err == nil {
-		return fmt.Errorf("cannot overwrite key: %s", oldInfo.GetName())
+	if _, err := ks.Key(oldInfo.Name); err == nil {
+		return fmt.Errorf("cannot overwrite key: %s", oldInfo.Name)
 	}
 
 	return ks.writeInfo(oldInfo)
@@ -340,11 +338,9 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		return nil, nil, err
 	}
 
-
 	fmt.Println("Sign Local unpacked privKey", k.GetLocal().PrivKey.GetCachedValue().(types.PrivKey))
 	fmt.Println("Sign k.Name", k.Name)
 	fmt.Println("Sign unpacked pubKey", k.PubKey.GetCachedValue().(types.PubKey))
-
 
 	priv, err := k.extractPrivKeyFromLocal()
 	if err != nil {
@@ -366,7 +362,7 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 		return nil, nil, err
 	}
 
-	return ks.Sign(k.GetName(), msg)
+	return ks.Sign(k.Name, msg)
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
@@ -382,24 +378,13 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 		return nil, err
 	}
 
-	apk, err := codectypes.NewAnyWithValue(priv.PubKey())
-	if err != nil {
-		return nil, err
-	}
-
-	return ks.writeLedgerKey(uid, apk, hdPath)
+	return ks.writeLedgerKey(uid, priv.PubKey(), hdPath)
 }
 
-func (ks keystore) writeLedgerKey(name string, pubKey *codectypes.Any, path *hd.BIP44Params) (*Record, error) {
-
+func (ks keystore) writeLedgerKey(name string, pk types.PubKey, path *hd.BIP44Params) (*Record, error) {
 	ledgerRecord := NewLedgerRecord(path)
 	ledgerRecordItem := NewLedgerRecordItem(ledgerRecord)
-	k := NewRecord(name, pubKey, ledgerRecordItem)
-	if err := ks.writeRecord(k); err != nil {
-		return nil, err
-	}
-
-	return k, nil
+	return ks.newRecord(name, pk, ledgerRecordItem)
 }
 
 func (ks keystore) SaveMultisig(uid string, pubkey types.PubKey) (*Record, error) {
@@ -416,7 +401,7 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 		return err
 	}
 
-	err = ks.Delete(k.GetName())
+	err = ks.Delete(k.Name)
 	if err != nil {
 		return err
 	}
@@ -496,7 +481,7 @@ func (ks keystore) List() ([]*Record, error) {
 
 		k, err := ks.protoUnmarshalRecord(item.Data)
 		if err != nil {
-			return nil,err 
+			return nil, err
 		}
 
 		res = append(res, k)
@@ -558,7 +543,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	if _, err := ks.KeyByAddress(address); err == nil {
 		return nil, err
 	}
-	
+
 	return ks.writeLocalKey(name, privKey)
 }
 
@@ -596,7 +581,6 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 	fmt.Println("key Local unpacked privKey", k.GetLocal().PrivKey.GetCachedValue().(types.PrivKey))
 	fmt.Println("key k.Name", k.Name)
 	fmt.Println("key unpacked pubKey", k.PubKey.GetCachedValue().(types.PubKey))
-
 
 	return k, nil
 }
@@ -771,25 +755,12 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 }
 
 func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, error) {
-	// encrypt private key using keyring
-	anyPrivKey, err := codectypes.NewAnyWithValue(privKey)
+	localRecord, err := newLocalRecord(privKey, privKey.Type())
 	if err != nil {
 		return nil, err
 	}
-
-	anyPubKey, err := codectypes.NewAnyWithValue(privKey.PubKey())
-	if err != nil {
-		return nil, err
-	}
-
-	localRecord := newLocalRecord(anyPrivKey, privKey.Type())
 	localRecordItem := newLocalRecordItem(localRecord)
-	k := NewRecord(name, anyPubKey, localRecordItem)
-	if err := ks.writeRecord(k); err != nil {
-		return nil, err
-	}
-
-	return k, nil
+	return ks.newRecord(name, privKey.PubKey(), localRecordItem)
 }
 
 func (ks keystore) writeRecord(k *Record) error {
@@ -808,11 +779,11 @@ func (ks keystore) writeRecord(k *Record) error {
 	if err != nil {
 		return fmt.Errorf("Unable to serialize record, err - %s", err)
 	}
- 
-	key := infoKeyBz(k.GetName())
+
+	key := infoKeyBz(k.Name)
 	fmt.Println("writeRecord key", string(key))
 	item := keyring.Item{
-		Key:  string(key),// it is fetched by VERSION_KEY in checkMigrate
+		Key:  string(key), // it is fetched by VERSION_KEY in checkMigrate
 		Data: serializedRecord,
 	}
 	fmt.Println("item Key", item.Key)
@@ -851,7 +822,7 @@ func (ks keystore) existsInDb(k *Record) (bool, error) {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(infoKey(k.GetName())); err == nil {
+	if _, err := ks.db.Get(infoKey(k.Name)); err == nil {
 		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
@@ -861,37 +832,25 @@ func (ks keystore) existsInDb(k *Record) (bool, error) {
 	return false, nil
 }
 
-func (ks keystore) writeOfflineKey(name string, pub types.PubKey) (*Record, error) {
-	apk, err := codectypes.NewAnyWithValue(pub)
-	if err != nil {
-		return nil, err
-	}
+func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error) {
 	emptyRecord := NewEmptyRecord()
 	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
-	k := NewRecord(name, apk, emptyRecordItem)
-
-	if err := ks.writeRecord(k); err != nil {
-		return nil, err
-	}
-
-	return k, nil
+	return ks.newRecord(name, pk, emptyRecordItem)
 }
 
 // writeMultisigKey investigate where thisf function is called maybe remove it
-func (ks keystore) writeMultisigKey(name string, pub types.PubKey) (*Record, error) {
-	apk, err := codectypes.NewAnyWithValue(pub)
+func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, error) {
+	emptyRecord := NewEmptyRecord()
+	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
+	return ks.newRecord(name, pk, emptyRecordItem)
+}
+
+func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (*Record, error) {
+	k, err := NewRecord(name, pk, item)
 	if err != nil {
 		return nil, err
 	}
-
-	emptyRecord := NewEmptyRecord()
-	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
-	k := NewRecord(name, apk, emptyRecordItem)
-	if err = ks.writeRecord(k); err != nil {
-		return nil, err
-	}
-
-	return k, nil
+	return k, ks.writeRecord(k)
 }
 
 func (ks keystore) checkMigrate() error {
@@ -953,13 +912,13 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			continue
 		}
 
-		legacyInfo, err := unmarshalInfo(item.Data);
+		legacyInfo, err := unmarshalInfo(item.Data)
 		if err != nil {
 			unmarshalErr := fmt.Errorf("unmarshalInfo(item.Data), err - %s", err)
-			fmt.Println(unmarshalErr) 
+			fmt.Println(unmarshalErr)
 			continue
 		}
-			
+
 		//4.serialize info using proto
 		k, err := convertFromLegacyInfo(legacyInfo)
 		if err != nil {
@@ -1005,7 +964,7 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 	}
 	fmt.Println("protoUnmarshalRecord k.Name", k.Name)
 	fmt.Println("protoUnmarshalRecord k packed pubKey", k.PubKey)
-	pub, ok := k.PubKey.GetCachedValue().(types.PubKey) 
+	pub, ok := k.PubKey.GetCachedValue().(types.PubKey)
 	fmt.Println("protoUnmarshalRecord k unpacked pub", pub)
 	fmt.Println("protoUnmarshalRecord k ok", ok)
 	local := k.GetLocal()
@@ -1016,7 +975,6 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 	fmt.Println("protoUnmarshalRecord k.GetLocal() ok", ok)
 	return k, nil
 }
-
 
 type unsafeKeystore struct {
 	keystore

@@ -17,9 +17,10 @@ message Record {
     Ledger ledger  = 4;
     Empty empty  = 5;
   }
-  
+
   // Item is a keyring item stored in a keyring backend.
   message Local {
+    // TODO: the RecordLocal structure shouldn't have privKey: Any. Instead it should have armored string - as in the original version.
     google.protobuf.Any privKey = 1;
     string pubKeyType = 2;
   }

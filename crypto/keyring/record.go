@@ -12,12 +12,21 @@ import (
 //TODO replace Info by reyring entry in client/reys
 // check  NewLedgerInfo, newLocalInfo, newMultiInfo in whole codebase
 // TODO count how many times NewLedgerInfo or newLocalInfo is used and perhaps consider create a separate functions for that
-func NewRecord(name string, pubKey *codectypes.Any, item isRecord_Item) *Record {
-	return &Record{name, pubKey, item}
+func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
+	any, err := codectypes.NewAnyWithValue(pk)
+	if err != nil {
+		return nil, err
+	}
+	return &Record{name, any, item}, nil
 }
 
-func newLocalRecord(apk *codectypes.Any, pubKeyType string) *Record_Local {
-	return &Record_Local{apk, pubKeyType}
+// TODO - the function shouldn't take pubKeyType, instead it should use sk.Type()
+func newLocalRecord(sk cryptotypes.PrivKey, pubKeyType string) (*Record_Local, error) {
+	any, err := codectypes.NewAnyWithValue(sk)
+	if err != nil {
+		return nil, err
+	}
+	return &Record_Local{any, pubKeyType}, nil
 }
 
 func newLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
@@ -47,6 +56,7 @@ func NewEmptyRecordItem(re *Record_Empty) *Record_Empty_ {
 func (k Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
+		// TODO - don't use fmt.Errorf
 		return nil, fmt.Errorf("Unable to cast PubKey to cryptotypes.PubKey")
 	}
 	return pk, nil
@@ -77,28 +87,34 @@ func (k Record) GetType() KeyType {
 }
 
 func (k *Record) extractPrivKeyFromLocal() (cryptotypes.PrivKey, error) {
-	
+
 	local := k.GetLocal()
 	fmt.Println("extractPrivKeyFromLocal local PrivKey any", local.PrivKey)
 	//"S�local PrivKey any &Any{TypeUrl:/cosmos.crypto.secp256k1.PrivKey,Value:[10 32 60 192 254 115 242 129 186 183 124 20 160 13 47 202 179 92 24 116 152 216 145 44 66 161 255 183 157 144 113 154 45 201],XXX_unrecognized:[]}"
 	fmt.Println("extractPrivKeyFromLocal local PubKeyType", local.PubKeyType)
 	//"secp256k1"
-	
+
 	switch {
 	case local != nil:
 		anyPrivKey := local.PrivKey
 		privKey := anyPrivKey.GetCachedValue().(cryptotypes.PrivKey)
 		fmt.Println("extractPrivKeyFromLocal privKey", privKey.String())
 		/*
-		fmt.Println("extractPrivKeyFromLocal ok", ok)
-		if !ok {
-			return nil, fmt.Errorf("unable to unpack private key")
-		}
+			fmt.Println("extractPrivKeyFromLocal ok", ok)
+			if !ok {
+				return nil, fmt.Errorf("unable to unpack private key")
+			}
 		*/
 		return privKey, nil
 	default:
 		return nil, fmt.Errorf("unable to extract private key object")
 	}
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
+func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var pk cryptotypes.PubKey
+	return unpacker.UnpackAny(k.PubKey, &pk)
 }
 
 // encoding info
@@ -175,18 +191,16 @@ func (p BIP44Params) String() string {
 func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	fmt.Println("convertFromLegacyInfo")
 	name := info.GetName()
-
-	apk, err := codectypes.NewAnyWithValue(info.GetPubKey())
-	if err != nil {
-		return nil, err
-	}
-	
 	var item isRecord_Item
+	var pk = info.GetPubKey()
 
 	switch info.GetType() {
 	case TypeLocal:
 		algo := info.GetAlgo()
-		localRecord := newLocalRecord(apk, string(algo))
+		localRecord, err := newLocalRecord(pk, string(algo))
+		if err != nil {
+			return nil, err
+		}
 		item = newLocalRecordItem(localRecord)
 	case TypeOffline:
 		emptyRecord := NewEmptyRecord()
@@ -203,6 +217,5 @@ func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		item = NewEmptyRecordItem(emptyRecord)
 	}
 
-	k := NewRecord(name, apk, item)
-	return k, nil
+	return NewRecord(name, pk, item)
 }

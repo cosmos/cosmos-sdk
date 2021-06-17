@@ -61,7 +61,7 @@ func MkAccKeyOutput(kr *Record) (KeyOutput, error) {
 		return KeyOutput{}, err
 	}
 	addr := sdk.AccAddress(pk.Address())
-	return NewKeyOutput(kr.GetName(), kr.GetType(), addr, pk)
+	return NewKeyOutput(kr.Name, kr.GetType(), addr, pk)
 }
 
 // MkAccKeysOutput returns a slice of KeyOutput objects, each with the "acc"

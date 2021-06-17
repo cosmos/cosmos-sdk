@@ -7,12 +7,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func Test_writeReadLedgerInfo(t *testing.T) {
@@ -27,7 +27,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	require.NoError(t, err)
 	path := hd.NewFundraiserParams(5, sdk.CoinType, 1)
 	ledgerRecord := keyring.NewLedgerRecord(path)
-	ledgerRecordItem  := keyring.NewLedgerRecordItem(ledgerRecord)
+	ledgerRecordItem := keyring.NewLedgerRecordItem(ledgerRecord)
 	k := keyring.NewRecord("some_name", apk, ledgerRecordItem)
 	//require.Equal(t, keyring.TypeLedger, kr.GetType())
 

@@ -3062,10 +3062,21 @@ ValidatorSlashEventRecord is used for import / export via genesis json.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+<<<<<<< HEAD
 | `validator_address` | [string](#string) |  | validator_address is the address of the validator. |
 | `height` | [uint64](#uint64) |  | height defines the block height at which the slash event occured. |
 | `period` | [uint64](#uint64) |  | period is the period of the slash event. |
 | `validator_slash_event` | [ValidatorSlashEvent](#cosmos.distribution.v1beta1.ValidatorSlashEvent) |  | validator_slash_event describes the slash event. |
+=======
+| `name` | [string](#string) |  |  |
+| `app_name` | [string](#string) |  |  |
+| `version` | [string](#string) |  |  |
+| `git_commit` | [string](#string) |  |  |
+| `build_tags` | [string](#string) |  |  |
+| `go_version` | [string](#string) |  |  |
+| `build_deps` | [Module](#cosmos.base.tendermint.v1beta1.Module) | repeated |  |
+| `cosmos_sdk_version` | [string](#string) |  |  |
+>>>>>>> 105ad99a8 (feat: add cosmos-sdk Version (#9429))
 
 
 

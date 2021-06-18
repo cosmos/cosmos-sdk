@@ -128,7 +128,7 @@ message MsgSend {
 message MsgSendResponse {}
 
 message MsgBurn {
-  string denom = 1;
+  string type  = 1;
   string id    = 2;
   string owner = 3;
 }
@@ -151,70 +151,68 @@ type msgServer struct{
 }
 
 func (m msgServer) Issue(ctx context.Context, msg *types.MsgIssue) (*types.MsgIssueResponse, error){
-  m.keeper.AssertDenomNotExist(msg.Metadata.Denom)
+  m.keeper.AssertTypeNotExist(msg.Metadata.Type)
 
   store := ctx.KVStore(m.keeper.storeKey)
   bz := m.keeper.cdc.MustMarshalBinaryBare(msg.Metadata)
-  store.Set(msg.Denom, bz)
+  store.Set(msg.Type, bz)
+  
   return &types.MsgIssueResponse{}, nil
 }
 
 func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error){
-  m.keeper.AssertDenomExist(msg.NFT.Denom)
+  m.keeper.AssertTypeExist(msg.NFT.Type)
 
-  metadata := m.keeper.GetMetadata(ctx, msg.NFT.Denom)
-  // NOTE: we can use denom manager or DID
-  baseDenom := fmt.Sprintf("nft/%s/%s", msg.NFT.Denom, msg.NFT.Id)
+  metadata := m.keeper.GetMetadata(ctx, msg.NFT.Type)
+  
+  baseDenom := fmt.Sprintf("%s-%s", msg.NFT.Type, msg.NFT.Id)
   bkMetadata := bankTypes.Metadata{
     Symbol:      metadata.Symbol,
     Base:        baseDenom,
     Name:        metadata.Name,
-    URI:         msg.NFT.URI,
+    URI:         msg.NFT.Uri,
     Description: metadata.Description,
   }
-
   m.keeper.bank.SetDenomMetaData(ctx, bkMetadata)
-  mintCoins := sdk.NewCoins(sdk.NewCoin(baseDenom,1))
-  m.keeper.bank.MintCoins(types.ModuleName, mintCoins)
-  m.keeper.bank.SendCoinsFromModuleToAccount(types.ModuleName, msg.Owner, mintCoins)
+  mintedCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, 1))
+  m.keeper.bank.MintCoins(types.ModuleName, mintedCoins)
+  m.keeper.bank.SendCoinsFromModuleToAccount(types.ModuleName, msg.Owner, mintedCoins)
   
   bz := m.keeper.cdc.MustMarshalBinaryBare(&msg.NFT)
-  denomStore := m.keeper.getDenomStore(ctx, msg.NFT.Denom)
-  denomStore.Set(msg.NFT.Id, bz)
+  typeStore := m.keeper.getTypeStore(ctx, msg.NFT.Type)
+  typeStore.Set(msg.NFT.Id, bz)
+  
   return nil, nil
 }
 
 func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error){
   sentCoins := sdk.NewCoins()
-  for _,nft := range msg.NFTs {
-    m.keeper.AssertNFTExist(nft.Id)
-
-    denomStore := m.keeper.getDenomStore(ctx, nft.Denom)
-    nft := denomStore.Get(nft.Id)
-    bz := m.keeper.cdc.MustMarshalBinaryBare(&nft)
-    denomStore.Set(nft.Id, bz)
-
-    baseDenom := fmt.Sprintf("nft/%s/%s", nft.Denom, nft.Id)
-    sentCoins = sentCoins.Add(sdk.NewCoin(baseDenom,1)) 
+  
+  for _, nft := range msg.NFTs {
+    m.keeper.AssertNFTExist(nft)
+    baseDenom := fmt.Sprintf("%s-%s", nft.Type, nft.Id)
+    sentCoins = sentCoins.Add(sdk.NewCoin(baseDenom, 1)) 
   } 
   m.keeper.bank.SendCoins(ctx, msg.Sender, msg.Reveiver, sentCoins)
-  return &types.MsgSendResponse{},nil
+  
+  return &types.MsgSendResponse{}, nil
 }
 
 func (m Keeper) Burn(ctx sdk.Context, msg *types.MsgBurn) (types.MsgBurnResponse,error) {
-  m.keeper.AssertNFTExist(msg.Id)
+  m.keeper.AssertNFTExist(msg.Type, msg.Id)
 
-  denomStore := m.keeper.getDenomStore(ctx, msg.Denom)
-  nft := denomStore.Get(msg.Id)
+  typeStore := m.keeper.getTypeStore(ctx, msg.Type)
+  nft := typeStore.Get(msg.Id)
 
-  baseDenom := fmt.Sprintf("nft/%s/%s", msg.Denom, msg.Id)
+  baseDenom := fmt.Sprintf("%s-%s", msg.Type, msg.Id)
   coins := sdk.NewCoins(sdk.NewCoin(baseDenom, 1))
   m.keeper.bank.SendCoinsFromAccountToModule(ctx, msg.Owner, types.ModuleName, coins)
   m.keeper.bank.BurnCoins(ctx, types.ModuleName, coins)
 
-  // TODO: Delete bank.metadata
-  // delete nft
-  denomStore.Delete(msg.Id)
+  // Delete bank.Metadata (keeper method not available)
+  
+  typeStore.Delete(msg.Id)
+  
   return &types.MsgBurnResponse{}, nil
 }
 ```
@@ -236,29 +234,29 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts";
   }
 
-  // NFTsOf queries all NFTs based on the denom.
+  // NFTsOf queries all NFTs based on the type.
   rpc NFTsOf(QueryNFTsOfRequest) returns (QueryNFTsOfResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/denom/{denom}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{type}";
   }
 
-  // Supply queries the number of nft based on the denom, same as totalSupply of erc721
+  // Supply queries the number of nft based on the type, same as totalSupply of ERC721
   rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{denom}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{type}";
   }
 
-  // Balance queries the number of based on the owner, same as balanceOf of erc721
+  // Balance queries the number of NFTs based on the owner and type, same as balanceOf of ERC721
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/type/{type}";
   }
 
-  // Denom queries the definition of a given denom
-  rpc Denom(QueryDenomRequest) returns (QueryDenomResponse) {
-      option (google.api.http).get = "/cosmos/nft/v1beta1/denoms/{denom}";
+  // Type queries the definition of a given type
+  rpc Type(QueryTypeRequest) returns (QueryTypeResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/types/{type}";
   }
 
-  // Denoms queries all the denoms
-  rpc Denoms(QueryDenomsRequest) returns (QueryDenomsResponse) {
-      option (google.api.http).get = "/cosmos/nft/v1beta1/denoms";
+  // Types queries all the types
+  rpc Types(QueryTypesRequest) returns (QueryTypesResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/types";
   }
 }
 
@@ -286,7 +284,7 @@ message QueryNFTsResponse {
 
 // QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
 message QueryNFTsOfRequest {
-  string                                 denom      = 1;
+  string                                 type       = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -298,7 +296,7 @@ message QueryNFTsOfResponse {
 
 // QuerySupplyRequest is the request type for the Query/Supply RPC method
 message QuerySupplyRequest{
-  string denom = 1;
+  string type = 1;
 }
 
 // QuerySupplyResponse is the response type for the Query/Supply RPC method
@@ -309,6 +307,7 @@ message QuerySupplyResponse{
 // QueryBalanceRequest is the request type for the Query/Balance RPC method
 message QueryBalanceRequest{
   string owner = 1;
+  string type  = 2;
 }
 
 // QueryBalanceResponse is the response type for the Query/Balance RPC method
@@ -316,24 +315,24 @@ message QueryBalanceResponse{
   uint64 amount = 1;
 }
 
-// QueryDenomRequest is the request type for the Query/Denom RPC method
-message QueryDenomRequest {
-  string denom = 1;
+// QueryTypeRequest is the request type for the Query/Type RPC method
+message QueryTypeRequest {
+  string type = 1;
 }
 
-// QueryDenomResponse is the response type for the Query/Denom RPC method
-message QueryDenomResponse {
+// QueryTypeResponse is the response type for the Query/Type RPC method
+message QueryTypeResponse {
   cosmos.nft.v1beta1.Metadata metadata = 1;
 }
 
-// QueryDenomsRequest is the request type for the Query/Denoms RPC method
-message QueryDenomsRequest {
+// QueryTypesRequest is the request type for the Query/Types RPC method
+message QueryTypesRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryDenomsResponse is the response type for the Query/Denoms RPC method
-message QueryDenomsResponse {
+// QueryTypesResponse is the response type for the Query/Types RPC method
+message QueryTypesResponse {
   repeated cosmos.nft.v1beta1.Metadata   metadatas = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

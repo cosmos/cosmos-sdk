@@ -20,9 +20,8 @@ message Record {
 
   // Item is a keyring item stored in a keyring backend.
   message Local {
-    // TODO: the RecordLocal structure shouldn't have privKey: Any. Instead it should have armored string - as in the original version.
-    google.protobuf.Any privKey = 1;
-    string pubKeyType = 2;
+    string privKeyArmor = 1;
+    string privKeyType = 2;
   }
   message Ledger {
     hd.BIP44Params path = 1;

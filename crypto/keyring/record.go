@@ -2,9 +2,13 @@ package keyring
 
 import (
 	"fmt"
+	"errors"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -20,16 +24,44 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	return &Record{name, any, item}, nil
 }
 
-// TODO - the function shouldn't take pubKeyType, instead it should use sk.Type()
-func newLocalRecord(sk cryptotypes.PrivKey, pubKeyType string) (*Record_Local, error) {
-	any, err := codectypes.NewAnyWithValue(sk)
-	if err != nil {
-		return nil, err
+// bz, err := cdc.Marshal(privKey) yields an error that's why I cast privKey to curve PrivKey to serialize it
+func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local, error) {
+
+	var (
+		err error
+	    bz []byte
+	)
+
+	privKeyType := privKey.Type()
+
+	switch privKeyType  {
+		case "secp256k1":
+			priv, ok := privKey.(*secp256k1.PrivKey)
+			if !ok {
+				return nil, fmt.Errorf("unable to cast privKey to *secp256k1.PrivKey")
+			}
+
+			bz, err = cdc.Marshal(priv)
+			if err != nil {
+				return nil, err
+			}
+		
+		case "ed25519":
+			priv, ok := privKey.(*ed25519.PrivKey)
+			if !ok {
+				return nil, fmt.Errorf("unable to cast privKey to *ed25519.PrivKey")
+			}
+
+			bz, err = cdc.Marshal(priv)
+			if err != nil {
+				return nil, err
+			}
 	}
-	return &Record_Local{any, pubKeyType}, nil
+
+	return &Record_Local{string(bz), privKeyType}, nil
 }
 
-func newLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
+func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
 	return &Record_Local_{localRecord}
 }
 
@@ -74,7 +106,7 @@ func (k Record) GetAddress() (types.AccAddress, error) {
 func (k Record) GetAlgo() string {
 
 	if l := k.GetLocal(); l != nil {
-		return l.PubKeyType
+		return l.PrivKeyType
 	}
 
 	// TODO  doublecheck there is no field pubKeyType for multi,offline,ledger
@@ -86,30 +118,6 @@ func (k Record) GetType() KeyType {
 	return 0
 }
 
-func (k *Record) extractPrivKeyFromLocal() (cryptotypes.PrivKey, error) {
-
-	local := k.GetLocal()
-	fmt.Println("extractPrivKeyFromLocal local PrivKey any", local.PrivKey)
-	//"S�local PrivKey any &Any{TypeUrl:/cosmos.crypto.secp256k1.PrivKey,Value:[10 32 60 192 254 115 242 129 186 183 124 20 160 13 47 202 179 92 24 116 152 216 145 44 66 161 255 183 157 144 113 154 45 201],XXX_unrecognized:[]}"
-	fmt.Println("extractPrivKeyFromLocal local PubKeyType", local.PubKeyType)
-	//"secp256k1"
-
-	switch {
-	case local != nil:
-		anyPrivKey := local.PrivKey
-		privKey := anyPrivKey.GetCachedValue().(cryptotypes.PrivKey)
-		fmt.Println("extractPrivKeyFromLocal privKey", privKey.String())
-		/*
-			fmt.Println("extractPrivKeyFromLocal ok", ok)
-			if !ok {
-				return nil, fmt.Errorf("unable to unpack private key")
-			}
-		*/
-		return privKey, nil
-	default:
-		return nil, fmt.Errorf("unable to extract private key object")
-	}
-}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
@@ -197,13 +205,13 @@ func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	switch info.GetType() {
 	case TypeLocal:
 		// TODO fix that
-		/* 
-		algo := info.GetAlgo()
-		localRecord, err := newLocalRecord(pk, string(algo))
-		if err != nil {
-			return nil, err
-		}
-		item = newLocalRecordItem(localRecord)
+		/*
+			algo := info.GetAlgo()
+			localRecord, err := NewLocalRecord(pk, string(algo))
+			if err != nil {
+				return nil, err
+			}
+			item = NewLocalRecordItem(localRecord)
 		*/
 	case TypeOffline:
 		emptyRecord := NewEmptyRecord()
@@ -222,3 +230,38 @@ func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 
 	return NewRecord(name, pk, item)
 }
+
+func extractPrivKeyFromItem(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, error) {
+	rl := k.GetLocal()
+	if rl == nil {
+		return nil, errors.New("works only for Local")
+	}
+
+	return extractPrivKeyFromLocal(cdc, rl)	
+}
+
+func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey, error){
+	bz := []byte(rl.PrivKeyArmor)
+
+	switch rl.PrivKeyType {
+	case "secp256k1":
+		// TODO consider to declare standalone function for that
+		priv := new(secp256k1.PrivKey)
+
+		if err := cdc.Unmarshal(bz, priv); err != nil {
+			return nil, err
+		}
+
+		return priv, nil
+	
+	default:
+		priv := new(ed25519.PrivKey)
+
+		if err := cdc.Unmarshal(bz, priv); err != nil {
+			return nil, err
+		}
+
+		return priv, nil
+	}
+}
+

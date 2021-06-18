@@ -112,12 +112,12 @@ func (kb dbKeybase) Get(name string) (*Record, error) {
 // passphrase. An error is returned if the key does not exist or if the Info for
 // the key is invalid.
 func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (types.PrivKey, error) {
-	ke, err := kb.Get(name)
+	k, err := kb.Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return ke.extractPrivKeyFromLocal()
+	return extractPrivKeyFromItem(kb.cdc, k)
 
 	/*
 		var priv types.PrivKey

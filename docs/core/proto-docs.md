@@ -1308,7 +1308,7 @@ MsgExecResponse defines the Msg/MsgExecResponse response type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `result` | [cosmos.base.abci.v1beta1.Result](#cosmos.base.abci.v1beta1.Result) |  |  |
+| `results` | [bytes](#bytes) | repeated |  |
 
 
 

@@ -77,6 +77,7 @@ if input key is empty, or input data contains empty key.
   * via legacy `msg.Type()` (e.g. `message.action='send'`) is being deprecated, new `Msg`s won't emit these events.
   * Please use concrete `Msg` TypeURLs instead (e.g. `message.action='/cosmos.bank.v1beta1.MsgSend'`).
 * [\#9291](https://github.com/cosmos/cosmos-sdk/pull/9291) Migration scripts prior to v0.38 have been removed from the CLI `migrate` command. The oldest supported migration is v0.39->v0.42.
+* (x/upgrade) [\#9534](https://github.com/cosmos/cosmos-sdk/pull/9534) Upgrade `Plan`'s `upgraded_client_state` field has been deprecated, and will error if not empty.
 
 ### API Breaking Changes
 
@@ -123,7 +124,7 @@ if input key is empty, or input data contains empty key.
 
 * (x/{bank,distrib,gov,slashing,staking}) [\#8363](https://github.com/cosmos/cosmos-sdk/issues/8363) Store keys have been modified to allow for variable-length addresses.
 * (x/evidence) [\#8502](https://github.com/cosmos/cosmos-sdk/pull/8502) `HandleEquivocationEvidence` persists the evidence to state.
-* (x/gov) [\#7733](https://github.com/cosmos/cosmos-sdk/pull/7733) ADR 037 Implementation: Governance Split Votes
+* (x/gov) [\#7733](https://github.com/cosmos/cosmos-sdk/pull/7733) ADR 037 Implementation: Governance Split Votes, use `MsgWeightedVote` to send a split vote. Sending a regular `MsgVote` will convert the underlying vote option into a weighted vote with weight 1.
 * (x/bank) [\#8656](https://github.com/cosmos/cosmos-sdk/pull/8656) balance and supply are now correctly tracked via `coin_spent`, `coin_received`, `coinbase` and `burn` events.
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) Supply is now stored and tracked as `sdk.Coins`
 * (store) [\#8790](https://github.com/cosmos/cosmos-sdk/pull/8790) Reduce gas costs by 10x for transient store operations.

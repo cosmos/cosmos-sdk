@@ -10,11 +10,11 @@ DRAFT
 
 ## Abstract
 
-This ADR defines a generic NFT module of `x/nft` which supports NFTs as a `proto.Any` and contains `NFT` as the default implementation.
+This ADR defines the `x/nft` module which as a generic implementation of the NFT standard API, with some enhancements.
 
 ## Context
 
-NFTs are more digital assets than only crypto arts, which is very helpful for accruing value to ATOM. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
+NFTs are more digital assets than only crypto arts, which is very helpful for accruing value to cosmos . As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
 
 As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
 
@@ -25,106 +25,123 @@ As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/906
 
 Since NFTs functions/use cases are tightly connected with their logic, it is almost impossible to support all the NFTs' use cases in one Cosmos SDK module by defining and implementing different transaction types.
 
-Considering generic usage and compatibility of interchain protocols including IBC and Gravity Bridge, it is preferred to have a very simple NFT module design which only stores NFTs by id and owner. 
+Considering generic usage and compatibility of interchain protocols including IBC and Gravity Bridge, it is preferred to have a generic NFT module design which handles the generic NFTs logic.
 
 This design idea can enable composability that application-specific functions should be managed by other modules on Cosmos Hub or on other Zones by importing the NFT module.
-
-For example, NFTs can be grouped into collections in a collectibles module to define the behaviors such as minting, burning, etc.
 
 The current design is based on the work done by [IRISnet team](https://github.com/irisnet/irismod/tree/master/modules/nft) and an older implementation in the [Cosmos repository](https://github.com/cosmos/modules/tree/master/incubator/nft).
 
 ## Decision
 
-We will create a module `x/nft`, which provides the most basic storage, query functions for other upper-level modules to call. This module implements the OCAP security model in the [ADR 033](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-033-protobuf-inter-module-comm.md) protocol.
+We will create a module `x/nft`, which contains the following functionality:
+
+- store and transfer the NFTs utilizing `x/bank`, if you want to modify the attribute value of nft, you can use the `send` function in `x/nft`.
+- permission, we can utilize `x/authz`.
+- mint and burn the NFTs.
+- enumeration.
 
 ### Types
 
-We define a general NFT model and `x/nft` module only stores NFTs by denom.
+#### Metadata
+
+We define a general `Metadata` model for `denom`, it is same as an erc721 contract on Ethereum, which manages all nfts in the contract, and is more like a set of nfts.
 
 ```protobuf
-message NFT {
-  string              id    = 1;
-  string              denom = 2;
-  google.protobuf.Any data  = 3;
+message Metadata {
+  string     denom       = 1; // Required, unique key
+  string     symbol      = 2; // An abbreviated name for NFTs
+  string     name        = 3; // A descriptive name for a collection of NFTs
+  string     description = 4; // Description of NFTs
 }
 ```
 
-```go
-// Data defines a minimum funtion set consistent with `ERC721Metadata` interface.
-type Metadata struct {
-  string       Name   // A descriptive name for a collection of NFTs
-  string       Symbol // An abbreviated name for NFTs
-  string       URI    // A distinct Uniform Resource Identifier (URI) for a given asset
-  sdktypes.Any data;  // NFT specific data
+- The `denom` is the name of the same type of nft, just like the address of an erc721 contract on Ethereum.
+- The `symbol` is an abbreviated name for NFTs in this denom.
+- The `name` is a descriptive name for a collection of NFTs in this denom.
+- The `description` is a detailed description of denom, which extends the function of erc721.
+
+#### NFT
+
+We define a general NFT model and `x/nft` module only stores NFTs by id.
+
+```protobuf
+message NFT {
+  string              denom = 1;
+  string              id    = 2;
+  string              uri   = 3;
+  google.protobuf.Any data  = 4;
 }
 ```
 
 The NFT conforms to the following specifications:
 
-- The Id is an immutable field used as a unique identifier. NFT identifiers don't currently have a naming convention but can be used in association with existing Hub attributes, e.g., defining an NFT's identifier as an immutable Hub address allows its integration into existing Hub account management modules.
+- The `id` is an immutable field used as a unique identifier in the same denom, It is generated by the system and may be expanded to DID in the future. NFT identifiers don't currently have a naming convention but can be used in association with existing Hub attributes, e.g., defining an NFT's identifier as an immutable Hub address allows its integration into existing Hub account management modules.
   We envision that identifiers can accommodate mint and transfer actions.
-    The Id is also the primary index for storing NFTs.
-      
+  The Id is also the primary index for storing NFTs.
 
   ```
-  id (string) --> NFT (bytes)
+  {denom}/{id} --> NFT (bytes)
   ```
 
-- Owner: This mutable field represents the current account owner (on the Hub) of the NFT, i.e., the account that will have the authorization to perform various activities in the future. This can be a user, a module account, or potentially a future NFT module that adds capabilities.
-  Owner is also the secondary index for storing NFT IDs owned by an address
+- The `uri` is the off-chain storage address of nft attribute `data`, such as ipfs, etc.
 
-  ```
-  owner (address) --> []string
-  ```
+- The `data` is mutable field and allows attaching special information to the NFT, for example:
 
-- Data: This mutable field allows attaching special information to the NFT, for example:
-
-  - metadata such as the title of the work and URI
-  - immutable data and parameters (such actual NFT data, hash or seed for generators)
-  - mutable data and parameters that change when transferring or when certain criteria are met (such as provenance)
+  - metadata such as the title of the work and URI.
+  - immutable data and parameters (such actual NFT data, hash or seed for generators).
+  - mutable data and parameters that change when transferring or when certain criteria are met (such as provenance).
 
   This ADR doesn't specify values that this field can take; however, best practices recommend upper-level NFT modules clearly specify their contents.
-  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, 
+  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification,
   the field's existence allows basic informational/UI functionality.
+
+- The ownership of nft is controlled by the `x/bank` module and the `metadata` part will be converted to `banktypes.Metadata` is stored in the `x/bank` module.
 
 ### `Msg` Service
 
 ```protobuf
 service Msg {
-  rpc Mint(MsgMint) returns (MsgMintResponse);
-  rpc Send(MsgSend) returns (MsgTransferOwnershipResponse);
-  rpc Burn(MsgBurn) returns (MsgBurnResponse);
+  rpc Issue(MsgIssue) returns (MsgIssueResponse);
+  rpc Mint(MsgMint)   returns (MsgMintResponse);
+  rpc Send(MsgSend)   returns (MsgMsgSendResponse);
+  rpc Burn(MsgBurn)   returns (MsgBurnResponse);
 }
+
+message MsgIssue {
+  cosmos.nft.v1beta1.Metadata metadata = 1;
+  string issuer                        = 2;
+}
+message MsgIssueResponse {}
 
 message MsgMint {
-  string       denom     = 1;
-  Metadata     metadata  = 2;
-  string       owner     = 3;
+  cosmos.nft.v1beta1.NFT nft = 1;
+  string               owner = 2;
 }
-message MsgMintResponse {
-  string  id = 1;
-}
+message MsgMintResponse {}
 
 message MsgSend {
-  string id                = 1;
-  string sender            = 2;
-  string reveiver          = 3;
-  google.protobuf.Any Data = 4;
+  string sender                        = 1;
+  string reveiver                      = 2;
+  repeated cosmos.nft.v1beta1.NFT nfts = 3;
 }
+
 message MsgSendResponse {}
 
-message MsgBurn { 
-  string id    = 1;
-  string owner = 2;
+message MsgBurn {
+  string denom = 1;
+  string id    = 2;
+  string owner = 3;
 }
 message MsgBurnResponse {}
 ```
 
-`MsgMint` provides the ability to create a new nft. 
+`MsgIssue` is responsible for issuing an nft classification, just like deploying an erc721 contract on Ethereum.
 
-`MsgTransferOwnership` is responsible for transferring the ownership of an NFT to another address (no coins involved).
+`MsgMint` provides the ability to create a new nft.
 
-`MsgBurn` provides the ability to destroy nft, thereby guaranteeing the uniqueness of cross-chain nft. 
+`MsgSend` is responsible for transferring the ownership of an NFT to another address (no coins involved).
+
+`MsgBurn` provides the ability to destroy nft, thereby guaranteeing the uniqueness of cross-chain nft.
 
 Other business-logic implementations should be defined in other upper-level modules that import this NFT module. The implementation example of the server is as follows:
 
@@ -133,62 +150,75 @@ type msgServer struct{
   k Keeper
 }
 
-func (k msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error){
-  nftID := fmt.Sprintf("nft/%s/%s",msg.Denom,nextID())
-  metadata := bankTypes.Metadata{
-    Symbol: msg.Metadata.Symbol,
-    Base:   nftID,
-    Name:   msg.Metadata.Name,
-    URI:    msg.Metadata.URI, //TODO
-  }
-  _,has := k.bank.GetDenomMetaData(metadata.Base)
-  if has {
-    retutn sdkerrors.Wrapf(types.ErrExistedDenom, "%s", msg.Name)
-  }
+func (m msgServer) Issue(ctx context.Context, msg *types.MsgIssue) (*types.MsgIssueResponse, error){
+  m.keeper.AssertDenomNotExist(msg.Metadata.Denom)
 
-  k.bank.SetDenomMetaData(ctx,metadata)
-  k.bank.MintCoins(types.ModuleName, sdk.Coin{denom: msg.ID, amount: 1})
-  k.bank.SendCoinsFromModuleToAccount(types.ModuleName, msg.Owner, coin)
-  
-  nft := NFT{nftID,msg.Metadata.Data}
-  bz := k.cdc.MustMarshalBinaryBare(&nft)
-  denomStore := k.getDenomStore(ctx, msg.Denom)
-  denomStore.Set(nft.Id,bz)
+  store := ctx.KVStore(m.keeper.storeKey)
+  bz := m.keeper.cdc.MustMarshalBinaryBare(msg.Metadata)
+  store.Set(msg.Denom, bz)
+  return &types.MsgIssueResponse{}, nil
 }
 
-func (k msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error){
-  denom := GetDenomFromID(msg.Id)
-  denomStore := k.getDenomStore(ctx, denom)
-  nft, has := denomStore.Get(ctx, msg.Id)
-  if !has {
-    return sdkerrors.Wrapf(types.ErrNotFoundNFT, "%s", msg.Id)
-  }
-  
-  k.bank.SendCoins(ctx,msg.Sender,msg.Reveiver,sdk.Coin{denom: msg.ID, amount: 1})
+func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error){
+  m.keeper.AssertDenomExist(msg.NFT.Denom)
 
-  nft.Data := msg.Data
-  bz := k.cdc.MustMarshalBinaryBare(&nft)
-  denomStore.Set(nft.Id,bz)
-  return nil
+  metadata := m.keeper.GetMetadata(ctx, msg.NFT.Denom)
+  //NOTICE: how to generate coin denom
+  baseDenom := fmt.Sprintf("nft/%s/%s", msg.NFT.Denom, msg.NFT.Id)
+  bkMetadata := bankTypes.Metadata{
+    Symbol:      metadata.Symbol,
+    Base:        baseDenom,
+    Name:        metadata.Name,
+    URI:         msg.NFT.URI,
+    Description: metadata.Description,
+  }
+
+  m.keeper.bank.SetDenomMetaData(ctx, bkMetadata)
+  mintCoins := sdk.NewCoins(sdk.NewCoin(baseDenom,1))
+  m.keeper.bank.MintCoins(types.ModuleName, mintCoins)
+  m.keeper.bank.SendCoinsFromModuleToAccount(types.ModuleName, msg.Owner, mintCoins)
+  
+  bz := m.keeper.cdc.MustMarshalBinaryBare(&msg.NFT)
+  denomStore := m.keeper.getDenomStore(ctx, msg.NFT.Denom)
+  denomStore.Set(msg.NFT.Id, bz)
+  return nil, nil
 }
 
-func (k Keeper) Burn(ctx sdk.Context, msg *types.MsgBurn) error {
-  denom := GetDenomFromID(msg.Id)
-  denomStore := k.getDenomStore(ctx, denom)
-  nft, has := denomStore.Get(ctx, msg.Id)
-  if !has {
-    return sdkerrors.Wrapf(types.ErrNotFoundNFT, "%s", msg.Id)
-  }
+func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error){
+  sentCoins := sdk.NewCoins()
+  for _,nft := range msg.NFTs {
+    m.keeper.AssertNFTExist(nft.Id)
 
-  token := sdk.Coin{denom: msg.ID, amount: 1}
-  k.bank.SendCoinsFromAccountToModule(ctx,msg.Owner,types.ModuleName,token)
-  k.bank.BurnCoins(ctx,types.ModuleName,token)
+    denomStore := m.keeper.getDenomStore(ctx, nft.Denom)
+    nft := denomStore.Get(nft.Id)
+    bz := m.keeper.cdc.MustMarshalBinaryBare(&nft)
+    denomStore.Set(nft.Id, bz)
 
+    // NOTICE: how to generate coin denom
+    baseDenom := fmt.Sprintf("nft/%s/%s", nft.Denom, nft.Id)
+    sentCoins = sentCoins.Add(sdk.NewCoin(baseDenom,1)) 
+  } 
+  m.keeper.bank.SendCoins(ctx, msg.Sender, msg.Reveiver, sentCoins)
+  return &types.MsgSendResponse{},nil
+}
+
+func (m Keeper) Burn(ctx sdk.Context, msg *types.MsgBurn) (types.MsgBurnResponse,error) {
+  m.keeper.AssertNFTExist(msg.Id)
+
+  denomStore := m.keeper.getDenomStore(ctx, msg.Denom)
+  nft := denomStore.Get(msg.Id)
+
+  // NOTICE: how to generate coin denom
+  baseDenom := fmt.Sprintf("nft/%s/%s", msg.Denom, msg.Id)
+  coins := sdk.NewCoins(sdk.NewCoin(baseDenom,1))
+  m.keeper.bank.SendCoinsFromAccountToModule(ctx, msg.Owner, types.ModuleName, coins)
+  m.keeper.bank.BurnCoins(ctx, types.ModuleName, coins)
+
+  // TODO: how to delete bank.metadata
   // delete nft
-  denomStore.Delete(types.GetNFTKey(nft.Id))
-  return nil
+  denomStore.Delete(msg.Id)
+  return &types.MsgBurnResponse{}, nil
 }
-
 ```
 
 The upper application calls those methods by holding the MsgClient instance of the `x/nft` module. The execution authority of msg is guaranteed by the OCAPs mechanism.
@@ -203,9 +233,34 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{id}";
   }
 
-  // NFTs queries all NFTs based on the optional onwer.
+  // NFTs queries all NFTs based on the optional owner.
   rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/nfts";
+  }
+
+  // NFTsOf queries all NFTs based on the denom.
+  rpc NFTsOf(QueryNFTsOfRequest) returns (QueryNFTsOfResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/denom/{denom}";
+  }
+
+  // Supply queries the number of nft based on the denom, same as totalSupply of erc721
+  rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{denom}";
+  }
+
+  // Balance queries the number of based on the owner, same as balanceOf of erc721
+  rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}";
+  }
+
+  // Denom queries the definition of a given denom
+  rpc Denom(QueryDenomRequest) returns (QueryDenomResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/denoms/{denom}";
+  }
+
+  // Denoms queries all the denoms
+  rpc Denoms(QueryDenomsRequest) returns (QueryDenomsResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/denoms";
   }
 }
 
@@ -216,7 +271,7 @@ message QueryNFTRequest {
 
 // QueryNFTResponse is the response type for the Query/NFT RPC method
 message QueryNFTResponse {
-  NFT nft = 1;
+  cosmos.nft.v1beta1.NFT nft = 1;
 }
 
 // QueryNFTsRequest is the request type for the Query/NFTs RPC method
@@ -227,7 +282,61 @@ message QueryNFTsRequest {
 
 // QueryNFTsResponse is the response type for the Query/NFTs RPC method
 message QueryNFTsResponse {
-  repeated NFT nfts = 1;
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
+message QueryNFTsOfRequest {
+  string                                 denom      = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsOfResponse is the response type for the Query/NFTsOf RPC method
+message QueryNFTsOfResponse {
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySupplyRequest is the request type for the Query/Supply RPC method
+message QuerySupplyRequest{
+  string denom = 1;
+}
+
+// QuerySupplyResponse is the response type for the Query/Supply RPC method
+message QuerySupplyResponse{
+  uint64 amount = 1;
+}
+
+// QueryBalanceRequest is the request type for the Query/Balance RPC method
+message QueryBalanceRequest{
+  string owner = 1;
+}
+
+// QueryBalanceResponse is the response type for the Query/Balance RPC method
+message QueryBalanceResponse{
+  uint64 amount = 1;
+}
+
+// QueryDenomRequest is the request type for the Query/Denom RPC method
+message QueryDenomRequest {
+  string denom = 1;
+}
+
+// QueryDenomResponse is the response type for the Query/Denom RPC method
+message QueryDenomResponse {
+  cosmos.nft.v1beta1.Metadata metadata = 1;
+}
+
+// QueryDenomsRequest is the request type for the Query/Denoms RPC method
+message QueryDenomsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryDenomsResponse is the response type for the Query/Denoms RPC method
+message QueryDenomsResponse {
+  repeated cosmos.nft.v1beta1.Metadata   metadatas = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 ```
@@ -240,11 +349,11 @@ No backward incompatibilities.
 
 ### Forward Compatibility
 
-This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe. 
+This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe.s
 
 ### Positive
 
-- NFT identifiers available on Cosmos Hub
+- NFT identifiers available on Cosmos Hub.
 - Ability to build different NFT modules for the Cosmos Hub, e.g., ERC-721.
 - NFT module which supports interoperability with IBC and other cross-chain infrastructures like Gravity Bridge
 
@@ -254,15 +363,14 @@ This specification conforms to the ERC-721 smart contract specification for NFT 
 
 ### Neutral
 
-- Other functions need more modules. For example, a custody module is needed for NFT trading function, a collectible module is needed for defining NFT properties
+- Other functions need more modules. For example, a custody module is needed for NFT trading function, a collectible module is needed for defining NFT properties.
 
 ## Further Discussions
 
 For other kinds of applications on the Hub, more app-specific modules can be developed in the future:
 
-- `x/nft/collectibles`: grouping NFTs into collections and defining properties of NFTs such as minting, burning and transferring, etc.
-- `x/nft/custody`: custody of NFTs to support trading functionality
-- `x/nft/marketplace`: selling and buying NFTs using sdk.Coins
+- `x/nft/custody`: custody of NFTs to support trading functionality.
+- `x/nft/marketplace`: selling and buying NFTs using sdk.Coins.
 
 Other networks in the Cosmos ecosystem could design and implement their own NFT modules for specific NFT applications and use cases.
 

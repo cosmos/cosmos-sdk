@@ -14,7 +14,7 @@ This ADR defines the `x/nft` module which as a generic implementation of the NFT
 
 ## Context
 
-NFTs are more digital assets than only crypto arts, which is very helpful for accruing value to cosmos . As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
+NFTs are more digital assets than only crypto arts, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
 
 As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
 
@@ -135,13 +135,13 @@ message MsgBurn {
 message MsgBurnResponse {}
 ```
 
-`MsgIssue` is responsible for issuing an nft classification, just like deploying an erc721 contract on Ethereum.
+`MsgIssue` is responsible for issuing an NFT classification, just like deploying an erc721 contract on Ethereum.
 
-`MsgMint` provides the ability to create a new nft.
+`MsgMint` provides the ability to create a new NFT.
 
 `MsgSend` is responsible for transferring the ownership of an NFT to another address (no coins involved).
 
-`MsgBurn` provides the ability to destroy nft, thereby guaranteeing the uniqueness of cross-chain nft.
+`MsgBurn` provides the ability to destroy NFT, thereby guaranteeing the uniqueness of cross-chain NFT.
 
 Other business-logic implementations should be defined in other upper-level modules that import this NFT module. The implementation example of the server is as follows:
 
@@ -170,9 +170,10 @@ func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMint
     Symbol:      metadata.Symbol,
     Base:        baseDenom,
     Name:        metadata.Name,
-    URI:         msg.NFT.Uri,
+    URI:         msg.NFT.URI,
     Description: metadata.Description,
   }
+  
   m.keeper.bank.SetDenomMetaData(ctx, bkMetadata)
   mintedCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, 1))
   m.keeper.bank.MintCoins(types.ModuleName, mintedCoins)
@@ -210,7 +211,7 @@ func (m Keeper) Burn(ctx sdk.Context, msg *types.MsgBurn) (types.MsgBurnResponse
   m.keeper.bank.BurnCoins(ctx, types.ModuleName, coins)
 
   // Delete bank.Metadata (keeper method not available)
-  
+  typeStore := m.keeper.getTypeStore(ctx, msg.NFT.Type)
   typeStore.Delete(msg.Id)
   
   return &types.MsgBurnResponse{}, nil

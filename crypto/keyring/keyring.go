@@ -267,7 +267,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 		return nil, err
 	}
 
-	return extractPrivKeyFromItem(ks.cdc, k)
+	return ExtractPrivKeyFromItem(ks.cdc, k)
 }
 
 func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
@@ -338,8 +338,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		return nil, nil, err
 	}
 
-	
-	priv, err := extractPrivKeyFromItem(ks.cdc, k)
+	priv, err := ExtractPrivKeyFromItem(ks.cdc, k)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -352,7 +351,6 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	return sig, priv.PubKey(), nil
 
 }
-
 
 func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {
 	k, err := ks.KeyByAddress(address)

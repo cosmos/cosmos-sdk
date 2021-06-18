@@ -8,10 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
+
 
 func TestEmptyRecordMarshaling(t *testing.T) {
 	require := require.New(t)
@@ -84,9 +88,6 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	require.Equal(localRecord2.PrivKeyType, privKey.Type())
 }
 
-
-
-
 /* TODO implement tests
 TestNewRecordGetItem
 input: name, anyPub, a)Empty b)Local 3)ledger
@@ -102,6 +103,68 @@ input privKey is valid and invalid
 test extractPrivKeyFrom Local
 
 
-
-
 */
+// TODO fix that
+func TestExtractPrivKeyFromItem(t *testing.T){
+	
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	tt := []struct {
+		name string
+		privKey cryptotypes.PrivKey
+		errExp  error
+	}{
+		{
+			name: "local record",
+			privKey: ed25519.GenPrivKey(),
+			errExp : nil,
+		},
+		{
+			name: "ledger record",
+			privKey: secp256k1.GenPrivKey(),
+			errExp : keyring.ErrPrivKeyExtr,
+		},
+		{
+			name: "empty record",
+			privKey: ed25519.GenPrivKey(),
+			errExp : keyring.ErrPrivKeyExtr,
+		},
+	}
+
+	for _, tc := range tt {
+		tc := tc
+		t.Run(tc.name,  func(t *testing.T) {
+			require := require.New(t)
+			k := new(keyring.Record)
+		
+			switch tc.name {
+			case "local record":
+				localRecord, err := keyring.NewLocalRecord(cdc, tc.privKey)
+				require.NoError(err)
+				localRecordItem := keyring.NewLocalRecordItem(localRecord)
+				k, err = keyring.NewRecord(tc.name, tc.privKey.PubKey(), localRecordItem)
+				require.NoError(err)
+			case "ledger record":
+				var err error
+				path := hd.NewFundraiserParams(4, types.CoinType, 22)
+				ledgerRecord := keyring.NewLedgerRecord(path)
+				ledgerRecordItem := keyring.NewLedgerRecordItem(ledgerRecord)
+				k, err = keyring.NewRecord(tc.name, tc.privKey.PubKey(), ledgerRecordItem)
+				require.NoError(err)
+			case "empty record":
+				var err error
+				emptyRecord := keyring.NewEmptyRecord()
+				emptyRecordItem := keyring.NewEmptyRecordItem(emptyRecord)
+				k, err = keyring.NewRecord(tc.name, tc.privKey.PubKey(), emptyRecordItem)
+				require.NoError(err)
+			}
+
+			priv, err := keyring.ExtractPrivKeyFromItem(cdc, k)
+			require.Equal(tc.errExp, err)
+			require.Equal(priv, tc.privKey)
+
+		})
+	}
+}

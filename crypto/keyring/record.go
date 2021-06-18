@@ -1,8 +1,8 @@
 package keyring
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
+var ErrPrivKeyExtr = errors.New("Private key extraction works only for Local")
 //TODO replace Info by reyring entry in client/reys
 // check  NewLedgerInfo, newLocalInfo, newMultiInfo in whole codebase
 // TODO count how many times NewLedgerInfo or newLocalInfo is used and perhaps consider create a separate functions for that
@@ -29,33 +30,33 @@ func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local
 
 	var (
 		err error
-	    bz []byte
+		bz  []byte
 	)
 
 	privKeyType := privKey.Type()
 
-	switch privKeyType  {
-		case "secp256k1":
-			priv, ok := privKey.(*secp256k1.PrivKey)
-			if !ok {
-				return nil, fmt.Errorf("unable to cast privKey to *secp256k1.PrivKey")
-			}
+	switch privKeyType {
+	case "secp256k1":
+		priv, ok := privKey.(*secp256k1.PrivKey)
+		if !ok {
+			return nil, fmt.Errorf("unable to cast privKey to *secp256k1.PrivKey")
+		}
 
-			bz, err = cdc.Marshal(priv)
-			if err != nil {
-				return nil, err
-			}
-		
-		case "ed25519":
-			priv, ok := privKey.(*ed25519.PrivKey)
-			if !ok {
-				return nil, fmt.Errorf("unable to cast privKey to *ed25519.PrivKey")
-			}
+		bz, err = cdc.Marshal(priv)
+		if err != nil {
+			return nil, err
+		}
 
-			bz, err = cdc.Marshal(priv)
-			if err != nil {
-				return nil, err
-			}
+	case "ed25519":
+		priv, ok := privKey.(*ed25519.PrivKey)
+		if !ok {
+			return nil, fmt.Errorf("unable to cast privKey to *ed25519.PrivKey")
+		}
+
+		bz, err = cdc.Marshal(priv)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Record_Local{string(bz), privKeyType}, nil
@@ -117,7 +118,6 @@ func (k Record) GetAlgo() string {
 func (k Record) GetType() KeyType {
 	return 0
 }
-
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
@@ -231,16 +231,16 @@ func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	return NewRecord(name, pk, item)
 }
 
-func extractPrivKeyFromItem(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, error) {
+func ExtractPrivKeyFromItem(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, error) {
 	rl := k.GetLocal()
 	if rl == nil {
-		return nil, errors.New("works only for Local")
+		return nil, ErrPrivKeyExtr
 	}
 
-	return extractPrivKeyFromLocal(cdc, rl)	
+	return extractPrivKeyFromLocal(cdc, rl)
 }
 
-func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey, error){
+func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey, error) {
 	bz := []byte(rl.PrivKeyArmor)
 
 	switch rl.PrivKeyType {
@@ -253,7 +253,7 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 		}
 
 		return priv, nil
-	
+
 	default:
 		priv := new(ed25519.PrivKey)
 
@@ -264,4 +264,3 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 		return priv, nil
 	}
 }
-

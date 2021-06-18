@@ -1,8 +1,8 @@
 package keyring_test
 
 import (
-//	"encoding/hex"
-//	"fmt"
+	//	"encoding/hex"
+	//	"fmt"
 	"strings"
 	"testing"
 
@@ -19,7 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO set proper naming k for Record 
+// TODO set proper naming k for Record
 
 const (
 	someKey = "theKey"
@@ -32,9 +32,6 @@ func init() {
 }
 
 //TODO architect table driven tests for migration 3 tests - 1, key of version 0, key of version 1, random bytes -> expected err
-
-
-
 
 func TestNewKeyring(t *testing.T) {
 	dir := t.TempDir()
@@ -239,7 +236,6 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
-
 
 /* fix migration before fixing this test
 func TestExportImportKeyRing(t *testing.T) {
@@ -471,7 +467,6 @@ func TestInMemoryCreateMultisig(t *testing.T) {
 	require.NoError(t, err)
 }
 
-
 func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb := keyring.NewInMemory(encCfg.Marshaler)
@@ -482,7 +477,8 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "Invalid mnemonic", err.Error())
 }
- /* fix migration 
+
+/* fix migration
 // TestInMemoryKeyManagement makes sure we can manipulate these keys well
 func TestInMemoryKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -787,7 +783,7 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	err = cstore.ImportPubKey("john-pubkey-only", armor)
 	require.NotNil(t, err)
 }
-*/ 
+*/
 
 /* fix migration
 // TestInMemoryAdvancedKeyManagement verifies update, import, export functionality
@@ -1000,7 +996,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	require.Equal(t, uid, ke.GetName())
 
 	list, err := kr.List()
-	// TODO fix list 
+	// TODO fix list
 	require.NoError(t, err)
 	require.Len(t, list, 1)
 }
@@ -1277,7 +1273,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	err = kr.ImportPubKey(newUID, armor)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
-*/ 
+*/
 /* fix migration
 func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()

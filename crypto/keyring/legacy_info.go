@@ -2,13 +2,16 @@ package  keyring
 
 import (
 	"fmt"
+	"errors"
 
+	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	bip39 "github.com/cosmos/go-bip39"
 )
 
 // Info is the publicly exposed information about a keypair
@@ -20,7 +23,7 @@ type LegacyInfo interface {
 	// Public key
 	GetPubKey() cryptotypes.PubKey
 	// Address
-	GetAddress() types.AccAddress
+	GetAddress() sdk.AccAddress
 	// Bip44 Path
 	GetPath() (*hd.BIP44Params, error)
 	// Algo
@@ -43,7 +46,7 @@ type legacyLocalInfo struct {
 	Algo         hd.PubKeyType      `json:"algo"`
 }
 
-func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) LegacyInfo {
+func NewLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) LegacyInfo {
 	return &legacyLocalInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -68,7 +71,7 @@ func (i legacyLocalInfo) GetPubKey() cryptotypes.PubKey {
 }
 
 // GetType implements Info interface
-func (i legacyLocalInfo) GetAddress() types.AccAddress {
+func (i legacyLocalInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
@@ -116,7 +119,7 @@ func (i legacyLedgerInfo) GetPubKey() cryptotypes.PubKey {
 }
 
 // GetAddress implements Info interface
-func (i legacyLedgerInfo) GetAddress() types.AccAddress {
+func (i legacyLedgerInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
@@ -168,7 +171,7 @@ func (i legacyOfflineInfo) GetAlgo() hd.PubKeyType {
 }
 
 // GetAddress implements Info interface
-func (i legacyOfflineInfo) GetAddress() types.AccAddress {
+func (i legacyOfflineInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
@@ -221,7 +224,7 @@ func (i legacyMultiInfo) GetPubKey() cryptotypes.PubKey {
 }
 
 // GetAddress implements Info interface
-func (i legacyMultiInfo) GetAddress() types.AccAddress {
+func (i legacyMultiInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
@@ -271,3 +274,106 @@ func unmarshalInfo(bz []byte) (info LegacyInfo, err error) {
 
 	return
 }
+
+func (ks keystore) NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (LegacyInfo, string, error) {
+	if language != English {
+		return nil, "", ErrUnsupportedLanguage
+	}
+
+	if !ks.isSupportedSigningAlgo(algo) {
+		return nil, "", ErrUnsupportedSigningAlgo
+	}
+
+	// Default number of words (24): This generates a mnemonic directly from the
+	// number of words by reading system entropy.
+	entropy, err := bip39.NewEntropy(DefaultEntropySize)
+	if err != nil {
+		return nil, "", err
+	}
+
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if bip39Passphrase == "" {
+		bip39Passphrase = DefaultBIP39Passphrase
+	}
+
+	info, err := ks.NewLegacyAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return info, mnemonic, nil
+}
+
+
+
+
+func (ks keystore) NewLegacyAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (LegacyInfo, error) {
+	if !ks.isSupportedSigningAlgo(algo) {
+		return nil, ErrUnsupportedSigningAlgo
+	}
+
+	// create master key and derive first key for keyring
+	derivedPriv, err := algo.Derive()(mnemonic, bip39Passphrase, hdPath)
+	if err != nil {
+		return nil, err
+	}
+
+	privKey := algo.Generate()(derivedPriv)
+
+	// check if the a key already exists with the same address and return an error
+	// if found
+	address := sdk.AccAddress(privKey.PubKey().Address())
+	if _, err := ks.KeyByAddress(address); err == nil {
+		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
+	}
+
+	return ks.writeLegacyLocalKey(name, privKey, algo.Name())
+}
+
+func (ks keystore) writeLegacyLocalKey(name string, priv cryptotypes.PrivKey, algo hd.PubKeyType) (LegacyInfo, error) {
+	// encrypt private key using keyring
+	pub := priv.PubKey()
+	info := NewLegacyLocalInfo(name, pub, string(legacy.Cdc.MustMarshal(priv)), algo)
+	if err := ks.writeInfo(info); err != nil {
+		return nil, err
+	}
+
+	return info, nil
+}
+
+func (ks keystore) writeInfo(info LegacyInfo) error {
+	exists, err := ks.existsInDb(info.GetAddress(), info.GetName())
+	if err != nil {
+		return err
+	}
+	if exists {
+		return errors.New("public key already exist in keybase")
+	}
+
+	key := infoKeyBz(info.GetName())
+	serializedInfo := marshalInfo(info)
+
+	err = ks.db.Set(keyring.Item{
+		Key:  string(key),
+		Data: serializedInfo,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ks.db.Set(keyring.Item{
+		Key:  addrHexKeyAsString(info.GetAddress()),
+		Data: key,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+

@@ -79,11 +79,13 @@ type Keyring interface {
 	//
 	// A passphrase set to the empty string will set the passphrase to the DefaultBIP39Passphrase value.
 	NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (*Record, string, error)
-
+	// required for testing purposes in migration_test.go
+	NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (LegacyInfo, string, error)
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
 	// It fails if there is an existing key Info with the same address.
 	NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error)
 
+	NewLegacyAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (LegacyInfo, error)
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
 
@@ -234,6 +236,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(key), string(k.GetAlgo())), nil
 }
 
@@ -750,7 +753,12 @@ func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, e
 }
 
 func (ks keystore) writeRecord(k *Record) error {
-	exists, err := ks.existsInDb(k)
+	addr, err := k.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	exists, err := ks.existsInDb(addr, k.Name)
 	if err != nil {
 		return err
 	}
@@ -775,11 +783,6 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 
-	addr, err := k.GetAddress()
-	if err != nil {
-		return fmt.Errorf("Unable to get record address, err - %s", err)
-	}
-
 	item = keyring.Item{
 		Key:  addrHexKeyAsString(addr),
 		Data: serializedRecord,
@@ -794,18 +797,15 @@ func (ks keystore) writeRecord(k *Record) error {
 
 // existsInDb returns true if key is in DB. Error is returned only when we have error
 // different thant ErrKeyNotFound
-func (ks keystore) existsInDb(k *Record) (bool, error) {
-	addr, err := k.GetAddress()
-	if err != nil {
-		return false, err
-	}
+func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
+
 	if _, err := ks.db.Get(addrHexKeyAsString(addr)); err == nil {
 		return true, nil // address lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(infoKey(k.Name)); err == nil {
+	if _, err := ks.db.Get(infoKey(name)); err == nil {
 		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
@@ -814,6 +814,8 @@ func (ks keystore) existsInDb(k *Record) (bool, error) {
 	// both lookups failed, info does not exist
 	return false, nil
 }
+
+// TO
 
 func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error) {
 	emptyRecord := NewEmptyRecord()
@@ -840,8 +842,6 @@ func (ks keystore) checkMigrate() error {
 	var version uint32 = 0
 	// 1.Get a key data
 	item, err := ks.db.Get(VERSION_KEY)
-	fmt.Println("checkMigrate() item.Key", item.Key)
-	fmt.Println("checkMigrate() item.Data", string(item.Data))
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
 			return fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
@@ -974,3 +974,4 @@ func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err
 func addrHexKeyAsString(address sdk.Address) string {
 	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }
+

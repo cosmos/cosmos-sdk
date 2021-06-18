@@ -1,23 +1,24 @@
 package query
 
 import (
+	"github.com/spf13/cobra"
+	"go.uber.org/dig"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/spf13/cobra"
-	"go.uber.org/dig"
 )
 
 type Inputs struct {
 	dig.In
 
-	Commands []*cobra.Command `group:"cosmos.query.v1.Command"`
+	Commands []*cobra.Command `group:"query"`
 }
 
 type Outputs struct {
 	dig.Out
 
-	Command *cobra.Command `group:"cli.root"`
+	Command *cobra.Command `group:"root"`
 }
 
 func Provider(inputs Inputs) Outputs {

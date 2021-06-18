@@ -1,6 +1,9 @@
 package module
 
 import (
+	"github.com/spf13/cobra"
+	"go.uber.org/dig"
+
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -8,8 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/container"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/spf13/cobra"
-	"go.uber.org/dig"
 )
 
 var (
@@ -19,7 +20,7 @@ var (
 type Inputs struct {
 	dig.In
 
-	Commands  []*cobra.Command `group:"cosmos.tx.v1.Command"`
+	Commands  []*cobra.Command `group:"tx"`
 	Marshaler codec.ProtoCodecMarshaler
 }
 
@@ -27,8 +28,8 @@ type Outputs struct {
 	dig.Out
 
 	TxConfig      client.TxConfig
-	Command       *cobra.Command   `group:"cli.root"`
-	QueryCommands []*cobra.Command `group:"cosmos.query.v1.Command,flatten"`
+	Command       *cobra.Command   `group:"root"`
+	QueryCommands []*cobra.Command `group:"query,flatten"`
 }
 
 func (m Module) Provision(_ app.ModuleKey, registrar container.Registrar) error {

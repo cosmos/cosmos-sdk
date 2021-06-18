@@ -3,12 +3,13 @@ package provider
 import (
 	"encoding/json"
 
+	"github.com/spf13/cobra"
+	"go.uber.org/dig"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/spf13/cobra"
-	"go.uber.org/dig"
 )
 
 type Inputs struct {
@@ -23,7 +24,7 @@ type Inputs struct {
 type Outputs struct {
 	dig.Out
 
-	RootCommands []*cobra.Command `group:"cli.root,flatten"`
+	RootCommands []*cobra.Command `group:"root,flatten"`
 }
 
 func Provider(inputs Inputs) Outputs {

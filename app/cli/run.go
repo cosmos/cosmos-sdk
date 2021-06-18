@@ -3,11 +3,12 @@ package cli
 import (
 	"os"
 
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"go.uber.org/dig"
 
@@ -16,13 +17,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/app/internal"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/spf13/cobra"
 )
 
 type Options struct {
@@ -50,16 +52,16 @@ func Run(options Options) {
 type Inputs struct {
 	dig.In
 
-	RootCommands []*cobra.Command `group:"cli.root"`
+	RootCommands []*cobra.Command `group:"root"`
 }
 
 func newRootCmd(options Options) *cobra.Command {
-	a, err := internal.NewAppProvider(options.DefaultAppConfig)
+	appProvider, err := internal.NewAppProvider(options.DefaultAppConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	err = a.Provide(func() string { return options.DefaultHome }, dig.Name("cli.default-home"))
+	err = appProvider.Provide(func() string { return options.DefaultHome }, dig.Name("cli.default-home"))
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +71,7 @@ func newRootCmd(options Options) *cobra.Command {
 		WithHomeDir(options.DefaultHome).
 		WithViper(options.EnvPrefix)
 
-	err = a.Invoke(func(
+	err = appProvider.Invoke(func(
 		codec codec.JSONCodec,
 		registry codectypes.InterfaceRegistry,
 		txConfig client.TxConfig,
@@ -113,9 +115,14 @@ func newRootCmd(options Options) *cobra.Command {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
-	err = a.Invoke(func(inputs Inputs) {
+	err = appProvider.Invoke(func(inputs Inputs) {
 		rootCmd.AddCommand(inputs.RootCommands...)
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	err = dig.Visualize(appProvider.Container, os.Stdout)
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +135,7 @@ func newRootCmd(options Options) *cobra.Command {
 		config.Cmd(),
 	)
 
-	server.AddCommands(rootCmd, options.DefaultHome, a.AppCreator, a.AppExportor, addModuleInitFlags)
+	server.AddCommands(rootCmd, options.DefaultHome, appProvider.AppCreator, appProvider.AppExportor, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(

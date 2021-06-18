@@ -2,12 +2,14 @@ package app
 
 import (
 	"reflect"
+	"strings"
+
+	proto "github.com/gogo/protobuf/proto"
+	"go.uber.org/dig"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
-	proto "github.com/gogo/protobuf/proto"
-	"go.uber.org/dig"
 )
 
 type ModuleContainer struct {
@@ -72,6 +74,16 @@ func (mc *ModuleContainer) AddModule(name string, mod interface{}) error {
 		err := provisioner.Provision(nil, registrar)
 		if err != nil {
 			return err
+		}
+	}
+
+	// register DI Provide* methods
+	modTy := reflect.TypeOf(mod)
+	numMethods := modTy.NumMethod()
+	for i := 0; i < numMethods; i++ {
+		method := modTy.Method(i)
+		if strings.HasPrefix(method.Name, "Provide") {
+			// TODO wrap function and provide
 		}
 	}
 

@@ -40,6 +40,7 @@ type Plan struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Deprecated: Time based upgrades have been deprecated. Time based upgrade logic
 	// has been removed from the SDK.
+	// If this field is not empty, an error will be thrown.
 	Time time.Time `protobuf:"bytes,2,opt,name=time,proto3,stdtime" json:"time"`
 	// The height at which the upgrade must be performed.
 	// Only used if Time is not set.
@@ -49,6 +50,7 @@ type Plan struct {
 	Info string `protobuf:"bytes,4,opt,name=info,proto3" json:"info,omitempty"`
 	// Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been
 	// moved to the IBC module in the sub module 02-client.
+	// If this field is not empty, an error will be thrown.
 	UpgradedClientState *types.Any `protobuf:"bytes,5,opt,name=upgraded_client_state,json=upgradedClientState,proto3" json:"upgraded_client_state,omitempty" yaml:"upgraded_client_state"`
 }
 

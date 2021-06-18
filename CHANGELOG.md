@@ -77,7 +77,6 @@ if input key is empty, or input data contains empty key.
   * via legacy `msg.Type()` (e.g. `message.action='send'`) is being deprecated, new `Msg`s won't emit these events.
   * Please use concrete `Msg` TypeURLs instead (e.g. `message.action='/cosmos.bank.v1beta1.MsgSend'`).
 * [\#9291](https://github.com/cosmos/cosmos-sdk/pull/9291) Migration scripts prior to v0.38 have been removed from the CLI `migrate` command. The oldest supported migration is v0.39->v0.42.
-* (x/upgrade) [\#9534](https://github.com/cosmos/cosmos-sdk/pull/9534) Upgrade `Plan`'s `upgraded_client_state` field has been deprecated, and will error if not empty.
 
 ### API Breaking Changes
 
@@ -89,7 +88,7 @@ if input key is empty, or input data contains empty key.
 * (client/keys) [\#8500](https://github.com/cosmos/cosmos-sdk/pull/8500) `InfoImporter` interface is removed from legacy keybase.
 * (x/staking) [\#8505](https://github.com/cosmos/cosmos-sdk/pull/8505) `sdk.PowerReduction` has been renamed to `sdk.DefaultPowerReduction`, and most staking functions relying on power reduction take a new function argument, instead of relying on that global variable.
 * [\#8629](https://github.com/cosmos/cosmos-sdk/pull/8629) Deprecated `SetFullFundraiserPath` from `Config` in favor of `SetPurpose` and `SetCoinType`.
-* (x/upgrade) [\#8673](https://github.com/cosmos/cosmos-sdk/pull/8673) Remove IBC logic from x/upgrade. Deprecates IBC fields in an Upgrade Plan. IBC upgrade logic moved to 02-client and an IBC UpgradeProposal is added.
+* (x/upgrade) [\#8673](https://github.com/cosmos/cosmos-sdk/pull/8673) Remove IBC logic from x/upgrade. Deprecates IBC fields in an Upgrade Plan, an error will be thrown if they are set. IBC upgrade logic moved to 02-client and an IBC UpgradeProposal is added.
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) `SupplyI` interface and `Supply` are removed and uses `sdk.Coins` for supply tracking
 * (x/upgrade) [\#8743](https://github.com/cosmos/cosmos-sdk/pull/8743) `UpgradeHandler` includes a new argument `VersionMap` which helps facilitate in-place migrations.
 * (x/auth) [\#8129](https://github.com/cosmos/cosmos-sdk/pull/8828) Updated `SigVerifiableTx.GetPubKeys` method signature to return error.

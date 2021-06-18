@@ -122,8 +122,33 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	serverCtx.Viper.AutomaticEnv()
 
+
+		// DRPCWebConfig defines configuration for the gRPC-web server.
+		type DRPCWebConfig struct {
+			// Enable defines if the gRPC-web should be enabled.
+			Enable bool `mapstructure:"enable"`
+
+			// Address defines the gRPC-web server to listen on
+			Address string `mapstructure:"address"`
+		}
+
+		type CustomAppConfig struct {
+			config.Config
+
+			DRPC DRPCWebConfig `mapstructure:"telemetry"`
+		}
+
+
+		customConf := CustomAppConfig{
+			Config: *config.DefaultConfig(),
+			DRPC: DRPCWebConfig{
+				Enable: false,
+				Address: "9999",
+			},
+		}
+
 	// intercept configuration files, using both Viper instances separately
-	config, err := interceptConfigs(serverCtx.Viper)
+	config, err := interceptConfigs(serverCtx.Viper, customConf)
 	if err != nil {
 		return err
 	}
@@ -433,28 +458,12 @@ address = {{ .DRPC.Address }}
 
 		if customConfig != "" {
 			config.SetConfigTemplate(customConfigTemplate)
+
+			err = rootViper.Unmarshal(customConfig)
+			config.WriteConfigFile(appCfgFilePath, customConfig)
+		} else {
+			config.WriteConfigFile(appCfgFilePath, appConf)
 		}
-
-		// DRPCWebConfig defines configuration for the gRPC-web server.
-		type DRPCWebConfig struct {
-			// Enable defines if the gRPC-web should be enabled.
-			Enable bool `mapstructure:"enable"`
-
-			// Address defines the gRPC-web server to listen on
-			Address string `mapstructure:"address"`
-		}
-
-		type CustomAppConfig struct {
-			config.Config
-
-			DRPC DRPCWebConfig `mapstructure:"telemetry"`
-		}
-
-
-		conf := CustomAppConfig
-		
-		err := v.Unmarshal(conf)
-		config.WriteConfigFile(appCfgFilePath, appConf)
 	}
 
 	rootViper.SetConfigType("toml")

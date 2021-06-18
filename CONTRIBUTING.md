@@ -75,12 +75,13 @@ of how these are written refer to the current [ADRs](https://github.com/cosmos/c
 PRs should be categorically broken up based on the type of changes being made (i.e. `fix`, `feat`,
 `refactor`, `docs`, etc.). The *type* must be included in the PR title as a prefix (e.g.
 `fix: <description>`). This ensures that all changes committed to the base branch follow the
-[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. 
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
 
 ### Pull Request Templates
 
 There are currently three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes and an [other template](./.github/PULL_REQUEST_TEMPLATE/other.md) for changes that do not affect production code. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
+
 - `template=docs.md`
 - `template=other.md`
 

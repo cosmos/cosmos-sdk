@@ -37,8 +37,8 @@ We will create a module `x/nft`, which contains the following functionality:
 
 - store and transfer the NFTs utilizing `x/bank`, if you want to modify the attribute value of nft, you can use the `send` function in `x/nft`.
 - permission, we can utilize `x/authz`.
-- mint and burn the NFTs.
-- enumeration.
+- mint and burn the NFTs, in this module.
+- enumeration, in this module.
 
 ### Types
 
@@ -163,7 +163,7 @@ func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMint
   m.keeper.AssertDenomExist(msg.NFT.Denom)
 
   metadata := m.keeper.GetMetadata(ctx, msg.NFT.Denom)
-  //NOTICE: how to generate coin denom
+  // NOTE: we can use denom manager or DID
   baseDenom := fmt.Sprintf("nft/%s/%s", msg.NFT.Denom, msg.NFT.Id)
   bkMetadata := bankTypes.Metadata{
     Symbol:      metadata.Symbol,
@@ -194,7 +194,6 @@ func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
     bz := m.keeper.cdc.MustMarshalBinaryBare(&nft)
     denomStore.Set(nft.Id, bz)
 
-    // NOTICE: how to generate coin denom
     baseDenom := fmt.Sprintf("nft/%s/%s", nft.Denom, nft.Id)
     sentCoins = sentCoins.Add(sdk.NewCoin(baseDenom,1)) 
   } 
@@ -208,13 +207,12 @@ func (m Keeper) Burn(ctx sdk.Context, msg *types.MsgBurn) (types.MsgBurnResponse
   denomStore := m.keeper.getDenomStore(ctx, msg.Denom)
   nft := denomStore.Get(msg.Id)
 
-  // NOTICE: how to generate coin denom
   baseDenom := fmt.Sprintf("nft/%s/%s", msg.Denom, msg.Id)
-  coins := sdk.NewCoins(sdk.NewCoin(baseDenom,1))
+  coins := sdk.NewCoins(sdk.NewCoin(baseDenom, 1))
   m.keeper.bank.SendCoinsFromAccountToModule(ctx, msg.Owner, types.ModuleName, coins)
   m.keeper.bank.BurnCoins(ctx, types.ModuleName, coins)
 
-  // TODO: how to delete bank.metadata
+  // TODO: Delete bank.metadata
   // delete nft
   denomStore.Delete(msg.Id)
   return &types.MsgBurnResponse{}, nil

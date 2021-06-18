@@ -4,6 +4,9 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/dig"
 
+	"github.com/cosmos/cosmos-sdk/app/compat"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -62,51 +65,51 @@ func (Module) ProvideCLICommands() CLICommands {
 	}
 }
 
-//func (m Module) ProvideAppHandler(key app.ModuleKey, inputs Inputs) (Outputs, error) {
-//	var accCtr types.AccountConstructor
-//	if m.AccountConstructor != nil {
-//		err := inputs.Codec.UnpackAny(m.AccountConstructor, &accCtr)
-//		if err != nil {
-//			return Outputs{}, err
-//		}
-//	} else {
-//		accCtr = DefaultAccountConstructor{}
-//	}
-//
-//	perms := map[string][]string{}
-//	for _, perm := range m.Permissions {
-//		perms[perm.Address] = perm.Permissions
-//	}
-//
-//	var randomGenesisAccountsProvider types.RandomGenesisAccountsProvider
-//	if m.RandomGenesisAccountsProvider != nil {
-//		err := inputs.Codec.UnpackAny(m.RandomGenesisAccountsProvider, &randomGenesisAccountsProvider)
-//		if err != nil {
-//			return Outputs{}, err
-//		}
-//	} else {
-//		randomGenesisAccountsProvider = DefaultRandomGenesisAccountsProvider{}
-//	}
-//
-//	keeper := authkeeper.NewAccountKeeper(
-//		inputs.Codec,
-//		inputs.KeyProvider(key),
-//		inputs.SubspaceProvider(key),
-//		func() types.AccountI {
-//			return accCtr.NewAccount()
-//		},
-//		perms,
-//	)
-//	appMod := auth.NewAppModule(inputs.Codec, keeper, func(simState *module.SimulationState) types.GenesisAccounts {
-//		return randomGenesisAccountsProvider.RandomGenesisAccounts(simState)
-//	})
-//
-//	return Outputs{
-//		ViewKeeper: viewOnlyKeeper{keeper},
-//		Keeper:     keeper,
-//		Handler:    compat.AppModuleHandler(key.ID(), appMod),
-//	}, nil
-//}
+func (m Module) ProvideAppHandler(key app.ModuleKey, inputs Inputs) (Outputs, error) {
+	var accCtr types.AccountConstructor
+	if m.AccountConstructor != nil {
+		err := inputs.Codec.UnpackAny(m.AccountConstructor, &accCtr)
+		if err != nil {
+			return Outputs{}, err
+		}
+	} else {
+		accCtr = DefaultAccountConstructor{}
+	}
+
+	perms := map[string][]string{}
+	for _, perm := range m.Permissions {
+		perms[perm.Address] = perm.Permissions
+	}
+
+	var randomGenesisAccountsProvider types.RandomGenesisAccountsProvider
+	if m.RandomGenesisAccountsProvider != nil {
+		err := inputs.Codec.UnpackAny(m.RandomGenesisAccountsProvider, &randomGenesisAccountsProvider)
+		if err != nil {
+			return Outputs{}, err
+		}
+	} else {
+		randomGenesisAccountsProvider = DefaultRandomGenesisAccountsProvider{}
+	}
+
+	keeper := authkeeper.NewAccountKeeper(
+		inputs.Codec,
+		inputs.KeyProvider(key),
+		inputs.SubspaceProvider(key),
+		func() types.AccountI {
+			return accCtr.NewAccount()
+		},
+		perms,
+	)
+	appMod := auth.NewAppModule(inputs.Codec, keeper, func(simState *module.SimulationState) types.GenesisAccounts {
+		return randomGenesisAccountsProvider.RandomGenesisAccounts(simState)
+	})
+
+	return Outputs{
+		ViewKeeper: viewOnlyKeeper{keeper},
+		Keeper:     keeper,
+		Handler:    compat.AppModuleHandler(key.ID(), appMod),
+	}, nil
+}
 
 func (m DefaultAccountConstructor) NewAccount() types.AccountI {
 	return &types.BaseAccount{}

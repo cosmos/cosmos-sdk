@@ -1,6 +1,7 @@
 package cli
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/spf13/pflag"
@@ -42,38 +43,38 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			fsModify: func(fs *pflag.FlagSet) {
 				return
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "1stake"),
 		}, {
 			name: "Custom amount",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagAmount, "2000stake")
 			},
-			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01", "1stake"),
 		}, {
 			name: "Custom commission rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagCommissionRate, "0.54")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01", "1stake"),
 		}, {
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagCommissionMaxRate, "0.89")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01", "1stake"),
 		}, {
 			name: "Custom commission max change rate",
 			fsModify: func(fs *pflag.FlagSet) {
 				fs.Set(FlagCommissionMaxChangeRate, "0.55")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.55", "1"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.55", "1stake"),
 		},
 		{
 			name: "Custom min self delegations",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagMinSelfDelegation, "0.33")
+				fs.Set(FlagMinSelfDelegation, "0.33stake")
 			},
-			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "0.33"),
+			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01", "0.33stake"),
 		},
 	}
 
@@ -91,4 +92,30 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			require.Equal(t, tc.expectedCfg, cvCfg)
 		})
 	}
+}
+
+func TestParseMinSelfDelegation(t *testing.T) {
+	coin, err := parseMinSelfDelegation("1stake", "stake")
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt64Coin("stake", int64(1)), *coin)
+
+	coin, err = parseMinSelfDelegation("1stake", "")
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt64Coin("stake", int64(1)), *coin)
+
+	coin, err = parseMinSelfDelegation("1stake", "uatom")
+	require.Error(t, err)
+	require.Nil(t, coin)
+
+	coin, err = parseMinSelfDelegation("1", "stake")
+	require.Error(t, err)
+	require.Nil(t, coin)
+
+	coin, err = parseMinSelfDelegation("0stake", "stake")
+	require.Error(t, err)
+	require.Nil(t, coin)
+
+	coin, err = parseMinSelfDelegation("-1stake", "stake")
+	require.Error(t, err)
+	require.Nil(t, coin)
 }

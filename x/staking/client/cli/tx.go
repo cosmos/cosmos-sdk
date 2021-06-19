@@ -25,7 +25,7 @@ var (
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfDelegation       = "1"
+	defaultMinSelfDelegation       = "1" + sdk.DefaultBondDenom
 )
 
 // NewTxCmd returns a root CLI command handler for all x/staking transaction commands.
@@ -117,19 +117,18 @@ func NewEditValidatorCmd() *cobra.Command {
 				newRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
+			var newMinSelfDelegationAmount *sdk.Int
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
-				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
-				if !ok {
-					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
+				minSelfDelegation, err := parseMinSelfDelegation(minSelfDelegationString, "")
+				if err != nil {
+					return err
 				}
-
-				newMinSelfDelegation = &msb
+				newMinSelfDelegationAmount = &minSelfDelegation.Amount
 			}
 
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegationAmount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -320,14 +319,13 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 
 	// get the initial validator min self delegation
 	msbStr, _ := fs.GetString(FlagMinSelfDelegation)
-
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
-	if !ok {
-		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
+	minSelfDelegation, err := parseMinSelfDelegation(msbStr, amount.Denom)
+	if err != nil {
+		return txf, nil, err
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation.Amount,
 	)
 	if err != nil {
 		return txf, nil, err
@@ -522,15 +520,13 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	// get the initial validator min self delegation
-	msbStr := config.MinSelfDelegation
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
-
-	if !ok {
-		return txBldr, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
+	minSelfDelegation, err := parseMinSelfDelegation(config.MinSelfDelegation, amount.Denom)
+	if err != nil {
+		return txBldr, nil, err
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation.Amount,
 	)
 	if err != nil {
 		return txBldr, msg, err
@@ -545,4 +541,16 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	return txBldr, msg, nil
+}
+
+func parseMinSelfDelegation(minSelfDelegationStr, expectedDenom string) (*sdk.Coin, error) {
+	minSelfDelegation, err := sdk.ParseCoinNormalized(minSelfDelegationStr)
+	if err != nil {
+		return nil, err
+	} else if !minSelfDelegation.IsPositive() {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "the amount of minimum self delegation must be a positive integer")
+	} else if expectedDenom != "" && minSelfDelegation.Denom != expectedDenom {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "the denom of minimum self delegation must be the same as %s", expectedDenom)
+	}
+	return &minSelfDelegation, nil
 }

@@ -88,7 +88,7 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return RunAddCmd(clientCtx, cmd, args, buf)
+	return runAddCmd(clientCtx, cmd, args, buf)
 }
 
 /*
@@ -100,10 +100,12 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
+func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
+	dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun)
+	multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
 	showMnemonic := !noBackup
@@ -117,7 +119,10 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		return err
 	}
 
-	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); !dryRun {
+	if dryRun {
+		// use in memory keybase
+		kb = keyring.NewInMemory()
+	} else {
 		_, err = kb.Key(name)
 		if err == nil {
 			// account exists, ask for user confirmation
@@ -136,7 +141,6 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 		}
 
-		multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
 		if len(multisigKeys) != 0 {
 			var pks []cryptotypes.PubKey
 			multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
@@ -160,12 +164,12 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-			if _, err := kb.SaveMultisig(name, pk); err != nil {
+			info, err := kb.SaveMultisig(name, pk)
+			if err != nil {
 				return err
 			}
 
-			cmd.PrintErrf("Key %q saved to disk.\n", name)
-			return nil
+			return printCreate(cmd, info, false, "", outputFormat)
 		}
 	}
 
@@ -176,8 +180,13 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		if err != nil {
 			return err
 		}
-		_, err := kb.SavePubKey(name, pk, algo.Name())
-		return err
+
+		info, err := kb.SavePubKey(name, pk, algo.Name())
+		if err != nil {
+			return err
+		}
+
+		return printCreate(cmd, info, false, "", outputFormat)
 	}
 
 	coinType, _ := cmd.Flags().GetUint32(flagCoinType)

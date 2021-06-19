@@ -156,6 +156,7 @@ if input key is empty, or input data contains empty key.
 * (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
 * (x/bank) [\#9229](https://github.com/cosmos/cosmos-sdk/pull/9229) Now zero coin balances cannot be added to balances & supply stores. If any denom becomes zero corresponding key gets deleted from store.
 * (types) [\#9511](https://github.com/cosmos/cosmos-sdk/pull/9511) Change `maxBitLen` of `sdk.Int` and `sdk.Dec`  to handle max ERC20 value.
+* (cli) [\#9548](https://github.com/cosmos/cosmos-sdk/pull/9548) Make a denom of `--min-self-delegation` CLI flag required
 
 ### Deprecated
 

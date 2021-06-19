@@ -35,4 +35,8 @@ func (v viewOnlyKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) typ
 	return v.k.GetModuleAccount(ctx, moduleName)
 }
 
+func (v viewOnlyKeeper) GetParams(ctx sdk.Context) (params types.Params) {
+	return v.k.GetParams(ctx)
+}
+
 var _ types.ViewKeeper = viewOnlyKeeper{}

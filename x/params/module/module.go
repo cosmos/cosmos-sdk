@@ -1,6 +1,8 @@
 package module
 
 import (
+	"go.uber.org/dig"
+
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,7 +12,6 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	"go.uber.org/dig"
 )
 
 var (
@@ -29,7 +30,7 @@ type Inputs struct {
 type Outputs struct {
 	dig.Out
 
-	Handler          app.Handler         `group:"app.handler"`
+	Handler          app.Handler         `group:"tx"`
 	GovRoute         types2.Route        `group:"cosmos.gov.v1.Route"`
 	Keeper           paramskeeper.Keeper `security-role:"admin"`
 	SubspaceProvider types.SubspaceProvider

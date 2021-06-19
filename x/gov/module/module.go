@@ -1,6 +1,8 @@
 package module
 
 import (
+	"go.uber.org/dig"
+
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,7 +12,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	types2 "github.com/cosmos/cosmos-sdk/x/params/types"
-	"go.uber.org/dig"
 )
 
 var (
@@ -39,7 +40,7 @@ type Inputs struct {
 type Outputs struct {
 	dig.Out
 
-	Handler app.Handler `group:"app.handler"`
+	Handler app.Handler `group:"tx"`
 }
 
 func (m *Module) Provision(key app.ModuleKey, registrar container.Registrar) error {

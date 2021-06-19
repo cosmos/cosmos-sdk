@@ -34,7 +34,7 @@ type Inputs struct {
 type Outputs struct {
 	dig.Out
 
-	Handler    app.Handler `group:"app.handler"`
+	Handler    app.Handler `group:"tx"`
 	ViewKeeper types.ViewKeeper
 	Keeper     types.Keeper `security-role:"admin"`
 }

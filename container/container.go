@@ -1,37 +1,22 @@
 package container
 
+import "go.uber.org/dig"
+
 type Container struct {
+	container *dig.Container
+	err       error
 }
 
-var _ Registrar = &Container{}
+func New(opts ...Option) *Container {
+	ctr := &Container{
+		container: dig.New(),
+	}
 
-func NewContainer() *Container {
-	panic("TODO")
+	Options(opts...).applyOption(ctr)
+
+	return ctr
 }
 
-func (c *Container) Provide(fn interface{}) error {
-	panic("implement me")
-}
-
-func (c *Container) ProvideWithScope(fn interface{}, scope Scope) error {
-	panic("implement me")
-}
-
-func (c *Container) Invoke(fn interface{}) error {
-	panic("TODO")
-}
-
-// TryInitializeAll attempts to initialize all registered providers in the container.
-// It returns an error if a provider returns an error. If a given provider has
-// dependencies which cannot be resolved, an error is not returned and instead
-// that provider is not called.
-func (c *Container) TryInitializeAll() error {
-	panic("TODO")
-}
-
-// InitializeAll attempts to initialize all registered providers in the container.
-// It returns an error if a provider returns an error or a dependency in the graph
-// cannot be satisfied.
-func (c *Container) InitializeAll() error {
-	panic("TODO")
+func (c Container) Invoke(f interface{}) error {
+	return c.container.Invoke(f)
 }

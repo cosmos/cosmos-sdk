@@ -1,6 +1,8 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 type ViewKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) AccountI
@@ -9,6 +11,7 @@ type ViewKeeper interface {
 	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
 	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (ModuleAccountI, []string)
 	GetModuleAccount(ctx sdk.Context, moduleName string) ModuleAccountI
+	GetParams(ctx sdk.Context) (params Params)
 }
 
 type Keeper interface {

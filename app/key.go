@@ -1,7 +1,5 @@
 package app
 
-import "github.com/cosmos/cosmos-sdk/types"
-
 type ModuleKey interface {
 	moduleKey()
 	ID() ModuleID
@@ -11,9 +9,6 @@ type ModuleID interface {
 	moduleID()
 	Name() string
 }
-
-type KVStoreKeyProvider func(ModuleKey) *types.KVStoreKey
-type TransientStoreKeyProvider func(ModuleKey) *types.TransientStoreKey
 
 type moduleKey struct {
 	*moduleID

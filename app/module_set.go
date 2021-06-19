@@ -13,41 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/container"
 )
 
-type ModuleContainer struct {
-	*dig.Container
+type moduleContainer struct {
 	typeRegistry codecTypes.TypeRegistry
-	codec        codec.Codec
-	modules      map[ModuleKey]interface{}
+	cdc          codec.Codec
+	opts         []container.Option
 }
 
-func NewModuleContainer() *ModuleContainer {
-	typeRegistry := codecTypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(typeRegistry)
-	amino := codec.NewLegacyAmino()
-	ctr := dig.New()
-	err := ctr.Provide(func() (
-		codecTypes.TypeRegistry,
-		codec.Codec,
-		codec.ProtoCodecMarshaler,
-		codec.BinaryCodec,
-		codec.JSONCodec,
-		*codec.LegacyAmino,
-	) {
-		return typeRegistry, cdc, cdc, cdc, cdc, amino
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	return &ModuleContainer{
-		Container:    ctr,
-		typeRegistry: typeRegistry,
-		codec:        cdc,
-		modules:      map[ModuleKey]interface{}{},
-	}
-}
-
-func (mc ModuleContainer) AddProtoModule(name string, config *codecTypes.Any) error {
+func (mc moduleContainer) AddProtoModule(name string, config *codecTypes.Any) error {
 	// unpack Any
 	msgTyp := proto.MessageType(config.TypeUrl)
 	mod := reflect.New(msgTyp.Elem()).Interface().(proto.Message)
@@ -60,24 +32,12 @@ func (mc ModuleContainer) AddProtoModule(name string, config *codecTypes.Any) er
 
 var moduleKeyType = reflect.TypeOf((*ModuleKey)(nil)).Elem()
 
-func (mc *ModuleContainer) AddModule(name string, mod interface{}) error {
+func (mc *moduleContainer) AddModule(name string, mod interface{}) error {
 	key := &moduleKey{&moduleID{name}}
-	mc.modules[key] = mod
 
 	// register types
 	if typeProvider, ok := mod.(TypeProvider); ok {
 		typeProvider.RegisterTypes(mc.typeRegistry)
-	}
-
-	// register DI providers
-	if provisioner, ok := mod.(Provisioner); ok {
-		registrar := registrar{
-			ctr: mc.Container,
-		}
-		err := provisioner.Provision(nil, registrar)
-		if err != nil {
-			return err
-		}
 	}
 
 	// register DI Provide* methods
@@ -133,10 +93,7 @@ func (mc *ModuleContainer) AddModule(name string, mod interface{}) error {
 				return method.Func.Call(args)
 			})
 
-			err := mc.Provide(fn.Interface())
-			if err != nil {
-				return err
-			}
+			mc.opts = append(mc.opts, container.Provide(fn.Interface()))
 		}
 	}
 
@@ -151,4 +108,35 @@ var _ container.Registrar = registrar{}
 
 func (s registrar) Provide(fn interface{}) error {
 	return s.ctr.Provide(fn)
+}
+
+func ProvideModules(modules map[string]*codecTypes.Any) container.Option {
+	typeRegistry := codecTypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(typeRegistry)
+	amino := codec.NewLegacyAmino()
+	cdcProvider := container.Provide(func() (
+		codecTypes.TypeRegistry,
+		codec.Codec,
+		codec.ProtoCodecMarshaler,
+		codec.BinaryCodec,
+		codec.JSONCodec,
+		*codec.LegacyAmino,
+	) {
+		return typeRegistry, cdc, cdc, cdc, cdc, amino
+	})
+
+	mc := moduleContainer{
+		typeRegistry: typeRegistry,
+		cdc:          cdc,
+		opts:         []container.Option{cdcProvider},
+	}
+
+	for name, mod := range modules {
+		err := mc.AddProtoModule(name, mod)
+		if err != nil {
+			return container.Error(err)
+		}
+	}
+
+	return container.Options(mc.opts...)
 }

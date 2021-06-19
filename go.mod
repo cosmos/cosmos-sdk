@@ -10,7 +10,6 @@ require (
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/coinbase/rosetta-sdk-go v0.6.10
 	github.com/confio/ics23/go v0.6.6
-	github.com/cosmos/cosmos-sdk/container v0.0.0-20210601215105-8e0f2e2ea130
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.16.0
 	github.com/cosmos/ledger-cosmos-go v0.11.1
@@ -65,5 +64,3 @@ require (
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-
-replace github.com/cosmos/cosmos-sdk/container => ./container

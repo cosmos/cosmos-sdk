@@ -17,14 +17,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/types/module"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
+
+type AppProvider struct{}
 
 // NewApp is an AppCreator
 func (ap *AppProvider) AppCreator(
@@ -113,7 +113,6 @@ func (ap *AppProvider) AppExportor(
 type theApp struct {
 	*baseapp.BaseApp
 	appProvider *AppProvider
-	mm          module.Manager
 }
 
 var _ servertypes.Application = &theApp{}

@@ -121,9 +121,12 @@ func NewEditValidatorCmd() *cobra.Command {
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
-				minSelfDelegation, err := parseMinSelfDelegation(minSelfDelegationString, "")
+				minSelfDelegation, err := sdk.ParseCoinNormalized(minSelfDelegationString)
 				if err != nil {
 					return err
+				}
+				if !minSelfDelegation.IsPositive() {
+					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "the amount of minimum self delegation must be a positive integer")
 				}
 				newMinSelfDelegationAmount = &minSelfDelegation.Amount
 			}
@@ -319,9 +322,15 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 
 	// get the initial validator min self delegation
 	msbStr, _ := fs.GetString(FlagMinSelfDelegation)
-	minSelfDelegation, err := parseMinSelfDelegation(msbStr, amount.Denom)
+	minSelfDelegation, err := sdk.ParseCoinNormalized(msbStr)
 	if err != nil {
 		return txf, nil, err
+	}
+	if !minSelfDelegation.IsPositive() {
+		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "the amount of minimum self delegation must be a positive integer")
+	}
+	if minSelfDelegation.Denom != amount.Denom {
+		return txf, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "the denom of minimum self delegation must be the same as %s", amount.Denom)
 	}
 
 	msg, err := types.NewMsgCreateValidator(
@@ -520,9 +529,15 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	// get the initial validator min self delegation
-	minSelfDelegation, err := parseMinSelfDelegation(config.MinSelfDelegation, amount.Denom)
+	minSelfDelegation, err := sdk.ParseCoinNormalized(config.MinSelfDelegation)
 	if err != nil {
 		return txBldr, nil, err
+	}
+	if !minSelfDelegation.IsPositive() {
+		return txBldr, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "the amount of minimum self delegation must be a positive integer")
+	}
+	if minSelfDelegation.Denom != amount.Denom {
+		return txBldr, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "the denom of minimum self delegation must be the same as %s", amount.Denom)
 	}
 
 	msg, err := types.NewMsgCreateValidator(
@@ -541,16 +556,4 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	return txBldr, msg, nil
-}
-
-func parseMinSelfDelegation(minSelfDelegationStr, expectedDenom string) (*sdk.Coin, error) {
-	minSelfDelegation, err := sdk.ParseCoinNormalized(minSelfDelegationStr)
-	if err != nil {
-		return nil, err
-	} else if !minSelfDelegation.IsPositive() {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "the amount of minimum self delegation must be a positive integer")
-	} else if expectedDenom != "" && minSelfDelegation.Denom != expectedDenom {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "the denom of minimum self delegation must be the same as %s", expectedDenom)
-	}
-	return &minSelfDelegation, nil
 }

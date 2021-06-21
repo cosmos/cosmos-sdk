@@ -1,7 +1,6 @@
 package cli
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/spf13/pflag"
@@ -92,30 +91,4 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 			require.Equal(t, tc.expectedCfg, cvCfg)
 		})
 	}
-}
-
-func TestParseMinSelfDelegation(t *testing.T) {
-	coin, err := parseMinSelfDelegation("1stake", "stake")
-	require.NoError(t, err)
-	require.Equal(t, sdk.NewInt64Coin("stake", int64(1)), *coin)
-
-	coin, err = parseMinSelfDelegation("1stake", "")
-	require.NoError(t, err)
-	require.Equal(t, sdk.NewInt64Coin("stake", int64(1)), *coin)
-
-	coin, err = parseMinSelfDelegation("1stake", "uatom")
-	require.Error(t, err)
-	require.Nil(t, coin)
-
-	coin, err = parseMinSelfDelegation("1", "stake")
-	require.Error(t, err)
-	require.Nil(t, coin)
-
-	coin, err = parseMinSelfDelegation("0stake", "stake")
-	require.Error(t, err)
-	require.Nil(t, coin)
-
-	coin, err = parseMinSelfDelegation("-1stake", "stake")
-	require.Error(t, err)
-	require.Nil(t, coin)
 }

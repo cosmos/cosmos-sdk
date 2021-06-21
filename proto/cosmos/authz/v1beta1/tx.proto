@@ -40,7 +40,7 @@ message MsgGrant {
 
 // MsgExecResponse defines the Msg/MsgExecResponse response type.
 message MsgExecResponse {
-  cosmos.base.abci.v1beta1.Result result = 1;
+  repeated bytes results = 1;
 }
 
 // MsgExec attempts to execute the provided messages using

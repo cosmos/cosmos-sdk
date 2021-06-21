@@ -3,6 +3,8 @@ package module
 import (
 	"go.uber.org/dig"
 
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/app/compat"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 var (
@@ -36,8 +37,8 @@ type Outputs struct {
 	SubspaceProvider types.SubspaceProvider
 }
 
-func (m Module) Provision(key app.ModuleKey, registrar container.Registrar) error {
-	return registrar.Provide(func(inputs Inputs) Outputs {
+func (m Module) Provision(key app.ModuleKey) container.Option {
+	return container.Provide(func(inputs Inputs) Outputs {
 		keeper := paramskeeper.NewKeeper(inputs.Codec, inputs.LegacyAmino, inputs.KeyProvider(key), inputs.TransientKeyProvider(key))
 		appMod := params.NewAppModule(keeper)
 

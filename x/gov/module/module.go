@@ -3,13 +3,14 @@ package module
 import (
 	"go.uber.org/dig"
 
-	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/app/compat"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+
+	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	types2 "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -43,8 +44,8 @@ type Outputs struct {
 	Handler app.Handler `group:"tx"`
 }
 
-func (m *Module) Provision(key app.ModuleKey, registrar container.Registrar) error {
-	return registrar.Provide(func(inputs Inputs) Outputs {
+func (m *Module) Provision(key app.ModuleKey) container.Option {
+	return container.Provide(func(inputs Inputs) Outputs {
 		router := govtypes.NewRouter()
 		for _, route := range inputs.Routes {
 			router.AddRoute(route.Path, route.Handler)

@@ -2,21 +2,21 @@ package container
 
 import "go.uber.org/dig"
 
-type Container struct {
+type container struct {
 	container *dig.Container
 	err       error
 }
 
-func New(opts ...Option) *Container {
-	ctr := &Container{
+func Compose(invoker interface{}, opts ...Option) error {
+	ctr := &container{
 		container: dig.New(),
 	}
 
 	Options(opts...).applyOption(ctr)
 
-	return ctr
-}
+	if ctr.err != nil {
+		return ctr.err
+	}
 
-func (c Container) Invoke(f interface{}) error {
-	return c.container.Invoke(f)
+	return ctr.container.Invoke(invoker)
 }

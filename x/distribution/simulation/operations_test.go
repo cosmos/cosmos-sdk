@@ -95,7 +95,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	validator0 := suite.getTestingValidator0(accounts)
 
 	// setup delegation
-	delTokens := sdk.TokensFromConsensusPower(2)
+	delTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
@@ -143,11 +143,10 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 
 	// set module account coins
 	distrAcc := suite.app.DistrKeeper.GetDistributionAccount(suite.ctx)
-	err := suite.app.BankKeeper.SetBalances(suite.ctx, distrAcc.GetAddress(), sdk.NewCoins(
+	suite.Require().NoError(simapp.FundModuleAccount(suite.app.BankKeeper, suite.ctx, distrAcc.GetName(), sdk.NewCoins(
 		sdk.NewCoin(tokenName, sdk.NewInt(10)),
 		sdk.NewCoin("stake", sdk.NewInt(5)),
-	))
-	suite.Require().NoError(err)
+	)))
 	suite.app.AccountKeeper.SetModuleAccount(suite.ctx, distrAcc)
 
 	// set outstanding rewards
@@ -223,15 +222,14 @@ func (suite *SimTestSuite) SetupTest() {
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 
-	initAmt := sdk.TokensFromConsensusPower(200)
+	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 
 	// add coins to the accounts
 	for _, account := range accounts {
 		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, account.Address)
 		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		err := suite.app.BankKeeper.SetBalances(suite.ctx, account.Address, initCoins)
-		suite.Require().NoError(err)
+		suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, account.Address, initCoins))
 	}
 
 	return accounts

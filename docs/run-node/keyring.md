@@ -25,8 +25,8 @@ is a list of the most popular operating systems and their respective passwords m
 - macOS (since Mac OS 8.6): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
 - Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
 - GNU/Linux:
-  - [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
-  - [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
+    - [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
+    - [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)
 
 GNU/Linux distributions that use GNOME as default desktop environment typically come with
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
@@ -37,6 +37,8 @@ client.
 `os` is the default option since operating system's default credentials managers are
 designed to meet users' most common needs and provide them with a comfortable
 experience without compromising on security.
+
+The recommended backends for headless environments are `file` and `pass`.
 
 ### The `file` backend
 
@@ -76,17 +78,11 @@ passphrase expiration.
 The password store must be set up prior to first use:
 
 ```sh
-$ pass init <GPG_KEY_ID>
+pass init <GPG_KEY_ID>
 ```
 
 Replace `<GPG_KEY_ID>` with your GPG key ID. You can use your personal GPG key or an alternative
 one you may want to use specifically to encrypt the password store.
-
-### The `test` backend
-
-The `test` backend is a password-less variation of the `file` backend. Keys are stored
-unencrypted on disk. This backend is meant for testing purposes only and **should never be used
-in production environments**.
 
 ### The `kwallet` backend
 
@@ -94,6 +90,19 @@ The `kwallet` backend uses `KDE Wallet Manager`, which comes installed by defaul
 GNU/Linux distributions that ships KDE as default desktop environment. Please refer to
 [KWallet Handbook](https://docs.kde.org/stable5/en/kdeutils/kwallet5/index.html) for more
 information.
+
+### The `test` backend
+
+The `test` backend is a password-less variation of the `file` backend. Keys are stored
+unencrypted on disk.
+
+**Provided for testing purposes only. The `test` backend is not recommended for use in production environments**.
+
+### The `memory` backend
+
+The `memory` backend stores keys in memory. The keys are immediately deleted after the program has exited.
+
+**Provided for testing purposes only. The `memory` backend is not recommended for use in production environments**.
 
 ## Adding keys to the keyring
 

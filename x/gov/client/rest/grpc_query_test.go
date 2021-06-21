@@ -103,7 +103,7 @@ func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 			s.Require().NoError(err)
 
 			var proposal types.QueryProposalResponse
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &proposal)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &proposal)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -119,10 +119,11 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
-		name    string
-		url     string
-		headers map[string]string
-		expErr  bool
+		name             string
+		url              string
+		headers          map[string]string
+		wantNumProposals int
+		expErr           bool
 	}{
 		{
 			"get proposals with height 1",
@@ -130,12 +131,21 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "1",
 			},
+			0,
 			true,
 		},
 		{
 			"valid request",
 			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals", val.APIAddress),
 			map[string]string{},
+			3,
+			false,
+		},
+		{
+			"valid request with filter by status",
+			fmt.Sprintf("%s/cosmos/gov/v1beta1/proposals?proposal_status=1", val.APIAddress),
+			map[string]string{},
+			1,
 			false,
 		},
 	}
@@ -147,13 +157,13 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 			s.Require().NoError(err)
 
 			var proposals types.QueryProposalsResponse
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &proposals)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &proposals)
 
 			if tc.expErr {
 				s.Require().Empty(proposals.Proposals)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Len(proposals.Proposals, 3)
+				s.Require().Len(proposals.Proposals, tc.wantNumProposals)
 			}
 		})
 	}
@@ -214,7 +224,7 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 			s.Require().NoError(err)
 
 			var vote types.QueryVoteResponse
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &vote)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &vote)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -258,7 +268,7 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 			s.Require().NoError(err)
 
 			var votes types.QueryVotesResponse
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &votes)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &votes)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -307,7 +317,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 			s.Require().NoError(err)
 
 			var deposit types.QueryDepositResponse
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &deposit)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &deposit)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -346,7 +356,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositsGRPC() {
 			s.Require().NoError(err)
 
 			var deposits types.QueryDepositsResponse
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &deposits)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &deposits)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -391,7 +401,7 @@ func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 			s.Require().NoError(err)
 
 			var tally types.QueryTallyResultResponse
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, &tally)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &tally)
 
 			if tc.expErr {
 				s.Require().Error(err)
@@ -453,7 +463,7 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.expErr {
 				s.Require().Error(err)

@@ -4,7 +4,8 @@
 
 - 2019-11-06: Initial Draft
 - 2020-10-12: Updated Draft
-- 2021-11-13: Accepted
+- 2020-11-13: Accepted
+- 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from SDK)
 
 ## Status
 
@@ -18,6 +19,7 @@ on behalf of that account to other accounts.
 ## Context
 
 The concrete use cases which motivated this module include:
+
 - the desire to delegate the ability to vote on proposals to other accounts besides the account which one has
 delegated stake
 - "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/cosmos/cosmos-sdk/issues/4480) which
@@ -38,29 +40,44 @@ implementation is based on work done by the [Gaian's team at Hackatom Berlin 201
 We will create a module named `authz` which provides functionality for
 granting arbitrary privileges from one account (the _granter_) to another account (the _grantee_). Authorizations
 must be granted for a particular `Msg` service methods one by one using an implementation
-of `Authorization`.
+of `Authorization` interface.
 
 ### Types
 
 Authorizations determine exactly what privileges are granted. They are extensible
 and can be defined for any `Msg` service method even outside of the module where
-the `Msg` method is defined. `Authorization`s use the new `ServiceMsg` type from
-ADR 031.
+the `Msg` method is defined. `Authorization`s reference `Msg`s using their TypeURL.
 
 #### Authorization
 
 ```go
 type Authorization interface {
-	// MethodName returns the fully-qualified Msg service method name as described in ADR 031.
-	MethodName() string
+	proto.Message
 
-	// Accept determines whether this grant permits the provided sdk.ServiceMsg to be performed, and if
-	// so provides an upgraded authorization instance. 
-	// Returns:
-	// + allow: true if msg is authorized
-	// + updated: new Authorization instance which should overwrite the current one with new state
-	// + delete: true if Authorization has been exhausted and can be deleted from state
-	Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool)
+	// MsgTypeURL returns the fully-qualified Msg TypeURL (as described in ADR 020),
+	// which will process and accept or reject a request.
+	MsgTypeURL() string
+
+	// Accept determines whether this grant permits the provided sdk.Msg to be performed, and if
+	// so provides an upgraded authorization instance.
+	Accept(ctx sdk.Context, msg sdk.Msg) (AcceptResponse, error)
+
+	// ValidateBasic does a simple validation check that
+	// doesn't require access to any other information.
+	ValidateBasic() error
+}
+
+// AcceptResponse instruments the controller of an authz message if the request is accepted
+// and if it should be updated or deleted.
+type AcceptResponse struct {
+	// If Accept=true, the controller can accept and authorization and handle the update.
+	Accept bool
+	// If Delete=true, the controller must delete the authorization object and release
+	// storage resources.
+	Delete bool
+	// Controller, who is calling Authorization.Accept must check if `Updated != nil`. If yes,
+	// it must use the updated version and handle the update on the storage level.
+	Updated Authorization
 }
 ```
 
@@ -75,23 +92,24 @@ type SendAuthorization struct {
 	SpendLimit sdk.Coins
 }
 
-func (cap SendAuthorization) MethodName() string {
-	return "/cosmos.bank.v1beta1.Msg/Send"
+func (a SendAuthorization) MsgTypeURL() string {
+	return sdk.MsgTypeURL(&MsgSend{})
 }
 
-func (cap SendAuthorization) Accept(msg sdk.ServiceMsg, block abci.Header) (allow bool, updated Authorization, delete bool) {
-	switch req := msg.Request.(type) {
-	case bank.MsgSend:
-		left, invalid := cap.SpendLimit.SafeSub(req.Amount)
-		if invalid {
-			return false, nil, false
-		}
-		if left.IsZero() {
-			return true, nil, true
-		}
-		return true, SendAuthorization{SpendLimit: left}, false
+func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
+	mSend, ok := msg.(*MsgSend)
+	if !ok {
+		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
-	return false, nil, false
+	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount)
+	if isNegative {
+		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
+	}
+	if limitLeft.IsZero() {
+		return authz.AcceptResponse{Accept: true, Delete: true}, nil
+	}
+
+	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft}}, nil
 }
 ```
 
@@ -103,76 +121,74 @@ using the `Authorization` interface with no need to change the underlying
 
 ```proto
 service Msg {
-  // GrantAuthorization grants the provided authorization to the grantee on the granter's
+  // Grant grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.
-  rpc GrantAuthorization(MsgGrantAuthorization) returns (MsgGrantAuthorizationResponse);
+  rpc Grant(MsgGrant) returns (MsgGrantResponse);
 
-  // ExecAuthorized attempts to execute the provided messages using
+  // Exec attempts to execute the provided messages using
   // authorizations granted to the grantee. Each message should have only
   // one signer corresponding to the granter of the authorization.
-  // The grantee signing this message must have an authorization from the granter.
-  rpc ExecAuthorized(MsgExecAuthorized) returns (MsgExecAuthorizedResponse)
+  rpc Exec(MsgExec) returns (MsgExecResponse);
 
-
-  // RevokeAuthorization revokes any authorization corresponding to the provided method name on the
+  // Revoke revokes any authorization corresponding to the provided method name on the
   // granter's account that has been granted to the grantee.
-  rpc RevokeAuthorization(MsgRevokeAuthorization) returns (MsgRevokeAuthorizationResponse);
+  rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
 }
 
-message MsgGrantAuthorization{
+// Grant gives permissions to execute
+// the provided method with expiration time.
+message Grant {
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message MsgGrant {
   string granter = 1;
   string grantee = 2;
-  google.protobuf.Any authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
-  google.protobuf.Timestamp expiration = 4;
+
+  Grant grant = 3 [(gogoproto.nullable) = false];
 }
 
-message MsgExecAuthorized {
-    string grantee = 1;
-    repeated google.protobuf.Any msgs = 2;
+message MsgExecResponse {
+  cosmos.base.abci.v1beta1.Result result = 1;
 }
 
-message MsgRevokeAuthorization{
-  string granter = 1;
-  string grantee = 2;
-  string method_name = 3;
+message MsgExec {
+  string   grantee                  = 1;
+  // Authorization Msg requests to execute. Each msg must implement Authorization interface
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "sdk.Msg"];;
 }
 ```
 
 ### Router Middleware
 
-The `authz` `Keeper` will expose a `DispatchActions` method which allows other modules to send `ServiceMsg`s
+The `authz` `Keeper` will expose a `DispatchActions` method which allows other modules to send `Msg`s
 to the router based on `Authorization` grants:
 
 ```go
 type Keeper interface {
 	// DispatchActions routes the provided msgs to their respective handlers if the grantee was granted an authorization
-	// to send those messages by the first (and only) signer of each msg. 
-    DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.ServiceMsg) sdk.Result`
+	// to send those messages by the first (and only) signer of each msg.
+    DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result`
 }
 ```
-
-This allows the functionality provided by `authz` to be used for future inter-module object capabilities
-permissions as described in [ADR 033](https://github.com/cosmos/cosmos-sdk/7459)
 
 ### CLI
 
 #### `tx exec` Method
 
-When a CLI user wants to run a transaction on behalf of another account using `MsgExecAuthorized`, they
+When a CLI user wants to run a transaction on behalf of another account using `MsgExec`, they
 can use the `exec` method. For instance `gaiacli tx gov vote 1 yes --from <grantee> --generate-only | gaiacli tx authz exec --send-as <granter> --from <grantee>`
 would send a transaction like this:
 
 ```go
-MsgExecAuthorized {
+MsgExec {
   Grantee: mykey,
-  Msgs: []sdk.SericeMsg{
-    ServiceMsg {
-      MethodName:"/cosmos.gov.v1beta1.Msg/Vote"
-      Request: MsgVote {
-	    ProposalID: 1,
-	    Voter: cosmos3thsdgh983egh823
-	    Option: Yes
-      }
+  Msgs: []sdk.Msg{
+    MsgVote {
+      ProposalID: 1,
+      Voter: cosmos3thsdgh983egh823
+      Option: Yes
     }
   }
 }
@@ -180,12 +196,12 @@ MsgExecAuthorized {
 
 #### `tx grant <grantee> <authorization> --from <granter>`
 
-This CLI command will send a `MsgGrantAuthorization` transaction. `authorization` should be encoded as
+This CLI command will send a `MsgGrant` transaction. `authorization` should be encoded as
 JSON on the CLI.
 
 #### `tx revoke <grantee> <method-name> --from <granter>`
 
-This CLI command will send a `MsgRevokeAuthorization` transaction.
+This CLI command will send a `MsgRevoke` transaction.
 
 ### Built-in Authorizations
 
@@ -203,9 +219,12 @@ message SendAuthorization {
 
 ```proto
 // GenericAuthorization gives the grantee unrestricted permissions to execute
-// the provide method on behalf of the granter's account.
+// the provided method on behalf of the granter's account.
 message GenericAuthorization {
-  string method_name = 1;
+  option (cosmos_proto.implements_interface) = "Authorization";
+
+  // Msg, identified by it's type URL, to grant unrestricted permissions to execute
+  string msg = 1;
 }
 ```
 
@@ -216,7 +235,7 @@ message GenericAuthorization {
 - Users will be able to authorize arbitrary actions on behalf of their accounts to other
 users, improving key management for many use cases
 - The solution is more generic than previously considered approaches and the
-`Authorization` interface approach can be extended to cover other use cases by 
+`Authorization` interface approach can be extended to cover other use cases by
 SDK users
 
 ### Negative

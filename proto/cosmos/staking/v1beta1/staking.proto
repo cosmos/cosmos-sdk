@@ -28,7 +28,7 @@ message CommissionRates {
   option (gogoproto.goproto_stringer) = false;
 
   // rate is the commission rate charged to delegators, as a fraction.
-  string rate     = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
   string max_rate = 2 [
     (gogoproto.moretags)   = "yaml:\"max_rate\"",
@@ -49,9 +49,9 @@ message Commission {
   option (gogoproto.goproto_stringer) = false;
 
   // commission_rates defines the initial commission rates to be used for creating a validator.
-  CommissionRates           commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+  CommissionRates commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
   // update_time is the last time the commission rate was changed.
-  google.protobuf.Timestamp update_time      = 2
+  google.protobuf.Timestamp update_time = 2
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"update_time\""];
 }
 
@@ -61,15 +61,15 @@ message Description {
   option (gogoproto.goproto_stringer) = false;
 
   // moniker defines a human-readable name for the validator.
-  string moniker          = 1;
+  string moniker = 1;
   // identity defines an optional identity signature (ex. UPort or Keybase).
-  string identity         = 2;
+  string identity = 2;
   // website defines an optional website link.
-  string website          = 3;
+  string website = 3;
   // security_contact defines an optional email for security contact.
   string security_contact = 4 [(gogoproto.moretags) = "yaml:\"security_contact\""];
   // details define other optional details.
-  string details          = 5;
+  string details = 5;
 }
 
 // Validator defines a validator, together with the total amount of the
@@ -86,12 +86,12 @@ message Validator {
   option (gogoproto.goproto_getters)  = false;
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
-  string              operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
+  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
   // consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
   google.protobuf.Any consensus_pubkey = 2
       [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey", (gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
   // jailed defined whether the validator has been jailed from bonded status or not.
-  bool       jailed = 3;
+  bool jailed = 3;
   // status is the validator status (bonded/unbonding/unbonded).
   BondStatus status = 4;
   // tokens define the delegated tokens (incl. self-delegation).
@@ -103,16 +103,16 @@ message Validator {
     (gogoproto.nullable)   = false
   ];
   // description defines the description terms for the validator.
-  Description               description      = 7 [(gogoproto.nullable) = false];
+  Description description = 7 [(gogoproto.nullable) = false];
   // unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
-  int64                     unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
+  int64 unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
   // unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
-  google.protobuf.Timestamp unbonding_time   = 9
+  google.protobuf.Timestamp unbonding_time = 9
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // commission defines the commission parameters.
-  Commission commission          = 10 [(gogoproto.nullable) = false];
+  Commission commission = 10 [(gogoproto.nullable) = false];
   // min_self_delegation is the validator's self declared minimum self delegation.
-  string     min_self_delegation = 11 [
+  string min_self_delegation = 11 [
     (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
@@ -201,9 +201,9 @@ message UnbondingDelegation {
   option (gogoproto.goproto_stringer) = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
-  string                            delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   // validator_address is the bech32-encoded address of the validator.
-  string                            validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // entries are the unbonding delegation entries.
   repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
 }
@@ -214,7 +214,7 @@ message UnbondingDelegationEntry {
   option (gogoproto.goproto_stringer) = false;
 
   // creation_height is the height which the unbonding took place.
-  int64                     creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
+  int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
   // completion_time is the unix time for unbonding completion.
   google.protobuf.Timestamp completion_time = 2
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
@@ -234,7 +234,7 @@ message RedelegationEntry {
   option (gogoproto.goproto_stringer) = false;
 
   // creation_height  defines the height which the redelegation took place.
-  int64                     creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
+  int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
   // completion_time defines the unix time for redelegation completion.
   google.protobuf.Timestamp completion_time = 2
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
@@ -257,13 +257,13 @@ message Redelegation {
   option (gogoproto.goproto_stringer) = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
-  string                     delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   // validator_src_address is the validator redelegation source operator address.
-  string                     validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
+  string validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
   // validator_dst_address is the validator redelegation destination operator address.
-  string                     validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
+  string validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
   // entries are the redelegation entries.
-  repeated RedelegationEntry entries               = 4 [(gogoproto.nullable) = false]; // redelegation entries
+  repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
 }
 
 // Params defines the parameters for the staking module.
@@ -275,13 +275,13 @@ message Params {
   google.protobuf.Duration unbonding_time = 1
       [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // max_validators is the maximum number of validators.
-  uint32 max_validators     = 2 [(gogoproto.moretags) = "yaml:\"max_validators\""];
+  uint32 max_validators = 2 [(gogoproto.moretags) = "yaml:\"max_validators\""];
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
-  uint32 max_entries        = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
+  uint32 max_entries = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
   // historical_entries is the number of historical entries to persist.
   uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
-  string bond_denom         = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
+  string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a

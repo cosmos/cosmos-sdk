@@ -31,7 +31,7 @@ module correctly.
 ### Implement `IBCModule` Interface and callbacks
 
 The Cosmos SDK expects all IBC modules to implement the [`IBCModule`
-interface](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/05-port/types/module.go). This
+interface](https://github.com/cosmos/ibc-go/tree/main/modules/core/05-port/types/module.go). This
 interface contains all of the callbacks IBC expects modules to implement. This section will describe
 the callbacks that are called during channel handshake execution.
 
@@ -84,7 +84,7 @@ OnChanOpenTry(
             return err
         }
     }
-    
+
     // ... do custom initialization logic
 
     // Use above arguments to determine if we want to abort handshake
@@ -209,7 +209,7 @@ channel, as well as how they will encode/decode it. This process is not specifie
 to each application module to determine how to implement this agreement. However, for most
 applications this will happen as a version negotiation during the channel handshake. While more
 complex version negotiation is possible to implement inside the channel opening handshake, a very
-simple version negotation is implemented in the [ibc-transfer module](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer/module.go).
+simple version negotation is implemented in the [ibc-transfer module](https://github.com/cosmos/ibc-go/tree/main/modules/apps/transfer/module.go).
 
 Thus, a module must define its a custom packet data structure, along with a well-defined way to
 encode and decode it to and from `[]byte`.
@@ -336,16 +336,16 @@ not want the packet processing to revert. Instead, we may want to encode this fa
 acknowledgement and finish processing the packet. This will ensure the packet cannot be replayed,
 and will also allow the sender module to potentially remediate the situation upon receiving the
 acknowledgement. An example of this technique is in the `ibc-transfer` module's
-[`OnRecvPacket`](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc-transfer/module.go).
+[`OnRecvPacket`](https://github.com/cosmos/ibc-go/tree/main/modules/apps/transfer/module.go).
 :::
 
 ### Acknowledgements
 
 Modules may commit an acknowledgement upon receiving and processing a packet in the case of synchronous packet processing.
-In the case where a packet is processed at some later point after the packet has been received (asynchronous execution), the acknowledgement 
+In the case where a packet is processed at some later point after the packet has been received (asynchronous execution), the acknowledgement
 will be written once the packet has been processed by the application which may be well after the packet receipt.
 
-NOTE: Most blockchain modules will want to use the synchronous execution model in which the module processes and writes the acknowledgement 
+NOTE: Most blockchain modules will want to use the synchronous execution model in which the module processes and writes the acknowledgement
 for a packet as soon as it has been received from the IBC module.
 
 This acknowledgement can then be relayed back to the original sender chain, which can take action
@@ -358,9 +358,9 @@ Thus, modules must agree on how to encode/decode acknowledgements. The process o
 acknowledgement struct along with encoding and decoding it, is very similar to the packet data
 example above. [ICS 04](https://github.com/cosmos/ics/tree/master/spec/ics-004-channel-and-packet-semantics#acknowledgement-envelope)
 specifies a recommended format for acknowledgements. This acknowledgement type can be imported from
-[channel types](https://github.com/cosmos/cosmos-sdk/tree/master/x/ibc/core/04-channel/types).
+[channel types](https://github.com/cosmos/ibc-go/tree/main/modules/core/04-channel/types).
 
-While modules may choose arbitrary acknowledgement structs, a default acknowledgement types is provided by IBC [here](https://github.com/cosmos/cosmos-sdk/blob/master/proto/ibc/core/channel/v1/channel.proto):
+While modules may choose arbitrary acknowledgement structs, a default acknowledgement types is provided by IBC [here](https://github.com/cosmos/ibc-go/blob/main/proto/ibc/core/channel/v1/channel.proto):
 
 ```proto
 // Acknowledgement is the recommended acknowledgement format to be used by
@@ -408,7 +408,7 @@ OnAcknowledgementPacket(
 
 #### Timeout Packets
 
-If the timeout for a packet is reached before the packet is successfully received or the 
+If the timeout for a packet is reached before the packet is successfully received or the
 counterparty channel end is closed before the packet is successfully received, then the receiving
 chain can no longer process it. Thus, the sending chain must process the timeout using
 `OnTimeoutPacket` to handle this situation. Again the IBC module will verify that the timeout is
@@ -455,14 +455,14 @@ which implements everything discussed above.
 Here are the useful parts of the module to look at:
 
 [Binding to transfer
-port](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/genesis.go)
+port](https://github.com/cosmos/ibc-go/blob/main/modules/apps/transfer/types/genesis.go)
 
 [Sending transfer
-packets](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/keeper/relay.go)
+packets](https://github.com/cosmos/ibc-go/blob/main/modules/apps/transfer/keeper/relay.go)
 
 [Implementing IBC
-callbacks](https://github.com/cosmos/cosmos-sdk/blob/master/x/ibc-transfer/module.go)
+callbacks](https://github.com/cosmos/ibc-go/blob/main/modules/apps/transfer/module.go)
 
 ## Next {hide}
 
-Learn about [building modules](../building-modules/intro.md) {hide}
+Learn about [building modules](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/intro.md) {hide}

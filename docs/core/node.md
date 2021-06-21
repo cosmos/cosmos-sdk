@@ -17,11 +17,11 @@ The full-node client of any SDK application is built by running a `main` functio
 In general, developers will implement the `main.go` function with the following structure:
 
 - First, an [`appCodec`](./encoding.md) is instantiated for the application.
-- Then, the `config` is retrieved and config parameters are set. This mainly involves setting the bech32 prefixes for [addresses and pubkeys](../basics/accounts.md#addresses-and-pubkeys).
+- Then, the `config` is retrieved and config parameters are set. This mainly involves setting the Bech32 prefixes for [addresses](../basics/accounts.md#addresses).
   +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/config.go#L13-L24
 - Using [cobra](https://github.com/spf13/cobra), the root command of the full-node client is created. After that, all the custom commands of the application are added using the `AddCommand()` method of `rootCmd`.
 - Add default server commands to `rootCmd` using the `server.AddCommands()` method. These commands are separated from the ones added above since they are standard and defined at SDK level. They should be shared by all SDK-based applications. They include the most important command: the [`start` command](#start-command).
-- Prepare and execute the `executor`.  
+- Prepare and execute the `executor`.
    +++ https://github.com/tendermint/tendermint/blob/v0.34.0-rc6/libs/cli/setup.go#L74-L78
 
 See an example of `main` function from the `simapp` application, the SDK's application for demo purposes:
@@ -46,10 +46,10 @@ The flow of the `start` command is pretty straightforward. First, it retrieves t
 
 With the `db`, the `start` command creates a new instance of the application using an `appCreator` function:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L227
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/start.go#L227-L228
 
 Note that an `appCreator` is a function that fulfills the `AppCreator` signature:
-+++https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/server/types/app.go#L48-L50
 
 In practice, the [constructor of the application](../basics/app-anatomy.md#constructor-function) is passed as the `appCreator`.
 

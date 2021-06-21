@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
@@ -58,6 +59,8 @@ type Store struct {
 	traceContext types.TraceContext
 
 	interBlockCache types.MultiStorePersistentCache
+
+	listeners map[types.StoreKey][]types.WriteListener
 }
 
 var (
@@ -77,6 +80,7 @@ func NewStore(db dbm.DB) *Store {
 		stores:       make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
 		pruneHeights: make([]int64, 0),
+		listeners:    make(map[types.StoreKey][]types.WriteListener),
 	}
 }
 
@@ -312,6 +316,23 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
+// AddListeners adds listeners for a specific KVStore
+func (rs *Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
+	if ls, ok := rs.listeners[key]; ok {
+		rs.listeners[key] = append(ls, listeners...)
+	} else {
+		rs.listeners[key] = listeners
+	}
+}
+
+// ListeningEnabled returns if listening is enabled for a specific KVStore
+func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
+	if ls, ok := rs.listeners[key]; ok {
+		return len(ls) != 0
+	}
+	return false
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
@@ -404,6 +425,11 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
+// CacheWrapWithListeners implements the CacheWrapper interface.
+func (rs *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
+	return rs.CacheWrap()
+}
+
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
@@ -411,8 +437,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	for k, v := range rs.stores {
 		stores[k] = v
 	}
-
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -442,7 +467,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		}
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -467,10 +492,17 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 // NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
 // set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
-	store := rs.stores[key].(types.KVStore)
+	s := rs.stores[key]
+	if s == nil {
+		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
+	}
+	store := s.(types.KVStore)
 
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
+	}
+	if rs.ListeningEnabled(key) {
+		store = listenkv.NewStore(store, key, rs.listeners[key])
 	}
 
 	return store

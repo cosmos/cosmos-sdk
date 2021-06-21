@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -40,7 +40,7 @@ func GetCmdQuerySigningInfo() *cobra.Command {
 		Short: "Query a validator's signing information",
 		Long: strings.TrimSpace(`Use a validators' consensus public key to find the signing-info for that validator:
 
-$ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexxhmz0l8c7sgswl7ulv7aulk364x4g5xsw7sr0k2g5
+$ <appd> query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"OauFcTKbN5Lx3fJL689cikXBqe+hcp6Y+x0rYUdR9Jk="}'
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -48,13 +48,13 @@ $ <appd> query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgexx
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
 
-			pk, err := sdk.GetPubKeyFromBech32(sdk.Bech32PubKeyTypeConsPub, args[0])
-			if err != nil {
+			var pk cryptotypes.PubKey
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[0]), &pk); err != nil {
 				return err
 			}
 
+			queryClient := types.NewQueryClient(clientCtx)
 			consAddr := sdk.ConsAddress(pk.Address())
 			params := &types.QuerySigningInfoRequest{ConsAddress: consAddr.String()}
 			res, err := queryClient.SigningInfo(cmd.Context(), params)

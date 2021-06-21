@@ -42,8 +42,6 @@ func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) 
 	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
 }
 
-//_________________________________________________________________________________________
-
 // Hooks wrapper struct for slashing keeper
 type Hooks struct {
 	k Keeper

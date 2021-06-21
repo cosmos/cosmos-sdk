@@ -16,16 +16,21 @@ validator set which is responsible for validating Tendermint messages at the
 consensus layer. Operations are as following:
 
 - the new validator set is taken as the top `params.MaxValidators` number of
-  validators retrieved from the ValidatorsByPower index
+  validators retrieved from the `ValidatorsByPower` index
 - the previous validator set is compared with the new validator set:
-  - missing validators begin unbonding and their `Tokens` are transferred from the
+    - missing validators begin unbonding and their `Tokens` are transferred from the
     `BondedPool` to the `NotBondedPool` `ModuleAccount`
-  - new validators are instantly bonded and their `Tokens` are transferred from the
+    - new validators are instantly bonded and their `Tokens` are transferred from the
     `NotBondedPool` to the `BondedPool` `ModuleAccount`
 
 In all cases, any validators leaving or entering the bonded validator set or
 changing balances and staying within the bonded validator set incur an update
-message which is passed back to Tendermint.
+message reporting their new consensus power which is passed back to Tendermint.
+
+The `LastTotalPower` and `LastValidatorsPower` hold the state of the total power
+and validator power from the end of the last block, and are used to check for
+changes that have occured in `ValidatorsByPower` and the total new power, which
+is calculated during `EndBlock`.
 
 ## Queues
 
@@ -41,14 +46,15 @@ When a validator is kicked out of the bonded validator set (either through
 being jailed, or not having sufficient bonded tokens) it begins the unbonding
 process along with all its delegations begin unbonding (while still being
 delegated to this validator). At this point the validator is said to be an
-unbonding validator, whereby it will mature to become an "unbonded validator"
+"unbonding validator", whereby it will mature to become an "unbonded validator"
 after the unbonding period has passed.
 
 Each block the validator queue is to be checked for mature unbonding validators
-(namely with a completion time <= current time). At this point any mature
-validators which do not have any delegations remaining are deleted from state.
-For all other mature unbonding validators that still have remaining
-delegations, the `validator.Status` is switched from `types.Unbonding` to
+(namely with a completion time <= current time and completion height <= current
+block height). At this point any mature validators which do not have any
+delegations remaining are deleted from state. For all other mature unbonding
+validators that still have remaining delegations, the `validator.Status` is
+switched from `types.Unbonding` to
 `types.Unbonded`.
 
 ### Unbonding Delegations

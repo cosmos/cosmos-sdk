@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -13,20 +12,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const FlagSpendLimit = "spend-limit"
-const FlagMsgType = "msg-type"
-const FlagExpiration = "expiration"
+// Flag names and values
+const (
+	FlagSpendLimit        = "spend-limit"
+	FlagMsgType           = "msg-type"
+	FlagExpiration        = "expiration"
+	FlagAllowedValidators = "allowed-validators"
+	FlagDenyValidators    = "deny-validators"
+	delegate              = "delegate"
+	redelegate            = "redelegate"
+	unbond                = "unbond"
+)
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
 	AuthorizationTxCmd := &cobra.Command{
-		Use:                        types.ModuleName,
+		Use:                        authz.ModuleName,
 		Short:                      "Authorization transactions subcommands",
 		Long:                       "Authorize and revoke access to execute transactions on behalf of your address",
 		DisableFlagParsing:         true,
@@ -45,28 +53,34 @@ func GetTxCmd() *cobra.Command {
 
 func NewCmdGrantAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"> --from <granter>",
+		Use:   "grant <grantee> <authorization_type=\"send\"|\"generic\"|\"delegate\"|\"unbond\"|\"redelegate\"> --from <granter>",
 		Short: "Grant authorization to an address",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Grant authorization to an address to execute a transaction on your behalf:
+			fmt.Sprintf(`grant authorization to an address to execute a transaction on your behalf:
 
 Examples:
  $ %s tx %s grant cosmos1skjw.. send %s --spend-limit=1000stake --from=cosmos1skl..
- $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.Msg/Vote --from=cosmos1sk..
-	`, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName(), version.AppName, types.ModuleName),
+ $ %s tx %s grant cosmos1skjw.. generic --msg-type=/cosmos.gov.v1beta1.MsgVote --from=cosmos1sk..
+	`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL(), version.AppName, authz.ModuleName),
 		),
-		Args: cobra.RangeArgs(2, 3),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
+
 			grantee, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			var authorization types.Authorization
+			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			if err != nil {
+				return err
+			}
+
+			var authorization authz.Authorization
 			switch args[1] {
 			case "send":
 				limit, err := cmd.Flags().GetString(FlagSpendLimit)
@@ -83,56 +97,95 @@ Examples:
 					return fmt.Errorf("spend-limit should be greater than zero")
 				}
 
-				authorization = &types.SendAuthorization{
-					SpendLimit: spendLimit,
-				}
+				authorization = bank.NewSendAuthorization(spendLimit)
 			case "generic":
 				msgType, err := cmd.Flags().GetString(FlagMsgType)
 				if err != nil {
 					return err
 				}
 
-				authorization = types.NewGenericAuthorization(msgType)
+				authorization = authz.NewGenericAuthorization(msgType)
+			case delegate, unbond, redelegate:
+				limit, err := cmd.Flags().GetString(FlagSpendLimit)
+				if err != nil {
+					return err
+				}
+
+				allowValidators, err := cmd.Flags().GetStringSlice(FlagAllowedValidators)
+				if err != nil {
+					return err
+				}
+
+				denyValidators, err := cmd.Flags().GetStringSlice(FlagDenyValidators)
+				if err != nil {
+					return err
+				}
+
+				var delegateLimit *sdk.Coin
+				if limit != "" {
+					spendLimit, err := sdk.ParseCoinsNormalized(limit)
+					if err != nil {
+						return err
+					}
+
+					if !spendLimit.IsAllPositive() {
+						return fmt.Errorf("spend-limit should be greater than zero")
+					}
+					delegateLimit = &spendLimit[0]
+				}
+
+				allowed, err := bech32toValidatorAddresses(allowValidators)
+				if err != nil {
+					return err
+				}
+
+				denied, err := bech32toValidatorAddresses(denyValidators)
+				if err != nil {
+					return err
+				}
+
+				switch args[1] {
+				case delegate:
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, delegateLimit)
+				case unbond:
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_UNDELEGATE, delegateLimit)
+				default:
+					authorization, err = staking.NewStakeAuthorization(allowed, denied, staking.AuthorizationType_AUTHORIZATION_TYPE_REDELEGATE, delegateLimit)
+				}
+				if err != nil {
+					return err
+				}
+
 			default:
 				return fmt.Errorf("invalid authorization type, %s", args[1])
 			}
 
-			exp, err := cmd.Flags().GetInt64(FlagExpiration)
+			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
 			if err != nil {
 				return err
 			}
 
-			msg, err := types.NewMsgGrantAuthorization(clientCtx.GetFromAddress(), grantee, authorization, time.Unix(exp, 0))
-			if err != nil {
-				return err
-			}
-
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = authzMsgClient.GrantAuthorization(context.Background(), msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMsgType, "", "The Msg method name for which we are creating a GenericAuthorization")
 	cmd.Flags().String(FlagSpendLimit, "", "SpendLimit for Send Authorization, an array of Coins allowed spend")
+	cmd.Flags().StringSlice(FlagAllowedValidators, []string{}, "Allowed validators addresses separated by ,")
+	cmd.Flags().StringSlice(FlagDenyValidators, []string{}, "Deny validators addresses separated by ,")
 	cmd.Flags().Int64(FlagExpiration, time.Now().AddDate(1, 0, 0).Unix(), "The Unix timestamp. Default is one year.")
 	return cmd
 }
 
 func NewCmdRevokeAuthorization() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "revoke [grantee_address] [msg_type] --from=[granter_address]",
+		Use:   "revoke [grantee] [msg_type] --from=[granter]",
 		Short: "revoke authorization",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`revoke authorization from a granter to a grantee:
 Example:
  $ %s tx %s revoke cosmos1skj.. %s --from=cosmos1skj..
-			`, version.AppName, types.ModuleName, types.SendAuthorization{}.MethodName()),
+			`, version.AppName, authz.ModuleName, bank.SendAuthorization{}.MsgTypeURL()),
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -147,19 +200,10 @@ Example:
 			}
 
 			granter := clientCtx.GetFromAddress()
-
 			msgAuthorized := args[1]
+			msg := authz.NewMsgRevoke(granter, grantee, msgAuthorized)
 
-			msg := types.NewMsgRevokeAuthorization(granter, grantee, msgAuthorized)
-
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = authzMsgClient.RevokeAuthorization(context.Background(), &msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -175,7 +219,7 @@ func NewCmdExecAuthorization() *cobra.Command {
 Example:
  $ %s tx %s exec tx.json --from grantee
  $ %s tx bank send <granter> <recipient> --from <granter> --chain-id <chain-id> --generate-only > tx.json && %s tx %s exec tx.json --from grantee
-			`, version.AppName, types.ModuleName, version.AppName, version.AppName, types.ModuleName),
+			`, version.AppName, authz.ModuleName, version.AppName, version.AppName, authz.ModuleName),
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -194,29 +238,25 @@ Example:
 			if err != nil {
 				return err
 			}
-			msgs := theTx.GetMsgs()
-			serviceMsgs := make([]sdk.ServiceMsg, len(msgs))
-			for i, msg := range msgs {
-				srvMsg, ok := msg.(sdk.ServiceMsg)
-				if !ok {
-					return fmt.Errorf("tx contains %T which is not a sdk.ServiceMsg", msg)
-				}
-				serviceMsgs[i] = srvMsg
-			}
+			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
 
-			msg := types.NewMsgExecAuthorized(grantee, serviceMsgs)
-			svcMsgClientConn := &msgservice.ServiceMsgClientConn{}
-			authzMsgClient := types.NewMsgClient(svcMsgClientConn)
-			_, err = authzMsgClient.ExecAuthorized(context.Background(), &msg)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), svcMsgClientConn.GetMsgs()...)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func bech32toValidatorAddresses(validators []string) ([]sdk.ValAddress, error) {
+	vals := make([]sdk.ValAddress, len(validators))
+	for i, validator := range validators {
+		addr, err := sdk.ValAddressFromBech32(validator)
+		if err != nil {
+			return nil, err
+		}
+		vals[i] = addr
+	}
+	return vals, nil
 }

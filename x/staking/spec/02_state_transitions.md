@@ -15,7 +15,11 @@ This document describes the state transition operations pertaining to:
 State transitions in validators are performed on every [`EndBlock`](./05_end_block.md#validator-set-changes)
 in order to check for changes in the active `ValidatorSet`.
 
-### Unbonded to Bonded
+A validator can be `Unbonded`, `Unbonding` or `Bonded`. `Unbonded`
+and `Unbonding` are collectively called `Not Bonded`. A validator can move
+directly between all the states, except for from `Bonded` to `Unbonded`.
+
+### Not bonded to Bonded
 
 The following transition occurs when a validator's ranking in the `ValidatorPowerIndex` surpasses
 that of the `LastValidator`.
@@ -54,6 +58,10 @@ this process may be also be reversed. the following operations occur:
 - set `Validator.Jailed` and update object
 - if jailed delete record from `ValidatorByPowerIndex`
 - if unjailed add record to `ValidatorByPowerIndex`
+
+Jailed validators are not present in any of the following stores:
+
+- the power store (from consensus power to address)
 
 ## Delegations
 
@@ -105,6 +113,9 @@ Redelegations affect the delegation, source and destination validators.
   is `Bonded`, transfer the newly delegated tokens from the `NotBondedPool` to the `BondedPool` `ModuleAccount`
 - record the token amount in an new entry in the relevant `Redelegation`
 
+From when a redelegation begins until it completes, the delegator is in a state of "pseudo-unbonding", and can still be
+slashed for infractions that occured before the redelegation began.
+
 ### Complete Redelegation
 
 When a redelegations complete the following occurs:
@@ -119,12 +130,16 @@ When a Validator is slashed, the following occurs:
 
 - The total `slashAmount` is calculated as the `slashFactor` (a chain parameter) \* `TokensFromConsensusPower`,
   the total number of tokens bonded to the validator at the time of the infraction.
-- Every unbonding delegation and redelegation from the validator are slashed by the `slashFactor`
-  percentage of the initialBalance.
+- Every unbonding delegation and pseudo-unbonding redelegation such that the infraction occured before the unbonding or
+  redelegation began from the validator are slashed by the `slashFactor` percentage of the initialBalance.
 - Each amount slashed from redelegations and unbonding delegations is subtracted from the
   total slash amount.
 - The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
   `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
+
+In the case of a slash due to any infraction that requires evidence to submitted (for example double-sign), the slash
+occurs at the block where the evidence is included, not at the block where the infraction occured.
+Put otherwise, validators are not slashed retroactively, only when they are caught.
 
 ### Slash Unbonding Delegation
 
@@ -137,5 +152,25 @@ delegation and is capped to prevent a resulting negative balance. Completed (or 
 
 When a validator is slashed, so are all redelegations from the validator that began after the
 infraction. Redelegations are slashed by `slashFactor`.
+Redelegations that began before the infraction are not slashed.
 The amount slashed is calculated from the `InitialBalance` of the delegation and is capped to
-prevent a resulting negative balance. Mature redelegations are not slashed.
+prevent a resulting negative balance.
+Mature redelegations (that have completed pseudo-unbonding) are not slashed.
+
+## How Shares are calculated
+
+At any given point in time, each validator has a number of tokens, `T`, and has a number of shares issued, `S`.
+Each delegator, `i`, holds a number of shares, `S_i`.
+The number of tokens is the sum of all tokens delegated to the validator, plus the rewards, minus the slashes.
+
+The delegator is entitled to a portion of the underlying tokens proportional to their proportion of shares.
+So delegator `i` is entitled to `T * S_i / S` of the validator's tokens.
+
+When a delegator delegates new tokens to the validator, they receive a number of shares proportional to their contribution.
+So when delegator `j` delegates `T_j` tokens, they receive `S_j = S * T_j / T` shares.
+The total number of tokens is now `T + T_j`, and the total number of shares is `S + S_j`.
+`j`s proportion of the shares is the same as their proportion of the total tokens contributed: `(S + S_j) / S = (T + T_j) / T`.
+
+A special case is the initial delegation, when `T = 0` and `S = 0`, so `T_j / T` is undefined.
+For the initial delegation, delegator `j` who delegates `T_j` tokens receive `S_j = T_j` shares.
+So a validator that hasn't received any rewards and has not been slashed will have `T = S`.

@@ -5,6 +5,11 @@ parent:
 
 # Cosmos SDK 文档
 
+::: warning
+**DEPRECATED**
+This documentation is not complete and it's outdated. Please use the English version.
+:::
+
 ## 开始
 
 - **[SDK 介绍](./intro/README.md)**：Cosmos SDK 的总体概览
@@ -16,7 +21,7 @@ parent:
 - **[基础文档](./basics/)**：cosmos sdk 的基础概念文档，例如应用结构、交易的生命周期、账户管理等
 - **[核心文档](./core/)**: cosmos sdk 的核心文档，例如`baseapp`，`store`，`server`等
 - **[构建模块](./building-modules/)**: 对于模块开发者来说的一些重要概念，例如`message`，`keeper`，`handler`，`querier`
-- **[接口](./interfaces/)**: 为 cosmos 应用设计接口的文档
+- **[接口](./run-node/)**: 为 cosmos 应用设计接口的文档
 
 ## 开发资源
 

@@ -153,7 +153,7 @@ func TestQueries(t *testing.T) {
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(20000001))
 
 	oneCoins := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1))
-	consCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.TokensFromConsensusPower(10)))
+	consCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
 
 	tp := TestProposal
 
@@ -316,13 +316,23 @@ func TestPaginatedVotesQuery(t *testing.T) {
 	app.GovKeeper.SetProposal(ctx, proposal)
 
 	votes := make([]types.Vote, 20)
-	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	addr := make(sdk.AccAddress, 20)
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	addrMap := make(map[string]struct{})
+	genAddr := func() string {
+		addr := make(sdk.AccAddress, 20)
+		for {
+			random.Read(addr)
+			addrStr := addr.String()
+			if _, ok := addrMap[addrStr]; !ok {
+				addrMap[addrStr] = struct{}{}
+				return addrStr
+			}
+		}
+	}
 	for i := range votes {
-		rand.Read(addr)
 		vote := types.Vote{
 			ProposalId: proposal.ProposalId,
-			Voter:      addr.String(),
+			Voter:      genAddr(),
 			Options:    types.NewNonSplitVoteOption(types.OptionYes),
 		}
 		votes[i] = vote

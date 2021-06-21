@@ -13,7 +13,7 @@ execution context.
 
 ## Registration
 
-Modules should define and register their custom errors in `x/{module}/types/errors.go`. Registration
+Modules should define and register their custom errors in `x/{module}/errors.go`. Registration
 of errors is handled via the `types/errors` package.
 
 Example:
@@ -48,7 +48,3 @@ an error is of a particular kind via `Is`.
 If a module error is registered, the SDK `errors` package allows ABCI information to be extracted
 through the `ABCIInfo` API. The package also provides `ResponseCheckTx` and `ResponseDeliverTx` as
 auxiliary APIs to automatically get `CheckTx` and `DeliverTx` responses from an error.
-
-## Next {hide}
-
-Learn about [interfaces](../interfaces/interfaces-intro.md) {hide}

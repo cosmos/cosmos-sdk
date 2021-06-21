@@ -13,39 +13,56 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ authz.QueryServer = Keeper{}
 
-// Authorizations implements the Query/Authorizations gRPC method.
-func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizationsRequest) (*types.QueryAuthorizationsResponse, error) {
+// Authorizations implements the Query/Grants gRPC method.
+func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
 	granter, err := sdk.AccAddressFromBech32(req.Granter)
-
 	if err != nil {
 		return nil, err
 	}
-	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
 
+	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
 	if err != nil {
 		return nil, err
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetAuthorizationStoreKey(grantee, granter, "")
+	key := grantStoreKey(grantee, granter, "")
 	authStore := prefix.NewStore(store, key)
-	var authorizations []*types.AuthorizationGrant
+
+	if req.MsgTypeUrl != "" {
+		authorization, expiration := k.GetCleanAuthorization(ctx, grantee, granter, req.MsgTypeUrl)
+		if authorization == nil {
+			return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MsgTypeUrl)
+		}
+		authorizationAny, err := codectypes.NewAnyWithValue(authorization)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+		return &authz.QueryGrantsResponse{
+			Grants: []*authz.Grant{{
+				Authorization: authorizationAny,
+				Expiration:    expiration,
+			}},
+		}, nil
+	}
+
+	var authorizations []*authz.Grant
 	pageRes, err := query.FilteredPaginate(authStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
 		auth, err := unmarshalAuthorization(k.cdc, value)
 		if err != nil {
 			return false, err
 		}
-		auth1 := auth.GetAuthorizationGrant()
+		auth1 := auth.GetAuthorization()
 		if accumulate {
 			msg, ok := auth1.(proto.Message)
 			if !ok {
@@ -56,7 +73,7 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 			if err != nil {
 				return false, status.Errorf(codes.Internal, err.Error())
 			}
-			authorizations = append(authorizations, &types.AuthorizationGrant{
+			authorizations = append(authorizations, &authz.Grant{
 				Authorization: authorizationAny,
 				Expiration:    auth.Expiration,
 			})
@@ -67,54 +84,14 @@ func (k Keeper) Authorizations(c context.Context, req *types.QueryAuthorizations
 		return nil, err
 	}
 
-	return &types.QueryAuthorizationsResponse{
-		Authorizations: authorizations,
-		Pagination:     pageRes,
+	return &authz.QueryGrantsResponse{
+		Grants:     authorizations,
+		Pagination: pageRes,
 	}, nil
 }
 
 // unmarshal an authorization from a store value
-func unmarshalAuthorization(cdc codec.BinaryMarshaler, value []byte) (v types.AuthorizationGrant, err error) {
-	err = cdc.UnmarshalBinaryBare(value, &v)
+func unmarshalAuthorization(cdc codec.BinaryCodec, value []byte) (v authz.Grant, err error) {
+	err = cdc.Unmarshal(value, &v)
 	return v, err
-}
-
-// Authorization implements the Query/Authorization gRPC method.
-func (k Keeper) Authorization(c context.Context, req *types.QueryAuthorizationRequest) (*types.QueryAuthorizationResponse, error) {
-	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if req.MethodName == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "empty method-name")
-	}
-
-	granter, err := sdk.AccAddressFromBech32(req.Granter)
-
-	if err != nil {
-		return nil, err
-	}
-	grantee, err := sdk.AccAddressFromBech32(req.Grantee)
-
-	if err != nil {
-		return nil, err
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-
-	authorization, expiration := k.GetOrRevokeAuthorization(ctx, grantee, granter, req.MethodName)
-	if authorization == nil {
-		return nil, status.Errorf(codes.NotFound, "no authorization found for %s type", req.MethodName)
-	}
-
-	authorizationAny, err := codectypes.NewAnyWithValue(authorization)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return &types.QueryAuthorizationResponse{
-		Authorization: &types.AuthorizationGrant{
-			Authorization: authorizationAny,
-			Expiration:    expiration,
-		},
-	}, nil
 }

@@ -110,7 +110,9 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
 func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate, err error) {
-	maxValidators := k.GetParams(ctx).MaxValidators
+	params := k.GetParams(ctx)
+	maxValidators := params.MaxValidators
+	powerReduction := k.PowerReduction(ctx)
 	totalPower := sdk.ZeroInt()
 	amtFromBondedToNotBonded, amtFromNotBondedToBonded := sdk.ZeroInt(), sdk.ZeroInt()
 
@@ -138,7 +140,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
-		if validator.PotentialConsensusPower() == 0 {
+		if validator.PotentialConsensusPower(k.PowerReduction(ctx)) == 0 {
 			break
 		}
 
@@ -163,17 +165,17 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		}
 
 		// fetch the old power bytes
-		valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixValAddr, valAddr)
+		valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
 		if err != nil {
 			return nil, err
 		}
 		oldPowerBytes, found := last[valAddrStr]
-		newPower := validator.ConsensusPower()
-		newPowerBytes := k.cdc.MustMarshalBinaryBare(&gogotypes.Int64Value{Value: newPower})
+		newPower := validator.ConsensusPower(powerReduction)
+		newPowerBytes := k.cdc.MustMarshal(&gogotypes.Int64Value{Value: newPower})
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
-			updates = append(updates, validator.ABCIValidatorUpdate())
+			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
 
 			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}
@@ -361,7 +363,7 @@ func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) (validatorsByAddr, erro
 	for ; iterator.Valid(); iterator.Next() {
 		// extract the validator address from the key (prefix is 1-byte, addrLen is 1-byte)
 		valAddr := types.AddressFromLastValidatorPowerKey(iterator.Key())
-		valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixValAddr, valAddr)
+		valAddrStr, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
 		if err != nil {
 			return nil, err
 		}

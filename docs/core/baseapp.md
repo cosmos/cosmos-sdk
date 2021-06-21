@@ -60,9 +60,9 @@ First, the important parameters that are initialized during the bootstrapping of
   The `CommitMultiStore` is a multi-store, meaning a store of stores. Each module of the application
   uses one or multiple `KVStores` in the multi-store to persist their subset of the state.
 - Database: The `db` is used by the `CommitMultiStore` to handle data persistence.
-- [`Msg` Service Router](#msg-service-router): The `msgServiceRouter` facilitates the routing of service `Msg`s to the appropriate
-  module for it to be processed. Here a service `Msg` refers to the transaction components that need to be
-  processed by the application in order to update the state, and not to ABCI messages which implement
+- [`Msg` Service Router](#msg-service-router): The `msgServiceRouter` facilitates the routing of `sdk.Msg` requests to the appropriate
+  module `Msg` service for processing. Here a `sdk.Msg` refers to the transaction component that needs to be
+  processed by a service in order to update the application state, and not to ABCI message which implements
   the interface between the application and the underlying consensus engine.
 - [gRPC Query Router](#grpc-query-router): The `grpcQueryRouter` facilitates the routing of gRPC queries to the
   appropriate module for it to be processed. These queries are not ABCI messages themselves, but they
@@ -126,7 +126,7 @@ is the canonical state of the application and the volatile states, `checkState` 
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
-From this root state, we derive two volatile state through a mechanism called _store branching_ (performed by `CacheWrap` function). 
+From this root state, we derive two volatile states by using a mechanism called _store branching_ (performed by `CacheWrap` function).
 The types can be illustrated as follows:
 
 ![Types](./baseapp_state_types.png)
@@ -191,7 +191,7 @@ When messages and queries are received by the application, they must be routed t
 
 ### `Msg` Service Router
 
-[`Msg`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `BaseApp` holds a `msgServiceRouter` which maps fully-qualified service methods (`string`, defined in each module's `Msg` Protobuf service) to the appropriate module's `Msg` server implementation.
+[`sdk.Msg`s](#../building-modules/messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `BaseApp` holds a `msgServiceRouter` which maps fully-qualified service methods (`string`, defined in each module's Protobuf  `Msg` service) to the appropriate module's `MsgServer` implementation.
 
 The [default `msgServiceRouter` included in `BaseApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/baseapp/msg_service_router.go) is stateless. However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes. For this reason, the `sdk.Context` is also passed into each [route handler inside `msgServiceRouter`](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/baseapp/msg_service_router.go#L31-L32). For a stateless router that doesn't want to make use of this, you can just ignore the `ctx`.
 
@@ -199,7 +199,7 @@ The application's `msgServiceRouter` is initialized with all the routes using th
 
 ### gRPC Query Router
 
-Similar to `Msg`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [`Query` service](../building-modules/query-services.md). To do so, `BaseApp` holds a `grpcQueryRouter`, which maps modules' fully-qualified service methods (`string`, defined in their Protobuf `Query` gRPC) to their `Query` server implementation. The `grpcQueryRouter` is called during the initial stages of query processing, which can be either by directly sending a gRPC query to the gRPC endpoint, or via the [`Query` ABCI message](#query) on the Tendermint RPC endpoint.
+Similar to `sdk.Msg`s, [`queries`](../building-modules/messages-and-queries.md#queries) need to be routed to the appropriate module's [`Query` service](../building-modules/query-services.md). To do so, `BaseApp` holds a `grpcQueryRouter`, which maps modules' fully-qualified service methods (`string`, defined in their Protobuf `Query` gRPC) to their `QueryServer` implementation. The `grpcQueryRouter` is called during the initial stages of query processing, which can be either by directly sending a gRPC query to the gRPC endpoint, or via the [`Query` ABCI message](#query) on the Tendermint RPC endpoint.
 
 Just like the `msgServiceRouter`, the `grpcQueryRouter` is initialized with all the query routes using the application's [module manager](../building-modules/module-manager.md) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/app-anatomy.md#app-constructor).
 
@@ -227,18 +227,18 @@ Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 make them lightweight. In the Cosmos SDK, after [decoding transactions](./encoding.md), `CheckTx()` is implemented
 to do the following checks:
 
-1. Extract the `Msg`s from the transaction.
-2. Perform _stateless_ checks by calling `ValidateBasic()` on each of the `Msg`s. This is done
+1. Extract the `sdk.Msg`s from the transaction.
+2. Perform _stateless_ checks by calling `ValidateBasic()` on each of the `sdk.Msg`s. This is done
    first, as _stateless_ checks are less computationally expensive than _stateful_ checks. If
    `ValidateBasic()` fail, `CheckTx` returns before running _stateful_ checks, which saves resources.
 3. Perform non-module related _stateful_ checks on the [account](../basics/accounts.md). This step is mainly about checking
-   that the `Msg` signatures are valid, that enough fees are provided and that the sending account
+   that the `sdk.Msg` signatures are valid, that enough fees are provided and that the sending account
    has enough funds to pay for said fees. Note that no precise [`gas`](../basics/gas-fees.md) counting occurs here,
-   as `Msg`s are not processed. Usually, the [`AnteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided
+   as `sdk.Msg`s are not processed. Usually, the [`AnteHandler`](../basics/gas-fees.md#antehandler) will check that the `gas` provided
    with the transaction is superior to a minimum reference gas amount based on the raw transaction size,
    in order to avoid spam with transactions that provide 0 gas.
-4. Ensure that each `Msg`'s fully-qualified service method matches on of the routes inside the `msgServiceRouter`, but do **not** actually
-   process `Msg`s. `Msg`s only need to be processed when the canonical state need to be updated,
+4. Ensure that each `sdk.Msg`'s fully-qualified service method matches on of the routes inside the `msgServiceRouter`, but do **not** actually
+   process `sdk.Msg`s. `sdk.Msg`s only need to be processed when the canonical state need to be updated,
    which happens during `DeliverTx`.
 
 Steps 2. and 3. are performed by the [`AnteHandler`](../basics/gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
@@ -262,7 +262,7 @@ The response contains:
 - `Info (string):` Additional information. May be non-deterministic.
 - `GasWanted (int64)`: Amount of gas requested for transaction. It is provided by users when they generate the transaction.
 - `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction. Next is an example:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/ante/basic.go#L104
+  +++ https://github.com/cosmos/cosmos-sdk/blob/7d7821b9af132b0f6131640195326aa02b6751db/x/auth/ante/basic.go#L104-L105
 - `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./events.md) for more.
 - `Codespace (string)`: Namespace for the Code.
 
@@ -284,11 +284,11 @@ Before the first transaction of a given block is processed, a [volatile state](#
 `DeliverTx` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
 1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
-2. For each `Msg` in the transaction, route to the appropriate module's [`Msg` service](../building-modules/msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `deliverState` `CacheMultiStore`.
+2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../building-modules/msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `deliverState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `deliverState` `CacheMultiStore`.
 
-During step 5., each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
+During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L153-L162
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/store/types/gas.go#L164-L175
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails.
 
@@ -311,7 +311,7 @@ At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0
 
 The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `runTxModeDeliver`). This `CacheMultiStore` is a branch of the main store, with cache functionality (for query requests), instantiated during `BeginBlock` for `DeliverTx` and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for [`gas`](../basics/gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
 
-After that, `RunTx()` calls `ValidateBasic()` on each `Msg`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
+After that, `RunTx()` calls `ValidateBasic()` on each `sdk.Msg`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `sdk.Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
@@ -319,7 +319,7 @@ Then, the [`anteHandler`](#antehandler) of the application is run (if it exists)
 
 This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./ocap.md) of the Cosmos SDK.
 
-Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
+Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`s in the `Tx`. In preparation of this step, just like with the `anteHandler`, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
 ### AnteHandler
 
@@ -333,15 +333,15 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 - Perform preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees.
 - Play a role in the incentivisation of stakeholders via the collection of transaction fees.
 
-`BaseApp` holds an `anteHandler` as paraemter, which is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` today is that of the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/ante/ante.go).
+`BaseApp` holds an `anteHandler` as parameter that is initialized in the [application's constructor](../basics/app-anatomy.md#application-constructor). The most widely used `anteHandler` is the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/v0.42.1/x/auth/ante/ante.go).
 
 Click [here](../basics/gas-fees.md#antehandler) for more on the `anteHandler`.
 
 ### RunMsgs
 
-`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `Msg`s.
+`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `runTxModeDeliver` to actually process the `sdk.Msg`s.
 
-First, it retrieves the `Msg`'s fully-qualified service method name, by checking the `type_url` of the Protobuf `Any` representing the service `Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of this fully-qualified service method. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. If instead `mode == runTxModeDeliver`, the [`Msg` server](../building-modules/msg-services.md) implementation for the message is executed, before `RunMsgs` returns.
+First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `type_url` of the Protobuf `Any` representing the `sdk.Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of `Msg` service method related to that `type_url`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. Otherwise, if `mode == runTxModeDeliver`, the [`Msg` service](../building-modules/msg-services.md) RPC is executed, before `RunMsgs` returns.
 
 ## Other ABCI Messages
 

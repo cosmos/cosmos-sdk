@@ -106,7 +106,6 @@ func migrateContent(oldContent v036gov.Content) *codectypes.Any {
 				Title:       oldContent.Title,
 				Plan: v040upgrade.Plan{
 					Name:   oldContent.Plan.Name,
-					Time:   oldContent.Plan.Time,
 					Height: oldContent.Plan.Height,
 					Info:   oldContent.Plan.Info,
 				},

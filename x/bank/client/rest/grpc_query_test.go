@@ -38,6 +38,9 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 					sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), s.cfg.AccountTokens),
 					sdk.NewCoin(s.cfg.BondDenom, s.cfg.StakingTokens.Add(sdk.NewInt(10))),
 				),
+				Pagination: &query.PageResponse{
+					Total: 2,
+				},
 			},
 		},
 		{
@@ -92,7 +95,7 @@ func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
@@ -121,6 +124,8 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			&types.QueryDenomsMetadataResponse{
 				Metadatas: []types.Metadata{
 					{
+						Name:        "Cosmos Hub Atom",
+						Symbol:      "ATOM",
 						Description: "The native staking token of the Cosmos Hub.",
 						DenomUnits: []*types.DenomUnit{
 							{
@@ -151,6 +156,8 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			&types.QueryDenomMetadataResponse{},
 			&types.QueryDenomMetadataResponse{
 				Metadata: types.Metadata{
+					Name:        "Cosmos Hub Atom",
+					Symbol:      "ATOM",
 					Description: "The native staking token of the Cosmos Hub.",
 					DenomUnits: []*types.DenomUnit{
 						{
@@ -192,9 +199,9 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 			s.Require().NoError(err)
 
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
-				s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -255,7 +262,7 @@ func (s *IntegrationTestSuite) TestBalancesGRPCHandler() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 
-			s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}

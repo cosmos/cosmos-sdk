@@ -31,9 +31,9 @@ foundation of an object capability system.
 > These structural properties stem from the two rules governing
 > access to existing objects:
 >
-> 1.  An object A can send a message to B only if object A holds a
+> 1. An object A can send a message to B only if object A holds a
 >     reference to B.
-> 2.  An object A can obtain a reference to C only
+> 2. An object A can obtain a reference to C only
 >     if object A receives a message containing a reference to C. As a
 >     consequence of these two rules, an object can obtain a reference
 >     to another object only through a preexisting chain of references.
@@ -68,7 +68,11 @@ sumValue := externalModule.ComputeSumValue(*account)
 In the Cosmos SDK, you can see the application of this principle in the
 gaia app.
 
-+++ https://github.com/cosmos/gaia/blob/master/app/app.go#L197-L209
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.4/simapp/app.go#L249-L273
+
+The following diagram shows the current dependencies between keepers.
+
+![Keeper dependencies](../uml/svg/keeper_dependencies.svg)
 
 ## Next {hide}
 

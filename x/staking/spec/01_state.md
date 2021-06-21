@@ -4,9 +4,14 @@ order: 1
 
 # State
 
+## Pool
+
+Pool is used for tracking bonded and not-bonded token supply of the bond denomination.
+
 ## LastTotalPower
 
 LastTotalPower tracks the total amounts of bonded tokens recorded during the previous end block.
+Store entries prefixed with "Last" must remain unchanged until EndBlock.
 
 - LastTotalPower: `0x12 -> ProtocolBuffer(sdk.Int)`
 
@@ -29,12 +34,12 @@ Validators can have one of three statuses
   active set during [`EndBlock`](./05_end_block.md#validator-set-changes) and their status is updated to `Bonded`.
   They are signing blocks and receiving rewards. They can receive further delegations.
   They can be slashed for misbehavior. Delegators to this validator who unbond their delegation
-  must wait the duration of the UnbondingTime, a chain-specific param. during which time
+  must wait the duration of the UnbondingTime, a chain-specific param, during which time
   they are still slashable for offences of the source validator if those offences were committed
   during the period of time that the tokens were bonded.
-- `Unbonding`: When a validator leaves the active set, either by choice or due to slashing or
+- `Unbonding`: When a validator leaves the active set, either by choice or due to slashing, jailing or
   tombstoning, an unbonding of all their delegations begins. All delegations must then wait the UnbondingTime
-  before moving receiving their tokens to their accounts from the `BondedPool`.
+  before their tokens are moved to their accounts from the `BondedPool`.
 
 Validators objects should be primarily stored and accessed by the
 `OperatorAddr`, an SDK validator address for the operator of the validator. Two
@@ -44,10 +49,10 @@ required lookups for slashing and validator-set updates. A third special index
 throughout each block, unlike the first two indices which mirror the validator
 records within a block.
 
-- Validators: `0x21 | OperatorAddr -> ProtocolBuffer(validator)`
-- ValidatorsByConsAddr: `0x22 | ConsAddr -> OperatorAddr`
-- ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddr -> OperatorAddr`
-- LastValidatorsPower: `0x11 OperatorAddr -> ProtocolBuffer(ConsensusPower)`
+- Validators: `0x21 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(validator)`
+- ValidatorsByConsAddr: `0x22 | ConsAddrLen (1 byte) | ConsAddr -> OperatorAddr`
+- ValidatorsByPower: `0x23 | BigEndian(ConsensusPower) | OperatorAddrLen (1 byte) | OperatorAddr -> OperatorAddr`
+- LastValidatorsPower: `0x11 | OperatorAddrLen (1 byte) | OperatorAddr -> ProtocolBuffer(ConsensusPower)`
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
@@ -59,10 +64,10 @@ When Tendermint reports evidence, it provides the validator address, so this
 map is needed to find the operator. Note that the `ConsAddr` corresponds to the
 address which can be derived from the validator's `ConsPubKey`.
 
-`ValidatorsByPower` is an additional index that provides a sorted list o
+`ValidatorsByPower` is an additional index that provides a sorted list of
 potential validators to quickly determine the current active set. Here
-ConsensusPower is validator.Tokens/10^6. Note that all validators where
-`Jailed` is true are not stored within this index.
+ConsensusPower is validator.Tokens/10^6 by default. Note that all validators
+where `Jailed` is true are not stored within this index.
 
 `LastValidatorsPower` is a special index that provides a historical list of the
 last-block's bonded validators. This index remains constant during a block but
@@ -79,7 +84,7 @@ Each validator's state is stored in a `Validator` struct:
 Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
 with the `ValidatorAddr` Delegators are indexed in the store as follows:
 
-- Delegation: `0x31 | DelegatorAddr | ValidatorAddr -> ProtocolBuffer(delegation)`
+- Delegation: `0x31 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(delegation)`
 
 Stake holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one
@@ -115,8 +120,8 @@ detected.
 
 `UnbondingDelegation` are indexed in the store as:
 
-- UnbondingDelegation: `0x32 | DelegatorAddr | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
-- UnbondingDelegationsFromValidator: `0x33 | ValidatorAddr | DelegatorAddr -> nil`
+- UnbondingDelegation: `0x32 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(unbondingDelegation)`
+- UnbondingDelegationsFromValidator: `0x33 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
 
 The first map here is used in queries, to lookup all unbonding delegations for
 a given delegator, while the second map is used in slashing, to lookup all
@@ -137,9 +142,9 @@ committed by the source validator.
 
 `Redelegation` are indexed in the store as:
 
-- Redelegations: `0x34 | DelegatorAddr | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
-- RedelegationsBySrc: `0x35 | ValidatorSrcAddr | ValidatorDstAddr | DelegatorAddr -> nil`
-- RedelegationsByDst: `0x36 | ValidatorDstAddr | ValidatorSrcAddr | DelegatorAddr -> nil`
+- Redelegations: `0x34 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddr -> ProtocolBuffer(redelegation)`
+- RedelegationsBySrc: `0x35 | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+- RedelegationsByDst: `0x36 | ValidatorDstAddrLen (1 byte) | ValidatorDstAddr | ValidatorSrcAddrLen (1 byte) | ValidatorSrcAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
 
 The first map here is used for queries, to lookup all redelegations for a given
 delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
@@ -151,7 +156,7 @@ A redelegation object is created every time a redelegation occurs. To prevent
 - the (re)delegator already has another immature redelegation in progress
   with a destination to a validator (let's call it `Validator X`)
 - and, the (re)delegator is attempting to create a _new_ redelegation
-  where the source validator for this new redelegation is `Validator-X`.
+  where the source validator for this new redelegation is `Validator X`.
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/staking.proto#L200-L228
 
@@ -182,7 +187,7 @@ delegations queue is kept.
 For the purpose of tracking progress of redelegations the redelegation queue is
 kept.
 
-- UnbondingDelegation: `0x42 | format(time) -> []DVVTriplet`
+- RedelegationQueue: `0x42 | format(time) -> []DVVTriplet`
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0/proto/cosmos/staking/v1beta1/staking.proto#L140-L152
 

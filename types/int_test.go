@@ -40,16 +40,16 @@ func (s *intTestSuite) TestFromUint64() {
 }
 
 func (s *intTestSuite) TestIntPanic() {
-	// Max Int = 2^255-1 = 5.789e+76
-	// Min Int = -(2^255-1) = -5.789e+76
-	s.Require().NotPanics(func() { sdk.NewIntWithDecimal(1, 76) })
-	i1 := sdk.NewIntWithDecimal(1, 76)
-	s.Require().NotPanics(func() { sdk.NewIntWithDecimal(2, 76) })
-	i2 := sdk.NewIntWithDecimal(2, 76)
-	s.Require().NotPanics(func() { sdk.NewIntWithDecimal(3, 76) })
-	i3 := sdk.NewIntWithDecimal(3, 76)
+	// Max Int = 2^256-1 = 1.1579209e+77
+	// Min Int = -(2^256-1) = -1.1579209e+77
+	s.Require().NotPanics(func() { sdk.NewIntWithDecimal(4, 76) })
+	i1 := sdk.NewIntWithDecimal(4, 76)
+	s.Require().NotPanics(func() { sdk.NewIntWithDecimal(5, 76) })
+	i2 := sdk.NewIntWithDecimal(5, 76)
+	s.Require().NotPanics(func() { sdk.NewIntWithDecimal(6, 76) })
+	i3 := sdk.NewIntWithDecimal(6, 76)
 
-	s.Require().Panics(func() { sdk.NewIntWithDecimal(6, 76) })
+	s.Require().Panics(func() { sdk.NewIntWithDecimal(2, 77) })
 	s.Require().Panics(func() { sdk.NewIntWithDecimal(9, 80) })
 
 	// Overflow check
@@ -69,7 +69,7 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().Panics(func() { i2.Neg().Mul(i2.Neg()) })
 	s.Require().Panics(func() { i3.Neg().Mul(i3.Neg()) })
 
-	// Underflow check
+	// // Underflow check
 	i3n := i3.Neg()
 	s.Require().NotPanics(func() { i3n.Sub(i1) })
 	s.Require().NotPanics(func() { i3n.Sub(i2) })
@@ -84,7 +84,7 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().Panics(func() { i3.Mul(i3.Neg()) })
 
 	// Bound check
-	intmax := sdk.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(255), nil), big.NewInt(1)))
+	intmax := sdk.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Exp(big.NewInt(2), big.NewInt(256), nil), big.NewInt(1)))
 	intmin := intmax.Neg()
 	s.Require().NotPanics(func() { intmax.Add(sdk.ZeroInt()) })
 	s.Require().NotPanics(func() { intmin.Sub(sdk.ZeroInt()) })
@@ -159,6 +159,8 @@ func (s *intTestSuite) TestArithInt() {
 			{sdk.MinInt(i1, i2), minint(n1, n2)},
 			{sdk.MaxInt(i1, i2), maxint(n1, n2)},
 			{i1.Neg(), -n1},
+			{i1.Abs(), n1},
+			{i1.Neg().Abs(), n1},
 		}
 
 		for tcnum, tc := range cases {
@@ -206,6 +208,7 @@ func (s *intTestSuite) TestImmutabilityAllInt() {
 		func(i *sdk.Int) { _ = i.MulRaw(rand.Int63()) },
 		func(i *sdk.Int) { _ = i.QuoRaw(rand.Int63()) },
 		func(i *sdk.Int) { _ = i.Neg() },
+		func(i *sdk.Int) { _ = i.Abs() },
 		func(i *sdk.Int) { _ = i.IsZero() },
 		func(i *sdk.Int) { _ = i.Sign() },
 		func(i *sdk.Int) { _ = i.Equal(randint()) },

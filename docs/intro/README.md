@@ -13,4 +13,4 @@ This folder contains introduction material on the Cosmos SDK.
 3. [Architecture of an SDK Application](./sdk-app-architecture.md)
 4. [Cosmos SDK Design Overview](./sdk-design.md)
 
-After reading the introduction material, head over to the [basics](../basics/README.md) to learn more. 
+After reading the introduction material, head over to the [basics](../basics/README.md) to learn more.

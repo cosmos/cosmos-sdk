@@ -10,16 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 )
 
 const (
-	flagMultisig  = "multisig"
-	flagOverwrite = "overwrite"
-	flagSigOnly   = "signature-only"
-	flagAmino     = "amino"
+	flagMultisig        = "multisig"
+	flagOverwrite       = "overwrite"
+	flagSigOnly         = "signature-only"
+	flagAmino           = "amino"
+	flagNoAutoIncrement = "no-auto-increment"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -113,9 +113,6 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			} else {
-				if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-					txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-				}
 				err = authclient.SignTxWithSignerAddress(
 					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
 			}
@@ -136,14 +133,13 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		return scanner.Err()
+		return scanner.UnmarshalErr()
 	}
 }
 
 func setOutputFile(cmd *cobra.Command) (func(), error) {
 	outputDoc, _ := cmd.Flags().GetString(flags.FlagOutputDocument)
 	if outputDoc == "" {
-		cmd.SetOut(cmd.OutOrStdout())
 		return func() {}, nil
 	}
 
@@ -203,21 +199,20 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 }
 
 func makeSignCmd() func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		clientCtx, err := client.GetClientTxContext(cmd)
+	return func(cmd *cobra.Command, args []string) (err error) {
+		var clientCtx client.Context
+
+		clientCtx, err = client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
 		f := cmd.Flags()
-		txFactory := tx.NewFactoryCLI(clientCtx, f)
 
 		clientCtx, txF, newTx, err := readTxAndInitContexts(clientCtx, cmd, args[0])
 		if err != nil {
 			return err
 		}
-		if txF.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
-			txF = txF.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-		}
+
 		txCfg := clientCtx.TxConfig
 		txBuilder, err := txCfg.WrapTxBuilder(newTx)
 		if err != nil {
@@ -227,7 +222,7 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
 		multisigAddrStr, _ := cmd.Flags().GetString(flagMultisig)
 		from, _ := cmd.Flags().GetString(flags.FlagFrom)
-		_, fromName, _, err := client.GetFromFields(txFactory.Keybase(), from, clientCtx.GenerateOnly)
+		_, fromName, _, err := client.GetFromFields(txF.Keybase(), from, clientCtx.GenerateOnly)
 		if err != nil {
 			return fmt.Errorf("error getting account from keybase: %w", err)
 		}

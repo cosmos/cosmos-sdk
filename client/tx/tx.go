@@ -2,11 +2,13 @@ package tx
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 
+	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 // GenerateOrBroadcastTxCLI will either generate and print and unsigned transaction
@@ -33,6 +34,16 @@ func GenerateOrBroadcastTxCLI(clientCtx client.Context, flagSet *pflag.FlagSet, 
 // GenerateOrBroadcastTxWithFactory will either generate and print and unsigned transaction
 // or sign it and broadcast it returning an error upon failure.
 func GenerateOrBroadcastTxWithFactory(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
+	// Validate all msgs before generating or broadcasting the tx.
+	// We were calling ValidateBasic separately in each CLI handler before.
+	// Right now, we're factorizing that call inside this function.
+	// ref: https://github.com/cosmos/cosmos-sdk/pull/9236#discussion_r623803504
+	for _, msg := range msgs {
+		if err := msg.ValidateBasic(); err != nil {
+			return err
+		}
+	}
+
 	if clientCtx.GenerateOnly {
 		return GenerateTx(clientCtx, txf, msgs...)
 	}
@@ -50,7 +61,7 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 			return errors.New("cannot estimate gas in offline mode")
 		}
 
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -76,13 +87,13 @@ func GenerateTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // given set of messages. It will also simulate gas requirements if necessary.
 // It will return an error upon failure.
 func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
-	txf, err := PrepareFactory(clientCtx, txf)
+	txf, err := prepareFactory(clientCtx, txf)
 	if err != nil {
 		return err
 	}
 
 	if txf.SimulateAndExecute() || clientCtx.Simulate {
-		_, adjusted, err := CalculateGas(clientCtx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if err != nil {
 			return err
 		}
@@ -142,8 +153,9 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
 // Note that this function returns the legacy StdTx Amino JSON format for compatibility
 // with legacy clients.
+// Deprecated: We are removing Amino soon.
 func WriteGeneratedTxResponse(
-	ctx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
+	clientCtx client.Context, w http.ResponseWriter, br rest.BaseReq, msgs ...sdk.Msg,
 ) {
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, flags.DefaultGasAdjustment)
 	if !ok {
@@ -163,7 +175,7 @@ func WriteGeneratedTxResponse(
 		WithMemo(br.Memo).
 		WithChainID(br.ChainID).
 		WithSimulateAndExecute(br.Simulate).
-		WithTxConfig(ctx.TxConfig).
+		WithTxConfig(clientCtx.TxConfig).
 		WithTimeoutHeight(br.TimeoutHeight)
 
 	if br.Simulate || gasSetting.Simulate {
@@ -172,7 +184,7 @@ func WriteGeneratedTxResponse(
 			return
 		}
 
-		_, adjusted, err := CalculateGas(ctx.QueryWithData, txf, msgs...)
+		_, adjusted, err := CalculateGas(clientCtx, txf, msgs...)
 		if rest.CheckInternalServerError(w, err) {
 			return
 		}
@@ -180,7 +192,7 @@ func WriteGeneratedTxResponse(
 		txf = txf.WithGas(adjusted)
 
 		if br.Simulate {
-			rest.WriteSimulationResponse(w, ctx.LegacyAmino, txf.Gas())
+			rest.WriteSimulationResponse(w, clientCtx.LegacyAmino, txf.Gas())
 			return
 		}
 	}
@@ -190,12 +202,12 @@ func WriteGeneratedTxResponse(
 		return
 	}
 
-	stdTx, err := ConvertTxToStdTx(ctx.LegacyAmino, tx.GetTx())
+	stdTx, err := ConvertTxToStdTx(clientCtx.LegacyAmino, tx.GetTx())
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
 
-	output, err := ctx.LegacyAmino.MarshalJSON(stdTx)
+	output, err := clientCtx.LegacyAmino.MarshalJSON(stdTx)
 	if rest.CheckInternalServerError(w, err) {
 		return
 	}
@@ -268,46 +280,35 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 		return nil, err
 	}
 
-	protoProvider, ok := txb.(authtx.ProtoTxProvider)
-	if !ok {
-		return nil, fmt.Errorf("cannot simulate amino tx")
-	}
-	simReq := tx.SimulateRequest{Tx: protoProvider.GetProtoTx()}
-
-	return simReq.Marshal()
+	return txf.txConfig.TxEncoder()(txb.GetTx())
 }
 
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(
-	queryFunc func(string, []byte) ([]byte, int64, error), txf Factory, msgs ...sdk.Msg,
-) (tx.SimulateResponse, uint64, error) {
+	clientCtx gogogrpc.ClientConn, txf Factory, msgs ...sdk.Msg,
+) (*tx.SimulateResponse, uint64, error) {
 	txBytes, err := BuildSimTx(txf, msgs...)
 	if err != nil {
-		return tx.SimulateResponse{}, 0, err
+		return nil, 0, err
 	}
 
-	// TODO This should use the generated tx service Client.
-	// https://github.com/cosmos/cosmos-sdk/issues/7726
-	bz, _, err := queryFunc("/cosmos.tx.v1beta1.Service/Simulate", txBytes)
+	txSvcClient := tx.NewServiceClient(clientCtx)
+	simRes, err := txSvcClient.Simulate(context.Background(), &tx.SimulateRequest{
+		TxBytes: txBytes,
+	})
 	if err != nil {
-		return tx.SimulateResponse{}, 0, err
-	}
-
-	var simRes tx.SimulateResponse
-
-	if err := simRes.Unmarshal(bz); err != nil {
-		return tx.SimulateResponse{}, 0, err
+		return nil, 0, err
 	}
 
 	return simRes, uint64(txf.GasAdjustment() * float64(simRes.GasInfo.GasUsed)), nil
 }
 
-// PrepareFactory ensures the account defined by ctx.GetFromAddress() exists and
+// prepareFactory ensures the account defined by ctx.GetFromAddress() exists and
 // if the account number and/or the account sequence number are zero (not set),
 // they will be queried for and set on the provided Factory. A new Factory with
 // the updated fields will be returned.
-func PrepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
+func prepareFactory(clientCtx client.Context, txf Factory) (Factory, error) {
 	from := clientCtx.GetFromAddress()
 
 	if err := txf.accountRetriever.EnsureExists(clientCtx, from); err != nil {

@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -25,10 +26,30 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	}
 
 	cmd := exec.Command(bin, args...)
+	outpipe, err := cmd.StdoutPipe()
 	fw, err := newUpgradeFileWatcher(cfg.UpgradeInfoFilePath())
 	if err != nil {
 		return false, err
 	}
+
+	errpipe, err := cmd.StderrPipe()
+	if err != nil {
+		return false, err
+	}
+
+	scanOut := bufio.NewScanner(io.TeeReader(outpipe, stdout))
+	scanErr := bufio.NewScanner(io.TeeReader(errpipe, stderr))
+	// set scanner's buffer size to cfg.LogBufferSize, and ensure larger than bufio.MaxScanTokenSize otherwise fallback to bufio.MaxScanTokenSize
+	var maxCapacity int
+	if cfg.LogBufferSize < bufio.MaxScanTokenSize {
+		maxCapacity = bufio.MaxScanTokenSize
+	} else {
+		maxCapacity = cfg.LogBufferSize
+	}
+	bufOut := make([]byte, maxCapacity)
+	bufErr := make([]byte, maxCapacity)
+	scanOut.Buffer(bufOut, maxCapacity)
+	scanErr.Buffer(bufErr, maxCapacity)
 
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s: %w", bin, strings.Join(args, " "), err)

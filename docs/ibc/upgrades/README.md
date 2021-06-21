@@ -6,7 +6,7 @@ parent:
 
 ### Upgrading IBC Chains Overview
 
-This directory contains information on how to upgrade an IBC chain without breaking counterparty clients and connections. 
+This directory contains information on how to upgrade an IBC chain without breaking counterparty clients and connections.
 
 IBC-connnected chains must be able to upgrade without breaking connections to other chains. Otherwise there would be a massive disincentive towards upgrading and disrupting high-value IBC connections, thus preventing chains in the IBC ecosystem from evolving and improving. Many chain upgrades may be irrelevant to IBC, however some upgrades could potentially break counterparty clients if not handled correctly. Thus, any IBC chain that wishes to perform a IBC-client-breaking upgrade must perform an IBC upgrade in order to allow counterparty clients to securely upgrade to the new light client.
 

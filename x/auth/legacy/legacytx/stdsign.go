@@ -2,6 +2,9 @@ package legacytx
 
 import (
 	"encoding/json"
+	"fmt"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -13,8 +16,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-// Interface implementation checks
-var _ codectypes.UnpackInterfacesMessage = StdTx{}
+// LegacyMsg defines the old interface a message must fulfill, containing
+// Amino signing method and legacy router info.
+// Deprecated: Please use `Msg` instead.
+type LegacyMsg interface {
+	sdk.Msg
+
+	// Get the canonical byte representation of the Msg.
+	GetSignBytes() []byte
+
+	// Return the message type.
+	// Must be alphanumeric or empty.
+	Route() string
+
+	// Returns a human-readable string for the message, intended for utilization
+	// within tags
+	Type() string
+}
 
 // StdSignDoc is replay-prevention structure.
 // It includes the result of msg.GetSignBytes(),
@@ -35,7 +53,12 @@ type StdSignDoc struct {
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
-		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
+		legacyMsg, ok := msg.(LegacyMsg)
+		if !ok {
+			panic(fmt.Errorf("expected %T when using amino JSON", (*LegacyMsg)(nil)))
+		}
+
+		msgsBytes = append(msgsBytes, json.RawMessage(legacyMsg.GetSignBytes()))
 	}
 
 	bz, err := legacy.Cdc.MarshalJSON(StdSignDoc{
@@ -58,6 +81,47 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 type StdSignature struct {
 	cryptotypes.PubKey `json:"pub_key" yaml:"pub_key"` // optional
 	Signature          []byte                          `json:"signature" yaml:"signature"`
+}
+
+// Deprecated
+func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
+	return StdSignature{PubKey: pk, Signature: sig}
+}
+
+// GetSignature returns the raw signature bytes.
+func (ss StdSignature) GetSignature() []byte {
+	return ss.Signature
+}
+
+// GetPubKey returns the public key of a signature as a cryptotypes.PubKey using the
+// Amino codec.
+func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
+	return ss.PubKey
+}
+
+// MarshalYAML returns the YAML representation of the signature.
+func (ss StdSignature) MarshalYAML() (interface{}, error) {
+	pk := ""
+	if ss.PubKey != nil {
+		pk = ss.PubKey.String()
+	}
+
+	bz, err := yaml.Marshal(struct {
+		PubKey    string
+		Signature string
+	}{
+		pk,
+		fmt.Sprintf("%X", ss.Signature),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return string(bz), err
+}
+
+func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	return codectypes.UnpackInterfaces(ss.PubKey, unpacker)
 }
 
 // StdSignatureToSignatureV2 converts a StdSignature to a SignatureV2
@@ -83,7 +147,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 		}, nil
 	}
 	var multiSig multisig.AminoMultisignature
-	err := cdc.UnmarshalBinaryBare(sig, &multiSig)
+	err := cdc.Unmarshal(sig, &multiSig)
 	if err != nil {
 		return nil, err
 	}

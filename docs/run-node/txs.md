@@ -305,15 +305,13 @@ func simulateTx() error {
     // Simulate the tx via gRPC. We create a new client for the Protobuf Tx
     // service.
     txClient := tx.NewServiceClient(grpcConn)
-    // We then call the BroadcastTx method on this client.
-    protoTx := txBuilderToProtoTx(txBuilder)
-    if err != nil {
-        return err
-    }
+    txBytes := /* Fill in with your signed transaction bytes. */
+
+    // We then call the Simulate method on this client.
     grpcRes, err := txClient.Simulate(
         context.Background(),
         &tx.SimulateRequest{
-            Tx: protoTx,
+            TxBytes: txBytes,
         },
     )
     if err != nil {
@@ -323,16 +321,6 @@ func simulateTx() error {
     fmt.Println(grpcRes.GasInfo) // Prints estimated gas used.
 
     return nil
-}
-
-// txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
-func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
-	protoProvider, ok := txBuilder.(authtx.ProtoTxProvider)
-	if !ok {
-		return nil, fmt.Errorf("expected proto tx builder, got %T", txBuilder)
-	}
-
-	return protoProvider.GetProtoTx(), nil
 }
 ```
 

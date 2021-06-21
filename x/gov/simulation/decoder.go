@@ -12,17 +12,17 @@ import (
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's
 // Value to the corresponding gov type.
-func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
+func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.ProposalsKeyPrefix):
 			var proposalA types.Proposal
-			err := cdc.UnmarshalBinaryBare(kvA.Value, &proposalA)
+			err := cdc.Unmarshal(kvA.Value, &proposalA)
 			if err != nil {
 				panic(err)
 			}
 			var proposalB types.Proposal
-			err = cdc.UnmarshalBinaryBare(kvA.Value, &proposalB)
+			err = cdc.Unmarshal(kvB.Value, &proposalB)
 			if err != nil {
 				panic(err)
 			}
@@ -37,14 +37,14 @@ func NewDecodeStore(cdc codec.Marshaler) func(kvA, kvB kv.Pair) string {
 
 		case bytes.Equal(kvA.Key[:1], types.DepositsKeyPrefix):
 			var depositA, depositB types.Deposit
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &depositA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &depositB)
+			cdc.MustUnmarshal(kvA.Value, &depositA)
+			cdc.MustUnmarshal(kvB.Value, &depositB)
 			return fmt.Sprintf("%v\n%v", depositA, depositB)
 
 		case bytes.Equal(kvA.Key[:1], types.VotesKeyPrefix):
 			var voteA, voteB types.Vote
-			cdc.MustUnmarshalBinaryBare(kvA.Value, &voteA)
-			cdc.MustUnmarshalBinaryBare(kvB.Value, &voteB)
+			cdc.MustUnmarshal(kvA.Value, &voteA)
+			cdc.MustUnmarshal(kvB.Value, &voteB)
 			return fmt.Sprintf("%v\n%v", voteA, voteB)
 
 		default:

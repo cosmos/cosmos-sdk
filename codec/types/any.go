@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	"github.com/gogo/protobuf/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -62,20 +64,17 @@ func NewAnyWithValue(v proto.Message) (*Any, error) {
 	if v == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrPackAny, "Expecting non nil value to create a new Any")
 	}
-	return NewAnyWithCustomTypeURL(v, "/"+proto.MessageName(v))
-}
 
-// NewAnyWithCustomTypeURL same as NewAnyWithValue, but sets a custom type url, instead
-// using the one from proto.Message.
-// NOTE: This functions should be only used for types with additional logic bundled
-// into the protobuf Any serialization. For simple marshaling you should use NewAnyWithValue.
-func NewAnyWithCustomTypeURL(v proto.Message, typeURL string) (*Any, error) {
 	bz, err := proto.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Any{
-		TypeUrl:     typeURL,
+		TypeUrl:     "/" + proto.MessageName(v),
 		Value:       bz,
 		cachedValue: v,
-	}, err
+	}, nil
 }
 
 // UnsafePackAny packs the value x in the Any and instead of returning the error
@@ -112,4 +111,27 @@ func (any *Any) pack(x proto.Message) error {
 // GetCachedValue returns the cached value from the Any if present
 func (any *Any) GetCachedValue() interface{} {
 	return any.cachedValue
+}
+
+// GoString returns a string representing valid go code to reproduce the current state of
+// the struct.
+func (any *Any) GoString() string {
+	if any == nil {
+		return "nil"
+	}
+	extra := ""
+	if any.XXX_unrecognized != nil {
+		extra = fmt.Sprintf(",\n  XXX_unrecognized: %#v,\n", any.XXX_unrecognized)
+	}
+	return fmt.Sprintf("&Any{TypeUrl: %#v,\n  Value: %#v%s\n}",
+		any.TypeUrl, any.Value, extra)
+}
+
+// String implements the stringer interface
+func (any *Any) String() string {
+	if any == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("&Any{TypeUrl:%v,Value:%v,XXX_unrecognized:%v}",
+		any.TypeUrl, any.Value, any.XXX_unrecognized)
 }

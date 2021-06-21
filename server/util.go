@@ -229,8 +229,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		if customAppTemplate != "" {
 			config.SetConfigTemplate(customAppTemplate)
 
-			err = rootViper.Unmarshal(customConfig)
-			if err != nil {
+			if err = rootViper.Unmarshal(customConfig); err != nil {
 				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
 			}
 

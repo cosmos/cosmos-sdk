@@ -224,6 +224,8 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 	return conf, err
 }
 
+// SetConfigTemplate sets the custom app config template for
+// the application
 func SetConfigTemplate(customTemplate string) {
 	var err error
 

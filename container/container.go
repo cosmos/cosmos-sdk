@@ -20,3 +20,11 @@ func Compose(invoker interface{}, opts ...Option) error {
 
 	return ctr.container.Invoke(invoker)
 }
+
+type In struct {
+	dig.In
+}
+
+type Out struct {
+	dig.Out
+}

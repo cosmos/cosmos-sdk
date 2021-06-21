@@ -110,7 +110,7 @@ func (s registrar) Provide(fn interface{}) error {
 	return s.ctr.Provide(fn)
 }
 
-func ProvideModules(modules map[string]*codecTypes.Any) container.Option {
+func ComposeModules(modules map[string]*codecTypes.Any) container.Option {
 	typeRegistry := codecTypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(typeRegistry)
 	amino := codec.NewLegacyAmino()

@@ -1,6 +1,7 @@
 package module
 
 import (
+	"github.com/spf13/cobra"
 	"go.uber.org/dig"
 
 	"github.com/cosmos/cosmos-sdk/app/compat"
@@ -24,8 +25,8 @@ func (m *Module) RegisterTypes(registry types.InterfaceRegistry) {
 	govtypes.RegisterInterfaces(registry)
 }
 
-type Inputs struct {
-	dig.In
+type inputs struct {
+	container.In
 
 	Codec            codec.Codec
 	KeyProvider      app.KVStoreKeyProvider
@@ -38,32 +39,48 @@ type Inputs struct {
 	StakingKeeper govtypes.StakingKeeper
 }
 
-type Outputs struct {
-	dig.Out
+type outputs struct {
+	container.Out
 
 	Handler app.Handler `group:"tx"`
 }
 
+type cliCommands struct {
+	dig.Out
+
+	TxCmd    *cobra.Command `group:"tx"`
+	QueryCmd *cobra.Command `group:"query"`
+}
+
 func (m *Module) Provision(key app.ModuleKey) container.Option {
-	return container.Provide(func(inputs Inputs) Outputs {
-		router := govtypes.NewRouter()
-		for _, route := range inputs.Routes {
-			router.AddRoute(route.Path, route.Handler)
-		}
-		k := govkeeper.NewKeeper(
-			inputs.Codec,
-			inputs.KeyProvider(key),
-			inputs.SubspaceProvider(key),
-			inputs.AuthKeeper,
-			inputs.BankKeeper,
-			inputs.StakingKeeper,
-			router,
-		)
+	return container.Provide(
+		func(inputs inputs) outputs {
+			router := govtypes.NewRouter()
+			for _, route := range inputs.Routes {
+				router.AddRoute(route.Path, route.Handler)
+			}
+			k := govkeeper.NewKeeper(
+				inputs.Codec,
+				inputs.KeyProvider(key),
+				inputs.SubspaceProvider(key),
+				inputs.AuthKeeper,
+				inputs.BankKeeper,
+				inputs.StakingKeeper,
+				router,
+			)
 
-		am := gov.NewAppModule(inputs.Codec, k, inputs.AuthKeeper, inputs.BankKeeper)
+			am := gov.NewAppModule(inputs.Codec, k, inputs.AuthKeeper, inputs.BankKeeper)
 
-		return Outputs{
-			Handler: compat.AppModuleHandler(key.ID(), am),
-		}
-	})
+			return outputs{
+				Handler: compat.AppModuleHandler(key.ID(), am),
+			}
+		},
+		func() cliCommands {
+			amb := gov.AppModuleBasic{}
+			return cliCommands{
+				TxCmd:    amb.GetTxCmd(),
+				QueryCmd: amb.GetQueryCmd(),
+			}
+		},
+	)
 }

@@ -23,7 +23,7 @@ var (
 	_ app.TypeProvider = Module{}
 )
 
-type Inputs struct {
+type inputs struct {
 	dig.In
 
 	Codec            codec.Codec
@@ -31,7 +31,7 @@ type Inputs struct {
 	SubspaceProvider types2.SubspaceProvider
 }
 
-type Outputs struct {
+type outputs struct {
 	dig.Out
 
 	Handler    app.Handler `group:"tx"`
@@ -39,7 +39,7 @@ type Outputs struct {
 	Keeper     types.Keeper `security-role:"admin"`
 }
 
-type CLICommands struct {
+type cliCommands struct {
 	dig.Out
 
 	TxCmd    *cobra.Command   `group:"tx"`
@@ -54,9 +54,9 @@ func (Module) ProvideAccountRetriever() client.AccountRetriever {
 	return types.AccountRetriever{}
 }
 
-func (Module) ProvideCLICommands() CLICommands {
+func (Module) ProvideCLICommands() cliCommands {
 	am := auth.AppModuleBasic{}
-	return CLICommands{
+	return cliCommands{
 		TxCmd: am.GetTxCmd(),
 		QueryCmd: []*cobra.Command{
 			am.GetQueryCmd(),
@@ -65,12 +65,12 @@ func (Module) ProvideCLICommands() CLICommands {
 	}
 }
 
-func (m Module) ProvideAppHandler(key app.ModuleKey, inputs Inputs) (Outputs, error) {
+func (m Module) ProvideAppHandler(key app.ModuleKey, inputs inputs) (outputs, error) {
 	var accCtr types.AccountConstructor
 	if m.AccountConstructor != nil {
 		err := inputs.Codec.UnpackAny(m.AccountConstructor, &accCtr)
 		if err != nil {
-			return Outputs{}, err
+			return outputs{}, err
 		}
 	} else {
 		accCtr = DefaultAccountConstructor{}
@@ -85,7 +85,7 @@ func (m Module) ProvideAppHandler(key app.ModuleKey, inputs Inputs) (Outputs, er
 	if m.RandomGenesisAccountsProvider != nil {
 		err := inputs.Codec.UnpackAny(m.RandomGenesisAccountsProvider, &randomGenesisAccountsProvider)
 		if err != nil {
-			return Outputs{}, err
+			return outputs{}, err
 		}
 	} else {
 		randomGenesisAccountsProvider = DefaultRandomGenesisAccountsProvider{}
@@ -104,7 +104,7 @@ func (m Module) ProvideAppHandler(key app.ModuleKey, inputs Inputs) (Outputs, er
 		return randomGenesisAccountsProvider.RandomGenesisAccounts(simState)
 	})
 
-	return Outputs{
+	return outputs{
 		ViewKeeper: viewOnlyKeeper{keeper},
 		Keeper:     keeper,
 		Handler:    compat.AppModuleHandler(key.ID(), appMod),

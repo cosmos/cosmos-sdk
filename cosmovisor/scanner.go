@@ -2,84 +2,98 @@ package cosmovisor
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/fsnotify/fsnotify"
+	"time"
 )
 
 // UpgradeInfo is the update details created by `x/upgrade/keeper.DumpUpgradeInfoToDisk`.
 type UpgradeInfo struct {
-	Name string
-	Info string
+	Name   string
+	Info   string
+	Height uint
 }
 
 type fileWatcher struct {
+	// full path to a watched file
 	filename string
-	dirname  string
+	interval time.Duration
+
+	currentInfo UpgradeInfo
+	lastModTime time.Time
+	cancel      chan bool
+	ticker      *time.Ticker
+	needsUpdate bool
 }
 
-func newUpgradeFileWatcher(filename string) (fileWatcher, error) {
+func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatcher, error) {
 	if filename == "" {
-		return fileWatcher{}, nil
+		return nil, errors.New("filename undefined")
 	}
 	filenameAbs, err := filepath.Abs(filename)
 	if err != nil {
-		return fileWatcher{},
+		return nil,
 			fmt.Errorf("wrong path, %s must be a valid file path, [%w]", filename, err)
 	}
 	dirname := filepath.Dir(filename)
-	fw := fileWatcher{filenameAbs, dirname}
-
 	info, err := os.Stat(dirname)
 	if err != nil || !info.IsDir() {
-		return fw, fmt.Errorf("wrong path, %s must be an existing directory, [%w]", dirname, err)
+		return nil, fmt.Errorf("wrong path, %s must be an existing directory, [%w]", dirname, err)
 	}
-	return fw, nil
+
+	return &fileWatcher{filenameAbs, interval, UpgradeInfo{}, time.Time{}, make(chan bool), time.NewTicker(interval), false}, nil
 }
 
-func (fw fileWatcher) MonitorUpdate(res *WaitResult) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		res.SetError(fmt.Errorf("can't create file watcher: %w", err))
-		return
-	}
-	defer watcher.Close()
+func (fw *fileWatcher) Stop() {
+	close(fw.cancel)
+}
 
-	if err = watcher.Add(fw.dirname); err != nil {
-		res.SetError(fmt.Errorf("can't add directory '%s', to the file watcher: %w", fw.dirname, err))
-		return
-	}
+func (fw *fileWatcher) MonitorUpdate() <-chan struct{} {
+	fw.ticker.Reset(fw.interval)
+	done := make(chan struct{})
+	fw.cancel = make(chan bool)
+	fw.needsUpdate = false
 
-	// we don't stop the process on error - the blockchain node shouldn't be killed if the
-	// watcher stopped working correctly.
-	for {
-		select {
-		case event, ok := <-watcher.Events:
-			if !ok {
+	go func() {
+		for {
+			select {
+			case <-fw.ticker.C:
+				if fw.CheckUpdate() {
+					done <- struct{}{}
+				}
+			case <-fw.cancel:
 				return
 			}
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				fn, err := filepath.Abs(event.Name)
-				if err != nil {
-					log.Printf("ERROR: file watcher can't expand a filename '%s', %v", event.Name, err)
-				} else if fw.filename == fn {
-					ui, err := parseUpgradeInfoFile(fn)
-					if err != nil {
-						log.Printf("ERROR: file watcher can't expand a filename '%s', %v", event.Name, err)
-					} else {
-						res.SetUpgrade(&ui)
-					}
-				}
-			}
-		case err, ok := <-watcher.Errors:
-			if ok {
-				log.Println("ERROR: file watcher can't monitor correctly for the update", err)
-			}
 		}
+	}()
+	return done
+}
+
+// CheckUpdate reads update plan from file and checks if there is a new update request
+func (fw *fileWatcher) CheckUpdate() bool {
+	if fw.needsUpdate {
+		return true
 	}
+	stat, err := os.Stat(fw.filename)
+	if err != nil {
+		return false
+	}
+	if !stat.ModTime().After(fw.lastModTime) {
+		return false
+	}
+	ui, err := parseUpgradeInfoFile(fw.filename)
+	if err != nil {
+		// TODO: print error!
+		return false
+	}
+	if ui.Height > fw.currentInfo.Height {
+		fw.currentInfo = ui
+		fw.needsUpdate = true
+		return true
+	}
+	return false
 }
 
 func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {

@@ -1,15 +1,12 @@
 package cosmovisor
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
-
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"time"
 )
 
 const (
@@ -19,14 +16,17 @@ const (
 	currentLink = "current"
 )
 
+// should be the same as x/upgrade/types.UpgradeInfoFilename
+const defaultFilename = "upgrade-info.json"
+
 // Config is the information passed in to control the daemon
 type Config struct {
 	Home                  string
 	Name                  string
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
-	LogBufferSize         int
-	upgradeInfoFile       string
+	UpgradeInfoFilename   string
+	PoolInterval          time.Duration
 }
 
 // Root returns the root directory where all info lives
@@ -53,13 +53,10 @@ func (cfg *Config) UpgradeDir(upgradeName string) string {
 // UpgradeInfoFile is the expecte filenmame used in `x/upgrade/keeper` for dumping
 // upgrade info.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	if cfg.upgradeInfoFile != "" {
-		return cfg.upgradeInfoFile
+	if cfg.UpgradeInfoFilename != "" {
+		return cfg.UpgradeInfoFilename
 	}
-	// TODO: let's use SDK. But this causes go mod errors:
-	//     github.com/gogo/protobuf@v1.3.3: reading https://proxy.golang.org/github.com/gogo/protobuf/@v/v1.3.3.mod: 410 Gone
-	// return filepath.Join(cfg.Home, "data", keeper.UpgradeInfoFileName)
-	return filepath.Join(cfg.Home, "data", types.UpgradeInfoFilename)
+	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
 
 // Symlink to genesis
@@ -117,20 +114,13 @@ func GetConfigFromEnv() (*Config, error) {
 		cfg.RestartAfterUpgrade = true
 	}
 
-	logBufferSizeStr := os.Getenv("DAEMON_LOG_BUFFER_SIZE")
-	if logBufferSizeStr != "" {
-		logBufferSize, err := strconv.Atoi(logBufferSizeStr)
-		if err != nil {
-			return nil, err
-		}
-		cfg.LogBufferSize = logBufferSize * 1024
-	} else {
-		cfg.LogBufferSize = bufio.MaxScanTokenSize
-	}
+	cfg.UpgradeInfoFilename = os.Getenv("DAEMON_UPDATE_INFO_FILE")
 
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
+	// TODO - use env!
+	cfg.PoolInterval = time.Duration(500 * time.Millisecond)
 
 	return cfg, nil
 }

@@ -20,11 +20,15 @@ func Run(args []string) error {
 	if err != nil {
 		return err
 	}
+	luncher, err := cosmovisor.NewLauncher(cfg)
+	if err != nil {
+		return err
+	}
 
-	doUpgrade, err := cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
+	doUpgrade, err := luncher.Run(args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		doUpgrade, err = cosmovisor.LaunchProcess(cfg, args, os.Stdout, os.Stderr)
+		doUpgrade, err = luncher.Run(args, os.Stdout, os.Stderr)
 	}
 	return err
 }

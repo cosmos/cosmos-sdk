@@ -29,11 +29,13 @@ func (s *processTestSuite) TestLaunchProcess() {
 	var stdout, stderr bytes.Buffer
 	currentBin, err := cfg.CurrentBin()
 	s.Require().NoError(err)
-
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 
+	launcher, err := cosmovisor.NewLauncher(cfg)
+	s.Require().NoError(err)
+
 	args := []string{"foo", "bar", "1234"}
-	doUpgrade, err := cosmovisor.LaunchProcess(cfg, args, &stdout, &stderr)
+	doUpgrade, err := launcher.Run(args, &stdout, &stderr)
 	s.Require().NoError(err)
 	s.Require().True(doUpgrade)
 	s.Require().Equal("", stderr.String())
@@ -47,7 +49,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	args = []string{"second", "run", "--verbose"}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = cosmovisor.LaunchProcess(cfg, args, &stdout, &stderr)
+	doUpgrade, err = launcher.Run(args, &stdout, &stderr)
 	s.Require().NoError(err)
 	s.Require().False(doUpgrade)
 	s.Require().Equal("", stderr.String())
@@ -74,7 +76,11 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 	args := []string{"some", "args"}
-	doUpgrade, err := cosmovisor.LaunchProcess(cfg, args, &stdout, &stderr)
+
+	launcher, err := cosmovisor.NewLauncher(cfg)
+	s.Require().NoError(err)
+
+	doUpgrade, err := launcher.Run(args, &stdout, &stderr)
 	s.Require().NoError(err)
 	s.Require().True(doUpgrade)
 	s.Require().Equal("", stderr.String())
@@ -87,7 +93,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	args = []string{"run", "--fast"}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = cosmovisor.LaunchProcess(cfg, args, &stdout, &stderr)
+	doUpgrade, err = launcher.Run(args, &stdout, &stderr)
 	s.Require().NoError(err)
 	s.Require().True(doUpgrade)
 	s.Require().Equal("", stderr.String())
@@ -101,7 +107,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	args = []string{"end", "--halt"}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = cosmovisor.LaunchProcess(cfg, args, &stdout, &stderr)
+	doUpgrade, err = launcher.Run(args, &stdout, &stderr)
 	s.Require().NoError(err)
 	s.Require().False(doUpgrade)
 	s.Require().Equal("", stderr.String())

@@ -1,6 +1,6 @@
 # Cosmosvisor Quick Start
 
-`cosmovisor` is a small process manager for Cosmos SDK binaries that monitors the governance module via `stdout` for incoming chain upgrade proposals. If it sees a proposal that gets approved, it can be run manually or automatically to download the new code, stop the node, run the migration script, replace the node binary, and then start the node with the new genesis file.
+`cosmovisor` is a small process manager for Cosmos SDK binaries that monitors the governance module via stdout for incoming chain upgrade proposals. If it sees a proposal that gets approved, it can be run manually or automatically to download the new code, stop the node, run the migration script, replace the node binary, and then restart the node with the new genesis file.
 
 ## Installation
 
@@ -12,7 +12,7 @@ go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
 
 ## Command Line Arguments And Environment Variables
 
-All arguments passed to the `cosmovisor` program will be passed to the current daemon binary running as a subprocess. `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor` cannot accept any command line arguments, nor print anything to output (unless it terminates unexpectedly before executing a binary).
+All arguments passed to the `cosmovisor` program will be passed to the current daemon binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor` cannot accept any command line arguments, nor print anything to output (unless it terminates unexpectedly before executing a binary).
 
 `cosmovisor` reads its configuration from environment variables:
 
@@ -92,7 +92,7 @@ This file contained in the link will be retrieved by [go-getter](https://github.
 
 If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can access a canonical url for the new binary, then the `cosmovisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and unpack it into the `upgrades/<name>` folder to be run as if we installed it manually.
 
-Note that for this mechanism to provide strong security guarantees, all URLS should include a sha{256,512} checksum. This ensures that no false binary is run, even if someone hacks the server or hijacks the DNS. `go-getter` will always ensure the downloaded file matches the checksum if it is provided. `go-getter` will also handle unpacking archives into directories (in this case the download link should point to a `zip` file of all data in the `bin` directory).
+Note that for this mechanism to provide strong security guarantees, all URLS should include a SHA 256/512 checksum. This ensures that no false binary is run, even if someone hacks the server or hijacks the DNS. `go-getter` will always ensure the downloaded file matches the checksum if it is provided. `go-getter` will also handle unpacking archives into directories (in this case the download link should point to a `zip` file of all data in the `bin` directory).
 
 To properly create a checksum on linux, you can use the `sha256sum` utility. For example:
 
@@ -169,36 +169,29 @@ Submit a `yes` vote for the upgrade proposal:
 ./build/simd tx gov vote 1 yes --from validator --keyring-backend test --chain-id test -y
 ```
 
-For the sake of this demonstration, we will hardcode a modification in `simapp` to simulate a code change. In `simapp/app.go`, find the line containing the `UpgradeKeeper` initialization:
+For the sake of this demonstration, we will hardcode a modification in `simapp` to simulate a code change. In `simapp/app.go`, find the line containing the `UpgradeKeeper` initialization. It should look like the following:
 
 ```
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
+app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
 ```
 
 After that line, add the following snippet:
 
  ```
-	app.UpgradeKeeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan upgradetypes.Plan) {
-		// Add some coins to a random account
-		addr, err := sdk.AccAddressFromBech32("cosmos18cgkqduwuh253twzmhedesw3l7v3fm37sppt58")
-		if err != nil {
-			panic(err)
-		}
-		err = app.BankKeeper.AddCoins(ctx, addr, sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(345600000)}})
-		if err != nil {
-			panic(err)
-		}
-	})
+app.UpgradeKeeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan upgradetypes.Plan) {
+	// Add some coins to a random account
+	addr, err := sdk.AccAddressFromBech32("cosmos18cgkqduwuh253twzmhedesw3l7v3fm37sppt58")
+	if err != nil {
+		panic(err)
+	}
+	err = app.BankKeeper.AddCoins(ctx, addr, sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(345600000)}})
+	if err != nil {
+		panic(err)
+	}
+})
 ```
 
-Set the required environment variables for the new window:
-
-```
-export DAEMON_NAME=simd
-export DAEMON_HOME=$HOME/.simapp
-```
-
-Now recompile a new binary and make a copy of it in `$DAEMON_HOME/cosmosvisor/upgrades/test1/bin`:
+Now recompile a new binary and make a copy of it in `$DAEMON_HOME/cosmosvisor/upgrades/test1/bin` (you may need to run `export DAEMON_HOME=$HOME/.simapp` again if you are using a new window):
 
 ```
 make build

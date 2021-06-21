@@ -104,7 +104,7 @@ func TestDeposits(t *testing.T) {
 	// Test delete deposits
 	_, err = app.GovKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 	require.NoError(t, err)
-	app.GovKeeper.DeleteAndBurnDeposits(ctx, proposalID)
+	app.GovKeeper.DeleteDeposits(ctx, proposalID)
 	deposits = app.GovKeeper.GetDeposits(ctx, proposalID)
 	require.Len(t, deposits, 0)
 }

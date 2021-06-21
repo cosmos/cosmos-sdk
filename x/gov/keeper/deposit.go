@@ -53,8 +53,8 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) (deposits t
 	return
 }
 
-// DeleteAndBurnDeposits deletes and burns all the deposits on a specific proposal without refunding them
-func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
+// DeleteDeposits deletes all the deposits on a specific proposal without refunding them
+func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
@@ -68,18 +68,6 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 			panic(err)
 		}
 		store.Delete(types.DepositKey(proposalID, depositor))
-		return false
-	})
-}
-
-// BurnDeposits burns all the deposits on a specific proposal
-func (keeper Keeper) BurnDeposits(ctx sdk.Context, proposalID uint64) {
-	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
-		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
-		if err != nil {
-			panic(err)
-		}
-
 		return false
 	})
 }
@@ -180,7 +168,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // RefundDeposits refunds and deletes all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
+	// store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
 		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
@@ -193,7 +181,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 			panic(err)
 		}
 
-		store.Delete(types.DepositKey(proposalID, depositor))
+		// store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
 }

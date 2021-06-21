@@ -40,7 +40,7 @@ func (s *DepositTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	deposits := sdk.Coins{
-		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))),
+		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(120))),
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens),
@@ -80,7 +80,7 @@ func (s *DepositTestSuite) TearDownSuite() {
 func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String()
+	initialDeposit := s.deposits[0].String()
 	proposalID := s.proposalIDs[0]
 
 	commonArgs := []string{
@@ -89,11 +89,14 @@ func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 	}
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("acc", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 	acc := sdk.AccAddress(info.GetPubKey().Address())
 
-	sendAmount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150))
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	sendAmount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))
 	_, err = testutil.MsgSendExec(val.ClientCtx, val.Address, acc, sendAmount, commonArgs...)
 	s.Require().NoError(err)
 

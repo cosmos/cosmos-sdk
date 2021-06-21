@@ -36,14 +36,14 @@ func (s *DepositTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	deposits := sdk.Coins{
-		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(120))),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens),
 	}
 	s.deposits = deposits
 
 	// create 4 proposals for testing
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(deposits); i++ {
 		var exactArgs []string
 		id := i + 1
 
@@ -74,9 +74,8 @@ func (s *DepositTestSuite) TearDownSuite() {
 
 func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	val := s.network.Validators[0]
-	// val2 := s.network.Validators[1]
 	clientCtx := val.ClientCtx
-	proposalID := s.proposalIDs[1]
+	proposalID := s.proposalIDs[0]
 
 	// deposit amount
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
@@ -84,7 +83,6 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	s.Require().NoError(err)
 
 	// waiting for voting period to end
-	// time.Sleep(20 * time.Second)
 	_, err = s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 
@@ -104,7 +102,7 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	proposalID := s.proposalIDs[2]
+	proposalID := s.proposalIDs[1]
 
 	// query proposal
 	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
@@ -124,8 +122,8 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	initialDeposit := s.deposits[3]
-	proposalID := s.proposalIDs[3]
+	initialDeposit := s.deposits[2]
+	proposalID := s.proposalIDs[2]
 
 	// query deposits
 	var deposits types.QueryDepositsResponse
@@ -144,8 +142,6 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 
 	_, err = s.network.WaitForHeight(3)
 	s.Require().NoError(err)
-
-	// time.Sleep(20 * time.Second)
 
 	args = []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 	cmd = cli.GetCmdQueryProposal()

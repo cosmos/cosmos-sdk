@@ -4,13 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/suite"
@@ -41,7 +37,6 @@ func (s *DepositTestSuite) SetupSuite() {
 
 	deposits := sdk.Coins{
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(120))),
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens),
 	}
@@ -75,55 +70,6 @@ func (s *DepositTestSuite) SetupSuite() {
 func (s *DepositTestSuite) TearDownSuite() {
 	s.T().Log("tearing down test suite")
 	s.network.Cleanup()
-}
-
-func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
-	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-	initialDeposit := s.deposits[0].String()
-	proposalID := s.proposalIDs[0]
-
-	commonArgs := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-	}
-
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("acc", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-	acc := sdk.AccAddress(info.GetPubKey().Address())
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	sendAmount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))
-	_, err = testutil.MsgSendExec(val.ClientCtx, val.Address, acc, sendAmount, commonArgs...)
-	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// deposit more amount
-	extraDeposit := sendAmount.Sub(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(50)))
-	_, err = MsgDeposit(clientCtx, acc.String(), proposalID, extraDeposit.String())
-	s.Require().NoError(err)
-
-	// waiting for voting period to end
-	// time.Sleep(20 * time.Second)
-	_, err = s.network.WaitForHeight(3)
-	s.Require().NoError(err)
-
-	// query deposit & verify initial deposit
-	deposit := s.queryDeposit(val, proposalID, false, "")
-	s.Require().NotNil(deposit)
-	s.Require().Equal(deposit.Amount.String(), initialDeposit)
-
-	// query deposits
-	deposits := s.queryDeposits(val, proposalID, false, "")
-	s.Require().NotNil(deposits)
-	s.Require().Len(deposits.Deposits, 2)
-	// verify initial deposit
-	s.Require().Equal(deposits.Deposits[0].Amount.String(), initialDeposit)
 }
 
 func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {

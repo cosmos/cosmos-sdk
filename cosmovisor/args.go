@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -116,12 +117,20 @@ func GetConfigFromEnv() (*Config, error) {
 
 	cfg.UpgradeInfoFilename = os.Getenv("DAEMON_UPDATE_INFO_FILE")
 
+	interval := os.Getenv("DAEMON_POLL_INTERVAL")
+	if interval != "" {
+		i, err := strconv.ParseUint(interval, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		cfg.PoolInterval = time.Millisecond * time.Duration(i)
+	} else {
+		cfg.PoolInterval = time.Duration(300 * time.Millisecond)
+	}
+
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
-	// TODO - use env!
-	cfg.PoolInterval = time.Duration(500 * time.Millisecond)
-
 	return cfg, nil
 }
 

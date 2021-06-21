@@ -19,6 +19,8 @@ binary).
 
 * `DAEMON_HOME` is the location where upgrade binaries should be kept (e.g. `$HOME/.gaiad` or `$HOME/.xrnd`).
 * `DAEMON_NAME` is the name of the binary itself (eg. `xrnd`, `gaiad`, `simd`, etc).
+* `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling upgrade plan file. Default: 300.
+* `DAEMON_UPGRADE_INFO_FILE` is a full path to the upgrade plan file created by an app. On start, it check if the base directory exists. If the file name is wrong the update request will never be handled. Default: `<DAEMON_HOME>/data/upgrade-info.json`.
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*) if set to `true` will enable auto-downloading of new binaries
 (for security reasons, this is intended for full nodes rather than validators).
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*) if set to `true` it will restart the sub-process with the same

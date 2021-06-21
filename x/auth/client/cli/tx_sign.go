@@ -108,12 +108,15 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			} else {
-				multisigAddr, multisigName, _, err := client.GetFromFields(txFactory.Keybase(), ms, clientCtx.GenerateOnly)
+				multisigAddr, _, _, err := client.GetFromFields(txFactory.Keybase(), ms, clientCtx.GenerateOnly)
 				if err != nil {
 					return fmt.Errorf("error getting account from keybase: %w", err)
 				}
 				err = authclient.SignTxWithSignerAddress(
-					txFactory, clientCtx, multisigAddr, multisigName, txBuilder, clientCtx.Offline, true)
+					txFactory, clientCtx, multisigAddr, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, true)
+				if err != nil {
+					return err
+				}
 			}
 
 			if err != nil {
@@ -232,15 +235,18 @@ func makeSignCmd() func(cmd *cobra.Command, args []string) error {
 
 		overwrite, _ := f.GetBool(flagOverwrite)
 		if multisig != "" {
-			multisigAddr, multisigName, _, err := client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.GenerateOnly)
+			multisigAddr, _, _, err := client.GetFromFields(txFactory.Keybase(), multisig, clientCtx.GenerateOnly)
 			if err != nil {
 				return fmt.Errorf("error getting account from keybase: %w", err)
 			}
 			err = authclient.SignTxWithSignerAddress(
-				txF, clientCtx, multisigAddr, multisigName, txBuilder, clientCtx.Offline, overwrite)
+				txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
+			if err != nil {
+				return err
+			}
 			printSignatureOnly = true
 		} else {
-			err = authclient.SignTx(txF, clientCtx, fromName, txBuilder, clientCtx.Offline, overwrite)
+			err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
 		}
 		if err != nil {
 			return err

@@ -1,4 +1,4 @@
-# Cosmos SDK
+<center># Cosmos SDK</center>
 
 The Cosmos SDK is a framework for building public, application specific blockchains that can connect to one another using a protocol called [IBC](https://github.com/cosmos/ibc) in Go with [Tendermint consensus](https://github.com/tendermint/tendermint).
 

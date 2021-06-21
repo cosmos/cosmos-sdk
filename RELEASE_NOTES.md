@@ -1,25 +1,22 @@
-# Cosmos SDK v0.42.5 "Stargate" Release Notes
+# Cosmos SDK v0.42.6 "Stargate" Release Notes
 
 This release includes various minor bugfixes and improvments, including:
 
-- Fix support for building the Cosmos SDK on ARM architectures,
-- Fix the `[appd] keys show/list` CLI subcommands for multisigs,
-- Internal code performance improvment.
+- x/bank's InitGenesis optimization, which should significantly decrease genesis initialization time,
+- bump Tendermint to v0.34.11 to fix state sync issues,
+- add `cosmos_sdk_version` to `node_info` to be able to query the SDK version used by a node,
+- IBC bugfixes and improvements (see below for more info),
+- new fields on `sdk.Context` (see below for more info).
 
-It also introduces one new feature: adding the `[appd] config` subcommand back to the SDK.
+See the [Cosmos SDK v0.42.6 milestone](https://github.com/cosmos/cosmos-sdk/milestone/45?closed=1) on our issue tracker for the exhaustive list of all changes.
 
-See the [Cosmos SDK v0.42.5 milestone](https://github.com/cosmos/cosmos-sdk/milestone/44?closed=1) on our issue tracker for the exhaustive list of all changes.
+### IBC Bugfixes and Improvements
 
-### The `config` Subcommand
+The `[appd] query ibc client header` is fixed and allows querying by height for the header and node-state command. This allows easier venerability of which IBC tokens belong to which chains. IBC's ExportGenesis now exports all fields, including previously missing `NextClientSequence`, `NextConnectionSequence` and `NextChannelSequence`. A new subcommand `[appd] query ibc-transfer escrow-address` has been added to get the escrow address for a channel; it can be used to then query balance of escrowed tokens.
 
-One new feature introduced in the Stargate series was the merging of the two CLI binaries `[appd]` and `[appcli]` into one single application binary. In this process, the `[appcli] config` subcommand, which was used to save client-side configuration into a TOML file, was removed.
+### New Fields on `sdk.Context`
 
-Due to [popular demand](https://github.com/cosmos/cosmos-sdk/issues/8529), we have introduced this feature back to the SDK, under the `[appd] config` subcommand. The functionality is as follows:
+Two fields have been added on `sdk.Context`:
 
-- `[appd] config`: Output all client-side configuration.
-- `[appd] config [config-name]`: Get the given configuration (e.g. `keyring-backend` or `node-id`).
-- `[appd] config [config-name] [config-value]`: Set and persist the given configuration with the new value.
-
-All configurations are persisted to the filesystem, under the path `$APP_HOME/config/client.toml`. For the list of all possible client-side configurations, please have a look at this `client.toml` file, as it is heavily commented.
-
-Environment variables binding to client-side configuration also works. For example, the command `KEYRING_BACKEND=os [appd] tx bank send ...` will bind ENV variable to the `keyring-backend` config. The order or precedence for config is: `flags > env vars > client.toml file`.
+- `ctx.HeaderHash` adds the current block header hash obtained during abci.RequestBeginBlock to the Context,
+- `ctx.GasMeter().RefundGas(<amount>, <description>)` adds support for refunding gas directly to the gas meter.

@@ -35,10 +35,10 @@ The current design is based on the work done by [IRISnet team](https://github.co
 
 We will create a module `x/nft`, which contains the following functionality:
 
-- store and transfer the NFTs utilizing `x/bank`, if you want to modify the attribute value of nft, you can use the `send` function in `x/nft`.
-- permission, we can utilize `x/authz`.
-- mint and burn the NFTs, in this module.
-- enumeration, in this module.
+- Store and transfer NFTs utilizing `x/bank`.
+- Mint and burn NFTs.
+- Use `x/authz` to implement ERC721-style authorization.
+- Query NFTs and their supply information.
 
 ### Types
 
@@ -48,10 +48,12 @@ We define a `Metadata` model for `NFT Type`, which is comparable to an ERC721 co
 
 ```protobuf
 message Metadata {
-  string     type        = 1; // Required, unique key, alphanumeric
-  string     name        = 2;
-  string     symbol      = 3;
-  string     description = 4;
+  string type          = 1; // Required, unique key, alphanumeric
+  string name          = 2;
+  string symbol        = 3;
+  string description   = 4;
+  bool mint_restricted = 5;
+  bool edit_restricted = 6;
 }
 ```
 
@@ -59,6 +61,8 @@ message Metadata {
 - The `name` is a descriptive name of this NFT type.
 - The `symbol` is the symbol usually shown on exchanges for this NFT type.
 - The `description` is a detailed description of this NFT type.
+- The `mint_restricted` flag, if set to true, indicates that only the issuer of this type can mint NFTs for it.
+- The `edit_restricted` flag, if set to true, indicates that NFTs of this type cannot be edited once minted.
 
 #### NFT
 
@@ -66,10 +70,10 @@ We define a general model for `NFT` as follows.
 
 ```protobuf
 message NFT {
-  string              type  = 1; // The type of this NFT
-  string              id    = 2; // The identifier of this NFT
-  string              uri   = 3; 
-  google.protobuf.Any data  = 4;
+  string type              = 1; // The type of this NFT
+  string id                = 2; // The identifier of this NFT
+  string uri               = 3; 
+  google.protobuf.Any data = 4;
 }
 ```
 
@@ -103,6 +107,7 @@ The NFT conforms to the following specifications:
 service Msg {
   rpc Issue(MsgIssue) returns (MsgIssueResponse);
   rpc Mint(MsgMint)   returns (MsgMintResponse);
+  rpc Edit(MsgEdit)   returns (MsgEditResponse);
   rpc Send(MsgSend)   returns (MsgMsgSendResponse);
   rpc Burn(MsgBurn)   returns (MsgBurnResponse);
 }
@@ -115,55 +120,67 @@ message MsgIssueResponse {}
 
 message MsgMint {
   cosmos.nft.v1beta1.NFT nft = 1;
-  string               owner = 2;
+  string minter              = 2;
 }
 message MsgMintResponse {}
 
-message MsgSend {
-  string sender                        = 1;
-  string reveiver                      = 2;
-  repeated cosmos.nft.v1beta1.NFT nfts = 3;
+message MsgEdit {
+  cosmos.nft.v1beta1.NFT nft = 1;
+  string editor              = 2;
 }
+message MsgEditResponse {}
 
+message MsgSend {
+  string type     = 1;
+  string id       = 2;
+  string sender   = 3;
+  string reveiver = 4;
+}
 message MsgSendResponse {}
 
 message MsgBurn {
-  string type  = 1;
-  string id    = 2;
-  string owner = 3;
+  string type      = 1;
+  string id        = 2;
+  string destroyer = 3;
 }
 message MsgBurnResponse {}
 ```
 
-`MsgIssue` is responsible for issuing an NFT classification, just like deploying an erc721 contract on Ethereum.
+`MsgIssue` can be used to issue an NFT type/class, just like deploying an ERC721 contract on Ethereum.
 
-`MsgMint` provides the ability to create a new NFT.
+`MsgMint` allows users to create new NFTs for a given type.
 
-`MsgSend` is responsible for transferring the ownership of an NFT to another address (no coins involved).
+`MsgEdit` allows users to edit/update their NFTs.
 
-`MsgBurn` provides the ability to destroy NFT, thereby guaranteeing the uniqueness of cross-chain NFT.
+`MsgSend` can be used to transfer the ownership of an NFT to another address.
+**Note**: we could use `x/bank` to handle NFT transfer directly and do without this service. It's only for the sake of completeness of an ERC721 compatible API that we may choose to keep this service.
 
-Other business-logic implementations should be defined in other upper-level modules that import this NFT module. The implementation example of the server is as follows:
+`MsgBurn` allows users to destroy their NFTs.
+
+Other business logic implementations should be defined in other upper-level modules that import this NFT module. The implementation example of the server is as follows:
 
 ```go
 type msgServer struct{
   k Keeper
 }
 
-func (m msgServer) Issue(ctx context.Context, msg *types.MsgIssue) (*types.MsgIssueResponse, error){
+func (m msgServer) Issue(ctx context.Context, msg *types.MsgIssue) (*types.MsgIssueResponse, error) {
   m.keeper.AssertTypeNotExist(msg.Metadata.Type)
 
-  store := ctx.KVStore(m.keeper.storeKey)
   bz := m.keeper.cdc.MustMarshalBinaryBare(msg.Metadata)
-  store.Set(msg.Type, bz)
+  typeStore := m.keeper.getTypeStore(ctx)
+  typeStore.Set(msg.Type, bz)
+  
+  bz := m.keeper.cdc.MustMarshalBinaryBare(msg.Issuer)
+  typeOwnerStore := m.keeper.getTypeOwnerStore(ctx)
+  typeOwnerStore.Set(msg.Type, bz)
   
   return &types.MsgIssueResponse{}, nil
 }
 
-func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error){
+func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
   m.keeper.AssertTypeExist(msg.NFT.Type)
-
-  metadata := m.keeper.GetMetadata(ctx, msg.NFT.Type)
+  m.keeper.AssertCanMint(msg.NFT.Type, msg.Minter)
   
   baseDenom := fmt.Sprintf("%s-%s", msg.NFT.Type, msg.NFT.Id)
   bkMetadata := bankTypes.Metadata{
@@ -180,20 +197,34 @@ func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMint
   m.keeper.bank.SendCoinsFromModuleToAccount(types.ModuleName, msg.Owner, mintedCoins)
   
   bz := m.keeper.cdc.MustMarshalBinaryBare(&msg.NFT)
-  typeStore := m.keeper.getTypeStore(ctx, msg.NFT.Type)
-  typeStore.Set(msg.NFT.Id, bz)
   
-  return nil, nil
+  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.NFT.Type)
+  nftStoreByType.Set(msg.NFT.Id, bz)
+  
+  nftStore := m.keeper.getNFTStore(ctx)
+  nftStore.Set(baseDenom, bz)
+  
+  return &types.MsgMintResponse{}, nil
 }
 
-func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error){
-  sentCoins := sdk.NewCoins()
+func (m msgServer) Edit(ctx context.Context, msg *types.MsgEdit) (*types.MsgEditResponse, error) {
+  m.keeper.AssertNFTExist(msg.Type, msg.Id)
+  m.keeper.AssertCanEdit(msg.Type, msg.Id, msg.Editor)
+
+  bz := m.keeper.cdc.MustMarshalBinaryBare(&msg.NFT)
   
-  for _, nft := range msg.NFTs {
-    m.keeper.AssertNFTExist(nft)
-    baseDenom := fmt.Sprintf("%s-%s", nft.Type, nft.Id)
-    sentCoins = sentCoins.Add(sdk.NewCoin(baseDenom, 1)) 
-  } 
+  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.NFT.Type)
+  nftStoreByType.Set(msg.NFT.Id, bz)
+  
+  return &types.MsgEditResponse{}, nil
+}
+
+func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
+  m.keeper.AssertNFTExist(msg.Type, msg.Id)
+
+  sentCoins := sdk.NewCoins()  
+  baseDenom := fmt.Sprintf("%s-%s", nft.Type, nft.Id)
+  sentCoins = sentCoins.Add(sdk.NewCoin(baseDenom, 1)) 
   m.keeper.bank.SendCoins(ctx, msg.Sender, msg.Reveiver, sentCoins)
   
   return &types.MsgSendResponse{}, nil
@@ -202,18 +233,22 @@ func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 func (m Keeper) Burn(ctx sdk.Context, msg *types.MsgBurn) (types.MsgBurnResponse,error) {
   m.keeper.AssertNFTExist(msg.Type, msg.Id)
 
-  typeStore := m.keeper.getTypeStore(ctx, msg.Type)
-  nft := typeStore.Get(msg.Id)
+  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.Type)
+  nft := nftStoreByType.Get(msg.Id)
 
   baseDenom := fmt.Sprintf("%s-%s", msg.Type, msg.Id)
   coins := sdk.NewCoins(sdk.NewCoin(baseDenom, 1))
-  m.keeper.bank.SendCoinsFromAccountToModule(ctx, msg.Owner, types.ModuleName, coins)
+  m.keeper.bank.SendCoinsFromAccountToModule(ctx, msg.Destroyer, types.ModuleName, coins)
   m.keeper.bank.BurnCoins(ctx, types.ModuleName, coins)
 
   // Delete bank.Metadata (keeper method not available)
-  typeStore := m.keeper.getTypeStore(ctx, msg.NFT.Type)
-  typeStore.Delete(msg.Id)
   
+  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.NFT.Type)
+  nftStoreByType.Delete(msg.Id)
+  
+  nftStore := m.keeper.getNFTStore(ctx)
+  nftStore.Delete(baseDenom)
+
   return &types.MsgBurnResponse{}, nil
 }
 ```
@@ -247,7 +282,7 @@ service Query {
 
   // Balance queries the number of NFTs based on the owner and type, same as balanceOf of ERC721
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/type/{type}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/{type}";
   }
 
   // Type queries the definition of a given type
@@ -357,7 +392,6 @@ This specification conforms to the ERC-721 smart contract specification for NFT 
 
 ### Negative
 
-- Currently, no methods are defined for this module except to store and retrieve data.
 
 ### Neutral
 

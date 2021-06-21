@@ -667,6 +667,10 @@ func (s *IntegrationTestSuite) TestSim_MsgExecEvents() {
 	}
 	s.Require().Len(logs[0].Events, 4)
 	for _, e := range logs[0].Events {
+		fmt.Printf("Type: %v\n", e.Type)
+		for i, a := range e.Attributes {
+			fmt.Printf("Attr #%v: %v\n", i+1, a.String())
+		}
 		s.Require().True(requiredEvents[e.Type])
 	}
 }

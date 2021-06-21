@@ -195,41 +195,6 @@ func (p BIP44Params) String() string {
 		p.Adressindex)
 }
 */
-// TODO add tests INCORRECT LOCAL - does not include private key
-func convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
-	fmt.Println("convertFromLegacyInfo")
-	name := info.GetName()
-	var item isRecord_Item
-	var pk = info.GetPubKey()
-
-	switch info.GetType() {
-	case TypeLocal:
-		// TODO fix that
-		/*
-			algo := info.GetAlgo()
-			localRecord, err := NewLocalRecord(pk, string(algo))
-			if err != nil {
-				return nil, err
-			}
-			item = NewLocalRecordItem(localRecord)
-		*/
-	case TypeOffline:
-		emptyRecord := NewEmptyRecord()
-		item = NewEmptyRecordItem(emptyRecord)
-	case TypeLedger:
-		path, err := info.GetPath()
-		if err != nil {
-			return nil, err
-		}
-		ledgerRecord := NewLedgerRecord(path)
-		item = NewLedgerRecordItem(ledgerRecord)
-	case TypeMulti:
-		emptyRecord := NewEmptyRecord()
-		item = NewEmptyRecordItem(emptyRecord)
-	}
-
-	return NewRecord(name, pk, item)
-}
 
 func ExtractPrivKeyFromItem(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, error) {
 	rl := k.GetLocal()

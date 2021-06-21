@@ -79,7 +79,7 @@ type Keyring interface {
 	//
 	// A passphrase set to the empty string will set the passphrase to the DefaultBIP39Passphrase value.
 	NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (*Record, string, error)
-	// required for testing purposes in migration_test.go
+    // saves legacyLocalInfo to keyring
 	NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (LegacyInfo, string, error)
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
 	// It fails if there is an existing key Info with the same address.
@@ -99,6 +99,8 @@ type Keyring interface {
 
 	Importer
 	Exporter
+
+	Migrator
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -132,6 +134,10 @@ type LegacyInfoImporter interface {
 	// ImportInfo import a keyring.Info into the current keyring.
 	// It is used to migrate multisig, ledger, and public key Info structure.
 	ImportInfo(oldInfo LegacyInfo) error
+}
+
+type Migrator interface {
+	CheckMigrate() (bool, error)
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -249,6 +255,8 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 	return ks.ExportPubKeyArmor(k.Name)
 }
 
+// TODO iam  not sure if this func is useful
+// we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
 	priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
@@ -331,7 +339,7 @@ func (ks keystore) ImportInfo(oldInfo LegacyInfo) error {
 		return fmt.Errorf("cannot overwrite key: %s", oldInfo.Name)
 	}
 
-	return ks.writeInfo(oldInfo)
+	return ks.writeLegacyInfo(oldInfo)
 }
 */
 
@@ -452,7 +460,7 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]*Record, error) {
-	if err := ks.checkMigrate(); err != nil {
+	if _, err := ks.checkMigrate(); err != nil {
 		return nil, err
 	}
 
@@ -551,22 +559,16 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) key(infoKey string) (*Record, error) {
-	if err := ks.checkMigrate(); err != nil {
+	if _, err := ks.checkMigrate(); err != nil {
 		return nil, err
 	}
 
-	fmt.Println("key before ks.db.Get(infoKey)")
-	fmt.Println("key infoKey", infoKey)
 	item, err := ks.db.Get(infoKey)
 	if err != nil {
 		return nil, wrapKeyNotFound(err, infoKey)
 	}
 
-	fmt.Println("key item.Key", item.Key)
-	fmt.Println("key item.Data", string(item.Data))
-
 	if len(item.Data) == 0 {
-		fmt.Println("len(bs.Data) == 0")
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 
@@ -838,55 +840,64 @@ func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (
 	return k, ks.writeRecord(k)
 }
 
-func (ks keystore) checkMigrate() error {
+// CheckMigrate() is used for testing purposes
+func (ks keystore) CheckMigrate() (bool, error) {
+	return ks.checkMigrate()
+}
+
+// introducet bool return parameter for testing purposes in migration tests
+func (ks keystore) checkMigrate() (bool, error) {
 	var version uint32 = 0
+	var migrated bool
 	// 1.Get a key data
 	item, err := ks.db.Get(VERSION_KEY)
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
-			return fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
+			return migrated, fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
 		}
 		// key not found, all good: assume version = 0
 	} else {
 		if len(item.Data) != 4 {
-			return sdkerrors.ErrInvalidVersion.Wrapf(
+			return migrated,sdkerrors.ErrInvalidVersion.Wrapf(
 				"Can't migrate the keyring - the stored version is malformed: [%v]: %v",
 				item.Description, string(item.Data))
 		}
 		version = binary.LittleEndian.Uint32(item.Data)
 	}
-	return ks.migrate(version, item)
+	return ks.migrate(version, item, migrated)
 }
 
-func (ks keystore) migrate(version uint32, i keyring.Item) error {
+func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool, error) {
 	if version == CURRENT_VERSION {
 		// return nil
-		return fmt.Errorf("versions match")
+		return migrated, fmt.Errorf("versions match")
 	}
 	if version > CURRENT_VERSION {
-		return sdkerrors.ErrInvalidVersion.Wrapf(
+		return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
 			"Can't migrate the keyring - wrong keyring version: [%v]: %v, expected version to be max %d",
 			i.Description, string(i.Data), CURRENT_VERSION)
 	}
 	keys, err := ks.db.Keys()
 	if err != nil {
 		// return err
-		return fmt.Errorf("Keys() error, err: %s", err)
+		return migrated, fmt.Errorf("Keys() error, err: %s", err)
 	}
 
 	for _, key := range keys {
+	
 		if !strings.HasSuffix(key, infoSuffix) {
+			fmt.Printf("key %s has no infoSuffix", key)
 			continue
 		}
 		item, err := ks.db.Get(key)
 		if err != nil {
 			//return err
-			return fmt.Errorf("Get error, err - %s", err)
+			return migrated, fmt.Errorf("Get error, err - %s", err)
 		}
 
 		if len(item.Data) == 0 {
 			// return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
-			return fmt.Errorf("sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key), err: %s", sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
+			return migrated, fmt.Errorf("sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key), err: %s", sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
 		}
 
 		// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
@@ -902,31 +913,28 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 			continue
 		}
 
+		fmt.Println("Unmarshal using Amino")
+
 		//4.serialize info using proto
-		k, err := convertFromLegacyInfo(legacyInfo)
+		k, err := ks.convertFromLegacyInfo(legacyInfo)
 		if err != nil {
-			// return err
-			return fmt.Errorf("convertFromLegacyInfo, err - %s", err)
+			return migrated, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
 		}
 
 		serializedRecord, err := ks.cdc.Marshal(k)
 		if err != nil {
 			// return err
-			return fmt.Errorf("ks.cdc.Marshal(kr), err - %s", err)
-		}
-
-		key, err := k.GetPubKey()
-		if err != nil {
-			//return err
-			return fmt.Errorf("kr.GetPubKey(), err - %s", err)
+			return migrated, fmt.Errorf("ks.cdc.Marshal(kr), err - %s", err)
 		}
 
 		//5.overwrite the keyring entry with
 		ks.db.Set(keyring.Item{
-			Key:         key.String(),
+			Key:         key,
 			Data:        serializedRecord,
 			Description: "SDK kerying version",
 		})
+
+		migrated = true
 	}
 	// 6. at the end of the loop update version
 	var versionBytes = make([]byte, 4)
@@ -937,7 +945,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item) error {
 		Description: "SDK kerying version",
 	})
 
-	return nil
+	return migrated, nil
 }
 
 func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
@@ -946,6 +954,45 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 		return nil, err
 	}
 	return k, nil
+}
+
+// TODO add tests INCORRECT LOCAL - does not include private key
+func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
+	fmt.Println("convertFromLegacyInfo")
+
+	var item isRecord_Item
+
+	switch info.GetType() {
+	case TypeLocal:
+		priv, err := exportPrivateKeyFromLegacyInfo(info)
+		if err != nil {
+			return nil, err
+		}
+
+		localRecord, err := NewLocalRecord(ks.cdc, priv)
+		if err != nil {
+			return nil, err
+		}
+		item = NewLocalRecordItem(localRecord)
+
+	case TypeOffline:
+		emptyRecord := NewEmptyRecord()
+		item = NewEmptyRecordItem(emptyRecord)
+	case TypeLedger:
+		path, err := info.GetPath()
+		if err != nil {
+			return nil, err
+		}
+		ledgerRecord := NewLedgerRecord(path)
+		item = NewLedgerRecordItem(ledgerRecord)
+	case TypeMulti:
+		emptyRecord := NewEmptyRecord()
+		item = NewEmptyRecordItem(emptyRecord)
+	}
+
+	name := info.GetName()
+	pk := info.GetPubKey()
+	return NewRecord(name, pk, item)
 }
 
 type unsafeKeystore struct {
@@ -974,4 +1021,3 @@ func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err
 func addrHexKeyAsString(address sdk.Address) string {
 	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }
-

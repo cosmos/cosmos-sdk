@@ -1,8 +1,8 @@
-package  keyring
+package keyring
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 
 	"github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -73,6 +73,11 @@ func (i legacyLocalInfo) GetPubKey() cryptotypes.PubKey {
 // GetType implements Info interface
 func (i legacyLocalInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
+}
+
+// GetPrivKeyArmor
+func (i legacyLocalInfo) GetPrivKeyArmor() string {
+	return i.PrivKeyArmor
 }
 
 // GetType implements Info interface
@@ -308,9 +313,6 @@ func (ks keystore) NewLegacyMnemonic(uid string, language Language, hdPath, bip3
 	return info, mnemonic, nil
 }
 
-
-
-
 func (ks keystore) NewLegacyAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (LegacyInfo, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
@@ -338,14 +340,14 @@ func (ks keystore) writeLegacyLocalKey(name string, priv cryptotypes.PrivKey, al
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 	info := NewLegacyLocalInfo(name, pub, string(legacy.Cdc.MustMarshal(priv)), algo)
-	if err := ks.writeInfo(info); err != nil {
+	if err := ks.writeLegacyInfo(info); err != nil {
 		return nil, err
 	}
 
 	return info, nil
 }
 
-func (ks keystore) writeInfo(info LegacyInfo) error {
+func (ks keystore) writeLegacyInfo(info LegacyInfo) error {
 	exists, err := ks.existsInDb(info.GetAddress(), info.GetName())
 	if err != nil {
 		return err
@@ -376,4 +378,23 @@ func (ks keystore) writeInfo(info LegacyInfo) error {
 	return nil
 }
 
+// func (ks keystore) ExportPrivateKeyFromLegacyInfo(uid string) (types.PrivKey, error) {
+func exportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) {
 
+	switch linfo := info.(type) {
+	case legacyLocalInfo:
+		if linfo.PrivKeyArmor == "" {
+			return nil, fmt.Errorf("private key not available")
+		}
+
+		priv, err := legacy.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		if err != nil {
+			return nil, err
+		}
+
+		return priv, nil
+	//case legacyLedgerInfo, legacyOfflineInfo, legacyMultiInfo:
+	default:
+		return nil, errors.New("only works on local private keys")
+	}
+}

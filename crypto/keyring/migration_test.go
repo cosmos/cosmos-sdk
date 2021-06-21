@@ -12,14 +12,15 @@ import (
 	
 )
 
-/*
-create legacyInfo -> keyring -> checkMigrate -> will be migrated
-create just record-> no migrate
-create radnomBytes -> err
+/* cases
+
+3)create radnomBytes -> err
 
 */
 
-func TestMigrationOneLegacyKey(t *testing.T) {
+// create legacyInfo -> keyring -> checkMigrate -> key will be migrated
+// TODO for legacyLedger , legacyOffline and legacyMulti table driven test
+func TestMigrationOneLegacyLocalKey(t *testing.T) {
 
 	const n1 = "cosmos"
 	
@@ -28,15 +29,39 @@ func TestMigrationOneLegacyKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendFile, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
 	require.NoError(err)
-	 
+	
+	//saves legacyLocalInfo to keyring 
 	_,_, err = kb.NewLegacyMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
-
-	k, err := kb.Key(n1)
-	require.NotNil(k)
+	
+	//calls checkMigrate, migrates the key to proto
+	migrated, err := kb.CheckMigrate()
+	require.True(migrated)
 	require.NoError(err)
-	require.Equal(k.Name, n1)
-
 }
+
+//create Record - no migration required make for all types of keys Local,Ledger etc
+func TestMigrationRecord(t *testing.T) {
+
+	const n1 = "cosmos"
+	
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+	
+	_,_, err = kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(err)
+	
+	migrated, err := kb.CheckMigrate()
+	require.False(migrated)
+	require.NoError(err)
+}
+
+
+

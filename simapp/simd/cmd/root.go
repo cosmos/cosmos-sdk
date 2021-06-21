@@ -67,7 +67,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := initConfig()
+			customAppTemplate, customAppConfig := initAppConfig()
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
@@ -78,9 +78,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	return rootCmd, encodingConfig
 }
 
-// initConfig helps to override default appConfig template and configs.
+// initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func initConfig() (string, interface{}) {
+func initAppConfig() (string, interface{}) {
 	// The following code snippet is just for reference.
 
 	// WASMConfig defines configuration for the wasm module.

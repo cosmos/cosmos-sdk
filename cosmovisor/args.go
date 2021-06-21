@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -57,7 +59,7 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	// TODO: let's use SDK. But this causes go mod errors:
 	//     github.com/gogo/protobuf@v1.3.3: reading https://proxy.golang.org/github.com/gogo/protobuf/@v/v1.3.3.mod: 410 Gone
 	// return filepath.Join(cfg.Home, "data", keeper.UpgradeInfoFileName)
-	return filepath.Join(cfg.Home, "data", "upgrade-info.json")
+	return filepath.Join(cfg.Home, "data", types.UpgradeInfoFilename)
 }
 
 // Symlink to genesis

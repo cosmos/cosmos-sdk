@@ -13,7 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -21,7 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// UpgradeInfoFileName file to store upgrade information
+// Deprecated: UpgradeInfoFileName file to store upgrade information
+// use x/upgrade/types.UpgradeInfoFilename instead.
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
@@ -320,7 +320,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 		return err
 	}
 
-	upgradeInfo := store.UpgradeInfo{
+	upgradeInfo := types.Plan{
 		Name:   p.Name,
 		Height: height,
 		Info:   p.Info,
@@ -341,7 +341,7 @@ func (k Keeper) GetUpgradeInfoPath() (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(upgradeInfoFileDir, UpgradeInfoFileName), nil
+	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil
 }
 
 // getHomeDir returns the height at which the given upgrade was executed
@@ -353,8 +353,8 @@ func (k Keeper) getHomeDir() string {
 // written to disk by the old binary when panicking. An error is returned if
 // the upgrade path directory cannot be created or if the file exists and
 // cannot be read or if the upgrade info fails to unmarshal.
-func (k Keeper) ReadUpgradeInfoFromDisk() (store.UpgradeInfo, error) {
-	var upgradeInfo store.UpgradeInfo
+func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
+	var upgradeInfo types.Plan
 
 	upgradeInfoPath, err := k.GetUpgradeInfoPath()
 	if err != nil {

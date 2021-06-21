@@ -27,6 +27,9 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 
 	cmd := exec.Command(bin, args...)
 	outpipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return false, err
+	}
 	fw, err := newUpgradeFileWatcher(cfg.UpgradeInfoFilePath())
 	if err != nil {
 		return false, err

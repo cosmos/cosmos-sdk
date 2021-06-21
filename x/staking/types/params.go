@@ -49,14 +49,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, powerReduction sdk.Int) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
 		MaxEntries:        maxEntries,
 		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
-		PowerReduction:    powerReduction,
 	}
 }
 
@@ -68,7 +67,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
-		paramtypes.NewParamSetPair(KeyPowerReduction, &p.PowerReduction, ValidatePowerReduction),
 	}
 }
 
@@ -80,7 +78,6 @@ func DefaultParams() Params {
 		DefaultMaxEntries,
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
-		sdk.DefaultPowerReduction,
 	)
 }
 

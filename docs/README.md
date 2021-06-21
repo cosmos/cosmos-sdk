@@ -19,10 +19,10 @@ sections:
     desc: Discover how to build modules for the Cosmos SDK.
     icon: modules
     url: /building-modules/intro.html
-  - title: Interfaces
-    desc: Build interfaces for Cosmos SDK applications.
+  - title: Running a Node
+    desc: Running and interacting with nodes using the CLI and API.
     icon: interfaces
-    url: /interfaces/interfaces-intro.html
+    url: /run-node/
   - title: Modules
     desc: Explore existing modules to build your application with.
     icon: specifications

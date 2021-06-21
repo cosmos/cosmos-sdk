@@ -8,6 +8,7 @@ pull_request_rules:
       merge:
         method: squash
         strict: true
+        commit_message: title+body
   - name: backport patches to v0.42.x branch
     conditions:
       - base=master

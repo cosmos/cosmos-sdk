@@ -72,7 +72,7 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	// Graceful fallback of deprecated `Option` field, in case there's only 1
 	// VoteOption.
 	if len(vote.Options) == 1 && vote.Options[0].Weight.Equal(sdk.MustNewDecFromStr("1.0")) {
-		vote.Option = vote.Options[0].Option //nolint staticcheck
+		vote.Option = vote.Options[0].Option //nolint staticcheck // Deprecated field
 	}
 
 	return vote, true
@@ -80,6 +80,11 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 
 // SetVote sets a Vote to the gov store
 func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
+	// vote.Option is a deprecated field, we don't set it in state
+	if vote.Option != types.OptionEmpty { //nolint staticcheck // Deprecated field
+		panic(fmt.Errorf("expected empty vote.Option, got %s", vote.Option)) //nolint staticcheck // Deprecated field
+	}
+
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&vote)
 	addr, err := sdk.AccAddressFromBech32(vote.Voter)

@@ -271,7 +271,10 @@ func TestQueries(t *testing.T) {
 	require.Equal(t, vote1, votes[0])
 
 	vote := getQueriedVote(t, ctx, legacyQuerierCdc, querier, proposal2.ProposalId, TestAddrs[0])
-	require.Equal(t, vote1, vote)
+	// vote and vote1 only differ by the fact that vote has its `Option` field populated thanks to graceful fallback in GetVote
+	require.Equal(t, vote1.Options, vote.Options)
+	require.Equal(t, vote1.Voter, vote.Voter)
+	require.Equal(t, vote1.ProposalId, vote.ProposalId)
 
 	// Test query votes on types.Proposal 3
 	votes = getQueriedVotes(t, ctx, legacyQuerierCdc, querier, proposal3.ProposalId, 1, 0)

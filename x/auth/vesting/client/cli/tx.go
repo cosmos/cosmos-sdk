@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"strconv"
 
@@ -110,11 +111,11 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 [
 {
   "coins": "10test",
-  "length_seconds":1620016673
+  "length_seconds":2592000 //30 days
  },
  {
 	"coins": "10test",
-	"length_seconds":1620026673
+	"length_seconds":2592000 //30 days
    },
 ]
 		`,
@@ -143,11 +144,15 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 
 			var periods []types.Period
 
-			for _, p := range inputPeriods {
+			for i, p := range inputPeriods {
 
 				amount, err := sdk.ParseCoinsNormalized(p.Coins)
 				if err != nil {
 					return err
+				}
+
+				if p.Length < 1 {
+					return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
 				}
 				period := types.Period{Length: p.Length, Amount: amount}
 				periods = append(periods, period)

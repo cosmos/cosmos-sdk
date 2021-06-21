@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -128,6 +130,12 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 
 	if err := sdk.VerifyAddressFormat(to); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+	}
+
+	for i, period := range msg.VestingPeriods {
+		if period.Length < 1 {
+			return fmt.Errorf("invalid period length of %d in period %d. Length must be greater than 0.", period.Length, i)
+		}
 	}
 
 	return nil

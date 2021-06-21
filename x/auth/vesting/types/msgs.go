@@ -134,7 +134,7 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
-			return fmt.Errorf("invalid period length of %d in period %d. Length must be greater than 0.", period.Length, i)
+			return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 	}
 

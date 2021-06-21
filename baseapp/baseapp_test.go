@@ -951,6 +951,8 @@ func TestCheckTx(t *testing.T) {
 	// If a block is committed, CheckTx state should be reset.
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	require.NotNil(t, app.checkState.ctx.BlockGasMeter(), "block gas meter should have been set to checkState")
+
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 

@@ -178,6 +178,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
 
+	// also set block gas meter to checkState in case the application needs to check
+	// for gas consumption during (Re)CheckTx
+	if app.checkState != nil {
+		app.checkState.ctx = app.checkState.ctx.WithBlockGasMeter(gasMeter)
+	}
+
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)

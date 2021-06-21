@@ -181,8 +181,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash)
 
+	// we also set block gas meter to checkState in case the application needs to
+	// verify gas consumption during (Re)CheckTx
 	if app.checkState != nil {
-		app.checkState.ctx = app.checkState.ctx.WithHeaderHash(req.Hash)
+		app.checkState.ctx = app.checkState.ctx.
+			WithBlockGasMeter(gasMeter).
+			WithHeaderHash(req.Hash)
 	}
 
 	if app.beginBlocker != nil {

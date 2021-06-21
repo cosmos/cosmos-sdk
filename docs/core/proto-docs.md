@@ -1308,7 +1308,7 @@ MsgExecResponse defines the Msg/MsgExecResponse response type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `result` | [cosmos.base.abci.v1beta1.Result](#cosmos.base.abci.v1beta1.Result) |  |  |
+| `results` | [bytes](#bytes) | repeated |  |
 
 
 
@@ -3015,6 +3015,7 @@ VersionInfo is the type for the GetNodeInfoResponse message.
 | `build_tags` | [string](#string) |  |  |
 | `go_version` | [string](#string) |  |  |
 | `build_deps` | [Module](#cosmos.base.tendermint.v1beta1.Module) | repeated |  |
+| `cosmos_sdk_version` | [string](#string) |  |  |
 
 
 

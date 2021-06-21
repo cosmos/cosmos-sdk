@@ -29,3 +29,7 @@ func (s *testMsgSuite) TestMsg() {
 	s.Require().Nil(msg.ValidateBasic())
 	s.Require().NotPanics(func() { msg.GetSignBytes() })
 }
+
+func (s *testMsgSuite) TestMsgTypeURL() {
+	s.Require().Equal("/testdata.TestMsg", sdk.MsgTypeURL(new(testdata.TestMsg)))
+}

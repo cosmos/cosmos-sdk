@@ -7,20 +7,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/stretchr/testify/require"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	
+	"github.com/stretchr/testify/require"
 )
 
-/* cases
-
-3)create radnomBytes -> err
-
-*/
+// TODO
+// create radnomBytes -> err test
+// create table driven tests
 
 // create legacyInfo -> keyring -> checkMigrate -> key will be migrated
-// TODO for legacyLedger , legacyOffline and legacyMulti table driven test
-func TestMigrationOneLegacyLocalKey(t *testing.T) {
+
+func TestMigrationLegacyLocalKey(t *testing.T) {
 
 	const n1 = "cosmos"
 	
@@ -33,17 +30,19 @@ func TestMigrationOneLegacyLocalKey(t *testing.T) {
 	require.NoError(err)
 	
 	//saves legacyLocalInfo to keyring 
-	_,_, err = kb.NewLegacyMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	accountType := "local"
+	info,_, err := kb.NewLegacyMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1, accountType)
 	require.NoError(err)
+	require.Equal(info.GetName(),n1)
 	
-	//calls checkMigrate, migrates the key to proto
+	//calls checkMigrate, migrates the amino key to proto
 	migrated, err := kb.CheckMigrate()
 	require.True(migrated)
 	require.NoError(err)
 }
 
-//create Record - no migration required make for all types of keys Local,Ledger etc
-func TestMigrationRecord(t *testing.T) {
+// TODO fix error support for ledger devices is not available in this executable
+func TestMigrationLegacyLedgerKey(t *testing.T) {
 
 	const n1 = "cosmos"
 	
@@ -55,8 +54,82 @@ func TestMigrationRecord(t *testing.T) {
 	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
 	require.NoError(err)
 	
-	_,_, err = kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	//saves legacyLocalInfo to keyring 
+	accountType := "ledger"
+	info,_, err := kb.NewLegacyMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1, accountType)
 	require.NoError(err)
+	require.Equal(info.GetName(), n1)
+	
+	//calls checkMigrate, migrates the key to proto
+	migrated, err := kb.CheckMigrate()
+	require.True(migrated)
+	require.NoError(err)
+}
+
+func TestMigrationLegacyOfflineKey(t *testing.T) {
+
+	const n1 = "cosmos"
+	
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+	
+	//saves legacyLocalInfo to keyring 
+	accountType := "offline"
+	info,_, err := kb.NewLegacyMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1, accountType)
+	require.NoError(err)
+	require.Equal(info.GetName(), n1)
+	
+	//calls checkMigrate, migrates the key to proto
+	migrated, err := kb.CheckMigrate()
+	require.True(migrated)
+	require.NoError(err)
+}
+
+func TestMigrationLegacyMultiKey(t *testing.T) {
+
+	const n1 = "cosmos"
+	
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+	
+	//saves legacyLocalInfo to keyring 
+	accountType :=  "multi"
+	info,_, err := kb.NewLegacyMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1, accountType)
+	require.NoError(err)
+	require.Equal(info.GetName(), n1)
+	
+	//calls checkMigrate, migrates the key to proto
+	migrated, err := kb.CheckMigrate()
+	require.True(migrated)
+	require.NoError(err)
+}
+
+// TODO  do i need to test migration for ledger,offline record items as well?
+func TestMigrationLocalRecord(t *testing.T) {
+
+	const n1 = "cosmos"
+	
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+	
+	k,_, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(err)
+	require.Equal(k.Name, n1)
 	
 	migrated, err := kb.CheckMigrate()
 	require.False(migrated)

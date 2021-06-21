@@ -9,6 +9,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bip39 "github.com/cosmos/go-bip39"
@@ -28,6 +29,17 @@ type LegacyInfo interface {
 	GetPath() (*hd.BIP44Params, error)
 	// Algo
 	GetAlgo() hd.PubKeyType
+}
+
+type LegacyInfoWriter interface {
+	// saves legacyInfo of specific accountType to keyring
+	NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo, accountType string) (LegacyInfo, string, error)
+	NewLegacyAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo, accountType string) (LegacyInfo, error)
+	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
+	SaveLegacyLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (LegacyInfo, error)
+	// for testing purposes
+	SaveLegacyOfflineKey(uid string, pubkey cryptotypes.PubKey,  algo hd.PubKeyType) (LegacyInfo, error)
+	SaveLegacyMultisig(uid string, pubkey cryptotypes.PubKey) (LegacyInfo, error)
 }
 
 var (
@@ -147,7 +159,7 @@ type legacyOfflineInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func NewlegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
+func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
 	return &legacyOfflineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -203,7 +215,7 @@ type legacyMultiInfo struct {
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
+func newLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
 		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
@@ -280,7 +292,7 @@ func unmarshalInfo(bz []byte) (info LegacyInfo, err error) {
 	return
 }
 
-func (ks keystore) NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (LegacyInfo, string, error) {
+func (ks keystore) NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo, accountType string) (LegacyInfo, string, error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
@@ -305,7 +317,7 @@ func (ks keystore) NewLegacyMnemonic(uid string, language Language, hdPath, bip3
 		bip39Passphrase = DefaultBIP39Passphrase
 	}
 
-	info, err := ks.NewLegacyAccount(uid, mnemonic, bip39Passphrase, hdPath, algo)
+	info, err := ks.NewLegacyAccount(uid, mnemonic, bip39Passphrase, hdPath, algo, accountType)
 	if err != nil {
 		return nil, "", err
 	}
@@ -313,7 +325,7 @@ func (ks keystore) NewLegacyMnemonic(uid string, language Language, hdPath, bip3
 	return info, mnemonic, nil
 }
 
-func (ks keystore) NewLegacyAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (LegacyInfo, error) {
+func (ks keystore) NewLegacyAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo, accountType string) (LegacyInfo, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}
@@ -333,10 +345,31 @@ func (ks keystore) NewLegacyAccount(name string, mnemonic string, bip39Passphras
 		return nil, fmt.Errorf("account with address %s already exists in keyring, delete the key first if you want to recreate it", address)
 	}
 
-	return ks.writeLegacyLocalKey(name, privKey, algo.Name())
+	var info LegacyInfo
+
+	switch accountType{
+	case "local":
+		// TODO consider to move logic above line 335 here
+		info, err = ks.writeLegacyLocalKey(name, privKey, algo.Name(), accountType)
+	case "ledger":
+		hrp := "cosmos"
+		coinType, account, index := uint32(118), uint32(0), uint32(0) 
+		info, err  = ks.SaveLegacyLedgerKey(name, algo, hrp, coinType, account, index)
+	case "offline":
+		info, err = ks.SaveLegacyOfflineKey(name, privKey.PubKey(), algo.Name())
+	case "multi": 
+		multi := multisig.NewLegacyAminoPubKey(
+			1, []cryptotypes.PubKey{
+				privKey.PubKey(),
+			},
+		)
+		info, err = ks.SaveLegacyMultisig(name,  multi)
+	}
+
+	return info, err
 }
 
-func (ks keystore) writeLegacyLocalKey(name string, priv cryptotypes.PrivKey, algo hd.PubKeyType) (LegacyInfo, error) {
+func (ks keystore) writeLegacyLocalKey(name string, priv cryptotypes.PrivKey, algo hd.PubKeyType, accountType string) (LegacyInfo, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
 	info := NewLegacyLocalInfo(name, pub, string(legacy.Cdc.MustMarshal(priv)), algo)
@@ -348,7 +381,8 @@ func (ks keystore) writeLegacyLocalKey(name string, priv cryptotypes.PrivKey, al
 }
 
 func (ks keystore) writeLegacyInfo(info LegacyInfo) error {
-	exists, err := ks.existsInDb(info.GetAddress(), info.GetName())
+	addr := info.GetAddress()
+	exists, err := ks.existsInDb(addr, info.GetName())
 	if err != nil {
 		return err
 	}
@@ -368,7 +402,7 @@ func (ks keystore) writeLegacyInfo(info LegacyInfo) error {
 	}
 
 	err = ks.db.Set(keyring.Item{
-		Key:  addrHexKeyAsString(info.GetAddress()),
+		Key:  addrHexKeyAsString(addr),
 		Data: key,
 	})
 	if err != nil {
@@ -397,4 +431,60 @@ func exportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error
 	default:
 		return nil, errors.New("only works on local private keys")
 	}
+}
+
+func (ks keystore) SaveLegacyLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (LegacyInfo, error) {
+
+	if !ks.options.SupportedAlgosLedger.Contains(algo) {
+		return nil, ErrUnsupportedSigningAlgo
+	}
+
+	hdPath := hd.NewFundraiserParams(account, coinType, index)
+
+	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
+	if err != nil {
+		return nil, err
+	}
+
+	return ks.writeLegacyLedgerKey(uid, priv.PubKey(), hdPath, algo.Name())
+}
+
+func (ks keystore) writeLegacyLedgerKey(name string, pub cryptotypes.PubKey, path *hd.BIP44Params, algo hd.PubKeyType) (LegacyInfo, error) {
+	info := NewLegacyLedgerInfo(name, pub, *path, algo)
+	if err := ks.writeLegacyInfo(info); err != nil {
+		return nil, err
+	}
+
+	return info, nil
+}
+
+func (ks keystore) SaveLegacyOfflineKey(uid string, pubkey cryptotypes.PubKey, algo hd.PubKeyType) (LegacyInfo, error) {
+	return ks.writeLegacyOfflineKey(uid, pubkey, algo)
+}
+
+func (ks keystore) writeLegacyOfflineKey(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) (LegacyInfo, error) {
+	info := newLegacyOfflineInfo(name, pub, algo)
+	err := ks.writeLegacyInfo(info)
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
+}
+
+
+func (ks keystore) SaveLegacyMultisig(uid string, pubkey cryptotypes.PubKey) (LegacyInfo, error) {
+	return ks.writeLegacyMultisigKey(uid, pubkey)
+}
+
+func (ks keystore) writeLegacyMultisigKey(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
+	info, err := newLegacyMultiInfo(name, pub)
+	if err != nil {
+		return nil, err
+	}
+	if err = ks.writeLegacyInfo(info); err != nil {
+		return nil, err
+	}
+
+	return info, nil
 }

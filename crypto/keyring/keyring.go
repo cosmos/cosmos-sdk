@@ -79,13 +79,11 @@ type Keyring interface {
 	//
 	// A passphrase set to the empty string will set the passphrase to the DefaultBIP39Passphrase value.
 	NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (*Record, string, error)
-    // saves legacyLocalInfo to keyring
-	NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (LegacyInfo, string, error)
+	
 	// NewAccount converts a mnemonic to a private key and BIP-39 HD Path and persists it.
 	// It fails if there is an existing key Info with the same address.
 	NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error)
-
-	NewLegacyAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (LegacyInfo, error)
+	
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
 
@@ -101,6 +99,7 @@ type Keyring interface {
 	Exporter
 
 	Migrator
+	LegacyInfoWriter
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -858,7 +857,7 @@ func (ks keystore) checkMigrate() (bool, error) {
 		// key not found, all good: assume version = 0
 	} else {
 		if len(item.Data) != 4 {
-			return migrated,sdkerrors.ErrInvalidVersion.Wrapf(
+			return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
 				"Can't migrate the keyring - the stored version is malformed: [%v]: %v",
 				item.Description, string(item.Data))
 		}
@@ -884,7 +883,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 	}
 
 	for _, key := range keys {
-	
+
 		if !strings.HasSuffix(key, infoSuffix) {
 			fmt.Printf("key %s has no infoSuffix", key)
 			continue

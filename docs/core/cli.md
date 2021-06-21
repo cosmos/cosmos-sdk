@@ -60,13 +60,13 @@ The root command (called `rootCmd`) is what the user first types into the comman
 
 Next is an example `rootCmd` function from the `simapp` application. It instantiates the root command, adds a [_persistent_ flag](#flags) and `PreRun` function to be run before every execution, and adds all of the necessary subcommands.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/e73c64bac3392084d47e96a5b49eb7c1b5274ea8/simapp/simd/cmd/root.go#L37-L150
++++ https://github.com/cosmos/cosmos-sdk/blob/4eea4cafd3b8b1c2cd493886db524500c9dd745c/simapp/simd/cmd/root.go#L37-L150
 
 `rootCmd` has a function called `initAppConfig()` which is useful for setting the application's custom configs.
 By default app uses Tendermint app config template from SDK, which can be over-written via `initAppConfig()`.
 Here's an example code to override default `appConfig` and `app.toml` template.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/e73c64bac3392084d47e96a5b49eb7c1b5274ea8/simapp/simd/cmd/root.go#L84-L117
++++ https://github.com/cosmos/cosmos-sdk/blob/4eea4cafd3b8b1c2cd493886db524500c9dd745c/simapp/simd/cmd/root.go#L84-L117
 
 The root-level `status` and `keys` subcommands are common across most applications and do not interact with application state. The bulk of an application's functionality - what users can actually _do_ with it - is enabled by its `tx` and `query` commands.
 

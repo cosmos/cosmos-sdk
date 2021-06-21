@@ -420,7 +420,6 @@ func exportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error
 		if linfo.PrivKeyArmor == "" {
 			return nil, fmt.Errorf("private key not available")
 		}
-
 		priv, err := legacy.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
 		if err != nil {
 			return nil, err

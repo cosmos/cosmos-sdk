@@ -118,29 +118,6 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 	}
 
 	return ExtractPrivKeyFromItem(kb.cdc, k)
-
-	/*
-		var priv types.PrivKey
-
-		switch i := info.(type) {
-		case LocalInfo:
-			linfo := i
-			if linfo.PrivKeyArmor == "" {
-				err = fmt.Errorf("private key not available")
-				return nil, err
-			}
-
-			priv, _, err = crypto.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
-			if err != nil {
-				return nil, err
-			}
-
-		case LedgerInfo, OfflineInfo, MultiInfo:
-			return nil, errors.New("only works on local private keys")
-		}
-
-		return priv, nil
-	*/
 }
 
 func (kb dbKeybase) Export(name string) (armor string, err error) {

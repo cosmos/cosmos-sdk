@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 )
 
 var ErrPrivKeyExtr = errors.New("Private key extraction works only for Local")
@@ -34,6 +35,9 @@ func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local
 	)
 
 	privKeyType := privKey.Type()
+
+	// TODO find out why i canot do that?
+	b, err := cdc.Marshal(privKey)
 
 	switch privKeyType {
 	case "secp256k1":
@@ -205,27 +209,24 @@ func ExtractPrivKeyFromItem(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, er
 	return extractPrivKeyFromLocal(cdc, rl)
 }
 
-func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey, error) {
+func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey,error) {
+	if rl.PrivKeyArmor == "" {
+		return nil, errors.New("private key not available")
+	}
+
 	bz := []byte(rl.PrivKeyArmor)
 
 	switch rl.PrivKeyType {
 	case "secp256k1":
-		// TODO consider to declare standalone function for that
-		priv := new(secp256k1.PrivKey)
+		var priv secp256k1.PrivKey
 
-		if err := cdc.Unmarshal(bz, priv); err != nil {
-			return nil, err
-		}
 
-		return priv, nil
 
-	default:
-		priv := new(ed25519.PrivKey)
+		
 
-		if err := cdc.Unmarshal(bz, priv); err != nil {
-			return nil, err
-		}
 
-		return priv, nil
+	case "ed25519":
 	}
+	return priv,nil
+
 }

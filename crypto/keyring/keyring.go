@@ -99,6 +99,7 @@ type Keyring interface {
 	Exporter
 
 	Migrator
+	ItemSetter
 	LegacyInfoWriter
 }
 
@@ -137,6 +138,10 @@ type LegacyInfoImporter interface {
 
 type Migrator interface {
 	CheckMigrate() (bool, error)
+}
+// used in migration_test.go
+type ItemSetter interface {
+	SetItem(item keyring.Item) error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -850,6 +855,7 @@ func (ks keystore) checkMigrate() (bool, error) {
 	var migrated bool
 	// 1.Get a key data
 	item, err := ks.db.Get(VERSION_KEY)
+
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
 			return migrated, fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
@@ -865,6 +871,7 @@ func (ks keystore) checkMigrate() (bool, error) {
 	}
 	return ks.migrate(version, item, migrated)
 }
+
 
 func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool, error) {
 	if version == CURRENT_VERSION {
@@ -907,9 +914,11 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 
 		legacyInfo, err := unmarshalInfo(item.Data)
 		if err != nil {
-			unmarshalErr := fmt.Errorf("unmarshalInfo(item.Data), err - %s", err)
+			unmarshalErr := fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 			fmt.Println(unmarshalErr)
-			continue
+			// TODO should I continue here or exit with error?
+			// continue 
+			return migrated, unmarshalErr
 		}
 
 		fmt.Println("Unmarshal using Amino")
@@ -927,22 +936,26 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 		}
 
 		//5.overwrite the keyring entry with
-		ks.db.Set(keyring.Item{
+		if err := ks.db.Set(keyring.Item{
 			Key:         key,
 			Data:        serializedRecord,
 			Description: "SDK kerying version",
-		})
+		}); err != nil {
+			return migrated, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+		}
 
 		migrated = true
 	}
 	// 6. at the end of the loop update version
 	var versionBytes = make([]byte, 4)
 	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
-	ks.db.Set(keyring.Item{
+	if err := ks.db.Set(keyring.Item{
 		Key:         VERSION_KEY,
 		Data:        versionBytes,
 		Description: "SDK kerying version",
-	})
+	}); err != nil {
+		return migrated, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+	}
 
 	return migrated, nil
 }
@@ -958,6 +971,10 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 // TODO add tests INCORRECT LOCAL - does not include private key
 func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	fmt.Println("convertFromLegacyInfo")
+
+	if info == nil {
+		return nil, errors.New("unable to convert LegacyInfo to Record cause info is nil")
+	}
 
 	var item isRecord_Item
 
@@ -992,6 +1009,10 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	name := info.GetName()
 	pk := info.GetPubKey()
 	return NewRecord(name, pk, item)
+}
+
+func (ks keystore) SetItem(item keyring.Item) error {
+	return ks.db.Set(item)
 }
 
 type unsafeKeystore struct {

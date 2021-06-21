@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	dkeyring "github.com/99designs/keyring"
 )
 
 // TODO
@@ -17,10 +18,9 @@ import (
 
 // create legacyInfo -> keyring -> checkMigrate -> key will be migrated
 
-func TestMigrationLegacyLocalKey(t *testing.T) {
+const n1 = "cosmos"
 
-	const n1 = "cosmos"
-	
+func TestMigrationLegacyLocalKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -43,9 +43,6 @@ func TestMigrationLegacyLocalKey(t *testing.T) {
 
 // TODO fix error support for ledger devices is not available in this executable
 func TestMigrationLegacyLedgerKey(t *testing.T) {
-
-	const n1 = "cosmos"
-	
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -67,9 +64,6 @@ func TestMigrationLegacyLedgerKey(t *testing.T) {
 }
 
 func TestMigrationLegacyOfflineKey(t *testing.T) {
-
-	const n1 = "cosmos"
-	
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -91,9 +85,6 @@ func TestMigrationLegacyOfflineKey(t *testing.T) {
 }
 
 func TestMigrationLegacyMultiKey(t *testing.T) {
-
-	const n1 = "cosmos"
-	
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -116,9 +107,6 @@ func TestMigrationLegacyMultiKey(t *testing.T) {
 
 // TODO  do i need to test migration for ledger,offline record items as well?
 func TestMigrationLocalRecord(t *testing.T) {
-
-	const n1 = "cosmos"
-	
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -135,6 +123,35 @@ func TestMigrationLocalRecord(t *testing.T) {
 	require.False(migrated)
 	require.NoError(err)
 }
+
+// TODO insert multiple incorrect migration keys and output errors to user 
+func TestMigrationOneRandomItemError(t *testing.T) {
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+
+	randomBytes := []byte("abckd0s03l")
+
+	errItem := dkeyring.Item{
+		Key:         keyring.InfoKey(n1),
+		Data:        randomBytes,
+		Description: "SDK kerying version",
+	}
+
+	err = kb.SetItem(errItem)
+	require.NoError(err)
+
+	migrated, err := kb.CheckMigrate()
+	require.False(migrated)
+	require.Error(err)
+}
+
+
+
 
 
 

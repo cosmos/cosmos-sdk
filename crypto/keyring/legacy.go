@@ -203,6 +203,7 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 // Close the underlying storage.
 func (kb dbKeybase) Close() error { return kb.db.Close() }
 
+func InfoKey(name string) string { return infoKey(name)}
 func infoKey(name string) string   { return fmt.Sprintf("%s.%s", name, infoSuffix) }
 func infoKeyBz(name string) []byte { return []byte(infoKey(name)) }
 

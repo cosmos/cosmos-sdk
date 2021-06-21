@@ -68,6 +68,13 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	}
 
 	keeper.cdc.MustUnmarshal(bz, &vote)
+
+	// Graceful fallback of deprecated `Option` field, in case there's only 1
+	// VoteOption.
+	if len(vote.Options) == 1 && vote.Options[0].Weight.Equal(sdk.MustNewDecFromStr("1.0")) {
+		vote.Option = vote.Options[0].Option
+	}
+
 	return vote, true
 }
 

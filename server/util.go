@@ -226,17 +226,17 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 
 	appCfgFilePath := filepath.Join(configPath, "app.toml")
 	if _, err := os.Stat(appCfgFilePath); os.IsNotExist(err) {
-		appConf, err := config.ParseConfig(rootViper)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
-		}
-
 		if customAppTemplate != "" {
 			config.SetConfigTemplate(customAppTemplate)
 
 			err = rootViper.Unmarshal(customConfig)
 			config.WriteConfigFile(appCfgFilePath, customConfig)
 		} else {
+			appConf, err := config.ParseConfig(rootViper)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse %s: %w", appCfgFilePath, err)
+			}
+
 			config.WriteConfigFile(appCfgFilePath, appConf)
 		}
 	}

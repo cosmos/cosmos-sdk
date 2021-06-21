@@ -78,3 +78,5 @@ func ReadPageRequest(flagSet *pflag.FlagSet) (*query.PageRequest, error) {
 func NewClientFromNode(nodeURI string) (*rpchttp.HTTP, error) {
 	return rpchttp.New(nodeURI, "/websocket")
 }
+
+type DefaultHome string

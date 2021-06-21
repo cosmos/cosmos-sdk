@@ -1,5 +1,7 @@
 package container
 
+import "fmt"
+
 type Option interface {
 	applyOption(*container)
 }
@@ -36,6 +38,10 @@ func Options(opts ...Option) Option {
 	return option{
 		func(container *container) {
 			for _, opt := range opts {
+				if opt == nil {
+					container.err = fmt.Errorf("unexpected nil option")
+					return
+				}
 				opt.applyOption(container)
 				if container.err != nil {
 					return

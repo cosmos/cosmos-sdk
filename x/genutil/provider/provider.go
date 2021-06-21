@@ -3,6 +3,8 @@ package provider
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/container"
+
 	"github.com/spf13/cobra"
 	"go.uber.org/dig"
 
@@ -12,44 +14,47 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-type Inputs struct {
+type inputs struct {
 	dig.In
 
-	DefaultHome             string          `name:"cli.default-home"`
-	Handlers                []types.Handler `group:"cosmos.genutil.v1.Handler"`
+	DefaultHome             client.DefaultHome
+	Handlers                []types.Handler `group:"app"`
 	GenesisBalancesIterator types.GenesisBalancesIterator
 	TxConfig                client.TxConfig
 }
 
-type Outputs struct {
+type outputs struct {
 	dig.Out
 
 	RootCommands []*cobra.Command `group:"root,flatten"`
 }
 
-func Provider(inputs Inputs) Outputs {
-	validateGenesis := func(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
-		for _, b := range inputs.Handlers {
-			if err := b.ValidateGenesis(cdc, txEncCfg, genesis[b.ID.Name()]); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	return Outputs{
-		RootCommands: []*cobra.Command{
-			genutilcli.InitCmd(func(cdc codec.JSONCodec) map[string]json.RawMessage {
-				genesis := make(map[string]json.RawMessage)
-				for _, b := range inputs.Handlers {
-					genesis[b.ID.Name()] = b.DefaultGenesis(cdc)
+var Module = container.Provide(
+	func(inputs inputs) outputs {
+		validateGenesis := func(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
+			for _, b := range inputs.Handlers {
+				if err := b.ValidateGenesis(cdc, txEncCfg, genesis[b.ID.Name()]); err != nil {
+					return err
 				}
-				return genesis
-			}, inputs.DefaultHome),
-			genutilcli.CollectGenTxsCmd(inputs.GenesisBalancesIterator, inputs.DefaultHome),
-			genutilcli.MigrateGenesisCmd(),
-			genutilcli.GenTxCmd(validateGenesis, inputs.TxConfig, inputs.GenesisBalancesIterator, inputs.DefaultHome),
-			genutilcli.ValidateGenesisCmd(validateGenesis),
-		},
-	}
-}
+			}
+			return nil
+		}
+
+		defaultHome := string(inputs.DefaultHome)
+
+		return outputs{
+			RootCommands: []*cobra.Command{
+				genutilcli.InitCmd(func(cdc codec.JSONCodec) map[string]json.RawMessage {
+					genesis := make(map[string]json.RawMessage)
+					for _, b := range inputs.Handlers {
+						genesis[b.ID.Name()] = b.DefaultGenesis(cdc)
+					}
+					return genesis
+				}, defaultHome),
+				genutilcli.CollectGenTxsCmd(inputs.GenesisBalancesIterator, defaultHome),
+				genutilcli.MigrateGenesisCmd(),
+				genutilcli.GenTxCmd(validateGenesis, inputs.TxConfig, inputs.GenesisBalancesIterator, defaultHome),
+				genutilcli.ValidateGenesisCmd(validateGenesis),
+			},
+		}
+	})

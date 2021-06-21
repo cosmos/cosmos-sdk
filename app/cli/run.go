@@ -1,7 +1,14 @@
 package cli
 
 import (
+	"fmt"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/app/internal"
+
+	"github.com/cosmos/cosmos-sdk/app/query"
+
+	"github.com/cosmos/cosmos-sdk/container"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
@@ -14,8 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
-	"github.com/cosmos/cosmos-sdk/app/internal"
 
 	"github.com/spf13/cobra"
 
@@ -36,57 +41,64 @@ type Options struct {
 }
 
 func Run(options Options) {
-	rootCmd := newRootCmd(options)
+	err := container.Compose(
+		func(in inputs) {
+			rootCmd := makeRootCmd(in, options)
+			if err := svrcmd.Execute(rootCmd, string(in.DefaultHome)); err != nil {
+				switch e := err.(type) {
+				case server.ErrorCode:
+					os.Exit(e.Code)
 
-	if err := svrcmd.Execute(rootCmd, options.DefaultHome); err != nil {
-		switch e := err.(type) {
-		case server.ErrorCode:
-			os.Exit(e.Code)
+				default:
+					os.Exit(1)
+				}
+			}
+		},
 
-		default:
-			os.Exit(1)
-		}
+		// Provide default home
+		container.Provide(func() client.DefaultHome { return client.DefaultHome(options.DefaultHome) }),
+		// Provide codec
+		app.CodecProvider,
+		query.Module,
+		internal.AppConfigProvider(options.DefaultAppConfig),
+	)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+		os.Exit(-1)
 	}
 }
 
-type Inputs struct {
+type inputs struct {
 	dig.In
 
-	RootCommands []*cobra.Command `group:"root"`
+	DefaultHome       client.DefaultHome
+	RootCommands      []*cobra.Command             `group:"root"`
+	Codec             codec.JSONCodec              `optional:"true"`
+	InterfaceRegistry codectypes.InterfaceRegistry `optional:"true"`
+	Amino             *codec.LegacyAmino           `optional:"true"`
+	TxConfig          client.TxConfig              `optional:"true"`
+	AccountRetriever  client.AccountRetriever      `optional:"true"`
 }
 
-func newRootCmd(options Options) *cobra.Command {
-	appProvider, err := internal.NewAppProvider(options.DefaultAppConfig)
-	if err != nil {
-		panic(err)
-	}
-
-	err = appProvider.Provide(func() string { return options.DefaultHome }, dig.Name("cli.default-home"))
-	if err != nil {
-		panic(err)
-	}
-
+func makeRootCmd(in inputs, options Options) *cobra.Command {
 	initClientCtx := client.Context{}.
 		WithInput(os.Stdin).
 		WithHomeDir(options.DefaultHome).
 		WithViper(options.EnvPrefix)
-
-	err = appProvider.Invoke(func(
-		codec codec.JSONCodec,
-		registry codectypes.InterfaceRegistry,
-		txConfig client.TxConfig,
-		amino *codec.LegacyAmino,
-		accountRetriever client.AccountRetriever,
-	) {
-		initClientCtx = initClientCtx.
-			WithJSONCodec(codec).
-			WithInterfaceRegistry(registry).
-			WithTxConfig(txConfig).
-			WithLegacyAmino(amino).
-			WithAccountRetriever(accountRetriever)
-	})
-	if err != nil {
-		panic(err)
+	if in.Codec != nil {
+		initClientCtx = initClientCtx.WithJSONCodec(in.Codec)
+	}
+	if in.InterfaceRegistry != nil {
+		initClientCtx = initClientCtx.WithInterfaceRegistry(in.InterfaceRegistry)
+	}
+	if in.TxConfig != nil {
+		initClientCtx = initClientCtx.WithTxConfig(in.TxConfig)
+	}
+	if in.AccountRetriever != nil {
+		initClientCtx = initClientCtx.WithAccountRetriever(in.AccountRetriever)
+	}
+	if in.Amino != nil {
+		initClientCtx = initClientCtx.WithLegacyAmino(in.Amino)
 	}
 
 	rootCmd := &cobra.Command{
@@ -115,17 +127,7 @@ func newRootCmd(options Options) *cobra.Command {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
-	err = appProvider.Invoke(func(inputs Inputs) {
-		rootCmd.AddCommand(inputs.RootCommands...)
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	err = dig.Visualize(appProvider.Container, os.Stdout)
-	if err != nil {
-		panic(err)
-	}
+	rootCmd.AddCommand(in.RootCommands...)
 
 	rootCmd.AddCommand(
 		//TODO: AddGenesisAccountCmd(options.DefaultHome),
@@ -135,7 +137,8 @@ func newRootCmd(options Options) *cobra.Command {
 		config.Cmd(),
 	)
 
-	server.AddCommands(rootCmd, options.DefaultHome, appProvider.AppCreator, appProvider.AppExportor, addModuleInitFlags)
+	// TODO:
+	//server.AddCommands(rootCmd, options.DefaultHome, appProvider.AppCreator, appProvider.AppExportor, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(

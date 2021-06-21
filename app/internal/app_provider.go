@@ -116,7 +116,7 @@ func AppConfigProvider(config *app.Config) container.Option {
 		provideAbciMethods,
 		app.ComposeModules(moduleConfigMap),
 		// TODO should these be here:
-		container.Provide(genutilprovider.Provider),
+		genutilprovider.Module,
 		query.Module,
 	)
 }

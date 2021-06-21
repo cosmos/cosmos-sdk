@@ -9,37 +9,45 @@ import (
 	"go.uber.org/dig"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/container"
 )
 
-type moduleContainer struct {
-	typeRegistry codecTypes.TypeRegistry
-	cdc          codec.Codec
-	opts         []container.Option
-}
-
-func (mc moduleContainer) AddProtoModule(name string, config *codecTypes.Any) error {
+func addProtoModule(name string, config *codectypes.Any) container.Option {
 	// unpack Any
 	msgTyp := proto.MessageType(config.TypeUrl)
 	mod := reflect.New(msgTyp.Elem()).Interface().(proto.Message)
 	if err := proto.Unmarshal(config.Value, mod); err != nil {
-		return err
+		return container.Error(err)
 	}
 
-	return mc.AddModule(name, mod)
+	return addModule(name, mod)
 }
 
 var moduleKeyType = reflect.TypeOf((*ModuleKey)(nil)).Elem()
 
-func (mc *moduleContainer) AddModule(name string, mod interface{}) error {
+type codecClosureOutput struct {
+	container.Out
+
+	CodecClosure codecClosure `group:"codec"`
+}
+
+func addModule(name string, mod interface{}) container.Option {
+	var opts []container.Option
+
+	if typeProvider, ok := mod.(TypeProvider); ok {
+		opts = append(opts, container.Provide(func() codecClosureOutput {
+			return codecClosureOutput{
+				CodecClosure: func(registry codectypes.TypeRegistry) {
+					typeProvider.RegisterTypes(registry)
+				},
+			}
+		}))
+	}
+
 	key := &moduleKey{&moduleID{name}}
 
 	// register types
-	if typeProvider, ok := mod.(TypeProvider); ok {
-		typeProvider.RegisterTypes(mc.typeRegistry)
-	}
-
 	// register DI Provide* methods
 	modTy := reflect.TypeOf(mod)
 	numMethods := modTy.NumMethod()
@@ -48,30 +56,32 @@ func (mc *moduleContainer) AddModule(name string, mod interface{}) error {
 		if strings.HasPrefix(method.Name, "Provide") {
 			methTyp := method.Type
 			if methTyp.IsVariadic() {
-				return fmt.Errorf("variadic Provide methods are not supported")
+				return container.Error(fmt.Errorf("variadic Provide methods are not supported"))
 			}
 
 			m := methTyp.NumIn() - 1
+			fmt.Printf("method: %+v, m:%d\n", method, m)
 			if m < 0 {
-				return fmt.Errorf("unexpected number of method arguments %d", m)
+				return container.Error(fmt.Errorf("unexpected number of method arguments %d", m))
 			}
 
 			moduleKeyIdx := -1
 			var in []reflect.Type
 			for i := 0; i < m; i++ {
 				ty := methTyp.In(i + 1)
+				fmt.Printf("i:%d, ty:%+v\n", i, ty)
 				if ty == moduleKeyType {
 					if moduleKeyIdx >= 0 {
 						modTy := reflect.TypeOf(mod)
 						if modTy.Kind() == reflect.Ptr {
 							modTy = modTy.Elem()
 						}
-						return fmt.Errorf("%v can only be used as a parameter in a Provide method once, used twice in %s.%s.%s", moduleKeyType,
-							modTy.PkgPath(), modTy.Name(), method.Name)
+						return container.Error(fmt.Errorf("%v can only be used as a parameter in a Provide method once, used twice in %s.%s.%s", moduleKeyType,
+							modTy.PkgPath(), modTy.Name(), method.Name))
 					}
 					moduleKeyIdx = i + 1
 				} else {
-					in = append(in)
+					in = append(in, ty)
 				}
 			}
 
@@ -89,15 +99,15 @@ func (mc *moduleContainer) AddModule(name string, mod interface{}) error {
 					args0 := append(args[:moduleKeyIdx], reflect.ValueOf(key))
 					args = append(args0, args[moduleKeyIdx:]...)
 				}
-				fmt.Printf("modTy: %s, method: %+v, idx:%d, args:%+v\n", reflect.TypeOf(mod).Elem().PkgPath(), method, moduleKeyIdx, args)
+				fmt.Printf("method: %+v, args:%+v, fnTy: %+v\n", method, args, fnTyp)
 				return method.Func.Call(args)
 			})
 
-			mc.opts = append(mc.opts, container.Provide(fn.Interface()))
+			opts = append(opts, container.Provide(fn.Interface()))
 		}
 	}
 
-	return nil
+	return container.Options(opts...)
 }
 
 type registrar struct {
@@ -110,33 +120,36 @@ func (s registrar) Provide(fn interface{}) error {
 	return s.ctr.Provide(fn)
 }
 
-func ComposeModules(modules map[string]*codecTypes.Any) container.Option {
-	typeRegistry := codecTypes.NewInterfaceRegistry()
+func ComposeModules(modules map[string]*codectypes.Any) container.Option {
+	var opts []container.Option
+	for name, mod := range modules {
+		opts = append(opts, addProtoModule(name, mod))
+	}
+	return container.Options(opts...)
+}
+
+type codecInputs struct {
+	container.In
+
+	CodecClosures []codecClosure `group:"codec"`
+}
+
+type codecClosure func(codectypes.TypeRegistry)
+
+var CodecProvider = container.Provide(func(inputs codecInputs) (
+	codectypes.TypeRegistry,
+	codec.Codec,
+	codec.ProtoCodecMarshaler,
+	codec.BinaryCodec,
+	codec.JSONCodec,
+	*codec.LegacyAmino,
+) {
+
+	typeRegistry := codectypes.NewInterfaceRegistry()
+	for _, closure := range inputs.CodecClosures {
+		closure(typeRegistry)
+	}
 	cdc := codec.NewProtoCodec(typeRegistry)
 	amino := codec.NewLegacyAmino()
-	cdcProvider := container.Provide(func() (
-		codecTypes.TypeRegistry,
-		codec.Codec,
-		codec.ProtoCodecMarshaler,
-		codec.BinaryCodec,
-		codec.JSONCodec,
-		*codec.LegacyAmino,
-	) {
-		return typeRegistry, cdc, cdc, cdc, cdc, amino
-	})
-
-	mc := moduleContainer{
-		typeRegistry: typeRegistry,
-		cdc:          cdc,
-		opts:         []container.Option{cdcProvider},
-	}
-
-	for name, mod := range modules {
-		err := mc.AddProtoModule(name, mod)
-		if err != nil {
-			return container.Error(err)
-		}
-	}
-
-	return container.Options(mc.opts...)
-}
+	return typeRegistry, cdc, cdc, cdc, cdc, amino
+})

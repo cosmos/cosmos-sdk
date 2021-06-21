@@ -81,7 +81,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 // initConfig helps to override default appConfig template and settings.
 // return ("", nil) if no custom configuration is required for the application.
-func initConfig () (customAppTemplate string, customAppConfig interface{}) {
+func initConfig() (customAppTemplate string, customAppConfig interface{}) {
 	// WASMConfig defines configuration for the wasm module.
 	type WASMConfig struct {
 		// This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
@@ -100,12 +100,12 @@ func initConfig () (customAppTemplate string, customAppConfig interface{}) {
 	customAppConfig = CustomAppConfig{
 		Config: *serverconfig.DefaultConfig(),
 		WASM: WASMConfig{
-			LruSize: 1,
+			LruSize:       1,
 			QueryGasLimit: 300000,
 		},
 	}
 
-	customAppTemplate = serverconfig.DefaultConfigTemplate +  `
+	customAppTemplate = serverconfig.DefaultConfigTemplate + `
 [wasm]
 # This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries
 query_gas_limit = 300000

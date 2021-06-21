@@ -99,7 +99,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		info := &cosmovisor.UpgradeInfo{Name: name}
+		info := cosmovisor.UpgradeInfo{Name: name}
 		err = cosmovisor.DoUpgrade(cfg, info)
 		s.Require().Error(err, name)
 		currentBin, err := cfg.CurrentBin()
@@ -110,7 +110,7 @@ func (s *upgradeTestSuite) TestDoUpgradeNoDownloadUrl() {
 	// make sure it updates a few times
 	for _, upgrade := range []string{"chain2", "chain3"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
-		info := &cosmovisor.UpgradeInfo{Name: upgrade}
+		info := cosmovisor.UpgradeInfo{Name: upgrade}
 		err = cosmovisor.DoUpgrade(cfg, info)
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
@@ -173,7 +173,7 @@ func (s *upgradeTestSuite) TestGetDownloadURL() {
 	}
 
 	for _, tc := range cases {
-		url, err := cosmovisor.GetDownloadURL(&cosmovisor.UpgradeInfo{Info: tc.info})
+		url, err := cosmovisor.GetDownloadURL(cosmovisor.UpgradeInfo{Info: tc.info})
 		if tc.isErr {
 			s.Require().Error(err)
 		} else {
@@ -244,7 +244,7 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 		}
 
 		upgrade := "amazonas"
-		info := &cosmovisor.UpgradeInfo{
+		info := cosmovisor.UpgradeInfo{
 			Name: upgrade,
 			Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
 		}

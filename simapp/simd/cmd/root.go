@@ -80,8 +80,12 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 }
 
 // initConfig helps to override default appConfig template and settings.
-// return ("", nil) if no custom configuration is required for the application.
+// return; if no custom configuration is required for the application.
 func initConfig() (customAppTemplate string, customAppConfig interface{}) {
+	// Below is an example to provide custom config
+	// If your app doesn't require any custom settings, remove the following code and
+	// just retrun;
+
 	// WASMConfig defines configuration for the wasm module.
 	type WASMConfig struct {
 		// This is the maximum sdk gas (wasm and storage) that we allow for any x/wasm "smart" queries

@@ -99,9 +99,12 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 // application command. It will create a Viper literal and a default server
 // Context. The server Tendermint configuration will either be read and parsed
 // or created and saved to disk, where the server Context is updated to reflect
-// the Tendermint configuration. The Viper literal is used to read and parse
-// the application configuration. Command handlers can fetch the server Context
-// to get the Tendermint configuration or to get access to Viper.
+// the Tendermint configuration. It takes custom app config template and config
+// settings to create a custom Tendermint configuration. If the custom template
+// is empty, it uses default-template provided by the server. The Viper literal
+// is used to read and parse the application configuration. Command handlers can
+// fetch the server Context to get the Tendermint configuration or to get access
+// to Viper.
 func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}) error {
 	serverCtx := NewDefaultContext()
 

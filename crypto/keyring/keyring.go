@@ -99,7 +99,7 @@ type Keyring interface {
 	Exporter
 
 	Migrator
-	ItemSetter
+	Setter
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -140,8 +140,9 @@ type Migrator interface {
 }
 
 // used in migration_test.go
-type ItemSetter interface {
+type Setter interface {
 	SetItem(item keyring.Item) error
+	setVersion() error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -845,64 +846,84 @@ func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (
 }
 
 // introduced bool return parameter for testing purposes in migration tests
+// TODO find out if i need first return bool parameter here or i can just use error as return parameter?
 func (ks keystore) CheckMigrate() (bool, error) {
 	var version uint32 = 0
-	var migrated bool
 	// 1.Get a key data
 	item, err := ks.db.Get(VERSION_KEY)
 
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
-			return migrated, fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
+			return false, fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
 		}
 		// key not found, all good: assume version = 0
 	} else {
 		if len(item.Data) != 4 {
-			return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
-				"Can't migrate the keyring - the stored version is malformed: [%v]: %v",
+			return false, sdkerrors.ErrInvalidVersion.Wrapf(
+				"Can't migrate the keyring - the stored version is malformed: [%s]: %s",
 				item.Description, string(item.Data))
 		}
 		version = binary.LittleEndian.Uint32(item.Data)
 	}
-	return ks.migrate(version, item, migrated)
+	return ks.migrate(version, item)
 }
 
-func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool, error) {
+func (ks keystore) migrate(version uint32, i keyring.Item) (bool, error) {
 	if version == CURRENT_VERSION {
 		// return nil
-		return migrated, fmt.Errorf("versions match")
+		return false, fmt.Errorf("versions match")
 	}
 	if version > CURRENT_VERSION {
-		return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
+		return false, sdkerrors.ErrInvalidVersion.Wrapf(
 			"Can't migrate the keyring - wrong keyring version: [%v]: %v, expected version to be max %d",
 			i.Description, string(i.Data), CURRENT_VERSION)
 	}
+	
+	// TODO i can use map or array of boleeans to check if no error occured thenw eu pdate the version otherwise
+	// return nil or error
+	// 6. at the end of the loop update version
+	migrated, err := ks.performMigration()
+	if !migrated {
+		return migrated, err
+	} else {
+		if err := ks.setVersion(); err != nil {
+			return migrated, err
+		}
+	}
+	
+	return migrated, nil
+}
+
+func (ks keystore) performMigration() (bool, error) {
 	keys, err := ks.db.Keys()
 	if err != nil {
 		// return err
-		return migrated, fmt.Errorf("Keys() error, err: %s", err)
+		return false, fmt.Errorf("Keys() error, err: %s", err)
 	}
 
-	for _, key := range keys {
-		// TODO to move it to separate function that outputs an error
+	migrations := make([]bool, len(keys))
+
+	for i, key := range keys {
 		if !strings.HasSuffix(key, infoSuffix) {
 			fmt.Printf("key %s has no infoSuffix", key)
 			continue
 		}
+
 		item, err := ks.db.Get(key)
 		if err != nil {
-			//return err
-			return migrated, fmt.Errorf("Get error, err - %s", err)
+			return false, fmt.Errorf("Get error, err - %s", err)
 		}
 
 		if len(item.Data) == 0 {
 			// return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
-			return migrated, fmt.Errorf("sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key), err: %s", sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
+			return false, fmt.Errorf("sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key), err: %s", sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
 		}
 
 		// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
 		if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
 			fmt.Println("protoUnmarshalRecord continue")
+			//TODO decide if we do not migrate, we should mark it as false or true?
+			migrations[i] = false 
 			continue
 		}
 
@@ -910,23 +931,19 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 		if err != nil {
 			unmarshalErr := fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 			fmt.Println(unmarshalErr)
-			// TODO should I continue here or exit with error?
-			// continue
-			return migrated, unmarshalErr
+			migrations[i] = false
+			continue
 		}
-
-		fmt.Println("Unmarshal using Amino")
-
 		//4.serialize info using proto
 		k, err := ks.convertFromLegacyInfo(legacyInfo)
 		if err != nil {
-			return migrated, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
+			return false, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
 		}
 
 		serializedRecord, err := ks.cdc.Marshal(k)
 		if err != nil {
 			// return err
-			return migrated, fmt.Errorf("ks.cdc.Marshal(kr), err - %s", err)
+			return false, fmt.Errorf("ks.cdc.Marshal(kr), err - %s", err)
 		}
 
 		//5.overwrite the keyring entry with
@@ -935,15 +952,30 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 			Data:        serializedRecord,
 			Description: "SDK kerying version",
 		}); err != nil {
-			return migrated, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+			return false, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 		}
 
-		migrated = true
+		migrations[i] = true
 	}
 
-	// TODO i can use map or array of boleeans to check if no error occured thenw eu pdate the version otherwise
-	// return nil or error
-	// 6. at the end of the loop update version
+	if !validateMigration(migrations) {
+		return false,errors.New("migration is not valid")
+	}
+
+	return true, nil
+}
+
+func validateMigration(migrations []bool) bool {
+	for _, m := range migrations {
+		if !m {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (ks keystore) setVersion() error  {
 	var versionBytes = make([]byte, 4)
 	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
 	if err := ks.db.Set(keyring.Item{
@@ -951,11 +983,11 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 		Data:        versionBytes,
 		Description: "SDK kerying version",
 	}); err != nil {
-		return migrated, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+		return fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}
-
-	return migrated, nil
+	return nil
 }
+
 
 func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 	k := new(Record)

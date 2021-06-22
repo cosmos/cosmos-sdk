@@ -67,14 +67,7 @@ not defined on a per-module basis. Registering this `StoreLoader` is done via
 func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades) baseapp.StoreLoader
 ```
 
-If there's a planned upgrade and the upgrade height is reached, the old binary writes `UpgradeInfo` to the disk before panic'ing.
-
-```go
-type UpgradeInfo struct {
-  Name    string
-  Height  int64
-}
-```
+If there's a planned upgrade and the upgrade height is reached, the old binary writes `Plan` to the disk before panic'ing.
 
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
 expected upgrade. It eliminiates the chances for the new binary to execute `StoreUpgrades` multiple

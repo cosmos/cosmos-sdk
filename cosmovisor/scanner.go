@@ -1,42 +1,114 @@
 package cosmovisor
 
 import (
-	"bufio"
-	"regexp"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
 )
 
-// Trim off whitespace around the info - match least greedy, grab as much space on both sides
-// Defined here: https://github.com/cosmos/cosmos-sdk/blob/release/v0.38.2/x/upgrade/abci.go#L38
-//  fmt.Sprintf("UPGRADE \"%s\" NEEDED at %s: %s", plan.Name, plan.DueAt(), plan.Info)
-// DueAt defined here: https://github.com/cosmos/cosmos-sdk/blob/release/v0.38.2/x/upgrade/internal/types/plan.go#L73-L78
-//
-//    if !p.Time.IsZero() {
-//      return fmt.Sprintf("time: %s", p.Time.UTC().Format(time.RFC3339))
-//    }
-//    return fmt.Sprintf("height: %d", p.Height)
-var upgradeRegex = regexp.MustCompile(`UPGRADE "(.*)" NEEDED at ((height): (\d+)|(time): (\S+)):\s+(\S*)`)
-
-// UpgradeInfo is the details from the regexp
+// UpgradeInfo is the update details created by `x/upgrade/keeper.DumpUpgradeInfoToDisk`.
 type UpgradeInfo struct {
-	Name string
-	Info string
+	Name   string
+	Info   string
+	Height uint
 }
 
-// WaitForUpdate will listen to the scanner until a line matches upgradeRegexp.
-// It returns (info, nil) on a matching line
-// It returns (nil, err) if the input stream errored
-// It returns (nil, nil) if the input closed without ever matching the regexp
-func WaitForUpdate(scanner *bufio.Scanner) (*UpgradeInfo, error) {
-	for scanner.Scan() {
-		line := scanner.Text()
-		if upgradeRegex.MatchString(line) {
-			subs := upgradeRegex.FindStringSubmatch(line)
-			info := UpgradeInfo{
-				Name: subs[1],
-				Info: subs[7],
-			}
-			return &info, nil
-		}
+type fileWatcher struct {
+	// full path to a watched file
+	filename string
+	interval time.Duration
+
+	currentInfo UpgradeInfo
+	lastModTime time.Time
+	cancel      chan bool
+	ticker      *time.Ticker
+	needsUpdate bool
+}
+
+func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatcher, error) {
+	if filename == "" {
+		return nil, errors.New("filename undefined")
 	}
-	return nil, scanner.Err()
+	filenameAbs, err := filepath.Abs(filename)
+	if err != nil {
+		return nil,
+			fmt.Errorf("wrong path, %s must be a valid file path, [%w]", filename, err)
+	}
+	dirname := filepath.Dir(filename)
+	info, err := os.Stat(dirname)
+	if err != nil || !info.IsDir() {
+		return nil, fmt.Errorf("wrong path, %s must be an existing directory, [%w]", dirname, err)
+	}
+
+	return &fileWatcher{filenameAbs, interval, UpgradeInfo{}, time.Time{}, make(chan bool), time.NewTicker(interval), false}, nil
+}
+
+func (fw *fileWatcher) Stop() {
+	close(fw.cancel)
+}
+
+func (fw *fileWatcher) MonitorUpdate() <-chan struct{} {
+	fw.ticker.Reset(fw.interval)
+	done := make(chan struct{})
+	fw.cancel = make(chan bool)
+	fw.needsUpdate = false
+
+	go func() {
+		for {
+			select {
+			case <-fw.ticker.C:
+				if fw.CheckUpdate() {
+					done <- struct{}{}
+				}
+			case <-fw.cancel:
+				return
+			}
+		}
+	}()
+	return done
+}
+
+// CheckUpdate reads update plan from file and checks if there is a new update request
+func (fw *fileWatcher) CheckUpdate() bool {
+	if fw.needsUpdate {
+		return true
+	}
+	stat, err := os.Stat(fw.filename)
+	if err != nil {
+		return false
+	}
+	if !stat.ModTime().After(fw.lastModTime) {
+		return false
+	}
+	ui, err := parseUpgradeInfoFile(fw.filename)
+	fmt.Println(">>>> UpgradeInfo", ui, err)
+	if err != nil {
+		// TODO: print error!
+		return false
+	}
+	if ui.Height > fw.currentInfo.Height {
+		fw.currentInfo = ui
+		fw.needsUpdate = true
+		return true
+	}
+	return false
+}
+
+func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
+	f, _ := os.Open(filename)
+	byteValue, _ := ioutil.ReadAll(f)
+	fmt.Println(">>>>> Upgrade File:", string(byteValue))
+	var ui UpgradeInfo
+	f, err := os.Open(filename)
+	if err != nil {
+		return ui, err
+	}
+	defer f.Close()
+	d := json.NewDecoder(f)
+	err = d.Decode(&ui)
+	return ui, err
 }

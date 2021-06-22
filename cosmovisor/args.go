@@ -1,13 +1,13 @@
 package cosmovisor
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 const (
@@ -17,13 +17,17 @@ const (
 	currentLink = "current"
 )
 
+// should be the same as x/upgrade/types.UpgradeInfoFilename
+const defaultFilename = "upgrade-info.json"
+
 // Config is the information passed in to control the daemon
 type Config struct {
 	Home                  string
 	Name                  string
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
-	LogBufferSize         int
+	UpgradeInfoFilename   string
+	PoolInterval          time.Duration
 }
 
 // Root returns the root directory where all info lives
@@ -44,7 +48,16 @@ func (cfg *Config) UpgradeBin(upgradeName string) string {
 // UpgradeDir is the directory named upgrade
 func (cfg *Config) UpgradeDir(upgradeName string) string {
 	safeName := url.PathEscape(upgradeName)
-	return filepath.Join(cfg.Root(), upgradesDir, safeName)
+	return filepath.Join(cfg.Home, rootName, upgradesDir, safeName)
+}
+
+// UpgradeInfoFile is the expecte filenmame used in `x/upgrade/keeper` for dumping
+// upgrade info.
+func (cfg *Config) UpgradeInfoFilePath() string {
+	if cfg.UpgradeInfoFilename != "" {
+		return cfg.UpgradeInfoFilename
+	}
+	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
 
 // Symlink to genesis
@@ -102,21 +115,22 @@ func GetConfigFromEnv() (*Config, error) {
 		cfg.RestartAfterUpgrade = true
 	}
 
-	logBufferSizeStr := os.Getenv("DAEMON_LOG_BUFFER_SIZE")
-	if logBufferSizeStr != "" {
-		logBufferSize, err := strconv.Atoi(logBufferSizeStr)
+	cfg.UpgradeInfoFilename = os.Getenv("DAEMON_UPDATE_INFO_FILE")
+
+	interval := os.Getenv("DAEMON_POLL_INTERVAL")
+	if interval != "" {
+		i, err := strconv.ParseUint(interval, 10, 32)
 		if err != nil {
 			return nil, err
 		}
-		cfg.LogBufferSize = logBufferSize * 1024
+		cfg.PoolInterval = time.Millisecond * time.Duration(i)
 	} else {
-		cfg.LogBufferSize = bufio.MaxScanTokenSize
+		cfg.PoolInterval = time.Duration(300 * time.Millisecond)
 	}
 
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
-
 	return cfg, nil
 }
 

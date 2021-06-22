@@ -444,7 +444,7 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	expected = sdk.NewCoins(newFooCoin(150), newBarCoin(75))
 	suite.Require().Equal(expected, acc2Balances)
 
-	// we sent all coins to acc2, so we should have deleted all balances for acc1
+	// we sent all foo coins to acc2, so foo balance should be deleted for acc1 and bar should be still there
 	var coins []sdk.Coin
 	app.BankKeeper.IterateAccountBalances(ctx, addr1, func(c sdk.Coin) (stop bool) {
 		coins = append(coins, c)

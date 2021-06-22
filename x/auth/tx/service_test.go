@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -29,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -69,7 +67,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		val.Address,
 		val.Address,
 		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100)),
+			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
 		),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -565,110 +563,6 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 
 	// make sure gas was used
 	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
-}
-
-// Tests that all msg events included in an authz MsgExec tx
-// Ref: https://github.com/cosmos/cosmos-sdk/issues/9501
-func (s *IntegrationTestSuite) TestSim_MsgExecEvents() {
-	val1 := s.network.Validators[0]
-	val1.ClientCtx.Offline = true
-
-	// create a second account and fund it for grantee usage
-	kr := val1.ClientCtx.Keyring
-	acc1, _, err := kr.NewMnemonic("granteeAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-	out, err := bankcli.MsgSendExec(
-		val1.ClientCtx,
-		val1.Address,
-		acc1.GetAddress(),
-		sdk.NewCoins(
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100)),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
-		fmt.Sprintf("--%s=foobar", flags.FlagNote),
-	)
-	s.Require().NoError(err)
-	s.Require().NoError(val1.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
-	s.Require().Equal(uint32(0), s.txRes.Code)
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// grab the account for sanity purposes
-	grantee, err := val1.ClientCtx.Keyring.Key("granteeAccount")
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// tx builder vars
-	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	limit := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 100000)}
-	gasLimit := testdata.NewTestGasLimit()
-	expiration := time.Now().Add(1000 * time.Hour)
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-	txBuilder := val1.ClientCtx.TxConfig.NewTxBuilder()
-
-	// create an authorization and grant for the grantee from validator[0]
-	a := banktypes.NewSendAuthorization(limit)
-	msg, err := authz.NewMsgGrant(val1.Address, grantee.GetAddress(), a, expiration)
-	err = txBuilder.SetMsgs(msg)
-
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
-	txBuilder.SetMemo("hello world")
-	// setup txFactory
-	txFactory := clienttx.Factory{}.
-		WithChainID(val1.ClientCtx.ChainID).
-		WithKeybase(val1.ClientCtx.Keyring).
-		WithTxConfig(val1.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-
-	// Sign Tx.
-	err = authclient.SignTx(txFactory, val1.ClientCtx, val1.Moniker, txBuilder, false, true)
-	s.Require().NoError(err)
-	txBytes, err := val1.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
-	s.Require().NoError(err)
-	// broadcast the tx
-	_, err = s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txBytes, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
-	s.Require().NoError(err)
-
-	// tx for grantee to use the granted funds with a MsgSend
-	s.Require().NoError(s.network.WaitForNextBlock())
-	txBuilder2 := val1.ClientCtx.TxConfig.NewTxBuilder()
-	msgExec := authz.NewMsgExec(grantee.GetAddress(), []sdk.Msg{
-		banktypes.NewMsgSend(grantee.GetAddress(), val1.Address, feeAmount),
-	})
-	var msg1 sdk.Msg = &msgExec
-	err = txBuilder2.SetMsgs(msg1)
-	s.Require().NoError(err)
-	txBuilder2.SetFeeAmount(feeAmount)
-	txBuilder2.SetGasLimit(gasLimit)
-	txBuilder2.SetMemo("hello world")
-	txFactory2 := clienttx.Factory{}.
-		WithChainID(val1.ClientCtx.ChainID).
-		WithKeybase(val1.ClientCtx.Keyring).
-		WithTxConfig(val1.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT)
-	err = authclient.SignTx(txFactory2, val1.ClientCtx, grantee.GetName(), txBuilder2, false, true)
-	s.Require().NoError(err)
-	txBytes2, err := val1.ClientCtx.TxConfig.TxEncoder()(txBuilder2.GetTx())
-	res, err := s.queryClient.BroadcastTx(context.Background(), &tx.BroadcastTxRequest{TxBytes: txBytes2, Mode: tx.BroadcastMode_BROADCAST_MODE_BLOCK})
-	s.Require().NoError(s.network.WaitForNextBlock())
-	s.Require().NoError(err)
-	logs := res.GetTxResponse().Logs
-
-	// make sure these events are included in the log
-	requiredEvents := map[string]bool{
-		"coin_received": true,
-		"coin_spent":    true,
-		"message":       true,
-		"transfer":      true,
-	}
-	s.Require().Len(logs[0].Events, 4)
-	for _, e := range logs[0].Events {
-		s.Require().True(requiredEvents[e.Type])
-	}
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

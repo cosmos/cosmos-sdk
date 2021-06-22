@@ -94,7 +94,7 @@ If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can acc
 
 Note that for this mechanism to provide strong security guarantees, all URLs should include a SHA 256/512 checksum. This ensures that no false binary is run, even if someone hacks the server or hijacks the DNS. `go-getter` will always ensure the downloaded file matches the checksum if it is provided. `go-getter` will also handle unpacking archives into directories (in this case the download link should point to a `zip` file of all data in the `bin` directory).
 
-To properly create a checksum on linux, you can use the `sha256sum` utility. For example:
+To properly create a sha256 checksum on linux, you can use the `sha256sum` utility. For example:
 
 ```
 sha256sum ./testdata/repo/zip_directory/autod.zip

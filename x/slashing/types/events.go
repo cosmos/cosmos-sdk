@@ -1,4 +1,4 @@
-//noalias
+// noalias
 package types
 
 // Slashing module event types

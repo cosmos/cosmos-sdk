@@ -258,6 +258,28 @@ func (k BaseSendKeeper) SetBalances(ctx sdk.Context, addr sdk.AccAddress, balanc
 	return nil
 }
 
+// initBalances sets the balance (multiple coins) for an account by address.
+// An error is returned upon failure.
+func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
+	store := ctx.KVStore(k.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	accountStore := prefix.NewStore(balancesStore, addr.Bytes())
+	for i := range balances {
+		balance := balances[i]
+		if !balance.IsValid() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
+		}
+
+		// Bank invariants require to not store zero balances.
+		if !balance.IsZero() {
+			bz := k.cdc.MustMarshalBinaryBare(&balance)
+			accountStore.Set([]byte(balance.Denom), bz)
+		}
+	}
+
+	return nil
+}
+
 // SetBalance sets the coin balance for an account by address.
 func (k BaseSendKeeper) SetBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {

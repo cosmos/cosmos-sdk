@@ -40,6 +40,7 @@ func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
 
 var _ LegacyKeybase = dbKeybase{}
 
+// nolint
 // dbKeybase combines encryption and storage implementation to provide a
 // full-featured key manager.
 //

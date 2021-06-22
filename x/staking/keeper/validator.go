@@ -240,7 +240,7 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) sdk.Iterator {
 	return sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 }
 
-//_______________________________________________________________________
+// _______________________________________________________________________
 // Last Validator Index
 
 // Load the last validator power.

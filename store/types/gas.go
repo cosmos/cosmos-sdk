@@ -20,6 +20,12 @@ const (
 // Gas measured by the SDK
 type Gas = uint64
 
+// ErrorNegativeGasConsumed defines an error thrown when the amount of gas refunded results in a
+// negative gas consumed amount.
+type ErrorNegativeGasConsumed struct {
+	Descriptor string
+}
+
 // ErrorOutOfGas defines an error thrown when an action results in out of gas.
 type ErrorOutOfGas struct {
 	Descriptor string
@@ -37,6 +43,7 @@ type GasMeter interface {
 	GasConsumedToLimit() Gas
 	Limit() Gas
 	ConsumeGas(amount Gas, descriptor string)
+	RefundGas(amount Gas, descriptor string)
 	IsPastLimit() bool
 	IsOutOfGas() bool
 	String() string
@@ -91,7 +98,20 @@ func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	if g.consumed > g.limit {
 		panic(ErrorOutOfGas{descriptor})
 	}
+}
 
+// RefundGas will deduct the given amount from the gas consumed. If the amount is greater than the
+// gas consumed, the function will panic.
+//
+// Use case: This functionality enables refunding gas to the transaction or block gas pools so that
+// EVM-compatible chains can fully support the go-ethereum StateDb interface.
+// See https://github.com/cosmos/cosmos-sdk/pull/9403 for reference.
+func (g *basicGasMeter) RefundGas(amount Gas, descriptor string) {
+	if g.consumed < amount {
+		panic(ErrorNegativeGasConsumed{Descriptor: descriptor})
+	}
+
+	g.consumed -= amount
 }
 
 func (g *basicGasMeter) IsPastLimit() bool {
@@ -136,6 +156,20 @@ func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	if overflow {
 		panic(ErrorGasOverflow{descriptor})
 	}
+}
+
+// RefundGas will deduct the given amount from the gas consumed. If the amount is greater than the
+// gas consumed, the function will panic.
+//
+// Use case: This functionality enables refunding gas to the trasaction or block gas pools so that
+// EVM-compatible chains can fully support the go-ethereum StateDb interface.
+// See https://github.com/cosmos/cosmos-sdk/pull/9403 for reference.
+func (g *infiniteGasMeter) RefundGas(amount Gas, descriptor string) {
+	if g.consumed < amount {
+		panic(ErrorNegativeGasConsumed{Descriptor: descriptor})
+	}
+
+	g.consumed -= amount
 }
 
 func (g *infiniteGasMeter) IsPastLimit() bool {

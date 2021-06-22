@@ -4,6 +4,7 @@ package cosmovisor_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -23,7 +24,8 @@ func TestProcessTestSuite(t *testing.T) {
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcess() {
 	home := copyTestData(s.T(), "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd"}
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PoolInterval: 10}
+	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
 	var stdout, stderr bytes.Buffer
@@ -34,19 +36,20 @@ func (s *processTestSuite) TestLaunchProcess() {
 	launcher, err := cosmovisor.NewLauncher(cfg)
 	s.Require().NoError(err)
 
-	args := []string{"foo", "bar", "1234"}
+	args := []string{"foo", "bar", "1234", upgradeFile}
 	doUpgrade, err := launcher.Run(args, &stdout, &stderr)
 	s.Require().NoError(err)
 	s.Require().True(doUpgrade)
 	s.Require().Equal("", stderr.String())
-	s.Require().Equal("Genesis foo bar 1234\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", stdout.String())
+	s.Require().Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile),
+		stdout.String())
 
 	// ensure this is upgraded now and produces new output
 
 	currentBin, err = cfg.CurrentBin()
 	s.Require().NoError(err)
 	s.Require().Equal(cfg.UpgradeBin("chain2"), currentBin)
-	args = []string{"second", "run", "--verbose"}
+	args = []string{"second", "run", "--verbose", upgradeFile}
 	stdout.Reset()
 	stderr.Reset()
 	doUpgrade, err = launcher.Run(args, &stdout, &stderr)

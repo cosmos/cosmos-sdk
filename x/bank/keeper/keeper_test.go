@@ -451,7 +451,7 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 		return true
 	})
 	suite.Require().Len(coins, 1)
-	suite.Require().Equal(newBarCoin(25), coins[0], "Expecte only bar coins in the account balance, got: %v", coins)
+	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
 func (suite *IntegrationTestSuite) TestValidateBalance() {

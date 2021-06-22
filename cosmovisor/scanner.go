@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -84,6 +85,7 @@ func (fw *fileWatcher) CheckUpdate() bool {
 		return false
 	}
 	ui, err := parseUpgradeInfoFile(fw.filename)
+	fmt.Println(">>>> UpgradeInfo", ui, err)
 	if err != nil {
 		// TODO: print error!
 		return false
@@ -97,13 +99,15 @@ func (fw *fileWatcher) CheckUpdate() bool {
 }
 
 func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
+	f, _ := os.Open(filename)
+	byteValue, _ := ioutil.ReadAll(f)
+	fmt.Println(">>>>> Upgrade File:", string(byteValue))
 	var ui UpgradeInfo
 	f, err := os.Open(filename)
 	if err != nil {
 		return ui, err
 	}
 	defer f.Close()
-	// byteValue, _ := ioutil.ReadAll(jsonFile)
 	d := json.NewDecoder(f)
 	err = d.Decode(&ui)
 	return ui, err

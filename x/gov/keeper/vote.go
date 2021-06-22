@@ -79,7 +79,7 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
 	// vote.Option is a deprecated field, we don't set it in state
 	if vote.Option != types.OptionEmpty { //nolint
-		panic(fmt.Errorf("expected empty vote.Option, got %s", vote.Option)) //nolint
+		vote.Option = types.OptionEmpty //nolint
 	}
 
 	store := ctx.KVStore(keeper.storeKey)

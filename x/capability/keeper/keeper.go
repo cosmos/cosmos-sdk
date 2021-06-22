@@ -13,6 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
+// initialized is a global variable used by GetCapability to ensure that the memory store
+// and capability map are correctly populated. A state-synced node may copy over all the persistent
+// state and start running the application without having the in-memory state required for x/capability.
+// Thus, we must initialized the memory stores on-the-fly during tx execution once the first GetCapability
+// is called.
+// This is a temporary fix and should be replaced by a more robust solution in the next breaking release.
 var initialized = false
 
 type (

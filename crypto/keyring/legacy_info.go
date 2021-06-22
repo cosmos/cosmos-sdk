@@ -31,6 +31,7 @@ type LegacyInfo interface {
 	GetAlgo() hd.PubKeyType
 }
 
+// TODO remove it and declare these function in tesyt file, and use keyring-backend to write into the keyring
 type LegacyInfoWriter interface {
 	// saves legacyInfo of specific accountType to keyring
 	NewLegacyMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo, accountType string) (LegacyInfo, string, error)
@@ -38,7 +39,7 @@ type LegacyInfoWriter interface {
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLegacyLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (LegacyInfo, error)
 	// for testing purposes
-	SaveLegacyOfflineKey(uid string, pubkey cryptotypes.PubKey,  algo hd.PubKeyType) (LegacyInfo, error)
+	SaveLegacyOfflineKey(uid string, pubkey cryptotypes.PubKey, algo hd.PubKeyType) (LegacyInfo, error)
 	SaveLegacyMultisig(uid string, pubkey cryptotypes.PubKey) (LegacyInfo, error)
 }
 
@@ -159,7 +160,7 @@ type legacyOfflineInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
+func NewLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
 	return &legacyOfflineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -215,7 +216,7 @@ type legacyMultiInfo struct {
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func newLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
+func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
 		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
@@ -263,12 +264,12 @@ func (i legacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 }
 
 // encoding info
-func marshalInfo(i LegacyInfo) []byte {
+func MarshalInfo(i LegacyInfo) []byte {
 	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }
 
 // decoding info
-func unmarshalInfo(bz []byte) (info LegacyInfo, err error) {
+func unMarshalInfo(bz []byte) (info LegacyInfo, err error) {
 	err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
@@ -347,23 +348,23 @@ func (ks keystore) NewLegacyAccount(name string, mnemonic string, bip39Passphras
 
 	var info LegacyInfo
 
-	switch accountType{
+	switch accountType {
 	case "local":
 		// TODO consider to move logic above line 335 here
 		info, err = ks.writeLegacyLocalKey(name, privKey, algo.Name(), accountType)
 	case "ledger":
 		hrp := "cosmos"
-		coinType, account, index := uint32(118), uint32(0), uint32(0) 
-		info, err  = ks.SaveLegacyLedgerKey(name, algo, hrp, coinType, account, index)
+		coinType, account, index := uint32(118), uint32(0), uint32(0)
+		info, err = ks.SaveLegacyLedgerKey(name, algo, hrp, coinType, account, index)
 	case "offline":
 		info, err = ks.SaveLegacyOfflineKey(name, privKey.PubKey(), algo.Name())
-	case "multi": 
+	case "multi":
 		multi := multisig.NewLegacyAminoPubKey(
 			1, []cryptotypes.PubKey{
 				privKey.PubKey(),
 			},
 		)
-		info, err = ks.SaveLegacyMultisig(name,  multi)
+		info, err = ks.SaveLegacyMultisig(name, multi)
 	}
 
 	return info, err
@@ -391,7 +392,7 @@ func (ks keystore) writeLegacyInfo(info LegacyInfo) error {
 	}
 
 	key := infoKeyBz(info.GetName())
-	serializedInfo := marshalInfo(info)
+	serializedInfo := MarshalInfo(info)
 
 	err = ks.db.Set(keyring.Item{
 		Key:  string(key),
@@ -462,7 +463,7 @@ func (ks keystore) SaveLegacyOfflineKey(uid string, pubkey cryptotypes.PubKey, a
 }
 
 func (ks keystore) writeLegacyOfflineKey(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) (LegacyInfo, error) {
-	info := newLegacyOfflineInfo(name, pub, algo)
+	info := NewLegacyOfflineInfo(name, pub, algo)
 	err := ks.writeLegacyInfo(info)
 	if err != nil {
 		return nil, err
@@ -471,13 +472,12 @@ func (ks keystore) writeLegacyOfflineKey(name string, pub cryptotypes.PubKey, al
 	return info, nil
 }
 
-
 func (ks keystore) SaveLegacyMultisig(uid string, pubkey cryptotypes.PubKey) (LegacyInfo, error) {
 	return ks.writeLegacyMultisigKey(uid, pubkey)
 }
 
 func (ks keystore) writeLegacyMultisigKey(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
-	info, err := newLegacyMultiInfo(name, pub)
+	info, err := NewLegacyMultiInfo(name, pub)
 	if err != nil {
 		return nil, err
 	}

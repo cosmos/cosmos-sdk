@@ -147,7 +147,7 @@ func protoMarshalInfo(i Info) ([]byte, error) {
 // decoding info
 // we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on reystore
 /*
-func protoUnmarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
+func protoUnMarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
 
 	var k Record // will not work cause we use any, use InterfaceRegistry
 	// dont forget to merge master to my branch, UnmarshalBinaryBare has been renamed
@@ -229,6 +229,5 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 		}
 		return &priv, nil
 	}
-	
 
 }

@@ -100,7 +100,7 @@ func (kb dbKeybase) Get(name string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, name)
 	}
 	ke := new(Record)
-	//return protoUnmarshalInfo(bs, kb.cdc)
+	//return protoUnMarshalInfo(bs, kb.cdc)
 	if err := kb.cdc.Unmarshal(bs, ke); err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", fmt.Errorf("no key to export with name %s", name)
 	}
 
-	//	info, err := protoUnmarshalInfo(bz, kb.cdc)
+	//	info, err := protoUnMarshalInfo(bz, kb.cdc)
 	ke := Record{}
 	if err := kb.cdc.Unmarshal(bz, &ke); err != nil {
 		return "", err
@@ -180,9 +180,8 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 // Close the underlying storage.
 func (kb dbKeybase) Close() error { return kb.db.Close() }
 
-func InfoKey(name string) string   { return infoKey(name) }
-func infoKey(name string) string   { return fmt.Sprintf("%s.%s", name, infoSuffix) }
-func infoKeyBz(name string) []byte { return []byte(infoKey(name)) }
+func InfoKey(name string) string   { return fmt.Sprintf("%s.%s", name, infoSuffix) }
+func infoKeyBz(name string) []byte { return []byte(InfoKey(name)) }
 
 // KeybaseOption overrides options for the db.
 type KeybaseOption func(*kbOptions)

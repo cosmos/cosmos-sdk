@@ -100,7 +100,7 @@ type Keyring interface {
 
 	Migrator
 	ItemSetter
-	LegacyInfoWriter
+	LegacyInfoWriter // TODO we can removeit
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -437,7 +437,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(infoKey(uid))
+	err = ks.db.Remove(InfoKey(uid))
 	if err != nil {
 		return err
 	}
@@ -465,7 +465,7 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]*Record, error) {
-	if _, err := ks.checkMigrate(); err != nil {
+	if _, err := ks.CheckMigrate(); err != nil {
 		return nil, err
 	}
 
@@ -564,7 +564,7 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) key(infoKey string) (*Record, error) {
-	if _, err := ks.checkMigrate(); err != nil {
+	if _, err := ks.CheckMigrate(); err != nil {
 		return nil, err
 	}
 
@@ -581,7 +581,7 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
-	return ks.key(infoKey(uid))
+	return ks.key(InfoKey(uid))
 }
 
 // SupportedAlgorithms returns the keystore Options' supported signing algorithm.
@@ -812,7 +812,7 @@ func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(infoKey(name)); err == nil {
+	if _, err := ks.db.Get(InfoKey(name)); err == nil {
 		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
@@ -845,13 +845,8 @@ func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (
 	return k, ks.writeRecord(k)
 }
 
-// CheckMigrate() is used for testing purposes
+// introduced bool return parameter for testing purposes in migration tests
 func (ks keystore) CheckMigrate() (bool, error) {
-	return ks.checkMigrate()
-}
-
-// introducet bool return parameter for testing purposes in migration tests
-func (ks keystore) checkMigrate() (bool, error) {
 	var version uint32 = 0
 	var migrated bool
 	// 1.Get a key data
@@ -890,7 +885,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 	}
 
 	for _, key := range keys {
-
+		// TODO to move it to separate function that outputs an error
 		if !strings.HasSuffix(key, infoSuffix) {
 			fmt.Printf("key %s has no infoSuffix", key)
 			continue
@@ -912,7 +907,7 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 			continue
 		}
 
-		legacyInfo, err := unmarshalInfo(item.Data)
+		legacyInfo, err := unMarshalInfo(item.Data)
 		if err != nil {
 			unmarshalErr := fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 			fmt.Println(unmarshalErr)
@@ -946,6 +941,9 @@ func (ks keystore) migrate(version uint32, i keyring.Item, migrated bool) (bool,
 
 		migrated = true
 	}
+
+	// TODO i can use map or array of boleeans to check if no error occured thenw eu pdate the version otherwise
+	// return nil or error
 	// 6. at the end of the loop update version
 	var versionBytes = make([]byte, 4)
 	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)

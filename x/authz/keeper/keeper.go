@@ -113,6 +113,14 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
 		results[i] = msgResp.Data
+
+		// emit the events from the dispatched actions
+		events := msgResp.Events
+		sdkEvents := make([]sdk.Event, 0, len(events))
+		for i := 0; i < len(events); i++ {
+			sdkEvents = append(sdkEvents, sdk.Event(events[i]))
+		}
+		ctx.EventManager().EmitEvents(sdkEvents)
 	}
 
 	return results, nil

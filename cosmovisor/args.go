@@ -48,7 +48,7 @@ func (cfg *Config) UpgradeBin(upgradeName string) string {
 // UpgradeDir is the directory named upgrade
 func (cfg *Config) UpgradeDir(upgradeName string) string {
 	safeName := url.PathEscape(upgradeName)
-	return filepath.Join(cfg.Home, upgradesDir, safeName)
+	return filepath.Join(cfg.Home, rootName, upgradesDir, safeName)
 }
 
 // UpgradeInfoFile is the expecte filenmame used in `x/upgrade/keeper` for dumping

@@ -16,14 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 )
 
-// TODO
-// create radnomBytes -> err test
-// create table driven tests
-
-// create legacyInfo -> keyring -> checkMigrate -> key will be migrated
-
 const n1 = "cosmos"
-
+// TODO consider to make table driven testMigrationLegacy tests
 func TestMigrationLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring
 	dir := t.TempDir()

@@ -100,7 +100,6 @@ type Keyring interface {
 
 	Migrator
 	ItemSetter
-	LegacyInfoWriter // TODO we can removeit
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in

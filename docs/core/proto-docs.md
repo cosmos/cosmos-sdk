@@ -4987,7 +4987,7 @@ A Vote consists of a proposal ID, the voter, and the vote option.
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
 | `voter` | [string](#string) |  |  |
-| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  | **Deprecated.** Deprecated: Prefer to use `options` instead. If this field is set, the VoteOption will be converted into a WeightedVoteOption with weight 1. |
+| `option` | [VoteOption](#cosmos.gov.v1beta1.VoteOption) |  | **Deprecated.** Deprecated: Prefer to use `options` instead. This field is set in queries if an only if `len(options) == 1` and that option has weight 1. In all other cases, this field will default to OptionEmpty. |
 | `options` | [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption) | repeated |  |
 
 

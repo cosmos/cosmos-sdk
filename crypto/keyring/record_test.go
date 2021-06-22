@@ -10,12 +10,8 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
-
 
 func TestEmptyRecordMarshaling(t *testing.T) {
 	require := require.New(t)
@@ -44,9 +40,8 @@ func TestEmptyRecordMarshaling(t *testing.T) {
 	pk2, err := r2.GetPubKey()
 	require.NoError(err)
 	require.True(pk.Equals(pk2))
-	
-}
 
+}
 
 func TestLocalRecordMarshaling(t *testing.T) {
 	require := require.New(t)
@@ -57,10 +52,10 @@ func TestLocalRecordMarshaling(t *testing.T) {
 
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
-	
+
 	var privKey cryptotypes.PrivKey
 	privKey = priv
-	
+
 	localRecord, err := keyring.NewLocalRecord(cdc, privKey)
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
@@ -97,14 +92,13 @@ test GetLocal, GetLedger, GetEmpty
 
 
 func newLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local, error) {
-TestNewLocalRecord 
+TestNewLocalRecord
 input privKey is valid and invalid
 
 test extractPrivKeyFrom Local
 */
 
-
-func TestExtractPrivKeyFromLocal(t *testing.T){
+func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	require := require.New(t)
 
 	registry := codectypes.NewInterfaceRegistry()
@@ -113,10 +107,11 @@ func TestExtractPrivKeyFromLocal(t *testing.T){
 
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
-	
+
 	var privKey cryptotypes.PrivKey
 	privKey = priv
-    // use proto serialize 
+
+	// use proto serialize
 	localRecord, err := keyring.NewLocalRecord(cdc, privKey)
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
@@ -124,20 +119,43 @@ func TestExtractPrivKeyFromLocal(t *testing.T){
 	k, err := keyring.NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
 
-	_, err = keyring.ExtractPrivKeyFromItem(cdc, k)
+	privKey2, err := keyring.ExtractPrivKeyFromRecord(cdc, k)
+	require.NoError(err)
+	require.True(privKey2.Equals(privKey))
+}
+
+
+func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
+	require := require.New(t)
+
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	priv := ed25519.GenPrivKey()
+	pub := priv.PubKey()
+
+	emptyRecord := keyring.NewEmptyRecord()
+	emptyRecordItem := keyring.NewEmptyRecordItem(emptyRecord)
+
+	k, err := keyring.NewRecord("testrecord", pub, emptyRecordItem)
 	require.NoError(err)
 
+	privKey2, err := keyring.ExtractPrivKeyFromRecord(cdc, k)
+	require.Error(err)
+	require.Nil(privKey2)
 }
+
 
 
 // TODO fix that
 /*
-func TestExtractPrivKeyFromItem(t *testing.T){
-	
+func TestExtractPrivKeyFromRecord(t *testing.T){
+
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
-	
+
 
 	tt := []struct {
 		name string
@@ -166,7 +184,7 @@ func TestExtractPrivKeyFromItem(t *testing.T){
 		t.Run(tc.name,  func(t *testing.T) {
 			require := require.New(t)
 			k := new(keyring.Record)
-		
+
 			switch tc.name {
 			case "local record":
 				localRecord, err := keyring.NewLocalRecord(cdc, tc.privKey)
@@ -189,7 +207,7 @@ func TestExtractPrivKeyFromItem(t *testing.T){
 				require.NoError(err)
 			}
 
-			_, err := keyring.ExtractPrivKeyFromItem(cdc, k)
+			_, err := keyring.ExtractPrivKeyFromRecord(cdc, k)
 			require.Equal(tc.errExp, err)
 	        // TODO find out how to compare 2 private keys
 			//require.True(bytes.Equal(priv.Key., tc.privKey.PubKey().String())

@@ -117,7 +117,7 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (type
 		return nil, err
 	}
 
-	return ExtractPrivKeyFromItem(kb.cdc, k)
+	return ExtractPrivKeyFromRecord(kb.cdc, k)
 }
 
 func (kb dbKeybase) Export(name string) (armor string, err error) {
@@ -180,7 +180,7 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 // Close the underlying storage.
 func (kb dbKeybase) Close() error { return kb.db.Close() }
 
-func InfoKey(name string) string { return infoKey(name)}
+func InfoKey(name string) string   { return infoKey(name) }
 func infoKey(name string) string   { return fmt.Sprintf("%s.%s", name, infoSuffix) }
 func infoKeyBz(name string) []byte { return []byte(infoKey(name)) }
 

@@ -11,10 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 )
 
 var ErrPrivKeyExtr = errors.New("Private key extraction works only for Local")
+
 //TODO replace Info by reyring entry in client/reys
 // check  NewLedgerInfo, newLocalInfo, newMultiInfo in whole codebase
 // TODO count how many times NewLedgerInfo or newLocalInfo is used and perhaps consider create a separate functions for that
@@ -35,9 +35,6 @@ func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local
 	)
 
 	privKeyType := privKey.Type()
-
-	// TODO find out why i canot do that?
-	b, err := cdc.Marshal(privKey)
 
 	switch privKeyType {
 	case "secp256k1":
@@ -200,7 +197,7 @@ func (p BIP44Params) String() string {
 }
 */
 
-func ExtractPrivKeyFromItem(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, error) {
+func ExtractPrivKeyFromRecord(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, error) {
 	rl := k.GetLocal()
 	if rl == nil {
 		return nil, ErrPrivKeyExtr
@@ -209,7 +206,7 @@ func ExtractPrivKeyFromItem(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, er
 	return extractPrivKeyFromLocal(cdc, rl)
 }
 
-func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey,error) {
+func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey, error) {
 	if rl.PrivKeyArmor == "" {
 		return nil, errors.New("private key not available")
 	}
@@ -219,14 +216,19 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 	switch rl.PrivKeyType {
 	case "secp256k1":
 		var priv secp256k1.PrivKey
+		if err := cdc.Unmarshal(bz, &priv); err != nil {
+			return nil, fmt.Errorf("unable to unmsrashal to secp256k1.PrivKey")
+		}
+		return &priv, nil
 
-
-
-		
-
-
-	case "ed25519":
+	// case "ed25519": ? does it sound good?
+	default:
+		var priv ed25519.PrivKey
+		if err := cdc.Unmarshal(bz, &priv); err != nil {
+			return nil, fmt.Errorf("unable to unmsrashal to ed25519.PrivKey")
+		}
+		return &priv, nil
 	}
-	return priv,nil
+	
 
 }

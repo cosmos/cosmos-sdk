@@ -148,8 +148,7 @@ func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 }
 
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
-// If there is another Plan already scheduled, it will overwrite it
-// (implicitly cancelling the current plan)
+// If there is another Plan already scheduled, it will cancell and overwrite it.
 // ScheduleUpgrade will also write the upgraded client to the upgraded client path
 // if an upgraded client is specified in the plan
 func (k Keeper) ScheduleUpgrade(ctx sdk.Context, plan types.Plan) error {

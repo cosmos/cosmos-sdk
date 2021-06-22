@@ -34,6 +34,8 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	}
 
 	cmd := exec.Command(bin, args...)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
@@ -43,7 +45,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	go func() {
 		sig := <-sigs
 		if err := cmd.Process.Signal(sig); err != nil {
-			log.Fatal(err)
+			log.Fatal(bin, "terminated. Error:", err)
 		}
 	}()
 

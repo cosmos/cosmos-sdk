@@ -46,6 +46,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/tx) [\#9421](https://github.com/cosmos/cosmos-sdk/pull/9421/) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to
   the Tx Factory as methods.
 
+### Bug Fixes
+
+* (x/genutil) [\#9574](https://github.com/cosmos/cosmos-sdk/pull/9575) Actually use the `gentx` client tx flags (like `--keyring-dir`)
+
+
 ## [v0.43.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc0) - 2021-06-25
 
 ### Features

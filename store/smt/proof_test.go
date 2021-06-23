@@ -7,14 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	smtstore "github.com/cosmos/cosmos-sdk/store/smt"
 	"github.com/lazyledger/smt"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func TestProofOpInterface(t *testing.T) {
 	hasher := sha256.New()
-	tree := smt.NewSparseMerkleTree(dbm.NewMemDB(), hasher)
+	tree := smt.NewSparseMerkleTree(memdb.NewDB(), hasher)
 	key := []byte("foo")
 	value := []byte("bar")
 	root, err := tree.Update(key, value)

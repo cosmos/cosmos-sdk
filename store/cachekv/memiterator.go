@@ -3,7 +3,7 @@ package cachekv
 import (
 	"errors"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-sdk/db"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )

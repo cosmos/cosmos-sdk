@@ -127,4 +127,4 @@ type Store struct {
 }
 ```
 
-`Store.Store` is a `dbadapter.Store` with a `dbm.NewMemDB()`. All `KVStore` methods are reused. When `Store.Commit()` is called, new `dbadapter.Store` is assigned, discarding previous reference and making it garbage collected.
+`Store.Store` is a `dbadapter.Store` with an in-memory backing `DB`. All `KVStore` methods are reused. When `Store.Commit()` is called, new `dbadapter.Store` is assigned, discarding previous reference and making it garbage collected.

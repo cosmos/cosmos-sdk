@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"math"
 
-	db "github.com/tendermint/tm-db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -141,7 +141,7 @@ func Paginate(
 	return res, nil
 }
 
-func getIterator(prefixStore types.KVStore, start []byte, reverse bool) db.Iterator {
+func getIterator(prefixStore types.KVStore, start []byte, reverse bool) dbm.Iterator {
 	if reverse {
 		var end []byte
 		if start != nil {

@@ -3,7 +3,7 @@ package smt
 import (
 	"bytes"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-sdk/db"
 )
 
 type Iterator struct {

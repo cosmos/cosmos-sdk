@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/tendermint/tm-db"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -38,7 +38,7 @@ func newTraceKVStore(w io.Writer) *tracekv.Store {
 }
 
 func newEmptyTraceKVStore(w io.Writer) *tracekv.Store {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
+	memDB := dbadapter.Store{DB: memdb.NewDB()}
 	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
 	return tracekv.NewStore(memDB, w, tc)
@@ -277,7 +277,7 @@ func TestTraceKVStorePrefix(t *testing.T) {
 }
 
 func TestTraceKVStoreGetStoreType(t *testing.T) {
-	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
+	memDB := dbadapter.Store{DB: memdb.NewDB()}
 	store := newEmptyTraceKVStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }

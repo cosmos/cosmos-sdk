@@ -3,7 +3,8 @@ package dbadapter
 import (
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-sdk/db"
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
@@ -13,7 +14,11 @@ import (
 
 // Wrapper type for dbm.Db with implementation of KVStore
 type Store struct {
-	dbm.DB
+	DB dbm.DBReadWriter
+}
+
+func NewStore(db tmdb.DB) Store {
+	return Store{DB: dbm.MungeDBRW(db)}
 }
 
 // Get wraps the underlying DB's Get method panicing on error.

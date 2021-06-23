@@ -3,15 +3,16 @@ package types_test
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func newMemTestKVStore(t *testing.T) types.KVStore {
-	db := dbm.NewMemDB()
+	db := dbm.MungeTmdb(memdb.NewDB())
 	store, err := iavl.LoadStore(db, types.CommitID{}, false)
 	require.NoError(t, err)
 	return store

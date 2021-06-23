@@ -3,7 +3,7 @@ package mem
 import (
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
@@ -24,11 +24,11 @@ type Store struct {
 }
 
 func NewStore() *Store {
-	return NewStoreWithDB(dbm.NewMemDB())
+	return NewStoreWithDB(memdb.NewDB())
 }
 
-func NewStoreWithDB(db *dbm.MemDB) *Store { // nolint: interfacer
-	return &Store{Store: dbadapter.Store{DB: db}}
+func NewStoreWithDB(db *memdb.MemDB) *Store { // nolint: interfacer
+	return &Store{Store: dbadapter.Store{DB: db.ReadWriter()}}
 }
 
 // GetStoreType returns the Store's type.

@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/stretchr/testify/suite"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -107,7 +108,7 @@ func (s *storeTestSuite) TestDiffKVStores() {
 }
 
 func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
-	db := dbm.NewMemDB()
+	db := dbm.MungeTmdb(memdb.NewDB())
 	ms := rootmulti.NewStore(db)
 
 	key1 := types.NewKVStoreKey("store1")

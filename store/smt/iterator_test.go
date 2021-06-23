@@ -5,10 +5,10 @@ import (
 	"sort"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/store/smt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func TestIteration(t *testing.T) {

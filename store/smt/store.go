@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/lazyledger/smt"
 )
@@ -36,7 +36,7 @@ var (
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
 	tree *smt.SparseMerkleTree
-	db   dbm.DB
+	db   dbm.DBReadWriter
 
 	version int64
 
@@ -48,7 +48,7 @@ type Store struct {
 	mtx sync.RWMutex
 }
 
-func NewStore(underlyingDB dbm.DB) *Store {
+func NewStore(underlyingDB dbm.DBReadWriter) *Store {
 	return &Store{
 		tree: smt.NewSparseMerkleTree(underlyingDB, sha256.New()),
 		db:   underlyingDB,

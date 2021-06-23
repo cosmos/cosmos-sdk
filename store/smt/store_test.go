@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/store/smt"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func TestVersioning(t *testing.T) {

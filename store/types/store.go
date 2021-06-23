@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"io"
 
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
-	dbm "github.com/tendermint/tm-db"
+	tmdb "github.com/tendermint/tm-db"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -153,7 +154,7 @@ type CommitMultiStore interface {
 
 	// Mount a store of type using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
-	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
+	MountStoreWithDB(key StoreKey, typ StoreType, db tmdb.DB)
 
 	// Panics on a nil key.
 	GetCommitStore(key StoreKey) CommitStore

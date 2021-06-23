@@ -142,7 +142,6 @@ type Migrator interface {
 // used in migration_test.go
 type Setter interface {
 	SetItem(item keyring.Item) error
-	setVersion() error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -848,146 +847,100 @@ func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (
 // introduced bool return parameter for testing purposes in migration tests
 // TODO find out if i need first return bool parameter here or i can just use error as return parameter?
 func (ks keystore) CheckMigrate() (bool, error) {
+	var migrated bool
 	var version uint32 = 0
 	// 1.Get a key data
 	item, err := ks.db.Get(VERSION_KEY)
 
 	if err != nil {
 		if err != keyring.ErrKeyNotFound {
-			return false, fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
+			return migrated, fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
 		}
 		// key not found, all good: assume version = 0
 	} else {
 		if len(item.Data) != 4 {
-			return false, sdkerrors.ErrInvalidVersion.Wrapf(
+			return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
 				"Can't migrate the keyring - the stored version is malformed: [%s]: %s",
 				item.Description, string(item.Data))
 		}
 		version = binary.LittleEndian.Uint32(item.Data)
 	}
-	return ks.migrate(version, item)
-}
-
-func (ks keystore) migrate(version uint32, i keyring.Item) (bool, error) {
+	
 	if version == CURRENT_VERSION {
 		// return nil
-		return false, fmt.Errorf("versions match")
+		return migrated, fmt.Errorf("versions match")
 	}
 	if version > CURRENT_VERSION {
-		return false, sdkerrors.ErrInvalidVersion.Wrapf(
+		return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
 			"Can't migrate the keyring - wrong keyring version: [%v]: %v, expected version to be max %d",
-			i.Description, string(i.Data), CURRENT_VERSION)
+			item.Description, string(item.Data), CURRENT_VERSION)
 	}
 	
-	// TODO i can use map or array of boleeans to check if no error occured thenw eu pdate the version otherwise
-	// return nil or error
-	// 6. at the end of the loop update version
-	migrated, err := ks.performMigration()
-	if !migrated {
-		return migrated, err
-	} else {
-		if err := ks.setVersion(); err != nil {
-			return migrated, err
-		}
-	}
-	
-	return migrated, nil
-}
-
-func (ks keystore) performMigration() (bool, error) {
 	keys, err := ks.db.Keys()
 	if err != nil {
 		// return err
-		return false, fmt.Errorf("Keys() error, err: %s", err)
+		return migrated, fmt.Errorf("Keys() error, err: %s", err)
 	}
 
-	migrations := make([]bool, len(keys))
-
-	for i, key := range keys {
+	for _, key := range keys {
 		if !strings.HasSuffix(key, infoSuffix) {
 			fmt.Printf("key %s has no infoSuffix", key)
 			continue
 		}
 
-		item, err := ks.db.Get(key)
+		migrated, err = ks.migrate(key)
 		if err != nil {
-			return false, fmt.Errorf("Get error, err - %s", err)
+			return migrated, err
 		}
-
-		if len(item.Data) == 0 {
-			// return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
-			return false, fmt.Errorf("sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key), err: %s", sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key))
-		}
-
-		// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
-		if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
-			fmt.Println("protoUnmarshalRecord continue")
-			//TODO decide if we do not migrate, we should mark it as false or true?
-			migrations[i] = false 
-			continue
-		}
-
-		legacyInfo, err := unMarshalInfo(item.Data)
-		if err != nil {
-			unmarshalErr := fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
-			fmt.Println(unmarshalErr)
-			migrations[i] = false
-			continue
-		}
-		//4.serialize info using proto
-		k, err := ks.convertFromLegacyInfo(legacyInfo)
-		if err != nil {
-			return false, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
-		}
-
-		serializedRecord, err := ks.cdc.Marshal(k)
-		if err != nil {
-			// return err
-			return false, fmt.Errorf("ks.cdc.Marshal(kr), err - %s", err)
-		}
-
-		//5.overwrite the keyring entry with
-		if err := ks.db.Set(keyring.Item{
-			Key:         key,
-			Data:        serializedRecord,
-			Description: "SDK kerying version",
-		}); err != nil {
-			return false, fmt.Errorf("unable to set keyring.Item, err: %w", err)
-		}
-
-		migrations[i] = true
 	}
 
-	if !validateMigration(migrations) {
-		return false,errors.New("migration is not valid")
-	}
-
-	return true, nil
+	return migrated, nil
 }
 
-func validateMigration(migrations []bool) bool {
-	for _, m := range migrations {
-		if !m {
-			return false
-		}
+func (ks keystore) migrate(key string) (bool,error) {
+	var migrated bool
+	item, err := ks.db.Get(key)
+	if err != nil {
+		return migrated, fmt.Errorf("Get error, err - %s", err)
 	}
 
-	return true
-}
+	if len(item.Data) == 0 {
+		return migrated, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+	}
 
-func (ks keystore) setVersion() error  {
-	var versionBytes = make([]byte, 4)
-	binary.LittleEndian.PutUint32(versionBytes, CURRENT_VERSION)
+	// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
+	if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
+		fmt.Println("protoUnmarshalRecord continue")
+		return migrated, nil
+	}
+
+	legacyInfo, err := unMarshalInfo(item.Data)
+	if err != nil {
+		return migrated, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
+	}
+
+	//4.serialize info using proto
+	k, err := ks.convertFromLegacyInfo(legacyInfo)
+	if err != nil {
+		return migrated, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
+	}
+
+	serializedRecord, err := ks.cdc.Marshal(k)
+	if err != nil {
+		return migrated, fmt.Errorf("unable to serialize record, err - %w", err)
+	}
+
+	//5.overwrite the keyring entry with
 	if err := ks.db.Set(keyring.Item{
-		Key:         VERSION_KEY,
-		Data:        versionBytes,
+		Key:         key,
+		Data:        serializedRecord,
 		Description: "SDK kerying version",
 	}); err != nil {
-		return fmt.Errorf("unable to set keyring.Item, err: %w", err)
+		return migrated, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}
-	return nil
-}
 
+	return !migrated, nil
+}
 
 func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 	k := new(Record)

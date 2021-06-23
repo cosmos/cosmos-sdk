@@ -10,14 +10,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 const n1 = "cosmos"
 // TODO consider to make table driven testMigrationLegacy tests
+// TODO insert multiple keys into keyring (amino and proto) and check the result
 func TestMigrationLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring
 	dir := t.TempDir()
@@ -153,17 +156,37 @@ func TestMigrationLocalRecord(t *testing.T) {
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
 
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
 	require := require.New(t)
 	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
 	require.NoError(err)
 
-	k, _, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	priv := secp256k1.GenPrivKey()
+	privKey := cryptotypes.PrivKey(priv)
+	pub := priv.PubKey()
+
+	localRecord, err := keyring.NewLocalRecord(cdc, privKey)
 	require.NoError(err)
-	require.Equal(k.Name, n1)
+	localRecordItem := keyring.NewLocalRecordItem(localRecord)
+	k, err := keyring.NewRecord("test record", pub, localRecordItem)
+	serializedRecord, err := cdc.Marshal(k)
+	require.NoError(err)
+
+	item := design99keyring.Item{
+		Key:         keyring.InfoKey(n1),
+		Data:        serializedRecord,
+		Description: "SDK kerying version",
+	}
+
+	err = kb.SetItem(item)
+	require.NoError(err)
 
 	migrated, err := kb.CheckMigrate()
 	require.False(migrated)
-	require.Error(err)
+	require.NoError(err)
 }
 
 // TODO insert multiple incorrect migration keys and output errors to user

@@ -759,7 +759,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	// write sigs to file2
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
 
-	//sign-batch file with multisig key name
+	// sign-batch file with multisig key name
 	res, err = TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetName())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
@@ -830,7 +830,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// multisign the file
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
 
-	//sign-batch file with multisig key name
+	// sign-batch file with multisig key name
 	res, err = TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetName(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))

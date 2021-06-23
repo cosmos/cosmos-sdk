@@ -53,7 +53,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 `, defaultsDesc, version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := client.GetConfigFromCmd(cmd)
+			serverCtx := server.GetServerContextFromCmd(cmd)
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

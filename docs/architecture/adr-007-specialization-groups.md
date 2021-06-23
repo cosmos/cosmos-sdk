@@ -11,7 +11,7 @@ creation of a decentralized Computer Emergency Response Team (dCERT), whose
 members would be elected by a governing community and would fulfill the role of
 coordinating the community under emergency situations. This thinking
 can be further abstracted into the conception of "blockchain specialization
-groups". 
+groups".
 
 The creation of these groups are the beginning of specialization capabilities
 within a wider blockchain community which could be used to enable a certain
@@ -19,30 +19,29 @@ level of delegated responsibilities. Examples of specialization which could be
 beneficial to a blockchain community include: code auditing, emergency response,
 code development etc. This type of community organization paves the way for
 individual stakeholders to delegate votes by issue type, if in the future
-governance proposals include a field for issue type. 
-
+governance proposals include a field for issue type.
 
 ## Decision
 
 A specialization group can be broadly broken down into the following functions
 (herein containing examples):
 
- - Membership Admittance
- - Membership Acceptance
- - Membership Revocation
-   - (probably) Without Penalty 
-     - member steps down (self-Revocation)
-     - replaced by new member from governance
-   - (probably) With Penalty 
-     - due to breach of soft-agreement (determined through governance)
-     - due to breach of hard-agreement (determined by code) 
- - Execution of Duties
-   - Special transactions which only execute for members of a specialization
+- Membership Admittance
+- Membership Acceptance
+- Membership Revocation
+    - (probably) Without Penalty
+        - member steps down (self-Revocation)
+        - replaced by new member from governance
+    - (probably) With Penalty
+        - due to breach of soft-agreement (determined through governance)
+        - due to breach of hard-agreement (determined by code)
+- Execution of Duties
+    - Special transactions which only execute for members of a specialization
      group (for example, dCERT members voting to turn off transaction routes in
-     an emergency scenario) 
- - Compensation
-   - Group compensation (further distribution decided by the specialization group) 
-   - Individual compensation for all constituents of a group from the
+     an emergency scenario)
+- Compensation
+    - Group compensation (further distribution decided by the specialization group)
+    - Individual compensation for all constituents of a group from the
      greater community
 
 Membership admittance to a specialization group could take place over a wide
@@ -56,31 +55,31 @@ some of these possiblities in a common interface dubbed the `Electionator`. For
 its initial implementation as a part of this ADR we recommend that the general
 election abstraction (`Electionator`) is provided as well as a basic
 implementation of that abstraction which allows for a continuous election of
-members of a specialization group. 
+members of a specialization group.
 
 ``` golang
-// The Electionator abstraction covers the concept space for 
+// The Electionator abstraction covers the concept space for
 // a wide variety of election kinds.  
 type Electionator interface {
-    
+
     // is the election object accepting votes.
-    Active() bool 
+    Active() bool
 
     // functionality to execute for when a vote is cast in this election, here
-    // the vote field is anticipated to be marshalled into a vote type used 
-    // by an election. 
-    // 
+    // the vote field is anticipated to be marshalled into a vote type used
+    // by an election.
+    //
     // NOTE There are no explicit ids here. Just votes which pertain specifically
     // to one electionator. Anyone can create and send a vote to the electionator item
     // which will presumably attempt to marshal those bytes into a particular struct
     // and apply the vote information in some arbitrary way. There can be multiple
     // Electionators within the Cosmos-Hub for multiple specialization groups, votes
     // would need to be routed to the Electionator upstream of here.
-    Vote(addr sdk.AccAddress, vote []byte) 
+    Vote(addr sdk.AccAddress, vote []byte)
 
     // here lies all functionality to authenticate and execute changes for
     // when a member accepts being elected
-    AcceptElection(sdk.AccAddress) 
+    AcceptElection(sdk.AccAddress)
 
     // Register a revoker object
     RegisterRevoker(Revoker)
@@ -89,25 +88,25 @@ type Electionator interface {
     SealRevokers()
 
     // register hooks to call when an election actions occur
-    RegisterHooks(ElectionatorHooks) 
+    RegisterHooks(ElectionatorHooks)
 
     // query for the current winner(s) of this election based on arbitrary
     // election ruleset
-    QueryElected() []sdk.AccAddress 
+    QueryElected() []sdk.AccAddress
 
-    // query metadata for an address in the election this 
+    // query metadata for an address in the election this
     // could include for example position that an address
-    // is being elected for within a group   
-    // 
-    // this metadata may be directly related to 
+    // is being elected for within a group
+    //
+    // this metadata may be directly related to
     // voting information and/or privileges enabled
-    // to members within a group. 
+    // to members within a group.
     QueryMetadata(sdk.AccAddress) []byte
 }
 
-// ElectionatorHooks, once registered with an Electionator, 
-// trigger execution of relevant interface functions when 
-// Electionator events occur. 
+// ElectionatorHooks, once registered with an Electionator,
+// trigger execution of relevant interface functions when
+// Electionator events occur.
 type ElectionatorHooks interface {
     AfterVoteCast(addr sdk.AccAddress, vote []byte)
     AfterMemberAccepted(addr sdk.AccAddress)
@@ -117,30 +116,30 @@ type ElectionatorHooks interface {
 // Revoker defines the function required for a membership revocation rule-set
 // used by a specialization group. This could be used to create self revoking,
 // and evidence based revoking, etc. Revokers types may be created and
-// reused for different election types. 
-// 
+// reused for different election types.
+//
 // When revoking the "cause" bytes may be arbitrarily marshalled into evidence,
 // memos, etc.
 type Revoker interface {
-    RevokeName() string      // identifier for this revoker type 
+    RevokeName() string      // identifier for this revoker type
     RevokeMember(addr sdk.AccAddress, cause []byte) error
 }
 ```
 
 Certain level of commonality likely exists between the existing code within
 `x/governance` and required functionality of elections. This common
-functionality should be abstracted during implementation. Similarly for each 
+functionality should be abstracted during implementation. Similarly for each
 vote implementation client CLI/REST functionality should be abstracted
-to be reused for multiple elections. 
+to be reused for multiple elections.
 
 The specialization group abstraction firstly extends the `Electionator`
-but also further defines traits of the group. 
+but also further defines traits of the group.
 
 ``` golang
 type SpecializationGroup interface {
-    Electionator 
+    Electionator
     GetName() string
-    GetDescription() string 
+    GetDescription() string
 
     // general soft contract the group is expected
     // to fulfill with the greater community
@@ -151,7 +150,7 @@ type SpecializationGroup interface {
 
     // logic to be executed at endblock, this may for instance
     // include payment of a stipend to the group members
-    // for participation in the security group.   
+    // for participation in the security group.
     EndBlocker(ctx sdk.Context)
 }
 ```
@@ -164,16 +163,15 @@ type SpecializationGroup interface {
 
 ### Positive
 
- - increases specialization capabilities of a blockchain
- - improve abstractions in `x/gov/` such that they can be used with specialization groups
+- increases specialization capabilities of a blockchain
+- improve abstractions in `x/gov/` such that they can be used with specialization groups
 
 ### Negative
 
- - could be used to increase centralization within a community
+- could be used to increase centralization within a community
 
 ### Neutral
 
 ## References
 
- - (dCERT ADR)[./adr-008-dCERT-group.md]
- 
+- [dCERT ADR](./adr-008-dCERT-group.md)

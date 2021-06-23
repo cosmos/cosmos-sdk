@@ -14,7 +14,9 @@ option (gogoproto.goproto_getters_all) = false;
 // Msg defines the authz Msg service.
 service Msg {
   // Grant grants the provided authorization to the grantee on the granter's
-  // account with the provided expiration time.
+  // account with the provided expiration time. If there is already a grant
+  // for the given (granter, grantee, Authorization) triple, then the grant
+  // will be overwritten.
   rpc Grant(MsgGrant) returns (MsgGrantResponse);
 
   // Exec attempts to execute the provided messages using
@@ -27,8 +29,8 @@ service Msg {
   rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
 }
 
-// MsgGrant grants the provided authorization to the grantee on the granter's
-// account with the provided expiration time.
+// MsgGrant is a request type for Grant method. It declares authorization to the grantee
+// on behalf of the granter with the provided expiration time.
 message MsgGrant {
   string granter = 1;
   string grantee = 2;
@@ -38,7 +40,7 @@ message MsgGrant {
 
 // MsgExecResponse defines the Msg/MsgExecResponse response type.
 message MsgExecResponse {
-  cosmos.base.abci.v1beta1.Result result = 1;
+  repeated bytes results = 1;
 }
 
 // MsgExec attempts to execute the provided messages using

@@ -26,7 +26,7 @@ var cancelledInPreRun = errors.New("Cancelled in prerun")
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
 func preRunETestImpl(cmd *cobra.Command, args []string) error {
-	err := server.InterceptConfigsPreRunHandler(cmd)
+	err := server.InterceptConfigsPreRunHandler(cmd, "", nil)
 	if err != nil {
 		return err
 	}

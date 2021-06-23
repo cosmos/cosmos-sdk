@@ -48,13 +48,13 @@ The version map is a mapping of module names to consensus versions. The map is p
 
 Upgrades use an `UpgradeHandler` to facilitate migrations. The `UpgradeHandler` functions implemented by the app developer must conform to the following function signature. These functions retrieve the `VersionMap` from x/upgrade's state and return the new `VersionMap` to be stored in x/upgrade after the upgrade. The diff between the two `VersionMap`s determines which modules need upgrading.
 
-```golang
+```go
 type UpgradeHandler func(ctx sdk.Context, plan Plan, fromVM VersionMap) (VersionMap, error)
 ```
 
 Inside these functions, you must perform any upgrade logic to include in the provided `plan`. All upgrade handler functions must end with the following line of code:
 
-```golang
+```go
   return app.mm.RunMigrations(ctx, cfg, fromVM)
 ```
 
@@ -62,7 +62,7 @@ Inside these functions, you must perform any upgrade logic to include in the pro
 
 Migrations are run inside of an `UpgradeHandler` using  `app.mm.RunMigrations(ctx, cfg, vm)`. The `UpgradeHandler` functions describe the functionality to occur during an upgrade. The `RunMigration` function loops through the `VersionMap` argument and runs the migration scripts for all versions that are less than the versions of the new binary app module. After the migrations are finished, a new `VersionMap` is returned to persist the upgraded module versions to state.
 
-```golang
+```go
 cfg := module.NewConfigurator(...)
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 
@@ -86,7 +86,7 @@ You can introduce entirely new modules to the application during an upgrade. New
 
 All chains preparing to run in-place store migrations will need to manually add store upgrades for new modules and then configure the store loader to apply those upgrades. This ensures that the new module's stores are added to the multistore before the migrations begin.
 
-```golang
+```go
 upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 if err != nil {
 	panic(err)

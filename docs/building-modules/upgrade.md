@@ -2,7 +2,7 @@
 order: 13
 -->
 
-# In-Place Store Migrations
+# Upgrading Modules
 
 In-place store migrations allow your modules to upgrade to new versions that include breaking changes. This document outlines how to build modules to take advantage of this functionality. {synopsis}
 

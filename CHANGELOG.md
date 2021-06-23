@@ -127,6 +127,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (x/auth) [\#9553] (https://github.com/cosmos/cosmos-sdk/pull/9553) The `--multisig` flag now accepts both a name and address.
 * (x/bank) [\#8614](https://github.com/cosmos/cosmos-sdk/issues/8614) Add `Name` and `Symbol` fields to denom metadata
 * (x/auth) [\#8522](https://github.com/cosmos/cosmos-sdk/pull/8522) Allow to query all stored accounts
 * (crypto/types) [\#8600](https://github.com/cosmos/cosmos-sdk/pull/8600) `CompactBitArray`: optimize the `NumTrueBitsBefore` method and add an `Equal` method.

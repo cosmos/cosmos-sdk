@@ -22,7 +22,7 @@ const (
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
 )
 
-// ErrSetMinGasPrice defines an error occured if min-gas-prices field in BaseConfig is empty.
+// ErrSetMinGasPrice defines an error occurred if min-gas-prices field in BaseConfig is empty.
 var ErrSetMinGasPrice = errors.New("please set min gas price in app.toml or flag or env var")
 
 // BaseConfig defines the server's basic configuration

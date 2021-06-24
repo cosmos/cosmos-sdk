@@ -1,10 +1,10 @@
 #!/bin/sh
 
 echo Preparing auto-download $@
-sleep 1
+sleep 0.1
 echo 'ERROR: UPGRADE "chain2" NEEDED at height: 49: {"binaries":{"linux/amd64":"https://github.com/cosmos/cosmos-sdk/raw/robert/cosmvisor-file-watch/cosmovisor/testdata/repo/zip_binary/autod.zip?checksum=sha256:9428a1c135430d89243fa48e2ae67cb73530c636818a49bdc4ae6335a576370a"}} module=main'
 
 echo '{"name":"chain2","height":49,"info":"{\"binaries\":{\"linux/amd64\":\"https://github.com/cosmos/cosmos-sdk/raw/robert/cosmvisor-file-watch/cosmovisor/testdata/repo/zip_binary/autod.zip?checksum=sha256:9428a1c135430d89243fa48e2ae67cb73530c636818a49bdc4ae6335a576370a\"}}"}' > $3
 
-sleep 2
+sleep 0.1
 echo Never should be printed!!!

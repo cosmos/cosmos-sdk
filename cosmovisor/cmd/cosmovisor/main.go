@@ -28,7 +28,9 @@ func Run(args []string) error {
 	doUpgrade, err := luncher.Run(args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
+		fmt.Println(">>>>>>>>>>>> RE LAUNCH !!!")
 		doUpgrade, err = luncher.Run(args, os.Stdout, os.Stderr)
 	}
+	fmt.Println("\n>>>>>>>>>>>>> AFTER FOR LOOP", doUpgrade, err, "##")
 	return err
 }

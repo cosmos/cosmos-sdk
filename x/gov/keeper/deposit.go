@@ -77,11 +77,6 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
-		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
-		if err != nil {
-			panic(err)
-		}
-
 		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
 		if err != nil {
 			panic(err)
@@ -200,7 +195,6 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 			panic(err)
 		}
 
-		// store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
 }

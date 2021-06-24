@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -24,6 +25,8 @@ func TestDeposits(t *testing.T) {
 
 	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 4)))
 	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5)))
+	fmt.Println("stake amount", fourStake)
+	fmt.Println("stake amount", fiveStake)
 
 	addr0Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[0])
 	addr1Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[1])
@@ -96,8 +99,9 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
 	app.GovKeeper.RefundDeposits(ctx, proposalID)
+	app.GovKeeper.DeleteDeposits(ctx, proposalID)
 	deposit, found = app.GovKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])
-	require.True(t, found)
+	require.False(t, found)
 	require.Equal(t, addr0Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 	require.Equal(t, addr1Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 

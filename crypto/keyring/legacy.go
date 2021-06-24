@@ -14,8 +14,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TODO - should we migrate a legacy as well?
-
 // LegacyKeybase is implemented by the legacy keybase implementation.
 type LegacyKeybase interface {
 	List() ([]*Record, error)
@@ -179,7 +177,7 @@ func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
 
 // Close the underlying storage.
 func (kb dbKeybase) Close() error { return kb.db.Close() }
-
+// TODO remove InfoKey it is legacy stuff
 func InfoKey(name string) string   { return fmt.Sprintf("%s.%s", name, infoSuffix) }
 func infoKeyBz(name string) []byte { return []byte(InfoKey(name)) }
 

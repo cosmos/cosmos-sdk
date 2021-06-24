@@ -2,7 +2,6 @@ package keyring
 
 import (
 	"bufio"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -136,7 +135,8 @@ type LegacyInfoImporter interface {
 }
 
 type Migrator interface {
-	CheckMigrate() (bool, error)
+	MigrateAll() (bool, error)
+	Migrate(key string) (bool, error) 
 }
 
 // used in migration_test.go
@@ -464,7 +464,8 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]*Record, error) {
-	if _, err := ks.CheckMigrate(); err != nil {
+	// todo migrateAll
+	if _, err := ks.MigrateAll(); err != nil {
 		return nil, err
 	}
 
@@ -563,7 +564,7 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) key(infoKey string) (*Record, error) {
-	if _, err := ks.CheckMigrate(); err != nil {
+	if _, err := ks.Migrate(infoKey); err != nil {
 		return nil, err
 	}
 
@@ -844,41 +845,11 @@ func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (
 	return k, ks.writeRecord(k)
 }
 
-// introduced bool return parameter for testing purposes in migration tests
-// TODO find out if i need first return bool parameter here or i can just use error as return parameter?
-func (ks keystore) CheckMigrate() (bool, error) {
+func (ks keystore) MigrateAll() (bool, error) {
 	var migrated bool
-	var version uint32 = 0
-	// 1.Get a key data
-	item, err := ks.db.Get(VERSION_KEY)
-
-	if err != nil {
-		if err != keyring.ErrKeyNotFound {
-			return migrated, fmt.Errorf(" not a keyring.ErrKeyNotFound, err: %s", err)
-		}
-		// key not found, all good: assume version = 0
-	} else {
-		if len(item.Data) != 4 {
-			return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
-				"Can't migrate the keyring - the stored version is malformed: [%s]: %s",
-				item.Description, string(item.Data))
-		}
-		version = binary.LittleEndian.Uint32(item.Data)
-	}
-	
-	if version == CURRENT_VERSION {
-		// return nil
-		return migrated, fmt.Errorf("versions match")
-	}
-	if version > CURRENT_VERSION {
-		return migrated, sdkerrors.ErrInvalidVersion.Wrapf(
-			"Can't migrate the keyring - wrong keyring version: [%v]: %v, expected version to be max %d",
-			item.Description, string(item.Data), CURRENT_VERSION)
-	}
 	
 	keys, err := ks.db.Keys()
 	if err != nil {
-		// return err
 		return migrated, fmt.Errorf("Keys() error, err: %s", err)
 	}
 
@@ -888,16 +859,18 @@ func (ks keystore) CheckMigrate() (bool, error) {
 			continue
 		}
 
-		migrated, err = ks.migrate(key)
+		migrated, err = ks.Migrate(key)
 		if err != nil {
-			return migrated, err
+			fmt.Println("migrate err", err)
+			continue
 		}
 	}
 
 	return migrated, nil
 }
 
-func (ks keystore) migrate(key string) (bool,error) {
+// for one key
+func (ks keystore) Migrate(key string) (bool, error) {
 	var migrated bool
 	item, err := ks.db.Get(key)
 	if err != nil {

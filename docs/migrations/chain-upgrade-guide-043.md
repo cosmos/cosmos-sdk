@@ -18,17 +18,21 @@ You must upgrade to Stargate v0.42 before upgrading to v0.43. If you have not do
 
 ## In-Place Store Migrations
 
-We recommend using [In-Place Store Migrations](../core/upgrade.html) to upgrade your chain from v0.42 to v0.43. The first step is to make sure all your modules follow the [Module Upgrade Guide](../building-modules/upgrade.html). The second step is to add an [upgrade handler](../core/upgrade.html#running-migrations) to `app.go`. In this document, we'll provide an example of what the upgrade handler should look like for a chain upgrading module versions for the first time.
+We recommend using [In-Place Store Migrations](../core/upgrade.html) to upgrade your chain from v0.42 to v0.43. The first step is to make sure all your modules follow the [Module Upgrade Guide](../building-modules/upgrade.html). The second step is to add an [upgrade handler](../core/upgrade.html#running-migrations) to `app.go`.
+
+In this document, we'll provide an example of what the upgrade handler should look like for a chain upgrading module versions for the first time. It is critical to note that the initial version of each module must be set to `1` (not `0`) or else the upgrade will run [`InitGenesis`](../building-modules/genesis.html#initgenesis) for each module.
 
 ## Preparing Upgrade Binaries
 
-We recommend validators use [Cosmovisor](../run-node/cosmovisor.html) and blockchain application developers prepare a tarball that includes the genesis binary and all available upgrade binaries so that validators can easily download the necessary binaries to run the upgrade. This tarball can also be used to sync a fullnode from start. In this example, we will build the genesis binary and the upgrade binary.
+We recommend validators use [Cosmovisor](../run-node/cosmovisor.html), which is a process manager for running application binaries. For security reasons, we recommend validators build their own upgrade binaries rather than enabling the auto-download option. Using Cosmovisor with the auto-restart option will ensure the upgrade is run with zero downtime.
+
+We also recommend application developers prepare and maintain a tarball with the genesis binary and all available upgrade binaries. This tarball can be used to sync a full node from start without having to manually run each upgrade. See [Cosmovisor](../run-node/cosmovisor.html) for more information about setting up the auto-download option.
 
 ## Example: Simapp Upgrade
 
-The following example will walk through the upgrade process using `simapp`. We will be upgrading `simapp` from v0.42 to v0.43.
+The following example will walk through the upgrade process using `simapp` as our blockchain application. We will be upgrading `simapp` from v0.42 to v0.43.
  
-### Initialize Chain
+### Initial Setup
 
 From within the `cosmos-sdk` repository, check out `v0.42.6`:
 
@@ -36,13 +40,13 @@ From within the `cosmos-sdk` repository, check out `v0.42.6`:
 git checkout v0.42.6
 ```
 
-Build the `simd` binary:
+Build the `simd` binary for `v0.42.6` (the genesis binary):
 
 ```
 make build
 ```
 
-Configure and initialize the node:
+Configure `simd` and initialize the node:
 
 <!-- TODO: init does not read chain-id from config -->
 
@@ -54,10 +58,10 @@ rm -rf $HOME/.simapp
 ./build/simd init test --chain-id test
 ```
 
-For the purpose of this demontration, amend `voting_period` in `genesis.json` to a reduced time of 10 seconds (`10s`):
+For the purpose of this demonstration, change `voting_period` in `genesis.json` to a reduced time of 20 seconds (`20s`):
 
 ```
-cat <<< $(jq '.app_state.gov.voting_params.voting_period = "10s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
+cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
 ```
 
 Create a genesis account and transaction, and then load the genesis transaction:
@@ -72,7 +76,7 @@ Create a genesis account and transaction, and then load the genesis transaction:
 ./build/simd collect-gentxs
 ```
 
-Now that the chain is ready to be started, let's set up `cosmovisor` and the genesis binary.
+Now that our node is initialized and we are ready to start a new `simapp` chain, let's set up `cosmovisor` and build the genesis binary.
 
 ### Cosmovisor Setup
 
@@ -95,14 +99,14 @@ Set the optional environment variable to trigger an automatic restart:
 export DAEMON_RESTART_AFTER_UPGRADE=true
 ```
 
-Create the cosmovisor genesis folder and copy the `v0.42` binary:
+Create the cosmovisor genesis folder and copy the `v0.42.6` binary:
 
 ```
 mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
-Now that `cosmovisor` and the genesis binary are ready, let's add the upgrade handler and set up the upgrade binary.
+Now that `cosmovisor` is installed and we have set up the genesis binary, let's add the upgrade handler and then set up the upgrade binary.
 
 ### Chain Upgrade
 
@@ -120,7 +124,7 @@ Add the following to `simapp/app.go` starting on line 260:
 	app.registerUpgradeHandlers()
 ```
 
-Add the following to `simapp/app.go` starting on line 420 (or anywhere in file):
+Add the following to `simapp/app.go` starting on line 420:
 
 ```go
 func (app *SimApp) registerUpgradeHandlers() {
@@ -171,23 +175,28 @@ Add `storetypes` to imports:
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 ```
 
-Now recompile a new binary and make a copy of it in `$DAEMON_HOME/cosmosvisor/upgrades/v0.43/bin`:
+Build the `simd` binary for `v0.43.0` (the upgrade binary):
 
 ```
 make build
+```
+
+Create the cosmovisor genesis folder and copy the `v0.43.0` binary:
+
+```
 mkdir -p $DAEMON_HOME/cosmovisor/upgrades/v0.43/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/v0.43/bin
 ```
 
 ### Upgrade Proposal
 
-Start chain using cosmovisor:
+Start the node using cosmovisor:
 
 ```
 cosmovisor start
 ```
 
-Submit a governance proposal:
+Submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
 
 ```
 ./build/simd tx gov submit-proposal software-upgrade v0.43 --title upgrade --description upgrade --upgrade-height 20 --from validator --yes
@@ -195,4 +204,4 @@ Submit a governance proposal:
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```
 
-Confirm upgrades at height 20.
+Confirm that the upgrades at height 20.

@@ -131,8 +131,10 @@ message Vote {
 
   uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
   string voter       = 2;
-  reserved 3;
-  reserved "option";
+  // Deprecated: Prefer to use `options` instead. This field is set in queries
+  // if and only if `len(options) == 1` and that option has weight 1. In all
+  // other cases, this field will default to OptionEmpty.
+  VoteOption                  option  = 3 [deprecated = true];
   repeated WeightedVoteOption options = 4 [(gogoproto.nullable) = false];
 }
 

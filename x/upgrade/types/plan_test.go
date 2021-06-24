@@ -9,9 +9,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func mustParseTime(s string) time.Time {
@@ -67,6 +67,17 @@ func TestPlanValid(t *testing.T) {
 		"no name": {
 			p: types.Plan{
 				Height: 123450000,
+			},
+		},
+		"time-base upgrade": {
+			p: types.Plan{
+				Time: time.Now(),
+			},
+		},
+		"IBC upgrade": {
+			p: types.Plan{
+				Height:              123450000,
+				UpgradedClientState: &codectypes.Any{},
 			},
 		},
 		"no due at": {

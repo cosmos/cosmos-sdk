@@ -298,7 +298,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 					Voter:      addrs[0].String(),
 				}
 
-				expRes = &types.QueryVoteResponse{Vote: types.NewVote(proposal.ProposalId, addrs[0], types.NewNonSplitVoteOption(types.OptionAbstain))}
+				expRes = &types.QueryVoteResponse{Vote: types.Vote{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Option: types.OptionAbstain, Options: []types.WeightedVoteOption{{Option: types.OptionAbstain, Weight: sdk.MustNewDecFromStr("1.0")}}}}
 			},
 			true,
 		},
@@ -395,8 +395,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				app.GovKeeper.SetProposal(ctx, proposal)
 
 				votes = []types.Vote{
-					{proposal.ProposalId, addrs[0].String(), types.NewNonSplitVoteOption(types.OptionAbstain)},
-					{proposal.ProposalId, addrs[1].String(), types.NewNonSplitVoteOption(types.OptionYes)},
+					{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Options: types.NewNonSplitVoteOption(types.OptionAbstain)},
+					{ProposalId: proposal.ProposalId, Voter: addrs[1].String(), Options: types.NewNonSplitVoteOption(types.OptionYes)},
 				}
 				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
 				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)

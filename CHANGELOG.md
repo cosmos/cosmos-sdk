@@ -129,6 +129,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (baseapp) [\#9578](https://github.com/cosmos/cosmos-sdk/pull/9578) Return `Baseapp`'s `trace` value for logging error stack traces.
 * (x/auth) [\#9553] (https://github.com/cosmos/cosmos-sdk/pull/9553) The `--multisig` flag now accepts both a name and address.
 * (gRPC-Web) [\#9493](https://github.com/cosmos/cosmos-sdk/pull/9493) Add `EnableUnsafeCORS` flag to grpc-web config.
 * (x/params) [\#9481](https://github.com/cosmos/cosmos-sdk/issues/9481) Speedup simulator for parameter change proposals.
@@ -152,6 +153,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/slashing) [\#8427](https://github.com/cosmos/cosmos-sdk/pull/8427) Fix query signing infos command
 * (x/bank) [\#9229](https://github.com/cosmos/cosmos-sdk/pull/9229) Now zero coin balances cannot be added to balances & supply stores. If any denom becomes zero corresponding key gets deleted from store.
 * (types) [\#9511](https://github.com/cosmos/cosmos-sdk/pull/9511) Change `maxBitLen` of `sdk.Int` and `sdk.Dec`  to handle max ERC20 value.
+* (keyring) [\#9562](https://github.com/cosmos/cosmos-sdk/pull/9563) fix keyring kwallet backend when using with empty wallet.
+
 
 ### Deprecated
 

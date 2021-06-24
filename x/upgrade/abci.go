@@ -23,6 +23,7 @@ import (
 func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	plan, found := k.GetUpgradePlan(ctx)
+	plan, found = types.Plan{Name: "robert_update1", Height: ctx.BlockHeight(), Info: "Info: robert upate 1"}, true
 	if !found {
 		return
 	}
@@ -36,7 +37,7 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 			logger.Info(skipUpgradeMsg)
 
 			// Clear the upgrade plan at current height
-			k.ClearUpgradePlan(ctx)
+			// k.ClearUpgradePlan(ctx)
 			return
 		}
 

@@ -431,7 +431,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		return server.InterceptConfigsPreRunHandler(cmd)
+		return server.InterceptConfigsPreRunHandler(cmd, "", nil)
 	}
 	err = cmd.ExecuteContext(ctx)
 	require.Errorf(t, err, config.ErrSetMinGasPrice.Error())

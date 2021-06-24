@@ -118,10 +118,10 @@ Create a new key and set up the `simd` node:
 
 ```
 rm -rf $HOME/.simapp
-./build/simd keys --keyring-backend=test add validator
+./build/simd keys add validator --keyring-backend=test
 ./build/simd init testing --chain-id test
-./build/simd add-genesis-account --keyring-backend=test validator 1000000000stake
-./build/simd gentx --keyring-backend test --chain-id test validator 1000000stake
+./build/simd add-genesis-account validator 1000000000stake --keyring-backend=test
+./build/simd gentx validator 1000000stake --keyring-backend test --chain-id test
 ./build/simd collect-gentxs
 ```
 
@@ -145,7 +145,43 @@ mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
 cp ./build/simd $DAEMON_HOME/cosmovisor/genesis/bin
 ```
 
-For the sake of this demonstration, amend `voting_params.voting_period` in `$HOME/.simapp/config/genesis.json` to a reduced time of ~5 minutes (`300s`) and then start `cosmosvisor`:
+For the sake of this demonstration, amend `voting_period` in `genesis.json` to a reduced time of 10 seconds (`10s`):
+
+```
+cat <<< $(jq '.app_state.gov.voting_params.voting_period = "10s"' $HOME/.simapp/config/genesis.json) > $HOME/.simapp/config/genesis.json
+```
+
+Next, we will hardcode a modification in `simapp` to simulate a code change. In `simapp/app.go`, find the line containing the `UpgradeKeeper` initialization. It should look like the following:
+
+```go
+app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
+```
+
+After that line, add the following snippet:
+
+ ```go
+app.UpgradeKeeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan upgradetypes.Plan) {
+	// Add some coins to a random account
+	addr, err := sdk.AccAddressFromBech32("cosmos18cgkqduwuh253twzmhedesw3l7v3fm37sppt58")
+	if err != nil {
+		panic(err)
+	}
+	err = app.BankKeeper.AddCoins(ctx, addr, sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(345600000)}})
+	if err != nil {
+		panic(err)
+	}
+})
+```
+
+Now recompile a new binary and make a copy of it in `$DAEMON_HOME/cosmosvisor/upgrades/test1/bin`:
+
+```
+make build
+mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
+cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
+```
+
+Start `cosmosvisor`:
 
 ```
 cosmovisor start
@@ -154,7 +190,7 @@ cosmovisor start
 Open a new terminal window and submit a software upgrade proposal:
 
 ```
-./build/simd tx gov submit-proposal software-upgrade test1 --title "upgrade-demo" --description "upgrade"  --from validator --upgrade-height 100 --deposit 10000000stake --chain-id test --keyring-backend test -y
+./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --from validator --upgrade-height 20 --deposit 10000000stake --chain-id test --keyring-backend test -y
 ```
 
 Query the proposal to ensure it was correctly broadcast and added to a block:
@@ -169,34 +205,4 @@ Submit a `yes` vote for the upgrade proposal:
 ./build/simd tx gov vote 1 yes --from validator --keyring-backend test --chain-id test -y
 ```
 
-For the sake of this demonstration, we will hardcode a modification in `simapp` to simulate a code change. In `simapp/app.go`, find the line containing the `UpgradeKeeper` initialization. It should look like the following:
-
-```
-app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath)
-```
-
-After that line, add the following snippet:
-
- ```
-app.UpgradeKeeper.SetUpgradeHandler("test1", func(ctx sdk.Context, plan upgradetypes.Plan) {
-	// Add some coins to a random account
-	addr, err := sdk.AccAddressFromBech32("cosmos18cgkqduwuh253twzmhedesw3l7v3fm37sppt58")
-	if err != nil {
-		panic(err)
-	}
-	err = app.BankKeeper.AddCoins(ctx, addr, sdk.Coins{sdk.Coin{Denom: "stake", Amount: sdk.NewInt(345600000)}})
-	if err != nil {
-		panic(err)
-	}
-})
-```
-
-Now recompile a new binary and make a copy of it in `$DAEMON_HOME/cosmosvisor/upgrades/test1/bin` (you may need to run `export DAEMON_HOME=$HOME/.simapp` again if you are using a new window):
-
-```
-make build
-mkdir -p $DAEMON_HOME/cosmovisor/upgrades/test1/bin
-cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
-```
-
-The upgrade will occur automatically at height 100.
+The upgrade will occur automatically at height 20.

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var cancelledInPreRun = errors.New("Cancelled in prerun")
@@ -434,5 +435,5 @@ func TestEmptyMinGasPrices(t *testing.T) {
 		return server.InterceptConfigsPreRunHandler(cmd, "", nil)
 	}
 	err = cmd.ExecuteContext(ctx)
-	require.Errorf(t, err, config.ErrSetMinGasPrice.Error())
+	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
 }

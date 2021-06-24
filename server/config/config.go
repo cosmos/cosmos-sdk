@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -10,6 +9,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -21,9 +21,6 @@ const (
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
 	DefaultGRPCWebAddress = "0.0.0.0:9091"
 )
-
-// ErrSetMinGasPrice defines an error occurred if min-gas-prices field in BaseConfig is empty.
-var ErrSetMinGasPrice = errors.New("please set min gas price in app.toml or flag or env var")
 
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
@@ -318,7 +315,7 @@ func GetConfig(v *viper.Viper) Config {
 // ValidateBasic returns an error if min-gas-prices field is empty in BaseConfig. Otherwise, it returns nil.
 func (c Config) ValidateBasic() error {
 	if c.BaseConfig.MinGasPrices == "" {
-		return ErrSetMinGasPrice
+		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
 	}
 
 	return nil

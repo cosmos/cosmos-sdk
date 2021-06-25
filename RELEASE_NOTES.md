@@ -40,7 +40,7 @@ Cosmos SDK v0.43 introduces a new way of handling upgrades. Whan an upgrade happ
 
 For more information:
 
-- see the [module's documenation](https://docs.cosmos.network/master/building-modules/upgrade.html) to how to modify your module to be able to support in-place store migrations,
+- see the [upgrading modules](https://docs.cosmos.network/master/building-modules/upgrade.html) documentation to learn how to modify your module to be able to support in-place store migrations,
 - check out how to [set up an upgrade handler](https://docs.cosmos.network/master/core/upgrade.html) that perform in-place store migrations in your `app.go`,
 - read [ADR-041](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-041-in-place-store-migrations.md) introducing this feature.
 

@@ -31,3 +31,23 @@ ADR-028 introduces a new specification for deriving addresses for all kinds of a
 [Link to ADR-028](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-028-public-key-addresses.md).
 
 ## ADR-041 In-place store migrations
+
+Chain upgrades were historically done with the Cosmos SDK by creating an upgrade proposal, halting the chain at the given height, exporting state to a JSON file, making the necessary JSON file changes, and creating a new chain with the modified JSON file as genesis. This procedure is tedious, and could take up to several hours.
+
+Cosmos SDK v0.43 introduces a new way of handling upgrades. Whan an upgrade happens, instead of starting a new chain, the new binary will read the existing database, and perform in-place modifications of the store. We expect this method to significantly reduce the migration time.
+
+For more information:
+
+- see the [module's documenation](https://docs.cosmos.network/master/building-modules/upgrade.html) to how to modify your module to be able to support in-place store migrations,
+- check out how to [set up an upgrade handler](https://docs.cosmos.network/master/core/upgrade.html) that perform in-place store migrations in your `app.go`,
+- read [ADR-041](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-041-in-place-store-migrations.md) introducing this feature.
+
+## Protobuf Client-Side Breaking Changes
+
+In this release, we deprecated a couple of fields in our Protobuf definitions. When using these fields, some changes in behavior might occur whether you're hitting an v0.42 or a v0.43 node.
+
+- `cosmos.gov.v1beta1.Vote#option` is deprecated in favor of `cosmos.gov.v1beta1.Vote#options` (with an "s") to support x/gov [split votes](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-037-gov-split-vote.md). There are no breaking changes in `Msg`s, as a new `MsgWeightedVote` has been added to support split votes. However, when querying, the deprecated `option` field is populated only when the underlying vote has one VoteOption with weight 1. For other split votes, the `option` field will be equal to `OptionEmpty`.
+- `cosmos.upgrade.v1beta1.Plan#time` is deprecated, because the SDK stops supporting time-based upgrades in favor or height-based upgrades. If an upgrade Plan is created with a non-empty time, the node will error.
+- `cosmos.upgrade.v1beta1.Plan#upgraded_client_state` is deprecated as IBC logic has been moved to the IBC repo. If this field is set, the node will error.
+
+The SDK team is planning to document in the form of an ADR a set of Protobuf guidelines for all chain developers, follow [#9477](https://github.com/cosmos/cosmos-sdk/issues/9477) for more info.

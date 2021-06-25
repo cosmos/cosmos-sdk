@@ -4,7 +4,7 @@ order: 1
 
 # Chain Upgrade Guide to v0.43
 
-This document explains how to perform a chain upgrade from v0.42 to v0.43. {synopsis}
+This document provides information about a chain upgrade from v0.42 to v0.43 and an example of the upgrade process using `simapp`. {synopsis}
 
 ::: warning
 You must upgrade to Stargate v0.42 before upgrading to v0.43. If you have not done so, please see [Chain Upgrade Guide to v0.42](/v0.42/migrations/chain-upgrade-guide-040.html).
@@ -16,6 +16,10 @@ You must upgrade to Stargate v0.42 before upgrading to v0.43. If you have not do
 - [In-Place Store Migrations](../core/upgrade.html) {prereq}
 - [Upgrading Modules](../building-modules/upgrade.html) {prereq}
 
+## Breaking Changes
+
+For a comprehsive list of all breaking changes and improvements since the v0.42 "Stargate" release series, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-rc0/CHANGELOG.md#v0430-rc0---2021-06-25).
+
 ## In-Place Store Migrations
 
 We recommend using [In-Place Store Migrations](../core/upgrade.html) to upgrade your chain from v0.42 to v0.43. The first step is to make sure all your modules follow the [Module Upgrade Guide](../building-modules/upgrade.html). The second step is to add an [upgrade handler](../core/upgrade.html#running-migrations) to `app.go`.
@@ -24,7 +28,7 @@ In this document, we'll provide an example of what the upgrade handler should lo
 
 ## Preparing Upgrade Binaries
 
-We recommend validators use [Cosmovisor](../run-node/cosmovisor.html), which is a process manager for running application binaries. For security reasons, we recommend validators build their own upgrade binaries rather than enabling the auto-download option. Using Cosmovisor with the auto-restart option will further reduce upgrade downtime.
+We recommend validators use [Cosmovisor](../run-node/cosmovisor.html), which is a process manager for running application binaries. For security reasons, we recommend validators build their own upgrade binaries rather than enabling the auto-download option. Using Cosmovisor with the auto-restart option will also prevent downtime.
 
 We also recommend application developers prepare and maintain a tarball with the genesis binary and all available upgrade binaries. This tarball can be used to sync a full node from start without having to manually run each upgrade. See [Cosmovisor](../run-node/cosmovisor.html) for more information about setting up the auto-download option.
 
@@ -124,7 +128,7 @@ Add the following to `simapp/app.go` starting on line 260:
 	app.registerUpgradeHandlers()
 ```
 
-Add the following to `simapp/app.go` starting on line 420:
+Add the following to `simapp/app.go` starting on line 420 (to learn more about the upgrade handler, see the [Module Upgrade Guide](../building-modules/upgrade.html)):
 
 ```go
 func (app *SimApp) registerUpgradeHandlers() {

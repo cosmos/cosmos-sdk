@@ -18,7 +18,7 @@ The v0.43 release focused on simplifying [keys and fee management](https://githu
   - Read the [documentation](https://docs.cosmos.network/master/modules/authz/).
   - Check out its [Protobuf definitions](https://github.com/cosmos/cosmos-sdk/tree/master/proto/cosmos/authz/v1beta1).
 
-These two modules have a slightly different folder structure compared to previously existing modules. For example, all Protobuf-generated files are generated in the module root folder instead of the `types/` folder, and the module itself is defined inside a `module` sub-package. Moving forward, we believe this folder structure is clearer and sets a better example for module developers. To learn more about building modules following this structure, please read our [building module docs](https://docs.cosmos.network/master/building-modules/intro.html).
+These two modules have a slightly different folder structure compared to previously existing modules. For example, all Protobuf-generated files are generated in the module root folder instead of the `types/` folder, and the module itself is defined inside a `module` sub-package. Moving forward, we believe this folder structure is clearer and sets a better example for module developers. To learn more about building modules following this structure, please read our [building modules](https://docs.cosmos.network/master/building-modules/intro.html) documentation.
 
 ## ADR-028 Addresses
 

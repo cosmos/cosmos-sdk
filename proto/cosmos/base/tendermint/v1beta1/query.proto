@@ -116,13 +116,14 @@ message GetNodeInfoResponse {
 
 // VersionInfo is the type for the GetNodeInfoResponse message.
 message VersionInfo {
-  string          name       = 1;
-  string          app_name   = 2;
-  string          version    = 3;
-  string          git_commit = 4;
-  string          build_tags = 5;
-  string          go_version = 6;
-  repeated Module build_deps = 7;
+  string          name               = 1;
+  string          app_name           = 2;
+  string          version            = 3;
+  string          git_commit         = 4;
+  string          build_tags         = 5;
+  string          go_version         = 6;
+  repeated Module build_deps         = 7;
+  string          cosmos_sdk_version = 8;
 }
 
 // Module is the type for VersionInfo

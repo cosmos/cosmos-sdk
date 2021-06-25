@@ -88,7 +88,7 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return RunAddCmd(clientCtx, cmd, args, buf)
+	return runAddCmd(clientCtx, cmd, args, buf)
 }
 
 /*
@@ -100,7 +100,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
+func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
@@ -117,7 +117,10 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		return err
 	}
 
-	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); !dryRun {
+	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
+		// use in memory keybase
+		kb = keyring.NewInMemory()
+	} else {
 		_, err = kb.Key(name)
 		if err == nil {
 			// account exists, ask for user confirmation
@@ -138,19 +141,19 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
 		if len(multisigKeys) != 0 {
-			var pks []cryptotypes.PubKey
+			pks := make([]cryptotypes.PubKey, len(multisigKeys))
 			multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
 			if err := validateMultisigThreshold(multisigThreshold, len(multisigKeys)); err != nil {
 				return err
 			}
 
-			for _, keyname := range multisigKeys {
+			for i, keyname := range multisigKeys {
 				k, err := kb.Key(keyname)
 				if err != nil {
 					return err
 				}
 
-				pks = append(pks, k.GetPubKey())
+				pks[i] = k.GetPubKey()
 			}
 
 			if noSort, _ := cmd.Flags().GetBool(flagNoSort); !noSort {
@@ -160,12 +163,12 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-			if _, err := kb.SaveMultisig(name, pk); err != nil {
+			info, err := kb.SaveMultisig(name, pk)
+			if err != nil {
 				return err
 			}
 
-			cmd.PrintErrf("Key %q saved to disk.\n", name)
-			return nil
+			return printCreate(cmd, info, false, "", outputFormat)
 		}
 	}
 
@@ -176,8 +179,13 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		if err != nil {
 			return err
 		}
-		_, err := kb.SavePubKey(name, pk, algo.Name())
-		return err
+
+		info, err := kb.SavePubKey(name, pk, algo.Name())
+		if err != nil {
+			return err
+		}
+
+		return printCreate(cmd, info, false, "", outputFormat)
 	}
 
 	coinType, _ := cmd.Flags().GetUint32(flagCoinType)

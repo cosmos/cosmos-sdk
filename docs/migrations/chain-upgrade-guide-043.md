@@ -24,7 +24,7 @@ In this document, we'll provide an example of what the upgrade handler should lo
 
 ## Preparing Upgrade Binaries
 
-We recommend validators use [Cosmovisor](../run-node/cosmovisor.html), which is a process manager for running application binaries. For security reasons, we recommend validators build their own upgrade binaries rather than enabling the auto-download option. Using Cosmovisor with the auto-restart option will ensure the upgrade is run with zero downtime.
+We recommend validators use [Cosmovisor](../run-node/cosmovisor.html), which is a process manager for running application binaries. For security reasons, we recommend validators build their own upgrade binaries rather than enabling the auto-download option. Using Cosmovisor with the auto-restart option will further reduce upgrade downtime.
 
 We also recommend application developers prepare and maintain a tarball with the genesis binary and all available upgrade binaries. This tarball can be used to sync a full node from start without having to manually run each upgrade. See [Cosmovisor](../run-node/cosmovisor.html) for more information about setting up the auto-download option.
 
@@ -204,4 +204,4 @@ Submit an upgrade proposal along with a deposit and a vote (these commands must 
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```
 
-Confirm that the upgrades at height 20.
+Confirm that the chain upgrades at height 20.

@@ -2,8 +2,7 @@
 
 This release introduces several new important updates to the Cosmos SDK. The release notes below provide an overview of the larger high-level changes introduced in the v0.43 release series.
 
-That being said, this release does contain many more minor and module-level changes besides those mentioned below. For a comprehsive list of all breaking changes and improvements since the v0.42 "Stargate" release series, please see the
-[CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-rc0/CHANGELOG.md).
+That being said, this release does contain many more minor and module-level changes besides those mentioned below. For a comprehsive list of all breaking changes and improvements since the v0.42 "Stargate" release series, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-rc0/CHANGELOG.md).
 
 ## Two new modules: `x/authz` and `x/feegrant`
 

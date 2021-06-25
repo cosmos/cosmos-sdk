@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [v0.43.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc0) - 2021-06-24
 
 
+
 ### Features
 
 * [\#8077](https://github.com/cosmos/cosmos-sdk/pull/8077) Added support for grpc-web, enabling browsers to communicate with a chain's gRPC server
@@ -123,6 +124,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8656](https://github.com/cosmos/cosmos-sdk/pull/8656) balance and supply are now correctly tracked via `coin_spent`, `coin_received`, `coinbase` and `burn` events.
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) Supply is now stored and tracked as `sdk.Coins`
 * (x/bank) [\#9051](https://github.com/cosmos/cosmos-sdk/pull/9051) Supply value is stored as `sdk.Int` rather than `string`.
+
+
+### CLI Breaking Changes
+
+* [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml
+
 
 ### Improvements
 

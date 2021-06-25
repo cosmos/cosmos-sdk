@@ -50,4 +50,4 @@ In this release, we deprecated a couple of fields in our Protobuf definitions. W
 - `cosmos.upgrade.v1beta1.Plan#time` is deprecated, because the SDK stops supporting time-based upgrades in favor or height-based upgrades. If an upgrade Plan is created with a non-empty time, the node will error.
 - `cosmos.upgrade.v1beta1.Plan#upgraded_client_state` is deprecated as IBC logic has been moved to the IBC repo. If this field is set, the node will error.
 
-The SDK team is planning to document in the form of an ADR a set of Protobuf guidelines for all chain developers, follow [#9477](https://github.com/cosmos/cosmos-sdk/issues/9477) for more info.
+The SDK team is planning to document Protobuf change process using an ADR. It will be a guideline for all chain developers, follow [#9477](https://github.com/cosmos/cosmos-sdk/issues/9477) for more info.

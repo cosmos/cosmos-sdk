@@ -738,6 +738,9 @@ func (m *QueryDenomOwnersRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
+// DenomOwner defines structure representing an account that owns or holds a
+// particular denominated token. It contains the account address and account
+// balance of the denominated token.
 type DenomOwner struct {
 	// address defines the address that owns a particular denomination.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`

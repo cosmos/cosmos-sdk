@@ -184,7 +184,7 @@ message DenomOwner {
   string address = 1;
 
   // balance is the balance of the denominated coin for an account.
-  cosmos.base.v1beta1.Coin balance = 2;
+  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
 }
 
 // QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.

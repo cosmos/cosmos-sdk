@@ -377,7 +377,7 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 			if tc.expPass {
 				suite.NoError(err)
 				suite.NotNil(resp)
-				suite.Len(resp.Addresses, tc.numAddrs)
+				suite.Len(resp.DenomOwners, tc.numAddrs)
 				suite.Equal(tc.total, resp.Pagination.Total)
 
 				if tc.hasNext {

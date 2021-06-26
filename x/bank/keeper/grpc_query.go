@@ -183,7 +183,7 @@ func (k BaseKeeper) DenomOwners(
 	store := ctx.KVStore(k.storeKey)
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 
-	var addresses []string
+	var denomOwners []*types.DenomOwner
 	pageRes, err := query.FilteredPaginate(
 		balancesStore,
 		req.Pagination,
@@ -203,7 +203,13 @@ func (k BaseKeeper) DenomOwners(
 					return false, err
 				}
 
-				addresses = append(addresses, address.String())
+				denomOwners = append(
+					denomOwners,
+					&types.DenomOwner{
+						Address: address.String(),
+						Balance: balance,
+					},
+				)
 			}
 
 			return true, nil
@@ -214,5 +220,5 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDenomOwnersResponse{Addresses: addresses, Pagination: pageRes}, nil
+	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
 }

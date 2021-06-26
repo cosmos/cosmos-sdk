@@ -89,6 +89,7 @@
     - [GenesisState](#cosmos.bank.v1beta1.GenesisState)
   
 - [cosmos/bank/v1beta1/query.proto](#cosmos/bank/v1beta1/query.proto)
+    - [DenomOwner](#cosmos.bank.v1beta1.DenomOwner)
     - [QueryAllBalancesRequest](#cosmos.bank.v1beta1.QueryAllBalancesRequest)
     - [QueryAllBalancesResponse](#cosmos.bank.v1beta1.QueryAllBalancesResponse)
     - [QueryBalanceRequest](#cosmos.bank.v1beta1.QueryBalanceRequest)
@@ -1705,6 +1706,15 @@ GenesisState defines the bank module's genesis state.
 
 
 
+<a name="cosmos.bank.v1beta1.DenomOwner"></a>
+
+### DenomOwner
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address defines the address that owns a particular denomination. |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance is the balance of the denominated coin for an account. |
+
 <a name="cosmos.bank.v1beta1.QueryAllBalancesRequest"></a>
 
 ### QueryAllBalancesRequest
@@ -1803,7 +1813,6 @@ method.
 <a name="cosmos.bank.v1beta1.QueryDenomOwnersRequest"></a>
 
 ### QueryDenomOwnersRequest
-
 QueryDenomOwnersRequest defines the request type for the DenomOwners RPC query,
 which queries for a paginated set of all account holders of a particular
 denomination.
@@ -1822,13 +1831,12 @@ denomination.
 <a name="cosmos.bank.v1beta1.QueryDenomOwnersResponse"></a>
 
 ### QueryDenomOwnersResponse
-
 QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `addresses` | [string](#string) | repeated | addresses defines the set of addresses that own a particular denomination. |
+| `denom_owners` | [DenomOwner](#cosmos.bank.v1beta1.DenomOwner) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 

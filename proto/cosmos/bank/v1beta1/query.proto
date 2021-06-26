@@ -176,10 +176,17 @@ message QueryDenomOwnersRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
+message DenomOwner {
+  // address defines the address that owns a particular denomination.
+  string address = 1;
+
+  // balance is the balance of the denominated coin for an account.
+  cosmos.base.v1beta1.Coin balance = 2;
+}
+
 // QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
 message QueryDenomOwnersResponse {
-  // addresses defines the set of addresses that own a particular denomination.
-  repeated string addresses = 1;
+  repeated DenomOwner denom_owners = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

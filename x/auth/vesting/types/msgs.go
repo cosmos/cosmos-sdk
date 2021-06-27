@@ -133,10 +133,6 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
 	}
 
-	if msg.StartTime < 1 {
-		return fmt.Errorf("invalid start time of %d, length must be greater than 0", msg.StartTime)
-	}
-
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
 			return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", period.Length, i)

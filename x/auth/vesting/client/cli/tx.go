@@ -100,7 +100,7 @@ type InputPeriod struct {
 // MsgCreateVestingAccount transaction.
 func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
+		Use:   "create-periodic-vesting-account [start_time_unix] [to_address] [periods_json_file]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
 		Long: `A sequence of coins and period length in seconds. Periods are sequential, in that the duration of of a period only starts at the end of the previous period. The duration of the first period starts upon account creation. For instance, the following periods.json file shows 20 "test" coins vesting 30 days apart from each other.
 		Where periods.json contains:
@@ -124,19 +124,25 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+
+			startTime, err := strconv.ParseInt(args[0], 10, 64)
+
+			if err != nil {
+				return err
+			}
+			toAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			contents, err := ioutil.ReadFile(args[1])
+			contents, err := ioutil.ReadFile(args[2])
 			if err != nil {
 				return err
 			}
 
 			var inputPeriods []InputPeriod
 
-			err = json.Unmarshal(contents, inputPeriods)
+			err = json.Unmarshal(contents, &inputPeriods)
 			if err != nil {
 				return err
 			}
@@ -157,7 +163,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				periods = append(periods, period)
 			}
 
-			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, periods)
+			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, startTime, periods)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

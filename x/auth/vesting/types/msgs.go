@@ -85,10 +85,11 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
 //nolint:interfacer
-func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, periods []Period) *MsgCreatePeriodicVestingAccount {
+func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{
 		FromAddress:    fromAddr.String(),
 		ToAddress:      toAddr.String(),
+		StartTime:      startTime,
 		VestingPeriods: periods,
 	}
 }
@@ -130,6 +131,10 @@ func (msg MsgCreatePeriodicVestingAccount) ValidateBasic() error {
 
 	if err := sdk.VerifyAddressFormat(to); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+	}
+
+	if msg.StartTime < 1 {
+		return fmt.Errorf("invalid start time of %d, length must be greater than 0", msg.StartTime)
 	}
 
 	for i, period := range msg.VestingPeriods {

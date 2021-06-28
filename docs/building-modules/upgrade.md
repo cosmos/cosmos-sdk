@@ -4,7 +4,7 @@ order: 13
 
 # Upgrading Modules
 
-In-place store migrations allow your modules to upgrade to new versions that include breaking changes. This document outlines how to build modules to take advantage of this functionality. {synopsis}
+[In-Place Store Migrations](../core/upgrade.html) allow your modules to upgrade to new versions that include breaking changes. This document outlines how to build modules to take advantage of this functionality. {synopsis}
 
 ## Prerequisite Readings
 
@@ -12,16 +12,16 @@ In-place store migrations allow your modules to upgrade to new versions that inc
 
 ## Consensus Version
 
-Successful upgrades of existing modules require your `AppModule` to implement the function `ConsensusVersion() uint64`.
+Successful upgrades of existing modules require each `AppModule` to implement the function `ConsensusVersion() uint64`.
 
 - The versions must be hard-coded by the module developer.
 - The initial version **must** be set to 1.
 
-Consensus versions serve as state-breaking versions of app modules and are incremented when the module is upgraded.
+Consensus versions serve as state-breaking versions of app modules and must be incremented when the module introduces breaking changes.
 
 ## Registering Migrations
 
-To register the functionality that takes place during a module upgrade, you must register which migrations we want to take place.
+To register the functionality that takes place during a module upgrade, you must register which migrations you want to take place.
 
 Migration registration takes place in the `Configurator` using the `RegisterMigration` method. The `AppModule` reference to the configurator is in the `RegisterServices` method.
 
@@ -54,4 +54,4 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 ```
 
-To see example code of changes that were implemented in a migration of balance keys, check out the [func migrateBalanceKeys](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62) code. For context, this code introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as outlined in [ADR-028](../architecture/adr-028-public-key-addresses.md).
+To see example code of changes that were implemented in a migration of balance keys, check out [migrateBalanceKeys](https://github.com/cosmos/cosmos-sdk/blob/36f68eb9e041e20a5bb47e216ac5eb8b91f95471/x/bank/legacy/v043/store.go#L41-L62). For context, this code introduced migrations of the bank store that updated addresses to be prefixed by their length in bytes as outlined in [ADR-028](../architecture/adr-028-public-key-addresses.md).

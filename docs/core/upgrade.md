@@ -8,13 +8,13 @@ order: 15
 Read and understand all of the in-place store migration documentation before you run a migration on a live chain.
 :::
 
-Upgrade your app modules smoothly with custom in-place migration logic. {synopsis}
+Upgrade your app modules smoothly with custom in-place store migration logic. {synopsis}
 
 The Cosmos SDK uses two methods to perform upgrades.
 
-- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See the [Chain Upgrade Guide to v0.42](/v0.42/migrations/chain-upgrade-guide-040.html).
+- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See [Chain Upgrade Guide to v0.42](/v0.42/migrations/chain-upgrade-guide-040.html).
 
-- Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Migration Upgrade Guide](../building-modules/upgrade.md) guide to set up your application modules to take advantage of in-place upgrades.
+- Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Module Upgrade Guide](../building-modules/upgrade.md) to set up your application modules to take advantage of in-place upgrades.
   
 This document provides steps to use the In-Place Store Migrations upgrade method.
 
@@ -76,7 +76,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 })
 ```
 
-To learn more about configuring migration scripts for your modules, see the [Migration Upgrade Guide](../building-modules/upgrade.md).
+To learn more about configuring migration scripts for your modules, see the [Module Upgrade Guide](../building-modules/upgrade.md).
 
 ## Adding New Modules During Upgrades
 

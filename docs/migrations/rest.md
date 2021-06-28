@@ -34,7 +34,7 @@ Some important information concerning all legacy REST endpoints:
 
 Thanks to the Protocol Buffers migration in v0.40, we are able to take advantage of a vast number of gRPC tools and solutions. Most of the legacy REST endpoints have been replaced by REST endpoints generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/). We usually call them _gRPC-gateway REST endpoints_.
 
-Some modules exposed legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints were removed in v0.40. We recommend using [Protobuf `Msg` service](../building-modules/msg-services.md) directly to do client-side transaction generation. A guide can be found [here](../run-node/txs.md).
+Previously, some modules exposed legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints were removed in v0.40. We recommend using [Protobuf `Msg` service](../building-modules/msg-services.md) directly to do client-side transaction generation. A guide can be found [here](../run-node/txs.md).
 
 | Legacy REST Endpoint                                                            | Description                                                         | New gRPC-gateway REST Endpoint                                                                        |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |

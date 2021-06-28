@@ -31,11 +31,10 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	tenMinutes := time.Duration(10) * time.Minute
 
 	cases := map[string]struct {
-		allow feegrant.PeriodicAllowance
-		// all other checks are ignored if valid=false
+		allow         feegrant.PeriodicAllowance
 		fee           sdk.Coins
 		blockTime     time.Time
-		valid         bool
+		valid         bool // all other checks are ignored if valid=false
 		accept        bool
 		remove        bool
 		remains       sdk.Coins
@@ -115,7 +114,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:        false,
 			remainsPeriod: nil,
 			remains:       smallAtom,
-			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
+			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
 		},
 		"step limited by global allowance": {
 			allow: feegrant.PeriodicAllowance{
@@ -134,7 +133,20 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			remove:        false,
 			remainsPeriod: smallAtom.Sub(oneAtom),
 			remains:       smallAtom.Sub(oneAtom),
-			periodReset:   oneHour.Add(10 * time.Minute), // one step from last reset, not now
+			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
+		},
+		"period reset no spend limit": {
+			allow: feegrant.PeriodicAllowance{
+				Period:           tenMinutes,
+				PeriodReset:      now,
+				PeriodSpendLimit: atom,
+			},
+			valid:       true,
+			fee:         atom,
+			blockTime:   oneHour,
+			accept:      true,
+			remove:      false,
+			periodReset: oneHour.Add(tenMinutes), // one step from last reset, not now
 		},
 		"expired": {
 			allow: feegrant.PeriodicAllowance{

@@ -190,6 +190,11 @@ func (app *BaseApp) Logger() log.Logger {
 	return app.logger
 }
 
+// Trace returns the boolean value for logging error stack traces.
+func (app *BaseApp) Trace() bool {
+	return app.trace
+}
+
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
 

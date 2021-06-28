@@ -32,7 +32,7 @@ func Cmd() *cobra.Command {
 // getPubKeyFromString decodes SDK PubKey using JSON marshaler.
 func getPubKeyFromString(ctx client.Context, pkstr string) (cryptotypes.PubKey, error) {
 	var pk cryptotypes.PubKey
-	err := ctx.JSONCodec.UnmarshalInterfaceJSON([]byte(pkstr), &pk)
+	err := ctx.Codec.UnmarshalInterfaceJSON([]byte(pkstr), &pk)
 	return pk, err
 }
 

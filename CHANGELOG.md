@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [\#9533](https://github.com/cosmos/cosmos-sdk/pull/9533) Added a new gRPC method, `DenomOwners`, in `x/bank` to query for all account holders of a specific denomination.
+* [\#9407](https://github.com/cosmos/cosmos-sdk/pull/9601) Added a new CLI command, `./simd keys rename [from] [to]` to rename a key in the keyring.
 
 ### API Breaking Changes
 

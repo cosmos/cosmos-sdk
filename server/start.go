@@ -245,6 +245,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
+	config := config.GetConfig(ctx.Viper)
+	if err := config.ValidateBasic(); err != nil {
+		return err
+	}
+
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
@@ -272,8 +277,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 	ctx.Logger.Debug("initialization: tmNode started")
-
-	config := config.GetConfig(ctx.Viper)
 
 	// Add the tx service to the gRPC router. We only need to register this
 	// service if API or gRPC is enabled, and avoid doing so in the general
@@ -347,7 +350,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			Retries:       config.Rosetta.Retries,
 			Offline:       offlineMode,
 		}
-		conf.WithCodec(clientCtx.InterfaceRegistry, clientCtx.JSONCodec.(*codec.ProtoCodec))
+		conf.WithCodec(clientCtx.InterfaceRegistry, clientCtx.Codec.(*codec.ProtoCodec))
 
 		rosettaSrv, err = rosetta.ServerFromConfig(conf)
 		if err != nil {

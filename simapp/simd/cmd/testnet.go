@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -14,8 +15,8 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
+	tmtime "github.com/tendermint/tendermint/libs/time"
 	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -115,7 +116,7 @@ func InitTestnet(
 ) error {
 
 	if chainID == "" {
-		chainID = "chain-" + tmrand.NewRand().Str(6)
+		chainID = "chain-" + tmrand.Str(6)
 	}
 
 	nodeIDs := make([]string, numValidators)
@@ -394,7 +395,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
+	err = ioutil.WriteFile(file, contents, 0644)
 	if err != nil {
 		return err
 	}

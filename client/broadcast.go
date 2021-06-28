@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/mempool"
+	"github.com/tendermint/tendermint/pkg/mempool"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

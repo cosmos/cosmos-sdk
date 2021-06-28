@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/mempool"
+	"github.com/tendermint/tendermint/pkg/mempool"
 	"github.com/tendermint/tendermint/rpc/client/mock"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"

@@ -129,71 +129,125 @@ func TestVestingTimes(t *testing.T) {
 	}
 }
 
-/*
-func TestEncode(t *testing.T) {
-	for _, tt := range []struct{
-		name string
-		params encodeParams
-		want string
+func TestApplyCliff(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		cliff  time.Time
+		events []event
+		want   []event
 	}{
 		{
-			name: "simple_2y",
-			params: encodeParams{
-				Amount: 1000000000,  // 1000 BLD
-				Denom: "ubld",
-				Months: 24,
-				DayOfMonth: 1,
-				TimeOfDay: "09:00",
-				Location: "America/Los_Angeles",
-				Start: "2021-01-01T09:30",
-				Cliffs: []string{
-					"2022-01-01T00:00:00",
-				},
+			name:  "before",
+			cliff: iso("1999-12-31T23:59"),
+			events: []event{
+				{iso("2020-03-01T12:00"), 1000},
+				{iso("2020-04-01T12:00"), 100},
 			},
-			want: `[
-				{ "coins": "500000000ubld", "length_seconds": 31536000 },
-				{ "coins": "41666666ubld", "length_seconds": 2678400 },
-				{ "coins": "41666667ubld", "length_seconds": 2419200 },
-				{ "coins": "41666667ubld", "length_seconds": 2678400 },
-				{ "coins": "41666666ubld", "length_seconds": 2592000 },
-				{ "coins": "41666667ubld", "length_seconds": 2678400 },
-				{ "coins": "41666667ubld", "length_seconds": 2592000 },
-				{ "coins": "41666666ubld", "length_seconds": 2678400 },
-				{ "coins": "41666667ubld", "length_seconds": 2678400 },
-				{ "coins": "41666667ubld", "length_seconds": 2592000 },
-				{ "coins": "41666666ubld", "length_seconds": 2678400 },
-				{ "coins": "41666667ubld", "length_seconds": 2592000 },
-				{ "coins": "41666667ubld", "length_seconds": 2678400 }
-			]`,
+			want: []event{
+				{iso("2020-03-01T12:00"), 1000},
+				{iso("2020-04-01T12:00"), 100},
+			},
 		},
-	}{
+		{
+			name:  "after",
+			cliff: iso("2021-01-02T09:30"),
+			events: []event{
+				{iso("2020-03-01T12:00"), 1000},
+				{iso("2020-04-01T12:00"), 100},
+			},
+			want: []event{
+				{iso("2021-01-02T09:30"), 1100},
+			},
+		},
+		{
+			name:  "mid",
+			cliff: iso("2021-06-15T17:00"),
+			events: []event{
+				{iso("2021-05-15T12:00"), 10},
+				{iso("2021-06-15T12:00"), 100},
+				{iso("2021-07-15T12:00"), 1000},
+			},
+			want: []event{
+				{iso("2021-06-15T17:00"), 110},
+				{iso("2021-07-15T12:00"), 1000},
+			},
+		},
+	} {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRaw, err := encode(tt.params)
+			got, err := applyCliff(tt.events, tt.cliff)
 			if err != nil {
-				t.Fatalf("error encoding: %v", err)
+				t.Fatalf("applyCliff error: %v", err)
 			}
-			got := []filePeriod{}
-			err = json.Unmarshal([]byte(gotRaw), &got)
-			if err != nil {
-				t.Fatalf("error decoding got JSON: %v", err)
-			}
-			want := []filePeriod{}
-			err = json.Unmarshal([]byte(tt.want), &want)
-			if err != nil {
-				t.Fatalf("error decoding want JSON: %v", err)
-			}
-			if !reflect.DeepEqual(got, want) {
-				t.Errorf("encoding got %v, want %v", got, want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("applyCliff got %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
+func TestWrite(t *testing.T) {
+	// Use an explicit timezone for consistant intervals between timestamps.
+	oldLoc := time.Local
+	loc, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		t.Fatalf("cannot load timezone: %v", err)
+	}
+	time.Local = loc
+
+	for _, tt := range []struct {
+		name   string
+		config writeConfig
+		want   []period
+	}{
+		{
+			name: "simple_2y",
+			config: writeConfig{
+				Amount:    1000000000, // 1000 BLD
+				Denom:     "ubld",
+				Months:    24,
+				TimeOfDay: hhmmFmt("09:00"),
+				Start:     iso("2021-01-01T09:30"),
+				Cliffs: []time.Time{
+					iso("2022-01-15T00:00"),
+				},
+			},
+			want: []period{
+				{Coins: "500000000ubld", Length: 32711400},
+				{Coins: "41666666ubld", Length: 1501200},
+				{Coins: "41666667ubld", Length: 2419200},
+				{Coins: "41666667ubld", Length: 2678400},
+				{Coins: "41666666ubld", Length: 2592000},
+				{Coins: "41666667ubld", Length: 2678400},
+				{Coins: "41666667ubld", Length: 2592000},
+				{Coins: "41666666ubld", Length: 2678400},
+				{Coins: "41666667ubld", Length: 2678400},
+				{Coins: "41666667ubld", Length: 2592000},
+				{Coins: "41666666ubld", Length: 2678400},
+				{Coins: "41666667ubld", Length: 2592000},
+				{Coins: "41666667ubld", Length: 2678400},
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			events, err := tt.config.generateEvents()
+			if err != nil {
+				t.Fatalf("generateEvents error: %v", err)
+			}
+			got := tt.config.convertRelative(events)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encoding got %v, want %v", got, tt.want)
+			}
+		})
+	}
+
+	time.Local = oldLoc
+}
+
 func TestFormatDuration(t *testing.T) {
-	for _, tt := range []struct{
-		name string
+	for _, tt := range []struct {
+		name  string
 		input string
-		want string
+		want  string
 	}{
 		{"zero", "0s", "0s"},
 		{"small", "23h", "23h0m0s"},
@@ -202,7 +256,7 @@ func TestFormatDuration(t *testing.T) {
 		{"fracsec", "76h3m7.501s", "3d4h3m7.501s"},
 		{"fracsec_harder", "76h3m0.501s", "3d4h3m0.501s"},
 		{"neg", "-76h3m7.501s", "-3d4h3m7.501s"},
-	}{
+	} {
 		t.Run(tt.name, func(t *testing.T) {
 			duration, err := time.ParseDuration(tt.input)
 			if err != nil {
@@ -215,25 +269,3 @@ func TestFormatDuration(t *testing.T) {
 		})
 	}
 }
-
-func TestParseDate(t *testing.T) {
-	for _, tt := range []struct {
-		name string
-		date string
-		want string
-	}{
-		{"ref", "2006-001-02", "Mon Jan  2 00:00:00 2006"},
-	}{
-		t.Run(tt.name, func(t *testing.T) {
-			tm, err := parseDate(tt.date)
-			if err != nil {
-				t.Fatalf("parseDate error: %v", err)
-			}
-			got := tm.Format(time.ANSIC)
-			if got != tt.want {
-				t.Errorf(`parseDate got "%s", want "%s"`, got , tt.want)
-			}
-		})
-	}
-}
-*/

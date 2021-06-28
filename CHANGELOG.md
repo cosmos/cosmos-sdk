@@ -40,12 +40,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [\#9533](https://github.com/cosmos/cosmos-sdk/pull/9533) Added a new gRPC method, `DenomOwners`, in `x/bank` to query for all account holders of a specific denomination.
-* [\#9407](https://github.com/cosmos/cosmos-sdk/pull/9601) Added a new CLI command, `./simd keys rename [from] [to]` to rename a key in the keyring.
 
 ### API Breaking Changes
 
 * (client/tx) [\#9421](https://github.com/cosmos/cosmos-sdk/pull/9421/) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to
   the Tx Factory as methods.
+* (client/keys) [\#9407](https://github.com/cosmos/cosmos-sdk/pull/9601) Added a new CLI command and Keyring interface function, `./simd keys rename [from] [to]` to rename a key in the keyring.
 
 ## [v0.43.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc0) - 2021-06-25
 

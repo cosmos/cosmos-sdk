@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -653,7 +652,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	// fetch validator and delegation
+	// fetch validator
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 
 	// allocate some rewards
@@ -676,8 +675,15 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	rewards, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	require.NoError(t, err)
-	fmt.Printf("rewards: %v\n", rewards)
 
+	denom, _ := sdk.GetBaseDenom()
+	zeroRewards := sdk.Coins{
+		sdk.Coin{
+			Denom:  denom,
+			Amount: sdk.ZeroInt(),
+		},
+	}
+	require.True(t, rewards.IsEqual(zeroRewards))
 	events := ctx.EventManager().Events()
 	lastEvent := events[len(events)-1]
 	hasValue := false

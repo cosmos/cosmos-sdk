@@ -1,0 +1,29 @@
+syntax = "proto3";
+package cosmos.nft.v1beta1;
+
+import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft/types";
+
+message Metadata {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+
+  string type            = 1; // Required, unique key, alphanumeric
+  string name            = 2;
+  string symbol          = 3;
+  string description     = 4;
+  bool   mint_restricted = 5;
+  bool   edit_restricted = 6;
+}
+
+message NFT {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+
+  string              type = 1; // The type of this NFT
+  string              id   = 2; // The identifier of this NFT
+  string              uri  = 3;
+  google.protobuf.Any data = 4;
+}

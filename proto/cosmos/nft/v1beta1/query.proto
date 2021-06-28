@@ -1,0 +1,124 @@
+syntax = "proto3";
+package cosmos.nft.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/nft/v1beta1/nft.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft/types";
+
+service Query {
+
+  // NFT queries NFT details based on id.
+  rpc NFT(QueryNFTRequest) returns (QueryNFTResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{id}";
+  }
+
+  // NFTs queries all NFTs based on the optional owner.
+  rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts";
+  }
+
+  // NFTsOf queries all NFTs based on the type.
+  rpc NFTsOf(QueryNFTsOfRequest) returns (QueryNFTsOfResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{type}";
+  }
+
+  // Supply queries the number of nft based on the type, same as totalSupply of ERC721
+  rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{type}";
+  }
+
+  // Balance queries the number of NFTs based on the owner and type, same as balanceOf of ERC721
+  rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/{type}";
+  }
+
+  // Type queries the definition of a given type
+  rpc Type(QueryTypeRequest) returns (QueryTypeResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/types/{type}";
+  }
+
+  // Types queries all the types
+  rpc Types(QueryTypesRequest) returns (QueryTypesResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/types";
+  }
+}
+
+// QueryNFTRequest is the request type for the Query/NFT RPC method
+message QueryNFTRequest {
+  string id = 1;
+}
+
+// QueryNFTResponse is the response type for the Query/NFT RPC method
+message QueryNFTResponse {
+  cosmos.nft.v1beta1.NFT nft = 1;
+}
+
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
+message QueryNFTsRequest {
+  string                                 owner      = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsResponse is the response type for the Query/NFTs RPC method
+message QueryNFTsResponse {
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
+message QueryNFTsOfRequest {
+  string                                 type       = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsOfResponse is the response type for the Query/NFTsOf RPC method
+message QueryNFTsOfResponse {
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySupplyRequest is the request type for the Query/Supply RPC method
+message QuerySupplyRequest {
+  string type = 1;
+}
+
+// QuerySupplyResponse is the response type for the Query/Supply RPC method
+message QuerySupplyResponse {
+  uint64 amount = 1;
+}
+
+// QueryBalanceRequest is the request type for the Query/Balance RPC method
+message QueryBalanceRequest {
+  string owner = 1;
+  string type  = 2;
+}
+
+// QueryBalanceResponse is the response type for the Query/Balance RPC method
+message QueryBalanceResponse {
+  uint64 amount = 1;
+}
+
+// QueryTypeRequest is the request type for the Query/Type RPC method
+message QueryTypeRequest {
+  string type = 1;
+}
+
+// QueryTypeResponse is the response type for the Query/Type RPC method
+message QueryTypeResponse {
+  cosmos.nft.v1beta1.Metadata metadata = 1;
+}
+
+// QueryTypesRequest is the request type for the Query/Types RPC method
+message QueryTypesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryTypesResponse is the response type for the Query/Types RPC method
+message QueryTypesResponse {
+  repeated cosmos.nft.v1beta1.Metadata   metadatas  = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

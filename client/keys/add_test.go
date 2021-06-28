@@ -1,8 +1,10 @@
 package keys
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -113,4 +116,114 @@ func Test_runAddCmdBasic(t *testing.T) {
 	// passwords don't match and fail interactive key generation
 	mockIn.Reset("\n" + password + "\n" + "fail" + "\n")
 	require.Error(t, cmd.ExecuteContext(ctx))
+}
+
+func Test_runAddCmdDryRun(t *testing.T) {
+	pubkey1 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtObiFVE4s+9+RX5SP8TN9r2mxpoaT4eGj9CJfK7VRzN"}`
+	pubkey2 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/se1vkqgdQ7VJQCM4mxN+L+ciGhnnJ4XYsQCRBMrdRi"}`
+
+	testData := []struct {
+		name  string
+		args  []string
+		added bool
+	}{
+		{
+			name: "account is added",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "false"),
+			},
+			added: true,
+		},
+		{
+			name: "account is not added with dry run",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "true"),
+			},
+			added: false,
+		},
+		{
+			name: "multisig account is added",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "false"),
+				fmt.Sprintf("--%s=%s", flagMultisig, "subkey"),
+			},
+			added: true,
+		},
+		{
+			name: "multisig account is not added with dry run",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "true"),
+				fmt.Sprintf("--%s=%s", flagMultisig, "subkey"),
+			},
+			added: false,
+		},
+		{
+			name: "pubkey account is added",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "false"),
+				fmt.Sprintf("--%s=%s", FlagPublicKey, pubkey1),
+			},
+			added: true,
+		},
+		{
+			name: "pubkey account is not added with dry run",
+			args: []string{
+				"testkey",
+				fmt.Sprintf("--%s=%s", flags.FlagDryRun, "true"),
+				fmt.Sprintf("--%s=%s", FlagPublicKey, pubkey2),
+			},
+			added: false,
+		},
+	}
+	for _, tt := range testData {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := AddKeyCommand()
+			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+
+			kbHome := t.TempDir()
+			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+			require.NoError(t, err)
+
+			appCodec := simapp.MakeTestEncodingConfig().Marshaler
+			clientCtx := client.Context{}.
+				WithJSONCodec(appCodec).
+				WithKeyringDir(kbHome).
+				WithKeyring(kb)
+			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+			path := sdk.GetConfig().GetFullBIP44Path()
+			_, err = kb.NewAccount("subkey", testutil.TestMnemonic, "", path, hd.Secp256k1)
+			require.NoError(t, err)
+
+			t.Cleanup(func() {
+				_ = kb.Delete("subkey")
+			})
+
+			b := bytes.NewBufferString("")
+			cmd.SetOut(b)
+
+			cmd.SetArgs(tt.args)
+			require.NoError(t, cmd.ExecuteContext(ctx))
+
+			if tt.added {
+				_, err = kb.Key("testkey")
+				require.NoError(t, err)
+
+				out, err := ioutil.ReadAll(b)
+				require.NoError(t, err)
+				require.Contains(t, string(out), "name: testkey")
+			} else {
+				_, err = kb.Key("testkey")
+				require.Error(t, err)
+				require.Equal(t, "testkey.info: key not found", err.Error())
+			}
+		})
+	}
 }

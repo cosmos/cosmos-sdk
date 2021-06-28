@@ -8,7 +8,7 @@ In-place store migrations allow your modules to upgrade to new versions that inc
 
 ## Prerequisite Readings
 
-- [In-Place Store Migration](../core-concepts/upgrade.md) {prereq}
+- [In-Place Store Migration](../core/upgrade.md) {prereq}
 
 ## Consensus Version
 

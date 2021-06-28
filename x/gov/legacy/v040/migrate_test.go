@@ -175,7 +175,9 @@ func TestMigrate(t *testing.T) {
 				"plan": {
 					"height": "123",
 					"info": "foo_upgrade_info",
-					"name": "foo_upgrade_name"
+					"name": "foo_upgrade_name",
+					"time": "0001-01-01T00:00:00Z",
+					"upgraded_client_state": null
 				},
 				"title": "foo_software_upgrade"
 			},

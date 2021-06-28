@@ -443,6 +443,15 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
 	expected = sdk.NewCoins(newFooCoin(150), newBarCoin(75))
 	suite.Require().Equal(expected, acc2Balances)
+
+	// we sent all foo coins to acc2, so foo balance should be deleted for acc1 and bar should be still there
+	var coins []sdk.Coin
+	app.BankKeeper.IterateAccountBalances(ctx, addr1, func(c sdk.Coin) (stop bool) {
+		coins = append(coins, c)
+		return true
+	})
+	suite.Require().Len(coins, 1)
+	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
 func (suite *IntegrationTestSuite) TestValidateBalance() {

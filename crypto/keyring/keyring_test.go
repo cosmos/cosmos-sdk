@@ -1153,6 +1153,52 @@ func TestBackendConfigConstructors(t *testing.T) {
 	require.Equal(t, "keyring-test", backend.PassPrefix)
 }
 
+func TestRenameKey(t *testing.T) {
+	kb, err := New("keybasename", "test", t.TempDir(), nil)
+	require.NoError(t, err)
+
+	fromUID, toUID := "from", "to"
+
+	// create key with "from"
+	_, _, err = kb.NewMnemonic(fromUID, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+
+	fromKey, err := kb.Key(fromUID)
+	require.NoError(t, err)
+	require.Equal(t, fromUID, fromKey.GetName())
+
+	// basic rename
+	err = kb.Rename(fromUID, toUID)
+	require.NoError(t, err)
+
+	// "to" now has "from"'s info
+	toKey, err := kb.Key(toUID)
+	require.Equal(t, toUID, toKey.GetName())
+	require.Equal(t, fromKey.GetPubKey(), toKey.GetPubKey())
+	require.Equal(t, fromKey.GetAlgo(), toKey.GetAlgo())
+	require.Equal(t, fromKey.GetAddress(), toKey.GetAddress())
+
+	// from should be deleted
+	fromKey, err = kb.Key(fromUID)
+	require.Error(t, err)
+
+	// can't rename from a non-existent key 'foo'
+	err = kb.Rename("foo", "bar")
+	require.Error(t, err)
+
+	// create new key
+	_, _, err = kb.NewMnemonic("tester", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+
+	// renaming a key to an existing name should fail
+	err = kb.Rename("tester", toUID)
+	require.Error(t, err)
+
+	// rename to itself should fail
+	err = kb.Rename(toUID, toUID)
+	require.Error(t, err)
+}
+
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetName(), mnemonic.GetName())
 	require.Equal(t, key.GetAddress(), mnemonic.GetAddress())

@@ -64,6 +64,9 @@ type Keyring interface {
 	Delete(uid string) error
 	DeleteByAddress(address sdk.Address) error
 
+	// Rename an existing key from the Keyring
+	Rename(from string, to string) error
+
 	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from it, and
 	// persists the key to storage. Returns the generated mnemonic and the key Info.
 	// It returns an error if it fails to generate a key for the given algo type, or if
@@ -419,6 +422,31 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 	}
 
 	err = ks.Delete(info.GetName())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ks keystore) Rename(from string, to string) error {
+	_, err := ks.Key(to)
+	if err == nil {
+		return errors.New(fmt.Sprintf("rename failed: %s already exists in keyring", to))
+	}
+
+	passPhrase := "temp"
+	armor, err := ks.ExportPrivKeyArmor(from, passPhrase)
+	if err != nil {
+		return err
+	}
+
+	err = ks.Delete(from)
+	if err != nil {
+		return err
+	}
+
+	err = ks.ImportPrivKey(to, armor, passPhrase)
 	if err != nil {
 		return err
 	}

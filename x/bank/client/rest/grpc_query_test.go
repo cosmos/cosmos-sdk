@@ -6,14 +6,72 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+type IntegrationTestSuite struct {
+	suite.Suite
+
+	cfg     network.Config
+	network *network.Network
+}
+
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
+
+	cfg := network.DefaultConfig()
+	genesisState := cfg.GenesisState
+	cfg.NumValidators = 1
+
+	var bankGenesis types.GenesisState
+	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[types.ModuleName], &bankGenesis))
+
+	bankGenesis.DenomMetadata = []types.Metadata{
+		{
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{
+					Denom:    "uatom",
+					Exponent: 0,
+					Aliases:  []string{"microatom"},
+				},
+				{
+					Denom:    "atom",
+					Exponent: 6,
+					Aliases:  []string{"ATOM"},
+				},
+			},
+			Base:    "uatom",
+			Display: "atom",
+		},
+	}
+
+	bankGenesisBz, err := cfg.Codec.MarshalJSON(&bankGenesis)
+	s.Require().NoError(err)
+	genesisState[types.ModuleName] = bankGenesisBz
+	cfg.GenesisState = genesisState
+
+	s.cfg = cfg
+	s.network = network.New(s.T(), cfg)
+
+	_, err = s.network.WaitForHeight(2)
+	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
 
 func (s *IntegrationTestSuite) TestTotalSupplyGRPCHandler() {
 	val := s.network.Validators[0]

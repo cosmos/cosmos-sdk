@@ -119,7 +119,6 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 			}
 
 			startTime, err := strconv.ParseInt(args[0], 10, 64)
-
 			if err != nil {
 				return err
 			}

@@ -39,7 +39,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	// TODO serialize using amino or proto? legacy.Cdc.MustMarshal(priv)
 	legacyLocalInfo := keyring.NewLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
 	serializedLegacyLocalInfo := keyring.MarshalInfo(legacyLocalInfo)
-	
+
 	itemKey := keyring.InfoKey(n1)
 
 	item := design99keyring.Item{
@@ -58,7 +58,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 
 // test pass!
 // go test -tags='cgo ledger norace' github.com/cosmos-sdk/crypto
-func TestMigrationLegacyLedgerKey(t *testing.T) {
+func TestMigrateLegacyLedgerKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -90,7 +90,7 @@ func TestMigrationLegacyLedgerKey(t *testing.T) {
 	require.NoError(err)
 }
 
-func TestMigrationLegacyOfflineKey(t *testing.T) {
+func TestMigrateLegacyOfflineKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -120,7 +120,7 @@ func TestMigrationLegacyOfflineKey(t *testing.T) {
 	require.NoError(err)
 }
 
-func TestMigrationLegacyMultiKey(t *testing.T) {
+func TestMigrateLegacyMultiKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -156,7 +156,7 @@ func TestMigrationLegacyMultiKey(t *testing.T) {
 
 // TODO fix the test , it fails after I updated migration algo
 // TODO  do i need to test migration for ledger,offline record items as well?
-func TestMigrationLocalRecord(t *testing.T) {
+func TestMigrateLocalRecord(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -196,7 +196,7 @@ func TestMigrationLocalRecord(t *testing.T) {
 }
 
 // TODO insert multiple incorrect migration keys and output errors to user
-func TestMigrationOneRandomItemError(t *testing.T) {
+func TestMigrateOneRandomItemError(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -220,4 +220,97 @@ func TestMigrationOneRandomItemError(t *testing.T) {
 	migrated, err := kb.Migrate(itemKey)
 	require.False(migrated)
 	require.Error(err)
+}
+
+func TestMigrateAllMultiOffline(t *testing.T) {
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+
+	priv := secp256k1.GenPrivKey()
+	multi := multisig.NewLegacyAminoPubKey(
+		1, []cryptotypes.PubKey{
+			priv.PubKey(),
+		},
+	)
+	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
+	require.NoError(err)
+	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
+	itemKey := keyring.InfoKey(n1)
+
+	item := design99keyring.Item{
+		Key:         itemKey,
+		Data:        serializedLegacyMultiInfo,
+		Description: "SDK kerying version",
+	}
+
+	require.NoError(kb.SetItem(item))
+
+	priv = secp256k1.GenPrivKey()
+	pub := priv.PubKey()
+
+	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
+	itemKey = keyring.InfoKey("cosmos1")
+
+	item = design99keyring.Item{
+		Key:         itemKey,
+		Data:        serializedLegacyOfflineInfo,
+		Description: "SDK kerying version",
+	}
+
+	require.NoError(kb.SetItem(item))
+
+	migrated, err := kb.MigrateAll()
+	require.True(migrated)
+	require.NoError(err)
+
+}
+
+func TestMigrateAllNoItem(t *testing.T) {
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+
+	_, err = kb.MigrateAll()
+	require.Equal("no keys available for migration", err.Error())
+}
+
+func TestMigrateErrUnknownItemKey(t *testing.T) {
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	require.NoError(err)
+
+	priv := secp256k1.GenPrivKey()
+	pub := priv.PubKey()
+
+	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
+	itemKey := keyring.InfoKey(n1)
+
+	item := design99keyring.Item{
+		Key:         itemKey,
+		Data:        serializedLegacyOfflineInfo,
+		Description: "SDK kerying version",
+	}
+
+	err = kb.SetItem(item)
+	require.NoError(err)
+
+	incorrectItemKey := itemKey + "1"
+	migrated, err := kb.Migrate(incorrectItemKey)
+	require.False(migrated)
+	require.True(strings.Contains(err.Error(), "Get error, err"))
 }

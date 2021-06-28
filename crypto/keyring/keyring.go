@@ -44,15 +44,9 @@ const (
 	passKeyringPrefix  = "keyring-%s"
 )
 
-// Keyring version
-const (
-	CURRENT_VERSION = 1
-)
-
 var (
 	_                          Keyring = &keystore{}
 	maxPassphraseEntryAttempts         = 3
-	VERSION_KEY                        = "0"
 )
 
 // Keyring exposes operations over a backend supported by github.com/99designs/keyring.
@@ -136,7 +130,7 @@ type LegacyInfoImporter interface {
 
 type Migrator interface {
 	MigrateAll() (bool, error)
-	Migrate(key string) (bool, error) 
+	Migrate(key string) (bool, error)
 }
 
 // used in migration_test.go
@@ -781,7 +775,7 @@ func (ks keystore) writeRecord(k *Record) error {
 	key := infoKeyBz(k.Name)
 	fmt.Println("writeRecord key", string(key))
 	item := keyring.Item{
-		Key:  string(key), // it is fetched by VERSION_KEY in checkMigrate
+		Key:  string(key),
 		Data: serializedRecord,
 	}
 	fmt.Println("item Key", item.Key)
@@ -847,10 +841,14 @@ func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (
 
 func (ks keystore) MigrateAll() (bool, error) {
 	var migrated bool
-	
+
 	keys, err := ks.db.Keys()
 	if err != nil {
 		return migrated, fmt.Errorf("Keys() error, err: %s", err)
+	}
+
+	if len(keys) == 0 {
+		return migrated, errors.New("no keys available for migration")
 	}
 
 	for _, key := range keys {
@@ -861,7 +859,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 
 		migrated, err = ks.Migrate(key)
 		if err != nil {
-			fmt.Println("migrate err", err)
+			fmt.Printf("migrate err: %q", err)
 			continue
 		}
 	}

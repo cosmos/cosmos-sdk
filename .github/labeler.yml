@@ -50,8 +50,5 @@
 "C:CLI":
   - client/**/*
   - x/*/client/**/*
-"Type: Docs":
-  - docs/**/*
-  - x/*/spec/**/*
 "Type: ADR":
-    - docs/architecture/**/*
+  - docs/architecture/**/*

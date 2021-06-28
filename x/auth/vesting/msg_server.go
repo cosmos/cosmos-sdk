@@ -98,3 +98,55 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 
 	return &types.MsgCreateVestingAccountResponse{}, nil
 }
+
+func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreateVestingAccountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	ak := s.AccountKeeper
+	bk := s.BankKeeper
+
+	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if bk.BlockedAddr(to) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	}
+
+	if acc := ak.GetAccount(ctx, to); acc != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
+	}
+
+	if msg.StartTime < ctx.BlockTime().Unix() {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "StartTime must be after the current blocktime", msg.ToAddress)
+
+	}
+	var totalCoins sdk.Coins
+
+	for _, period := range msg.VestingPeriods {
+		totalCoins.Add(period.Amount...)
+	}
+
+	baseAccount := ak.NewAccountWithAddress(ctx, to)
+
+	types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+
+	err = bk.SendCoins(ctx, from, to, totalCoins)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+	return &types.MsgCreateVestingAccountResponse{}, nil
+
+}

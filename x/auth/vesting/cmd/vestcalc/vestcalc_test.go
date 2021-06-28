@@ -72,7 +72,7 @@ func TestDivision(t *testing.T) {
 }
 
 func iso(s string) time.Time {
-	t, _ := time.Parse(shortIsoFmt, s)
+	t, _ := time.ParseInLocation(shortIsoFmt, s, time.Local)
 	return t
 }
 
@@ -215,7 +215,7 @@ func TestWrite(t *testing.T) {
 				{Coins: "500000000ubld", Length: 32711400},
 				{Coins: "41666666ubld", Length: 1501200},
 				{Coins: "41666667ubld", Length: 2419200},
-				{Coins: "41666667ubld", Length: 2678400},
+				{Coins: "41666667ubld", Length: 2674800},
 				{Coins: "41666666ubld", Length: 2592000},
 				{Coins: "41666667ubld", Length: 2678400},
 				{Coins: "41666667ubld", Length: 2592000},
@@ -223,7 +223,7 @@ func TestWrite(t *testing.T) {
 				{Coins: "41666667ubld", Length: 2678400},
 				{Coins: "41666667ubld", Length: 2592000},
 				{Coins: "41666666ubld", Length: 2678400},
-				{Coins: "41666667ubld", Length: 2592000},
+				{Coins: "41666667ubld", Length: 2595600},
 				{Coins: "41666667ubld", Length: 2678400},
 			},
 		},

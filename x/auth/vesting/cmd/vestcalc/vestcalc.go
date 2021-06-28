@@ -12,6 +12,7 @@ import (
 )
 
 // shortIsoFmt specifies ISO 8601 without seconds or timezone.
+// Note: when parsing, timezone is UTC unless overridden.
 const shortIsoFmt = "2006-01-02T15:04"
 
 // divide returns the division of total as evenly as possible.
@@ -285,7 +286,7 @@ type isoDate struct{ time.Time }
 
 // Set() implements flag.Value.Set().
 func (id *isoDate) Set(s string) error {
-	t, err := time.Parse(shortIsoFmt, s)
+	t, err := time.ParseInLocation(shortIsoFmt, s, time.Local)
 	if err != nil {
 		return err
 	}
@@ -309,7 +310,7 @@ type isoDateList []time.Time
 // Set() implements flag.Value.Set().
 func (dates *isoDateList) Set(s string) error {
 	for _, ds := range strings.Split(s, ",") {
-		d, err := time.Parse(shortIsoFmt, ds)
+		d, err := time.ParseInLocation(shortIsoFmt, ds, time.Local)
 		if err != nil {
 			return err
 		}

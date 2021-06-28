@@ -1,4 +1,4 @@
-package v043
+package v044
 
 import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -8,11 +8,17 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+// migrateParamsStore adds application version parameters to baseapp parameters
 func migrateParamsStore(ctx sdk.Context, paramstore paramtypes.Subspace) {
-	paramstore.WithKeyTable(paramtypes.ConsensusParamsKeyTable())
-	paramstore.Set(ctx, baseapp.ParamStoreKeyVersionParams, tmproto.VersionParams{})
+	if paramstore.HasKeyTable() {
+		paramstore.Set(ctx, baseapp.ParamStoreKeyVersionParams, tmproto.VersionParams{})
+	} else {
+		paramstore.WithKeyTable(paramtypes.ConsensusParamsKeyTable())
+		paramstore.Set(ctx, baseapp.ParamStoreKeyVersionParams, tmproto.VersionParams{})
+	}
 }
 
+// MigrateStore adds a new key, versionParams, for baseapp consensus parameters.
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, paramstore paramtypes.Subspace) error {
 	migrateParamsStore(ctx, paramstore)
 	return nil

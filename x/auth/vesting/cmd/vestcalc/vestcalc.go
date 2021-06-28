@@ -371,7 +371,6 @@ var (
 	flagMonths = flag.Int("months", 1, "Number of months to vest over.")
 	flagAmount = flag.Int64("amount", 0, "Total amount to vest.")
 	flagDenom  = flag.String("denom", "ubld", "Denomination of amount.")
-	//flagTime   = flag.String("time", "00:00", "Time of day for vesting, e.g. 15:04.")
 	flagTime   = isoTimeFlag("time", "00:00", "Time of day for vesting, e.g. 15:04.")
 	flagCliffs = isoDateListFlag("cliffs", "Vesting cliffs in format 2006-01-02T15:04 (local time).")
 	flagRead   = flag.Bool("read", false, "Read periods file from stdin and print dates relative to start.")

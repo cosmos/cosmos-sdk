@@ -63,7 +63,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 		resp, err := rest.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected, tc.respType)
 		})
 	}
@@ -113,10 +113,10 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -167,10 +167,10 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -226,10 +226,10 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -302,10 +302,10 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -354,10 +354,10 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -406,10 +406,10 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 
 		s.Run(tc.name, func() {
 			if tc.expErr {
-				s.Require().Error(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().Error(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -454,7 +454,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})

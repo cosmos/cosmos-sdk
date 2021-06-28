@@ -4,8 +4,6 @@ package rest_test
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
@@ -111,7 +109,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 			s.Require().NoError(err)
 
 			var valRes types.QueryValidatorsResponse
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &valRes)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &valRes)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -159,7 +157,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 			s.Require().NoError(err)
 
 			var validator types.QueryValidatorResponse
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &validator)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &validator)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -223,7 +221,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -269,7 +267,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 
 			var ubds types.QueryValidatorUnbondingDelegationsResponse
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &ubds)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &ubds)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -346,7 +344,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
 			s.T().Logf("%s", resp)
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -402,7 +400,7 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 
 			var ubd types.QueryUnbondingDelegationResponse
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &ubd)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &ubd)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -416,38 +414,14 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegationsResponseCode() {
-	val := s.network.Validators[0]
-
-	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-	s.T().Log("expect 404 error for address without delegations")
-	res, statusCode, err := getRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", val.APIAddress, newAddr.String()))
-	s.Require().NoError(err)
-	s.Require().Contains(string(res), "\"code\": 5")
-	s.Require().Equal(404, statusCode)
-}
-
-func getRequest(url string) ([]byte, int, error) {
-	res, err := http.Get(url) // nolint:gosec
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, res.StatusCode, err
-	}
-
-	if err = res.Body.Close(); err != nil {
-		return nil, res.StatusCode, err
-	}
-
-	return body, res.StatusCode, nil
-}
-
 func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
+
+	// Create new account in the keyring for address without delegations.
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
 	testCases := []struct {
 		name         string
@@ -488,6 +462,19 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 				Pagination: &query.PageResponse{Total: 1},
 			},
 		},
+		{
+			"address without delegations",
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", baseURL, newAddr.String()),
+			map[string]string{
+				grpctypes.GRPCBlockHeightHeader: "1",
+			},
+			false,
+			&types.QueryDelegatorDelegationsResponse{},
+			&types.QueryDelegatorDelegationsResponse{
+				DelegationResponses: types.DelegationResponses{},
+				Pagination:          &query.PageResponse{Total: 0},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -496,7 +483,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -546,7 +533,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 
 			var ubds types.QueryDelegatorUnbondingDelegationsResponse
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &ubds)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &ubds)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -607,7 +594,7 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 			s.Require().NoError(err)
 			var redelegations types.QueryRedelegationsResponse
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &redelegations)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &redelegations)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -657,7 +644,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 
 			var validators types.QueryDelegatorValidatorsResponse
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &validators)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &validators)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -713,7 +700,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 			s.Require().NoError(err)
 
 			var validator types.QueryDelegatorValidatorResponse
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &validator)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &validator)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -760,7 +747,7 @@ func (s *IntegrationTestSuite) TestQueryHistoricalInfoGRPC() {
 
 			var historicalInfo types.QueryHistoricalInfoResponse
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &historicalInfo)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &historicalInfo)
 
 			if tc.error {
 				s.Require().Error(err)
@@ -797,7 +784,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 		resp, err := rest.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected, tc.respType)
 		})
 	}
@@ -831,7 +818,7 @@ func (s *IntegrationTestSuite) TestQueryPoolGRPC() {
 		resp, err := rest.GetRequest(tc.url)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType))
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
 			s.Require().Equal(tc.expected, tc.respType)
 		})
 	}

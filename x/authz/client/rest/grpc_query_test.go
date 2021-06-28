@@ -141,7 +141,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 				require.Contains(string(resp), tc.errorMsg)
 			} else {
 				var g authz.QueryGrantsResponse
-				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &g)
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &g)
 				require.NoError(err)
 				require.Len(g.Grants, 1)
 				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
@@ -225,7 +225,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 				s.Require().Contains(string(resp), tc.errMsg)
 			} else {
 				var authorizations authz.QueryGrantsResponse
-				err := val.ClientCtx.JSONCodec.UnmarshalJSON(resp, &authorizations)
+				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				s.Require().NoError(err)
 				tc.postRun(&authorizations)
 			}

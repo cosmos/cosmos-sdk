@@ -212,12 +212,12 @@ func TestNoSpuriousUpgrades(t *testing.T) {
 func TestPlanStringer(t *testing.T) {
 	require.Equal(t, `Upgrade Plan
   Name: test
-  Height: 100
+  height: 100
   Info: .`, types.Plan{Name: "test", Height: 100, Info: ""}.String())
 
 	require.Equal(t, fmt.Sprintf(`Upgrade Plan
   Name: test
-  Height: 100
+  height: 100
   Info: .`), types.Plan{Name: "test", Height: 100, Info: ""}.String())
 }
 

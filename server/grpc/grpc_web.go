@@ -11,7 +11,16 @@ import (
 
 // StartGRPCWeb starts a gRPC-Web server on the given address.
 func StartGRPCWeb(grpcSrv *grpc.Server, config config.Config) (*http.Server, error) {
-	wrappedServer := grpcweb.WrapServer(grpcSrv)
+	var options []grpcweb.Option
+	if config.GRPCWeb.EnableUnsafeCORS {
+		options = append(options,
+			grpcweb.WithOriginFunc(func(origin string) bool {
+				return true
+			}),
+		)
+	}
+
+	wrappedServer := grpcweb.WrapServer(grpcSrv, options...)
 	handler := func(resp http.ResponseWriter, req *http.Request) {
 		wrappedServer.ServeHTTP(resp, req)
 	}

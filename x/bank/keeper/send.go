@@ -257,7 +257,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	accountStore := k.getAccountStore(ctx, addr)
 	denomPrefixStore := k.getDenomPrefixStore(ctx, balance.Denom)
 
-	// x/bank invariants prohibit persistance of zero balances
+	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
 		accountStore.Delete([]byte(balance.Denom))
 		denomPrefixStore.Delete(address.MustLengthPrefix(addr))

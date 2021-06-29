@@ -266,7 +266,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		accountStore.Set([]byte(balance.Denom), bz)
 
 		// store a reverse index from denomination to account address
-		denomPrefixStore.Set(address.MustLengthPrefix(addr), nil)
+		denomPrefixStore.Set(address.MustLengthPrefix(addr), bz)
 	}
 
 	return nil

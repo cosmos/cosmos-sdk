@@ -179,27 +179,21 @@ func (k BaseKeeper) DenomOwners(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	store := ctx.KVStore(k.storeKey)
-	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	denomPrefixStore := k.getDenomPrefixStore(ctx, req.Denom)
 
 	var denomOwners []*types.DenomOwner
 	pageRes, err := query.FilteredPaginate(
-		balancesStore,
+		denomPrefixStore,
 		req.Pagination,
 		func(key []byte, value []byte, accumulate bool) (bool, error) {
-			var balance sdk.Coin
-			if err := k.cdc.Unmarshal(value, &balance); err != nil {
-				return false, err
-			}
-
-			if req.Denom != balance.Denom {
-				return false, nil
-			}
-
 			if accumulate {
 				address, err := types.AddressFromBalancesStore(key)
 				if err != nil {
+					return false, err
+				}
+
+				var balance sdk.Coin
+				if err := k.cdc.Unmarshal(value, &balance); err != nil {
 					return false, err
 				}
 

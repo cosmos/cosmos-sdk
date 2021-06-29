@@ -1,11 +1,12 @@
 package v043
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -33,28 +34,31 @@ func migratePrefixProposalAddress(store sdk.KVStore, prefixBz []byte) {
 }
 
 // migrateStoreWeightedVotes migrates a legacy vote to an ADR-037 weighted vote.
-func migrateVote(oldVote v040gov.Vote) types.Vote {
+// Important: the `oldVote` has its `Option` field set, whereas the new weighted
+// vote has its `Options` field set.
+func migrateVote(oldVote types.Vote) types.Vote {
 	return types.Vote{
 		ProposalId: oldVote.ProposalId,
 		Voter:      oldVote.Voter,
-		Options:    []types.WeightedVoteOption{{Option: oldVote.Option, Weight: sdk.NewDec(1)}},
+		Options:    types.NewNonSplitVoteOption(oldVote.Option),
 	}
 }
 
 // migrateStoreWeightedVotes migrates in-place all legacy votes to ADR-037 weighted votes.
-func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryMarshaler) error {
-	iterator := sdk.KVStorePrefixIterator(store, v040gov.VotesKeyPrefix)
+func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
+	iterator := sdk.KVStorePrefixIterator(store, types.VotesKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var oldVote v040gov.Vote
-		err := cdc.UnmarshalBinaryBare(iterator.Value(), &oldVote)
+		var oldVote types.Vote
+		err := cdc.Unmarshal(iterator.Value(), &oldVote)
 		if err != nil {
 			return err
 		}
 
 		newVote := migrateVote(oldVote)
-		bz, err := cdc.MarshalBinaryBare(&newVote)
+		fmt.Println("migrateStoreWeightedVotes newVote=", newVote)
+		bz, err := cdc.Marshal(&newVote)
 		if err != nil {
 			return err
 		}
@@ -65,13 +69,13 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryMarshaler) err
 	return nil
 }
 
-// MigrateStore performs in-place store migrations from v0.40 to v0.42. The
+// MigrateStore performs in-place store migrations from v0.40 to v0.43. The
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryMarshaler) error {
+func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
-	migratePrefixProposalAddress(store, v040gov.DepositsKeyPrefix)
-	migratePrefixProposalAddress(store, v040gov.VotesKeyPrefix)
+	migratePrefixProposalAddress(store, types.DepositsKeyPrefix)
+	migratePrefixProposalAddress(store, types.VotesKeyPrefix)
 	return migrateStoreWeightedVotes(store, cdc)
 }

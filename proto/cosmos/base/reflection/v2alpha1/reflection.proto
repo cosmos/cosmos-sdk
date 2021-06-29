@@ -28,8 +28,7 @@ message TxDescriptor {
   // it is not meant to support polymorphism of transaction types, it is supposed to be used by
   // reflection clients to understand if they can handle a specific transaction type in an application.
   string fullname = 1;
-  // msgs lists the accepted application messages (sdk.ServiceMsg, sdk.Msg)
-  // NOTE: not to be confused with proto.Message types
+  // msgs lists the accepted application messages (sdk.Msg)
   repeated MsgDescriptor msgs = 2;
 }
 
@@ -70,7 +69,8 @@ message CodecDescriptor {
 message InterfaceDescriptor {
   // fullname is the name of the interface
   string fullname = 1;
-  // interface_accepting_messages contains information regarding the proto messages which contain the interface as google.protobuf.Any field
+  // interface_accepting_messages contains information regarding the proto messages which contain the interface as
+  // google.protobuf.Any field
   repeated InterfaceAcceptingMessageDescriptor interface_accepting_messages = 2;
   // interface_implementers is a list of the descriptors of the interface implementers
   repeated InterfaceImplementerDescriptor interface_implementers = 3;
@@ -106,28 +106,8 @@ message ConfigurationDescriptor {
 
 // MsgDescriptor describes a cosmos-sdk message that can be delivered with a transaction
 message MsgDescriptor {
-  // msg contains a descriptor of sdk.ServiceMsg, note: sdk.Msg is not supported
-  // as every sdk.Msg is already an sdk.ServiceMsg. It is defined as a oneof in case
-  // different representation of a msg will be implemented.
-  oneof msg {
-    // service_msg is used when the message is an sdk.ServiceMsg type
-    ServiceMsgDescriptor service_msg = 1;
-  }
-}
-
-// ServiceMsgDescriptor describes an sdk.ServiceMsg type
-message ServiceMsgDescriptor {
-  // request_fullname is the protobuf fullname of the given sdk.ServiceMsg request
-  // this is the protobuf message type which should be used as google.protobuf.Any.value
-  // when delivering the msg to the DeliverTx endpoint
-  string request_fullname = 1;
-  // request_route is the sdk.ServiceMsg route, it is equal to type_url
-  string request_route = 2;
-  // request_type_url is the identifier that should be used as google.protobuf.Any.type_url
-  // when delivering the msg to the DeliverTx endpoint
-  string request_type_url = 3;
-  // response_fullname is the protobuf fullname of the given sdk.ServiceMsg response
-  string response_fullname = 4;
+  // msg_type_url contains the TypeURL of a sdk.Msg.
+  string msg_type_url = 1;
 }
 
 // ReflectionService defines a service for application reflection.
@@ -208,7 +188,6 @@ message GetTxDescriptorResponse {
   // alongside the accepted transaction protobuf type
   TxDescriptor tx = 1;
 }
-
 
 // QueryServicesDescriptor contains the list of cosmos-sdk queriable services
 message QueryServicesDescriptor {

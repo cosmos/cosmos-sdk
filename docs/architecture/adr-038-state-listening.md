@@ -60,11 +60,11 @@ message StoreKVPair {
 // protobuf encoded StoreKVPairs to an underlying io.Writer
 type StoreKVPairWriteListener struct {
 	writer io.Writer
-	marshaller codec.BinaryMarshaler
+	marshaller codec.BinaryCodec
 }
 
-// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryMarshaler
-func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryMarshaler) *StoreKVPairWriteListener {
+// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryCodec
+func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer: w,
 		marshaller: m,
@@ -229,6 +229,7 @@ This service uses the same `StoreKVPairWriteListener` for every KVStore, writing
 out to the same files, relying on the `StoreKey` field in the `StoreKVPair` protobuf message to later distinguish the source for each pair.
 
 The file naming schema is as such:
+
 * After every `BeginBlock` request a new file is created with the name `block-{N}-begin`, where N is the block number. All
 subsequent state changes are written out to this file until the first `DeliverTx` request is received. At the head of these files,
   the length-prefixed protobuf encoded `BeginBlock` request is written, and the response is written at the tail.
@@ -248,7 +249,7 @@ type FileStreamingService struct {
 	filePrefix string // optional prefix for each of the generated files
 	writeDir string // directory to write files into
 	dstFile *os.File // the current write output file
-	marshaller codec.BinaryMarshaler // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	marshaller codec.BinaryCodec // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	stateCache [][]byte // cache the protobuf binary encoded StoreKVPairs in the order they are received
 }
 ```
@@ -279,7 +280,7 @@ func (iw *intermediateWriter) Write(b []byte) (int, error) {
 }
 
 // NewFileStreamingService creates a new FileStreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewFileStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, m codec.BinaryMarshaler) (*FileStreamingService, error) {
+func NewFileStreamingService(writeDir, filePrefix string, storeKeys []sdk.StoreKey, m codec.BinaryCodec) (*FileStreamingService, error) {
 	listenChan := make(chan []byte, 0)
 	iw := NewIntermediateWriter(listenChan)
 	listener := listen.NewStoreKVPairWriteListener(iw, m)
@@ -398,38 +399,37 @@ func (app *BaseApp) RegisterHooks(s StreamingService) {
 We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass ABCI requests and responses to any streaming service hooks registered
 with the `BaseApp`.
 
-
 ```go
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	
+
 	...
-	
+
 	// Call the streaming service hooks with the BeginBlock messages
 	for _, hook := range app.hooks {
 		hook.ListenBeginBlock(app.deliverState.ctx, req, res)
 	}
-	
+
 	return res
 }
 ```
 
 ```go
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
-	
+
 	...
 
 	// Call the streaming service hooks with the EndBlock messages
 	for _, hook := range app.hooks {
 		hook.ListenEndBlock(app.deliverState.ctx, req, res)
 	}
-	
+
 	return res
 }
 ```
 
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	
+
 	...
 
 	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
@@ -450,12 +450,12 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		Data:      result.Data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
-	
+
 	// Call the streaming service hooks with the DeliverTx messages
 	for _, hook := range app.hooks {
 		hook.ListenDeliverTx(app.deliverState.ctx, req, res)
 	}
-	
+
 	return res
 }
 ```
@@ -544,7 +544,6 @@ func FileStreamingConstructor(opts servertypes.AppOptions, keys []sdk.StoreKey) 
 As a demonstration, we will implement the state watching features as part of SimApp.
 For example, the below is a very rudimentary integration of the state listening features into the SimApp `AppCreator` function:
 
-
 ```go
 func NewSimApp(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
@@ -560,7 +559,7 @@ func NewSimApp(
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 	)
-	
+
 	// configure state listening capabilities using AppOptions
 	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
 	for _, listenerName := range listeners {
@@ -590,7 +589,7 @@ func NewSimApp(
 		// kick off the background streaming service loop
 		streamingService.Stream(wg, quitChan) // maybe this should be done from inside BaseApp instead?
 	}
-	
+
 	...
 
 	return app

@@ -17,6 +17,12 @@ func (p Plan) String() string {
 
 // ValidateBasic does basic validation of a Plan
 func (p Plan) ValidateBasic() error {
+	if !p.Time.IsZero() {
+		return sdkerrors.ErrInvalidRequest.Wrap("time-based upgrades have been deprecated in the SDK")
+	}
+	if p.UpgradedClientState != nil {
+		return sdkerrors.ErrInvalidRequest.Wrap("upgrade logic for IBC has been moved to the IBC module")
+	}
 	if len(p.Name) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
 	}
@@ -37,5 +43,5 @@ func (p Plan) ShouldExecute(ctx sdk.Context) bool {
 
 // DueAt is a string representation of when this plan is due to be executed
 func (p Plan) DueAt() string {
-	return fmt.Sprintf("Height: %d", p.Height)
+	return fmt.Sprintf("height: %d", p.Height)
 }

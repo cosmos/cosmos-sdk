@@ -18,7 +18,7 @@ jobs:
       - name: install tparse
         run: |
           export GO111MODULE="on" && go get github.com/mfridman/tparse@v0.8.3
-      - uses: actions/cache@v2.1.5
+      - uses: actions/cache@v2.1.6
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-tparse-binary
@@ -164,7 +164,7 @@ jobs:
             sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done
         if: env.GIT_DIFF
-      - uses: codecov/codecov-action@v1.4.0
+      - uses: codecov/codecov-action@v1.5.2
         with:
           file: ./coverage.txt
         if: env.GIT_DIFF

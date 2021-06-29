@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -44,7 +45,7 @@ func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool,
 			return nil, err
 		}
 		for _, msg := range sdkTx.GetMsgs() {
-			if msg.Type() == msgType {
+			if msg.(legacytx.LegacyMsg).Type() == msgType {
 				matchingTxs = append(matchingTxs, tx)
 				break
 			}

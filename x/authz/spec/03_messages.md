@@ -6,37 +6,41 @@ order: 3
 
 In this section we describe the processing of messages for the authz module.
 
-## Msg/GrantAuthorization
+## MsgGrant
 
-An authorization-grant is created using the `MsgGrantAuthorization` message.
+An authorization grant is created using the `MsgGrant` message.
+If there is already a grant for the `(granter, grantee, Authorization)` triple, then the new grant will overwrite the previous one. To update or extend an existing grant, a new grant with the same `(granter, grantee, Authorization)` triple should be created.
 
-+++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/proto/cosmos/authz/v1beta1/tx.proto#L27-L35
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L32-L37
 
-This message is expected to fail if:
-    
-- both granter & grantee have same address.
-- provided `Expiration` time less than current unix timestamp.
+The message handling should fail if:
+
+- both granter and grantee have the same address.
+- provided `Expiration` time is less than current unix timestamp.
+- provided `Grant.Authorization` is not implemented.
+- `Authorization.MsgTypeURL()` is not defined in the router (there is no defined handler in the app router to handle that Msg types).
+
+## MsgRevoke
+
+A grant can be removed with the `MsgRevoke` message.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L60-L64
+
+The message handling should fail if:
+
+- both granter and grantee have the same address.
+- provided `MsgTypeUrl` is empty.
+
+NOTE: The `MsgExec` message removes a grant if the grant has expired.
+
+## MsgExec
+
+When a grantee wants to execute a transaction on behalf of a granter, they must send `MsgExec`.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/proto/cosmos/authz/v1beta1/tx.proto#L47-L53
+
+The message handling should fail if:
+
 - provided `Authorization` is not implemented.
-
-## Msg/RevokeAuthorization
-
-An allowed authorization can be removed with `MsgRevokeAuthorization` message.
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/proto/cosmos/authz/v1beta1/tx.proto#L53-L59
-
-This message is expected to fail if:
-
-- both granter & grantee have same address.
-- provided `MethodName` is empty.
-
-## Msg/ExecAuthorizedRequest
-
-When a grantee wants to execute transaction on behalf of a granter, it must send MsgExecAuthorizedRequest.  
-
-+++ https://github.com/cosmos/cosmos-sdk/blob/c95de9c4177442dee4c69d96917efc955b5d19d9/proto/cosmos/authz/v1beta1/tx.proto#L42-L48
-
-This message is expected to fail if:
-
-- authorization not implemented for the provided msg.
-- grantee don't have permission to run transaction.
+- grantee doesn't have permission to run the transaction.
 - if granted authorization is expired.

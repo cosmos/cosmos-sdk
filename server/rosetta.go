@@ -5,15 +5,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 )
 
 // RosettaCommand builds the rosetta root command given
 // a protocol buffers serializer/deserializer
-func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Marshaler) *cobra.Command {
+func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rosetta",
 		Short: "spin up a rosetta server",

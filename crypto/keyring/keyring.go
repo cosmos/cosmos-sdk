@@ -224,7 +224,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", fmt.Errorf("no key to export with name: %s", uid)
 	}
 
-	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshalBinaryBare(bz.GetPubKey()), string(bz.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(bz.GetPubKey()), string(bz.GetAlgo())), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -743,7 +743,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 func (ks keystore) writeLocalKey(name string, priv types.PrivKey, algo hd.PubKeyType) (Info, error) {
 	// encrypt private key using keyring
 	pub := priv.PubKey()
-	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshalBinaryBare(priv)), algo)
+	info := newLocalInfo(name, pub, string(legacy.Cdc.MustMarshal(priv)), algo)
 	if err := ks.writeInfo(info); err != nil {
 		return nil, err
 	}
@@ -760,7 +760,7 @@ func (ks keystore) writeInfo(info Info) error {
 		return err
 	}
 	if exists {
-		return errors.New("public key already exist in keybase")
+		return errors.New("public key already exists in keybase")
 	}
 
 	err = ks.db.Set(keyring.Item{

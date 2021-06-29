@@ -61,7 +61,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
 		var result sdk.Coin
-		err := k.cdc.UnmarshalBinaryBare(value, &result)
+		err := k.cdc.Unmarshal(value, &result)
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 	metadatas := []types.Metadata{}
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
 		var metadata types.Metadata
-		k.cdc.MustUnmarshalBinaryBare(value, &metadata)
+		k.cdc.MustUnmarshal(value, &metadata)
 
 		metadatas = append(metadatas, metadata)
 		return nil
@@ -163,4 +163,62 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 	return &types.QueryDenomMetadataResponse{
 		Metadata: metadata,
 	}, nil
+}
+
+func (k BaseKeeper) DenomOwners(
+	goCtx context.Context,
+	req *types.QueryDenomOwnersRequest,
+) (*types.QueryDenomOwnersResponse, error) {
+
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty denom")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	store := ctx.KVStore(k.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+
+	var denomOwners []*types.DenomOwner
+	pageRes, err := query.FilteredPaginate(
+		balancesStore,
+		req.Pagination,
+		func(key []byte, value []byte, accumulate bool) (bool, error) {
+			var balance sdk.Coin
+			if err := k.cdc.Unmarshal(value, &balance); err != nil {
+				return false, err
+			}
+
+			if req.Denom != balance.Denom {
+				return false, nil
+			}
+
+			if accumulate {
+				address, err := types.AddressFromBalancesStore(key)
+				if err != nil {
+					return false, err
+				}
+
+				denomOwners = append(
+					denomOwners,
+					&types.DenomOwner{
+						Address: address.String(),
+						Balance: balance,
+					},
+				)
+			}
+
+			return true, nil
+		},
+	)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
 }

@@ -7,7 +7,8 @@ import (
 
 	"github.com/coinbase/rosetta-sdk-go/types"
 	"github.com/spf13/pflag"
-	crg "github.com/tendermint/cosmos-rosetta-gateway/server"
+
+	crg "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

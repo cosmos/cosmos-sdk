@@ -238,7 +238,7 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 					return err
 				}
 
-				if err := clientCtx.JSONMarshaler.UnmarshalJSON(resByTxQuery, &vote); err != nil {
+				if err := clientCtx.Codec.UnmarshalJSON(resByTxQuery, &vote); err != nil {
 					return err
 				}
 			}
@@ -303,7 +303,7 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				}
 
 				var votes types.Votes
-				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// TODO migrate to use JSONCodec (implement MarshalJSONArray
 				// or wrap lists of proto.Message in some other message)
 				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &votes)
 				return clientCtx.PrintObjectLegacy(votes)
@@ -366,7 +366,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			// check to see if the proposal is in the store
 			ctx := cmd.Context()
-			_, err = queryClient.Proposal(
+			proposalRes, err := queryClient.Proposal(
 				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
@@ -379,6 +379,18 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
+			var deposit types.Deposit
+			propStatus := proposalRes.Proposal.Status
+			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
+				params := types.NewQueryDepositParams(proposalID, depositorAddr)
+				resByTxQuery, err := gcutils.QueryDepositByTxQuery(clientCtx, params)
+				if err != nil {
+					return err
+				}
+				clientCtx.Codec.MustUnmarshalJSON(resByTxQuery, &deposit)
+				return clientCtx.PrintProto(&deposit)
+			}
+
 			res, err := queryClient.Deposit(
 				ctx,
 				&types.QueryDepositRequest{ProposalId: proposalID, Depositor: args[1]},
@@ -387,17 +399,7 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return err
 			}
 
-			deposit := res.GetDeposit()
-			if deposit.Empty() {
-				params := types.NewQueryDepositParams(proposalID, depositorAddr)
-				resByTxQuery, err := gcutils.QueryDepositByTxQuery(clientCtx, params)
-				if err != nil {
-					return err
-				}
-				clientCtx.JSONMarshaler.MustUnmarshalJSON(resByTxQuery, &deposit)
-			}
-
-			return clientCtx.PrintProto(&deposit)
+			return clientCtx.PrintProto(&res.Deposit)
 		},
 	}
 
@@ -454,7 +456,7 @@ $ %s query gov deposits 1
 				}
 
 				var dep types.Deposits
-				// TODO migrate to use JSONMarshaler (implement MarshalJSONArray
+				// TODO migrate to use JSONCodec (implement MarshalJSONArray
 				// or wrap lists of proto.Message in some other message)
 				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &dep)
 

@@ -72,6 +72,28 @@ type IntegrationTestSuite struct {
 	queryClient types.QueryClient
 }
 
+func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
+	app := suite.app
+	maccPerms := simapp.GetMaccPerms()
+	appCodec := simapp.MakeTestEncodingConfig().Marshaler
+
+	maccPerms[holder] = nil
+	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
+	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
+	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
+	maccPerms[randomPerm] = []string{"random"}
+	authKeeper := authkeeper.NewAccountKeeper(
+		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
+		authtypes.ProtoBaseAccount, maccPerms,
+	)
+	keeper := keeper.NewBaseKeeper(
+		appCodec, app.GetKey(types.StoreKey), authKeeper,
+		app.GetSubspace(types.ModuleName), blockedAddrs,
+	)
+
+	return authKeeper, keeper
+}
+
 func (suite *IntegrationTestSuite) SetupTest() {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -89,42 +111,41 @@ func (suite *IntegrationTestSuite) SetupTest() {
 }
 
 func (suite *IntegrationTestSuite) TestSupply() {
-	app, ctx := suite.app, suite.ctx
+	ctx := suite.ctx
 
-	initialPower := int64(100)
-	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, initialPower)
-
-	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
-	suite.NoError(app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, totalSupply))
-
-	total, _, err := app.BankKeeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(totalSupply, total)
-}
-
-func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blacklist() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	appCodec := app.AppCodec()
+	require := suite.Require()
 
 	// add module accounts to supply keeper
-	maccPerms := simapp.GetMaccPerms()
-	maccPerms[holder] = nil
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-	maccPerms[randomPerm] = []string{"random"}
+	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
+	initialPower := int64(100)
+	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(ctx, initialPower)
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
+
+	// set burnerAcc balance
+	authKeeper.SetModuleAccount(ctx, burnerAcc)
+	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, totalSupply))
+	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), totalSupply))
+
+	total, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
+	require.NoError(err)
+	require.Equal(totalSupply, total)
+
+	// burning all supplied tokens
+	err = keeper.BurnCoins(ctx, authtypes.Burner, totalSupply)
+	require.NoError(err)
+
+	total, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
+	require.NoError(err)
+	require.Equal(total.String(), "")
+}
+
+func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
+	ctx := suite.ctx
+
+	// add module accounts to supply keeper
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
-
-	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
-	)
-	keeper := keeper.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(types.ModuleName), map[string]bool{addr1.String(): true},
-	)
+	_, keeper := suite.initKeepersWithmAccPerms(map[string]bool{addr1.String(): true})
 
 	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
 	suite.Require().Error(keeper.SendCoinsFromModuleToAccount(
@@ -133,26 +154,10 @@ func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blacklist() 
 }
 
 func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	appCodec := app.AppCodec()
+	ctx := suite.ctx
 
 	// add module accounts to supply keeper
-	maccPerms := simapp.GetMaccPerms()
-	maccPerms[holder] = nil
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-
-	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
-	)
-	keeper := keeper.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(types.ModuleName), make(map[string]bool),
-	)
+	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
 	baseAcc := authKeeper.NewAccountWithAddress(ctx, authtypes.NewModuleAddress("baseAcc"))
 
@@ -203,26 +208,10 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 }
 
 func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	appCodec := app.AppCodec()
+	ctx := suite.ctx
 
 	// add module accounts to supply keeper
-	maccPerms := simapp.GetMaccPerms()
-	maccPerms[holder] = nil
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-
-	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
-	)
-	keeper := keeper.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(types.ModuleName), make(map[string]bool),
-	)
+	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
 	authKeeper.SetModuleAccount(ctx, minterAcc)
@@ -264,26 +253,9 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 }
 
 func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	appCodec := simapp.MakeTestEncodingConfig().Marshaler
-
+	ctx := suite.ctx
 	// add module accounts to supply keeper
-	maccPerms := simapp.GetMaccPerms()
-	maccPerms[holder] = nil
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-
-	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
-	)
-	keeper := keeper.NewBaseKeeper(
-		appCodec, app.GetKey(types.StoreKey), authKeeper,
-		app.GetSubspace(types.ModuleName), make(map[string]bool),
-	)
+	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
 	// set burnerAcc balance
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
@@ -338,7 +310,7 @@ func (suite *IntegrationTestSuite) TestSendCoinsNewAccount() {
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	suite.Require().Equal(balances, acc1Balances)
@@ -349,11 +321,15 @@ func (suite *IntegrationTestSuite) TestSendCoinsNewAccount() {
 	app.BankKeeper.GetAllBalances(ctx, addr2)
 	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
 
-	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
+	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(50))
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
 
 	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
+	acc1Balances = app.BankKeeper.GetAllBalances(ctx, addr1)
 	suite.Require().Equal(sendAmt, acc2Balances)
+	updatedAcc1Bal := balances.Sub(sendAmt)
+	suite.Require().Len(acc1Balances, len(updatedAcc1Bal))
+	suite.Require().Equal(acc1Balances, updatedAcc1Bal)
 	suite.Require().NotNil(app.AccountKeeper.GetAccount(ctx, addr2))
 }
 
@@ -364,7 +340,7 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	app.AccountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
 	suite.Require().Equal(balances, acc1Balances)
@@ -417,7 +393,7 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, []types.Output{}))
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 
 	insufficientInputs := []types.Input{
 		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
@@ -452,12 +428,12 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	addr2 := sdk.AccAddress("addr2_______________")
 	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
 	app.AccountKeeper.SetAccount(ctx, acc2)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, balances))
 
 	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
 	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
 
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
 
 	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
@@ -467,6 +443,15 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
 	expected = sdk.NewCoins(newFooCoin(150), newBarCoin(75))
 	suite.Require().Equal(expected, acc2Balances)
+
+	// we sent all foo coins to acc2, so foo balance should be deleted for acc1 and bar should be still there
+	var coins []sdk.Coin
+	app.BankKeeper.IterateAccountBalances(ctx, addr1, func(c sdk.Coin) (stop bool) {
+		coins = append(coins, c)
+		return true
+	})
+	suite.Require().Len(coins, 1)
+	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
 func (suite *IntegrationTestSuite) TestValidateBalance() {
@@ -484,14 +469,14 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 	app.AccountKeeper.SetAccount(ctx, acc)
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
 	suite.Require().NoError(app.BankKeeper.ValidateBalance(ctx, addr1))
 
 	bacc := authtypes.NewBaseAccountWithAddress(addr2)
 	vacc := vesting.NewContinuousVestingAccount(bacc, balances.Add(balances...), now.Unix(), endTime.Unix())
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, balances))
 	suite.Require().Error(app.BankKeeper.ValidateBalance(ctx, addr2))
 }
 
@@ -508,11 +493,11 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	barCoin := sdk.NewCoin("barcoin", sdk.OneInt())
 
 	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
-	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
-	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Both coins should be send enabled.
-	err := app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	err := app.BankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
 	suite.Require().NoError(err)
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
@@ -521,20 +506,20 @@ func (suite *IntegrationTestSuite) TestSendEnabled() {
 	app.BankKeeper.SetParams(ctx, params)
 
 	// Expect our specific override to be enabled, others to be !enabled.
-	suite.Require().Equal(enabled, app.BankKeeper.SendEnabledCoin(ctx, fooCoin))
-	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, barCoin))
-	suite.Require().Equal(!enabled, app.BankKeeper.SendEnabledCoin(ctx, bondCoin))
+	suite.Require().Equal(enabled, app.BankKeeper.IsSendEnabledCoin(ctx, fooCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	suite.Require().Equal(!enabled, app.BankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Foo coin should be send enabled.
-	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin)
+	err = app.BankKeeper.IsSendEnabledCoins(ctx, fooCoin)
 	suite.Require().NoError(err)
 
 	// Expect an error when one coin is not send enabled.
-	err = app.BankKeeper.SendEnabledCoins(ctx, fooCoin, bondCoin)
+	err = app.BankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
 	suite.Require().Error(err)
 
 	// Expect an error when all coins are not send enabled.
-	err = app.BankKeeper.SendEnabledCoins(ctx, bondCoin, barCoin)
+	err = app.BankKeeper.IsSendEnabledCoins(ctx, bondCoin, barCoin)
 	suite.Require().Error(err)
 }
 
@@ -548,7 +533,7 @@ func (suite *IntegrationTestSuite) TestHasBalance() {
 	balances := sdk.NewCoins(newFooCoin(100))
 	suite.Require().False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(99)))
 
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, balances))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr, balances))
 	suite.Require().False(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(101)))
 	suite.Require().True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(100)))
 	suite.Require().True(app.BankKeeper.HasBalance(ctx, addr, newFooCoin(1)))
@@ -562,12 +547,9 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	app.AccountKeeper.SetAccount(ctx, acc)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr, newCoins))
 
-	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
-
-	events := ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(2, len(events))
-
+	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 	event1 := sdk.Event{
 		Type:       types.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
@@ -594,17 +576,9 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
 	)
 
-	suite.Require().Equal(abci.Event(event1), events[0])
-	suite.Require().Equal(abci.Event(event2), events[1])
-
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
-	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
-
-	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr, addr2, newCoins))
-
 	// events are shifted due to the funding account events
-	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(12, len(events))
+	events := ctx.EventManager().ABCIEvents()
+	suite.Require().Equal(10, len(events))
 	suite.Require().Equal(abci.Event(event1), events[8])
 	suite.Require().Equal(abci.Event(event2), events[9])
 }
@@ -641,7 +615,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	suite.Require().Equal(0, len(events))
 
 	// Set addr's coins but not addr2's coins
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
 	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
@@ -658,10 +632,10 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	suite.Require().Equal(abci.Event(event1), events[7])
 
 	// Set addr's coins and addr2's coins
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
 	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 
 	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
@@ -728,8 +702,8 @@ func (suite *IntegrationTestSuite) TestSpendableCoins() {
 	app.AccountKeeper.SetAccount(ctx, macc)
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, origCoins))
 
 	suite.Require().Equal(origCoins, app.BankKeeper.SpendableCoins(ctx, addr2))
 
@@ -754,13 +728,13 @@ func (suite *IntegrationTestSuite) TestVestingAccountSend() {
 	vacc := vesting.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
 	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
 
 	// receive some coins
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, sendCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, sendCoins))
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
@@ -786,13 +760,13 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
 	vacc := vesting.NewPeriodicVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix(), periods)
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
 	suite.Require().Error(app.BankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
 
 	// receive some coins
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, sendCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, sendCoins))
 
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
@@ -818,8 +792,8 @@ func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, origCoins))
 
 	// send some coins to the vesting account
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
@@ -857,8 +831,8 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, origCoins))
 
 	// send some coins to the vesting account
 	suite.Require().NoError(app.BankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
@@ -894,8 +868,8 @@ func (suite *IntegrationTestSuite) TestDelegateCoins() {
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
@@ -958,8 +932,8 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins() {
 	app.AccountKeeper.SetAccount(ctx, vacc)
 	app.AccountKeeper.SetAccount(ctx, acc)
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr2, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr2, origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
@@ -1009,7 +983,7 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins_Invalid() {
 	suite.Require().Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
 
 	app.AccountKeeper.SetAccount(ctx, macc)
-	suite.Require().NoError(simapp.FundAccount(app, ctx, addr1, origCoins))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, origCoins))
 
 	suite.Require().Error(app.BankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
 	app.AccountKeeper.SetAccount(ctx, acc)

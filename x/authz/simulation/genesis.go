@@ -1,38 +1,59 @@
 package simulation
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// Simulation parameter constant.
-const authz = "authz"
+// genGrant returns a slice of authorization grants.
+func genGrant(r *rand.Rand, accounts []simtypes.Account) []authz.GrantAuthorization {
+	authorizations := make([]authz.GrantAuthorization, len(accounts)-1)
+	for i := 0; i < len(accounts)-1; i++ {
+		granter := accounts[i]
+		grantee := accounts[i+1]
+		authorizations[i] = authz.GrantAuthorization{
+			Granter:       granter.Address.String(),
+			Grantee:       grantee.Address.String(),
+			Authorization: generateRandomGrant(r),
+		}
+	}
 
-// GenAuthorizationGrant returns an empty slice of authorization grants.
-func GenAuthorizationGrant(_ *rand.Rand, _ []simtypes.Account) []types.GrantAuthorization {
-	return []types.GrantAuthorization{}
+	return authorizations
 }
 
-// RandomizedGenState generates a random GenesisState for authz.
-func RandomizedGenState(simState *module.SimulationState) {
-	var grants []types.GrantAuthorization
+func generateRandomGrant(r *rand.Rand) *codectypes.Any {
+	authorizations := make([]*codectypes.Any, 2)
+	authorizations[0] = newAnyAuthorization(banktypes.NewSendAuthorization(sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))))
+	authorizations[1] = newAnyAuthorization(authz.NewGenericAuthorization(sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})))
 
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, authz, &grants, simState.Rand,
-		func(r *rand.Rand) { grants = GenAuthorizationGrant(r, simState.Accounts) },
-	)
-	authzGrantsGenesis := types.NewGenesisState(grants)
+	return authorizations[r.Intn(len(authorizations))]
+}
 
-	bz, err := json.MarshalIndent(&authzGrantsGenesis, "", " ")
+func newAnyAuthorization(a authz.Authorization) *codectypes.Any {
+	any, err := codectypes.NewAnyWithValue(a)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Selected randomly generated %s parameters:\n%s\n", types.ModuleName, bz)
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(authzGrantsGenesis)
+	return any
+}
+
+// RandomizedGenState generates a random GenesisState for authz.
+func RandomizedGenState(simState *module.SimulationState) {
+	var grants []authz.GrantAuthorization
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, "authz", &grants, simState.Rand,
+		func(r *rand.Rand) { grants = genGrant(r, simState.Accounts) },
+	)
+
+	authzGrantsGenesis := authz.NewGenesisState(grants)
+
+	simState.GenState[authz.ModuleName] = simState.Cdc.MustMarshalJSON(authzGrantsGenesis)
 }

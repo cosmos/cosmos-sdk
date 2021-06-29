@@ -13,7 +13,7 @@ import (
 // NewVote creates a new Vote instance
 //nolint:interfacer
 func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
-	return Vote{proposalID, voter.String(), options}
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
 }
 
 func (v Vote) String() string {
@@ -89,7 +89,7 @@ func ValidWeightedVoteOption(option WeightedVoteOption) bool {
 func VoteOptionFromString(str string) (VoteOption, error) {
 	option, ok := VoteOption_value[str]
 	if !ok {
-		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/no_with_veto/abstain", str)
 	}
 	return VoteOption(option), nil
 }

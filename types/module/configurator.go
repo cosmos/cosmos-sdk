@@ -35,7 +35,7 @@ type Configurator interface {
 }
 
 type configurator struct {
-	cdc         codec.Marshaler
+	cdc         codec.Codec
 	msgServer   grpc.Server
 	queryServer grpc.Server
 
@@ -44,7 +44,7 @@ type configurator struct {
 }
 
 // NewConfigurator returns a new Configurator instance
-func NewConfigurator(cdc codec.Marshaler, msgServer grpc.Server, queryServer grpc.Server) Configurator {
+func NewConfigurator(cdc codec.Codec, msgServer grpc.Server, queryServer grpc.Server) Configurator {
 	return configurator{
 		cdc:         cdc,
 		msgServer:   msgServer,

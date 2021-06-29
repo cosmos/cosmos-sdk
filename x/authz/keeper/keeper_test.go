@@ -197,6 +197,57 @@ func (s *TestSuite) TestKeeperFees() {
 	s.Require().NotNil(authorization)
 }
 
+// Tests that all msg events included in an authz MsgExec tx
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/9501
+func (s *TestSuite) TestDispatchedEvents() {
+	require := s.Require()
+	app, addrs := s.app, s.addrs
+	granterAddr := addrs[0]
+	granteeAddr := addrs[1]
+	recipientAddr := addrs[2]
+	require.NoError(simapp.FundAccount(app.BankKeeper, s.ctx, granterAddr, sdk.NewCoins(sdk.NewInt64Coin("steak", 10000))))
+	now := s.ctx.BlockHeader().Time
+	require.NotNil(now)
+
+	smallCoin := sdk.NewCoins(sdk.NewInt64Coin("steak", 20))
+	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{
+		&banktypes.MsgSend{
+			Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+			FromAddress: granterAddr.String(),
+			ToAddress:   recipientAddr.String(),
+		},
+	})
+
+	// grant authorization
+	err := app.AuthzKeeper.SaveGrant(s.ctx, granteeAddr, granterAddr, &banktypes.SendAuthorization{SpendLimit: smallCoin}, now)
+	require.NoError(err)
+	authorization, _ := app.AuthzKeeper.GetCleanAuthorization(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
+	require.NotNil(authorization)
+	require.Equal(authorization.MsgTypeURL(), bankSendAuthMsgType)
+
+	executeMsgs, err := msgs.GetMessages()
+	require.NoError(err)
+
+	result, err := app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
+	require.NoError(err)
+	require.NotNil(result)
+	events := s.ctx.EventManager().Events()
+	// get last 5 events (events that occur *after* the grant)
+	events = events[len(events)-5:]
+	requiredEvents := map[string]bool{
+		"coin_spent":    false,
+		"coin_received": false,
+		"transfer":      false,
+		"message":       false,
+	}
+	for _, e := range events {
+		requiredEvents[e.Type] = true
+	}
+	for _, v := range requiredEvents {
+		require.True(v)
+	}
+}
+
 func TestTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

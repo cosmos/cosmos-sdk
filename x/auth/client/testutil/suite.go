@@ -129,7 +129,7 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
-	// sign-batch file
+	// sign-batch file signature only
 	res, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
@@ -169,7 +169,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	queryResJSON, err := QueryAccountExec(val1.ClientCtx, val1.Address)
 	require.NoError(err)
 	var account authtypes.AccountI
-	require.NoError(val1.ClientCtx.JSONCodec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
+	require.NoError(val1.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	/****  test signature-only  ****/
 	res, err := TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag,
@@ -258,7 +258,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 	)
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
@@ -300,7 +300,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 				s.Require().NotEqual("internal", err.Error())
 			} else {
 				var result sdk.TxResponse
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
 				s.Require().Contains(result.RawLog, tc.rawLogContains)
 			}
@@ -353,7 +353,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 	startTokens := balRes.Balances.AmountOf(s.cfg.BondDenom)
 
@@ -414,7 +414,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 	s.Require().Equal(startTokens, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
@@ -437,7 +437,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, account.GetAddress())
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
@@ -445,7 +445,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, val1.Address)
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 }
 
@@ -554,7 +554,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 	intialCoins := balRes.Balances
 
@@ -572,7 +572,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	resp, err = bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 	diff, _ := balRes.Balances.SafeSub(intialCoins)
 	s.Require().Equal(sendTokens.Amount, diff.AmountOf(s.cfg.BondDenom))
@@ -650,7 +650,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	s.Require().NoError(err)
 	s.Require().Equal(sendTokens.Amount, balRes.Balances.AmountOf(s.cfg.BondDenom))
 
@@ -756,11 +756,19 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	res, err = TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
-
 	// write sigs to file2
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
-	_, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name())
+
+	// sign-batch file with multisig key name
+	res, err = TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetName())
 	s.Require().NoError(err)
+	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+	// write sigs to file3
+	file3 := testutil.WriteToNewTempFile(s.T(), res.String())
+
+	_, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name(), file3.Name())
+	s.Require().NoError(err)
+
 }
 
 func (s *IntegrationTestSuite) TestMultisignBatch() {
@@ -805,7 +813,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	queryResJSON, err := QueryAccountExec(val.ClientCtx, multisigInfo.GetAddress())
 	s.Require().NoError(err)
 	var account authtypes.AccountI
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	// sign-batch file
 	res, err := TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
@@ -821,7 +829,15 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 
 	// multisign the file
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
-	res, err = TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
+
+	// sign-batch file with multisig key name
+	res, err = TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetName(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+	// write sigs to file
+	file3 := testutil.WriteToNewTempFile(s.T(), res.String())
+
+	res, err = TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name(), file3.Name())
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
 
@@ -867,7 +883,7 @@ func (s *IntegrationTestSuite) TestGetAccountCmd() {
 				s.Require().NotEqual("internal", err.Error())
 			} else {
 				var acc authtypes.AccountI
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalInterfaceJSON(out.Bytes(), &acc))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &acc))
 				s.Require().Equal(val.Address, acc.GetAddress())
 			}
 		})
@@ -884,7 +900,7 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 	s.Require().NoError(err)
 
 	var res authtypes.QueryAccountsResponse
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	s.Require().NotEmpty(res.Accounts)
 }
 
@@ -962,7 +978,7 @@ func (s *IntegrationTestSuite) TestQueryParamsCmd() {
 				s.Require().NotEqual("internal", err.Error())
 			} else {
 				var authParams authtypes.Params
-				s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &authParams))
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &authParams))
 				s.Require().NotNil(authParams.MaxMemoCharacters)
 			}
 		})
@@ -1009,11 +1025,11 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	// Note: this method is only used for test purposes! In general, one should
 	// use txBuilder and TxEncoder/TxDecoder to manipulate txs.
 	var tx tx.Tx
-	err = val1.ClientCtx.JSONCodec.UnmarshalJSON(signedTx.Bytes(), &tx)
+	err = val1.ClientCtx.Codec.UnmarshalJSON(signedTx.Bytes(), &tx)
 	s.Require().NoError(err)
 	tx.AuthInfo.SignerInfos[0].PublicKey = nil
 	// Re-encode the tx again, to another file.
-	txJSON, err = val1.ClientCtx.JSONCodec.MarshalJSON(&tx)
+	txJSON, err = val1.ClientCtx.Codec.MarshalJSON(&tx)
 	s.Require().NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 	s.Require().True(strings.Contains(string(txJSON), "\"public_key\":null"))
@@ -1023,7 +1039,7 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	out, err := TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().NoError(err)
 	var res sdk.TxResponse
-	s.Require().NoError(val1.ClientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NoError(val1.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 	s.Require().NotEqual(0, res.Code)
 }
 
@@ -1081,14 +1097,14 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 
 	require.NoError(err)
 	var txRes sdk.TxResponse
-	require.NoError(val0.ClientCtx.JSONCodec.UnmarshalJSON(res.Bytes(), &txRes))
+	require.NoError(val0.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
 	require.Equal(uint32(0), txRes.Code)
 
 	// Make sure the addr1's balance got funded.
 	queryResJSON, err := bankcli.QueryBalancesExec(val0.ClientCtx, addr1)
 	require.NoError(err)
 	var queryRes banktypes.QueryAllBalancesResponse
-	err = val0.ClientCtx.JSONCodec.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
+	err = val0.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &queryRes)
 	require.NoError(err)
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }

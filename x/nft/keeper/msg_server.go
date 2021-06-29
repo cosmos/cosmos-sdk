@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/nft/types"
 )
 
@@ -18,22 +20,108 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (m msgServer) Issue(ctx context.Context, issue *types.MsgIssue) (*types.MsgIssueResponse, error) {
-	panic("implement me")
+// Issue implement Issue method of the types.MsgServer.
+func (m msgServer) Issue(goCtx context.Context, msg *types.MsgIssue) (*types.MsgIssueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Metadata == nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalidMetadata, "metadata is empty")
+	}
+
+	issuer, err := sdk.AccAddressFromBech32(msg.Issuer)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.Keeper.Issue(ctx, msg.Metadata.Type,
+		msg.Metadata.Name,
+		msg.Metadata.Symbol,
+		msg.Metadata.Description,
+		msg.Metadata.MintRestricted,
+		msg.Metadata.EditRestricted,
+		issuer); err != nil {
+		return nil, err
+	}
+	return &types.MsgIssueResponse{}, nil
 }
 
-func (m msgServer) Mint(ctx context.Context, mint *types.MsgMint) (*types.MsgMintResponse, error) {
-	panic("implement me")
+// Mint implement Mint method of the types.MsgServer.
+func (m msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Nft == nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalidNFT, "nft is empty")
+	}
+
+	minter, err := sdk.AccAddressFromBech32(msg.Minter)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.Keeper.MintNFT(ctx, msg.Nft.Type,
+		msg.Nft.Id,
+		msg.Nft.Uri,
+		msg.Nft.Data,
+		minter); err != nil {
+		return nil, err
+	}
+	return &types.MsgMintResponse{}, nil
 }
 
-func (m msgServer) Edit(ctx context.Context, edit *types.MsgEdit) (*types.MsgEditResponse, error) {
-	panic("implement me")
+// Edit implement Edit method of the types.MsgServer.
+func (m msgServer) Edit(goCtx context.Context, msg *types.MsgEdit) (*types.MsgEditResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Nft == nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalidNFT, "nft is empty")
+	}
+
+	editor, err := sdk.AccAddressFromBech32(msg.Editor)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.Keeper.EditNFT(ctx, msg.Nft.Type,
+		msg.Nft.Id,
+		msg.Nft.Uri,
+		msg.Nft.Data,
+		editor); err != nil {
+		return nil, err
+	}
+	return &types.MsgEditResponse{}, nil
 }
 
-func (m msgServer) Send(ctx context.Context, send *types.MsgSend) (*types.MsgSendResponse, error) {
-	panic("implement me")
+// Send implement Send method of the types.MsgServer.
+func (m msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	receiver, err := sdk.AccAddressFromBech32(msg.Receiver)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.Keeper.SendNFT(ctx, msg.Type,
+		msg.Id,
+		sender,
+		receiver); err != nil {
+		return nil, err
+	}
+	return &types.MsgSendResponse{}, nil
 }
 
-func (m msgServer) Burn(ctx context.Context, burn *types.MsgBurn) (*types.MsgBurnResponse, error) {
-	panic("implement me")
+// Burn implement Burn method of the types.MsgServer.
+func (m msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	destroyer, err := sdk.AccAddressFromBech32(msg.Destroyer)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.Keeper.BurnNFT(ctx, msg.Type,
+		msg.Id,
+		destroyer); err != nil {
+		return nil, err
+	}
+	return &types.MsgBurnResponse{}, nil
 }

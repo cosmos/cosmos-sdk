@@ -67,7 +67,7 @@ message MsgSend {
   string type     = 1;
   string id       = 2;
   string sender   = 3;
-  string reveiver = 4;
+  string receiver = 4;
 }
 // MsgSendResponse defines the Msg/Send response type.
 message MsgSendResponse {}

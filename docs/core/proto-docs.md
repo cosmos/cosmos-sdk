@@ -6232,7 +6232,7 @@ MsgSend represents a message to send a nft from one account to another account.
 | `type` | [string](#string) |  |  |
 | `id` | [string](#string) |  |  |
 | `sender` | [string](#string) |  |  |
-| `reveiver` | [string](#string) |  |  |
+| `receiver` | [string](#string) |  |  |
 
 
 

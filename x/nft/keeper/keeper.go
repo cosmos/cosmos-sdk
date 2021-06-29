@@ -8,9 +8,9 @@ import (
 
 // Keeper of the nft store
 type Keeper struct {
-	cdc        codec.BinaryCodec
-	storeKey   sdk.StoreKey
-	bankKeeper types.BankKeeper
+	cdc      codec.BinaryCodec
+	storeKey sdk.StoreKey
+	bk       types.BankKeeper
 }
 
 // NewKeeper creates a new nft Keeper instance
@@ -19,12 +19,12 @@ func NewKeeper(
 ) Keeper {
 	// ensure nft module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
-		panic("the mint module account has not been set")
+		panic("the nft module account has not been set")
 	}
 
 	return Keeper{
-		cdc:        cdc,
-		storeKey:   key,
-		bankKeeper: bk,
+		cdc:      cdc,
+		storeKey: key,
+		bk:       bk,
 	}
 }

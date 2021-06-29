@@ -117,7 +117,7 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
 
-			err = val.ClientCtx.JSONCodec.UnmarshalJSON(resp, tc.respType)
+			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.expErr {
 				s.Require().Error(err)

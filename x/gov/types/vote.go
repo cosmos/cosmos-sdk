@@ -13,7 +13,7 @@ import (
 // NewVote creates a new Vote instance
 //nolint:interfacer
 func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOptions) Vote {
-	return Vote{proposalID, voter.String(), options}
+	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
 }
 
 func (v Vote) String() string {

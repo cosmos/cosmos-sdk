@@ -51,7 +51,7 @@ The **DID Syntax** for an IID conforms to the [DID-Core Syntax](), which would b
 Where: 
 - `COSMOS` is the method _(it is not the Cosmos Zone namespace)_.
 - `CHAIN` is the namespace, such as `IXO` or `REGEN` _(it is not the chain-id)_.
-- `MODULE` is the module namespace, such as `NFT` or `BANK` _(as named within the context of each application chain)_.
+- `NAMESPACE` is the asset namespace, such as `NFT` or `DOMAIN` _(as named within the context of each application chain)_.
 - `{unique identifier string} abc123` is defined by applications developers _(NFTs in two different networkscould even have the identical Inique Identifier String value and will still have completely unique IIDs)_   
 
 Unique Identifier strings need only be unique within the context of their own namespace. These may be Serial Numbers, Content Identifiers, or any another identifier method which is either based on a published standard, or is proprietary.
@@ -67,12 +67,12 @@ An example of the extensibility of the DID syntax: a derivative demom of fungibl
 1. Cosmos IID Method DIDs SHOULD follow the standard format:
     -  `DID:COSMOS:` for the Cosmos Method (IID)
     -  `DID:COSMOS:CHAIN:` for a Cosmos chain namespace
-    -  `DID:COSMOS:CHAIN:MODULE:` for a Cosmos SDK module in a Cosmos application chain namespace
-    -  `DID:COSMOS:CHAIN:MODULE:{unique identifier string}` for the application's chosen method for deriving a unique identifier string
+    -  `DID:COSMOS:CHAIN:NAMESPACE:` for an asset namespace in a Cosmos application chain
+    -  `DID:COSMOS:CHAIN:NAMESPACE:{unique identifier string}` for the application's chosen method for deriving a unique identifier string
 2. IID implementations in the Cosmos SDK MUST conform to the Interchain Identifier (IID) specification RFC-09.
 3. All Cosmos chains SHOULD provide a standard IID Interface for registering asset IIDs, creating and updating IID Document properties, and for resolving the IID to return an IID Document.
 4. Cosmos assets MAY be identified using IIDs and if implementers choose this format, they SHOULD conform to the IID Method.
-5. Application developers SHOULD define their own application-specific Unique Identifier String formats for the modules in their chain namespace.
+5. Application developers SHOULD define their own application-specific Unique Identifier String formats for the asset namespaces in their chain context.
 6. Any chain registry service on the Cosmos Hub MUST support the Cosmos IID Method (did:cosmos).
 
 

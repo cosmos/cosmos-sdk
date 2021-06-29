@@ -5907,6 +5907,7 @@ QueryNFTRequest is the request type for the Query/NFT RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `type` | [string](#string) |  |  |
 | `id` | [string](#string) |  |  |
 
 
@@ -5938,7 +5939,7 @@ QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `type` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
 
 
@@ -5970,7 +5971,7 @@ QueryNFTsRequest is the request type for the Query/NFTs RPC method
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
 
 

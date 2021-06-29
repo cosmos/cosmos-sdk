@@ -48,35 +48,36 @@ service Query {
 
 // QueryNFTRequest is the request type for the Query/NFT RPC method
 message QueryNFTRequest {
-  string id = 1;
+  string type = 1;
+  string id   = 2;
 }
 
 // QueryNFTResponse is the response type for the Query/NFT RPC method
 message QueryNFTResponse {
-  cosmos.nft.v1beta1.NFT nft = 1;
+  cosmos.nft.v1beta1.NFT nft = 1 [(gogoproto.customname) = "NFT"];
 }
 
 // QueryNFTsRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
-  string                                 owner      = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  string                                owner      = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryNFTsResponse is the response type for the Query/NFTs RPC method
 message QueryNFTsResponse {
-  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1 [(gogoproto.customname) = "NFTs"];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
 message QueryNFTsOfRequest {
-  string                                 type       = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  string                                type       = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryNFTsOfResponse is the response type for the Query/NFTsOf RPC method
 message QueryNFTsOfResponse {
-  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1 [(gogoproto.customname) = "NFTs"];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

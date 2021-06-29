@@ -16,15 +16,15 @@ func (k Keeper) MintNFT(ctx sdk.Context,
 	uri string,
 	data *codectypes.Any,
 	minter sdk.AccAddress) error {
-	if k.HasType(ctx, typ) {
-		return sdkerrors.Wrap(types.ErrNFTTypeExists, typ)
+	metadata, has := k.GetMetadata(ctx, typ)
+	if !has {
+		return sdkerrors.Wrap(types.ErrTypeNotExists, typ)
 	}
 
 	if k.HasNFT(ctx, typ, id) {
-		return sdkerrors.Wrap(types.ErrNFTTypeExists, id)
+		return sdkerrors.Wrap(types.ErrNFTExists, id)
 	}
 
-	metadata := k.GetMetadata(ctx, typ)
 	nft := types.NFT{
 		Type: typ,
 		ID:   id,
@@ -57,6 +57,27 @@ func (k Keeper) EditNFT(ctx sdk.Context,
 	uri string,
 	data *codectypes.Any,
 	editor sdk.AccAddress) error {
+	// Assert whether nft type exists
+	metadata, has := k.GetMetadata(ctx, typ)
+	if !has {
+		return sdkerrors.Wrap(types.ErrTypeNotExists, typ)
+	}
+
+	// If nft does not allow editing, return an error
+	if metadata.EditRestricted {
+		return sdkerrors.Wrap(types.ErrNFTEditRestricted, id)
+	}
+
+	nft, has := k.GetNFT(ctx, typ, id)
+	if !has {
+		return sdkerrors.Wrap(types.ErrNFTNotExists, id)
+	}
+	nft.URI = uri
+	nft.Data = data
+
+	bz := k.cdc.MustMarshal(&nft)
+	nftStore := k.getNFTStore(ctx, nft.Type)
+	nftStore.Set(types.GetNFTIdKey(nft.ID), bz)
 	return nil
 }
 
@@ -66,7 +87,15 @@ func (k Keeper) SendNFT(ctx sdk.Context,
 	id string,
 	sender sdk.AccAddress,
 	receiver sdk.AccAddress) error {
-	return nil
+	if !k.HasType(ctx, typ) {
+		return sdkerrors.Wrap(types.ErrTypeNotExists, typ)
+	}
+
+	if !k.HasNFT(ctx, typ, id) {
+		return sdkerrors.Wrap(types.ErrNFTNotExists, typ)
+	}
+	sentCoins := sdk.NewCoins(sdk.NewCoin(types.CreateDenom(typ, id), sdk.OneInt()))
+	return k.bk.SendCoins(ctx, sender, receiver, sentCoins)
 }
 
 // BurnNFT defines a method for burning a nft from a specific account.
@@ -74,7 +103,34 @@ func (k Keeper) BurnNFT(ctx sdk.Context,
 	typ string,
 	id string,
 	destroyer sdk.AccAddress) error {
+	if !k.HasType(ctx, typ) {
+		return sdkerrors.Wrap(types.ErrTypeNotExists, typ)
+	}
+
+	if !k.HasNFT(ctx, typ, id) {
+		return sdkerrors.Wrap(types.ErrNFTNotExists, typ)
+	}
+
+	burnedCoins := sdk.NewCoins(sdk.NewCoin(types.CreateDenom(typ, id), sdk.OneInt()))
+	k.bk.SendCoinsFromAccountToModule(ctx, destroyer, types.ModuleName, burnedCoins)
+	k.bk.BurnCoins(ctx, types.ModuleName, burnedCoins)
+
+	// TODO Delete bank.Metadata (keeper method not available)
+
+	nftStore := k.getNFTStore(ctx, typ)
+	nftStore.Delete(types.GetNFTIdKey(id))
 	return nil
+}
+
+func (k Keeper) GetNFT(ctx sdk.Context, typ, id string) (types.NFT, bool) {
+	store := k.getNFTStore(ctx, typ)
+	bz := store.Get(types.GetNFTIdKey(id))
+	if len(bz) == 0 {
+		return types.NFT{}, false
+	}
+	var nft types.NFT
+	k.cdc.MustUnmarshal(bz, &nft)
+	return nft, true
 }
 
 func (k Keeper) HasNFT(ctx sdk.Context, typ, id string) bool {

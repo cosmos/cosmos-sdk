@@ -16,7 +16,7 @@ func (k Keeper) Issue(ctx sdk.Context,
 	editRestricted bool,
 	issuer sdk.AccAddress) error {
 	if k.HasType(ctx, typ) {
-		return sdkerrors.Wrap(types.ErrNFTTypeExists, typ)
+		return sdkerrors.Wrap(types.ErrTypeExists, typ)
 	}
 	bz := k.cdc.MustMarshal(&types.Metadata{
 		Type:           typ,
@@ -31,13 +31,16 @@ func (k Keeper) Issue(ctx sdk.Context,
 	return nil
 }
 
-func (k Keeper) GetMetadata(ctx sdk.Context, typ string) types.Metadata {
+func (k Keeper) GetMetadata(ctx sdk.Context, typ string) (types.Metadata, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetTypeKey(typ))
+	if len(bz) == 0 {
+		return types.Metadata{}, false
+	}
 
 	var metadata types.Metadata
 	k.cdc.MustUnmarshal(bz, &metadata)
-	return metadata
+	return metadata, true
 }
 
 func (k Keeper) HasType(ctx sdk.Context, typ string) bool {

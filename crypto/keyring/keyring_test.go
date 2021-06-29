@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,7 +53,7 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "foo", re.Name)
 }
 
-/*
+
 func TestKeyManagementKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
@@ -73,15 +74,16 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	// create some keys
 	_, err = kb.Key(n1)
 	require.Error(t, err)
+	// save localKey with "n1`"
 	kr, _, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.NoError(t, err)
-	require.Equal(t, n1, kr.GetName())
+	require.Equal(t, n1, kr.Name)
 
+	// save localKey with "n2"
 	_, _, err = kb.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.NoError(t, err)
 
 	i2, err := kb.Key(n2)
-	// TODO fix checkMigrate
 	require.NoError(t, err)
 	_, err = kb.Key(n3)
 	require.NotNil(t, err)
@@ -99,8 +101,8 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
 	// note these are in alphabetical order
-	require.Equal(t, n2, keyS[0].GetName())
-	require.Equal(t, n1, keyS[1].GetName())
+	require.Equal(t, n2, keyS[0].Name)
+	require.Equal(t, n1, keyS[1].Name)
 
 	key1, err := i2.GetPubKey()
 	require.NoError(t, err)
@@ -133,7 +135,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NotNil(t, key1)
 	require.Equal(t, pub1, key1)
 
-	require.Equal(t, o1, re.GetName())
+	require.Equal(t, o1, re.Name)
 	keyS, err = kb.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
@@ -148,7 +150,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2))
 }
-*/
+
 
 // TODO debug the test
 func TestSignVerifyKeyRing(t *testing.T) {

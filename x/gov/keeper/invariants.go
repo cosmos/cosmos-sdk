@@ -34,7 +34,7 @@ func ModuleAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 
 		macc := keeper.GetGovernanceAccount(ctx)
 		balances := bk.GetAllBalances(ctx, macc.GetAddress())
-		broken := !balances.IsAllLTE(deposits)
+		broken := deposits.IsAllGT(balances)
 
 		return sdk.FormatInvariant(types.ModuleName, "deposits",
 			fmt.Sprintf("\tgov ModuleAccount coins: %s\n\tsum of deposit amounts:  %s\n",

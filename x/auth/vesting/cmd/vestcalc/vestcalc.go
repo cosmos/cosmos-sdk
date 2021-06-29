@@ -15,6 +15,10 @@ import (
 // Note: when parsing, timezone is UTC unless overridden.
 const shortIsoFmt = "2006-01-02T15:04"
 
+// hhmmFmt specifies an HH:MM time format to generate time.Time values
+// where only hours, minutes, seconds are used.
+const hhmmFmt = "15:04"
+
 // divide returns the division of total as evenly as possible.
 // Divisions must be 1 or greater and total must be nonnegative.
 func divide(total int64, divisions int32) ([]int64, error) {
@@ -105,10 +109,12 @@ func parseCoins(coins string) (int64, string) {
 	return amount, denom
 }
 
+// marshalPeriods gives the JSON encoding.
 func marshalPeriods(periods []period) ([]byte, error) {
 	return json.MarshalIndent(periods, "", "  ")
 }
 
+// unmarshalPeriods parses an array of periods in JSON.
 func unmarshalPeriods(bz []byte) ([]period, error) {
 	periods := []period{}
 	err := json.Unmarshal(bz, &periods)
@@ -138,8 +144,7 @@ func zipEvents(amounts []int64, times []time.Time) ([]event, error) {
 	return events, nil
 }
 
-// marshalEvents returns a printed representation of events
-// using the local timezone.
+// marshalEvents returns a printed representation of events.
 func marshalEvents(events []event) ([]byte, error) {
 	var b strings.Builder
 	b.WriteString("[\n")
@@ -282,9 +287,10 @@ var (
 
 // Custom flag types
 
+// isoDate is time.Time as a flag.Value in shortIsoFmt.
 type isoDate struct{ time.Time }
 
-// Set() implements flag.Value.Set().
+// Set implements flag.Value.Set().
 func (id *isoDate) Set(s string) error {
 	t, err := time.ParseInLocation(shortIsoFmt, s, time.Local)
 	if err != nil {
@@ -294,32 +300,34 @@ func (id *isoDate) Set(s string) error {
 	return nil
 }
 
-// String() implements flag.Value.String().
+// String implements flag.Value.String().
 func (id *isoDate) String() string {
 	return id.Format(shortIsoFmt)
 }
 
+// isoDateFlag makes a new isoDate flag, accessed as a time.Time.
 func isoDateFlag(name string, usage string) *time.Time {
 	id := isoDate{time.Time{}}
 	flag.CommandLine.Var(&id, name, usage)
 	return &id.Time
 }
 
+// isoDateList is []time.Time as a flag.Value in repeated or comma-separated shortIsoFmt.
 type isoDateList []time.Time
 
-// Set() implements flag.Value.Set().
+// Set implements flag.Value.Set().
 func (dates *isoDateList) Set(s string) error {
 	for _, ds := range strings.Split(s, ",") {
 		d, err := time.ParseInLocation(shortIsoFmt, ds, time.Local)
 		if err != nil {
 			return err
 		}
-		*dates = append(*dates, d)
+		*dates = append(*dates, d) // accumulates repeated flag arguments
 	}
 	return nil
 }
 
-// String() implements flag.Value.String().
+// String implements flag.Value.String().
 func (dates *isoDateList) String() string {
 	s := ""
 	for _, t := range *dates {
@@ -332,19 +340,19 @@ func (dates *isoDateList) String() string {
 	return s
 }
 
+// isoDateListFlag makes a new isoDateList flag.
 func isoDateListFlag(name string, usage string) *isoDateList {
 	dates := isoDateList([]time.Time{})
 	flag.Var(&dates, name, usage)
 	return &dates
 }
 
+// isoTime is time.Time as a flagValue in HH:MM format.
 type isoTime struct{ time.Time }
 
-const hhmm = "15:04"
-
-// Set() implements flag.Value.Set().
+// Set implements flag.Value.Set().
 func (it *isoTime) Set(s string) error {
-	t, err := time.Parse(hhmm, s)
+	t, err := time.Parse(hhmmFmt, s)
 	if err != nil {
 		return err
 	}
@@ -352,13 +360,14 @@ func (it *isoTime) Set(s string) error {
 	return nil
 }
 
-// String() implements flag.Value.String().
+// String implements flag.Value.String().
 func (it *isoTime) String() string {
-	return it.Format(hhmm)
+	return it.Format(hhmmFmt)
 }
 
+// isoTimeFlag makes a new isoTime flag, accessed as a time.Time.
 func isoTimeFlag(name string, value string, usage string) *time.Time {
-	t, err := time.Parse(hhmm, value)
+	t, err := time.Parse(hhmmFmt, value)
 	if err != nil {
 		t = time.Time{}
 	}
@@ -378,10 +387,12 @@ var (
 	flagWrite  = flag.Bool("write", false, "Write periods file to stdout.")
 )
 
+// readConfig bundles data needed for the read operation.
 type readConfig struct {
 	startTime time.Time
 }
 
+// genReadConfig creates a readConfig from flag setings and validates it.
 func genReadConfig() (readConfig, error) {
 	rc := readConfig{}
 	if flagStart.IsZero() {
@@ -391,10 +402,13 @@ func genReadConfig() (readConfig, error) {
 	return rc, nil
 }
 
+// convertAbsolute converts relative periods to absolute events.
 func (rc readConfig) convertAbsolute(periods []period) []event {
 	return periodsToEvents(rc.startTime, periods)
 }
 
+// readCmd reads periods in JSON from stdin and writes a sequence of vesting
+// events in local time to stdout.
 func readCmd() {
 	rc, err := genReadConfig()
 	if err != nil {
@@ -420,6 +434,7 @@ func readCmd() {
 	fmt.Println(string(bzOut))
 }
 
+// writeConfig bundles data needed for the write operation.
 type writeConfig struct {
 	Amount    int64
 	Denom     string
@@ -429,6 +444,7 @@ type writeConfig struct {
 	Cliffs    []time.Time
 }
 
+// genWriteConfig generates a writeConfig from flag settings and validates it.
 func genWriteConfig() (writeConfig, error) {
 	wc := writeConfig{}
 	if *flagAmount < 1 {
@@ -449,6 +465,9 @@ func genWriteConfig() (writeConfig, error) {
 	return wc, nil
 }
 
+// generateEvents generates vesting events for the given amount and
+// denomination across the given monthly vesting events with the given start
+// time and subject to the vesting cliff times, if any.
 func (wc writeConfig) generateEvents() ([]event, error) {
 	divisions, err := divide(wc.Amount, wc.Months)
 	if err != nil {
@@ -472,10 +491,13 @@ func (wc writeConfig) generateEvents() ([]event, error) {
 	return events, nil
 }
 
+// convertRelative converts absolute-time events to relative periods.
 func (wc writeConfig) convertRelative(events []event) []period {
 	return eventsToPeriods(wc.Start, events, wc.Denom)
 }
 
+// writeCmd generates a set of vesting events based on flags and writes a
+// sequences of periods in JSON format to stdout.
 func writeCmd() {
 	wc, err := genWriteConfig()
 	if err != nil {
@@ -496,6 +518,7 @@ func writeCmd() {
 	fmt.Println(string(bz))
 }
 
+// main executes either readCmd() or writeCmd() based on flags.
 func main() {
 	flag.Parse()
 	if *flagRead && !*flagWrite {

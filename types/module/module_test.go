@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/golang/mock/gomock"
-	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -38,7 +37,6 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
-	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
@@ -56,8 +54,6 @@ func TestBasicManager(t *testing.T) {
 	require.Equal(t, map[string]string(nil), data)
 
 	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, nil, wantDefaultGenesis)))
-
-	mm.RegisterRESTRoutes(client.Context{}, &mux.Router{})
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)

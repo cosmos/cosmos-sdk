@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"context"
+
 	"github.com/tendermint/tendermint/crypto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -23,12 +25,12 @@ func NewPV() PV {
 }
 
 // GetPubKey implements PrivValidator interface
-func (pv PV) GetPubKey() (crypto.PubKey, error) {
+func (pv PV) GetPubKey(ctx context.Context) (crypto.PubKey, error) {
 	return cryptocodec.ToTmPubKeyInterface(pv.PrivKey.PubKey())
 }
 
 // SignVote implements PrivValidator interface
-func (pv PV) SignVote(chainID string, vote *tmproto.Vote) error {
+func (pv PV) SignVote(ctx context.Context, chainID string, vote *tmproto.Vote) error {
 	signBytes := tmtypes.VoteSignBytes(chainID, vote)
 	sig, err := pv.PrivKey.Sign(signBytes)
 	if err != nil {
@@ -39,7 +41,7 @@ func (pv PV) SignVote(chainID string, vote *tmproto.Vote) error {
 }
 
 // SignProposal implements PrivValidator interface
-func (pv PV) SignProposal(chainID string, proposal *tmproto.Proposal) error {
+func (pv PV) SignProposal(ctx context.Context, chainID string, proposal *tmproto.Proposal) error {
 	signBytes := tmtypes.ProposalSignBytes(chainID, proposal)
 	sig, err := pv.PrivKey.Sign(signBytes)
 	if err != nil {

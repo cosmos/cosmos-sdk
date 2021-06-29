@@ -36,7 +36,7 @@ type Context struct {
 	checkTx       bool
 	recheckTx     bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice   DecCoins
-	consParams    *abci.ConsensusParams
+	consParams    *tmproto.ConsensusParams
 	eventManager  *EventManager
 }
 
@@ -72,8 +72,8 @@ func (c Context) HeaderHash() tmbytes.HexBytes {
 	return hash
 }
 
-func (c Context) ConsensusParams() *abci.ConsensusParams {
-	return proto.Clone(c.consParams).(*abci.ConsensusParams)
+func (c Context) ConsensusParams() *tmproto.ConsensusParams {
+	return proto.Clone(c.consParams).(*tmproto.ConsensusParams)
 }
 
 // create a new context
@@ -203,7 +203,7 @@ func (c Context) WithMinGasPrices(gasPrices DecCoins) Context {
 }
 
 // WithConsensusParams returns a Context with an updated consensus params
-func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
+func (c Context) WithConsensusParams(params *tmproto.ConsensusParams) Context {
 	c.consParams = params
 	return c
 }

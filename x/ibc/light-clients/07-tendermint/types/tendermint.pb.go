@@ -5,16 +5,16 @@ package types
 
 import (
 	fmt "fmt"
-	_go "github.com/confio/ics23/go"
+	confio "github.com/confio/ics23/go"
 	types "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/ibc/core/23-commitment/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "github.com/golang/protobuf/ptypes/duration"
-	_ "github.com/golang/protobuf/ptypes/timestamp"
 	github_com_tendermint_tendermint_libs_bytes "github.com/tendermint/tendermint/libs/bytes"
 	types2 "github.com/tendermint/tendermint/proto/tendermint/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -50,7 +50,7 @@ type ClientState struct {
 	// Latest height the client was updated to
 	LatestHeight types.Height `protobuf:"bytes,7,opt,name=latest_height,json=latestHeight,proto3" json:"latest_height" yaml:"latest_height"`
 	// Proof specifications used in verifying counterparty state
-	ProofSpecs []*_go.ProofSpec `protobuf:"bytes,8,rep,name=proof_specs,json=proofSpecs,proto3" json:"proof_specs,omitempty" yaml:"proof_specs"`
+	ProofSpecs []*confio.ProofSpec `protobuf:"bytes,8,rep,name=proof_specs,json=proofSpecs,proto3" json:"proof_specs,omitempty" yaml:"proof_specs"`
 	// Path at which next upgraded client will be committed.
 	// Each element corresponds to the key for a single CommitmentProof in the chained proof.
 	// NOTE: ClientState must stored under `{upgradePath}/{upgradeHeight}/clientState`
@@ -1147,7 +1147,7 @@ func (m *ClientState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ProofSpecs = append(m.ProofSpecs, &_go.ProofSpec{})
+			m.ProofSpecs = append(m.ProofSpecs, &confio.ProofSpec{})
 			if err := m.ProofSpecs[len(m.ProofSpecs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

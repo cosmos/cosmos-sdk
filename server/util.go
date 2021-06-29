@@ -135,7 +135,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command) error {
 	}
 
 	var logWriter io.Writer
-	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmcfg.LogFormatPlain {
+	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == "plain" {
 		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
 	} else {
 		logWriter = os.Stderr

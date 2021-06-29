@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 
 func (suite *TendermintTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	altPrivVal := ibctestingmock.NewPV()
-	altPubKey, err := altPrivVal.GetPubKey()
+	altPubKey, err := altPrivVal.GetPubKey(context.TODO())
 	suite.Require().NoError(err)
 
 	altVal := tmtypes.NewValidator(altPubKey, 4)

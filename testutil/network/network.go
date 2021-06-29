@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/libs/service"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
@@ -104,7 +104,7 @@ func DefaultConfig() Config {
 		AppConstructor:    NewAppConstructor(encCfg),
 		GenesisState:      simapp.ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     2 * time.Second,
-		ChainID:           "chain-" + tmrand.NewRand().Str(6),
+		ChainID:           "chain-" + tmrand.Str(6),
 		NumValidators:     4,
 		BondDenom:         sdk.DefaultBondDenom,
 		MinGasPrices:      fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
@@ -155,7 +155,7 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
-		tmNode *node.Node
+		tmNode service.Service
 		api    *api.Server
 		grpc   *grpc.Server
 	}

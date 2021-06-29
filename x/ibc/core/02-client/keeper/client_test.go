@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -396,7 +397,7 @@ func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
 	)
 
 	altPrivVal := ibctestingmock.NewPV()
-	altPubKey, err := altPrivVal.GetPubKey()
+	altPubKey, err := altPrivVal.GetPubKey(context.TODO())
 	suite.Require().NoError(err)
 	altVal := tmtypes.NewValidator(altPubKey, 4)
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/tendermint/tendermint/types"
 
@@ -154,7 +153,7 @@ func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulato
 // Param change proposals
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
-func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONMarshaler) *abci.ConsensusParams {
+func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONMarshaler) *tmproto.ConsensusParams {
 	var genesisState map[string]json.RawMessage
 	err := json.Unmarshal(appState, &genesisState)
 	if err != nil {
@@ -162,8 +161,8 @@ func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSO
 	}
 
 	stakingGenesisState := stakingtypes.GetGenesisStateFromAppState(cdc, genesisState)
-	consensusParams := &abci.ConsensusParams{
-		Block: &abci.BlockParams{
+	consensusParams := &tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
 			MaxBytes: int64(simulation.RandIntBetween(r, 20000000, 30000000)),
 			MaxGas:   -1,
 		},

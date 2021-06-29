@@ -5,7 +5,7 @@ package types
 
 import (
 	fmt "fmt"
-	_go "github.com/confio/ics23/go"
+	confio "github.com/confio/ics23/go"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -162,7 +162,7 @@ func (m *MerklePath) GetKeyPath() []string {
 // should be succinct.
 // MerkleProofs are ordered from leaf-to-root
 type MerkleProof struct {
-	Proofs []*_go.CommitmentProof `protobuf:"bytes,1,rep,name=proofs,proto3" json:"proofs,omitempty"`
+	Proofs []*confio.CommitmentProof `protobuf:"bytes,1,rep,name=proofs,proto3" json:"proofs,omitempty"`
 }
 
 func (m *MerkleProof) Reset()         { *m = MerkleProof{} }
@@ -198,7 +198,7 @@ func (m *MerkleProof) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MerkleProof proto.InternalMessageInfo
 
-func (m *MerkleProof) GetProofs() []*_go.CommitmentProof {
+func (m *MerkleProof) GetProofs() []*confio.CommitmentProof {
 	if m != nil {
 		return m.Proofs
 	}
@@ -751,7 +751,7 @@ func (m *MerkleProof) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Proofs = append(m.Proofs, &_go.CommitmentProof{})
+			m.Proofs = append(m.Proofs, &confio.CommitmentProof{})
 			if err := m.Proofs[len(m.Proofs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

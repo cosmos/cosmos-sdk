@@ -2,6 +2,7 @@ package ibctesting
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -11,8 +12,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmprotoversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/version"
 	tmversion "github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -114,7 +115,7 @@ type TestChain struct {
 func NewTestChain(t *testing.T, chainID string) *TestChain {
 	// generate validator private/public key
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey(context.TODO())
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -549,7 +550,7 @@ func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, 
 
 	vsetHash := tmValSet.Hash()
 	tmHeader := tmtypes.Header{
-		Version:            tmprotoversion.Consensus{Block: tmversion.BlockProtocol, App: 2},
+		Version:            version.Consensus{Block: tmversion.BlockProtocol, App: 2},
 		ChainID:            chainID,
 		Height:             blockHeight,
 		Time:               timestamp,

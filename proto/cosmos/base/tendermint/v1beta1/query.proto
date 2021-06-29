@@ -110,8 +110,8 @@ message GetNodeInfoRequest {}
 
 // GetNodeInfoResponse is the request type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
-  .tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
-  VersionInfo                     application_version = 2;
+  .tendermint.p2p.NodeInfo node_info           = 1;
+  VersionInfo              application_version = 2;
 }
 
 // VersionInfo is the type for the GetNodeInfoResponse message.

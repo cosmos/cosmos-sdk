@@ -1,9 +1,10 @@
 package proofs
 
 import (
+	"math/rand"
 	"sort"
 
-	"github.com/tendermint/tendermint/libs/rand"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
@@ -98,7 +99,7 @@ func BuildMap(size int) map[string][]byte {
 	data := make(map[string][]byte)
 	// insert lots of info and store the bytes
 	for i := 0; i < size; i++ {
-		key := rand.Str(20)
+		key := tmrand.Str(20)
 		data[key] = toValue(key)
 	}
 	return data

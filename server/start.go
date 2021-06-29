@@ -13,10 +13,9 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -235,21 +234,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
-	if err != nil {
-		return err
-	}
-
-	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
-	tmNode, err := node.NewNode(
+	tmNode, err := node.New(
 		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
-		nodeKey,
-		proxy.NewLocalClientCreator(app),
-		genDocProvider,
-		node.DefaultDBProvider,
-		node.DefaultMetricsProvider(cfg.Instrumentation),
 		ctx.Logger,
+		proxy.NewLocalClientCreator(app),
+		nil,
 	)
 	if err != nil {
 		return err
@@ -284,7 +273,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	var apiSrv *api.Server
 
 	if config.API.Enable {
-		genDoc, err := genDocProvider()
+		genDoc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
 		if err != nil {
 			return err
 		}

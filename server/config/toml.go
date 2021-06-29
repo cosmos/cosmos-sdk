@@ -2,10 +2,10 @@ package config
 
 import (
 	"bytes"
+	"io/ioutil"
 	"text/template"
 
 	"github.com/spf13/viper"
-	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 const defaultConfigTemplate = `# This is a TOML config file.
@@ -193,5 +193,5 @@ func WriteConfigFile(configFilePath string, config *Config) {
 		panic(err)
 	}
 
-	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
+	ioutil.WriteFile(configFilePath, buffer.Bytes(), 0600)
 }

@@ -1,7 +1,6 @@
 package baseapp_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,7 +22,8 @@ func TestRegisterMsgService(t *testing.T) {
 
 	// Create an encoding config that doesn't register testdata Msg services.
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	app := baseapp.NewBaseApp("test", logger, db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
@@ -46,7 +46,8 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	// Setup baseapp.
 	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	app := baseapp.NewBaseApp("test", logger, db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
@@ -72,7 +73,8 @@ func TestMsgService(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	app := baseapp.NewBaseApp("test", logger, db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	testdata.RegisterMsgServer(
 		app.MsgServiceRouter(),

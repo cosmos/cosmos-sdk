@@ -41,9 +41,16 @@ service Query {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata/{denom}";
   }
 
-  // DenomsMetadata queries the client metadata for all registered coin denominations.
+  // DenomsMetadata queries the client metadata for all registered coin
+  // denominations.
   rpc DenomsMetadata(QueryDenomsMetadataRequest) returns (QueryDenomsMetadataResponse) {
     option (google.api.http).get = "/cosmos/bank/v1beta1/denoms_metadata";
+  }
+
+  // DenomOwners queries for all account addresses that own a particular token
+  // denomination.
+  rpc DenomOwners(QueryDenomOwnersRequest) returns (QueryDenomOwnersResponse) {
+    option (google.api.http).get = "/cosmos/bank/v1beta1/denom_owners/{denom}";
   }
 }
 
@@ -156,4 +163,34 @@ message QueryDenomMetadataRequest {
 message QueryDenomMetadataResponse {
   // metadata describes and provides all the client information for the requested token.
   Metadata metadata = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryDenomOwnersRequest defines the request type for the DenomOwners RPC query,
+// which queries for a paginated set of all account holders of a particular
+// denomination.
+message QueryDenomOwnersRequest {
+  // denom defines the coin denomination to query all account holders for.
+  string denom = 1;
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// DenomOwner defines structure representing an account that owns or holds a
+// particular denominated token. It contains the account address and account
+// balance of the denominated token.
+message DenomOwner {
+  // address defines the address that owns a particular denomination.
+  string address = 1;
+
+  // balance is the balance of the denominated coin for an account.
+  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryDenomOwnersResponse defines the RPC response of a DenomOwners RPC query.
+message QueryDenomOwnersResponse {
+  repeated DenomOwner denom_owners = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

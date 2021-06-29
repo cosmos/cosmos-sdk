@@ -47,7 +47,7 @@ func (m msgServer) Issue(goCtx context.Context, msg *types.MsgIssue) (*types.Msg
 // Mint implement Mint method of the types.MsgServer.
 func (m msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Nft == nil {
+	if msg.NFT == nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidNFT, "nft is empty")
 	}
 
@@ -56,10 +56,10 @@ func (m msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 		return nil, err
 	}
 
-	if err := m.Keeper.MintNFT(ctx, msg.Nft.Type,
-		msg.Nft.Id,
-		msg.Nft.Uri,
-		msg.Nft.Data,
+	if err := m.Keeper.MintNFT(ctx, msg.NFT.Type,
+		msg.NFT.ID,
+		msg.NFT.URI,
+		msg.NFT.Data,
 		minter); err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (m msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 // Edit implement Edit method of the types.MsgServer.
 func (m msgServer) Edit(goCtx context.Context, msg *types.MsgEdit) (*types.MsgEditResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Nft == nil {
+	if msg.NFT == nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidNFT, "nft is empty")
 	}
 
@@ -78,10 +78,10 @@ func (m msgServer) Edit(goCtx context.Context, msg *types.MsgEdit) (*types.MsgEd
 		return nil, err
 	}
 
-	if err := m.Keeper.EditNFT(ctx, msg.Nft.Type,
-		msg.Nft.Id,
-		msg.Nft.Uri,
-		msg.Nft.Data,
+	if err := m.Keeper.EditNFT(ctx, msg.NFT.Type,
+		msg.NFT.ID,
+		msg.NFT.URI,
+		msg.NFT.Data,
 		editor); err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (m msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 	}
 
 	if err := m.Keeper.SendNFT(ctx, msg.Type,
-		msg.Id,
+		msg.ID,
 		sender,
 		receiver); err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func (m msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 	}
 
 	if err := m.Keeper.BurnNFT(ctx, msg.Type,
-		msg.Id,
+		msg.ID,
 		destroyer); err != nil {
 		return nil, err
 	}

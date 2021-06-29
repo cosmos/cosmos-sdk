@@ -27,8 +27,8 @@ func (k Keeper) MintNFT(ctx sdk.Context,
 	metadata := k.GetMetadata(ctx, typ)
 	nft := types.NFT{
 		Type: typ,
-		Id:   id,
-		Uri:  uri,
+		ID:   id,
+		URI:  uri,
 		Data: data,
 	}
 
@@ -46,7 +46,7 @@ func (k Keeper) MintNFT(ctx sdk.Context,
 
 	bz := k.cdc.MustMarshal(&nft)
 	nftStore := k.getNFTStore(ctx, nft.Type)
-	nftStore.Set(types.GetNFTIdKey(nft.Id), bz)
+	nftStore.Set(types.GetNFTIdKey(nft.ID), bz)
 	return nil
 }
 

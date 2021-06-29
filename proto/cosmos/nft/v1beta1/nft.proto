@@ -22,8 +22,8 @@ message NFT {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = false;
 
-  string              type = 1; // The type of this NFT
-  string              id   = 2; // The identifier of this NFT
-  string              uri  = 3;
+  string              type = 1;                                 // The type of this NFT
+  string              id   = 2 [(gogoproto.customname) = "ID"]; // The identifier of this NFT
+  string              uri  = 3 [(gogoproto.customname) = "URI"];
   google.protobuf.Any data = 4;
 }

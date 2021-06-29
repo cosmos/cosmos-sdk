@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -80,9 +79,6 @@ func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.Tx
 
 	return feegrant.ValidateGenesis(data)
 }
-
-// RegisterRESTRoutes registers the REST routes for the feegrant module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx sdkclient.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the feegrant module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {

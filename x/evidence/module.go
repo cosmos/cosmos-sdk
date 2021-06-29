@@ -8,7 +8,6 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -72,9 +71,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 	return gs.Validate()
 }
-
-// RegisterRESTRoutes registers the evidence module's REST service handlers.
-func (a AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the evidence module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {

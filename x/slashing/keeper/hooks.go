@@ -34,7 +34,7 @@ func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) e
 	if err != nil {
 		return err
 	}
-	
+
 	return k.AddPubkey(ctx, consPk)
 }
 

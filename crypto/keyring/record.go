@@ -43,6 +43,7 @@ func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local
 			return nil, fmt.Errorf("unable to cast privKey to *secp256k1.PrivKey")
 		}
 
+		// TODO double check if we have to marshal priv as *secp256k1.PrivKey
 		bz, err = cdc.Marshal(priv)
 		if err != nil {
 			return nil, err

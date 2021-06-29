@@ -139,13 +139,13 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 		multisigKeys, _ := cmd.Flags().GetStringSlice(flagMultisig)
 		if len(multisigKeys) != 0 {
-			var pks []cryptotypes.PubKey
+			pks := make([]cryptotypes.PubKey, len(multisigKeys))
 			multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
 			if err := validateMultisigThreshold(multisigThreshold, len(multisigKeys)); err != nil {
 				return err
 			}
 
-			for _, keyname := range multisigKeys {
+			for i, keyname := range multisigKeys {
 				k, err := kb.Key(keyname)
 				if err != nil {
 					return err
@@ -155,7 +155,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 				if err != nil {
 					return err
 				}
-				pks = append(pks, key)
+				pks[i] = key
 			}
 
 			if noSort, _ := cmd.Flags().GetBool(flagNoSort); !noSort {
@@ -181,7 +181,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		if err != nil {
 			return err
 		}
-		_, err := kb.SavePubKey(name, pk, algo.Name())
+		_, err := kb.SaveOfflineKey(name, pk)
 		return err
 	}
 
@@ -200,13 +200,13 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		info, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
+		k, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
 
 		if err != nil {
 			return err
 		}
 
-		return printCreate(cmd, info, false, "")
+		return printCreate(cmd, k, false, "")
 	}
 
 	// Get bip39 mnemonic
@@ -268,7 +268,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 	}
 
-	info, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
+	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
 	if err != nil {
 		return err
 	}
@@ -280,15 +280,15 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		mnemonic = ""
 	}
 
-	return printCreate(cmd, info, showMnemonic, mnemonic)
+	return printCreate(cmd, k, showMnemonic, mnemonic)
 }
 
-func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemonic string) error {
+func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemonic string) error {
 	output, _ := cmd.Flags().GetString(cli.OutputFlag)
 	switch output {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyInfo(cmd.OutOrStdout(), info, keyring.MkAccKeyOutput, output)
+		printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, output)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
@@ -298,7 +298,7 @@ func printCreate(cmd *cobra.Command, info keyring.Info, showMnemonic bool, mnemo
 			fmt.Fprintln(cmd.ErrOrStderr(), mnemonic)
 		}
 	case OutputFormatJSON:
-		out, err := keyring.MkAccKeyOutput(info)
+		out, err := keyring.MkAccKeyOutput(k)
 		if err != nil {
 			return err
 		}

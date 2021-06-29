@@ -16,6 +16,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 		1,
 		[]cryptotypes.PubKey{tmpKey1.PubKey()},
 	)
-	tmp, err := keyring.NewMultiInfo("myMultisig", pk)
+	tmp, err := keyring.NewLegacyMultiInfo("myMultisig", pk)
 	require.NoError(t, err)
 	require.Equal(t, "myMultisig", tmp.GetName())
 	require.Equal(t, keyring.TypeMulti, tmp.GetType())
@@ -45,7 +46,8 @@ func Test_runShowCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	kbHome := t.TempDir()
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	clientCtx := client.Context{}.
@@ -95,15 +97,17 @@ func Test_runShowCmd(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// try fetch by addr
-	info, err := kb.Key(fakeKeyName1)
+	k, err := kb.Key(fakeKeyName1)
+	require.NoError(t, err)
+	addr, err := k.GetAddress()
+	require.NoError(t, err)
 	cmd.SetArgs([]string{
-		info.GetAddress().String(),
+		addr.String(),
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 	})
 
-	require.NoError(t, err)
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now try multisig key - set bech to acc

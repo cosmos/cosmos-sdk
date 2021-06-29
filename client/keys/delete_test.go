@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
@@ -32,9 +33,10 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
 	path := sdk.GetConfig().GetFullBIP44Path()
+	encCfg := simapp.MakeTestEncodingConfig()
 
 	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)

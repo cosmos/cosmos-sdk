@@ -124,7 +124,6 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	require.True(privKey2.Equals(privKey))
 }
 
-
 func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
 	require := require.New(t)
 
@@ -145,8 +144,6 @@ func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
 	require.Error(err)
 	require.Nil(privKey2)
 }
-
-
 
 // TODO fix that
 /*

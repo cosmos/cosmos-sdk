@@ -76,8 +76,8 @@ func iso(s string) time.Time {
 	return t
 }
 
-func hhmmFmt(s string) time.Time {
-	t, _ := time.Parse(hhmm, s)
+func hhmm(s string) time.Time {
+	t, _ := time.Parse(hhmmFmt, s)
 	return t
 }
 
@@ -94,7 +94,7 @@ func TestVestingTimes(t *testing.T) {
 			Name:      "first",
 			Start:     iso("2020-01-01T16:00"),
 			Months:    12,
-			TimeOfDay: hhmmFmt("12:00"),
+			TimeOfDay: hhmm("12:00"),
 			Want: []time.Time{
 				iso("2020-02-01T12:00"),
 				iso("2020-03-01T12:00"),
@@ -205,7 +205,7 @@ func TestWrite(t *testing.T) {
 				Amount:    1000000000, // 1000 BLD
 				Denom:     "ubld",
 				Months:    24,
-				TimeOfDay: hhmmFmt("09:00"),
+				TimeOfDay: hhmm("09:00"),
 				Start:     iso("2021-01-01T09:30"),
 				Cliffs: []time.Time{
 					iso("2022-01-15T00:00"),
@@ -217,13 +217,13 @@ func TestWrite(t *testing.T) {
 				{Coins: "41666667ubld", Length: 2419200},
 				{Coins: "41666667ubld", Length: 2674800},
 				{Coins: "41666666ubld", Length: 2592000},
-				{Coins: "41666667ubld", Length: 2678400},
+				{Coins: "41666667ubld", Length: 2678400}, // DST begins
 				{Coins: "41666667ubld", Length: 2592000},
 				{Coins: "41666666ubld", Length: 2678400},
 				{Coins: "41666667ubld", Length: 2678400},
 				{Coins: "41666667ubld", Length: 2592000},
 				{Coins: "41666666ubld", Length: 2678400},
-				{Coins: "41666667ubld", Length: 2595600},
+				{Coins: "41666667ubld", Length: 2595600}, // DST ends
 				{Coins: "41666667ubld", Length: 2678400},
 			},
 		},

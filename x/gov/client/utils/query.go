@@ -221,7 +221,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params types.QueryVoteParams) 
 			}
 
 			if vote != nil {
-				bz, err := clientCtx.JSONCodec.MarshalJSON(vote)
+				bz, err := clientCtx.Codec.MarshalJSON(vote)
 				if err != nil {
 					return nil, err
 				}
@@ -245,7 +245,7 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 	}
 
 	if !initialDeposit.Amount.IsZero() {
-		bz, err := clientCtx.JSONCodec.MarshalJSON(&initialDeposit)
+		bz, err := clientCtx.Codec.MarshalJSON(&initialDeposit)
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +282,7 @@ func QueryDepositByTxQuery(clientCtx client.Context, params types.QueryDepositPa
 					Amount:     depMsg.Amount,
 				}
 
-				bz, err := clientCtx.JSONCodec.MarshalJSON(&deposit)
+				bz, err := clientCtx.Codec.MarshalJSON(&deposit)
 				if err != nil {
 					return nil, err
 				}

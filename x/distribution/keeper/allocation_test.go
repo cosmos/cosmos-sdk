@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -83,7 +84,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.NotNil(t, feeCollector)
 
 	// fund fee collector
-	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, feeCollector.GetName(), fees))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, feeCollector.GetName(), fees))
 
 	app.AccountKeeper.SetAccount(ctx, feeCollector)
 
@@ -163,7 +164,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	feeCollector := app.AccountKeeper.GetModuleAccount(ctx, types.FeeCollectorName)
 	require.NotNil(t, feeCollector)
 
-	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, feeCollector.GetName(), fees))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, feeCollector.GetName(), fees))
 
 	app.AccountKeeper.SetAccount(ctx, feeCollector)
 

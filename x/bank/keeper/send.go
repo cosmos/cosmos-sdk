@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -254,13 +255,18 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	}
 
 	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStore := k.getDenomPrefixStore(ctx, balance.Denom)
 
-	// Bank invariants require to not store zero balances.
+	// x/bank invariants prohibit persistance of zero balances
 	if balance.IsZero() {
 		accountStore.Delete([]byte(balance.Denom))
+		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
 	} else {
 		bz := k.cdc.MustMarshal(&balance)
 		accountStore.Set([]byte(balance.Denom), bz)
+
+		// store a reverse index from denomination to account address
+		denomPrefixStore.Set(address.MustLengthPrefix(addr), nil)
 	}
 
 	return nil

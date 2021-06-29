@@ -228,6 +228,11 @@ func (k BaseViewKeeper) ValidateBalance(ctx sdk.Context, addr sdk.AccAddress) er
 // getAccountStore gets the account store of the given address.
 func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) prefix.Store {
 	store := ctx.KVStore(k.storeKey)
-
 	return prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+}
+
+// getDenomPrefixStore returns a prefix store that acts as a reverse index
+// between a denomination and account balance for that denomination.
+func (k BaseViewKeeper) getDenomPrefixStore(ctx sdk.Context, denom string) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.CreateDenomPrefix(denom))
 }

@@ -23,6 +23,7 @@ const (
 var (
 	// BalancesPrefix is the prefix for the account balances store. We use a byte
 	// (instead of `[]byte("balances")` to save some disk space).
+	DenomPrefix         = []byte{0x03}
 	BalancesPrefix      = []byte{0x02}
 	SupplyKey           = []byte{0x00}
 	DenomMetadataPrefix = []byte{0x1}
@@ -43,15 +44,24 @@ func AddressFromBalancesStore(key []byte) (sdk.AccAddress, error) {
 	if len(key) == 0 {
 		return nil, ErrInvalidKey
 	}
+
 	addrLen := key[0]
 	bound := int(addrLen)
+
 	if len(key)-1 < bound {
 		return nil, ErrInvalidKey
 	}
+
 	return key[1 : bound+1], nil
 }
 
 // CreateAccountBalancesPrefix creates the prefix for an account's balances.
 func CreateAccountBalancesPrefix(addr []byte) []byte {
 	return append(BalancesPrefix, address.MustLengthPrefix(addr)...)
+}
+
+// CreateDenomPrefix creates a prefix for a reverse index of denomination to
+// account balance for that denomination.
+func CreateDenomPrefix(denom string) []byte {
+	return append(DenomPrefix, []byte(denom)...)
 }

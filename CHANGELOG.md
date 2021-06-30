@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* [\#6711](https://github.com/cosmos/cosmos-sdk/pull/6711) Make integration test suites reusable by apps, all tests are exported in each module's `client/testutil` package.
+* [\#6711](https://github.com/cosmos/cosmos-sdk/pull/6711) Make integration test suites reusable by apps, tests are exported in each module's `client/testutil` package.
 * [\#8077](https://github.com/cosmos/cosmos-sdk/pull/8077) Added support for grpc-web, enabling browsers to communicate with a chain's gRPC server
 * [\#8965](https://github.com/cosmos/cosmos-sdk/pull/8965) cosmos reflection now provides more information on the application such as: deliverable msgs, sdk.Config info etc (still in alpha stage).
 * [\#8520](https://github.com/cosmos/cosmos-sdk/pull/8520) Add support for permanently locked vesting accounts.
@@ -100,7 +100,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 * (x/bank) [\#8798](https://github.com/cosmos/cosmos-sdk/pull/8798) `GetTotalSupply` is removed in favour of `GetPaginatedTotalSupply`
 * (x/bank/types) [\#9061](https://github.com/cosmos/cosmos-sdk/pull/9061) `AddressFromBalancesStore` now returns an error for invalid key instead of panic.
-* (x/auth) [\#9144](https://github.com/cosmos/cosmos-sdk/pull/9144) The `NewTxTimeoutHeightDecorator` has been converted from a struct to a function.
+* (x/auth) [\#9144](https://github.com/cosmos/cosmos-sdk/pull/9144) The `NewTxTimeoutHeightDecorator` antehandler has been converted from a struct to a function.
 * (codec) [\#9226](https://github.com/cosmos/cosmos-sdk/pull/9226) Rename codec interfaces and methods, to follow a general Go interfaces:
   * `codec.Marshaler` → `codec.Codec` (this defines objects which serialize other objects)
   * `codec.BinaryMarshaler` → `codec.BinaryCodec`

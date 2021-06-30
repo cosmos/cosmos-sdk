@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+const DefaultPage = 1
+
 // DefaultLimit is the default `limit` for queries
 // if the `limit` is not supplied, paginate will use `DefaultLimit`
 const DefaultLimit = 100

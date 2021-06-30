@@ -5,13 +5,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 type IntegrationTestSuite struct {
@@ -44,17 +41,6 @@ func (s *IntegrationTestSuite) TestStatusCommand() {
 
 	// Make sure the output has the validator moniker.
 	s.Require().Contains(out.String(), fmt.Sprintf("\"moniker\":\"%s\"", val0.Moniker))
-}
-
-func (s *IntegrationTestSuite) TestLatestBlocks() {
-	val0 := s.network.Validators[0]
-
-	res, err := rest.GetRequest(fmt.Sprintf("%s/blocks/latest", val0.APIAddress))
-	s.Require().NoError(err)
-
-	var result ctypes.ResultBlock
-	err = legacy.Cdc.UnmarshalJSON(res, &result)
-	s.Require().NoError(err)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

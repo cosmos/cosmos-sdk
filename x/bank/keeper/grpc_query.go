@@ -192,16 +192,11 @@ func (k BaseKeeper) DenomOwners(
 					return false, err
 				}
 
-				var balance sdk.Coin
-				if err := k.cdc.Unmarshal(value, &balance); err != nil {
-					return false, err
-				}
-
 				denomOwners = append(
 					denomOwners,
 					&types.DenomOwner{
 						Address: address.String(),
-						Balance: balance,
+						Balance: k.GetBalance(ctx, address, req.Denom),
 					},
 				)
 			}

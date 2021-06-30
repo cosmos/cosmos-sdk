@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -232,16 +233,28 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 // An error is returned upon failure.
 func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
 	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
+
 	for i := range balances {
 		balance := balances[i]
 		if !balance.IsValid() {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 		}
 
-		// Bank invariants require to not store zero balances.
+		// x/bank invariants prohibit persistence of zero balances
 		if !balance.IsZero() {
 			bz := k.cdc.MustMarshal(&balance)
 			accountStore.Set([]byte(balance.Denom), bz)
+
+			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
+			if !ok {
+				denomPrefixStore = k.getDenomPrefixStore(ctx, balance.Denom)
+				denomPrefixStores[balance.Denom] = denomPrefixStore
+			}
+
+			// Store a reverse index from denomination to account address with a
+			// sentinel value.
+			denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
 		}
 	}
 

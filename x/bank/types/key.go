@@ -63,5 +63,6 @@ func CreateAccountBalancesPrefix(addr []byte) []byte {
 // CreateDenomPrefix creates a prefix for a reverse index of denomination to
 // account balance for that denomination.
 func CreateDenomPrefix(denom string) []byte {
-	return append(DenomPrefix, []byte(denom)...)
+	key := append(DenomPrefix, []byte(denom)...)
+	return append(key, 0)
 }

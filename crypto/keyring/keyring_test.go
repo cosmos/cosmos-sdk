@@ -53,7 +53,7 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "foo", re.Name)
 }
 
-
+// TODO do we require lines 91,92?
 func TestKeyManagementKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
@@ -151,7 +151,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 }
 
 
-// TODO debug the test
+// TODO review one more time
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -176,7 +176,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
-	require.NoError(t, err) // fix unable to unpack private key
+	require.NoError(t, err) 
 
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)
@@ -235,7 +235,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	_, _, err = kb.Sign(n3, d3)
 	require.Error(t, err)
-	require.Equal(t, "cannot sign with offline keys", err.Error())
+	require.Equal(t, "Private key extraction works only for Local", err.Error())
 }
 
 /* fix migration before fixing this test

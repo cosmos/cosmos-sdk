@@ -221,6 +221,18 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 	require.NoError(err)
 	checkSignatures(require, txCfg, res.Bytes(), valInfo.GetPubKey())
 
+	/****  test flagAmino  ****/
+	res, err = TxSignExec(val1.ClientCtx, val1.Address, filenameSigned, chainFlag,
+		"--amino=true", signModeAminoFlag)
+	require.NoError(err)
+
+	var txAmino authcli.BroadcastReq
+	err = val1.ClientCtx.LegacyAmino.UnmarshalJSON(res.Bytes(), &txAmino)
+	require.NoError(err)
+	require.Len(txAmino.Tx.Signatures, 2)
+	require.Equal(txAmino.Tx.Signatures[0].PubKey, valInfo.GetPubKey())
+	require.Equal(txAmino.Tx.Signatures[1].PubKey, valInfo.GetPubKey())
+
 }
 
 func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output []byte, pks ...cryptotypes.PubKey) {

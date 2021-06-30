@@ -541,7 +541,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	}
 
 	privKey := algo.Generate()(derivedPriv)
-	fmt.Println("NewAccount privKey=", privKey)
+
 
 	// check if the a key already exists with the same address and return an error
 	// if found
@@ -773,13 +773,12 @@ func (ks keystore) writeRecord(k *Record) error {
 	}
 
 	key := infoKeyBz(k.Name)
-	fmt.Println("writeRecord key", string(key))
+
 	item := keyring.Item{
 		Key:  string(key),
 		Data: serializedRecord,
 	}
-	fmt.Println("item Key", item.Key)
-	fmt.Println("item Data", string(item.Data))
+
 	if err := ks.db.Set(item); err != nil {
 		return err
 	}
@@ -848,7 +847,8 @@ func (ks keystore) MigrateAll() (bool, error) {
 	}
 
 	if len(keys) == 0 {
-		return migrated, errors.New("no keys available for migration")
+		fmt.Println("no keys available for migration")
+		return migrated, nil
 	}
 
 	for _, key := range keys {

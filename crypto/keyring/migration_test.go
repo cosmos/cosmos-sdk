@@ -154,7 +154,7 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	require.NoError(err)
 }
 
-// TODO fix the test , it fails after I updated migration algo
+
 // TODO  do i need to test migration for ledger,offline record items as well?
 func TestMigrateLocalRecord(t *testing.T) {
 	dir := t.TempDir()
@@ -280,8 +280,9 @@ func TestMigrateAllNoItem(t *testing.T) {
 	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
 	require.NoError(err)
 
-	_, err = kb.MigrateAll()
-	require.Equal("no keys available for migration", err.Error())
+	migrated, err := kb.MigrateAll()
+	require.False(migrated)
+	require.NoError(err)
 }
 
 func TestMigrateErrUnknownItemKey(t *testing.T) {

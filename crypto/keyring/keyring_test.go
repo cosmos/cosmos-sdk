@@ -408,7 +408,6 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 }
 
 
-/* fix migration before fixing this test
 func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
@@ -436,9 +435,9 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 	// try export non existing key
 	_, err = kb.ExportPrivKeyArmor("john3", "wrongpassword")
-	require.EqualError(t, err, "john3.info: key not found")
+	require.EqualError(t, err, "Get error, err - The specified item could not be found in the keyring")
 }
-*/
+
 
 func TestInMemoryLanguage(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()

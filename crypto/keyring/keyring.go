@@ -139,6 +139,7 @@ type Setter interface {
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
+// TODO decide if need exporter interface as it is used only in keyring_test.go
 type Exporter interface {
 	// Export public key
 	ExportPubKeyArmor(uid string) (string, error)
@@ -256,12 +257,7 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 // TODO iam  not sure if this func is useful
 // we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
-	priv, err := ks.ExportPrivateKeyObject(uid)
-	if err != nil {
-		return "", err
-	}
-
-	k, err := ks.Key(uid)
+	k, priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}
@@ -270,13 +266,18 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
-func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
+func (ks keystore) ExportPrivateKeyObject(uid string) (*Record, types.PrivKey, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return ExtractPrivKeyFromRecord(ks.cdc, k)
+	priv, err := ExtractPrivKeyFromRecord(ks.cdc, k)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return k, priv, err
 }
 
 func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
@@ -983,7 +984,7 @@ func NewUnsafe(kr Keyring) UnsafeKeyring {
 
 // UnsafeExportPrivKeyHex exports private keys in unarmored hexadecimal format.
 func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err error) {
-	priv, err := ks.ExportPrivateKeyObject(uid)
+	_, priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}

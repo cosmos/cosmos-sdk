@@ -218,7 +218,7 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 	case "secp256k1":
 		var priv secp256k1.PrivKey
 		if err := cdc.Unmarshal(bz, &priv); err != nil {
-			return nil, fmt.Errorf("unable to unmsrashal to secp256k1.PrivKey")
+			return nil, fmt.Errorf("unable to unmarshal to secp256k1.PrivKey")
 		}
 		return &priv, nil
 

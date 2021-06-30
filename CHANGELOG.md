@@ -47,6 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/tx) [\#9421](https://github.com/cosmos/cosmos-sdk/pull/9421/) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to
   the Tx Factory as methods.
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) The `New` method for the network package now returns an error.
+* [\#9519](https://github.com/cosmos/cosmos-sdk/pull/9519) `DeleteDeposits` now renamed to `DeleteAndBurnDeposits`, also now deposits won't be removed from state for completed proposals unless a proposal is vetoed.
 
 ### CLI Breaking Changes
 

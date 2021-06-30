@@ -1,8 +1,7 @@
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
@@ -12,14 +11,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-type IntegrationTestSuite struct {
+type GRPCQueryTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -32,12 +31,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+func (s *GRPCQueryTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -123,8 +122,4 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

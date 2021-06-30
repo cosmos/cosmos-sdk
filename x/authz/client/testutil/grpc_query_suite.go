@@ -1,10 +1,7 @@
-// +build norace
-
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -17,23 +14,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-type IntegrationTestSuite struct {
+type GRPCQueryTestSuite struct {
 	suite.Suite
 	cfg     network.Config
 	network *network.Network
 	grantee sdk.AccAddress
 }
 
-var typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
-
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -61,7 +53,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().Contains(out.String(), `"code":0`)
 
 	// grant authorization
-	out, err = authztestutil.ExecGrant(val, []string{
+	out, err = ExecGrant(val, []string{
 		newAddr.String(),
 		"send",
 		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
@@ -79,12 +71,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+func (s *GRPCQueryTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryGrantGRPC() {
 	val := s.network.Validators[0]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
 	testCases := []struct {
@@ -150,7 +142,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryGrantsGRPC() {
 	val := s.network.Validators[0]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 	testCases := []struct {
@@ -177,7 +169,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := authztestutil.ExecGrant(val, []string{
+				_, err := ExecGrant(val, []string{
 					s.grantee.String(),
 					"generic",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -230,8 +222,4 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

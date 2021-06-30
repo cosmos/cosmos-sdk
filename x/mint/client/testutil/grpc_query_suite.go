@@ -1,10 +1,7 @@
-// +build norace
-
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,13 +14,13 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-type IntegrationTestSuite struct {
+type GRPCQueryTestSuite struct {
 	suite.Suite
 	cfg     network.Config
 	network *network.Network
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -51,12 +48,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+func (s *GRPCQueryTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
@@ -105,8 +102,4 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

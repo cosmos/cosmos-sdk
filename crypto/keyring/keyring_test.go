@@ -238,21 +238,21 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.Equal(t, "Private key extraction works only for Local", err.Error())
 }
 
-/* fix migration before fixing this test
+
 func TestExportImportKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
 	require.NoError(t, err)
 
-	ke, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	name := ke.GetName()
+	k, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	name := k.Name
 	require.NoError(t, err)
 	require.Equal(t, name, "john")
 
 	john, err := kb.Key("john")
 	require.NoError(t, err)
 	require.Equal(t, name, "john")
-	key, err := ke.GetPubKey()
+	key, err := k.GetPubKey()
 	require.NoError(t, err)
 	johnAddr := key.Address()
 
@@ -268,7 +268,7 @@ func TestExportImportKeyRing(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, key.Address(), johnAddr)
-	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.Name, "john")
 
 	addr, err := john.GetAddress()
 	require.NoError(t, err)
@@ -286,9 +286,9 @@ func TestExportImportKeyRing(t *testing.T) {
 	require.Equal(t, key, key2)
 
 	//TODO do we require GetType or pubKeyType is sufficient?
-	//	require.Equal(t, john.GetType(), john2.GetType())
+	require.Equal(t, john.GetType(), john2.GetType())
 }
-*/
+
 
 /* fix migration before fixing this test
 func TestExportImportPubKeyKeyRing(t *testing.T) {

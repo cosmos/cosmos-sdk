@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -25,8 +24,6 @@ func TestDeposits(t *testing.T) {
 
 	fourStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 4)))
 	fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5)))
-	fmt.Println("stake amount", fourStake)
-	fmt.Println("stake amount", fiveStake)
 
 	addr0Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[0])
 	addr1Initial := app.BankKeeper.GetAllBalances(ctx, TestAddrs[1])
@@ -99,16 +96,19 @@ func TestDeposits(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
 	app.GovKeeper.RefundDeposits(ctx, proposalID)
-	app.GovKeeper.DeleteDeposits(ctx, proposalID)
 	deposit, found = app.GovKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])
-	require.False(t, found)
+	require.True(t, found) // deposits will be refunded but not deleted from store
 	require.Equal(t, addr0Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 	require.Equal(t, addr1Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 
-	// Test delete deposits
+	// Test delete and burn deposits
+	proposal, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	require.NoError(t, err)
+	proposalID = proposal.ProposalId
 	_, err = app.GovKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
 	require.NoError(t, err)
 	app.GovKeeper.DeleteAndBurnDeposits(ctx, proposalID)
 	deposits = app.GovKeeper.GetDeposits(ctx, proposalID)
 	require.Len(t, deposits, 0)
+	require.Equal(t, addr0Initial.Sub(fourStake), app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 }

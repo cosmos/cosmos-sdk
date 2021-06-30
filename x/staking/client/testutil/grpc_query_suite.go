@@ -31,11 +31,13 @@ func (s *GRPCQueryTestSuite) SetupSuite() {
 
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 2
-
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
 
-	_, err := s.network.WaitForHeight(1)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	unbond, err := sdk.ParseCoinNormalized("10stake")

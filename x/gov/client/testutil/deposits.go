@@ -29,8 +29,11 @@ func NewDepositTestSuite(cfg network.Config) *DepositTestSuite {
 func (s *DepositTestSuite) SetupSuite() {
 	s.T().Log("setting up test suite")
 
-	s.network = network.New(s.T(), s.cfg)
-	_, err := s.network.WaitForHeight(1)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
@@ -42,7 +45,7 @@ func (s *DepositTestSuite) SetupSuite() {
 	}
 	s.deposits = deposits
 
-	// create 4 proposals for testing
+	// create 3 proposals for testing
 	for i := 0; i < len(deposits); i++ {
 		var exactArgs []string
 		id := i + 1

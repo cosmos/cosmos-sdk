@@ -164,3 +164,61 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 		Metadata: metadata,
 	}, nil
 }
+
+func (k BaseKeeper) DenomOwners(
+	goCtx context.Context,
+	req *types.QueryDenomOwnersRequest,
+) (*types.QueryDenomOwnersResponse, error) {
+
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty denom")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	store := ctx.KVStore(k.storeKey)
+	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
+
+	var denomOwners []*types.DenomOwner
+	pageRes, err := query.FilteredPaginate(
+		balancesStore,
+		req.Pagination,
+		func(key []byte, value []byte, accumulate bool) (bool, error) {
+			var balance sdk.Coin
+			if err := k.cdc.Unmarshal(value, &balance); err != nil {
+				return false, err
+			}
+
+			if req.Denom != balance.Denom {
+				return false, nil
+			}
+
+			if accumulate {
+				address, err := types.AddressFromBalancesStore(key)
+				if err != nil {
+					return false, err
+				}
+
+				denomOwners = append(
+					denomOwners,
+					&types.DenomOwner{
+						Address: address.String(),
+						Balance: balance,
+					},
+				)
+			}
+
+			return true, nil
+		},
+	)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryDenomOwnersResponse{DenomOwners: denomOwners, Pagination: pageRes}, nil
+}

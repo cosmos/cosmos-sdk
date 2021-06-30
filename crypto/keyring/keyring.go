@@ -438,8 +438,10 @@ func (ks keystore) Delete(uid string) error {
 
 	return nil
 }
-
+// TODO probably incorrect 
 func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
+	//TODO remove reduntant functionality, this is implemented in func key
+	/* TODO remove reduntant functionality, this is implemented in func key 
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
 		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
@@ -448,7 +450,12 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 	if len(ik.Data) == 0 {
 		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
 	}
-	return ks.key(string(ik.Data))
+	*/
+	itemKey := addrHexKeyAsString(address)
+	fmt.Println("itemKey", itemKey)
+	
+	return ks.Key(itemKey)
+	//return ks.key(string(ik.Data))
 }
 
 func wrapKeyNotFound(err error, msg string) error {

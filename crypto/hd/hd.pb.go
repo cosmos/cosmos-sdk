@@ -32,7 +32,7 @@ type BIP44Params struct {
 }
 
 func (m *BIP44Params) Reset()         { *m = BIP44Params{} }
-func (m *BIP44Params) String() string { return proto.CompactTextString(m) }
+//func (m *BIP44Params) String() string { return proto.CompactTextString(m) }
 func (*BIP44Params) ProtoMessage()    {}
 func (*BIP44Params) Descriptor() ([]byte, []int) {
 	return fileDescriptor_388362624e554f43, []int{0}

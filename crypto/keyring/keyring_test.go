@@ -289,8 +289,6 @@ func TestExportImportKeyRing(t *testing.T) {
 	require.Equal(t, john.GetType(), john2.GetType())
 }
 
-
-/* fix migration before fixing this test
 func TestExportImportPubKeyKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
@@ -298,16 +296,16 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	algo := hd.Secp256k1
 
 	// CreateMnemonic a private-public key pair and ensure consistency
-	ke, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	k, _, err := kb.NewMnemonic("john", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
-	require.NotEqual(t, ke, "")
-	require.Equal(t, ke.GetName(), "john")
-	key, err := ke.GetPubKey()
+	require.NotNil(t, k)
+	require.Equal(t, k.Name, "john")
+	key, err := k.GetPubKey()
 	require.NoError(t, err)
 	addr := key.Address()
 	john, err := kb.Key("john")
 	require.NoError(t, err)
-	require.Equal(t, john.GetName(), "john")
+	require.Equal(t, john.Name, "john")
 
 	key, err = john.GetPubKey()
 	require.NoError(t, err)
@@ -336,9 +334,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 	err = kb.ImportPubKey("john-pubkey-only", armor)
 	require.NotNil(t, err)
 }
-*/
 
-/* fix migration before fixing this test
 func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -374,9 +370,7 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 	err = kb.ImportPubKey(n2, exported)
 	require.NotNil(t, err)
 }
-*/
 
-/* fix migration before fixing this test
 func TestSeedPhraseKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -388,11 +382,11 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	n1, n2 := "lost-key", "found-again"
 
 	// make sure key works with initial password
-	ke, mnemonic, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	k, mnemonic, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err, "%+v", err)
-	require.Equal(t, n1, ke.GetName())
+	require.Equal(t, n1, k.Name)
 	require.NotEmpty(t, mnemonic)
-	key, err := ke.GetPubKey()
+	key, err := k.GetPubKey()
 	require.NoError(t, err)
 
 	// now, let us delete this key
@@ -402,18 +396,17 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-	params := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
-	hdPath := params.String()
-	newKe, err := kb.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, hd.Secp256k1)
+	hdPath := hd.NewFundraiserParams(0, sdk.CoinType, 0).String()
+	k1, err := kb.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, hd.Secp256k1)
 	require.NoError(t, err)
-	require.Equal(t, n2, newKe.GetName())
-	newKey, err := newKe.GetPubKey()
+	require.Equal(t, n2, k1.Name)
+	newKey, err := k1.GetPubKey()
 	require.NoError(t, err)
 
 	require.Equal(t, key.Address(), newKey.Address())
 	require.Equal(t, key, newKey)
 }
-*/
+
 
 /* fix migration before fixing this test
 func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {

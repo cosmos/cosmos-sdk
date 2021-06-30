@@ -29,12 +29,12 @@ func ShowNodeIDCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			nodeKey, err := p2p.LoadNodeKey(cfg.NodeKeyFile())
+			nodeKeyID, err := p2p.LoadNodeKeyID(cfg.NodeKeyFile())
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(nodeKey.ID)
+			fmt.Println(nodeKeyID)
 			return nil
 		},
 	}

@@ -569,7 +569,7 @@ func (chain *TestChain) CreateTMClientHeader(chainID string, blockHeight int64, 
 	blockID := MakeBlockID(hhash, 3, tmhash.Sum([]byte("part_set")))
 	voteSet := tmtypes.NewVoteSet(chainID, blockHeight, 1, tmproto.PrecommitType, tmValSet)
 
-	commit, err := tmtypes.MakeCommit(blockID, blockHeight, 1, voteSet, signers, timestamp)
+	commit, err := MakeCommit(blockID, blockHeight, 1, voteSet, signers, timestamp)
 	require.NoError(chain.t, err)
 
 	signedHeader := &tmproto.SignedHeader{
@@ -901,4 +901,42 @@ func (chain *TestChain) WriteAcknowledgement(
 	chain.NextBlock()
 
 	return nil
+}
+
+func MakeCommit(blockID tmtypes.BlockID, height int64, round int32,
+	voteSet *tmtypes.VoteSet, validators []tmtypes.PrivValidator, now time.Time) (*tmtypes.Commit, error) {
+
+	// all sign
+	for i := 0; i < len(validators); i++ {
+		pubKey, err := validators[i].GetPubKey(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("can't get pubkey: %w", err)
+		}
+		vote := &tmtypes.Vote{
+			ValidatorAddress: pubKey.Address(),
+			ValidatorIndex:   int32(i),
+			Height:           height,
+			Round:            round,
+			Type:             tmproto.PrecommitType,
+			BlockID:          blockID,
+			Timestamp:        now,
+		}
+
+		_, err = signAddVote(validators[i], vote, voteSet)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return voteSet.MakeCommit(), nil
+}
+
+func signAddVote(privVal tmtypes.PrivValidator, vote *tmtypes.Vote, voteSet *tmtypes.VoteSet) (signed bool, err error) {
+	v := vote.ToProto()
+	err = privVal.SignVote(context.Background(), voteSet.ChainID(), v)
+	if err != nil {
+		return false, err
+	}
+	vote.Signature = v.Signature
+	return voteSet.AddVote(vote)
 }

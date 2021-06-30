@@ -62,19 +62,19 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, fmt.Errorf("invalid mnemonic")
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	nodeKey, err := p2p.LoadOrGenNodeKeyID(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err
 	}
 
-	nodeID = string(nodeKey.ID)
+	nodeID = string(nodeKey)
 
-	pvKeyFile := config.PrivValidator.Key
+	pvKeyFile := config.PrivValidator.KeyFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
 		return "", nil, err
 	}
 
-	pvStateFile := config.PrivValidator.State
+	pvStateFile := config.PrivValidator.StateFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
 		return "", nil, err
 	}

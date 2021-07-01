@@ -111,7 +111,7 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc := suite.encodingConfig.Marshaler
+			cdc := suite.encodingConfig.Codec
 			txJSONEncoder := suite.encodingConfig.TxConfig.TxJSONEncoder()
 
 			tc.malleate()
@@ -178,7 +178,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc := suite.encodingConfig.Marshaler
+			cdc := suite.encodingConfig.Codec
 
 			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
 			stakingGenesisState := staking.ExportGenesis(suite.ctx, suite.app.StakingKeeper)

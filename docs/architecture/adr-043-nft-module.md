@@ -107,6 +107,7 @@ message MsgSend {
   string reveiver = 4;
 }
 message MsgSendResponse {}
+```
 
 `MsgSend` can be used to transfer the ownership of an NFT to another address.
 
@@ -126,6 +127,7 @@ func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSend
 
   return &types.MsgSendResponse{}, nil
 }
+```
 
 The query service methods for the `x/nft` module are:
 

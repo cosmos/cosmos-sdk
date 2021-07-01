@@ -105,6 +105,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper))
 	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+
+	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
+	}
 }
 
 // NewAppModule creates a new AppModule object

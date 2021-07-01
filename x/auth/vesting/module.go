@@ -3,6 +3,7 @@ package vesting
 import (
 	"encoding/json"
 
+	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -52,6 +53,9 @@ func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	return nil
 }
+
+// RegisterRESTRoutes registers the REST routes for the vesting module. Currently, this is a no-op.
+func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the module's gRPC Gateway routes. Currently, this
 // is a no-op.

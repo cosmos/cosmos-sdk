@@ -144,15 +144,15 @@ func (s *Server) registerMetrics() {
 	s.Router.HandleFunc("/metrics", metricsHandler).Methods("GET")
 }
 
-// ErrorResponse defines the attributes of a JSON error response.
-type ErrorResponse struct {
+// errorResponse defines the attributes of a JSON error response.
+type errorResponse struct {
 	Code  int    `json:"code,omitempty"`
 	Error string `json:"error"`
 }
 
-// NewErrorResponse creates a new ErrorResponse instance.
-func NewErrorResponse(code int, err string) ErrorResponse {
-	return ErrorResponse{Code: code, Error: err}
+// newErrorResponse creates a new errorResponse instance.
+func newErrorResponse(code int, err string) errorResponse {
+	return errorResponse{Code: code, Error: err}
 }
 
 // writeErrorResponse prepares and writes a HTTP error
@@ -160,5 +160,5 @@ func NewErrorResponse(code int, err string) ErrorResponse {
 func writeErrorResponse(w http.ResponseWriter, status int, err string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_, _ = w.Write(legacy.Cdc.MustMarshalJSON(NewErrorResponse(0, err)))
+	_, _ = w.Write(legacy.Cdc.MustMarshalJSON(newErrorResponse(0, err)))
 }

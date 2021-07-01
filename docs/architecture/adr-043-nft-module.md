@@ -3,6 +3,7 @@
 ## Changelog
 
 - 05.05.2021: Initial Draft
+- 07.01.2021: Incorporate Billy's feedback
 
 ## Status
 
@@ -10,7 +11,7 @@ DRAFT
 
 ## Abstract
 
-This ADR defines the `x/nft` module which as a generic implementation of the NFT API, roughly "compatible" with ERC721.
+This ADR defines the `x/nft` module which is a generic storage of NFTs, roughly "compatible" with ERC721.
 
 ## Context
 
@@ -23,7 +24,7 @@ As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/906
 - DID NFTs
 - interNFT
 
-Since NFTs functions/use cases are tightly connected with their logic, it is almost impossible to support all the NFTs' use cases in one Cosmos SDK module by defining and implementing different transaction types.
+Since functions/use cases of NFTs are tightly connected with their logic, it is almost impossible to support all the NFTs' use cases in one Cosmos SDK module by defining and implementing different transaction types.
 
 Considering generic usage and compatibility of interchain protocols including IBC and Gravity Bridge, it is preferred to have a generic NFT module design which handles the generic NFTs logic.
 
@@ -35,34 +36,36 @@ The current design is based on the work done by [IRISnet team](https://github.co
 
 We will create a module `x/nft`, which contains the following functionality:
 
-- Store and transfer NFTs utilizing `x/bank`.
-- Mint and burn NFTs.
-- Use `x/authz` to implement ERC721-style authorization.
+- Store NFTs and track their ownership.
+- Expose `Keeper` interface for composing modules to mint and burn NFTs.
+- Expose external `Message` interface for users to transfer ownership of their NFTs.
 - Query NFTs and their supply information.
 
 ### Types
 
-#### Metadata
+#### Genre
 
-We define a `Metadata` model for `NFT Type`, which is comparable to an ERC721 contract on Ethereum, under which a collection of `NFT`s can be created and managed.
+We define a model for NFT **Genre**, which is comparable to an ERC721 Contract on Ethereum, under which a collection of NFTs can be created and managed.
 
 ```protobuf
-message Metadata {
-  string type          = 1; // Required, unique key, alphanumeric
-  string name          = 2;
-  string symbol        = 3;
-  string description   = 4;
-  bool mint_restricted = 5;
-  bool edit_restricted = 6;
+message Genre {
+  string id              = 1;
+  string name            = 2;
+  string symbol          = 3;
+  string description     = 4;
+  string uri             = 5;
+  bool mint_restricted   = 10;
+  bool update_restricted = 11;
 }
 ```
 
-- The `type` is the identifier of the NFT type/class.
-- The `name` is a descriptive name of this NFT type.
-- The `symbol` is the symbol usually shown on exchanges for this NFT type.
-- The `description` is a detailed description of this NFT type.
-- The `mint_restricted` flag, if set to true, indicates that only the issuer of this type can mint NFTs for it.
-- The `edit_restricted` flag, if set to true, indicates that NFTs of this type cannot be edited once minted.
+- `id` is an alphanumeric identifier of the NFT genre; it is used as the primary index for storing the genre; _required_
+- `name` is a descriptive name of the NFT genre; _optional_
+- `symbol` is the symbol usually shown on exchanges for the NFT genre; _optional_
+- `description` is a detailed description of the NFT genre; _optional_
+- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT genre ([OpenSea example](https://docs.opensea.io/docs/contract-level-metadata)); _optional_
+- `mint_restricted` flag, if set to true, indicates that only the genre owner can mint NFTs, otherwise anyone can do so; _required_
+- `udpate_restricted` flag, if set to true, indicates that no one can update NFTs, otherwise only NFT owners can do so; _required_
 
 #### NFT
 
@@ -70,280 +73,110 @@ We define a general model for `NFT` as follows.
 
 ```protobuf
 message NFT {
-  string type              = 1; // The type of this NFT
-  string id                = 2; // The identifier of this NFT
-  string uri               = 3; 
-  google.protobuf.Any data = 4;
+  string genre = 1;
+  string id    = 2;
+  string uri   = 3;
+  string data  = 10;
 }
 ```
 
-The NFT conforms to the following specifications:
-
-- The `id` is an immutable field used as a unique identifier within the scope of an NFT type. It is specified by the creator of the NFT and may be expanded to use DID in the future. NFT identifiers don't currently have a naming convention but can be used in association with existing Hub attributes, e.g., defining an NFT's identifier as an immutable Hub address allows its integration into existing Hub account management modules.
-  We envision that identifiers can accommodate mint and transfer actions.
-  The `id` is also the primary index for storing NFTs.
-
+- `genre` is identifier of genre where the NFT belongs; _required_
+- `id` is an alphanumeric identifier of the NFT, unique within the scope of its genre. It is specified by the creator of the NFT and may be expanded to use DID in the future. `genre` combined with `id` uniquely identifies an NFT and is used as the primary index for storing the NFT; _required_
   ```
-  {type}/{id} --> NFT (bytes)
+  {genre}/{id} --> NFT (bytes)
   ```
+- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT (Ref: [ERC721 standard and OpenSea extension](https://docs.opensea.io/docs/metadata-standards)).
+- `data` is a field that CAN be used by composing modules to specify additional properties for the NFT; _optional_
 
-- The `uri` points to an immutable off-chain resource containing more attributes about his NFT.
+This ADR doesn't specify values that `data` can take; however, best practices recommend upper-level NFT modules clearly specify their contents.  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, the field's existence allows basic informational/UI functionality.
 
-- The `data` is mutable field and allows attaching special information to the NFT, for example:
-
-  - metadata such as the title of the work and URI.
-  - immutable data and parameters (such actual NFT data, hash or seed for generators).
-  - mutable data and parameters that change when transferring or when certain criteria are met (such as provenance).
-
-  This ADR doesn't specify values that this field can take; however, best practices recommend upper-level NFT modules clearly specify their contents.
-  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification,
-  the field's existence allows basic informational/UI functionality.
-
-- The ownership of nft is controlled by the `x/bank` module and the `metadata` part will be converted to `banktypes.Metadata` is stored in the `x/bank` module.
+### `Keeper` Interface (TODO)
+Other business logic implementations should be defined in composing modules that import this NFT module and use its `Keeper`.
 
 ### `Msg` Service
 
 ```protobuf
 service Msg {
-  rpc Issue(MsgIssue) returns (MsgIssueResponse);
-  rpc Mint(MsgMint)   returns (MsgMintResponse);
-  rpc Edit(MsgEdit)   returns (MsgEditResponse);
-  rpc Send(MsgSend)   returns (MsgMsgSendResponse);
-  rpc Burn(MsgBurn)   returns (MsgBurnResponse);
+  rpc Send(MsgSend)         returns (MsgSendResponse);
 }
-
-message MsgIssue {
-  cosmos.nft.v1beta1.Metadata metadata = 1;
-  string issuer                        = 2;
-}
-message MsgIssueResponse {}
-
-message MsgMint {
-  cosmos.nft.v1beta1.NFT nft = 1;
-  string minter              = 2;
-}
-message MsgMintResponse {}
-
-message MsgEdit {
-  cosmos.nft.v1beta1.NFT nft = 1;
-  string editor              = 2;
-}
-message MsgEditResponse {}
 
 message MsgSend {
-  string type     = 1;
+  string genre    = 1;
   string id       = 2;
   string sender   = 3;
   string reveiver = 4;
 }
 message MsgSendResponse {}
 
-message MsgBurn {
-  string type      = 1;
-  string id        = 2;
-  string destroyer = 3;
-}
-message MsgBurnResponse {}
-```
-
-`MsgIssue` can be used to issue an NFT type/class, just like deploying an ERC721 contract on Ethereum.
-
-`MsgMint` allows users to create new NFTs for a given type.
-
-`MsgEdit` allows users to edit/update their NFTs.
-
 `MsgSend` can be used to transfer the ownership of an NFT to another address.
-**Note**: we could use `x/bank` to handle NFT transfer directly and do without this service. It's only for the sake of completeness of an ERC721 compatible API that we may choose to keep this service.
 
-`MsgBurn` allows users to destroy their NFTs.
-
-Other business logic implementations should be defined in other upper-level modules that import this NFT module. The implementation example of the server is as follows:
+The implementation outline of the server is as follows:
 
 ```go
 type msgServer struct{
   k Keeper
 }
 
-func (m msgServer) Issue(ctx context.Context, msg *types.MsgIssue) (*types.MsgIssueResponse, error) {
-  m.keeper.AssertTypeNotExist(msg.Metadata.Type)
-
-  bz := m.keeper.cdc.MustMarshalBinaryBare(msg.Metadata)
-  typeStore := m.keeper.getTypeStore(ctx)
-  typeStore.Set(msg.Type, bz)
-  
-  bz := m.keeper.cdc.MustMarshalBinaryBare(msg.Issuer)
-  typeOwnerStore := m.keeper.getTypeOwnerStore(ctx)
-  typeOwnerStore.Set(msg.Type, bz)
-  
-  return &types.MsgIssueResponse{}, nil
-}
-
-func (m msgServer) Mint(ctx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
-  m.keeper.AssertTypeExist(msg.NFT.Type)
-  m.keeper.AssertCanMint(msg.NFT.Type, msg.Minter)
-  
-  baseDenom := fmt.Sprintf("%s-%s", msg.NFT.Type, msg.NFT.Id)
-  bkMetadata := bankTypes.Metadata{
-    Symbol:      metadata.Symbol,
-    Base:        baseDenom,
-    Name:        metadata.Name,
-    URI:         msg.NFT.URI,
-    Description: metadata.Description,
-  }
-  
-  m.keeper.bank.SetDenomMetaData(ctx, bkMetadata)
-  mintedCoins := sdk.NewCoins(sdk.NewCoin(baseDenom, 1))
-  m.keeper.bank.MintCoins(types.ModuleName, mintedCoins)
-  m.keeper.bank.SendCoinsFromModuleToAccount(types.ModuleName, msg.Owner, mintedCoins)
-  
-  bz := m.keeper.cdc.MustMarshalBinaryBare(&msg.NFT)
-  
-  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.NFT.Type)
-  nftStoreByType.Set(msg.NFT.Id, bz)
-  
-  nftStore := m.keeper.getNFTStore(ctx)
-  nftStore.Set(baseDenom, bz)
-  
-  return &types.MsgMintResponse{}, nil
-}
-
-func (m msgServer) Edit(ctx context.Context, msg *types.MsgEdit) (*types.MsgEditResponse, error) {
-  m.keeper.AssertNFTExist(msg.Type, msg.Id)
-  m.keeper.AssertCanEdit(msg.Type, msg.Id, msg.Editor)
-
-  bz := m.keeper.cdc.MustMarshalBinaryBare(&msg.NFT)
-  
-  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.NFT.Type)
-  nftStoreByType.Set(msg.NFT.Id, bz)
-  
-  return &types.MsgEditResponse{}, nil
-}
-
 func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
-  m.keeper.AssertNFTExist(msg.Type, msg.Id)
+  // check current ownership
+  assertEqual(msg.Sender, m.k.GetNftOwner(msg.Genre, msg.Id))
 
-  sentCoins := sdk.NewCoins()  
-  baseDenom := fmt.Sprintf("%s-%s", nft.Type, nft.Id)
-  sentCoins = sentCoins.Add(sdk.NewCoin(baseDenom, 1)) 
-  m.keeper.bank.SendCoins(ctx, msg.Sender, msg.Reveiver, sentCoins)
-  
+  // change ownership mapping
+  m.k.SetNftOwner(msg.Genre, msg.Id, msg.Receiver)
+
   return &types.MsgSendResponse{}, nil
 }
-
-func (m Keeper) Burn(ctx sdk.Context, msg *types.MsgBurn) (types.MsgBurnResponse,error) {
-  m.keeper.AssertNFTExist(msg.Type, msg.Id)
-
-  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.Type)
-  nft := nftStoreByType.Get(msg.Id)
-
-  baseDenom := fmt.Sprintf("%s-%s", msg.Type, msg.Id)
-  coins := sdk.NewCoins(sdk.NewCoin(baseDenom, 1))
-  m.keeper.bank.SendCoinsFromAccountToModule(ctx, msg.Destroyer, types.ModuleName, coins)
-  m.keeper.bank.BurnCoins(ctx, types.ModuleName, coins)
-
-  // Delete bank.Metadata (keeper method not available)
-  
-  nftStoreByType := m.keeper.getNFTStoreByType(ctx, msg.NFT.Type)
-  nftStoreByType.Delete(msg.Id)
-  
-  nftStore := m.keeper.getNFTStore(ctx)
-  nftStore.Delete(baseDenom)
-
-  return &types.MsgBurnResponse{}, nil
-}
-```
-
-The upper application calls those methods by holding the MsgClient instance of the `x/nft` module. The execution authority of msg is guaranteed by the OCAPs mechanism.
 
 The query service methods for the `x/nft` module are:
 
 ```proto
 service Query {
 
-  // NFT queries NFT details based on id.
-  rpc NFT(QueryNFTRequest) returns (QueryNFTResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{id}";
-  }
-
-  // NFTs queries all NFTs based on the optional owner.
-  rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts";
-  }
-
-  // NFTsOf queries all NFTs based on the type.
-  rpc NFTsOf(QueryNFTsOfRequest) returns (QueryNFTsOfResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{type}";
-  }
-
-  // Supply queries the number of nft based on the type, same as totalSupply of ERC721
-  rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{type}";
-  }
-
-  // Balance queries the number of NFTs based on the owner and type, same as balanceOf of ERC721
+  // Balance queries the number of NFTs based on the genre and owner, same as balanceOf in ERC721
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{owner}/{type}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{genre}/{owner}";
   }
 
-  // Type queries the definition of a given type
-  rpc Type(QueryTypeRequest) returns (QueryTypeResponse) {
-      option (google.api.http).get = "/cosmos/nft/v1beta1/types/{type}";
+  // Owner queries the owner of the NFT based on the genre and id, same as ownerOf in ERC721
+  rpc Owner(QueryOwnerRequest) returns (QueryOwnerResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/owner/{genre}/{id}";
   }
 
-  // Types queries all the types
-  rpc Types(QueryTypesRequest) returns (QueryTypesResponse) {
-      option (google.api.http).get = "/cosmos/nft/v1beta1/types";
+  // Supply queries the number of NFTs based on the genre, same as totalSupply in ERC721Enumerable
+  rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{genre}";
   }
-}
 
-// QueryNFTRequest is the request type for the Query/NFT RPC method
-message QueryNFTRequest {
-  string id = 1;
-}
+  // NFTsOf queries all NFTs based on the genre, similar to tokenByIndex in ERC721Enumerable
+  rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{genre}";
+  }
 
-// QueryNFTResponse is the response type for the Query/NFT RPC method
-message QueryNFTResponse {
-  cosmos.nft.v1beta1.NFT nft = 1;
-}
+  // NFTsOfOwner queries the NFTs based on the genre and owner, similar to tokenOfOwnerByIndex in ERC721Enumerable
+  rpc NFTsOfOwner(QueryNFTsOfOwnerRequest) returns (QueryNFTsResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{genre}/{owner}";
+  }
 
-// QueryNFTsRequest is the request type for the Query/NFTs RPC method
-message QueryNFTsRequest {
-  string                                 owner      = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
+  // NFT queries NFT details based on genre and id.
+  rpc NFT(QueryNFTRequest) returns (QueryNFTResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{genre}/{id}";
+  }
 
-// QueryNFTsResponse is the response type for the Query/NFTs RPC method
-message QueryNFTsResponse {
-  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
+  // Genre queries the definition of a given genre
+  rpc Genre(QueryGenreRequest) returns (QueryGenreResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/genres/{genre}";
+  }
 
-// QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
-message QueryNFTsOfRequest {
-  string                                 type       = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryNFTsOfResponse is the response type for the Query/NFTsOf RPC method
-message QueryNFTsOfResponse {
-  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QuerySupplyRequest is the request type for the Query/Supply RPC method
-message QuerySupplyRequest{
-  string type = 1;
-}
-
-// QuerySupplyResponse is the response type for the Query/Supply RPC method
-message QuerySupplyResponse{
-  uint64 amount = 1;
+  // Types queries all the genres
+  rpc Genres(QueryGenresRequest) returns (QueryGenresResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/genres";
+  }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method
-message QueryBalanceRequest{
-  string owner = 1;
-  string type  = 2;
+message QueryBalanceRequest {
+  string genre = 1;
+  string owner = 2;
 }
 
 // QueryBalanceResponse is the response type for the Query/Balance RPC method
@@ -351,25 +184,76 @@ message QueryBalanceResponse{
   uint64 amount = 1;
 }
 
-// QueryTypeRequest is the request type for the Query/Type RPC method
-message QueryTypeRequest {
-  string type = 1;
+// QueryOwnerRequest is the request type for the Query/Owner RPC method
+message QueryOwnerRequest {
+  string genre = 1;
+  string id    = 2;
 }
 
-// QueryTypeResponse is the response type for the Query/Type RPC method
-message QueryTypeResponse {
-  cosmos.nft.v1beta1.Metadata metadata = 1;
+// QueryOwnerResponse is the response type for the Query/Owner RPC method
+message QueryOwnerResponse{
+  string owner = 1;
 }
 
-// QueryTypesRequest is the request type for the Query/Types RPC method
-message QueryTypesRequest {
+// QuerySupplyRequest is the request type for the Query/Supply RPC method
+message QuerySupplyRequest {
+  string genre = 1;
+}
+
+// QuerySupplyResponse is the response type for the Query/Supply RPC method
+message QuerySupplyResponse {
+  uint64 amount = 1;
+}
+
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
+message QueryNFTsRequest {
+  string                                 genre      = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsOfOwnerRequest is the request type for the Query/NFTsOfOwner RPC method
+message QueryNFTsOfOwnerRequest {
+  string                                 genre      = 1;
+  string                                 owner      = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
+
+// QueryNFTsResponse is the response type for the Query/NFTs and Query/NFTsOfOwner RPC method
+message QueryNFTsResponse {
+  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTRequest is the request type for the Query/NFT RPC method
+message QueryNFTRequest {
+  string genre = 1;
+  string id    = 2;
+}
+
+// QueryNFTResponse is the response type for the Query/NFT RPC method
+message QueryNFTResponse {
+  cosmos.nft.v1beta1.NFT nft = 1;
+}
+
+// QueryGenreRequest is the request type for the Query/Genre RPC method
+message QueryGenreRequest {
+  string genre = 1;
+}
+
+// QueryGenreResponse is the response type for the Query/Genre RPC method
+message QueryGenreResponse {
+  cosmos.nft.v1beta1.Genre genre = 1;
+}
+
+// QueryGenresRequest is the request type for the Query/Genres RPC method
+message QueryGenresRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryTypesResponse is the response type for the Query/Types RPC method
-message QueryTypesResponse {
-  repeated cosmos.nft.v1beta1.Metadata   metadatas = 1;
+// QueryGenresResponse is the response type for the Query/Genres RPC method
+message QueryGenresResponse {
+  repeated cosmos.nft.v1beta1.Genre      genres     = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 ```

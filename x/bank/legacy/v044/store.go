@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	v043 "github.com/cosmos/cosmos-sdk/x/bank/legacy/v043"
 )
 
 // MigrateStore performs in-place store migrations from v0.43 to v0.44. The
@@ -18,7 +18,7 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec)
 }
 
 func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	oldBalancesStore := prefix.NewStore(store, types.BalancesPrefix)
+	oldBalancesStore := prefix.NewStore(store, v043.BalancesPrefix)
 
 	oldBalancesIter := oldBalancesStore.Iterator(nil, nil)
 	defer oldBalancesIter.Close()
@@ -31,14 +31,14 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		addr, err := types.AddressFromBalancesStore(oldBalancesIter.Key())
+		addr, err := v043.AddressFromBalancesStore(oldBalancesIter.Key())
 		if err != nil {
 			return err
 		}
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 		if !ok {
-			denomPrefixStore = prefix.NewStore(store, types.CreateDenomPrefix(balance.Denom))
+			denomPrefixStore = prefix.NewStore(store, CreateDenomPrefix(balance.Denom))
 			denomPrefixStores[balance.Denom] = denomPrefixStore
 		}
 

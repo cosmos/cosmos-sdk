@@ -76,6 +76,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9457](https://github.com/cosmos/cosmos-sdk/pull/9457) Add amino support for x/authz and x/feegrant Msgs.
 * [\#9498](https://github.com/cosmos/cosmos-sdk/pull/9498) Added `Codec: codec.Codec` attribute to `client/Context` structure.
 * [\#9540](https://github.com/cosmos/cosmos-sdk/pull/9540) Add output flag for query txs command.
+* (errors) [\#8845](https://github.com/cosmos/cosmos-sdk/pull/8845) Add `Error.Wrap` handy method
 
 ### Client Breaking Changes
 
@@ -118,6 +119,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) `client/tx.PrepareFactory` has been converted to a private function, as it's only used internally.
 * (auth/tx) [\#8926](https://github.com/cosmos/cosmos-sdk/pull/8926) The `ProtoTxProvider` interface used as a workaround for transaction simulation has been removed.
 * (x/bank) [\#8798](https://github.com/cosmos/cosmos-sdk/pull/8798) `GetTotalSupply` is removed in favour of `GetPaginatedTotalSupply`
+* (keyring) [\#8739](https://github.com/cosmos/cosmos-sdk/pull/8739) Rename InfoImporter -> LegacyInfoImporter.
 * (x/bank/types) [\#9061](https://github.com/cosmos/cosmos-sdk/pull/9061) `AddressFromBalancesStore` now returns an error for invalid key instead of panic.
 * (x/auth) [\#9144](https://github.com/cosmos/cosmos-sdk/pull/9144) The `NewTxTimeoutHeightDecorator` antehandler has been converted from a struct to a function.
 * (codec) [\#9226](https://github.com/cosmos/cosmos-sdk/pull/9226) Rename codec interfaces and methods, to follow a general Go interfaces:
@@ -155,16 +157,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (store) [\#8012](https://github.com/cosmos/cosmos-sdk/pull/8012) Implementation of ADR-038 WriteListener and listen.KVStore
 * (x/bank) [\#8614](https://github.com/cosmos/cosmos-sdk/issues/8614) Add `Name` and `Symbol` fields to denom metadata
 * (x/auth) [\#8522](https://github.com/cosmos/cosmos-sdk/pull/8522) Allow to query all stored accounts
 * (crypto/types) [\#8600](https://github.com/cosmos/cosmos-sdk/pull/8600) `CompactBitArray`: optimize the `NumTrueBitsBefore` method and add an `Equal` method.
 * (x/upgrade) [\#8743](https://github.com/cosmos/cosmos-sdk/pull/8743) Add tracking module versions as per ADR-041
 * (types) [\#8962](https://github.com/cosmos/cosmos-sdk/issues/8962) Add `Abs()` method to `sdk.Int`.
 * (x/bank) [\#8950](https://github.com/cosmos/cosmos-sdk/pull/8950) Improve efficiency on supply updates.
-* (store) [\#8012](https://github.com/cosmos/cosmos-sdk/pull/8012) Implementation of ADR-038 WriteListener and listen.KVStore
+* (store) [\#8811](https://github.com/cosmos/cosmos-sdk/pull/8811) store/cachekv: use typed `types/kv.List` instead of `container/list.List`. The change brings time spent on the time assertion cummulatively to 580ms down from 6.88s.
+* (keyring) [\#8826](https://github.com/cosmos/cosmos-sdk/pull/8826) add trust to macOS Keychain for calling apps by default, avoiding repeating keychain popups that appears when dealing with keyring (key add, list, ...) operations.
 * (makefile) [\#7933](https://github.com/cosmos/cosmos-sdk/issues/7933) Use Docker to generate swagger files.
 * (crypto/types) [\#9196](https://github.com/cosmos/cosmos-sdk/pull/9196) Fix negative index accesses in CompactUnmarshal,GetIndex,SetIndex
 * (cli) [\#9201](https://github.com/cosmos/cosmos-sdk/pull/9201) Fix init --recover not working.
+* (makefile) [\#9192](https://github.com/cosmos/cosmos-sdk/pull/9192) Reuse proto containers in proto related jobs.
 * [\#9205](https://github.com/cosmos/cosmos-sdk/pull/9205) Improve readability in `abci` handleQueryP2P
 * [\#9231](https://github.com/cosmos/cosmos-sdk/pull/9231) Remove redundant staking errors.
 * [\#9314](https://github.com/cosmos/cosmos-sdk/pull/9314) Update Rosetta SDK to upstream's latest release.
@@ -173,6 +178,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [\#9423](https://github.com/cosmos/cosmos-sdk/pull/9423) Staking delegations now returns empty list instead of rpc error when no records found.
 * (x/auth) [\#9553](https://github.com/cosmos/cosmos-sdk/pull/9553) The `--multisig` flag now accepts both a name and address.
 * (baseapp) [\#9578](https://github.com/cosmos/cosmos-sdk/pull/9578) Return `Baseapp`'s `trace` value for logging error stack traces.
+
+
 
 ### Bug Fixes
 
@@ -190,6 +197,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9454](https://github.com/cosmos/cosmos-sdk/pull/9454) Fix testnet command with --node-dir-prefix accepts `-` and change `node-dir-prefix token` to `testtoken`.
 * (keyring) [\#9562](https://github.com/cosmos/cosmos-sdk/pull/9563) fix keyring kwallet backend when using with empty wallet.
 * (keyring) [\#9583](https://github.com/cosmos/cosmos-sdk/pull/9583) Fix correct population of legacy `Vote.Option` field for votes with 1 VoteOption of weight 1.
+* (x/distinction) [\#8918](https://github.com/cosmos/cosmos-sdk/pull/8918) Fix module's parameters validation.
 
 ### Deprecated
 
@@ -263,7 +271,7 @@ This release fixes a security vulnerability identified in x/bank.
 ### Bug Fixes
 
 * (crypto) [\#8841](https://github.com/cosmos/cosmos-sdk/pull/8841) Fix legacy multisig amino marshaling, allowing migrations to work between v0.39 and v0.40+.
-* (cli) [\#8873](https://github.com/cosmos/cosmos-sdk/pull/8873) add --output-document to multisign-batch.
+* (cli tx) [\8873](https://github.com/cosmos/cosmos-sdk/pull/8873) add missing `--output-document` option to `app tx multisign-batch`.
 
 ## [v0.42.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.1) - 2021-03-10
 

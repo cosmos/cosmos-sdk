@@ -16,13 +16,10 @@ func GetRequest(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = res.Body.Close(); err != nil {
 		return nil, err
 	}
 
@@ -36,14 +33,11 @@ func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error while sending post request: %w", err)
 	}
+	defer res.Body.Close()
 
 	bz, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
-	}
-
-	if err = res.Body.Close(); err != nil {
-		return nil, err
 	}
 
 	return bz, nil

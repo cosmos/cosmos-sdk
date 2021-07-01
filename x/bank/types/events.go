@@ -47,7 +47,16 @@ func NewCoinReceivedEvent(receiver sdk.AccAddress, amount sdk.Coins) sdk.Event {
 
 // NewCoinMintEvent construct a new coin minted sdk.Event
 // nolint: interfacer
-func NewCoinMintEvent(minter sdk.AccAddress, amount sdk.Coins) sdk.Event {
+func NewCoinMintEvent(minter sdk.AccAddress, amount sdk.Coins, receiver sdk.AccAddress) sdk.Event {
+	if len(receiver) > 0 {
+		return sdk.NewEvent(
+			EventTypeCoinMint,
+			sdk.NewAttribute(AttributeKeyMinter, minter.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amount.String()),
+			sdk.NewAttribute(AttributeKeyReceiver, receiver.String()),
+		)
+
+	}
 	return sdk.NewEvent(
 		EventTypeCoinMint,
 		sdk.NewAttribute(AttributeKeyMinter, minter.String()),

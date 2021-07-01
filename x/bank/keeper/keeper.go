@@ -364,6 +364,43 @@ func (k BaseKeeper) UndelegateCoinsFromModuleToAccount(
 // MintCoins creates new coins from thin air and adds it to the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error {
+	return k.mint(ctx, moduleName, nil, amounts)
+}
+
+// MintCoinsToAddress creates new coins from thin air using module account and puts them in
+// receiver balance. It will panic if the module account does not exist or is unauthorized.
+func (k BaseKeeper) MintCoinsToAddress(ctx sdk.Context, moduleName string, receiver sdk.AccAddress, amounts sdk.Coins) error {
+	return k.mint(ctx, moduleName, receiver, amounts)
+}
+
+// mint is a common function for minting new coins. It mints from module to receiver if receiver
+// is not nil. Otherwise the coins are minted to the module itself.
+func (k BaseKeeper) mint(ctx sdk.Context, moduleName string, receiver sdk.AccAddress, amounts sdk.Coins) error {
+	mAcc := k.assertModuleIsMinter(ctx, moduleName).GetAddress()
+	destination := receiver
+	if receiver == nil {
+		destination = mAcc
+	}
+	if err := k.addCoins(ctx, destination, amounts); err != nil {
+		return err
+	}
+
+	for _, amount := range amounts {
+		supply := k.GetSupply(ctx, amount.GetDenom())
+		k.setSupply(ctx, supply.Add(amount))
+	}
+
+	k.Logger(ctx).
+		Info("minted coins from module account",
+			"amount", amounts.String(), "from", moduleName, "to", destination)
+
+	ctx.EventManager().EmitEvent(
+		types.NewCoinMintEvent(mAcc, amounts, receiver),
+	)
+	return nil
+}
+
+func (k BaseKeeper) assertModuleIsMinter(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI {
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
 	if acc == nil {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", moduleName))
@@ -372,27 +409,7 @@ func (k BaseKeeper) MintCoins(ctx sdk.Context, moduleName string, amounts sdk.Co
 	if !acc.HasPermission(authtypes.Minter) {
 		panic(sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "module account %s does not have permissions to mint tokens", moduleName))
 	}
-
-	err := k.addCoins(ctx, acc.GetAddress(), amounts)
-	if err != nil {
-		return err
-	}
-
-	for _, amount := range amounts {
-		supply := k.GetSupply(ctx, amount.GetDenom())
-		supply = supply.Add(amount)
-		k.setSupply(ctx, supply)
-	}
-
-	logger := k.Logger(ctx)
-	logger.Info("minted coins from module account", "amount", amounts.String(), "from", moduleName)
-
-	// emit mint event
-	ctx.EventManager().EmitEvent(
-		types.NewCoinMintEvent(acc.GetAddress(), amounts),
-	)
-
-	return nil
+	return acc
 }
 
 // BurnCoins burns coins deletes coins from the balance of the module account.

@@ -14,6 +14,7 @@ import (
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	module "github.com/cosmos/cosmos-sdk/types/module"
 	gomock "github.com/golang/mock/gomock"
+	mux "github.com/gorilla/mux"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
 	types1 "github.com/tendermint/tendermint/abci/types"
@@ -132,6 +133,18 @@ func (m *MockAppModuleBasic) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 func (mr *MockAppModuleBasicMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterLegacyAminoCodec), arg0)
+}
+
+// RegisterRESTRoutes mocks base method.
+func (m *MockAppModuleBasic) RegisterRESTRoutes(arg0 client.Context, arg1 *mux.Router) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
+}
+
+// RegisterRESTRoutes indicates an expected call of RegisterRESTRoutes.
+func (mr *MockAppModuleBasicMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModuleBasic)(nil).RegisterRESTRoutes), arg0, arg1)
 }
 
 // ValidateGenesis mocks base method.
@@ -289,6 +302,18 @@ func (m *MockAppModuleGenesis) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino)
 func (mr *MockAppModuleGenesisMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterLegacyAminoCodec), arg0)
+}
+
+// RegisterRESTRoutes mocks base method.
+func (m *MockAppModuleGenesis) RegisterRESTRoutes(arg0 client.Context, arg1 *mux.Router) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
+}
+
+// RegisterRESTRoutes indicates an expected call of RegisterRESTRoutes.
+func (mr *MockAppModuleGenesisMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModuleGenesis)(nil).RegisterRESTRoutes), arg0, arg1)
 }
 
 // ValidateGenesis mocks base method.
@@ -526,6 +551,18 @@ func (m *MockAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
 func (mr *MockAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockAppModule)(nil).RegisterLegacyAminoCodec), arg0)
+}
+
+// RegisterRESTRoutes mocks base method.
+func (m *MockAppModule) RegisterRESTRoutes(arg0 client.Context, arg1 *mux.Router) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RegisterRESTRoutes", arg0, arg1)
+}
+
+// RegisterRESTRoutes indicates an expected call of RegisterRESTRoutes.
+func (mr *MockAppModuleMockRecorder) RegisterRESTRoutes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterRESTRoutes", reflect.TypeOf((*MockAppModule)(nil).RegisterRESTRoutes), arg0, arg1)
 }
 
 // RegisterServices mocks base method.

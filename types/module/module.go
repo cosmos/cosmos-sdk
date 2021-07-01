@@ -106,6 +106,13 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEn
 	return nil
 }
 
+// RegisterRESTRoutes registers all module rest routes
+func (bm BasicManager) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	for _, b := range bm {
+		b.RegisterRESTRoutes(clientCtx, rtr)
+	}
+}
+
 // RegisterGRPCGatewayRoutes registers all module rest routes
 func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *runtime.ServeMux) {
 	for _, b := range bm {

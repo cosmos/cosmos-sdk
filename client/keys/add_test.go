@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
+// TODO fix that
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())

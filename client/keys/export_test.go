@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
+// TODO fix test
 func Test_runExportCmd(t *testing.T) {
 	cmd := ExportKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())

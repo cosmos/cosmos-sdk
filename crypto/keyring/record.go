@@ -36,6 +36,11 @@ func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local
 
 	privKeyType := privKey.Type()
 
+	// TODO fix that cdc.Marshal(privKey)
+	// ERROR cannot use privKey (variable of type "github.com/cosmos/cosmos-sdk/crypto/types".PrivKey) as 
+	//codec.ProtoMarshaler value in argument to cdc.Marshal: missing method Marshal
+	
+
 	switch privKeyType {
 	case "secp256k1":
 		priv, ok := privKey.(*secp256k1.PrivKey)

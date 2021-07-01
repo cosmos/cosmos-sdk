@@ -40,6 +40,7 @@ func Test_showKeysCmd(t *testing.T) {
 	require.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
 }
 
+// TODO fix test
 func Test_runShowCmd(t *testing.T) {
 	cmd := ShowKeysCmd()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())

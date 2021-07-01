@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
+// TODO fix that
 func Test_runDeleteCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
@@ -53,7 +54,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.EqualError(t, err, "blah.info: key not found")
+	require.EqualError(t, err, "Get error, err - The specified item could not be found in the keyring")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{

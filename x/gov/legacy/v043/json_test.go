@@ -19,7 +19,7 @@ func TestMigrateJSON(t *testing.T) {
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Codec)
 
 	voter, err := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
 	require.NoError(t, err)

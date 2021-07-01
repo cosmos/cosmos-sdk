@@ -27,12 +27,12 @@ func TestSupplyMigration(t *testing.T) {
 	// Old supply was stored as a single blob under the `SupplyKey`.
 	var oldSupply v040bank.SupplyI
 	oldSupply = &types.Supply{Total: sdk.NewCoins(oldFooCoin, oldBarCoin)}
-	oldSupplyBz, err := encCfg.Marshaler.MarshalInterface(oldSupply)
+	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
 	require.NoError(t, err)
 	store.Set(v040bank.SupplyKey, oldSupplyBz)
 
 	// Run migration.
-	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
+	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
 
 	// New supply is indexed by denom.
@@ -72,7 +72,7 @@ func TestBalanceKeysMigration(t *testing.T) {
 	oldKey := append(append(v040bank.BalancesPrefix, addr...), denom...)
 	store.Set(oldKey, value)
 
-	err := v043bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
+	err := v043bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
 
 	newKey := append(types.CreateAccountBalancesPrefix(addr), denom...)

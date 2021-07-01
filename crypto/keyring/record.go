@@ -7,8 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -28,45 +26,15 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 
 // bz, err := cdc.Marshal(privKey) yields an error that's why I cast privKey to curve PrivKey to serialize it
 func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local, error) {
-
-	var (
-		err error
-		bz  []byte
-	)
-
-	privKeyType := privKey.Type()
-
-	// TODO fix that cdc.Marshal(privKey)
-	// ERROR cannot use privKey (variable of type "github.com/cosmos/cosmos-sdk/crypto/types".PrivKey) as 
-	//codec.ProtoMarshaler value in argument to cdc.Marshal: missing method Marshal
-	
-
-	switch privKeyType {
-	case "secp256k1":
-		priv, ok := privKey.(*secp256k1.PrivKey)
-		if !ok {
-			return nil, fmt.Errorf("unable to cast privKey to *secp256k1.PrivKey")
-		}
-
-		// TODO double check if we have to marshal priv as *secp256k1.PrivKey
-		bz, err = cdc.Marshal(priv)
-		if err != nil {
-			return nil, err
-		}
-
-	case "ed25519":
-		priv, ok := privKey.(*ed25519.PrivKey)
-		if !ok {
-			return nil, fmt.Errorf("unable to cast privKey to *ed25519.PrivKey")
-		}
-
-		bz, err = cdc.Marshal(priv)
-		if err != nil {
-			return nil, err
-		}
+	fmt.Println("NewLocalRecord privKey", privKey)
+	bz, err := cdc.MarshalInterface(privKey)
+	if err != nil {
+		return nil, err
 	}
+	fmt.Println("NewLocalRecord bz", string(bz))
+	fmt.Println("NewLocalRecord err", err.E
 
-	return &Record_Local{string(bz), privKeyType}, nil
+	return &Record_Local{string(bz), privKey.Type()}, nil
 }
 
 func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
@@ -218,22 +186,12 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 	}
 
 	bz := []byte(rl.PrivKeyArmor)
+	var priv cryptotypes.PrivKey
 
-	switch rl.PrivKeyType {
-	case "secp256k1":
-		var priv secp256k1.PrivKey
-		if err := cdc.Unmarshal(bz, &priv); err != nil {
-			return nil, fmt.Errorf("unable to unmarshal to secp256k1.PrivKey")
-		}
-		return &priv, nil
-
-	// case "ed25519": ? does it sound good?
-	default:
-		var priv ed25519.PrivKey
-		if err := cdc.Unmarshal(bz, &priv); err != nil {
-			return nil, fmt.Errorf("unable to unmsrashal to ed25519.PrivKey")
-		}
-		return &priv, nil
+	if err := cdc.UnmarshalInterface(bz, &priv); err != nil {
+		return nil, err
 	}
+
+	return priv,nil
 
 }

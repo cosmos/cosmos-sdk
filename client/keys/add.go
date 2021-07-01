@@ -89,6 +89,7 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+
 	return RunAddCmd(clientCtx, cmd, args, buf)
 }
 

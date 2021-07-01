@@ -552,6 +552,9 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 		return nil, err
 	}
 
+	fmt.Println("NewAccount privKey", privKey)
+	fmt.Println("NewAccount name", name)
+
 	return ks.writeLocalKey(name, privKey)
 }
 
@@ -946,7 +949,7 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		}
 		item = NewLocalRecordItem(localRecord)
 
-	case TypeOffline:
+	case TypeOffline, TypeMulti:
 		emptyRecord := NewEmptyRecord()
 		item = NewEmptyRecordItem(emptyRecord)
 	case TypeLedger:
@@ -956,9 +959,6 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		}
 		ledgerRecord := NewLedgerRecord(path)
 		item = NewLedgerRecordItem(ledgerRecord)
-	case TypeMulti:
-		emptyRecord := NewEmptyRecord()
-		item = NewEmptyRecordItem(emptyRecord)
 	}
 
 	name := info.GetName()

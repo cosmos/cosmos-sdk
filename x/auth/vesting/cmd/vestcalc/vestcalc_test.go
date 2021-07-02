@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
 
 const (
@@ -197,7 +199,7 @@ func TestWrite(t *testing.T) {
 	for _, tt := range []struct {
 		name   string
 		config writeConfig
-		want   []period
+		want   []cli.InputPeriod
 	}{
 		{
 			name: "simple_2y",
@@ -211,7 +213,7 @@ func TestWrite(t *testing.T) {
 					iso("2022-01-15T00:00"),
 				},
 			},
-			want: []period{
+			want: []cli.InputPeriod{
 				{Coins: "500000000ubld", Length: 32711400},
 				{Coins: "41666666ubld", Length: 1501200},
 				{Coins: "41666667ubld", Length: 2419200},

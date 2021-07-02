@@ -199,7 +199,7 @@ func TestWrite(t *testing.T) {
 	for _, tt := range []struct {
 		name   string
 		config writeConfig
-		want   []cli.InputPeriod
+		want   cli.VestingData
 	}{
 		{
 			name: "simple_2y",
@@ -213,20 +213,23 @@ func TestWrite(t *testing.T) {
 					iso("2022-01-15T00:00"),
 				},
 			},
-			want: []cli.InputPeriod{
-				{Coins: "500000000ubld", Length: 32711400},
-				{Coins: "41666666ubld", Length: 1501200},
-				{Coins: "41666667ubld", Length: 2419200},
-				{Coins: "41666667ubld", Length: 2674800},
-				{Coins: "41666666ubld", Length: 2592000},
-				{Coins: "41666667ubld", Length: 2678400}, // DST begins
-				{Coins: "41666667ubld", Length: 2592000},
-				{Coins: "41666666ubld", Length: 2678400},
-				{Coins: "41666667ubld", Length: 2678400},
-				{Coins: "41666667ubld", Length: 2592000},
-				{Coins: "41666666ubld", Length: 2678400},
-				{Coins: "41666667ubld", Length: 2595600}, // DST ends
-				{Coins: "41666667ubld", Length: 2678400},
+			want: cli.VestingData{
+				StartTime: 1609522200,
+				Periods: []cli.InputPeriod{
+					{Coins: "500000000ubld", Length: 32711400},
+					{Coins: "41666666ubld", Length: 1501200},
+					{Coins: "41666667ubld", Length: 2419200},
+					{Coins: "41666667ubld", Length: 2674800},
+					{Coins: "41666666ubld", Length: 2592000},
+					{Coins: "41666667ubld", Length: 2678400}, // DST begins
+					{Coins: "41666667ubld", Length: 2592000},
+					{Coins: "41666666ubld", Length: 2678400},
+					{Coins: "41666667ubld", Length: 2678400},
+					{Coins: "41666667ubld", Length: 2592000},
+					{Coins: "41666666ubld", Length: 2678400},
+					{Coins: "41666667ubld", Length: 2595600}, // DST ends
+					{Coins: "41666667ubld", Length: 2678400},
+				},
 			},
 		},
 	} {

@@ -96,19 +96,16 @@ func parseCoins(coins string) (int64, string) {
 	return amount, denom
 }
 
-// marshalPeriods gives the JSON encoding.
-func marshalPeriods(periods []cli.InputPeriod) ([]byte, error) {
-	return json.MarshalIndent(periods, "", "  ")
+// marshalVestingData gives the JSON encoding.
+func marshalVestingData(data cli.VestingData) ([]byte, error) {
+	return json.MarshalIndent(data, "", "  ")
 }
 
-// unmarshalPeriods parses an array of periods in JSON.
-func unmarshalPeriods(bz []byte) ([]cli.InputPeriod, error) {
-	periods := []cli.InputPeriod{}
-	err := json.Unmarshal(bz, &periods)
-	if err != nil {
-		return nil, err
-	}
-	return periods, nil
+// unmarshalVestingData parses the vesting data from JSON.
+func unmarshalVestingData(bz []byte) (cli.VestingData, error) {
+	data := cli.VestingData{}
+	err := json.Unmarshal(bz, &data)
+	return data, err
 }
 
 // event represents a single vesting event with an absolute time.
@@ -184,9 +181,9 @@ func applyCliff(events []event, cliff time.Time) ([]event, error) {
 	return newEvents, nil
 }
 
-// eventsToPeriods converts the events to periods with the given start time
+// eventsToVestingData converts the events to VestingData with the given start time
 // and denomination.
-func eventsToPeriods(startTime time.Time, events []event, denom string) []cli.InputPeriod {
+func eventsToVestingData(startTime time.Time, events []event, denom string) cli.VestingData {
 	periods := []cli.InputPeriod{}
 	lastTime := startTime
 	for _, e := range events {
@@ -198,14 +195,18 @@ func eventsToPeriods(startTime time.Time, events []event, denom string) []cli.In
 		periods = append(periods, p)
 		lastTime = e.Time
 	}
-	return periods
+	return cli.VestingData{
+		StartTime: startTime.Unix(),
+		Periods:   periods,
+	}
 }
 
-// periodsToEvents converts periods to events with the given start time.
-func periodsToEvents(startTime time.Time, periods []cli.InputPeriod) []event {
+// vestingDataToEvents converts periods to events with the given start time.
+func vestingDataToEvents(data cli.VestingData) []event {
+	startTime := time.Unix(data.StartTime, 0)
 	events := []event{}
 	lastTime := startTime
-	for _, p := range periods {
+	for _, p := range data.Periods {
 		amount, _ := parseCoins(p.Coins)
 		newTime := lastTime.Add(time.Duration(p.Length) * time.Second)
 		e := event{
@@ -412,45 +413,20 @@ var (
 	flagWrite  = flag.Bool("write", false, "Write periods file to stdout.")
 )
 
-// readConfig bundles data needed for the read operation.
-type readConfig struct {
-	startTime time.Time
-}
-
-// genReadConfig creates a readConfig from flag setings and validates it.
-func genReadConfig() (readConfig, error) {
-	rc := readConfig{}
-	if flagStart.IsZero() {
-		return rc, fmt.Errorf("must set start time with --start")
-	}
-	rc.startTime = *flagStart
-	return rc, nil
-}
-
-// convertAbsolute converts relative periods to absolute events.
-func (rc readConfig) convertAbsolute(periods []cli.InputPeriod) []event {
-	return periodsToEvents(rc.startTime, periods)
-}
-
 // readCmd reads periods in JSON from stdin and writes a sequence of vesting
 // events in local time to stdout.
 func readCmd() {
-	rc, err := genReadConfig()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "bad read configuration: %v", err)
-		return
-	}
 	bzIn, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot read stdin: %v", err)
 		return
 	}
-	periods, err := unmarshalPeriods(bzIn)
+	vestingData, err := unmarshalVestingData(bzIn)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cannot decode periods: %v", err)
+		fmt.Fprintf(os.Stderr, "cannot decode vesting data: %v", err)
 		return
 	}
-	events := rc.convertAbsolute(periods)
+	events := vestingDataToEvents(vestingData)
 	bzOut, err := marshalEvents(events)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot encode events: %v", err)
@@ -517,8 +493,8 @@ func (wc writeConfig) generateEvents() ([]event, error) {
 }
 
 // convertRelative converts absolute-time events to relative periods.
-func (wc writeConfig) convertRelative(events []event) []cli.InputPeriod {
-	return eventsToPeriods(wc.Start, events, wc.Denom)
+func (wc writeConfig) convertRelative(events []event) cli.VestingData {
+	return eventsToVestingData(wc.Start, events, wc.Denom)
 }
 
 // writeCmd generates a set of vesting events based on flags and writes a
@@ -534,10 +510,10 @@ func writeCmd() {
 		fmt.Fprintf(os.Stderr, "cannot generate events: %v", err)
 		return
 	}
-	periods := wc.convertRelative(events)
-	bz, err := marshalPeriods(periods)
+	vestingData := wc.convertRelative(events)
+	bz, err := marshalVestingData(vestingData)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cannot marshal periods: %v", err)
+		fmt.Fprintf(os.Stderr, "cannot marshal vesting data: %v", err)
 		return
 	}
 	fmt.Println(string(bz))

@@ -278,6 +278,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 
 func (s *GRPCQueryTestSuite) TestQueryDelegationGRPC() {
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -317,14 +318,14 @@ func (s *GRPCQueryTestSuite) TestQueryDelegationGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val.ValAddress.String(), val.Address.String()),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val2.ValAddress.String(), val.Address.String()),
 			false,
 			&types.QueryDelegationResponse{},
 			&types.QueryDelegationResponse{
 				DelegationResponse: &types.DelegationResponse{
 					Delegation: types.Delegation{
 						DelegatorAddress: val.Address.String(),
-						ValidatorAddress: val.ValAddress.String(),
+						ValidatorAddress: val2.ValAddress.String(),
 						Shares:           sdk.NewDec(10),
 					},
 					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
@@ -542,6 +543,7 @@ func (s *GRPCQueryTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 
 func (s *GRPCQueryTestSuite) TestQueryRedelegationsGRPC() {
 	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -576,7 +578,7 @@ func (s *GRPCQueryTestSuite) TestQueryRedelegationsGRPC() {
 		},
 		{
 			"valid request with dst address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String(), val.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String(), val2.ValAddress.String()),
 			false,
 		},
 	}
@@ -598,7 +600,7 @@ func (s *GRPCQueryTestSuite) TestQueryRedelegationsGRPC() {
 				s.Require().Len(redelegations.RedelegationResponses, 1)
 				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
 				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
 			}
 		})
 	}

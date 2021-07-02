@@ -27,10 +27,11 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	ledgerRecordItem := keyring.NewLedgerRecordItem(ledgerRecord)
 	k, err := keyring.NewRecord("some_name", pk, ledgerRecordItem)
 	require.NoError(t, err)
-	//require.Equal(t, keyring.TypeLedger, kr.GetType())
 
-	path = k.GetLedger().GetPath()
-	require.Equal(t, "purpose:44 coinType:118 account:5 addressIndex:1 ", path.String())
+	l := k.GetLedger()
+	require.NotNil(t, l)
+	path = l.Path
+	require.Equal(t, "m/44'/118'/5'/0/1", path.String())
 	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t,
@@ -49,12 +50,14 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 	// Check both keys match
 	require.Equal(t, k.Name, restoredRecord.Name)
 	require.Equal(t, k.GetType(), restoredRecord.GetType())
-	//TODO fix error
-	//restoredPubKey, err := restoredRecord.GetPubKey()
-	//require.NoError(t, err)
-	//require.Equal(t, pubKey, restoredPubKey)
 
-	restoredPath := restoredRecord.GetLedger().GetPath()
+	restoredPubKey, err := restoredRecord.GetPubKey()
+	require.NoError(t, err)
+	require.Equal(t, pubKey, restoredPubKey)
+
+	l = restoredRecord.GetLedger()
+	require.NotNil(t, l)
+	restoredPath := l.GetPath()
 	require.NoError(t, err)
 	require.Equal(t, path, restoredPath)
 }

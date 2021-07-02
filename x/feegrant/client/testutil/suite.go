@@ -590,9 +590,10 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	granter := val.Address
 
 	// creating an account manually (This account won't be exist in state)
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	grantee := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	grantee := sdk.AccAddress(pub.Address())
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -637,9 +638,11 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	val := s.network.Validators[0]
 
 	granter := val.Address
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee1", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	grantee := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	s.Require().NoError(err)
+	grantee := sdk.AccAddress(pub.Address())
 
 	clientCtx := val.ClientCtx
 

@@ -274,7 +274,8 @@ func New(t *testing.T, cfg Config) *Network {
 		nodeIDs[i] = nodeID
 		valPubKeys[i] = pubKey
 
-		kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, cfg.KeyringOptions...)
+		encCfg := simapp.MakeTestEncodingConfig()
+		kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, clientDir, buf, encCfg.Marshaler, cfg.KeyringOptions...)
 		require.NoError(t, err)
 
 		keyringAlgos, _ := kb.SupportedAlgorithms()

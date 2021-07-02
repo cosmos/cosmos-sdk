@@ -32,7 +32,7 @@ func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local
 		return nil, err
 	}
 	fmt.Println("NewLocalRecord bz", string(bz))
-	fmt.Println("NewLocalRecord err", err.E
+	fmt.Println("NewLocalRecord err", err.Error())
 
 	return &Record_Local{string(bz), privKey.Type()}, nil
 }
@@ -65,7 +65,7 @@ func (k Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
 		// TODO - don't use fmt.Errorf
-		return nil, fmt.Errorf("Unable to cast PubKey to cryptotypes.PubKey")
+		return nil, fmt.Errorf("Unable to cast any to cryptotypes.PubKey")
 	}
 	return pk, nil
 }

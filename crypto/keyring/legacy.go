@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
+// TODO delete legacy.go entirely?
 // LegacyKeybase is implemented by the legacy keybase implementation.
 type LegacyKeybase interface {
 	List() ([]*Record, error)

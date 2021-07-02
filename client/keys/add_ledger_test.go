@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
 func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
@@ -59,7 +60,8 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Marshaler)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
@@ -70,11 +72,13 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 
-	require.Equal(t, "keyname1", key1.GetName())
+	require.Equal(t, "keyname1", key1.Name)
 	require.Equal(t, keyring.TypeLedger, key1.GetType())
+	pub, err := key1.GetPubKey()
+	require.NoError(t, err)
 	require.Equal(t,
 		"PubKeySecp256k1{03028F0D5A9FD41600191CDEFDEA05E77A68DFBCE286241C0190805B9346667D07}",
-		key1.GetPubKey().String())
+		pub.String())
 
 	config.SetPurpose(44)
 	config.SetCoinType(118)
@@ -106,7 +110,8 @@ func Test_runAddCmdLedger(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
 	// Now check that it has been stored properly
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Marshaler)
 	require.NoError(t, err)
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
@@ -114,13 +119,15 @@ func Test_runAddCmdLedger(t *testing.T) {
 	})
 
 	mockIn.Reset("test1234\n")
-	key1, err := kb.Key("keyname1")
+	k, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 
-	require.Equal(t, "keyname1", key1.GetName())
+	require.Equal(t, "keyname1", k.Name)
 	require.Equal(t, keyring.TypeLedger, key1.GetType())
+	pub, err := k.GetPubKey()
+	require.NoError(t, err)
 	require.Equal(t,
 		"PubKeySecp256k1{034FEF9CD7C4C63588D3B03FEB5281B9D232CBA34D6F3D71AEE59211FFBFE1FE87}",
-		key1.GetPubKey().String())
+		pub.String())
 }

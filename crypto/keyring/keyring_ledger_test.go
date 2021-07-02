@@ -38,7 +38,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	restoredRecord, err := kb.Key("some_account")
 	require.NoError(t, err)
 	require.NotNil(t, restoredRecord)
-	require.Equal(t, "some_account", restoredRecord.GetName())
+	require.Equal(t, "some_account", restoredRecord.Name)
 	// TODO handle GetType remove it
 	//require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey, err = restoredRecord.GetPubKey()
@@ -66,7 +66,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
-	require.Equal(t, "key", ke1.GetName())
+	require.Equal(t, "key", ke1.Name)
 
 	d1 := []byte("my first message")
 	s1, pub1, err := kb.Sign("key", d1)
@@ -112,7 +112,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 		return
 	}
 	// The mock is available, check that the address is correct
-	require.Equal(t, "some_account", ke.GetName())
+	require.Equal(t, "some_account", ke.Name)
 	pubKey, err := ke.GetPubKey()
 	require.NoError(t, err)
 	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"
@@ -122,8 +122,8 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	restoredRecord, err := kr.Key("some_account")
 	require.NoError(t, err)
 	require.NotNil(t, restoredRecord)
-	require.Equal(t, "some_account", restoredRecord.GetName())
-	require.Equal(t, TypeLedger, restoredRecord.GetType())
+	require.Equal(t, "some_account", restoredRecord.Name)
+//	require.Equal(t, TypeLedger, restoredRecord.GetType())
 	pubKey, err = restoredRecord.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())

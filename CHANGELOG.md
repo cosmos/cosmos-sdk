@@ -47,6 +47,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/tx) [\#9421](https://github.com/cosmos/cosmos-sdk/pull/9421/) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to
   the Tx Factory as methods.
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) The `New` method for the network package now returns an error.
+* [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) `RESTHandlerFn` argument is removed from the `gov/NewProposalHandler`.
+* [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) `types/rest` package moved to `testutil/rest`.
+
+
+### Client Breaking Changes
+
+* [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) Remove legacy REST API.
+
 
 ### CLI Breaking Changes
 

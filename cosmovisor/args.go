@@ -96,7 +96,9 @@ func (cfg *Config) CurrentBin() (string, error) {
 	}
 
 	// and return the binary
-	return filepath.Join(dest, "bin", cfg.Name), nil
+	binpath := filepath.Join(dest, "bin", cfg.Name)
+	fmt.Println(">>> current binary resolved correctly, binary path:", binpath)
+	return binpath, nil
 }
 
 // GetConfigFromEnv will read the environmental variables into a config

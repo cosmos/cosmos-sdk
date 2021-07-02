@@ -72,8 +72,8 @@ const (
 	FlagKeyAlgorithm     = "algo"
 
 	// Tendermint logging flags
-	FlagLogLevel  = "log_level"
-	FlagLogFormat = "log_format"
+	FlagLogLevel  = "log-level"
+	FlagLogFormat = "log-format"
 )
 
 // LineBreak can be included in a command list to provide a blank line

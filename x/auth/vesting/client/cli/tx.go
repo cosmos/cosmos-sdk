@@ -173,7 +173,6 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Bool(FlagDelayed, false, "Create a delayed vesting account if true")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

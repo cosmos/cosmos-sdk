@@ -11,19 +11,6 @@ import (
 	"time"
 )
 
-// shortIsoFmt specifies ISO 8601 without seconds or timezone.
-// Note: when parsing, timezone is UTC unless overridden.
-// TODO: write parser/formatter to flexibly accept longest prefix of
-// YYYY-MM-DD
-// YYYY-MM-DDThh:mm
-// YYYY-MM-DDThh:mm:ss
-// YYYY-MM-DDThh:mm:ss<tzspec>
-const shortIsoFmt = "2006-01-02T15:04"
-
-// hhmmFmt specifies an HH:MM time format to generate time.Time values
-// where only hours, minutes, seconds are used.
-const hhmmFmt = "15:04"
-
 // divide returns the division of total as evenly as possible.
 // Divisions must be 1 or greater and total must be nonnegative.
 func divide(total int64, divisions int32) ([]int64, error) {
@@ -56,10 +43,10 @@ func divide(total int64, divisions int32) ([]int64, error) {
 	return a, nil
 }
 
-// vestingTimes generates timestamps for successive months after startTime.
+// monthlyVestTimes generates timestamps for successive months after startTime.
 // The monthly events occur at the given time of day. If the month is not
 // long enough for the desired date, the last day of the month is used.
-func vestingTimes(startTime time.Time, months int32, timeOfDay time.Time) ([]time.Time, error) {
+func monthlyVestTimes(startTime time.Time, months int32, timeOfDay time.Time) ([]time.Time, error) {
 	if months < 1 {
 		return nil, fmt.Errorf("must have at least one vesting period")
 	}
@@ -157,7 +144,7 @@ func marshalEvents(events []event) ([]byte, error) {
 	b.WriteString("[\n")
 	for _, e := range events {
 		b.WriteString("    ")
-		b.WriteString(e.Time.Format(shortIsoFmt))
+		b.WriteString(formatIso(e.Time))
 		b.WriteString(": ")
 		b.WriteString(fmt.Sprint(e.Amount))
 		b.WriteString("\n")
@@ -237,6 +224,8 @@ func periodsToEvents(startTime time.Time, periods []period) []event {
 	return events
 }
 
+// Time utilities
+
 const day = 24 * time.Hour
 
 // formatDuration returns a duration in a string like "3d4h3m0.5s".
@@ -292,6 +281,41 @@ var (
 	validDenoms = map[string]bool{"ubld": true} // TODO replace with cosmos-sdk denom validation
 )
 
+// shortIsoFmt specifies ISO 8601 without seconds or timezone.
+// Note: when parsing, timezone is UTC unless overridden.
+const shortIsoFmt = "2006-01-02T15:04"
+
+// Common ISO-8601 formats for local day/time.
+var localIsoFormats = []string{
+	"2006-01-02",
+	"2006-01-02T15:04",
+	"2006-01-02T15:04:05",
+}
+
+// parseIso tries to parse the given string as some common prefix of ISO-8601.
+// "Common" means the least significant unit is day, minute, or second.
+// The time will be in local time unless a timezone specifier is given.
+func parseIso(s string) (time.Time, error) {
+	// Try local (no explicit timezone) formats first.
+	for _, fmt := range localIsoFormats {
+		tm, err := time.ParseInLocation(fmt, s, time.Local)
+		if err == nil {
+			return tm, nil
+		}
+	}
+	// Now try the full format.
+	return time.Parse(time.RFC3339, s)
+}
+
+// formatIso formats the time in shortIso format in local time.
+func formatIso(tm time.Time) string {
+	return tm.Format(shortIsoFmt)
+}
+
+// hhmmFmt specifies an HH:MM time format to generate time.Time values
+// where only hours, minutes, seconds are used.
+const hhmmFmt = "15:04"
+
 // Custom flag types
 
 // isoDate is time.Time as a flag.Value in shortIsoFmt.
@@ -299,7 +323,7 @@ type isoDate struct{ time.Time }
 
 // Set implements flag.Value.Set().
 func (id *isoDate) Set(s string) error {
-	t, err := time.ParseInLocation(shortIsoFmt, s, time.Local)
+	t, err := parseIso(s)
 	if err != nil {
 		return err
 	}
@@ -309,7 +333,7 @@ func (id *isoDate) Set(s string) error {
 
 // String implements flag.Value.String().
 func (id *isoDate) String() string {
-	return id.Format(shortIsoFmt)
+	return formatIso(id.Time)
 }
 
 // isoDateFlag makes a new isoDate flag, accessed as a time.Time.
@@ -325,7 +349,7 @@ type isoDateList []time.Time
 // Set implements flag.Value.Set().
 func (dates *isoDateList) Set(s string) error {
 	for _, ds := range strings.Split(s, ",") {
-		d, err := time.ParseInLocation(shortIsoFmt, ds, time.Local)
+		d, err := parseIso(ds)
 		if err != nil {
 			return err
 		}
@@ -339,9 +363,9 @@ func (dates *isoDateList) String() string {
 	s := ""
 	for _, t := range *dates {
 		if s == "" {
-			s = t.Format(shortIsoFmt)
+			s = formatIso(t)
 		} else {
-			s = s + "," + t.Format(shortIsoFmt)
+			s = s + "," + formatIso(t)
 		}
 	}
 	return s
@@ -480,7 +504,7 @@ func (wc writeConfig) generateEvents() ([]event, error) {
 	if err != nil {
 		return nil, fmt.Errorf("vesting amount division failed: %v", err)
 	}
-	times, err := vestingTimes(wc.Start, wc.Months, wc.TimeOfDay)
+	times, err := monthlyVestTimes(wc.Start, wc.Months, wc.TimeOfDay)
 	if err != nil {
 		return nil, fmt.Errorf("vesting time calcuation failed: %v", err)
 	}

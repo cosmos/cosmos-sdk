@@ -33,11 +33,11 @@ stdout. The following flags control the output:
 - `--time`: The time of day of the vesting event, in 24-hour HH:MM format.
   Defaults to midnight.
 - `--start`: The vesting start time: i.e. the first event happens in the
-  next month. Specified in the format `YYYY-MM-DDThh:mm`, e.g.
-  `2006-01-02T15:04` for 3:04pm on January 2, 2006.
-- `--cliffs`: One or more vesting cliffs in `YYYY-MM-DDThh:mm` format.
-  Only the latest one will have any effect, but it is useful to let the
-  computer do that calculation to avoid mistakes. Multiple cliff dates
+  next month. Specified in the format `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`,
+  e.g. `2006-01-02T15:04` for 3:04pm on January 2, 2006.
+- `--cliffs`: One or more vesting cliffs in `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`
+  format. Only the latest one will have any effect, but it is useful to let
+  the computer do that calculation to avoid mistakes. Multiple cliff dates
   can be separated by commas or given as multiple arguments.
 
 ## Reading a schedule
@@ -47,15 +47,15 @@ stdin and write the vesting events in absolute time to stdout. The following
 flags control the command:
 
 - `--start`: The vesting start time used when generating the schedule.
-  Specified in the format `YYYY-MM-DDThh:mm`, e.g. `2006-01-02T15:04` for
-  3:04pm on January 2, 2006.
+  Specified in the format `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`, e.g.
+  `2006-01-02T15:04` for 3:04pm on January 2, 2006.
 
 ## Examples
 
 ```
-$ vestcalc --write --start=2021-01-01T09:30 --amount=1000000000 --denom=ubld \
+$ vestcalc --write --start=2021-01-01 --amount=1000000000 --denom=ubld \
 > --months=24 --time=09:00 --cliffs=2022-01-15T00:00 | \
-> vestcalc --read --start=2021-01-01T09:30
+> vestcalc --read --start=2021-01-01
 [
     2022-01-15T00:00: 500000000
     2022-02-01T09:00: 41666666
@@ -71,7 +71,7 @@ $ vestcalc --write --start=2021-01-01T09:30 --amount=1000000000 --denom=ubld \
     2022-12-01T09:00: 41666667
     2023-01-01T09:00: 41666667
 ]
-$ vestcalc --write --start=2021-01-01T09:30 --amount=1000000000 --denom=ubld \
+$ vestcalc --write --start=2021-01-01 --amount=1000000000 --denom=ubld \
 > --months=24 --time=09:00 --cliffs=2022-01-15T00:00
 [
   {

@@ -164,7 +164,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				periods = append(periods, period)
 			}
 
-			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, startTime, periods)
+			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, vestingData.StartTime, periods)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

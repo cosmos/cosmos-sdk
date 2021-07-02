@@ -71,6 +71,23 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// unbonding
 	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
+
+	val3 := s.network.Validators[2]
+
+	// redelegate
+	_, err = MsgRedelegateExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		val3.ValAddress,
+		unbond,
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 254000),
+	) // expected gas is 202987
+
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }

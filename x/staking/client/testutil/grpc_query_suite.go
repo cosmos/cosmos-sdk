@@ -4,10 +4,13 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
@@ -16,7 +19,60 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
+type GRPCQueryTestSuite struct {
+	suite.Suite
+
+	cfg     network.Config
+	network *network.Network
+}
+
+func (s *GRPCQueryTestSuite) SetupSuite() {
+	s.T().Log("setting up integration test suite")
+
+	cfg := network.DefaultConfig()
+	cfg.NumValidators = 2
+	s.cfg = cfg
+
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	unbond, err := sdk.ParseCoinNormalized("10stake")
+	s.Require().NoError(err)
+
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	// redelegate
+	_, err = MsgRedelegateExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		val2.ValAddress,
+		unbond,
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 254000),
+	) // expected gas is 202987
+
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// unbonding
+	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
+
+func (s *GRPCQueryTestSuite) TearDownSuite() {
+	s.T().Log("tearing down integration test suite")
+	s.network.Cleanup()
+}
+
+func (s *GRPCQueryTestSuite) TestQueryValidatorsGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -64,7 +120,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryValidatorGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -110,7 +166,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryValidatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -173,7 +229,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorDelegationsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -214,15 +270,14 @@ func (s *IntegrationTestSuite) TestQueryValidatorUnbondingDelegationsGRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
-				s.Require().Equal(ubds.UnbondingResponses[2].ValidatorAddress, val.ValAddress.String())
+				s.Require().Equal(ubds.UnbondingResponses[0].ValidatorAddress, val.ValAddress.String())
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryDelegationGRPC() {
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[2]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -262,14 +317,14 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val2.ValAddress.String(), val.Address.String()),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/delegations/%s", baseURL, val.ValAddress.String(), val.Address.String()),
 			false,
 			&types.QueryDelegationResponse{},
 			&types.QueryDelegationResponse{
 				DelegationResponse: &types.DelegationResponse{
 					Delegation: types.Delegation{
 						DelegatorAddress: val.Address.String(),
-						ValidatorAddress: val2.ValAddress.String(),
+						ValidatorAddress: val.ValAddress.String(),
 						Shares:           sdk.NewDec(10),
 					},
 					Balance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)),
@@ -296,7 +351,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryUnbondingDelegationGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -354,7 +409,7 @@ func (s *IntegrationTestSuite) TestQueryUnbondingDelegationGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -435,7 +490,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorDelegationsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -485,9 +540,8 @@ func (s *IntegrationTestSuite) TestQueryDelegatorUnbondingDelegationsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryRedelegationsGRPC() {
 	val := s.network.Validators[0]
-	val2 := s.network.Validators[2]
 	baseURL := val.APIAddress
 
 	testCases := []struct {
@@ -517,12 +571,12 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 		},
 		{
 			"valid request with dst address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?dst_validator_addr=%s", baseURL, val.Address.String(), val2.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String()),
 			false,
 		},
 		{
 			"valid request with dst address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String(), val2.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/staking/v1beta1/delegators/%s/redelegations?src_validator_addr=%s&dst_validator_addr=%s", baseURL, val.Address.String(), val.ValAddress.String(), val.ValAddress.String()),
 			false,
 		},
 	}
@@ -544,13 +598,13 @@ func (s *IntegrationTestSuite) TestQueryRedelegationsGRPC() {
 				s.Require().Len(redelegations.RedelegationResponses, 1)
 				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.DelegatorAddress, val.Address.String())
 				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorSrcAddress, val.ValAddress.String())
-				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val2.ValAddress.String())
+				s.Require().Equal(redelegations.RedelegationResponses[0].Redelegation.ValidatorDstAddress, val.ValAddress.String())
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -597,7 +651,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -653,7 +707,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryHistoricalInfoGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryHistoricalInfoGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -699,7 +753,7 @@ func (s *IntegrationTestSuite) TestQueryHistoricalInfoGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -730,7 +784,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryPoolGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryPoolGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

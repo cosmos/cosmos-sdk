@@ -4,6 +4,7 @@
 
 - 05.05.2021: Initial Draft
 - 07.01.2021: Incorporate Billy's feedback
+- 07.02.2021: Incorporate feedbacks from Aaron, Shaun, Billy et al.
 
 ## Status
 
@@ -11,11 +12,11 @@ DRAFT
 
 ## Abstract
 
-This ADR defines the `x/nft` module which is a generic storage of NFTs, roughly "compatible" with ERC721.
+This ADR defines the `x/nft` module which is a generic implementation of NFTs, roughly "compatible" with ERC721.
 
 ## Context
 
-NFTs are more digital assets than only crypto arts, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
+NFTs are more than just crypto art, which is very helpful for accruing value to the Cosmos ecosystem. As a result, Cosmos Hub should implement NFT functions and enable a unified mechanism for storing and sending the ownership representative of NFTs as discussed in https://github.com/cosmos/cosmos-sdk/discussions/9065.
 
 As was discussed in [#9065](https://github.com/cosmos/cosmos-sdk/discussions/9065), several potential solutions can be considered:
 
@@ -43,29 +44,25 @@ We will create a module `x/nft`, which contains the following functionality:
 
 ### Types
 
-#### Genre
+#### Class
 
-We define a model for NFT **Genre**, which is comparable to an ERC721 Contract on Ethereum, under which a collection of NFTs can be created and managed.
+We define a model for NFT **Class**, which is comparable to an ERC721 Contract on Ethereum, under which a collection of NFTs can be created and managed.
 
 ```protobuf
-message Genre {
-  string id              = 1;
-  string name            = 2;
-  string symbol          = 3;
-  string description     = 4;
-  string uri             = 5;
-  bool mint_restricted   = 10;
-  bool update_restricted = 11;
+message Class {
+  string id          = 1;
+  string name        = 2;
+  string symbol      = 3;
+  string description = 4;
+  string uri         = 5;
 }
 ```
 
-- `id` is an alphanumeric identifier of the NFT genre; it is used as the primary index for storing the genre; _required_
-- `name` is a descriptive name of the NFT genre; _optional_
-- `symbol` is the symbol usually shown on exchanges for the NFT genre; _optional_
-- `description` is a detailed description of the NFT genre; _optional_
-- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT genre ([OpenSea example](https://docs.opensea.io/docs/contract-level-metadata)); _optional_
-- `mint_restricted` flag, if set to true, indicates that only the genre owner can mint NFTs, otherwise anyone can do so; _required_
-- `udpate_restricted` flag, if set to true, indicates that no one can update NFTs, otherwise only NFT owners can do so; _required_
+- `id` is an alphanumeric identifier of the NFT class; it is used as the primary index for storing the class; _required_
+- `name` is a descriptive name of the NFT class; _optional_
+- `symbol` is the symbol usually shown on exchanges for the NFT class; _optional_
+- `description` is a detailed description of the NFT class; _optional_
+- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT class ([OpenSea example](https://docs.opensea.io/docs/contract-level-metadata)); _optional_
 
 #### NFT
 
@@ -73,25 +70,49 @@ We define a general model for `NFT` as follows.
 
 ```protobuf
 message NFT {
-  string genre = 1;
-  string id    = 2;
-  string uri   = 3;
-  string data  = 10;
+  string class_id           = 1;
+  string id                 = 2;
+  string uri                = 3;
+  google.protobuf.Any data  = 10;
 }
 ```
 
-- `genre` is identifier of genre where the NFT belongs; _required_
-- `id` is an alphanumeric identifier of the NFT, unique within the scope of its genre. It is specified by the creator of the NFT and may be expanded to use DID in the future. `genre` combined with `id` uniquely identifies an NFT and is used as the primary index for storing the NFT; _required_
+- `class_id` is the identifier of the NFT class where the NFT belongs; _required_
+- `id` is an alphanumeric identifier of the NFT, unique within the scope of its class. It is specified by the creator of the NFT and may be expanded to use DID in the future. `class_id` combined with `id` uniquely identifies an NFT and is used as the primary index for storing the NFT; _required_
   ```
-  {genre}/{id} --> NFT (bytes)
+  {class_id}/{id} --> NFT (bytes)
   ```
-- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT (Ref: [ERC721 standard and OpenSea extension](https://docs.opensea.io/docs/metadata-standards)).
+- `uri` is a URL pointing to an off-chain JSON file that contains metadata about this NFT (Ref: [ERC721 standard and OpenSea extension](https://docs.opensea.io/docs/metadata-standards)); _required_
 - `data` is a field that CAN be used by composing modules to specify additional properties for the NFT; _optional_
 
 This ADR doesn't specify values that `data` can take; however, best practices recommend upper-level NFT modules clearly specify their contents.  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, the field's existence allows basic informational/UI functionality.
 
-### `Keeper` Interface (TODO)
-Other business logic implementations should be defined in composing modules that import this NFT module and use its `Keeper`.
+### `Keeper` Interface
+
+```go
+type Keeper interface {
+  NewClass(class Class)
+  UpdateClass(class Class)
+
+  Mint(nft NFT，receiver sdk.AccAddress)   // updates totalSupply
+  Burn(classId string, nftId string)    // updates totalSupply
+  Update(nft NFT)
+  Transfer(classId string, nftId string, receiver sdk.AccAddress)
+
+  GetClass(classId string) Class
+  GetClasses() []Class
+
+  GetNFT(classId string, nftId string) NFT
+  GetNFTsOfClassByOwner(classId string, owner sdk.AccAddress) []NFT
+  GetNFTsOfClass(classId string) []NFT
+
+  GetOwner(classId string, nftId string) sdk.AccAddress
+  GetBalance(classId string, owner sdk.AccAddress) uint64
+  GetTotalSupply(classId string) uint64
+}
+```
+
+Other business logic implementations should be defined in composing modules that import `x/nft` and use its `Keeper`.
 
 ### `Msg` Service
 
@@ -101,7 +122,7 @@ service Msg {
 }
 
 message MsgSend {
-  string genre    = 1;
+  string class_id = 1;
   string id       = 2;
   string sender   = 3;
   string reveiver = 4;
@@ -120,10 +141,10 @@ type msgServer struct{
 
 func (m msgServer) Send(ctx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
   // check current ownership
-  assertEqual(msg.Sender, m.k.GetNftOwner(msg.Genre, msg.Id))
+  assertEqual(msg.Sender, m.k.GetOwner(msg.ClassId, msg.Id))
 
-  // change ownership mapping
-  m.k.SetNftOwner(msg.Genre, msg.Id, msg.Receiver)
+  // transfer ownership
+  m.k.Transfer(msg.ClassId, msg.Id, msg.Receiver)
 
   return &types.MsgSendResponse{}, nil
 }
@@ -134,51 +155,51 @@ The query service methods for the `x/nft` module are:
 ```proto
 service Query {
 
-  // Balance queries the number of NFTs based on the genre and owner, same as balanceOf in ERC721
+  // Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{genre}/{owner}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{class_id}/{owner}";
   }
 
-  // Owner queries the owner of the NFT based on the genre and id, same as ownerOf in ERC721
+  // Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721
   rpc Owner(QueryOwnerRequest) returns (QueryOwnerResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/owner/{genre}/{id}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/owner/{class_id}/{id}";
   }
 
-  // Supply queries the number of NFTs based on the genre, same as totalSupply in ERC721Enumerable
+  // Supply queries the number of NFTs of a given class, same as totalSupply in ERC721Enumerable
   rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{genre}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{class_id}";
   }
 
-  // NFTsOf queries all NFTs based on the genre, similar to tokenByIndex in ERC721Enumerable
-  rpc NFTs(QueryNFTsRequest) returns (QueryNFTsResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{genre}";
+  // NFTsOfClassByOwner queries the NFTs of a given class owned by the owner, similar to tokenOfOwnerByIndex in ERC721Enumerable
+  rpc NFTsOfClassByOwner(QueryNFTsOfClassByOwnerRequest) returns (QueryNFTsResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/owned_nfts/{class_id}/{owner}";
   }
 
-  // NFTsOfOwner queries the NFTs based on the genre and owner, similar to tokenOfOwnerByIndex in ERC721Enumerable
-  rpc NFTsOfOwner(QueryNFTsOfOwnerRequest) returns (QueryNFTsResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/balance/{genre}/{owner}";
+  // NFTsOfClass queries all NFTs of a given class, similar to tokenByIndex in ERC721Enumerable
+  rpc NFTsOfClass(QueryNFTsOfClassRequest) returns (QueryNFTsResponse) {
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{class_id}";
   }
 
-  // NFT queries NFT details based on genre and id.
+  // NFT queries an NFT based on its class and id.
   rpc NFT(QueryNFTRequest) returns (QueryNFTResponse) {
-    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{genre}/{id}";
+    option (google.api.http).get = "/cosmos/nft/v1beta1/nfts/{class_id}/{id}";
   }
 
-  // Genre queries the definition of a given genre
-  rpc Genre(QueryGenreRequest) returns (QueryGenreResponse) {
-      option (google.api.http).get = "/cosmos/nft/v1beta1/genres/{genre}";
+  // Class queries an NFT class based on its id
+  rpc Class(QueryClassRequest) returns (QueryClassResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/classes/{class_id}";
   }
 
-  // Types queries all the genres
-  rpc Genres(QueryGenresRequest) returns (QueryGenresResponse) {
-      option (google.api.http).get = "/cosmos/nft/v1beta1/genres";
+  // Classes queries all NFT classes
+  rpc Classes(QueryClassesRequest) returns (QueryClassesResponse) {
+      option (google.api.http).get = "/cosmos/nft/v1beta1/classes";
   }
 }
 
 // QueryBalanceRequest is the request type for the Query/Balance RPC method
 message QueryBalanceRequest {
-  string genre = 1;
-  string owner = 2;
+  string class_id = 1;
+  string owner    = 2;
 }
 
 // QueryBalanceResponse is the response type for the Query/Balance RPC method
@@ -188,8 +209,8 @@ message QueryBalanceResponse{
 
 // QueryOwnerRequest is the request type for the Query/Owner RPC method
 message QueryOwnerRequest {
-  string genre = 1;
-  string id    = 2;
+  string class_id = 1;
+  string id       = 2;
 }
 
 // QueryOwnerResponse is the response type for the Query/Owner RPC method
@@ -199,7 +220,7 @@ message QueryOwnerResponse{
 
 // QuerySupplyRequest is the request type for the Query/Supply RPC method
 message QuerySupplyRequest {
-  string genre = 1;
+  string class_id = 1;
 }
 
 // QuerySupplyResponse is the response type for the Query/Supply RPC method
@@ -207,20 +228,20 @@ message QuerySupplyResponse {
   uint64 amount = 1;
 }
 
-// QueryNFTsRequest is the request type for the Query/NFTs RPC method
-message QueryNFTsRequest {
-  string                                 genre      = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryNFTsOfOwnerRequest is the request type for the Query/NFTsOfOwner RPC method
-message QueryNFTsOfOwnerRequest {
-  string                                 genre      = 1;
+// QueryNFTsOfClassByOwnerRequest is the request type for the Query/NFTsOfClassByOwner RPC method
+message QueryNFTsOfClassByOwnerRequest {
+  string                                 class_id   = 1;
   string                                 owner      = 2;
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
-// QueryNFTsResponse is the response type for the Query/NFTs and Query/NFTsOfOwner RPC method
+// QueryNFTsOfClassRequest is the request type for the Query/NFTsOfClass RPC method
+message QueryNFTsOfClassRequest {
+  string                                 class_id   = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNFTsResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC methods
 message QueryNFTsResponse {
   repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -228,8 +249,8 @@ message QueryNFTsResponse {
 
 // QueryNFTRequest is the request type for the Query/NFT RPC method
 message QueryNFTRequest {
-  string genre = 1;
-  string id    = 2;
+  string class_id = 1;
+  string id       = 2;
 }
 
 // QueryNFTResponse is the response type for the Query/NFT RPC method
@@ -237,25 +258,25 @@ message QueryNFTResponse {
   cosmos.nft.v1beta1.NFT nft = 1;
 }
 
-// QueryGenreRequest is the request type for the Query/Genre RPC method
-message QueryGenreRequest {
-  string genre = 1;
+// QueryClassRequest is the request type for the Query/Class RPC method
+message QueryClassRequest {
+  string class_id = 1;
 }
 
-// QueryGenreResponse is the response type for the Query/Genre RPC method
-message QueryGenreResponse {
-  cosmos.nft.v1beta1.Genre genre = 1;
+// QueryClassResponse is the response type for the Query/Class RPC method
+message QueryClassResponse {
+  cosmos.nft.v1beta1.Class class = 1;
 }
 
-// QueryGenresRequest is the request type for the Query/Genres RPC method
-message QueryGenresRequest {
+// QueryClassesRequest is the request type for the Query/Classes RPC method
+message QueryClassesRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryGenresResponse is the response type for the Query/Genres RPC method
-message QueryGenresResponse {
-  repeated cosmos.nft.v1beta1.Genre      genres     = 1;
+// QueryClassesResponse is the response type for the Query/Classes RPC method
+message QueryClassesResponse {
+  repeated cosmos.nft.v1beta1.Class      classes    = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 ```

@@ -17,9 +17,10 @@ This tool correctly handles:
 - leap years;
 - large amounts (up to 9 quintillion).
 
-All times are interpreted in the local timezone, since the desired vesting
-schedule is commonly specified in local time. To use another timezone,
-set your `TZ` environment variable before running the command.
+Times are interpreted in the local timezone unless explicitly overridden,
+since the desired vesting schedule is commonly specified in local time.
+To use another timezone, set your `TZ` environment variable before
+running the command.
 
 ## Writing a schedule
 
@@ -43,19 +44,14 @@ stdout. The following flags control the output:
 ## Reading a schedule
 
 When the `--read` flag is set, th tool will read a schedule in JSON from
-stdin and write the vesting events in absolute time to stdout. The following
-flags control the command:
-
-- `--start`: The vesting start time used when generating the schedule.
-  Specified in the format `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`, e.g.
-  `2006-01-02T15:04` for 3:04pm on January 2, 2006.
+stdin and write the vesting events in absolute time to stdout.
 
 ## Examples
 
 ```
 $ vestcalc --write --start=2021-01-01 --amount=1000000000 --denom=ubld \
 > --months=24 --time=09:00 --cliffs=2022-01-15T00:00 | \
-> vestcalc --read --start=2021-01-01
+> vestcalc --read
 [
     2022-01-15T00:00: 500000000
     2022-02-01T09:00: 41666666
@@ -73,58 +69,61 @@ $ vestcalc --write --start=2021-01-01 --amount=1000000000 --denom=ubld \
 ]
 $ vestcalc --write --start=2021-01-01 --amount=1000000000 --denom=ubld \
 > --months=24 --time=09:00 --cliffs=2022-01-15T00:00
-[
-  {
-    "coins": "500000000ubld",
-    "length_seconds": 32711400
-  },
-  {
-    "coins": "41666666ubld",
-    "length_seconds": 1501200
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2419200
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2674800
-  },
-  {
-    "coins": "41666666ubld",
-    "length_seconds": 2592000
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2678400
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2592000
-  },
-  {
-    "coins": "41666666ubld",
-    "length_seconds": 2678400
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2678400
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2592000
-  },
-  {
-    "coins": "41666666ubld",
-    "length_seconds": 2678400
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2595600
-  },
-  {
-    "coins": "41666667ubld",
-    "length_seconds": 2678400
-  }
-]
+{
+  "start_time": 1609488000,
+  "periods": [
+    {
+      "coins": "500000000ubld",
+      "length_seconds": 32745600
+    },
+    {
+      "coins": "41666666ubld",
+      "length_seconds": 1501200
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2419200
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2674800
+    },
+    {
+      "coins": "41666666ubld",
+      "length_seconds": 2592000
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2678400
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2592000
+    },
+    {
+      "coins": "41666666ubld",
+      "length_seconds": 2678400
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2678400
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2592000
+    },
+    {
+      "coins": "41666666ubld",
+      "length_seconds": 2678400
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2595600
+    },
+    {
+      "coins": "41666667ubld",
+      "length_seconds": 2678400
+    }
+  ]
+}
 ```

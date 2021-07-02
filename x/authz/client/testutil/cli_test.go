@@ -15,7 +15,3 @@ func TestIntegrationTestSuite(t *testing.T) {
 	cfg.NumValidators = 1
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }
-
-func TestGRPCQueryTestSuite(t *testing.T) {
-	suite.Run(t, new(GRPCQueryTestSuite))
-}

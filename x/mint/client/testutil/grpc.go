@@ -8,53 +8,11 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-type GRPCQueryTestSuite struct {
-	suite.Suite
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *GRPCQueryTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	cfg := network.DefaultConfig()
-
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
-
-	var mintData minttypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
-
-	inflation := sdk.MustNewDecFromStr("1.0")
-	mintData.Minter.Inflation = inflation
-	mintData.Params.InflationMin = inflation
-	mintData.Params.InflationMax = inflation
-
-	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
-	s.Require().NoError(err)
-	genesisState[minttypes.ModuleName] = mintDataBz
-	cfg.GenesisState = genesisState
-
-	s.cfg = cfg
-	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
-	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *GRPCQueryTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
-
-func (s *GRPCQueryTestSuite) TestQueryGRPC() {
+func (s *IntegrationTestSuite) TestQueryGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {

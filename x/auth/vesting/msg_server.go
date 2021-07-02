@@ -122,10 +122,6 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
-	if msg.StartTime < ctx.BlockTime().Unix() {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrLogic, "StartTime must be after the current blocktime", msg.ToAddress)
-
-	}
 	var totalCoins sdk.Coins
 
 	for _, period := range msg.VestingPeriods {

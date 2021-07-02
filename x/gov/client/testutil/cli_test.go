@@ -27,7 +27,3 @@ func TestIntegrationTestSuite(t *testing.T) {
 	cfg.GenesisState["gov"] = bz
 	suite.Run(t, NewDepositTestSuite(cfg))
 }
-
-func TestGRPCQueryTestSuite(t *testing.T) {
-	suite.Run(t, new(GRPCQueryTestSuite))
-}

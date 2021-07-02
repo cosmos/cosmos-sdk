@@ -4,72 +4,15 @@ import (
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-type GRPCQueryTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *GRPCQueryTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	s.cfg = network.DefaultConfig()
-	s.cfg.NumValidators = 1
-
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	val := s.network.Validators[0]
-
-	// create a proposal with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// vote for proposal
-	_, err = MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
-	s.Require().NoError(err)
-
-	// create a proposal without deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// create a proposal3 with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// vote for proposal3 as val
-	_, err = MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
-	s.Require().NoError(err)
-}
-
-func (s *GRPCQueryTestSuite) TestGetProposalGRPC() {
+func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -113,7 +56,7 @@ func (s *GRPCQueryTestSuite) TestGetProposalGRPC() {
 	}
 }
 
-func (s *GRPCQueryTestSuite) TestGetProposalsGRPC() {
+func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -167,7 +110,7 @@ func (s *GRPCQueryTestSuite) TestGetProposalsGRPC() {
 	}
 }
 
-func (s *GRPCQueryTestSuite) TestGetProposalVoteGRPC() {
+func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	val := s.network.Validators[0]
 
 	voterAddressBech32 := val.Address.String()
@@ -239,7 +182,7 @@ func (s *GRPCQueryTestSuite) TestGetProposalVoteGRPC() {
 	}
 }
 
-func (s *GRPCQueryTestSuite) TestGetProposalVotesGRPC() {
+func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -278,7 +221,7 @@ func (s *GRPCQueryTestSuite) TestGetProposalVotesGRPC() {
 	}
 }
 
-func (s *GRPCQueryTestSuite) TestGetProposalDepositGRPC() {
+func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -327,7 +270,7 @@ func (s *GRPCQueryTestSuite) TestGetProposalDepositGRPC() {
 	}
 }
 
-func (s *GRPCQueryTestSuite) TestGetProposalDepositsGRPC() {
+func (s *IntegrationTestSuite) TestGetProposalDepositsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -367,7 +310,7 @@ func (s *GRPCQueryTestSuite) TestGetProposalDepositsGRPC() {
 	}
 }
 
-func (s *GRPCQueryTestSuite) TestGetTallyGRPC() {
+func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -411,7 +354,7 @@ func (s *GRPCQueryTestSuite) TestGetTallyGRPC() {
 	}
 }
 
-func (s *GRPCQueryTestSuite) TestGetParamsGRPC() {
+func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {

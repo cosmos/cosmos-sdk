@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/pkg/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
 	yaml "gopkg.in/yaml.v2"
@@ -29,7 +28,7 @@ func ShowNodeIDCmd() *cobra.Command {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
-			nodeKeyID, err := p2p.LoadNodeKeyID(cfg.NodeKeyFile())
+			nodeKeyID, err := cfg.LoadNodeKeyID()
 			if err != nil {
 				return err
 			}

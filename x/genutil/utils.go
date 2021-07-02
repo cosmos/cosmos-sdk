@@ -11,7 +11,6 @@ import (
 	cfg "github.com/tendermint/tendermint/config"
 	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	tmos "github.com/tendermint/tendermint/libs/os"
-	"github.com/tendermint/tendermint/pkg/p2p"
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -62,7 +61,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, fmt.Errorf("invalid mnemonic")
 	}
 
-	nodeKey, err := p2p.LoadOrGenNodeKeyID(config.NodeKeyFile())
+	nodeKey, err := config.LoadOrGenNodeKeyID()
 	if err != nil {
 		return "", nil, err
 	}

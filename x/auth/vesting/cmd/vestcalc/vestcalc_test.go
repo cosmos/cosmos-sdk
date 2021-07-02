@@ -72,7 +72,7 @@ func TestDivision(t *testing.T) {
 }
 
 func iso(s string) time.Time {
-	t, _ := time.ParseInLocation(shortIsoFmt, s, time.Local)
+	t, _ := parseIso(s)
 	return t
 }
 
@@ -81,7 +81,7 @@ func hhmm(s string) time.Time {
 	return t
 }
 
-func TestVestingTimes(t *testing.T) {
+func TestMonthlyVestTimes(t *testing.T) {
 	for _, tt := range []struct {
 		Name      string
 		Start     time.Time
@@ -92,7 +92,7 @@ func TestVestingTimes(t *testing.T) {
 	}{
 		{
 			Name:      "first",
-			Start:     iso("2020-01-01T16:00"),
+			Start:     iso("2020-01-01"),
 			Months:    12,
 			TimeOfDay: hhmm("12:00"),
 			Want: []time.Time{
@@ -112,7 +112,7 @@ func TestVestingTimes(t *testing.T) {
 		},
 	} {
 		t.Run(tt.Name, func(t *testing.T) {
-			got, err := vestingTimes(tt.Start, tt.Months, tt.TimeOfDay)
+			got, err := monthlyVestTimes(tt.Start, tt.Months, tt.TimeOfDay)
 			if err != nil {
 				if tt.WantErr {
 					return

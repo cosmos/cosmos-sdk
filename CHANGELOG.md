@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### CLI Breaking Changes
 
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
+* [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml
 
 ### Improvements
 * (cli) [\#9593](https://github.com/cosmos/cosmos-sdk/pull/9593) Check if chain-id is blank before verifying signatures in multisign and error.
@@ -78,8 +79,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9540](https://github.com/cosmos/cosmos-sdk/pull/9540) Add output flag for query txs command.
 * (errors) [\#8845](https://github.com/cosmos/cosmos-sdk/pull/8845) Add `Error.Wrap` handy method
 * [\#8518](https://github.com/cosmos/cosmos-sdk/pull/8518) Help users of multisig wallets debug signature issues.
-* [\#8415](https://github.com/cosmos/cosmos-sdk/pull/8415) Introduce ADR-028 address generation algorithm and Extensible address format.
-* [\#8459](https://github.com/cosmos/cosmos-sdk/pull/8259) Generic 02-client cli cmds, removes light client specific ones
 
 
 ### Client Breaking Changes
@@ -96,7 +95,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * via `ServiceMsg` TypeURLs (e.g. `message.action='/cosmos.bank.v1beta1.Msg/Send'`) does not work anymore,
   * via legacy `msg.Type()` (e.g. `message.action='send'`) is being deprecated, new `Msg`s won't emit these events.
   * Please use concrete `Msg` TypeURLs instead (e.g. `message.action='/cosmos.bank.v1beta1.MsgSend'`).
-* [\#8512](https://github.com/cosmos/cosmos-sdk/pull/8512) Add support for searching for legacy Msgs and service Msgs
 
 
 ### API Breaking Changes
@@ -141,8 +139,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (codec) [\#9251](https://github.com/cosmos/cosmos-sdk/pull/9251) Rename `clientCtx.JSONMarshaler` to `clientCtx.JSONCodec` as per #9226.
 * (x/bank) [\#9271](https://github.com/cosmos/cosmos-sdk/pull/9271) SendEnabledCoin(s) renamed to IsSendEnabledCoin(s) to better reflect its functionality.
 * (x/bank) [\#9550](https://github.com/cosmos/cosmos-sdk/pull/9550) `server.InterceptConfigsPreRunHandler` now takes 2 additional arguments: customAppConfigTemplate and customAppConfig. If you don't need to customize these, simply put `""` and `nil`.
-*[\#8250](https://github.com/cosmos/cosmos-sdk/pull/8250) Reuse encoding config instead of recreating it in AppCreator. 
-[\#8245](https://github.com/cosmos/cosmos-sdk/pull/8245) Removed `simapp.MakeCodecs` and use `simapp.MakeTestEncodingConfig` instead.
+* [\#8245](https://github.com/cosmos/cosmos-sdk/pull/8245) Removed `simapp.MakeCodecs` and use `simapp.MakeTestEncodingConfig` instead.
 
 
 ### State Machine Breaking
@@ -153,8 +150,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#8656](https://github.com/cosmos/cosmos-sdk/pull/8656) balance and supply are now correctly tracked via `coin_spent`, `coin_received`, `coinbase` and `burn` events.
 * (x/bank) [\#8517](https://github.com/cosmos/cosmos-sdk/pull/8517) Supply is now stored and tracked as `sdk.Coins`
 * (x/bank) [\#9051](https://github.com/cosmos/cosmos-sdk/pull/9051) Supply value is stored as `sdk.Int` rather than `string`.
- (x/ibc) [\#8405](https://github.com/cosmos/cosmos-sdk/pull/8405) Refactor IBC client update governance proposals to use a substitute client to update a frozen or expired client.
-(x/ibc) [\#8437](https://github.com/cosmos/cosmos-sdk/pull/8437) Enable IBC amino for MsgTransfer only.
 
 
 ### CLI Breaking Changes
@@ -163,7 +158,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#8628](https://github.com/cosmos/cosmos-sdk/issues/8628) Commands no longer print outputs using `stderr` by default
 * [\#9134](https://github.com/cosmos/cosmos-sdk/pull/9134) Renamed the CLI flag `--memo` to `--note`.
 * [\#9291](https://github.com/cosmos/cosmos-sdk/pull/9291) Migration scripts prior to v0.38 have been removed from the CLI `migrate` command. The oldest supported migration is v0.39->v0.42.
-* [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml
 
 
 ### Improvements
@@ -189,11 +183,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [\#9423](https://github.com/cosmos/cosmos-sdk/pull/9423) Staking delegations now returns empty list instead of rpc error when no records found.
 * (x/auth) [\#9553](https://github.com/cosmos/cosmos-sdk/pull/9553) The `--multisig` flag now accepts both a name and address.
 * (baseapp) [\#9578](https://github.com/cosmos/cosmos-sdk/pull/9578) Return `Baseapp`'s `trace` value for logging error stack traces.
-* (x/bank)[\#8612](https://github.com/cosmos/cosmos-sdk/pull/8612) Add an additional test case when the display denom is the base denom
-* [\#8561](https://github.com/cosmos/cosmos-sdk/pull/8561) Add github action for atlas deployment
 * [\#8549](https://github.com/cosmos/cosmos-sdk/pull/8549) Make gRPC requests go through tendermint Query
-* (x/ibc) [\#8574](https://github.com/cosmos/cosmos-sdk/issues/8574) Replace strings.Contains to bytes.Contains
-* [\#8093](https://github.com/cosmos/cosmos-sdk/pull/8093) Limit context background.
+* [\#8093](https://github.com/cosmos/cosmos-sdk/pull/8093) Limit usage of context.background.
 * [\#8460](https://github.com/cosmos/cosmos-sdk/pull/8460) Ensure b.ReportAllocs() in all the benchmarks
 * [\#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix upgrade tx commands not showing up in CLI
 
@@ -216,11 +207,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (keyring) [\#9583](https://github.com/cosmos/cosmos-sdk/pull/9583) Fix correct population of legacy `Vote.Option` field for votes with 1 VoteOption of weight 1.
 * (x/distinction) [\#8918](https://github.com/cosmos/cosmos-sdk/pull/8918) Fix module's parameters validation.
 * (x/gov/types) [\#8586](https://github.com/cosmos/cosmos-sdk/pull/8586) Fix bug caused by NewProposal that unnecessarily creates a Proposal object that’s discarded on any error.
-* [\#8580] (https://github.com/cosmos/cosmos-sdk/pull/8580) Use more cheaper method from the math/big package that provides a way to trivially check if a value is zero with .BitLen() == 0
-* [\#8567] (https://github.com/cosmos/cosmos-sdk/pull/8567) Fix bug by introducing pagination to GetValidatorSetByHeight response
-*  (x/bank) [\#8531] (https://github.com/cosmos/cosmos-sdk/pull/8531) Fix bug caused by ignoring errors returned by Balance.GetAddress()
-(server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
-[\#8282](https://github.com/cosmos/cosmos-sdk/pull/8282) fix zero time checks
+* [\#8580](https://github.com/cosmos/cosmos-sdk/pull/8580) Use more cheaper method from the math/big package that provides a way to trivially check if a value is zero with .BitLen() == 0
+* [\#8567](https://github.com/cosmos/cosmos-sdk/pull/8567) Fix bug by introducing pagination to GetValidatorSetByHeight response
+* (x/bank) [\#8531](https://github.com/cosmos/cosmos-sdk/pull/8531) Fix bug caused by ignoring errors returned by Balance.GetAddress()
+* (server) [\#8399](https://github.com/cosmos/cosmos-sdk/pull/8399) fix gRPC-web flag default value
+* [\#8282](https://github.com/cosmos/cosmos-sdk/pull/8282) fix zero time checks
 
 
 ### Deprecated

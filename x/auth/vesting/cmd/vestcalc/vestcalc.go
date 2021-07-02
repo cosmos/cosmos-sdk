@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
 
 // divide returns the division of total as evenly as possible.
@@ -80,14 +82,6 @@ func monthlyVestTimes(startTime time.Time, months int32, timeOfDay time.Time) ([
 	return times, nil
 }
 
-// period represents a single period in the vesting schdule.
-// The length in seconds is the time to the vesting event
-// from the previous event in the file, or the start time.
-type period struct {
-	Coins  string `json:"coins"`
-	Length int64  `json:"length_seconds"`
-}
-
 // encodeCoins encodes the given amount and denomination in coin format.
 // TODO: use sdk standard coin parsing and formatting.
 func encodeCoins(amount int64, denom string) string {
@@ -103,13 +97,13 @@ func parseCoins(coins string) (int64, string) {
 }
 
 // marshalPeriods gives the JSON encoding.
-func marshalPeriods(periods []period) ([]byte, error) {
+func marshalPeriods(periods []cli.InputPeriod) ([]byte, error) {
 	return json.MarshalIndent(periods, "", "  ")
 }
 
 // unmarshalPeriods parses an array of periods in JSON.
-func unmarshalPeriods(bz []byte) ([]period, error) {
-	periods := []period{}
+func unmarshalPeriods(bz []byte) ([]cli.InputPeriod, error) {
+	periods := []cli.InputPeriod{}
 	err := json.Unmarshal(bz, &periods)
 	if err != nil {
 		return nil, err
@@ -192,12 +186,12 @@ func applyCliff(events []event, cliff time.Time) ([]event, error) {
 
 // eventsToPeriods converts the events to periods with the given start time
 // and denomination.
-func eventsToPeriods(startTime time.Time, events []event, denom string) []period {
-	periods := []period{}
+func eventsToPeriods(startTime time.Time, events []event, denom string) []cli.InputPeriod {
+	periods := []cli.InputPeriod{}
 	lastTime := startTime
 	for _, e := range events {
 		dur := e.Time.Sub(lastTime)
-		p := period{
+		p := cli.InputPeriod{
 			Coins:  encodeCoins(e.Amount, denom),
 			Length: int64(dur.Seconds()),
 		}
@@ -208,7 +202,7 @@ func eventsToPeriods(startTime time.Time, events []event, denom string) []period
 }
 
 // periodsToEvents converts periods to events with the given start time.
-func periodsToEvents(startTime time.Time, periods []period) []event {
+func periodsToEvents(startTime time.Time, periods []cli.InputPeriod) []event {
 	events := []event{}
 	lastTime := startTime
 	for _, p := range periods {
@@ -434,7 +428,7 @@ func genReadConfig() (readConfig, error) {
 }
 
 // convertAbsolute converts relative periods to absolute events.
-func (rc readConfig) convertAbsolute(periods []period) []event {
+func (rc readConfig) convertAbsolute(periods []cli.InputPeriod) []event {
 	return periodsToEvents(rc.startTime, periods)
 }
 
@@ -523,7 +517,7 @@ func (wc writeConfig) generateEvents() ([]event, error) {
 }
 
 // convertRelative converts absolute-time events to relative periods.
-func (wc writeConfig) convertRelative(events []event) []period {
+func (wc writeConfig) convertRelative(events []event) []cli.InputPeriod {
 	return eventsToPeriods(wc.Start, events, wc.Denom)
 }
 

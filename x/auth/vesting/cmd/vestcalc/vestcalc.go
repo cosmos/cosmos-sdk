@@ -13,6 +13,11 @@ import (
 
 // shortIsoFmt specifies ISO 8601 without seconds or timezone.
 // Note: when parsing, timezone is UTC unless overridden.
+// TODO: write parser/formatter to flexibly accept longest prefix of
+// YYYY-MM-DD
+// YYYY-MM-DDThh:mm
+// YYYY-MM-DDThh:mm:ss
+// YYYY-MM-DDThh:mm:ss<tzspec>
 const shortIsoFmt = "2006-01-02T15:04"
 
 // hhmmFmt specifies an HH:MM time format to generate time.Time values
@@ -97,6 +102,7 @@ type period struct {
 }
 
 // encodeCoins encodes the given amount and denomination in coin format.
+// TODO: use sdk standard coin parsing and formatting.
 func encodeCoins(amount int64, denom string) string {
 	return fmt.Sprint(amount) + denom
 }
@@ -126,9 +132,10 @@ func unmarshalPeriods(bz []byte) ([]period, error) {
 
 // event represents a single vesting event with an absolute time.
 // The denomination must be understood by context.
+// TODO: switch to sdk.Coins - doesn't need to be just one denom.
 type event struct {
 	Time   time.Time
-	Amount int64 // TODO support 255-bit coin amounts
+	Amount int64 // TODO replace int64 with sdk.Int
 }
 
 // zipEvents generates events by zipping corresponding amounts and times.
@@ -282,7 +289,7 @@ func maxTime(cliffs []time.Time) time.Time {
 }
 
 var (
-	validDenoms = map[string]bool{"ubld": true}
+	validDenoms = map[string]bool{"ubld": true} // TODO replace with cosmos-sdk denom validation
 )
 
 // Custom flag types

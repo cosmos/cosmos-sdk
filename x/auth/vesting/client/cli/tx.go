@@ -85,8 +85,8 @@ timestamp.`,
 }
 
 type VestingData struct {
-	StartTime int64
-	Periods   []InputPeriod
+	StartTime int64         `json:"start_time"`
+	Periods   []InputPeriod `json:"periods"`
 }
 
 type InputPeriod struct {
@@ -94,8 +94,8 @@ type InputPeriod struct {
 	Length int64  `json:"length_seconds"`
 }
 
-// NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
-// MsgCreateVestingAccount transaction.
+// NewMsgCreatePeriodicVestingAccountCmd returns a CLI command handler for creating a
+// MsgCreatePeriodicVestingAccountCmd transaction.
 func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",

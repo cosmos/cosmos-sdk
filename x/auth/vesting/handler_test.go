@@ -102,7 +102,7 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 
 	period := []types.Period{{Length: 5000, Amount: balances}}
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(suite.app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(suite.app, ctx, addr1, balances))
 
 	testCases := []struct {
 		name      string
@@ -111,7 +111,7 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 	}{
 		{
 			name:      "continuous vesting account already exists",
-			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, period),
+			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, period),
 			expectErr: true,
 		},
 	}

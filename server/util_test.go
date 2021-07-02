@@ -13,19 +13,10 @@ import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/config"
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
 var errCanceledInPreRun = errors.New("canceled in prerun")
@@ -446,59 +437,3 @@ func TestInterceptConfigsWithBadPermissions(t *testing.T) {
 		t.Fatalf("Failed to catch permissions error, got: [%T] %v", err, err)
 	}
 }
-
-func TestEmptyMinGasPrices(t *testing.T) {
-	tempDir := t.TempDir()
-	err := os.Mkdir(filepath.Join(tempDir, "config"), os.ModePerm)
-	require.NoError(t, err)
-	encCfg := testutil.MakeTestEncodingConfig(codectestutil.CodecOptions{})
-
-	// Run InitCmd to create necessary config files.
-	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)
-	serverCtx := server.NewDefaultContext()
-	serverCtx.Config.SetRoot(tempDir)
-	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
-	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
-	cmd := genutilcli.InitCmd(module.NewManager())
-	cmd.SetArgs([]string{"appnode-test"})
-	err = cmd.ExecuteContext(ctx)
-	require.NoError(t, err)
-
-	// Modify app.toml.
-	appCfgTempFilePath := filepath.Join(tempDir, "config", "app.toml")
-	appConf := config.DefaultConfig()
-	appConf.BaseConfig.MinGasPrices = ""
-	err = config.WriteConfigFile(appCfgTempFilePath, appConf)
-	require.NoError(t, err)
-
-	// Run StartCmd.
-	cmd = server.StartCmd[servertypes.Application](nil)
-	cmd.PersistentFlags().String(flags.FlagHome, tempDir, "")
-	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		ctx, err := server.InterceptConfigsAndCreateContext(cmd, "", nil, cmtcfg.DefaultConfig())
-		if err != nil {
-			return err
-		}
-
-		return server.SetCmdServerContext(cmd, ctx)
-	}
-	err = cmd.ExecuteContext(ctx)
-	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
-}
-
-type mapGetter map[string]interface{}
-
-func (m mapGetter) Get(key string) interface{} {
-	return m[key]
-}
-
-func (m mapGetter) GetString(key string) string {
-	str, ok := m[key]
-	if !ok {
-		return ""
-	}
-
-	return str.(string)
-}
-
-var _ servertypes.AppOptions = mapGetter{}

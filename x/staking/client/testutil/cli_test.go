@@ -14,6 +14,4 @@ func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 2
 	suite.Run(t, NewIntegrationTestSuite(cfg))
-
-	suite.Run(t, new(GRPCQueryTestSuite))
 }

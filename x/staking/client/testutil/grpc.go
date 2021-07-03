@@ -750,7 +750,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryPool() {
 			&types.QueryPoolResponse{},
 			&types.QueryPoolResponse{
 				Pool: types.Pool{
-					NotBondedTokens: sdk.NewInt(10),
+					NotBondedTokens: sdk.NewInt(0),
 					BondedTokens:    cli.DefaultTokens.Mul(sdk.NewInt(2)),
 				},
 			},

@@ -5,50 +5,83 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"strings"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
 
 // divide returns the division of total as evenly as possible.
-// Divisions must be 1 or greater and total must be nonnegative.
-func divide(total int64, divisions int32) ([]int64, error) {
-	if divisions < 1 {
+// Divisor must be 1 or greater and total must be nonnegative.
+func divide(total sdk.Int, divisor int) ([]sdk.Int, error) {
+	if divisor < 1 {
 		return nil, fmt.Errorf("divisions must be 1 or greater")
 	}
-	if total < 0 {
+	div64 := int64(divisor)
+	if total.IsNegative() {
 		return nil, fmt.Errorf("total must be nonnegative")
 	}
-	a := make([]int64, divisions)
-	// Figure out the truncated division and the amount left over.
-	// Fact: remainder < divisions
-	truncated := total / int64(divisions)
-	remainder := total - truncated*int64(divisions)
-	runningTot := int64(0)
-	for i := int32(0); i < divisions; i++ {
-		// restrictiong divisions to int32 prevents overflow
-		nextTot := remainder * int64(i+1) / int64(divisions)
-		a[i] = truncated + nextTot - runningTot
-		runningTot = nextTot
+	divisions := make([]sdk.Int, divisor)
+	// Calculate truncated division and the remainder.
+	// Fact: remainder < divisions, hence fits in int64
+	truncated := total.QuoRaw(div64)
+	remainder := total.ModRaw(div64)
+	fraction := sdk.NewInt(0) // poirtion of remainder which has been doled out
+	for i := int64(0); i < div64; i++ {
+		// multiply will not overflow since remainder and i are < 2^63
+		nextFraction := remainder.MulRaw(i + 1).QuoRaw(div64)
+		divisions[i] = truncated.Add(nextFraction.Sub(fraction))
+		fraction = nextFraction
 	}
 	// Integrity check
-	sum := int64(0)
-	for _, x := range a {
-		sum = sum + x
+	sum := sdk.NewInt(0)
+	for _, x := range divisions {
+		sum = sum.Add(x)
 	}
-	if sum != total {
-		return nil, fmt.Errorf("failed integrity check: divisions sum to %d, should be %d", sum, total)
+	if !sum.Equal(total) {
+		return nil, fmt.Errorf("failed integrity check: divisions of %v sum to %d, should be %d", divisions, sum, total)
 	}
-	return a, nil
+	return divisions, nil
+}
+
+func divideCoins(coins sdk.Coins, divisor int) ([]sdk.Coins, error) {
+	if divisor < 1 {
+		return nil, fmt.Errorf("divisor must be 1 or greater")
+	}
+	divisions := make([]sdk.Coins, divisor)
+	divisionsByDenom := make(map[string][]sdk.Int)
+	for _, coin := range coins {
+		dividedCoin, err := divide(coin.Amount, divisor)
+		if err != nil {
+			return nil, fmt.Errorf("cannot divide %s: %v", coin.Denom, err)
+		}
+		divisionsByDenom[coin.Denom] = dividedCoin
+	}
+	for i := 0; i < divisor; i++ {
+		newCoins := sdk.NewCoins()
+		for _, coin := range coins {
+			c := sdk.NewCoin(coin.Denom, divisionsByDenom[coin.Denom][i])
+			newCoins = newCoins.Add(c)
+		}
+		divisions[i] = newCoins
+	}
+	// Integrity check
+	sum := sdk.NewCoins()
+	for _, c := range divisions {
+		sum = sum.Add(c...)
+	}
+	if !sum.IsEqual(coins) {
+		return nil, fmt.Errorf("failed integrity check: divisions of %v sum to %s, should be %s", divisions, sum, coins)
+	}
+	return divisions, nil
 }
 
 // monthlyVestTimes generates timestamps for successive months after startTime.
 // The monthly events occur at the given time of day. If the month is not
 // long enough for the desired date, the last day of the month is used.
-func monthlyVestTimes(startTime time.Time, months int32, timeOfDay time.Time) ([]time.Time, error) {
+func monthlyVestTimes(startTime time.Time, months int, timeOfDay time.Time) ([]time.Time, error) {
 	if months < 1 {
 		return nil, fmt.Errorf("must have at least one vesting period")
 	}
@@ -57,7 +90,7 @@ func monthlyVestTimes(startTime time.Time, months int32, timeOfDay time.Time) ([
 	minute := timeOfDay.Minute()
 	second := timeOfDay.Second()
 	times := make([]time.Time, months)
-	for i := 1; i <= int(months); i++ {
+	for i := 1; i <= months; i++ {
 		tm := startTime.AddDate(0, int(i), 0)
 		if tm.Day() != startTime.Day() {
 			// The starting day-of-month cannot fit in this month,
@@ -82,20 +115,6 @@ func monthlyVestTimes(startTime time.Time, months int32, timeOfDay time.Time) ([
 	return times, nil
 }
 
-// encodeCoins encodes the given amount and denomination in coin format.
-// TODO: use sdk standard coin parsing and formatting.
-func encodeCoins(amount int64, denom string) string {
-	return fmt.Sprint(amount) + denom
-}
-
-// parseCoins decodes the coin format into an amount and denomination
-func parseCoins(coins string) (int64, string) {
-	var amount int64
-	var denom string
-	fmt.Sscanf(coins, "%d%s", &amount, &denom)
-	return amount, denom
-}
-
 // marshalVestingData gives the JSON encoding.
 func marshalVestingData(data cli.VestingData) ([]byte, error) {
 	return json.MarshalIndent(data, "", "  ")
@@ -109,22 +128,20 @@ func unmarshalVestingData(bz []byte) (cli.VestingData, error) {
 }
 
 // event represents a single vesting event with an absolute time.
-// The denomination must be understood by context.
-// TODO: switch to sdk.Coins - doesn't need to be just one denom.
 type event struct {
-	Time   time.Time
-	Amount int64 // TODO replace int64 with sdk.Int
+	Time  time.Time
+	Coins sdk.Coins
 }
 
 // zipEvents generates events by zipping corresponding amounts and times.
-func zipEvents(amounts []int64, times []time.Time) ([]event, error) {
-	n := len(amounts)
+func zipEvents(divisions []sdk.Coins, times []time.Time) ([]event, error) {
+	n := len(divisions)
 	if len(times) != n {
 		return nil, fmt.Errorf("amount and time arrays are unequal")
 	}
 	events := make([]event, n)
 	for i := 0; i < n; i++ {
-		events[i] = event{Time: times[i], Amount: amounts[i]}
+		events[i] = event{Time: times[i], Coins: divisions[i]}
 	}
 	return events, nil
 }
@@ -137,7 +154,7 @@ func marshalEvents(events []event) ([]byte, error) {
 		b.WriteString("    ")
 		b.WriteString(formatIso(e.Time))
 		b.WriteString(": ")
-		b.WriteString(fmt.Sprint(e.Amount))
+		b.WriteString(e.Coins.String())
 		b.WriteString("\n")
 	}
 	b.WriteString("]")
@@ -148,48 +165,47 @@ func marshalEvents(events []event) ([]byte, error) {
 // into a single event, leaving subsequent events unchanged.
 func applyCliff(events []event, cliff time.Time) ([]event, error) {
 	newEvents := []event{}
-	amount := int64(0)
+	coins := sdk.NewCoins()
 	for _, e := range events {
 		if !e.Time.After(cliff) {
-			amount = amount + e.Amount
+			coins = coins.Add(e.Coins...)
 			continue
 		}
-		if amount != 0 {
-			cliffEvent := event{Time: cliff, Amount: amount}
+		if !coins.IsZero() {
+			cliffEvent := event{Time: cliff, Coins: coins}
 			newEvents = append(newEvents, cliffEvent)
-			amount = 0
+			coins = sdk.NewCoins()
 		}
 		newEvents = append(newEvents, e)
 	}
-	if amount != 0 {
+	if !coins.IsZero() {
 		// special case if all events are before the cliff
-		cliffEvent := event{Time: cliff, Amount: amount}
+		cliffEvent := event{Time: cliff, Coins: coins}
 		newEvents = append(newEvents, cliffEvent)
 	}
 	// integrity check
-	oldTotal := int64(0)
+	oldTotal := sdk.NewCoins()
 	for _, e := range events {
-		oldTotal = oldTotal + e.Amount
+		oldTotal = oldTotal.Add(e.Coins...)
 	}
-	newTotal := int64(0)
+	newTotal := sdk.NewCoins()
 	for _, e := range newEvents {
-		newTotal = newTotal + e.Amount
+		newTotal = newTotal.Add(e.Coins...)
 	}
-	if oldTotal != newTotal {
-		return nil, fmt.Errorf("applying vesting cliff changed total from %d to %d", oldTotal, newTotal)
+	if !oldTotal.IsEqual(newTotal) {
+		return nil, fmt.Errorf("applying vesting cliff changed total from %s to %s", oldTotal, newTotal)
 	}
 	return newEvents, nil
 }
 
-// eventsToVestingData converts the events to VestingData with the given start time
-// and denomination.
-func eventsToVestingData(startTime time.Time, events []event, denom string) cli.VestingData {
+// eventsToVestingData converts the events to VestingData with the given start time.
+func eventsToVestingData(startTime time.Time, events []event) cli.VestingData {
 	periods := []cli.InputPeriod{}
 	lastTime := startTime
 	for _, e := range events {
 		dur := e.Time.Sub(lastTime)
 		p := cli.InputPeriod{
-			Coins:  encodeCoins(e.Amount, denom),
+			Coins:  e.Coins.String(),
 			Length: int64(dur.Seconds()),
 		}
 		periods = append(periods, p)
@@ -201,22 +217,25 @@ func eventsToVestingData(startTime time.Time, events []event, denom string) cli.
 	}
 }
 
-// vestingDataToEvents converts periods to events with the given start time.
-func vestingDataToEvents(data cli.VestingData) []event {
+// vestingDataToEvents converts the vesting data to absolute-timestamped events.
+func vestingDataToEvents(data cli.VestingData) ([]event, error) {
 	startTime := time.Unix(data.StartTime, 0)
 	events := []event{}
 	lastTime := startTime
 	for _, p := range data.Periods {
-		amount, _ := parseCoins(p.Coins)
+		coins, err := sdk.ParseCoinsNormalized(p.Coins)
+		if err != nil {
+			return nil, err
+		}
 		newTime := lastTime.Add(time.Duration(p.Length) * time.Second)
 		e := event{
-			Time:   newTime,
-			Amount: amount,
+			Time:  newTime,
+			Coins: coins,
 		}
 		events = append(events, e)
 		lastTime = newTime
 	}
-	return events
+	return events, nil
 }
 
 // Time utilities
@@ -271,10 +290,6 @@ func maxTime(cliffs []time.Time) time.Time {
 	}
 	return tm
 }
-
-var (
-	validDenoms = map[string]bool{"ubld": true} // TODO replace with cosmos-sdk denom validation
-)
 
 // shortIsoFmt specifies ISO 8601 without seconds or timezone.
 // Note: when parsing, timezone is UTC unless overridden.
@@ -405,8 +420,7 @@ func isoTimeFlag(name string, value string, usage string) *time.Time {
 var (
 	flagStart  = isoDateFlag("start", "Start date for the vesting in format 2006-01-02T15:04 (local time).")
 	flagMonths = flag.Int("months", 1, "Number of months to vest over.")
-	flagAmount = flag.Int64("amount", 0, "Total amount to vest.")
-	flagDenom  = flag.String("denom", "ubld", "Denomination of amount.")
+	flagCoins  = flag.String("coins", "", "Total coins to vest.")
 	flagTime   = isoTimeFlag("time", "00:00", "Time of day for vesting, e.g. 15:04.")
 	flagCliffs = isoDateListFlag("cliffs", "Vesting cliffs in format 2006-01-02T15:04 (local time).")
 	flagRead   = flag.Bool("read", false, "Read periods file from stdin and print dates relative to start.")
@@ -426,7 +440,10 @@ func readCmd() {
 		fmt.Fprintf(os.Stderr, "cannot decode vesting data: %v", err)
 		return
 	}
-	events := vestingDataToEvents(vestingData)
+	events, err := vestingDataToEvents(vestingData)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "cannot convert vesting data: %v", err)
+	}
 	bzOut, err := marshalEvents(events)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "cannot encode events: %v", err)
@@ -437,9 +454,8 @@ func readCmd() {
 
 // writeConfig bundles data needed for the write operation.
 type writeConfig struct {
-	Amount    int64
-	Denom     string
-	Months    int32
+	Coins     sdk.Coins
+	Months    int
 	TimeOfDay time.Time
 	Start     time.Time
 	Cliffs    []time.Time
@@ -448,18 +464,15 @@ type writeConfig struct {
 // genWriteConfig generates a writeConfig from flag settings and validates it.
 func genWriteConfig() (writeConfig, error) {
 	wc := writeConfig{}
-	if *flagAmount < 1 {
-		return wc, fmt.Errorf("must have a postive amount")
+	coins, err := sdk.ParseCoinsNormalized(*flagCoins)
+	if err != nil {
+		return wc, fmt.Errorf("cannot parse --coins: %v", err)
 	}
-	wc.Amount = *flagAmount
-	if _, ok := validDenoms[*flagDenom]; !ok {
-		return wc, fmt.Errorf("must use a valid denomination (%v)", validDenoms)
-	}
-	wc.Denom = *flagDenom
-	if *flagMonths < 1 || *flagMonths > math.MaxInt32 {
+	wc.Coins = coins
+	if *flagMonths < 1 {
 		return wc, fmt.Errorf("must use a positive number of months")
 	}
-	wc.Months = int32(*flagMonths)
+	wc.Months = *flagMonths
 	wc.TimeOfDay = *flagTime
 	wc.Start = *flagStart
 	wc.Cliffs = *flagCliffs
@@ -470,7 +483,7 @@ func genWriteConfig() (writeConfig, error) {
 // denomination across the given monthly vesting events with the given start
 // time and subject to the vesting cliff times, if any.
 func (wc writeConfig) generateEvents() ([]event, error) {
-	divisions, err := divide(wc.Amount, wc.Months)
+	divisions, err := divideCoins(wc.Coins, wc.Months)
 	if err != nil {
 		return nil, fmt.Errorf("vesting amount division failed: %v", err)
 	}
@@ -494,7 +507,7 @@ func (wc writeConfig) generateEvents() ([]event, error) {
 
 // convertRelative converts absolute-time events to relative periods.
 func (wc writeConfig) convertRelative(events []event) cli.VestingData {
-	return eventsToVestingData(wc.Start, events, wc.Denom)
+	return eventsToVestingData(wc.Start, events)
 }
 
 // writeCmd generates a set of vesting events based on flags and writes a

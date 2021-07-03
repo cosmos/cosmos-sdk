@@ -751,7 +751,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryPool() {
 			&types.QueryPoolResponse{
 				Pool: types.Pool{
 					NotBondedTokens: sdk.NewInt(10),
-					BondedTokens:    cli.DefaultTokens.Mul(sdk.NewInt(2).Add(sdk.NewInt(140))),
+					BondedTokens:    cli.DefaultTokens.Mul(sdk.NewInt(2)),
 				},
 			},
 		},
@@ -759,7 +759,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryPool() {
 
 	for _, tc := range testCases {
 		tc := tc
-		resp, err := rest.GetRequest(tc.url)
+		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 		s.Run(tc.name, func() {
 			s.Require().NoError(err)
 			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))

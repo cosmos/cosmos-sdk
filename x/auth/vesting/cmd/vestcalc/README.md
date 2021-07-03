@@ -15,7 +15,8 @@ This tool correctly handles:
   the month happens on the 30th in June);
 - daylight saving time;
 - leap years;
-- large amounts (up to 9 quintillion).
+- gigantic amounts (up to 255-bit);
+- multiple denominations.
 
 Times are interpreted in the local timezone unless explicitly overridden,
 since the desired vesting schedule is commonly specified in local time.
@@ -27,9 +28,7 @@ running the command.
 When the `--write` flag is set, the tool will write a schedule in JSON to
 stdout. The following flags control the output:
 
-- `--amount`: A decimal number giving the total amount to vest.
-- `--denom`: The denomination for the amount.  Current valid options are:
-    - `ubld`: one millionth of an Agoric BLD
+- `--coins:` The coins to vest, e.g. `100ubld,50urun`.
 - `--months`: The number of months to vest over.
 - `--time`: The time of day of the vesting event, in 24-hour HH:MM format.
   Defaults to midnight.
@@ -43,31 +42,31 @@ stdout. The following flags control the output:
 
 ## Reading a schedule
 
-When the `--read` flag is set, th tool will read a schedule in JSON from
+When the `--read` flag is set, the tool will read a schedule in JSON from
 stdin and write the vesting events in absolute time to stdout.
 
 ## Examples
 
 ```
-$ vestcalc --write --start=2021-01-01 --amount=1000000000 --denom=ubld \
+$ vestcalc --write --start=2021-01-01 --coins=1000000000ubld \
 > --months=24 --time=09:00 --cliffs=2022-01-15T00:00 | \
 > vestcalc --read
 [
-    2022-01-15T00:00: 500000000
-    2022-02-01T09:00: 41666666
-    2022-03-01T09:00: 41666667
-    2022-04-01T09:00: 41666667
-    2022-05-01T09:00: 41666666
-    2022-06-01T09:00: 41666667
-    2022-07-01T09:00: 41666667
-    2022-08-01T09:00: 41666666
-    2022-09-01T09:00: 41666667
-    2022-10-01T09:00: 41666667
-    2022-11-01T09:00: 41666666
-    2022-12-01T09:00: 41666667
-    2023-01-01T09:00: 41666667
+    2022-01-15T00:00: 500000000ubld
+    2022-02-01T09:00: 41666666ubld
+    2022-03-01T09:00: 41666667ubld
+    2022-04-01T09:00: 41666667ubld
+    2022-05-01T09:00: 41666666ubld
+    2022-06-01T09:00: 41666667ubld
+    2022-07-01T09:00: 41666667ubld
+    2022-08-01T09:00: 41666666ubld
+    2022-09-01T09:00: 41666667ubld
+    2022-10-01T09:00: 41666667ubld
+    2022-11-01T09:00: 41666666ubld
+    2022-12-01T09:00: 41666667ubld
+    2023-01-01T09:00: 41666667ubld
 ]
-$ vestcalc --write --start=2021-01-01 --amount=1000000000 --denom=ubld \
+$ vestcalc --write --start=2021-01-01 --coins=1000000000ubld \
 > --months=24 --time=09:00 --cliffs=2022-01-15T00:00
 {
   "start_time": 1609488000,

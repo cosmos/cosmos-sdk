@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
 
@@ -13,11 +14,41 @@ const (
 	billion = int64(1000 * 1000 * 1000)
 )
 
+func iso(s string) time.Time {
+	t, err := parseIso(s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+func hhmm(s string) time.Time {
+	t, err := time.Parse(hhmmFmt, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+func coins(s string) sdk.Coins {
+	c, err := sdk.ParseCoinsNormalized(s)
+	if err != nil {
+		panic(err)
+	}
+	return c
+}
+
+func evt(ts string, cs string) event {
+	tm := iso(ts)
+	c := coins(cs)
+	return event{Time: tm, Coins: c}
+}
+
 func TestDivision(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
 		total     int64
-		divisions int32
+		divisions int
 		want      []int64
 	}{
 		{"zeroparts", 99, 0, nil},
@@ -56,16 +87,27 @@ func TestDivision(t *testing.T) {
 		}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _ := divide(tt.total, tt.divisions)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("divide got %v, want %v", got, tt.want)
+			got, err := divide(sdk.NewInt(tt.total), tt.divisions)
+			if err != nil {
+				if tt.want != nil {
+					t.Fatalf("divide got error %v", err)
+				}
+				return
+			}
+			if len(got) != tt.divisions || len(got) != len(tt.want) {
+				t.Fatalf("divide returned wrong size: got %d, want %d", len(got), len(tt.want))
+			}
+			for i := 0; i < len(got); i++ {
+				if !got[i].Equal(sdk.NewInt(tt.want[i])) {
+					t.Errorf("divide got %v, want %v", got, tt.want)
+				}
 			}
 			if got != nil {
-				sum := int64(0)
+				sum := sdk.NewInt(0)
 				for _, x := range got {
-					sum = sum + x
+					sum = sum.Add(x)
 				}
-				if sum != tt.total {
+				if !sum.Equal(sdk.NewInt(tt.total)) {
 					t.Errorf("divide total got %v, want %v", sum, tt.total)
 				}
 			}
@@ -73,21 +115,50 @@ func TestDivision(t *testing.T) {
 	}
 }
 
-func iso(s string) time.Time {
-	t, _ := parseIso(s)
-	return t
-}
-
-func hhmm(s string) time.Time {
-	t, _ := time.Parse(hhmmFmt, s)
-	return t
+func TestDivideCoins(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		coins     sdk.Coins
+		divisions int
+		want      []sdk.Coins
+	}{
+		{
+			name:      "one_denom",
+			coins:     coins("5ubld"),
+			divisions: 3,
+			want:      []sdk.Coins{coins("1ubld"), coins("2ubld"), coins("2ubld")},
+		},
+		{
+			name:      "mixed_gaps",
+			coins:     coins("3xxx,2yyy"),
+			divisions: 6,
+			want: []sdk.Coins{
+				coins(""),
+				coins("1xxx"),
+				coins("1yyy"),
+				coins("1xxx"),
+				coins(""),
+				coins("1xxx,1yyy"),
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := divideCoins(tt.coins, tt.divisions)
+			if err != nil {
+				t.Fatalf("division error: %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("division got %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
 func TestMonthlyVestTimes(t *testing.T) {
 	for _, tt := range []struct {
 		Name      string
 		Start     time.Time
-		Months    int32
+		Months    int
 		TimeOfDay time.Time
 		Want      []time.Time
 		WantErr   bool
@@ -142,36 +213,36 @@ func TestApplyCliff(t *testing.T) {
 			name:  "before",
 			cliff: iso("1999-12-31T23:59"),
 			events: []event{
-				{iso("2020-03-01T12:00"), 1000},
-				{iso("2020-04-01T12:00"), 100},
+				evt("2020-03-01T12:00", "1000ubld"),
+				evt("2020-04-01T12:00", "100ubld"),
 			},
 			want: []event{
-				{iso("2020-03-01T12:00"), 1000},
-				{iso("2020-04-01T12:00"), 100},
+				evt("2020-03-01T12:00", "1000ubld"),
+				evt("2020-04-01T12:00", "100ubld"),
 			},
 		},
 		{
 			name:  "after",
 			cliff: iso("2021-01-02T09:30"),
 			events: []event{
-				{iso("2020-03-01T12:00"), 1000},
-				{iso("2020-04-01T12:00"), 100},
+				evt("2020-03-01T12:00", "1000ubld"),
+				evt("2020-04-01T12:00", "100ubld"),
 			},
 			want: []event{
-				{iso("2021-01-02T09:30"), 1100},
+				evt("2021-01-02T09:30", "1100ubld"),
 			},
 		},
 		{
 			name:  "mid",
 			cliff: iso("2021-06-15T17:00"),
 			events: []event{
-				{iso("2021-05-15T12:00"), 10},
-				{iso("2021-06-15T12:00"), 100},
-				{iso("2021-07-15T12:00"), 1000},
+				evt("2021-05-15T12:00", "10ubld"),
+				evt("2021-06-15T12:00", "100ubld"),
+				evt("2021-07-15T12:00", "1000ubld"),
 			},
 			want: []event{
-				{iso("2021-06-15T17:00"), 110},
-				{iso("2021-07-15T12:00"), 1000},
+				evt("2021-06-15T17:00", "110ubld"),
+				evt("2021-07-15T12:00", "1000ubld"),
 			},
 		},
 	} {
@@ -204,8 +275,7 @@ func TestWrite(t *testing.T) {
 		{
 			name: "simple_2y",
 			config: writeConfig{
-				Amount:    1000000000, // 1000 BLD
-				Denom:     "ubld",
+				Coins:     coins("1000000000ubld"), // 1000 BLD
 				Months:    24,
 				TimeOfDay: hhmm("09:00"),
 				Start:     iso("2021-01-01T09:30"),
@@ -232,6 +302,24 @@ func TestWrite(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "mixed_denom",
+			config: writeConfig{
+				Coins:     coins("201ubld,1002urun"),
+				Months:    4,
+				TimeOfDay: hhmm("14:30"),
+				Start:     iso("2021-07-01"),
+			},
+			want: cli.VestingData{
+				StartTime: 1625122800,
+				Periods: []cli.InputPeriod{
+					{Coins: "50ubld,250urun", Length: 2730600},
+					{Coins: "50ubld,251urun", Length: 2678400},
+					{Coins: "50ubld,250urun", Length: 2592000},
+					{Coins: "51ubld,251urun", Length: 2678400},
+				},
+			},
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			events, err := tt.config.generateEvents()
@@ -240,7 +328,7 @@ func TestWrite(t *testing.T) {
 			}
 			got := tt.config.convertRelative(events)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("encoding got %v, want %v", got, tt.want)
+				t.Errorf("generateEvents got %v, want %v", got, tt.want)
 			}
 		})
 	}

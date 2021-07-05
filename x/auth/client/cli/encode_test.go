@@ -39,7 +39,7 @@ func TestGetCommandEncode(t *testing.T) {
 	ctx := context.Background()
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Codec)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{txFileName})
@@ -52,7 +52,7 @@ func TestGetCommandDecode(t *testing.T) {
 
 	clientCtx := client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig).
-		WithCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Codec)
 
 	cmd := GetDecodeCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)

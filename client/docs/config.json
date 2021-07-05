@@ -100,6 +100,22 @@
           "Params": "UpgradeParams"
         }
       }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/authz/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AuthzParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/feegrant/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "FeegrantParams"
+        }
+      }
     }
   ]
 }

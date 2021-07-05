@@ -328,18 +328,20 @@ func (i Int) String() string {
 
 // MarshalJSON defines custom encoding scheme
 func (i Int) MarshalJSON() ([]byte, error) {
-	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
-		i.i = new(big.Int)
+	if i.i == nil {
+		var bigInt *big.Int
+		i.i = bigInt
 	}
-	return marshalJSON(i.i)
+	return i.i.MarshalJSON()
 }
 
 // UnmarshalJSON defines custom decoding scheme
 func (i *Int) UnmarshalJSON(bz []byte) error {
-	if i.i == nil { // Necessary since default Int initialization has i.i as nil
+	if i.i == nil {
 		i.i = new(big.Int)
 	}
-	return unmarshalJSON(i.i, bz)
+
+	return i.i.UnmarshalJSON(bz)
 }
 
 // MarshalJSON for custom encoding scheme
@@ -372,7 +374,8 @@ func (i Int) MarshalYAML() (interface{}, error) {
 // Marshal implements the gogo proto custom type interface.
 func (i Int) Marshal() ([]byte, error) {
 	if i.i == nil {
-		i.i = new(big.Int)
+		var bigInt *big.Int
+		i.i = bigInt
 	}
 	return i.i.MarshalText()
 }
@@ -380,9 +383,10 @@ func (i Int) Marshal() ([]byte, error) {
 // MarshalTo implements the gogo proto custom type interface.
 func (i *Int) MarshalTo(data []byte) (n int, err error) {
 	if i.i == nil {
-		i.i = new(big.Int)
+		var bigInt *big.Int
+		i.i = bigInt
 	}
-	if i.i.BitLen() == 0 { // The value 0
+	if i.i != nil && i.i.BitLen() == 0 { // The value 0
 		copy(data, []byte{0x30})
 		return 1, nil
 	}

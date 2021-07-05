@@ -233,11 +233,31 @@ func (s *intTestSuite) TestImmutabilityAllInt() {
 func (s *intTestSuite) TestEncodingTableInt() {
 	var i sdk.Int
 
+	var bigInt *big.Int
+
+	bz, err := bigInt.MarshalText()
+	s.Require().NoError(err, "marshal text failed")
+	s.Require().Equal([]byte("<nil>"), bz)
+
+	// bz2, err := new(big.Int).MarshalText()
+	// s.Require().NoError(err, "marshal text failed")
+	// s.Require().Equal(bz, bz2, "not equal values")
+
 	cases := []struct {
 		i      sdk.Int
 		jsonBz []byte
 		rawBz  []byte
 	}{
+		{
+			sdk.Int{},
+			bz,
+			[]byte{0x22, 0x30, 0x22},
+		},
+		{
+			sdk.NewIntFromBigInt(new(big.Int)),
+			[]byte("\"0\""),
+			[]byte{0x30},
+		},
 		{
 			sdk.NewInt(0),
 			[]byte("\"0\""),
@@ -287,12 +307,12 @@ func (s *intTestSuite) TestEncodingTableInt() {
 
 	for tcnum, tc := range cases {
 		bz, err := tc.i.MarshalJSON()
-		s.Require().Nil(err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
-		s.Require().Equal(tc.jsonBz, bz, "Marshaled value is different from exported. tc #%d", tcnum)
+		s.Require().Nil(err, "Error marshaling JSON Int. tc #%d, err %s", tcnum, err)
+		s.Require().Equal(tc.jsonBz, bz, "Marshaled JSON value is different from exported. tc #%d", tcnum)
 
 		err = (&i).UnmarshalJSON(bz)
-		s.Require().Nil(err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
-		s.Require().Equal(tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
+		s.Require().Nil(err, "Error unmarshaling JSON Int. tc #%d, err %s", tcnum, err)
+		s.Require().Equal(tc.i, i, "Unmarshaled JSON value is different from exported. tc #%d", tcnum)
 
 		bz, err = tc.i.Marshal()
 		s.Require().Nil(err, "Error marshaling Int. tc #%d, err %s", tcnum, err)

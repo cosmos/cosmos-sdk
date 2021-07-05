@@ -101,15 +101,19 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 }
 
 // remove a delegation
-func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
+func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) error {
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 	if err != nil {
 		panic(err)
 	}
 	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
-	k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr())
+	if err := k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+		return err
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
+	return nil
 }
 
 // return a given amount of all the delegator unbonding-delegations
@@ -563,9 +567,13 @@ func (k Keeper) Delegate(
 
 	// call the appropriate hook if present
 	if found {
-		k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
+		err = k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
 	} else {
-		k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
+		err = k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
+	}
+
+	if err != nil {
+		return sdk.ZeroDec(), err
 	}
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
@@ -621,7 +629,9 @@ func (k Keeper) Delegate(
 	k.SetDelegation(ctx, delegation)
 
 	// Call the after-modification hook
-	k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+	if err := k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+		return newShares, err
+	}
 
 	return newShares, nil
 }
@@ -637,7 +647,9 @@ func (k Keeper) Unbond(
 	}
 
 	// call the before-delegation-modified hook
-	k.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
+	if err := k.BeforeDelegationSharesModified(ctx, delAddr, valAddr); err != nil {
+		return amount, err
+	}
 
 	// ensure that we have enough shares to remove
 	if delegation.Shares.LT(shares) {
@@ -670,11 +682,15 @@ func (k Keeper) Unbond(
 
 	// remove the delegation
 	if delegation.Shares.IsZero() {
-		k.RemoveDelegation(ctx, delegation)
+		err = k.RemoveDelegation(ctx, delegation)
 	} else {
 		k.SetDelegation(ctx, delegation)
 		// call the after delegation modification hook
-		k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+		err = k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+	}
+
+	if err != nil {
+		return amount, err
 	}
 
 	// remove the shares and coins from the validator

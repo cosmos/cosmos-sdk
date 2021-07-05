@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 )
 
 type HandlerTestSuite struct {
@@ -37,7 +38,7 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 
 	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, ctx, addr1, balances))
+	suite.Require().NoError(testutil.FundAccount(suite.app.BankKeeper, ctx, addr1, balances))
 
 	testCases := []struct {
 		name      string

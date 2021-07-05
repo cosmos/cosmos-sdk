@@ -48,7 +48,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		)
 	}
 
-	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
+	genesisState := NewDefaultGenesisState(encCfg.Codec)
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
 
@@ -243,7 +243,7 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	genesisState := NewDefaultGenesisState(encCfg.Marshaler)
+	genesisState := NewDefaultGenesisState(encCfg.Codec)
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
 

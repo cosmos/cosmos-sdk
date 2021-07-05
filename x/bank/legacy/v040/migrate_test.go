@@ -21,7 +21,7 @@ func TestMigrate(t *testing.T) {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Codec)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
 	addr1, _ := sdk.AccAddressFromBech32("cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u")

@@ -330,7 +330,7 @@ type Vote struct {
 	Voter      string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// Deprecated: Prefer to use `options` instead. This field is set in queries
 	// if and only if `len(options) == 1` and that option has weight 1. In all
-	// other cases, this field will default to OptionEmpty.
+	// other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
 	Option  VoteOption           `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"` // Deprecated: Do not use.
 	Options []WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options"`
 }

@@ -96,7 +96,9 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	k.AfterValidatorCreated(ctx, validator.GetOperator())
+	if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+		return nil, err
+	}
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -150,7 +152,9 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		k.BeforeValidatorModified(ctx, valAddr)
+		if err := k.BeforeValidatorModified(ctx, valAddr); err != nil {
+			return nil, err
+		}
 
 		validator.Commission = commission
 	}

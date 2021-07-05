@@ -20,7 +20,7 @@ func TestMigrate(t *testing.T) {
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
-		WithJSONCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Codec)
 
 	consPubKey := ed25519.GenPrivKeyFromSecret([]byte("val0")).PubKey()
 	stakingGenState := v038staking.GenesisState{

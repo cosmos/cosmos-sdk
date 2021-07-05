@@ -5,14 +5,14 @@ module.exports = {
     "/": {
       lang: "en-US"
     },
-    kr: {
-      lang: "kr"
-    },
-    cn: {
-      lang: "cn"
+    ko: {
+      lang: "ko"
     },
     ru: {
       lang: "ru"
+    },
+    zh: {
+      lang: "zh-CN"
     }
   },
   base: process.env.VUEPRESS_BASE || "/",

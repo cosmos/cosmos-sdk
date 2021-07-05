@@ -23,13 +23,13 @@ Morever, module developers often face other questions around Protobuf definition
 
 ## Decision
 
-We decide to keep [Buf's](https://docs.buf.build/) recommendations with the following exceptions (TODO document what they mean, and why we use them):
+We decide to keep [Buf's](https://docs.buf.build/) recommendations with the following exceptions:
 
-- UNARY_RPC
-- COMMENT_FIELD
-- SERVICE_SUFFIX
-- PACKAGE_VERSION_SUFFIX
-- RPC_REQUEST_STANDARD_NAME
+- `UNARY_RPC`: the SDK currently does not support streaming RPCs.
+- `COMMENT_FIELD`: the SDK allows fields with no comments.
+- `SERVICE_SUFFIX`: we use the `Query` and `Msg` services convention, which don't have the `-Service` suffix.
+- `PACKAGE_VERSION_SUFFIX`: some packages, such as `cosmos.crypto.ed25519`, don't use version suffix.
+- `RPC_REQUEST_STANDARD_NAME`: Requests for the `Msg` service don't have the `-Request` suffix to keep backwards compatibility.
 
 On top of Buf's recommendations we add the following guidelines that are specific to the SDK.
 
@@ -37,9 +37,15 @@ On top of Buf's recommendations we add the following guidelines that are specifi
 
 #### 1. `Msg`s SHALL NOT have new fields.
 
-TODO because of unknown fields rejection.
-TODO mention nested structs too (TODO how about anys?)
-TODO queries can have new fields
+When processing `Msg`s, the SDK's antehandlers are strict and don't allow unknown fields in `Msg`s. This is checked by the unknown field rejection in the [`codec/unknownproto` package](https://github.com/cosmos/cosmos-sdk/blob/master/codec/unknownproto).
+
+Now imagine a v0.43 node accepting a `MsgExample` transaction, and in v0.44 the chain developer decides to add a field to `MsgExample`. A client developer, which only manipulates Protobuf definitions, would see that `MsgExample` has a new field, and will populate it. However, sending the new `MsgExample` to an old v0.43 node would cause the v0.43 node to reject the `Msg` because of the unknown field. The expectation that the same Protobuf version can be used across multiple node versions should be guaranteed.
+
+For this reason, module developers SHALL NOT add new fields to existing `Msg`s.
+
+It is worth mentioning that this does not limit to adding fields to a `Msg`, but also to all nested structs and `Any`s inside the `Msg`.
+
+On the other hand, module developers MAY add new fields to Protobuf definitions related to the `Query` service, as the unknown field rejection does not apply to queries.
 
 #### 2. Fields MAY be marked as `deprecated`, and nodes MAY implement a protocol-breaking change for handling these fields.
 
@@ -52,14 +58,16 @@ As an example, the SDK v0.42 to v0.43 update contained two Protobuf-breaking cha
 
 #### 3. Fields SHALL NOT be renamed.
 
-TODO as this will break client compatibility.
+Whereas the official Protobuf recommendations do not prohibit renaming fields, as it does not break the Protobuf binary representation, the SDK explicitly forbids renaming fields in Protobuf structs. The main reason for this choice is to avoid introducing breaking changes for clients, which often rely on hard-coded fields from generated types. Morever, renaming fields will lead to client-breaking JSON representations of Protobuf definitions, used in REST endpoints and in the CLI.
 
 ### Bumping Protobuf Package Version
 
 TODO, needs architecture review. Some topics:
 
+- Bumping versions frequency
 - When bumping versions, should the SDK support both versions?
   - i.e. v1beta1 -> v1, should we have two folders in the SDK, and handlers for both versions?
+- mention ADR-023 Protobuf naming
 
 ## Consequences
 
@@ -83,8 +91,7 @@ TODO, needs architecture review. Some topics:
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
+This ADR is still in the DRAFT stage, and the "Bumping Protobuf Package Version" will be filled in once we make a decision on how to correctly bump Protobuf package versions.
 
 ## Test Cases [optional]
 
@@ -92,4 +99,5 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-- {reference link}
+- [#9445](https://github.com/cosmos/cosmos-sdk/issues/9445) Release proto definitions v1
+- [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) Address v1beta1 proto breaking changes

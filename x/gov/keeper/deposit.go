@@ -168,8 +168,6 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // RefundDeposits refunds all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
-	// store := ctx.KVStore(keeper.storeKey)
-
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
 		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
 		if err != nil {

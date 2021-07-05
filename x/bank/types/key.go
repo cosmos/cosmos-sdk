@@ -23,7 +23,7 @@ const (
 var (
 	// BalancesPrefix is the prefix for the account balances store. We use a byte
 	// (instead of `[]byte("balances")` to save some disk space).
-	DenomPrefix         = []byte{0x03}
+	DenomAddressPrefix         = []byte{0x03}
 	BalancesPrefix      = []byte{0x02}
 	SupplyKey           = []byte{0x00}
 	DenomMetadataPrefix = []byte{0x1}

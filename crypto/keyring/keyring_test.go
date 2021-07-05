@@ -1173,10 +1173,9 @@ func TestRenameKey(t *testing.T) {
 
 	// "newName" now has "oldName"'s info
 	newKey, err := kb.Key(newKeyUID)
-	require.Equal(t, newKeyUID, newKey.GetName())
-	require.Equal(t, oldKey.GetPubKey(), newKey.GetPubKey())
-	require.Equal(t, oldKey.GetAlgo(), newKey.GetAlgo())
-	require.Equal(t, oldKey.GetAddress(), newKey.GetAddress())
+
+	// check that keyinfo is the same, except for their names
+	requireEqualRenamedKey(t, newKey, oldKey)
 
 	// oldName should be deleted
 	oldKey, err = kb.Key(oldKeyUID)
@@ -1197,6 +1196,14 @@ func TestRenameKey(t *testing.T) {
 	// rename to itself should fail
 	err = kb.Rename(newKeyUID, newKeyUID)
 	require.Error(t, err)
+}
+
+func requireEqualRenamedKey(t *testing.T, newKey, oldKey Info) {
+	require.NotEqual(t, newKey.GetName(), oldKey.GetName())
+	require.Equal(t, newKey.GetAddress(), oldKey.GetAddress())
+	require.Equal(t, newKey.GetPubKey(), oldKey.GetPubKey())
+	require.Equal(t, newKey.GetAlgo(), oldKey.GetAlgo())
+	require.Equal(t, newKey.GetType(), oldKey.GetType())
 }
 
 func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {

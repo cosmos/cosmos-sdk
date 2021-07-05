@@ -254,7 +254,10 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 
 			// Store a reverse index from denomination to account address with a
 			// sentinel value.
-			denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
+			denomAddrKey := address.MustLengthPrefix(addr)
+			if !denomPrefixStore.Has(denomAddrKey) {
+				denomPrefixStore.Set(denomAddrKey, []byte{0})
+			}
 		}
 	}
 
@@ -280,7 +283,10 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
-		denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
+		denomAddrKey := address.MustLengthPrefix(addr)
+		if !denomPrefixStore.Has(denomAddrKey) {
+			denomPrefixStore.Set(denomAddrKey, []byte{0})
+		}
 	}
 
 	return nil

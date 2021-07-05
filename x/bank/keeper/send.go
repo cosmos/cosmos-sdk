@@ -248,7 +248,7 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 			if !ok {
-				denomPrefixStore = k.getDenomPrefixStore(ctx, balance.Denom)
+				denomPrefixStore = k.getDenomAddressPrefixStore(ctx, balance.Denom)
 				denomPrefixStores[balance.Denom] = denomPrefixStore
 			}
 
@@ -268,7 +268,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	}
 
 	accountStore := k.getAccountStore(ctx, addr)
-	denomPrefixStore := k.getDenomPrefixStore(ctx, balance.Denom)
+	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
 
 	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {

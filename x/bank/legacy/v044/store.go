@@ -38,7 +38,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 		denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 		if !ok {
-			denomPrefixStore = prefix.NewStore(store, CreateDenomPrefix(balance.Denom))
+			denomPrefixStore = prefix.NewStore(store, CreateAddressDenomPrefix(balance.Denom))
 			denomPrefixStores[balance.Denom] = denomPrefixStore
 		}
 

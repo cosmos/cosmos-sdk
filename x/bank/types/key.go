@@ -21,12 +21,13 @@ const (
 
 // KVStore keys
 var (
-	// BalancesPrefix is the prefix for the account balances store. We use a byte
-	// (instead of `[]byte("balances")` to save some disk space).
-	DenomAddressPrefix         = []byte{0x03}
-	BalancesPrefix      = []byte{0x02}
 	SupplyKey           = []byte{0x00}
 	DenomMetadataPrefix = []byte{0x1}
+	DenomAddressPrefix  = []byte{0x03}
+
+	// BalancesPrefix is the prefix for the account balances store. We use a byte
+	// (instead of `[]byte("balances")` to save some disk space).
+	BalancesPrefix = []byte{0x02}
 )
 
 // DenomMetadataKey returns the denomination metadata key.
@@ -60,9 +61,9 @@ func CreateAccountBalancesPrefix(addr []byte) []byte {
 	return append(BalancesPrefix, address.MustLengthPrefix(addr)...)
 }
 
-// CreateDenomPrefix creates a prefix for a reverse index of denomination to
-// account balance for that denomination.
-func CreateDenomPrefix(denom string) []byte {
-	key := append(DenomPrefix, []byte(denom)...)
+// CreateDenomAddressPrefix creates a prefix for a reverse index of denomination
+// to account balance for that denomination.
+func CreateDenomAddressPrefix(denom string) []byte {
+	key := append(DenomAddressPrefix, []byte(denom)...)
 	return append(key, 0)
 }

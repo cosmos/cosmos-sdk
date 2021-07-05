@@ -3,6 +3,8 @@ package v044_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -10,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v043 "github.com/cosmos/cosmos-sdk/x/bank/legacy/v043"
 	v044 "github.com/cosmos/cosmos-sdk/x/bank/legacy/v044"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -37,7 +38,7 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, v044.MigrateStore(ctx, bankKey, encCfg.Marshaler))
 
 	for _, b := range balances {
-		denomPrefixStore := prefix.NewStore(store, v044.CreateDenomPrefix(b.Denom))
+		denomPrefixStore := prefix.NewStore(store, v044.CreateAddressDenomPrefix(b.Denom))
 		bz := denomPrefixStore.Get(address.MustLengthPrefix(addr))
 		require.NotNil(t, bz)
 	}

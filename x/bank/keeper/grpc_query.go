@@ -179,7 +179,7 @@ func (k BaseKeeper) DenomOwners(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	denomPrefixStore := k.getDenomPrefixStore(ctx, req.Denom)
+	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, req.Denom)
 
 	var denomOwners []*types.DenomOwner
 	pageRes, err := query.FilteredPaginate(

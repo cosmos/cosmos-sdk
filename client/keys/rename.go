@@ -13,7 +13,7 @@ import (
 // RenameKeyCommand renames a key from the key store.
 func RenameKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rename <from> <to>",
+		Use:   "rename <old_name> <new_name>",
 		Short: "Rename an existing key",
 		Long: `Rename a key from the Keybase backend.
 
@@ -29,9 +29,9 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 				return err
 			}
 
-			fromName, toName := args[0], args[1]
+			oldName, newName := args[0], args[1]
 
-			info, err := clientCtx.Keyring.Key(fromName)
+			info, err := clientCtx.Keyring.Key(oldName)
 			if err != nil {
 				return err
 			}
@@ -46,7 +46,7 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 				}
 			}
 
-			if err := clientCtx.Keyring.Rename(fromName, toName); err != nil {
+			if err := clientCtx.Keyring.Rename(oldName, newName); err != nil {
 				return err
 			}
 
@@ -55,7 +55,7 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 				return nil
 			}
 
-			cmd.PrintErrln(fmt.Sprintf("Key was successfully renamed from %s to %s", fromName, toName))
+			cmd.PrintErrln(fmt.Sprintf("Key was successfully renamed from %s to %s", oldName, newName))
 
 			return nil
 		},

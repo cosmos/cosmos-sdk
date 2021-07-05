@@ -1157,29 +1157,29 @@ func TestRenameKey(t *testing.T) {
 	kb, err := New("keybasename", "test", t.TempDir(), nil)
 	require.NoError(t, err)
 
-	fromUID, toUID := "from", "to"
+	oldKeyUID, newKeyUID := "oldName", "newName"
 
-	// create key with "from"
-	_, _, err = kb.NewMnemonic(fromUID, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+	// create key with "oldName"
+	_, _, err = kb.NewMnemonic(oldKeyUID, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 
-	fromKey, err := kb.Key(fromUID)
+	oldKey, err := kb.Key(oldKeyUID)
 	require.NoError(t, err)
-	require.Equal(t, fromUID, fromKey.GetName())
+	require.Equal(t, oldKeyUID, oldKey.GetName())
 
 	// basic rename
-	err = kb.Rename(fromUID, toUID)
+	err = kb.Rename(oldKeyUID, newKeyUID)
 	require.NoError(t, err)
 
-	// "to" now has "from"'s info
-	toKey, err := kb.Key(toUID)
-	require.Equal(t, toUID, toKey.GetName())
-	require.Equal(t, fromKey.GetPubKey(), toKey.GetPubKey())
-	require.Equal(t, fromKey.GetAlgo(), toKey.GetAlgo())
-	require.Equal(t, fromKey.GetAddress(), toKey.GetAddress())
+	// "newName" now has "oldName"'s info
+	newKey, err := kb.Key(newKeyUID)
+	require.Equal(t, newKeyUID, newKey.GetName())
+	require.Equal(t, oldKey.GetPubKey(), newKey.GetPubKey())
+	require.Equal(t, oldKey.GetAlgo(), newKey.GetAlgo())
+	require.Equal(t, oldKey.GetAddress(), newKey.GetAddress())
 
-	// from should be deleted
-	fromKey, err = kb.Key(fromUID)
+	// oldName should be deleted
+	oldKey, err = kb.Key(oldKeyUID)
 	require.Error(t, err)
 
 	// can't rename from a non-existent key 'foo'
@@ -1191,11 +1191,11 @@ func TestRenameKey(t *testing.T) {
 	require.NoError(t, err)
 
 	// renaming a key to an existing name should fail
-	err = kb.Rename("tester", toUID)
+	err = kb.Rename("tester", newKeyUID)
 	require.Error(t, err)
 
 	// rename to itself should fail
-	err = kb.Rename(toUID, toUID)
+	err = kb.Rename(newKeyUID, newKeyUID)
 	require.Error(t, err)
 }
 

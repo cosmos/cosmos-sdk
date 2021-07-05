@@ -25,8 +25,8 @@ func Test_runRenameCmd(t *testing.T) {
 	yesF, _ := cmd.Flags().GetBool(flagYes)
 	require.False(t, yesF)
 
-	fakeKeyName1 := "runDeleteCmd_Key1"
-	fakeKeyName2 := "runDeleteCmd_Key2"
+	fakeKeyName1 := "runRenameCmd_Key1"
+	fakeKeyName2 := "runRenameCmd_Key2"
 
 	path := sdk.GetConfig().GetFullBIP44Path()
 
@@ -49,7 +49,7 @@ func Test_runRenameCmd(t *testing.T) {
 	require.Error(t, err)
 	require.EqualError(t, err, "blah.info: key not found")
 
-	// no confirmation
+	// User confirmation missing
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		"nokey",
@@ -60,7 +60,7 @@ func Test_runRenameCmd(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
 
-	ogKey, err := kb.Key(fakeKeyName1)
+	oldKey, err := kb.Key(fakeKeyName1)
 	require.NoError(t, err)
 
 	// add a confirmation
@@ -81,10 +81,10 @@ func Test_runRenameCmd(t *testing.T) {
 	renamedKey, err := kb.Key(fakeKeyName2)
 	require.NoError(t, err)
 
-	require.Equal(t, ogKey.GetPubKey(), renamedKey.GetPubKey())
-	require.Equal(t, ogKey.GetType(), renamedKey.GetType())
-	require.Equal(t, ogKey.GetAddress(), renamedKey.GetAddress())
-	require.Equal(t, ogKey.GetAlgo(), renamedKey.GetAlgo())
+	require.Equal(t, oldKey.GetPubKey(), renamedKey.GetPubKey())
+	require.Equal(t, oldKey.GetType(), renamedKey.GetType())
+	require.Equal(t, oldKey.GetAddress(), renamedKey.GetAddress())
+	require.Equal(t, oldKey.GetAlgo(), renamedKey.GetAlgo())
 
 	// try to rename key1 but it doesnt exist anymore so error
 	cmd.SetArgs([]string{

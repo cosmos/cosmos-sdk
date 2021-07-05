@@ -429,24 +429,24 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 	return nil
 }
 
-func (ks keystore) Rename(from, to string) error {
-	_, err := ks.Key(to)
+func (ks keystore) Rename(oldName, newName string) error {
+	_, err := ks.Key(newName)
 	if err == nil {
-		return errors.New(fmt.Sprintf("rename failed: %s already exists in keyring", to))
+		return errors.New(fmt.Sprintf("rename failed: %s already exists in the keyring", newName))
 	}
 
 	passPhrase := "temp"
-	armor, err := ks.ExportPrivKeyArmor(from, passPhrase)
+	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
 	if err != nil {
 		return err
 	}
 
-	err = ks.Delete(from)
+	err = ks.Delete(oldName)
 	if err != nil {
 		return err
 	}
 
-	err = ks.ImportPrivKey(to, armor, passPhrase)
+	err = ks.ImportPrivKey(newName, armor, passPhrase)
 	if err != nil {
 		return err
 	}

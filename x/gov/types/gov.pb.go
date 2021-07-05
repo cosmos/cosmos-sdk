@@ -329,7 +329,7 @@ type Vote struct {
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty" yaml:"proposal_id"`
 	Voter      string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// Deprecated: Prefer to use `options` instead. This field is set in queries
-	// if an only if `len(options) == 1` and that option has weight 1. In all
+	// if and only if `len(options) == 1` and that option has weight 1. In all
 	// other cases, this field will default to OptionEmpty.
 	Option  VoteOption           `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"` // Deprecated: Do not use.
 	Options []WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options"`

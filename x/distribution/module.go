@@ -63,6 +63,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // RegisterRESTRoutes registers the REST routes for the distribution module.
+// Deprecated: RegisterRESTRoutes is deprecated. `x/distribution` legacy REST implementation
+// has been removed from the SDK.
 func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the distribution module.

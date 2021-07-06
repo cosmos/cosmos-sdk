@@ -64,6 +64,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterRESTRoutes registers the REST routes for the mint module.
+// Deprecated: RegisterRESTRoutes is deprecated. `x/mint` legacy REST implementation
+// has been removed from the SDK.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.

@@ -55,6 +55,7 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConf
 }
 
 // RegisterRESTRoutes registers the REST routes for the vesting module. Currently, this is a no-op.
+// Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the module's gRPC Gateway routes. Currently, this

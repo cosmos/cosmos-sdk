@@ -71,6 +71,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // RegisterRESTRoutes registers the REST routes for the authz module.
+// Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.

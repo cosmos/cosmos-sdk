@@ -42,6 +42,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterRESTRoutes registers the REST routes for the upgrade module.
+// Deprecated: RegisterRESTRoutes is deprecated. `x/upgrade` legacy REST implementation
+// has been removed from the SDK.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the upgrade module.

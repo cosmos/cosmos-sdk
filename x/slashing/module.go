@@ -71,6 +71,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterRESTRoutes registers the REST routes for the slashing module.
+// Deprecated: RegisterRESTRoutes is deprecated. `x/slashing` legacy REST implementation
+// has been removed from the SDK.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.

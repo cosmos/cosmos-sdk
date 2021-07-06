@@ -53,6 +53,7 @@ func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodin
 }
 
 // RegisterRESTRoutes registers the REST routes for the params module.
+// Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the params module.

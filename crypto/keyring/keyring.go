@@ -41,6 +41,9 @@ const (
 	keyringFileDirName = "keyring-file"
 	keyringTestDirName = "keyring-test"
 	passKeyringPrefix  = "keyring-%s"
+
+	// temporary pass phrase for exporting a key during a key rename
+	passPhrase = "temp"
 )
 
 var (
@@ -435,7 +438,6 @@ func (ks keystore) Rename(oldName, newName string) error {
 		return fmt.Errorf("rename failed: %s already exists in the keyring", newName)
 	}
 
-	passPhrase := "temp"
 	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
 	if err != nil {
 		return err

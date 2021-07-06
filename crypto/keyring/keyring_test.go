@@ -3,6 +3,7 @@ package keyring
 import (
 	"encoding/hex"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 	"testing"
 
@@ -1154,48 +1155,61 @@ func TestBackendConfigConstructors(t *testing.T) {
 }
 
 func TestRenameKey(t *testing.T) {
-	kb, err := New("keybasename", "test", t.TempDir(), nil)
-	require.NoError(t, err)
+	testCases := []struct {
+		name string
+		run  func(Keyring)
+	}{
+		{
+			name: "rename a key",
+			run: func(kr Keyring) {
+				oldKeyUID, newKeyUID := "old", "new"
+				oldKeyInfo := newKeyInfo(t, kr, oldKeyUID)
+				err := kr.Rename(oldKeyUID, newKeyUID) // rename from "old" to "new"
+				require.NoError(t, err)
+				newInfo, err := kr.Key(newKeyUID) // new key should be in keyring
+				require.NoError(t, err)
+				requireEqualRenamedKey(t, newInfo, oldKeyInfo) // oldinfo and newinfo should be the same
+				oldKeyInfo, err = kr.Key(oldKeyUID)            // old key should be gone from keyring
+				require.Error(t, err)
+			},
+		},
+		{
+			name: "cant rename a key that doesnt exist",
+			run: func(kr Keyring) {
+				err := kr.Rename("bogus", "bogus2")
+				require.Equal(t, err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "bogus"))
+			},
+		},
+		{
+			name: "cant rename a key to an already existing key name",
+			run: func(kr Keyring) {
+				key1, key2 := "existingKey", "existingKey2" // create 2 keys
+				newKeyInfo(t, kr, key1)
+				newKeyInfo(t, kr, key2)
+				err := kr.Rename(key2, key1)
+				require.Equal(t, fmt.Errorf("rename failed: %s already exists in the keyring", key1), err)
+				assertKeysExist(t, kr, key1, key2) // keys should still exist after failed rename
+			},
+		},
+		{
+			name: "cant rename key to itself",
+			run: func(kr Keyring) {
+				keyName := "keyName"
+				newKeyInfo(t, kr, keyName)
+				err := kr.Rename(keyName, keyName)
+				require.Equal(t, fmt.Errorf("rename failed: %s already exists in the keyring", keyName), err)
+				assertKeysExist(t, kr, keyName)
+			},
+		},
+	}
 
-	oldKeyUID, newKeyUID := "oldName", "newName"
-
-	// create key with "oldName"
-	_, _, err = kb.NewMnemonic(oldKeyUID, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
-	require.NoError(t, err)
-
-	oldKey, err := kb.Key(oldKeyUID)
-	require.NoError(t, err)
-	require.Equal(t, oldKeyUID, oldKey.GetName())
-
-	// basic rename
-	err = kb.Rename(oldKeyUID, newKeyUID)
-	require.NoError(t, err)
-
-	// "newName" now has "oldName"'s info
-	newKey, err := kb.Key(newKeyUID)
-
-	// check that keyinfo is the same, except for their names
-	requireEqualRenamedKey(t, newKey, oldKey)
-
-	// oldName should be deleted
-	oldKey, err = kb.Key(oldKeyUID)
-	require.Error(t, err)
-
-	// can't rename from a non-existent key 'foo'
-	err = kb.Rename("foo", "bar")
-	require.Error(t, err)
-
-	// create new key
-	_, _, err = kb.NewMnemonic("tester", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
-	require.NoError(t, err)
-
-	// renaming a key to an existing name should fail
-	err = kb.Rename("tester", newKeyUID)
-	require.Error(t, err)
-
-	// rename to itself should fail
-	err = kb.Rename(newKeyUID, newKeyUID)
-	require.Error(t, err)
+	for _, tc := range testCases {
+		tc := tc
+		kr := newKeyring(t, "testKeyring")
+		t.Run(tc.name, func(t *testing.T) {
+			tc.run(kr)
+		})
+	}
 }
 
 func requireEqualRenamedKey(t *testing.T, newKey, oldKey Info) {
@@ -1212,6 +1226,25 @@ func requireEqualInfo(t *testing.T, key Info, mnemonic Info) {
 	require.Equal(t, key.GetPubKey(), mnemonic.GetPubKey())
 	require.Equal(t, key.GetAlgo(), mnemonic.GetAlgo())
 	require.Equal(t, key.GetType(), mnemonic.GetType())
+}
+
+func newKeyring(t *testing.T, name string) Keyring {
+	kr, err := New(name, "test", t.TempDir(), nil)
+	require.NoError(t, err)
+	return kr
+}
+
+func newKeyInfo(t *testing.T, kr Keyring, name string) Info {
+	keyInfo, _, err := kr.NewMnemonic(name, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+	return keyInfo
+}
+
+func assertKeysExist(t *testing.T, kr Keyring, names ...string) {
+	for _, n := range names {
+		_, err := kr.Key(n)
+		require.NoError(t, err)
+	}
 }
 
 func accAddr(info Info) sdk.AccAddress { return info.GetAddress() }

@@ -1,6 +1,7 @@
 package ante
 
 import (
+	txvalidate "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,7 +12,8 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
+// ValidateBasicDecorator will call tx.ValidateBasic, ValidateMsg(for each msg inside tx)
+// and return any non-nil error.
 // If ValidateBasic passes, decorator calls next AnteHandler in chain. Note,
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.
@@ -25,6 +27,12 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	// no need to validate basic on recheck tx, call next antehandler
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
+	}
+
+	for _, msg := range tx.GetMsgs() {
+		if err := txvalidate.ValidateMsg(msg); err != nil {
+			return ctx, err
+		}
 	}
 
 	if err := tx.ValidateBasic(); err != nil {

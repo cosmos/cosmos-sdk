@@ -13,6 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
+// initialized is a global variable used by GetCapability to ensure that the memory store
+// and capability map are correctly populated. A state-synced node may copy over all the persistent
+// state and start running the application without having the in-memory state required for x/capability.
+// Thus, we must initialized the memory stores on-the-fly during tx execution once the first GetCapability
+// is called.
+// This is a temporary fix and should be replaced by a more robust solution in the next breaking release.
+var initialized = false
+
 type (
 	// Keeper defines the capability module's keeper. It is responsible for provisioning,
 	// tracking, and authenticating capabilities at runtime. During application
@@ -342,6 +350,22 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
 func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capability, bool) {
+	// Create a keeper that will set all in-memory mappings correctly into memstore and capmap if scoped keeper is not initialized yet.
+	// This ensures that the in-memory mappings are correctly filled in, in case this is a state-synced node.
+	// This is a temporary non-breaking fix, a future PR should store the reverse mapping in the persistent store and reconstruct forward mapping and capmap on the fly.
+	if !initialized {
+		// create context with infinite gas meter to avoid app state mismatch.
+		initCtx := ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+		k := Keeper{
+			cdc:      sk.cdc,
+			storeKey: sk.storeKey,
+			memKey:   sk.memKey,
+			capMap:   sk.capMap,
+		}
+		k.InitializeAndSeal(initCtx)
+		initialized = true
+	}
+
 	if strings.TrimSpace(name) == "" {
 		return nil, false
 	}
@@ -358,6 +382,7 @@ func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capab
 		// so we delete here to remove unnecessary values in map
 		// TODO: Delete index correctly from capMap by storing some reverse lookup
 		// in-memory map. Issue: https://github.com/cosmos/cosmos-sdk/issues/7805
+
 		return nil, false
 	}
 

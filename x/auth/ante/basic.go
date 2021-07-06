@@ -1,7 +1,6 @@
 package ante
 
 import (
-	txvalidate "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -27,12 +26,6 @@ func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulat
 	// no need to validate basic on recheck tx, call next antehandler
 	if ctx.IsReCheckTx() {
 		return next(ctx, tx, simulate)
-	}
-
-	for _, msg := range tx.GetMsgs() {
-		if err := txvalidate.ValidateMsg(msg); err != nil {
-			return ctx, err
-		}
 	}
 
 	if err := tx.ValidateBasic(); err != nil {

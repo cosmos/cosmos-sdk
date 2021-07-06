@@ -486,18 +486,27 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	account2, _, err := kr.NewMnemonic("newAccount2", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{account1.GetPubKey(), account2.GetPubKey()})
+	pub1, err := account1.GetPubKey()
+	s.Require().NoError(err)
+
+	pub2, err := account2.GetPubKey()
+	s.Require().NoError(err)
+
+	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kr.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
-	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
+	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
 	height, err := s.network.LatestHeight()
 	_, err = s.network.WaitForHeight(height + 1)
+	s.Require().NoError(err)
+
+	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
@@ -505,7 +514,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	_, err = bankcli.MsgSendExec(
 		val1.ClientCtx,
 		val1.Address,
-		multisigInfo.GetAddress(),
+		addr,
 		sdk.NewCoins(coins),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -520,7 +529,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
-		multisigInfo.GetAddress(),
+		addr,
 		val1.Address,
 		sdk.NewCoins(
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
@@ -537,19 +546,23 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	multiGeneratedTxFile := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
 
 	// Sign with account1
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account1Signature, err := authtest.TxSignExec(val1.ClientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
 	// Sign with account2
-	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	addr2, err := account2.GetAddress()
+	s.Require().NoError(err)
+	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
 	// multisign tx
 	val1.ClientCtx.Offline = false
-	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	multiSigWith2Signatures, err := authtest.TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// convert from protoJSON to protoBinary for sim

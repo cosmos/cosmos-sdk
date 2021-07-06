@@ -1,16 +1,14 @@
 package simulation
 
-// DONTCOVER
-
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
+
+	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer/types"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
@@ -19,16 +17,14 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeySendEnabled),
 			func(r *rand.Rand) string {
-				paramsBytes, err := json.Marshal(RandomGenesisSendParams(r))
-				if err != nil {
-					panic(err)
-				}
-				return string(paramsBytes)
+				sendEnabled := RadomEnabled(r)
+				return string(types.ModuleCdc.MustMarshalJSON(&gogotypes.BoolValue{Value: sendEnabled}))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, string(types.KeyDefaultSendEnabled),
+		simulation.NewSimParamChange(types.ModuleName, string(types.KeyReceiveEnabled),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("%v", RandomGenesisDefaultSendParam(r))
+				receiveEnabled := RadomEnabled(r)
+				return string(types.ModuleCdc.MustMarshalJSON(&gogotypes.BoolValue{Value: receiveEnabled}))
 			},
 		),
 	}

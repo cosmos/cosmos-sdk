@@ -13,14 +13,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO fix that
 func Test_runAddCmdBasic(t *testing.T) {
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
@@ -33,28 +30,21 @@ func Test_runAddCmdBasic(t *testing.T) {
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Marshaler)
 	require.NoError(t, err)
 
-	priv := secp256k1.GenPrivKey()
-	privKey := cryptotypes.PrivKey(priv)
-	fmt.Println("privKey", privKey)
-
-	_, err = kb.NewLocalRecord(privKey)
-	require.NoError(t, err)
-	
-
 	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
+	
 	t.Cleanup(func() {
 		_ = kb.Delete("keyname1")
 		_ = kb.Delete("keyname2")
 	})
+	
 
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	mockIn.Reset("y\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -67,21 +57,21 @@ func Test_runAddCmdBasic(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
+	fmt.Println("keyname2 is done1")
 	require.Error(t, cmd.ExecuteContext(ctx))
+	fmt.Println("keyname2 is done2")
 
 	mockIn.Reset("y\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))
-
+	
 	cmd.SetArgs([]string{
 		"keyname4",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))

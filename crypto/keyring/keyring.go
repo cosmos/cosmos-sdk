@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	// codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // Backend options for Keyring
@@ -80,7 +81,7 @@ type Keyring interface {
 	// Creates a local record from given private key
 	NewLocalRecord(types.PrivKey) (*Record_Local, error)
 
-	ProtoUnmarshalRecord([]byte)(*Record, error)
+	ProtoUnmarshalRecord([]byte) (*Record, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
@@ -98,6 +99,7 @@ type Keyring interface {
 
 	Migrator
 	Setter
+	Marshaler
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -141,6 +143,12 @@ type Migrator interface {
 // used in migration_test.go
 type Setter interface {
 	SetItem(item keyring.Item) error
+}
+
+// used in migration_test.go
+type Marshaler interface {
+	ProtoMarshalRecord(k *Record) ([]byte, error)
+	MarshalPrivKey(priv types.PrivKey) ([]byte, error)
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -556,9 +564,6 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 		return nil, err
 	}
 
-	fmt.Println("NewAccount privKey", privKey)
-	fmt.Println("NewAccount name", name)
-
 	return ks.writeLocalKey(name, privKey)
 }
 
@@ -597,7 +602,6 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
 func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
-
 	ledgerInfo := k.GetLedger()
 	if ledgerInfo == nil {
 		return nil, nil, errors.New("not a ledger object")
@@ -753,7 +757,6 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 }
 
 func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, error) {
-
 	localRecord, err := ks.NewLocalRecord(privKey)
 	if err != nil {
 		return nil, err
@@ -924,13 +927,21 @@ func (ks keystore) Migrate(key string) (bool, error) {
 
 func (ks keystore) ProtoUnmarshalRecord(bz []byte) (*Record, error) {
 	k := new(Record)
+	fmt.Println("ProtoUnmarshalRecord ks.cdc", ks.cdc)
 	if err := ks.cdc.Unmarshal(bz, k); err != nil {
 		return nil, err
 	}
 	return k, nil
 }
 
-// TODO add tests INCORRECT LOCAL - does not include private key
+func (ks keystore) ProtoMarshalRecord(k *Record) ([]byte, error) {
+	return ks.cdc.Marshal(k)
+}
+
+func (ks keystore) MarshalPrivKey(privKey types.PrivKey) ([]byte, error) {
+	return ks.cdc.MarshalInterface(privKey)
+}
+
 func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	fmt.Println("convertFromLegacyInfo")
 
@@ -976,14 +987,11 @@ func (ks keystore) SetItem(item keyring.Item) error {
 
 // bz, err := cdc.Marshal(privKey) yields an error that's why I cast privKey to curve PrivKey to serialize it
 func (ks keystore) NewLocalRecord(privKey types.PrivKey) (*Record_Local, error) {
-	fmt.Println("NewLocalRecord privKey", privKey)
-	fmt.Println("cdc", ks.cdc)
+
 	bz, err := ks.cdc.MarshalInterface(privKey)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("NewLocalRecord bz", string(bz))
-	fmt.Println("NewLocalRecord err", err.Error())
 
 	return &Record_Local{string(bz), privKey.Type()}, nil
 }

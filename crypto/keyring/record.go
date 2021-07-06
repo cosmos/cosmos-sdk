@@ -24,6 +24,15 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	return &Record{name, any, item}, nil
 }
 
+func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local, error) {
+	
+	bz, err := cdc.MarshalInterface(privKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Record_Local{string(bz), privKey.Type()}, nil
+}
 
 
 func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {

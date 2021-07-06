@@ -151,10 +151,9 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	require.NoError(err)
 }
 
-
 // TODO  do i need to test migration for ledger,offline record items as well?
 // TODO make keystore.Cdc field public
-/*
+
 func TestMigrateLocalRecord(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
@@ -172,7 +171,7 @@ func TestMigrateLocalRecord(t *testing.T) {
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
 	k, err := keyring.NewRecord("test record", pub, localRecordItem)
-	serializedRecord, err := kb.cdc.Marshal(k)
+	serializedRecord, err := kb.ProtoMarshalRecord(k)
 	require.NoError(err)
 	itemKey := keyring.InfoKey(n1)
 
@@ -189,7 +188,6 @@ func TestMigrateLocalRecord(t *testing.T) {
 	require.False(migrated)
 	require.NoError(err)
 }
-*/
 
 // TODO insert multiple incorrect migration keys and output errors to user
 func TestMigrateOneRandomItemError(t *testing.T) {

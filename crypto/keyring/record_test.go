@@ -1,7 +1,7 @@
 package keyring_test
 
 import (
-//	"strings"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,8 +11,8 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-//	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-//	"github.com/cosmos/cosmos-sdk/simapp"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
 func TestEmptyRecordMarshaling(t *testing.T) {
@@ -44,8 +44,8 @@ func TestEmptyRecordMarshaling(t *testing.T) {
 	require.True(pk.Equals(pk2))
 
 }
-// TODO fix that
-/*func TestLocalRecordMarshaling(t *testing.T) {
+
+func TestLocalRecordMarshaling(t *testing.T) {
 
 	const n1 = "cosmos"
 	require := require.New(t)
@@ -69,7 +69,7 @@ func TestEmptyRecordMarshaling(t *testing.T) {
 	r, err := keyring.NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
 
-	bz, err := kb.cdc.Marshal(r)
+	bz, err := kb.ProtoMarshalRecord(r)
 	require.NoError(err)
 
 	r2, err := kb.ProtoUnmarshalRecord(bz)
@@ -83,12 +83,12 @@ func TestEmptyRecordMarshaling(t *testing.T) {
 	require.True(pub.Equals(pub2))
 
 	localRecord2 := r2.GetLocal()
-	bzPriv, err := cdc.Marshal(priv)
+	bzPriv, err := kb.MarshalPrivKey(priv)
 	require.NoError(err)
 	require.Equal(localRecord2.PrivKeyArmor, string(bzPriv))
 	require.Equal(localRecord2.PrivKeyType, privKey.Type())
 }
-*/
+
 
 /* TODO implement tests
 TestNewRecordGetItem

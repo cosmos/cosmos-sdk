@@ -54,6 +54,7 @@ func (b AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, txEncodingConfig cl
 }
 
 // RegisterRESTRoutes registers the REST routes for the genutil module.
+// Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the genutil module.

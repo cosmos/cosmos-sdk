@@ -52,7 +52,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 			case sdk.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"insufficient gas, gasOffered: %d, gasRequired: %d, code location: %v",
-				gasTx.GetGas(), newCtx.GasMeter().GasConsumed(), rType.Descriptor)
+					gasTx.GetGas(), newCtx.GasMeter().GasConsumed(), rType.Descriptor)
 
 				err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 			default:

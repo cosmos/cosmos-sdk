@@ -50,12 +50,11 @@ type (
 	// by name, in addition to creating new capabilities & authenticating capabilities
 	// passed by other modules.
 	ScopedKeeper struct {
-		cdc         codec.BinaryMarshaler
-		storeKey    sdk.StoreKey
-		memKey      sdk.StoreKey
-		capMap      map[uint64]*types.Capability
-		module      string
-		initialized bool
+		cdc      codec.BinaryMarshaler
+		storeKey sdk.StoreKey
+		memKey   sdk.StoreKey
+		capMap   map[uint64]*types.Capability
+		module   string
 	}
 )
 

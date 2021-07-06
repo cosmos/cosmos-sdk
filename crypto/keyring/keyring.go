@@ -820,9 +820,8 @@ func (ks keystore) existsInDb(info Info) (bool, error) {
 	if item, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
 		if item.Key == info.GetName() {
 			return true, nil // address lookup succeeds - info exists
-		} else {
-			return false, nil
 		}
+		return false, nil
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns error
 	}
@@ -830,9 +829,8 @@ func (ks keystore) existsInDb(info Info) (bool, error) {
 	if item, err := ks.db.Get(infoKey(info.GetName())); err == nil {
 		if item.Key == info.GetName() {
 			return true, nil // uid lookup succeeds - info exists
-		} else {
-			return false, nil
 		}
+		return false, nil
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
 	}

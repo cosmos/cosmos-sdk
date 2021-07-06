@@ -60,8 +60,6 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 
-				require.NoError(t, err)
-
 				if tt.mnemonic != "" {
 					actualPVFile := privval.LoadFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 					expectedPrivateKey := tmed25519.GenPrivKeyFromSecret([]byte(tt.mnemonic))

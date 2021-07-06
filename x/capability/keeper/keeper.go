@@ -55,7 +55,7 @@ type (
 		memKey      sdk.StoreKey
 		capMap      map[uint64]*types.Capability
 		module      string
-		initialized bool
+		initialized bool // nolint
 	}
 )
 

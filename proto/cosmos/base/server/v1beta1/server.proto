@@ -1,0 +1,81 @@
+syntax = "proto3";
+package cosmos.base.server.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/store/v1beta1/listening.proto";
+import "tendermint/abci/types.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/state_file_server/grpc/v1beta";
+
+// StateFile service
+service StateFile {
+  rpc BeginBlockDataAt (BeginBlockRequest) returns (BeginBlockPayload) {}
+  rpc DeliverTxDataAt (DeliverTxRequest) returns (DeliverTxPayload) {}
+  rpc EndBlockDataAt (EndBlockRequest) returns (EndBlockPayload) {}
+  rpc StreamData (StreamRequest) returns (stream StreamResponse) {}
+  rpc BackFillData (StreamRequest) returns (stream StreamResponse) {}
+}
+
+// StreamRequest is the message definition for a streaming request sent from a client to the server
+message StreamRequest {
+  // begin_block specifies whether or not stream BeginBlock files
+  bool begin_block = 1;
+  // deliver_tx specifies whether or not to stream DeliverTx files
+  bool deliver_tx = 2;
+  // end_block specifies whether or not to stream EndBlock files
+  bool end_block = 3;
+  // store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to
+  repeated string store_keys = 4;
+}
+
+// BeginBlockRequest is the message definition for requesting BeginBlock data at a specific height
+message BeginBlockRequest {
+  int64 height = 1;
+}
+
+// DeliverTxRequest is the message definition for requesting DeliverTx data at a specific height
+message DeliverTxRequest {
+  int64 height = 1;
+}
+
+// EndBlockRequest is the message definition for requesting EndBlock data at a specific height
+message EndBlockRequest {
+  int64 height = 1;
+}
+
+// StreamResponse contains the response data for a stream request
+message StreamResponse {
+  // The ChainID for the tendermint application we are streaming data for
+  string chain_id = 1;
+  // The block height that this response is for
+  int64 height = 2;
+  // begin_block_payload contains the BeginBlock data
+  BeginBlockPayload begin_block_payload = 3 [(gogoproto.nullable) = true];
+  // deliver_tx_payload contains the DeliverTx data
+  DeliverTxPayload deliver_tx_payload = 4 [(gogoproto.nullable) = true];
+  // end_block_payload contains the EndBlock data
+  EndBlockPayload end_block_payload = 5 [(gogoproto.nullable) = true];
+  // error holds any error that occurred while generating the response
+  string err = 6 [(gogoproto.nullable) = true];
+}
+
+// BeginBlockPayload contains the BeginBlock data
+message BeginBlockPayload {
+  tendermint.abci.RequestBeginBlock request = 1;
+  tendermint.abci.ResponseBeginBlock response = 2;
+  repeated cosmos.base.store.v1beta1.StoreKVPair state_changes = 3;
+}
+
+// DeliverTxPayload contains the DeliverTx data
+message DeliverTxPayload {
+  tendermint.abci.RequestDeliverTx request = 1;
+  tendermint.abci.ResponseDeliverTx response = 2;
+  repeated cosmos.base.store.v1beta1.StoreKVPair state_changes = 3;
+}
+
+// EndBlockPayload contains the EndBlock data
+message EndBlockPayload {
+  tendermint.abci.RequestEndBlock request = 1;
+  tendermint.abci.ResponseEndBlock response = 2;
+  repeated cosmos.base.store.v1beta1.StoreKVPair state_changes = 3;
+}

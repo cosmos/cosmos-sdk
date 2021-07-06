@@ -82,6 +82,7 @@
     - [Output](#cosmos.bank.v1beta1.Output)
     - [Params](#cosmos.bank.v1beta1.Params)
     - [SendEnabled](#cosmos.bank.v1beta1.SendEnabled)
+    - [Supply](#cosmos.bank.v1beta1.Supply)
   
 - [cosmos/bank/v1beta1/genesis.proto](#cosmos/bank/v1beta1/genesis.proto)
     - [Balance](#cosmos.bank.v1beta1.Balance)
@@ -158,6 +159,21 @@
   
     - [ReflectionService](#cosmos.base.reflection.v2alpha1.ReflectionService)
   
+- [cosmos/base/store/v1beta1/listening.proto](#cosmos/base/store/v1beta1/listening.proto)
+    - [StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair)
+  
+- [cosmos/base/server/v1beta1/server.proto](#cosmos/base/server/v1beta1/server.proto)
+    - [BeginBlockPayload](#cosmos.base.server.v1beta1.BeginBlockPayload)
+    - [BeginBlockRequest](#cosmos.base.server.v1beta1.BeginBlockRequest)
+    - [DeliverTxPayload](#cosmos.base.server.v1beta1.DeliverTxPayload)
+    - [DeliverTxRequest](#cosmos.base.server.v1beta1.DeliverTxRequest)
+    - [EndBlockPayload](#cosmos.base.server.v1beta1.EndBlockPayload)
+    - [EndBlockRequest](#cosmos.base.server.v1beta1.EndBlockRequest)
+    - [StreamRequest](#cosmos.base.server.v1beta1.StreamRequest)
+    - [StreamResponse](#cosmos.base.server.v1beta1.StreamResponse)
+  
+    - [StateFile](#cosmos.base.server.v1beta1.StateFile)
+  
 - [cosmos/base/snapshots/v1beta1/snapshot.proto](#cosmos/base/snapshots/v1beta1/snapshot.proto)
     - [Metadata](#cosmos.base.snapshots.v1beta1.Metadata)
     - [Snapshot](#cosmos.base.snapshots.v1beta1.Snapshot)
@@ -166,9 +182,6 @@
     - [CommitID](#cosmos.base.store.v1beta1.CommitID)
     - [CommitInfo](#cosmos.base.store.v1beta1.CommitInfo)
     - [StoreInfo](#cosmos.base.store.v1beta1.StoreInfo)
-  
-- [cosmos/base/store/v1beta1/listening.proto](#cosmos/base/store/v1beta1/listening.proto)
-    - [StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair)
   
 - [cosmos/base/store/v1beta1/snapshot.proto](#cosmos/base/store/v1beta1/snapshot.proto)
     - [SnapshotIAVLItem](#cosmos.base.store.v1beta1.SnapshotIAVLItem)
@@ -1622,6 +1635,23 @@ sendable).
 
 
 
+
+<a name="cosmos.bank.v1beta1.Supply"></a>
+
+### Supply
+Supply represents a struct that passively keeps track of the total supply
+amounts in the network.
+This message is deprecated now that supply is indexed by denom.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `total` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2607,6 +2637,206 @@ ReflectionService defines a service for application reflection.
 
 
 
+<a name="cosmos/base/store/v1beta1/listening.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/store/v1beta1/listening.proto
+
+
+
+<a name="cosmos.base.store.v1beta1.StoreKVPair"></a>
+
+### StoreKVPair
+StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
+It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
+Deletes
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `store_key` | [string](#string) |  | the store key for the KVStore this pair originates from |
+| `delete` | [bool](#bool) |  | true indicates a delete operation, false indicates a set operation |
+| `key` | [bytes](#bytes) |  |  |
+| `value` | [bytes](#bytes) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/base/server/v1beta1/server.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/base/server/v1beta1/server.proto
+
+
+
+<a name="cosmos.base.server.v1beta1.BeginBlockPayload"></a>
+
+### BeginBlockPayload
+BeginBlockPayload contains the BeginBlock data
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `request` | [tendermint.abci.RequestBeginBlock](#tendermint.abci.RequestBeginBlock) |  |  |
+| `response` | [tendermint.abci.ResponseBeginBlock](#tendermint.abci.ResponseBeginBlock) |  |  |
+| `state_changes` | [cosmos.base.store.v1beta1.StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.server.v1beta1.BeginBlockRequest"></a>
+
+### BeginBlockRequest
+BeginBlockRequest is the message definition for requesting BeginBlock data at a specific height
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `height` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.server.v1beta1.DeliverTxPayload"></a>
+
+### DeliverTxPayload
+DeliverTxPayload contains the DeliverTx data
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `request` | [tendermint.abci.RequestDeliverTx](#tendermint.abci.RequestDeliverTx) |  |  |
+| `response` | [tendermint.abci.ResponseDeliverTx](#tendermint.abci.ResponseDeliverTx) |  |  |
+| `state_changes` | [cosmos.base.store.v1beta1.StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.server.v1beta1.DeliverTxRequest"></a>
+
+### DeliverTxRequest
+DeliverTxRequest is the message definition for requesting DeliverTx data at a specific height
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `height` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.server.v1beta1.EndBlockPayload"></a>
+
+### EndBlockPayload
+EndBlockPayload contains the EndBlock data
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `request` | [tendermint.abci.RequestEndBlock](#tendermint.abci.RequestEndBlock) |  |  |
+| `response` | [tendermint.abci.ResponseEndBlock](#tendermint.abci.ResponseEndBlock) |  |  |
+| `state_changes` | [cosmos.base.store.v1beta1.StoreKVPair](#cosmos.base.store.v1beta1.StoreKVPair) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.base.server.v1beta1.EndBlockRequest"></a>
+
+### EndBlockRequest
+EndBlockRequest is the message definition for requesting EndBlock data at a specific height
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `height` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.base.server.v1beta1.StreamRequest"></a>
+
+### StreamRequest
+StreamRequest is the message definition for a streaming request sent from a client to the server
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `begin_block` | [bool](#bool) |  | begin_block specifies whether or not stream BeginBlock files |
+| `deliver_tx` | [bool](#bool) |  | deliver_tx specifies whether or not to stream DeliverTx files |
+| `end_block` | [bool](#bool) |  | end_block specifies whether or not to stream EndBlock files |
+| `store_keys` | [string](#string) | repeated | store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to |
+
+
+
+
+
+
+<a name="cosmos.base.server.v1beta1.StreamResponse"></a>
+
+### StreamResponse
+StreamResponse contains the response data for a stream request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain_id` | [string](#string) |  | The ChainID for the tendermint application we are streaming data for |
+| `height` | [int64](#int64) |  | The block height that this response is for |
+| `begin_block_payload` | [BeginBlockPayload](#cosmos.base.server.v1beta1.BeginBlockPayload) |  | begin_block_payload contains the BeginBlock data |
+| `deliver_tx_payload` | [DeliverTxPayload](#cosmos.base.server.v1beta1.DeliverTxPayload) |  | deliver_tx_payload contains the DeliverTx data |
+| `end_block_payload` | [EndBlockPayload](#cosmos.base.server.v1beta1.EndBlockPayload) |  | end_block_payload contains the EndBlock data |
+| `err` | [string](#string) |  | error holds any error that occurred while generating the response |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.base.server.v1beta1.StateFile"></a>
+
+### StateFile
+StateFile service
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `BeginBlockDataAt` | [BeginBlockRequest](#cosmos.base.server.v1beta1.BeginBlockRequest) | [BeginBlockPayload](#cosmos.base.server.v1beta1.BeginBlockPayload) |  | |
+| `DeliverTxDataAt` | [DeliverTxRequest](#cosmos.base.server.v1beta1.DeliverTxRequest) | [DeliverTxPayload](#cosmos.base.server.v1beta1.DeliverTxPayload) |  | |
+| `EndBlockDataAt` | [EndBlockRequest](#cosmos.base.server.v1beta1.EndBlockRequest) | [EndBlockPayload](#cosmos.base.server.v1beta1.EndBlockPayload) |  | |
+| `StreamData` | [StreamRequest](#cosmos.base.server.v1beta1.StreamRequest) | [StreamResponse](#cosmos.base.server.v1beta1.StreamResponse) stream |  | |
+| `BackFillData` | [StreamRequest](#cosmos.base.server.v1beta1.StreamRequest) | [StreamResponse](#cosmos.base.server.v1beta1.StreamResponse) stream |  | |
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/base/snapshots/v1beta1/snapshot.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -2709,42 +2939,6 @@ between a store name and the commit ID.
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
 | `commit_id` | [CommitID](#cosmos.base.store.v1beta1.CommitID) |  |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="cosmos/base/store/v1beta1/listening.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/base/store/v1beta1/listening.proto
-
-
-
-<a name="cosmos.base.store.v1beta1.StoreKVPair"></a>
-
-### StoreKVPair
-StoreKVPair is a KVStore KVPair used for listening to state changes (Sets and Deletes)
-It optionally includes the StoreKey for the originating KVStore and a Boolean flag to distinguish between Sets and
-Deletes
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `store_key` | [string](#string) |  | the store key for the KVStore this pair originates from |
-| `delete` | [bool](#bool) |  | true indicates a delete operation, false indicates a set operation |
-| `key` | [bytes](#bytes) |  |  |
-| `value` | [bytes](#bytes) |  |  |
 
 
 

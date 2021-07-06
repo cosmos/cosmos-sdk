@@ -1,6 +1,4 @@
-// +build norace
-
-package rest_test
+package testutil
 
 import (
 	"fmt"
@@ -8,10 +6,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -142,8 +140,26 @@ func (s *IntegrationTestSuite) TestDenomMetadataGRPCHandler() {
 						Base:    "uatom",
 						Display: "atom",
 					},
+					{
+						Name:        "Ethereum",
+						Symbol:      "ETH",
+						Description: "Ethereum mainnet token",
+						DenomUnits: []*types.DenomUnit{
+							{
+								Denom:    "wei",
+								Exponent: 0,
+							},
+							{
+								Denom:    "eth",
+								Exponent: 6,
+								Aliases:  []string{"ETH"},
+							},
+						},
+						Base:    "wei",
+						Display: "eth",
+					},
 				},
-				Pagination: &query.PageResponse{Total: 1},
+				Pagination: &query.PageResponse{Total: 2},
 			},
 		},
 		{

@@ -1,24 +1,18 @@
-// +build norace
-
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/stretchr/testify/suite"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+<<<<<<< HEAD:x/gov/client/rest/grpc_query_test.go
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -71,6 +65,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
+=======
+>>>>>>> cd221680c (feat!: remove legacy REST  (#9594)):x/gov/client/testutil/grpc.go
 func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 	val := s.network.Validators[0]
 
@@ -473,8 +469,4 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

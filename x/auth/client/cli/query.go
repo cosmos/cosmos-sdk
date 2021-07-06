@@ -10,9 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/rest"
+=======
+	"github.com/cosmos/cosmos-sdk/types/query"
+>>>>>>> cd221680c (feat!: remove legacy REST  (#9594))
 	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -206,8 +210,8 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().Int(flags.FlagPage, rest.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, rest.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
 	cmd.MarkFlagRequired(flagEvents)
 

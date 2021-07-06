@@ -5,20 +5,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 
 	gogogrpc "github.com/gogo/protobuf/grpc"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -148,6 +145,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 	return clientCtx.PrintProto(res)
 }
 
+<<<<<<< HEAD
 // WriteGeneratedTxResponse writes a generated unsigned transaction to the
 // provided http.ResponseWriter. It will simulate gas costs if requested by the
 // BaseReq. Upon any error, the error will be written to the http.ResponseWriter.
@@ -283,6 +281,8 @@ func BuildSimTx(txf Factory, msgs ...sdk.Msg) ([]byte, error) {
 	return txf.txConfig.TxEncoder()(txb.GetTx())
 }
 
+=======
+>>>>>>> cd221680c (feat!: remove legacy REST  (#9594))
 // CalculateGas simulates the execution of a transaction and returns the
 // simulation response obtained by the query and the adjusted gas amount.
 func CalculateGas(

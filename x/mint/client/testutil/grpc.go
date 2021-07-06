@@ -1,22 +1,18 @@
-// +build norace
-
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+<<<<<<< HEAD:x/mint/client/rest/grpc_query_test.go
 type IntegrationTestSuite struct {
 	suite.Suite
 	cfg     network.Config
@@ -56,6 +52,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
+=======
+>>>>>>> cd221680c (feat!: remove legacy REST  (#9594)):x/mint/client/testutil/grpc.go
 func (s *IntegrationTestSuite) TestQueryGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
@@ -105,8 +103,4 @@ func (s *IntegrationTestSuite) TestQueryGRPC() {
 			s.Require().Equal(tc.expected.String(), tc.respType.String())
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

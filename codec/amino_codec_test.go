@@ -11,8 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+=======
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+>>>>>>> cd221680c (feat!: remove legacy REST  (#9594))
 )
 
 func createTestCodec() *codec.LegacyAmino {
@@ -130,12 +134,4 @@ func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
 	marshaledTx, err := legacyCdc.MarshalJSON(tx)
 	require.NoError(t, err)
 	require.Equal(t, string(marshaledTx), txSigned)
-
-	// Marshalling/unmarshalling the tx wrapped in a struct should work.
-	txRequest := &rest.BroadcastReq{
-		Mode: "block",
-		Tx:   tx,
-	}
-	_, err = legacyCdc.MarshalJSON(txRequest)
-	require.NoError(t, err)
 }

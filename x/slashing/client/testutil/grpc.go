@@ -1,21 +1,19 @@
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
+<<<<<<< HEAD:x/slashing/client/rest/grpc_query_test.go
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -41,6 +39,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
+=======
+>>>>>>> cd221680c (feat!: remove legacy REST  (#9594)):x/slashing/client/testutil/grpc.go
 func (s *IntegrationTestSuite) TestGRPCQueries() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
@@ -127,8 +127,4 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

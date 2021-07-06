@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/store/v1beta1/listening.proto";
 import "tendermint/abci/types.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/state_file_server/grpc/v1beta";
+option go_package = "github.com/cosmos/cosmos-sdk/store/streaming/file/server/v1beta";
 
 // StateFile service
 service StateFile {

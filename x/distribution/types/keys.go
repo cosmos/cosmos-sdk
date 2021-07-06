@@ -61,6 +61,7 @@ func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) 
 	// 0x02<valAddrLen (1 Byte)><valAddr_Bytes>
 
 	// Remove prefix and address length.
+	assertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -75,6 +76,7 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	// 0x03<accAddrLen (1 Byte)><accAddr_Bytes>
 
 	// Remove prefix and address length.
+	assertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -90,6 +92,7 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 	assertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
 	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
+	assertKeyAtLeastLength(key, 3+valAddrLen)
 	delAddrLen := int(key[2+valAddrLen])
 	delAddr = sdk.AccAddress(key[3+valAddrLen:])
 	if len(delAddr.Bytes()) != delAddrLen {
@@ -106,6 +109,7 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	assertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
 	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
+	assertKeyAtLeastLength(key, 3+valAddrLen)
 	b := key[2+valAddrLen:]
 	if len(b) != 8 {
 		panic("unexpected key length")
@@ -120,6 +124,7 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 	// 0x06<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
 
 	// Remove prefix and address length.
+	assertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -134,6 +139,7 @@ func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddres
 	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
 
 	// Remove prefix and address length.
+	assertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -148,6 +154,7 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	// 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
 	assertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
+	assertKeyAtLeastLength(key, 3+valAddrLen)
 	valAddr = key[2 : 2+valAddrLen]
 	startB := 2 + valAddrLen
 	assertKeyAtLeastLength(key, startB+9)

@@ -4,6 +4,7 @@ package v040
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
@@ -44,6 +45,7 @@ func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 
 // ValidatorSigningInfoAddress - extract the address from a validator signing info key
 func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
+	assertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
@@ -66,4 +68,10 @@ func ValidatorMissedBlockBitArrayKey(v sdk.ConsAddress, i int64) []byte {
 // AddrPubkeyRelationKey gets pubkey relation key used to get the pubkey from the address
 func AddrPubkeyRelationKey(address []byte) []byte {
 	return append(AddrPubkeyRelationKeyPrefix, address...)
+}
+
+func assertKeyAtLeastLength(bz []byte, length int) {
+	if len(bz) < length {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
+	}
 }

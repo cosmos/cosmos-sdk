@@ -40,10 +40,17 @@ func DenomMetadataKey(denom string) []byte {
 // store. The key must not contain the perfix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
 func AddressFromBalancesStore(key []byte) sdk.AccAddress {
+	assertKeyAtLeastLength(key, 1+v040auth.AddrLen)
 	addr := key[:v040auth.AddrLen]
 	if len(addr) != v040auth.AddrLen {
 		panic(fmt.Sprintf("unexpected account address key length; got: %d, expected: %d", len(addr), v040auth.AddrLen))
 	}
 
 	return sdk.AccAddress(addr)
+}
+
+func assertKeyAtLeastLength(bz []byte, length int) {
+	if len(bz) < length {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
+	}
 }

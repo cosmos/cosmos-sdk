@@ -1,29 +1,28 @@
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-type IntegrationTestSuite struct {
+type GRPCQueryTestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
+func (s *GRPCQueryTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
 	cfg := network.DefaultConfig()
@@ -38,7 +37,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryParamsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -69,7 +68,7 @@ func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryOutstandingRewardsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -123,7 +122,7 @@ func (s *IntegrationTestSuite) TestQueryOutstandingRewardsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryValidatorCommissionGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -177,7 +176,7 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommissionGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
+func (s *GRPCQueryTestSuite) TestQuerySlashesGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -236,9 +235,9 @@ func (s *IntegrationTestSuite) TestQuerySlashesGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryDelegatorRewardsGRPC() {
 	val := s.network.Validators[0]
-	baseUrl := val.APIAddress
+	baseURL := val.APIAddress
 
 	rewards, err := sdk.ParseDecCoins("9.8stake")
 	s.Require().NoError(err)
@@ -253,7 +252,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 	}{
 		{
 			"wrong delegator address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseUrl, "wrongDelegatorAddress"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseURL, "wrongDelegatorAddress"),
 			map[string]string{},
 			true,
 			&types.QueryDelegationTotalRewardsResponse{},
@@ -261,7 +260,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseUrl, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards", baseURL, val.Address.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -276,7 +275,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"wrong validator address(specific validator rewards)",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseUrl, val.Address.String(), "wrongValAddress"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseURL, val.Address.String(), "wrongValAddress"),
 			map[string]string{},
 			true,
 			&types.QueryDelegationTotalRewardsResponse{},
@@ -284,7 +283,7 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 		},
 		{
 			"valid request(specific validator rewards)",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseUrl, val.Address.String(), val.ValAddress.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s", baseURL, val.Address.String(), val.ValAddress.String()),
 			map[string]string{
 				grpctypes.GRPCBlockHeightHeader: "2",
 			},
@@ -312,9 +311,9 @@ func (s *IntegrationTestSuite) TestQueryDelegatorRewardsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	val := s.network.Validators[0]
-	baseUrl := val.APIAddress
+	baseURL := val.APIAddress
 
 	testCases := []struct {
 		name     string
@@ -325,21 +324,21 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	}{
 		{
 			"empty delegator address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseUrl, ""),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseURL, ""),
 			true,
 			&types.QueryDelegatorValidatorsResponse{},
 			nil,
 		},
 		{
 			"wrong delegator address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseUrl, "wrongDelegatorAddress"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseURL, "wrongDelegatorAddress"),
 			true,
 			&types.QueryDelegatorValidatorsResponse{},
 			nil,
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseUrl, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/validators", baseURL, val.Address.String()),
 			false,
 			&types.QueryDelegatorValidatorsResponse{},
 			&types.QueryDelegatorValidatorsResponse{
@@ -364,9 +363,9 @@ func (s *IntegrationTestSuite) TestQueryDelegatorValidatorsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryWithdrawAddressGRPC() {
 	val := s.network.Validators[0]
-	baseUrl := val.APIAddress
+	baseURL := val.APIAddress
 
 	testCases := []struct {
 		name     string
@@ -377,21 +376,21 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 	}{
 		{
 			"empty delegator address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseUrl, ""),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseURL, ""),
 			true,
 			&types.QueryDelegatorWithdrawAddressResponse{},
 			nil,
 		},
 		{
 			"wrong delegator address",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseUrl, "wrongDelegatorAddress"),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseURL, "wrongDelegatorAddress"),
 			true,
 			&types.QueryDelegatorWithdrawAddressResponse{},
 			nil,
 		},
 		{
 			"valid request",
-			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseUrl, val.Address.String()),
+			fmt.Sprintf("%s/cosmos/distribution/v1beta1/delegators/%s/withdraw_address", baseURL, val.Address.String()),
 			false,
 			&types.QueryDelegatorWithdrawAddressResponse{},
 			&types.QueryDelegatorWithdrawAddressResponse{
@@ -416,7 +415,7 @@ func (s *IntegrationTestSuite) TestQueryWithdrawAddressGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryValidatorCommunityPoolGRPC() {
+func (s *GRPCQueryTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -459,8 +458,4 @@ func (s *IntegrationTestSuite) TestQueryValidatorCommunityPoolGRPC() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

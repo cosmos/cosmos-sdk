@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/binary"
+	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -86,6 +87,7 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delAddr sdk.AccAddress) {
 	// key is in the format:
 	// 0x04<valAddrLen (1 Byte)><valAddr_Bytes><accAddrLen (1 Byte)><accAddr_Bytes>
+	assertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
 	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
 	delAddrLen := int(key[2+valAddrLen])
@@ -101,6 +103,7 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
 	// key is in the format:
 	// 0x05<valAddrLen (1 Byte)><valAddr_Bytes><period_Bytes>
+	assertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
 	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
 	b := key[2+valAddrLen:]
@@ -143,9 +146,11 @@ func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddres
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
 	// key is in the format:
 	// 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
+	assertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
 	valAddr = key[2 : 2+valAddrLen]
 	startB := 2 + valAddrLen
+	assertKeyAtLeastLength(key, startB+9)
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
@@ -211,4 +216,10 @@ func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	prefix := GetValidatorSlashEventKeyPrefix(v, height)
 
 	return append(prefix, periodBz...)
+}
+
+func assertKeyAtLeastLength(bz []byte, length int) {
+	if len(bz) < length {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
+	}
 }

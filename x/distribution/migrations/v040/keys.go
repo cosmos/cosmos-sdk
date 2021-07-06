@@ -4,6 +4,7 @@ package v040
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
@@ -130,6 +131,7 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	}
 	valAddr = sdk.ValAddress(addr)
 	startB := 1 + v040auth.AddrLen
+	assertKeyAtLeastLength(key, startB+9)
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
@@ -193,4 +195,10 @@ func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	binary.BigEndian.PutUint64(periodBz, period)
 	prefix := GetValidatorSlashEventKeyPrefix(v, height)
 	return append(prefix, periodBz...)
+}
+
+func assertKeyAtLeastLength(bz []byte, length int) {
+	if len(bz) < length {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
+	}
 }

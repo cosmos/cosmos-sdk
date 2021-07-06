@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -38,10 +40,18 @@ func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType strin
 func addressesFromGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
 	// key is of format:
 	// 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
+	assertKeyAtLeastLength(key, 2)
 	granterAddrLen := key[1] // remove prefix key
 	granterAddr = sdk.AccAddress(key[2 : 2+granterAddrLen])
+	assertKeyAtLeastLength(key, int(3+granterAddrLen))
 	granteeAddrLen := int(key[2+granterAddrLen])
 	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+byte(granteeAddrLen)])
 
 	return granterAddr, granteeAddr
+}
+
+func assertKeyAtLeastLength(bz []byte, length int) {
+	if len(bz) < length {
+		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
+	}
 }

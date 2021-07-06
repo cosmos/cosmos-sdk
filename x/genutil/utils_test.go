@@ -2,6 +2,9 @@ package genutil
 
 import (
 	"encoding/json"
+	"fmt"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/privval"
 	"os"
 	"path/filepath"
 	"testing"
@@ -57,6 +60,19 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
+
+				require.NoError(t, err)
+
+				if tt.mnemonic != "" {
+					keyFilePath := fmt.Sprintf("%s/config/priv_validator_key.json", cfg.RootDir)
+					stateFilePath := fmt.Sprintf("%s/data/priv_validator_state.json", cfg.RootDir)
+					actualPVFile := privval.LoadFilePV(keyFilePath, stateFilePath)
+
+					expectedPrivateKey := tmed25519.GenPrivKeyFromSecret([]byte(tt.mnemonic))
+					expectedFile := privval.NewFilePV(expectedPrivateKey, cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
+
+					require.Equal(t, expectedFile, actualPVFile)
+				}
 			}
 		})
 	}

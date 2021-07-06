@@ -1,93 +1,20 @@
-// +build norace
-
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
-
-type IntegrationTestSuite struct {
-	suite.Suite
-	cfg     network.Config
-	network *network.Network
-	grantee sdk.AccAddress
-}
-
-var typeMsgSend = banktypes.SendAuthorization{}.MsgTypeURL()
-var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-	s.cfg = cfg
-
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
-	s.Require().NoError(err)
-
-	val := s.network.Validators[0]
-	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
-
-	// Send some funds to the new account.
-	out, err := banktestutil.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	)
-	s.Require().NoError(err)
-	s.Require().Contains(out.String(), `"code":0`)
-
-	// grant authorization
-	out, err = authztestutil.ExecGrant(val, []string{
-		newAddr.String(),
-		"send",
-		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
-	})
-	s.Require().NoError(err)
-	s.Require().Contains(out.String(), `"code":0`)
-
-	s.grantee = newAddr
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
 
 func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	val := s.network.Validators[0]
+	grantee := s.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
 	testCases := []struct {
 		name      string
@@ -97,7 +24,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	}{
 		{
 			"fail invalid granter address",
-			fmt.Sprintf(grantsURL, "invalid_granter", s.grantee.String(), typeMsgSend),
+			fmt.Sprintf(grantsURL, "invalid_granter", grantee.String(), typeMsgSend),
 			true,
 			"decoding bech32 failed: invalid index of 1: invalid request",
 		},
@@ -109,7 +36,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 		},
 		{
 			"fail with empty granter",
-			fmt.Sprintf(grantsURL, "", s.grantee.String(), typeMsgSend),
+			fmt.Sprintf(grantsURL, "", grantee.String(), typeMsgSend),
 			true,
 			"empty address string is not allowed: invalid request",
 		},
@@ -121,13 +48,13 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 		},
 		{
 			"fail invalid msg-type",
-			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String(), "invalidMsg"),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String(), "invalidMsg"),
 			true,
 			"rpc error: code = NotFound desc = no authorization found for invalidMsg type: key not found",
 		},
 		{
 			"valid query",
-			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String(), typeMsgSend),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String(), typeMsgSend),
 			false,
 			"",
 		},
@@ -154,6 +81,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 
 func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 	val := s.network.Validators[0]
+	grantee := s.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 	testCases := []struct {
 		name      string
@@ -165,7 +93,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 	}{
 		{
 			"valid query: expect single grant",
-			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {},
@@ -175,12 +103,12 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect two grants",
-			fmt.Sprintf(grantsURL, val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL, val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {
-				_, err := authztestutil.ExecGrant(val, []string{
-					s.grantee.String(),
+				_, err := ExecGrant(val, []string{
+					grantee.String(),
 					"generic",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 					fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
@@ -197,7 +125,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect single grant with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=1", val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL+"&pagination.limit=1", val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {},
@@ -207,7 +135,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 		},
 		{
 			"valid query: expect two grants with pagination",
-			fmt.Sprintf(grantsURL+"&pagination.limit=2", val.Address.String(), s.grantee.String()),
+			fmt.Sprintf(grantsURL+"&pagination.limit=2", val.Address.String(), grantee.String()),
 			false,
 			"",
 			func() {},
@@ -232,8 +160,4 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

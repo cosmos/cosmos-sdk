@@ -294,8 +294,10 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 }
 
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
-	if _, err := ks.Key(uid); err == nil {
-		return fmt.Errorf("cannot overwrite key: %s", uid)
+	if k, err := ks.Key(uid); err == nil {
+		if uid == k.GetName() {
+			return fmt.Errorf("cannot overwrite key: %s", uid)
+		}
 	}
 
 	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
@@ -443,12 +445,12 @@ func (ks keystore) Rename(oldName, newName string) error {
 		return err
 	}
 
-	err = ks.Delete(oldName)
+	err = ks.ImportPrivKey(newName, armor, passPhrase)
 	if err != nil {
 		return err
 	}
 
-	err = ks.ImportPrivKey(newName, armor, passPhrase)
+	err = ks.Delete(oldName)
 	if err != nil {
 		return err
 	}
@@ -815,14 +817,22 @@ func (ks keystore) writeInfo(info Info) error {
 // existsInDb returns true if key is in DB. Error is returned only when we have error
 // different thant ErrKeyNotFound
 func (ks keystore) existsInDb(info Info) (bool, error) {
-	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
-		return true, nil // address lookup succeeds - info exists
+	if item, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
+		if item.Key == info.GetName() {
+			return true, nil // address lookup succeeds - info exists
+		} else {
+			return false, nil
+		}
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(infoKey(info.GetName())); err == nil {
-		return true, nil // uid lookup succeeds - info exists
+	if item, err := ks.db.Get(infoKey(info.GetName())); err == nil {
+		if item.Key == info.GetName() {
+			return true, nil // uid lookup succeeds - info exists
+		} else {
+			return false, nil
+		}
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
 	}

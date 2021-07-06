@@ -3,7 +3,6 @@ package keyring
 import (
 	"encoding/hex"
 	"fmt"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 	"testing"
 
@@ -1177,7 +1176,7 @@ func TestRenameKey(t *testing.T) {
 			name: "cant rename a key that doesnt exist",
 			run: func(kr Keyring) {
 				err := kr.Rename("bogus", "bogus2")
-				require.Equal(t, err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "bogus"))
+				require.Error(t, err)
 			},
 		},
 		{

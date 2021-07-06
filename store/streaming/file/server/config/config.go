@@ -7,7 +7,7 @@ import (
 // Default constants
 const (
 	// DefaultReadDir defines the default directory to read the streamed files from
-	DefaultReadDir        = file.DefaultWriteDir
+	DefaultReadDir = file.DefaultWriteDir
 
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "0.0.0.0:9092"
@@ -17,23 +17,25 @@ const (
 )
 
 type StateServerConfig struct {
-	GRPCAddress string
-	GRPCWebAddress string
+	GRPCAddress    string `mapstructure:"grpc-address"`
+	GRPCWebAddress string `mapstructure:"grpc-web-address"`
+	ChainID        string `mapstructure:"chain-id"`
+	ReadDir        string `mapstructure:"read-dir"`
+	FilePrefix     string `mapstructure:"file-prefix"`
+	RemoveAfter    bool   `mapstructure:"remove-after"` // true: once data has been streamed forward it will be removed from the filesystem
 }
 
 // DefaultStateServerConfig returns the reference to ClientConfig with default values.
 func DefaultStateServerConfig() *StateServerConfig {
-	return &StateServerConfig{DefaultGRPCAddress, DefaultGRPCWebAddress}
+	return &StateServerConfig{
+		DefaultGRPCAddress,
+		DefaultGRPCWebAddress,
+		"",
+		DefaultReadDir,
+		"",
+		true}
 }
 
-type StateServerBackendConfig struct {
-	ChainID string
-	ReadDir string
-	FilePrefix string
-	Persist bool   // false: once data has been streamed forward it will be removed from the filesystem
-}
-
-// DefaultStateServerBackendConfig returns the reference to ClientConfig with default values.
-func DefaultStateServerBackendConfig() *StateServerBackendConfig {
-	return &StateServerBackendConfig{"", DefaultReadDir, "", true}
+func WriteConfigFile(cfgFilePath string, cfg *StateServerConfig) {
+	panic("implement me")
 }

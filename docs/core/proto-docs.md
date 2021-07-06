@@ -2706,6 +2706,7 @@ BeginBlockRequest is the message definition for requesting BeginBlock data at a 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `height` | [int64](#int64) |  |  |
+| `index` | [int64](#int64) |  |  |
 
 
 

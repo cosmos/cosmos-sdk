@@ -36,6 +36,7 @@ message BeginBlockRequest {
 // DeliverTxRequest is the message definition for requesting DeliverTx data at a specific height
 message DeliverTxRequest {
   int64 height = 1;
+  int64 index = 2;
 }
 
 // EndBlockRequest is the message definition for requesting EndBlock data at a specific height

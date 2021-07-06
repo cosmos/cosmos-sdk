@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,36 +13,38 @@ import (
 	"github.com/fkocik/fsnotify"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/state_file_server/config"
-	pb "github.com/cosmos/cosmos-sdk/state_file_server/grpc/v1beta"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
+	"github.com/cosmos/cosmos-sdk/store/streaming/file/server/config"
+	pb "github.com/cosmos/cosmos-sdk/store/streaming/file/server/v1beta"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
 type StateFileBackend struct {
-	conf config.StateServerBackendConfig
+	conf config.StateServerConfig
 
-	codec *codec.ProtoCodec
-	logger log.Logger
+	codec      *codec.ProtoCodec
+	logger     log.Logger
 	trimPrefix string
 }
 
-func NewStateFileBackend(conf config.StateServerBackendConfig, codec *codec.ProtoCodec, logger log.Logger) *StateFileBackend {
+func NewStateFileBackend(conf config.StateServerConfig, codec *codec.ProtoCodec, logger log.Logger) *StateFileBackend {
 	trimPrefix := "block-"
 	if conf.FilePrefix != "" {
 		trimPrefix = fmt.Sprintf("%s-%s", conf.FilePrefix, trimPrefix)
 	}
 	return &StateFileBackend{
-		conf: conf,
-		codec: codec,
+		conf:       conf,
+		codec:      codec,
 		trimPrefix: trimPrefix,
-		logger: logger,
+		logger:     logger,
 	}
 }
 
-func (sfb *StateFileBackend) Stream(req *pb.StreamRequest, res chan <-*pb.StreamResponse, doneChan chan <-struct{}) error {
+// StreamData streams the requested state file data
+// this streams new data as it is written to disk
+func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.StreamResponse, doneChan chan<- struct{}) error {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		close(doneChan)
@@ -71,7 +74,7 @@ func (sfb *StateFileBackend) Stream(req *pb.StreamRequest, res chan <-*pb.Stream
 						res <- sfb.formBeginBlockResponse(fileName)
 					default:
 					}
-					if !sfb.conf.Persist && readFlag {
+					if sfb.conf.RemoveAfter && readFlag {
 						if err := os.Remove(filepath.Join(sfb.conf.ReadDir, fileName)); err != nil {
 							sfb.logger.Error("unable to remove state change file", "err", err)
 						}
@@ -88,7 +91,9 @@ func (sfb *StateFileBackend) Stream(req *pb.StreamRequest, res chan <-*pb.Stream
 	return nil
 }
 
-func (sfb *StateFileBackend) BackFill(req *pb.StreamRequest, res chan <-*pb.StreamResponse, doneChan chan <-struct{}) error {
+// BackFillData stream the requested state file data
+// this stream data that is already written to disk
+func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.StreamResponse, doneChan chan<- struct{}) error {
 	f, err := os.Open(sfb.conf.ReadDir)
 	if err != nil {
 		return err
@@ -118,7 +123,7 @@ func (sfb *StateFileBackend) BackFill(req *pb.StreamRequest, res chan <-*pb.Stre
 				res <- sfb.formBeginBlockResponse(fileName)
 			default:
 			}
-			if !sfb.conf.Persist && readFlag {
+			if sfb.conf.RemoveAfter && readFlag {
 				if err := os.Remove(filepath.Join(sfb.conf.ReadDir, fileName)); err != nil {
 					sfb.logger.Error("unable to remove state change file", "err", err)
 				}
@@ -126,6 +131,33 @@ func (sfb *StateFileBackend) BackFill(req *pb.StreamRequest, res chan <-*pb.Stre
 		}
 	}()
 	return nil
+}
+
+// BeginBlockDataAt returns a BeginBlockPayload for the provided BeginBlockRequest
+func (sfb *StateFileBackend) BeginBlockDataAt(ctx context.Context, req *pb.BeginBlockRequest) (*pb.BeginBlockPayload, error) {
+	fileName := fmt.Sprintf("block-%d-begin", req.Height)
+	if sfb.conf.FilePrefix != "" {
+		fileName = fmt.Sprintf("%s-%s", sfb.conf.FilePrefix, fileName)
+	}
+	return sfb.formBeginBlockPayload(fileName)
+}
+
+// DeliverTxDataAt returns a DeliverTxPayload for the provided BeginBlockRequest
+func (sfb *StateFileBackend) DeliverTxDataAt(ctx context.Context, req *pb.DeliverTxRequest) (*pb.DeliverTxPayload, error) {
+	fileName := fmt.Sprintf("block-%d-tx-%d", req.Height, req.Index)
+	if sfb.conf.FilePrefix != "" {
+		fileName = fmt.Sprintf("%s-%s", sfb.conf.FilePrefix, fileName)
+	}
+	return sfb.formDeliverTxPayload(fileName)
+}
+
+// EndBlockDataAt returns a EndBlockPayload for the provided EndBlockRequest
+func (sfb *StateFileBackend) EndBlockDataAt(ctx context.Context, req *pb.EndBlockRequest) (*pb.EndBlockPayload, error) {
+	fileName := fmt.Sprintf("block-%d-end", req.Height)
+	if sfb.conf.FilePrefix != "" {
+		fileName = fmt.Sprintf("%s-%s", sfb.conf.FilePrefix, fileName)
+	}
+	return sfb.formEndBlockPayload(fileName)
 }
 
 type filesByTimeModified []os.FileInfo
@@ -152,45 +184,48 @@ func (sfb *StateFileBackend) formBeginBlockResponse(fileName string) *pb.StreamR
 		return res
 	}
 	res.Height = blockHeight
-	fileBytes, err := ioutil.ReadFile(filepath.Join(sfb.conf.ReadDir, fileName))
+	bbp, err := sfb.formBeginBlockPayload(fileName)
 	if err != nil {
 		res.Err = err.Error()
 		return res
+	}
+	res.BeginBlockPayload = bbp
+	return res
+}
+
+func (sfb *StateFileBackend) formBeginBlockPayload(fileName string) (*pb.BeginBlockPayload, error) {
+	fileBytes, err := readFile(sfb.conf.ReadDir, fileName)
+	if err != nil {
+		return nil, err
 	}
 	messageBytes, err := file.SegmentBytes(fileBytes)
 	if err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	if len(messageBytes) < 2 {
-		res.Err = fmt.Sprintf("expected at least two protobuf messages, got %d", len(messageBytes))
-		return res
+		return nil, fmt.Errorf("expected at least two protobuf messages, got %d", len(messageBytes))
 	}
 	beginBlockReq := new(abci.RequestBeginBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[0], beginBlockReq); err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	beginBlockRes := new(abci.ResponseBeginBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], beginBlockRes); err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	kvPairs := make([]*types.StoreKVPair, len(messageBytes[1:len(messageBytes)-2]))
-	for i := 1; i < len(messageBytes) - 1; i++ {
+	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
 		if err := sfb.codec.Unmarshal(messageBytes[i], kvPair); err != nil {
-			res.Err = err.Error()
-			return res
+			return nil, err
 		}
 		kvPairs[i-1] = kvPair
 	}
-	res.BeginBlockPayload = &pb.BeginBlockPayload{
-		Request: beginBlockReq,
-		Response: beginBlockRes,
+	return &pb.BeginBlockPayload{
+		Request:      beginBlockReq,
+		Response:     beginBlockRes,
 		StateChanges: kvPairs,
-	}
-	return res
+	}, nil
 }
 
 func (sfb *StateFileBackend) formDeliverTxResponse(fileName string) *pb.StreamResponse {
@@ -203,45 +238,48 @@ func (sfb *StateFileBackend) formDeliverTxResponse(fileName string) *pb.StreamRe
 		return res
 	}
 	res.Height = blockHeight
-	fileBytes, err := ioutil.ReadFile(filepath.Join(sfb.conf.ReadDir, fileName))
+	dtp, err := sfb.formDeliverTxPayload(fileName)
 	if err != nil {
 		res.Err = err.Error()
 		return res
+	}
+	res.DeliverTxPayload = dtp
+	return res
+}
+
+func (sfb *StateFileBackend) formDeliverTxPayload(fileName string) (*pb.DeliverTxPayload, error) {
+	fileBytes, err := readFile(sfb.conf.ReadDir, fileName)
+	if err != nil {
+		return nil, err
 	}
 	messageBytes, err := file.SegmentBytes(fileBytes)
 	if err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	if len(messageBytes) < 2 {
-		res.Err = fmt.Sprintf("expected at least two protobuf messages, got %d", len(messageBytes))
-		return res
+		return nil, fmt.Errorf("expected at least two protobuf messages, got %d", len(messageBytes))
 	}
 	deliverTxReq := new(abci.RequestDeliverTx)
 	if err := sfb.codec.Unmarshal(messageBytes[0], deliverTxReq); err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	deliverTxRes := new(abci.ResponseDeliverTx)
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], deliverTxRes); err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	kvPairs := make([]*types.StoreKVPair, len(messageBytes[1:len(messageBytes)-2]))
-	for i := 1; i < len(messageBytes) - 1; i++ {
+	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
 		if err := sfb.codec.Unmarshal(messageBytes[i], kvPair); err != nil {
-			res.Err = err.Error()
-			return res
+			return nil, err
 		}
 		kvPairs[i-1] = kvPair
 	}
-	res.DeliverTxPayload = &pb.DeliverTxPayload{
-		Request: deliverTxReq,
-		Response: deliverTxRes,
+	return &pb.DeliverTxPayload{
+		Request:      deliverTxReq,
+		Response:     deliverTxRes,
 		StateChanges: kvPairs,
-	}
-	return res
+	}, nil
 }
 
 func (sfb *StateFileBackend) formEndBlockResponse(fileName string) *pb.StreamResponse {
@@ -254,43 +292,50 @@ func (sfb *StateFileBackend) formEndBlockResponse(fileName string) *pb.StreamRes
 		return res
 	}
 	res.Height = blockHeight
-	fileBytes, err := ioutil.ReadFile(filepath.Join(sfb.conf.ReadDir, fileName))
+	ebp, err := sfb.formEndBlockPayload(fileName)
 	if err != nil {
 		res.Err = err.Error()
 		return res
+	}
+	res.EndBlockPayload = ebp
+	return res
+}
+
+func (sfb *StateFileBackend) formEndBlockPayload(fileName string) (*pb.EndBlockPayload, error) {
+	fileBytes, err := readFile(sfb.conf.ReadDir, fileName)
+	if err != nil {
+		return nil, err
 	}
 	messageBytes, err := file.SegmentBytes(fileBytes)
 	if err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	if len(messageBytes) < 2 {
-		res.Err = fmt.Sprintf("expected at least two protobuf messages, got %d", len(messageBytes))
-		return res
+		return nil, fmt.Errorf("expected at least two protobuf messages, got %d", len(messageBytes))
 	}
 	endBlockReq := new(abci.RequestEndBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[0], endBlockReq); err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	endBlockRes := new(abci.ResponseEndBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], endBlockRes); err != nil {
-		res.Err = err.Error()
-		return res
+		return nil, err
 	}
 	kvPairs := make([]*types.StoreKVPair, len(messageBytes[1:len(messageBytes)-2]))
-	for i := 1; i < len(messageBytes) - 1; i++ {
+	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
 		if err := sfb.codec.Unmarshal(messageBytes[i], kvPair); err != nil {
-			res.Err = err.Error()
-			return res
+			return nil, err
 		}
 		kvPairs[i-1] = kvPair
 	}
-	res.EndBlockPayload = &pb.EndBlockPayload{
-		Request: endBlockReq,
-		Response: endBlockRes,
+	return &pb.EndBlockPayload{
+		Request:      endBlockReq,
+		Response:     endBlockRes,
 		StateChanges: kvPairs,
-	}
-	return res
+	}, nil
+}
+
+func readFile(dir, fileName string) ([]byte, error) {
+	return ioutil.ReadFile(filepath.Join(dir, fileName))
 }

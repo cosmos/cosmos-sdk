@@ -1,78 +1,60 @@
 package grpc
 
 import (
-	"context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/state_file_server/config"
-	pb "github.com/cosmos/cosmos-sdk/state_file_server/grpc/v1beta"
-	"github.com/tendermint/tendermint/libs/log"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"fmt"
+	"net"
+	"time"
+
+	"google.golang.org/grpc"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/server/grpc/gogoreflection"
+	reflection "github.com/cosmos/cosmos-sdk/server/grpc/reflection/v2alpha1"
+	pb "github.com/cosmos/cosmos-sdk/store/streaming/file/server/v1beta"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Handler = pb.StateFileServer
-
-// handler is the interface which exposes the StateFile Server methods
-type handler struct {
-	pb.UnimplementedStateFileServer
-	backend *StateFileBackend
-	logger log.Logger
-}
-
-// New returns the object for the RPC handler
-func New(conf config.StateServerBackendConfig, codec *codec.ProtoCodec, logger log.Logger) (Handler, error) {
-	return &handler{
-		backend: NewStateFileBackend(conf, codec, logger),
-		logger: logger,
-	}, nil
-}
-
-// StreamData streams the requested state file data
-// this streams new data as it is written to disk
-func (h *handler) StreamData(req *pb.StreamRequest, srv pb.StateFile_StreamDataServer) error {
-	resChan := make(chan *pb.StreamResponse)
-	stopped := make(chan struct{})
-	if err := h.backend.Stream(req, resChan, stopped); err != nil {
-		return err
-	}
-	for {
-		select {
-		case res := <-resChan:
-			if err := srv.Send(res); err != nil {
-				h.logger.Error("StreamData send error", "err", err)
+// StartGRPCServer starts a gRPC server on the given address.
+func StartGRPCServer(clientCtx client.Context, handler pb.StateFileServer, address string) (*grpc.Server, error) {
+	grpcSrv := grpc.NewServer()
+	pb.RegisterStateFileServer(grpcSrv, handler)
+	// reflection allows consumers to build dynamic clients that can write
+	// to any cosmos-sdk application without relying on application packages at compile time
+	err := reflection.Register(grpcSrv, reflection.Config{
+		SigningModes: func() map[string]int32 {
+			modes := make(map[string]int32, len(clientCtx.TxConfig.SignModeHandler().Modes()))
+			for _, m := range clientCtx.TxConfig.SignModeHandler().Modes() {
+				modes[m.String()] = (int32)(m)
 			}
-		case <-stopped:
-			return nil
-		}
+			return modes
+		}(),
+		ChainID:           clientCtx.ChainID,
+		SdkConfig:         sdk.GetConfig(),
+		InterfaceRegistry: clientCtx.InterfaceRegistry,
+	})
+	if err != nil {
+		return nil, err
 	}
-}
+	// Reflection allows external clients to see what services and methods
+	// the gRPC server exposes.
+	gogoreflection.Register(grpcSrv)
+	listener, err := net.Listen("tcp", address)
+	if err != nil {
+		return nil, err
+	}
 
-// BackFillData stream the requested state file data
-// this stream data that is already written to disk
-func (h *handler) BackFillData(req *pb.StreamRequest, srv pb.StateFile_BackFillDataServer) error {
-	resChan := make(chan *pb.StreamResponse)
-	stopped := make(chan struct{})
-	if err := h.backend.BackFill(req, resChan, stopped); err != nil {
-		return err
-	}
-	for {
-		select {
-		case res := <-resChan:
-			if err := srv.Send(res); err != nil {
-				h.logger.Error("BackFillData send error", "err", err)
-			}
-		case <-stopped:
-			return nil
+	errCh := make(chan error)
+	go func() {
+		err = grpcSrv.Serve(listener)
+		if err != nil {
+			errCh <- fmt.Errorf("failed to serve: %w", err)
 		}
-	}
-}
+	}()
 
-func (h *handler) BeginBlockDataAt(ctx context.Context, req *pb.BeginBlockRequest) (*pb.BeginBlockPayload, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BeginBlockDataAt not implemented")
-}
-func (h *handler) DeliverTxDataAt(ctx context.Context, req *pb.DeliverTxRequest) (*pb.DeliverTxPayload, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeliverTxDataAt not implemented")
-}
-func (h *handler) EndBlockDataAt(ctx context.Context, req *pb.EndBlockRequest) (*pb.EndBlockPayload, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method EndBlockDataAt not implemented")
+	select {
+	case err := <-errCh:
+		return nil, err
+	case <-time.After(5 * time.Second): // assume server started successfully
+		return grpcSrv, nil
+	}
 }

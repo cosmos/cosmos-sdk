@@ -6,16 +6,15 @@ import (
 	"strings"
 	"testing"
 
-
 	keyring99designs "github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,8 +89,8 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NotNil(t, err)
 	addr, err := r2.GetAddress()
 	require.NoError(t, err)
-    _, err = kb.KeyByAddress(addr)
-    require.NoError(t, err) 
+	_, err = kb.KeyByAddress(addr)
+	require.NoError(t, err)
 	addr, err = sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
 	_, err = kb.KeyByAddress(addr)
@@ -176,7 +175,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
-	require.NoError(t, err) 
+	require.NoError(t, err)
 
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)
@@ -237,7 +236,6 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "Private key extraction works only for Local", err.Error())
 }
-
 
 func TestExportImportKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -407,7 +405,6 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 	require.Equal(t, key, newKey)
 }
 
-
 func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Marshaler)
@@ -437,7 +434,6 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 	_, err = kb.ExportPrivKeyArmor("john3", "wrongpassword")
 	require.EqualError(t, err, "Get error, err - The specified item could not be found in the keyring")
 }
-
 
 func TestInMemoryLanguage(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -470,7 +466,6 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, "Invalid mnemonic", err.Error())
 }
-
 
 // TestInMemoryKeyManagement makes sure we can manipulate these keys well
 func TestInMemoryKeyManagement(t *testing.T) {
@@ -507,7 +502,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	addr, err := accAddr(k2)
 	require.NoError(t, err)
 	_, err = cstore.KeyByAddress(addr)
-	require.NoError(t, err) 
+	require.NoError(t, err)
 	addr, err = sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
 	_, err = cstore.KeyByAddress(addr)
@@ -552,7 +547,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 
 	require.Equal(t, o1, k.Name)
 	require.NotNil(t, k.GetEmpty())
-//	require.Equal(t, hd.Ed25519Type, k.GetAlgo())
+	//	require.Equal(t, hd.Ed25519Type, k.GetAlgo())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
@@ -568,7 +563,6 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	err = cstore.Delete(n2)
 	require.NoError(t, err)
 }
-
 
 // TestInMemorySignVerify does some detailed checks on how we sign and validate
 // signatures
@@ -653,8 +647,6 @@ func TestInMemorySignVerify(t *testing.T) {
 	require.Equal(t, "Private key extraction works only for Local", err.Error())
 }
 
-
-
 // TestInMemoryExportImport tests exporting and importing
 func TestInMemoryExportImport(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -696,7 +688,6 @@ func TestInMemoryExportImport(t *testing.T) {
 
 	require.Equal(t, johnKey, john2Key)
 }
-
 
 func TestInMemoryExportImportPrivKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -771,7 +762,6 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-
 // TestInMemoryAdvancedKeyManagement verifies update, import, export functionality
 func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -808,8 +798,6 @@ func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-
-
 // TestInMemorySeedPhrase verifies restoring from a seed phrase
 func TestInMemorySeedPhrase(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -845,8 +833,6 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	require.Equal(t, key, newKey)
 }
 
-
-
 func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
@@ -867,19 +853,18 @@ func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	require.Error(t, err)
 }
 
-
 // TODO fixt that
 /*
 got:
 Bob
-key 144c2d0cee3e70ff1300fae2797e9ec182a155c5.address has no infoSuffixprotoUnmarshalRecord continue
-key 812d8daaf6a323038d318e240a5ffd01475bb7bc.address has no infoSuffixprotoUnmarshalRecord continue
-key af7b60b8c0fb782094bbe91250f649fb6742767e.address has no infoSuffixprotoUnmarshalRecord continue
+key 144c2d0cee3e70ff1300fae2797e9ec182a155c5.address has no infoSuffixProtoUnmarshalRecord continue
+key 812d8daaf6a323038d318e240a5ffd01475bb7bc.address has no infoSuffixProtoUnmarshalRecord continue
+key af7b60b8c0fb782094bbe91250f649fb6742767e.address has no infoSuffixProtoUnmarshalRecord continue
 Alice
 Bob
 Carl
-protoUnmarshalRecord continue
-protoUnmarshalRecord continue
+ProtoUnmarshalRecord continue
+ProtoUnmarshalRecord continue
 signed by Bob
 want:
 Bob
@@ -978,7 +963,6 @@ func TestAltKeyring_List(t *testing.T) {
 	require.Equal(t, uid1, list[2].Name)
 }
 
-
 func TestAltKeyring_NewAccount(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
@@ -1006,7 +990,6 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 	require.Len(t, list, 1)
 }
 
-
 func TestAltKeyring_Get(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
@@ -1020,7 +1003,6 @@ func TestAltKeyring_Get(t *testing.T) {
 	require.NoError(t, err)
 	requireEqualRecord(t, mnemonic, key)
 }
-
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -1037,8 +1019,6 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	require.NoError(t, err)
 	requireEqualRecord(t, key, mnemonic)
 }
-
-
 
 func TestAltKeyring_Delete(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -1084,7 +1064,6 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	require.Empty(t, list)
 }
 
-
 func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
@@ -1104,13 +1083,12 @@ func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, pub, pubKey)
 	require.Equal(t, key, ke.Name)
-//	require.Equal(t, hd.Secp256k1.Name(), ke.GetAlgo())
+	//	require.Equal(t, hd.Secp256k1.Name(), ke.GetAlgo())
 
 	list, err = kr.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(list))
 }
-
 
 func TestAltKeyring_SaveMultisig(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -1146,7 +1124,6 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, list, 3)
 }
-
 
 func TestAltKeyring_Sign(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -1211,7 +1188,6 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
 
-
 func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kr, err := keyring.New(t.Name(), keyring.BackendTest, t.TempDir(), nil, encCfg.Marshaler)
@@ -1241,8 +1217,6 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 	err = kr.ImportPrivKey(newUID, armor, passphrase)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
-
-
 
 func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -1278,7 +1252,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 
 	addr, err := mnemonic.GetAddress()
 	require.NoError(t, err)
-	armor, err := kr.ExportPubKeyArmorByAddress(addr) 
+	armor, err := kr.ExportPubKeyArmorByAddress(addr)
 	require.NoError(t, err)
 	err = kr.Delete(uid)
 	require.NoError(t, err)
@@ -1291,8 +1265,6 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 	err = kr.ImportPubKey(newUID, armor)
 	require.EqualError(t, err, fmt.Sprintf("cannot overwrite key: %s", newUID))
 }
-
-
 
 func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -1317,7 +1289,6 @@ func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 	_, err = unsafeKeyring.UnsafeExportPrivKeyHex("non-existing")
 	require.Error(t, err)
 }
-
 
 func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()

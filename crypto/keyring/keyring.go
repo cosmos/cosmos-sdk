@@ -77,6 +77,11 @@ type Keyring interface {
 	// It fails if there is an existing key Info with the same address.
 	NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error)
 
+	// Creates a local record from given private key
+	NewLocalRecord(types.PrivKey) (*Record_Local, error)
+
+	ProtoUnmarshalRecord([]byte)(*Record, error)
+
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
 
@@ -487,7 +492,7 @@ func (ks keystore) List() ([]*Record, error) {
 			return nil, sdkerrors.ErrKeyNotFound.Wrap(key)
 		}
 
-		k, err := ks.protoUnmarshalRecord(item.Data)
+		k, err := ks.ProtoUnmarshalRecord(item.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -544,7 +549,6 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 
 	privKey := algo.Generate()(derivedPriv)
 
-
 	// check if the a key already exists with the same address and return an error
 	// if found
 	address := sdk.AccAddress(privKey.PubKey().Address())
@@ -576,7 +580,7 @@ func (ks keystore) key(infoKey string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
 	}
 
-	return ks.protoUnmarshalRecord(item.Data)
+	return ks.ProtoUnmarshalRecord(item.Data)
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
@@ -750,7 +754,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 
 func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, error) {
 
-	localRecord, err := NewLocalRecord(ks.cdc, privKey)
+	localRecord, err := ks.NewLocalRecord(privKey)
 	if err != nil {
 		return nil, err
 	}
@@ -885,8 +889,8 @@ func (ks keystore) Migrate(key string) (bool, error) {
 	}
 
 	// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
-	if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
-		fmt.Println("protoUnmarshalRecord continue")
+	if _, err := ks.ProtoUnmarshalRecord(item.Data); err == nil {
+		fmt.Println("ProtoUnmarshalRecord continue")
 		return migrated, nil
 	}
 
@@ -918,7 +922,7 @@ func (ks keystore) Migrate(key string) (bool, error) {
 	return !migrated, nil
 }
 
-func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
+func (ks keystore) ProtoUnmarshalRecord(bz []byte) (*Record, error) {
 	k := new(Record)
 	if err := ks.cdc.Unmarshal(bz, k); err != nil {
 		return nil, err
@@ -943,7 +947,7 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 			return nil, err
 		}
 
-		localRecord, err := NewLocalRecord(ks.cdc, priv)
+		localRecord, err := ks.NewLocalRecord(priv)
 		if err != nil {
 			return nil, err
 		}
@@ -968,6 +972,20 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 
 func (ks keystore) SetItem(item keyring.Item) error {
 	return ks.db.Set(item)
+}
+
+// bz, err := cdc.Marshal(privKey) yields an error that's why I cast privKey to curve PrivKey to serialize it
+func (ks keystore) NewLocalRecord(privKey types.PrivKey) (*Record_Local, error) {
+	fmt.Println("NewLocalRecord privKey", privKey)
+	fmt.Println("cdc", ks.cdc)
+	bz, err := ks.cdc.MarshalInterface(privKey)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("NewLocalRecord bz", string(bz))
+	fmt.Println("NewLocalRecord err", err.Error())
+
+	return &Record_Local{string(bz), privKey.Type()}, nil
 }
 
 type unsafeKeystore struct {

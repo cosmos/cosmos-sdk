@@ -24,18 +24,7 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	return &Record{name, any, item}, nil
 }
 
-// bz, err := cdc.Marshal(privKey) yields an error that's why I cast privKey to curve PrivKey to serialize it
-func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local, error) {
-	fmt.Println("NewLocalRecord privKey", privKey)
-	bz, err := cdc.MarshalInterface(privKey)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("NewLocalRecord bz", string(bz))
-	fmt.Println("NewLocalRecord err", err.Error())
 
-	return &Record_Local{string(bz), privKey.Type()}, nil
-}
 
 func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
 	return &Record_Local_{localRecord}

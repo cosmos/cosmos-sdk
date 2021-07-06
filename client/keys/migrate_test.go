@@ -84,7 +84,7 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
-	localRecord, err := keyring.NewLocalRecord(encCfg.Marshaler, priv)
+	localRecord, err := kb.NewLocalRecord(priv)
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
 	k, err := keyring.NewRecord("test record", priv.PubKey(), localRecordItem)

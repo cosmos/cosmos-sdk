@@ -565,7 +565,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
-	addr, err: = multisigInfo.GetAddress()
+	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
@@ -579,7 +579,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(
 		val1,
-		multisigInfo.GetAddress(),
+		addr,
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
@@ -616,8 +616,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := TxSignExec(val1.ClientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
-	multisigInfo.GetAddress()
+	account1Signature, err := TxSignExec(val1.ClientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
@@ -625,12 +624,12 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	// Sign with account1
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
-	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// Write the output to disk
@@ -656,19 +655,22 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	account2, err := val1.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 
-	multisigInfo, err := val1.ClientCtx.Keyring.Key("multi")
+	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
+	s.Require().NoError(err)
+
+	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(
-		val1, multisigInfo.GetAddress(),
+		val1, addr,
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, multisigInfo.GetAddress())
+	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	var balRes banktypes.QueryAllBalancesResponse
@@ -679,7 +681,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	// Generate multisig transaction.
 	multiGeneratedTx, err := bankcli.MsgSendExec(
 		val1.ClientCtx,
-		multisigInfo.GetAddress(),
+		addr,
 		val1.Address,
 		sdk.NewCoins(
 			sdk.NewInt64Coin(s.cfg.BondDenom, 5),
@@ -694,25 +696,29 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 	// Save tx to file
 	multiGeneratedTxFile := testutil.WriteToNewTempFile(s.T(), multiGeneratedTx.String())
 
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
 	// Sign with account1
 	val1.ClientCtx.HomeDir = strings.Replace(val1.ClientCtx.HomeDir, "simd", "simcli", 1)
-	account1Signature, err := TxSignExec(val1.ClientCtx, account1.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account1Signature, err := TxSignExec(val1.ClientCtx, addr1, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
+	addr2, err := account2.GetAddress()
+	s.Require().NoError(err)
 	// Sign with account1
-	account2Signature, err := TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
+	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
 
 	// Does not work in offline mode.
-	_, err = TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
-	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", account1.GetAddress()))
+	_, err = TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), "--offline", sign1File.Name(), sign2File.Name())
+	s.Require().EqualError(err, fmt.Sprintf("couldn't verify signature for address %s", addr1))
 
 	val1.ClientCtx.Offline = false
-	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigInfo.GetName(), multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
+	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
 
 	// Write the output to disk
@@ -736,14 +742,16 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	s.Require().NoError(err)
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
-	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+	multisigRecord, err := val.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
+	addr, err := multisigRecord.GetAddress()
+	s.Require().NoError(err)
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(
 		val,
-		multisigInfo.GetAddress(),
+		addr,
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
@@ -751,7 +759,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 
 	generatedStd, err := bankcli.MsgSendExec(
 		val.ClientCtx,
-		multisigInfo.GetAddress(),
+		addr,
 		val.Address,
 		sdk.NewCoins(
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
@@ -767,21 +775,25 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	filename := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 1))
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
 	// sign-batch file
-	res, err := TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
 	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
 
+	addr2, err := account2.GetAddress()
+	s.Require().NoError(err)
 	// sign-batch file with account2
-	res, err = TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String())
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// write sigs to file2
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
-	_, err = TxMultiSignExec(val.ClientCtx, multisigInfo.GetName(), filename.Name(), file1.Name(), file2.Name())
+	_, err = TxMultiSignExec(val.ClientCtx, multisigRecord.Name, filename.Name(), file1.Name(), file2.Name())
 	s.Require().NoError(err)
 }
 
@@ -793,14 +805,16 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	s.Require().NoError(err)
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
-	multisigInfo, err := val.ClientCtx.Keyring.Key("multi")
+	multisigRecord, err := val.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
+	addr, err := multisigRecord.GetAddress()
+	s.Require().NoError(err)
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
 	_, err = s.createBankMsg(
 		val,
-		multisigInfo.GetAddress(),
+		addr,
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
@@ -808,7 +822,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 
 	generatedStd, err := bankcli.MsgSendExec(
 		val.ClientCtx,
-		multisigInfo.GetAddress(),
+		addr,
 		val.Address,
 		sdk.NewCoins(
 			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(1)),
@@ -824,26 +838,30 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	filename := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
-	queryResJSON, err := QueryAccountExec(val.ClientCtx, multisigInfo.GetAddress())
+	queryResJSON, err := QueryAccountExec(val.ClientCtx, addr)
 	s.Require().NoError(err)
 	var account authtypes.AccountI
 	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	// sign-batch file
-	res, err := TxSignBatchExec(val.ClientCtx, account1.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	addr1, err := account1.GetAddress()
+	s.Require().NoError(err)
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
 	file1 := testutil.WriteToNewTempFile(s.T(), res.String())
 
 	// sign-batch file with account2
-	res, err = TxSignBatchExec(val.ClientCtx, account2.GetAddress(), filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", multisigInfo.GetAddress().String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	addr2, err := account2.GetAddress()
+	s.Require().NoError(err)
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
 	// multisign the file
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
-	res, err = TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigInfo.GetName(), file1.Name(), file2.Name())
+	res, err = TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigRecord.Name, file1.Name(), file2.Name())
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")
 

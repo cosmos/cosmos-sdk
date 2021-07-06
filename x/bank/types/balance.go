@@ -55,7 +55,7 @@ func (b Balance) Validate() error {
 	}
 
 	// sort the coins post validation
-	b.Coins = b.Coins.Sort() // nolint
+	b.Coins = b.Coins.Sort()
 
 	return nil
 }

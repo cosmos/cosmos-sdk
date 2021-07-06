@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-// TODO fix that
 func Test_runDeleteCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
@@ -60,7 +59,6 @@ func Test_runDeleteCmd(t *testing.T) {
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	err = cmd.Execute()
 	require.Error(t, err)
@@ -74,7 +72,6 @@ func Test_runDeleteCmd(t *testing.T) {
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.Execute())
 
@@ -88,7 +85,6 @@ func Test_runDeleteCmd(t *testing.T) {
 		fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.Execute())
 

@@ -927,7 +927,6 @@ func (ks keystore) Migrate(key string) (bool, error) {
 
 func (ks keystore) ProtoUnmarshalRecord(bz []byte) (*Record, error) {
 	k := new(Record)
-	fmt.Println("ProtoUnmarshalRecord ks.cdc", ks.cdc)
 	if err := ks.cdc.Unmarshal(bz, k); err != nil {
 		return nil, err
 	}

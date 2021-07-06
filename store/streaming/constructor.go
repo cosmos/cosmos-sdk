@@ -67,6 +67,9 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryCodec) (baseapp.StreamingService, error) {
 	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
 	fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
+	if fileDir == "" {
+		fileDir = file.DefaultWriteDir
+	}
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
 }
 

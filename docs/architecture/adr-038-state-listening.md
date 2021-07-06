@@ -48,10 +48,10 @@ and determine the source of each KV pair.
 
 ```protobuf
 message StoreKVPair {
-  optional string store_key = 1; // the store key for the KVStore this pair originates from
-  required bool set = 2; // true indicates a set operation, false indicates a delete operation
-  required bytes key = 3;
-  required bytes value = 4;
+  string store_key = 1; // the store key for the KVStore this pair originates from
+  bool set = 2; // true indicates a set operation, false indicates a delete operation
+  bytes key = 3;
+  bytes value = 4;
 }
 ```
 

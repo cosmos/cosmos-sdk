@@ -33,6 +33,8 @@ subsequent state changes are written out to this file until the next `BeginBlock
 the length-prefixed protobuf encoded `EndBlock` request is written, and the response is written at the tail.
 */
 
+const DefaultWriteDir = "./state_output"
+
 var _ baseapp.StreamingService = &StreamingService{}
 
 // StreamingService is a concrete implementation of StreamingService that writes state changes out to files

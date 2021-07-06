@@ -1,7 +1,6 @@
 package file
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -190,7 +189,7 @@ func testListenBeginBlock(t *testing.T) {
 	require.Nil(t, err)
 
 	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
+	segments, err := SegmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))
 	require.Equal(t, expectedBeginBlockReqBytes, segments[0])
@@ -244,7 +243,7 @@ func testListenDeliverTx1(t *testing.T) {
 	require.Nil(t, err)
 
 	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
+	segments, err := SegmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))
 	require.Equal(t, expectedDeliverTxReq1Bytes, segments[0])
@@ -298,7 +297,7 @@ func testListenDeliverTx2(t *testing.T) {
 	require.Nil(t, err)
 
 	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
+	segments, err := SegmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))
 	require.Equal(t, expectedDeliverTxReq2Bytes, segments[0])
@@ -352,7 +351,7 @@ func testListenEndBlock(t *testing.T) {
 	require.Nil(t, err)
 
 	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
+	segments, err := SegmentBytes(fileBytes)
 	require.Nil(t, err)
 	require.Equal(t, 5, len(segments))
 	require.Equal(t, expectedEndBlockReqBytes, segments[0])
@@ -365,32 +364,4 @@ func testListenEndBlock(t *testing.T) {
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
 	return ioutil.ReadFile(path)
-}
-
-// Returns all of the protobuf messages contained in the byte array as an array of byte arrays
-// The messages have their length prefix removed
-func segmentBytes(bz []byte) ([][]byte, error) {
-	var err error
-	segments := make([][]byte, 0)
-	for len(bz) > 0 {
-		var segment []byte
-		segment, bz, err = getHeadSegment(bz)
-		if err != nil {
-			return nil, err
-		}
-		segments = append(segments, segment)
-	}
-	return segments, nil
-}
-
-// Returns the bytes for the leading protobuf object in the byte array (removing the length prefix) and returns the remainder of the byte array
-func getHeadSegment(bz []byte) ([]byte, []byte, error) {
-	size, prefixSize := binary.Uvarint(bz)
-	if prefixSize < 0 {
-		return nil, nil, fmt.Errorf("invalid number of bytes read from length-prefixed encoding: %d", prefixSize)
-	}
-	if size > uint64(len(bz)-prefixSize) {
-		return nil, nil, fmt.Errorf("not enough bytes to read; want: %v, got: %v", size, len(bz)-prefixSize)
-	}
-	return bz[prefixSize:(uint64(prefixSize) + size)], bz[uint64(prefixSize)+size:], nil
 }

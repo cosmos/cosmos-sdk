@@ -108,6 +108,10 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				return err
 			}
 
+			if txFactory.ChainID() == "" {
+				return fmt.Errorf("set the chain id with either the --chain-id flag or config file")
+			}
+
 			signingData := signing.SignerData{
 				ChainID:       txFactory.ChainID(),
 				AccountNumber: txFactory.AccountNumber(),

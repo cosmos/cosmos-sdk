@@ -12,7 +12,9 @@ service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
-  rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreateVestingAccountResponse);
+  // CreatePeriodicVestingAccount defines a method that enables creating a
+  // periodic vesting account.
+  rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting

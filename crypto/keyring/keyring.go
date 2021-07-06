@@ -432,7 +432,7 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 func (ks keystore) Rename(oldName, newName string) error {
 	_, err := ks.Key(newName)
 	if err == nil {
-		return errors.New(fmt.Sprintf("rename failed: %s already exists in the keyring", newName))
+		return fmt.Errorf("rename failed: %s already exists in the keyring", newName)
 	}
 
 	passPhrase := "temp"

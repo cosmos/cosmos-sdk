@@ -1,47 +1,17 @@
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
-
-type IntegrationTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-	s.cfg = cfg
-
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
-	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
 
 func (s *IntegrationTestSuite) TestGRPCQueries() {
 	val := s.network.Validators[0]
@@ -129,8 +99,4 @@ func (s *IntegrationTestSuite) TestGRPCQueries() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -71,6 +71,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// unbonding
 	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }

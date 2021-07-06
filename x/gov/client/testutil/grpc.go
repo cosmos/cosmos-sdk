@@ -1,77 +1,16 @@
-// +build norace
-
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/stretchr/testify/suite"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
-
-type IntegrationTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	s.cfg = network.DefaultConfig()
-	s.cfg.NumValidators = 1
-
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.Require().NoError(err)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	val := s.network.Validators[0]
-
-	// create a proposal with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// vote for proposal
-	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
-	s.Require().NoError(err)
-
-	// create a proposal without deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// create a proposal3 with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// vote for proposal3 as val
-	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
-	s.Require().NoError(err)
-}
 
 func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 	val := s.network.Validators[0]
@@ -475,8 +414,4 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 			}
 		})
 	}
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

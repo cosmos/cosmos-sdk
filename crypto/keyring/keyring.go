@@ -760,7 +760,7 @@ func (ks keystore) writeInfo(info Info) error {
 		return err
 	}
 	if exists {
-		return errors.New("public key already exist in keybase")
+		return errors.New("public key already exists in keybase")
 	}
 
 	err = ks.db.Set(keyring.Item{

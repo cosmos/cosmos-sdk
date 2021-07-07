@@ -170,9 +170,11 @@ func fetchKey(kb keyring.Keyring, keyref string) (*keyring.Record, error) {
 	k, err := kb.Key(keyref)
 	// if the key is not there or if we have a problem with a keyring itself then we move to a
 	// fallback: searching for key by address.
+
 	if err == nil || !sdkerr.IsOf(err, sdkerr.ErrIO, sdkerr.ErrKeyNotFound) {
 		return k, err
 	}
+
 	accAddr, err := sdk.AccAddressFromBech32(keyref)
 	if err != nil {
 		return k, err

@@ -36,6 +36,8 @@ and export your keys in ASCII-armored encrypted format.`,
 			if err != nil {
 				return err
 			}
+
+		
 			unarmored, _ := cmd.Flags().GetBool(flagUnarmoredHex)
 			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
 
@@ -44,7 +46,7 @@ and export your keys in ASCII-armored encrypted format.`,
 			} else if unarmored || unsafe {
 				return fmt.Errorf("the flags %s and %s must be used together", flagUnsafe, flagUnarmoredHex)
 			}
-
+		
 			encryptPassword, err := input.GetPassword("Enter passphrase to encrypt the exported key:", buf)
 			if err != nil {
 				return err

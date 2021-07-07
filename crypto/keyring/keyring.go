@@ -270,10 +270,12 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 // TODO iam  not sure if this func is useful
 // we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
+	fmt.Println("ExportPrivKeyArmor start")
 	k, priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("ExportPrivKeyArmor done")
 
 	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(k.GetAlgo())), nil
 }
@@ -284,11 +286,13 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (*Record, types.PrivKey, e
 	if err != nil {
 		return nil, nil, err
 	}
-
+	fmt.Println("ExportPrivateKeyObject ks.Key done")
 	priv, err := ExtractPrivKeyFromRecord(ks.cdc, k)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	fmt.Println("priv", priv)
 
 	return k, priv, err
 }
@@ -884,7 +888,7 @@ func (ks keystore) Migrate(key string) (bool, error) {
 	var migrated bool
 	item, err := ks.db.Get(key)
 	if err != nil {
-		return migrated, fmt.Errorf("Get error, err - %s", err)
+		return migrated, wrapKeyNotFound(err, key)
 	}
 
 	if len(item.Data) == 0 {
@@ -893,7 +897,6 @@ func (ks keystore) Migrate(key string) (bool, error) {
 
 	// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
 	if _, err := ks.ProtoUnmarshalRecord(item.Data); err == nil {
-		fmt.Println("ProtoUnmarshalRecord continue")
 		return migrated, nil
 	}
 
@@ -942,8 +945,6 @@ func (ks keystore) MarshalPrivKey(privKey types.PrivKey) ([]byte, error) {
 }
 
 func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
-	fmt.Println("convertFromLegacyInfo")
-
 	if info == nil {
 		return nil, errors.New("unable to convert LegacyInfo to Record cause info is nil")
 	}

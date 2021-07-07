@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -184,12 +186,24 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 	}
 
 	bz := []byte(rl.PrivKeyArmor)
-	var priv cryptotypes.PrivKey
+	
+	switch rl.PrivKeyType{
+	case "ed25519":
+		privKey := new(ed25519.PrivKey)
+		if err := cdc.UnmarshalInterface(bz, privKey); err != nil {
+			fmt.Println("UnmarshalInterface ed25519.PrivKey err ", err.Error())
+			return nil, err
+		}
 
-	if err := cdc.UnmarshalInterface(bz, &priv); err != nil {
-		return nil, err
+		return privKey, nil
+	// case secp256k1
+	default:
+		privKey := new(secp256k1.PrivKey)
+		if err := cdc.UnmarshalInterface(bz, privKey); err != nil {
+			fmt.Println("UnmarshalInterface secp256k1.PrivKey err ", err.Error())
+			return nil, err
+		}
+
+		return privKey, nil
 	}
-
-	return priv,nil
-
 }

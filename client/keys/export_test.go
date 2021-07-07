@@ -42,7 +42,6 @@ func Test_runExportCmd(t *testing.T) {
 	args := []string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	}
 
 	mockIn.Reset("123456789\n123456789\n")

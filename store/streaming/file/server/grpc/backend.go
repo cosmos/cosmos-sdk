@@ -22,14 +22,14 @@ import (
 )
 
 type StateFileBackend struct {
-	conf config.StateServerConfig
-
+	conf       *config.StateServerConfig
 	codec      *codec.ProtoCodec
 	logger     log.Logger
 	trimPrefix string
+	quitChan   <-chan struct{}
 }
 
-func NewStateFileBackend(conf config.StateServerConfig, codec *codec.ProtoCodec, logger log.Logger) *StateFileBackend {
+func NewStateFileBackend(conf *config.StateServerConfig, codec *codec.ProtoCodec, logger log.Logger, quitChan <-chan struct{}) *StateFileBackend {
 	trimPrefix := "block-"
 	if conf.FilePrefix != "" {
 		trimPrefix = fmt.Sprintf("%s-%s", conf.FilePrefix, trimPrefix)
@@ -39,20 +39,19 @@ func NewStateFileBackend(conf config.StateServerConfig, codec *codec.ProtoCodec,
 		codec:      codec,
 		trimPrefix: trimPrefix,
 		logger:     logger,
+		quitChan:   quitChan,
 	}
 }
 
 // StreamData streams the requested state file data
 // this streams new data as it is written to disk
-func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.StreamResponse, doneChan chan<- struct{}) error {
+func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.StreamResponse) error {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
-		close(doneChan)
 		return err
 	}
 	go func() {
 		defer w.Close()
-		defer close(doneChan)
 		for {
 			select {
 			case event, ok := <-w.Events:
@@ -65,13 +64,13 @@ func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.St
 					switch {
 					case strings.Contains(fileName, "begin") && req.BeginBlock:
 						readFlag = true
-						res <- sfb.formBeginBlockResponse(fileName)
-					case strings.Contains(fileName, "end") && req.EndBlock:
-						readFlag = true
-						res <- sfb.formBeginBlockResponse(fileName)
+						res <- sfb.formBeginBlockResponse(fileName, req.StoreKeys)
 					case strings.Contains(fileName, "tx") && req.DeliverTx:
 						readFlag = true
-						res <- sfb.formBeginBlockResponse(fileName)
+						res <- sfb.formDeliverTxResponse(fileName, req.StoreKeys)
+					case strings.Contains(fileName, "end") && req.EndBlock:
+						readFlag = true
+						res <- sfb.formEndBlockResponse(fileName, req.StoreKeys)
 					default:
 					}
 					if sfb.conf.RemoveAfter && readFlag {
@@ -85,6 +84,9 @@ func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.St
 					continue
 				}
 				sfb.logger.Error("fsnotify watcher error", "err", err)
+			case <-sfb.quitChan:
+				sfb.logger.Info("quiting StateFileBackend StreamData process")
+				return
 			}
 		}
 	}()
@@ -93,7 +95,7 @@ func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.St
 
 // BackFillData stream the requested state file data
 // this stream data that is already written to disk
-func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.StreamResponse, doneChan chan<- struct{}) error {
+func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.StreamResponse) error {
 	f, err := os.Open(sfb.conf.ReadDir)
 	if err != nil {
 		return err
@@ -104,8 +106,14 @@ func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.
 	}
 	sort.Sort(filesByTimeModified(files))
 	go func() {
-		defer close(doneChan)
 		for _, f := range files {
+			select {
+			// short circuit if the parent processes are shutting down
+			case <-sfb.quitChan:
+				sfb.logger.Info("quiting StateFileBackend BackFillData process")
+				return
+			default:
+			}
 			if f.IsDir() {
 				continue
 			}
@@ -114,13 +122,13 @@ func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.
 			switch {
 			case strings.Contains(fileName, "begin") && req.BeginBlock:
 				readFlag = true
-				res <- sfb.formBeginBlockResponse(fileName)
+				res <- sfb.formBeginBlockResponse(fileName, req.StoreKeys)
 			case strings.Contains(fileName, "end") && req.EndBlock:
 				readFlag = true
-				res <- sfb.formBeginBlockResponse(fileName)
+				res <- sfb.formEndBlockResponse(fileName, req.StoreKeys)
 			case strings.Contains(fileName, "tx") && req.DeliverTx:
 				readFlag = true
-				res <- sfb.formBeginBlockResponse(fileName)
+				res <- sfb.formDeliverTxResponse(fileName, req.StoreKeys)
 			default:
 			}
 			if sfb.conf.RemoveAfter && readFlag {
@@ -139,7 +147,7 @@ func (sfb *StateFileBackend) BeginBlockDataAt(ctx context.Context, req *pb.Begin
 	if sfb.conf.FilePrefix != "" {
 		fileName = fmt.Sprintf("%s-%s", sfb.conf.FilePrefix, fileName)
 	}
-	return sfb.formBeginBlockPayload(fileName)
+	return sfb.formBeginBlockPayload(fileName, req.StoreKeys)
 }
 
 // DeliverTxDataAt returns a DeliverTxPayload for the provided BeginBlockRequest
@@ -148,7 +156,7 @@ func (sfb *StateFileBackend) DeliverTxDataAt(ctx context.Context, req *pb.Delive
 	if sfb.conf.FilePrefix != "" {
 		fileName = fmt.Sprintf("%s-%s", sfb.conf.FilePrefix, fileName)
 	}
-	return sfb.formDeliverTxPayload(fileName)
+	return sfb.formDeliverTxPayload(fileName, req.StoreKeys)
 }
 
 // EndBlockDataAt returns a EndBlockPayload for the provided EndBlockRequest
@@ -157,7 +165,7 @@ func (sfb *StateFileBackend) EndBlockDataAt(ctx context.Context, req *pb.EndBloc
 	if sfb.conf.FilePrefix != "" {
 		fileName = fmt.Sprintf("%s-%s", sfb.conf.FilePrefix, fileName)
 	}
-	return sfb.formEndBlockPayload(fileName)
+	return sfb.formEndBlockPayload(fileName, req.StoreKeys)
 }
 
 type filesByTimeModified []os.FileInfo
@@ -174,7 +182,7 @@ func (fs filesByTimeModified) Less(i, j int) bool {
 	return fs[i].ModTime().Before(fs[j].ModTime())
 }
 
-func (sfb *StateFileBackend) formBeginBlockResponse(fileName string) *pb.StreamResponse {
+func (sfb *StateFileBackend) formBeginBlockResponse(fileName string, storeKeys []string) *pb.StreamResponse {
 	res := new(pb.StreamResponse)
 	res.ChainId = sfb.conf.ChainID
 	blockHeightStr := string(strings.TrimPrefix(fileName, sfb.trimPrefix)[0])
@@ -184,7 +192,7 @@ func (sfb *StateFileBackend) formBeginBlockResponse(fileName string) *pb.StreamR
 		return res
 	}
 	res.Height = blockHeight
-	bbp, err := sfb.formBeginBlockPayload(fileName)
+	bbp, err := sfb.formBeginBlockPayload(fileName, storeKeys)
 	if err != nil {
 		res.Err = err.Error()
 		return res
@@ -193,7 +201,7 @@ func (sfb *StateFileBackend) formBeginBlockResponse(fileName string) *pb.StreamR
 	return res
 }
 
-func (sfb *StateFileBackend) formBeginBlockPayload(fileName string) (*pb.BeginBlockPayload, error) {
+func (sfb *StateFileBackend) formBeginBlockPayload(fileName string, storeKeys []string) (*pb.BeginBlockPayload, error) {
 	fileBytes, err := readFile(sfb.conf.ReadDir, fileName)
 	if err != nil {
 		return nil, err
@@ -213,13 +221,15 @@ func (sfb *StateFileBackend) formBeginBlockPayload(fileName string) (*pb.BeginBl
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], beginBlockRes); err != nil {
 		return nil, err
 	}
-	kvPairs := make([]*types.StoreKVPair, len(messageBytes[1:len(messageBytes)-2]))
+	kvPairs := make([]*types.StoreKVPair, 0, len(messageBytes[1:len(messageBytes)-2]))
 	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
 		if err := sfb.codec.Unmarshal(messageBytes[i], kvPair); err != nil {
 			return nil, err
 		}
-		kvPairs[i-1] = kvPair
+		if listIsEmptyOrContains(storeKeys, kvPair.StoreKey) {
+			kvPairs = append(kvPairs, kvPair)
+		}
 	}
 	return &pb.BeginBlockPayload{
 		Request:      beginBlockReq,
@@ -228,7 +238,7 @@ func (sfb *StateFileBackend) formBeginBlockPayload(fileName string) (*pb.BeginBl
 	}, nil
 }
 
-func (sfb *StateFileBackend) formDeliverTxResponse(fileName string) *pb.StreamResponse {
+func (sfb *StateFileBackend) formDeliverTxResponse(fileName string, storeKeys []string) *pb.StreamResponse {
 	res := new(pb.StreamResponse)
 	res.ChainId = sfb.conf.ChainID
 	blockHeightStr := string(strings.TrimPrefix(fileName, sfb.trimPrefix)[0])
@@ -238,7 +248,7 @@ func (sfb *StateFileBackend) formDeliverTxResponse(fileName string) *pb.StreamRe
 		return res
 	}
 	res.Height = blockHeight
-	dtp, err := sfb.formDeliverTxPayload(fileName)
+	dtp, err := sfb.formDeliverTxPayload(fileName, storeKeys)
 	if err != nil {
 		res.Err = err.Error()
 		return res
@@ -247,7 +257,7 @@ func (sfb *StateFileBackend) formDeliverTxResponse(fileName string) *pb.StreamRe
 	return res
 }
 
-func (sfb *StateFileBackend) formDeliverTxPayload(fileName string) (*pb.DeliverTxPayload, error) {
+func (sfb *StateFileBackend) formDeliverTxPayload(fileName string, storeKeys []string) (*pb.DeliverTxPayload, error) {
 	fileBytes, err := readFile(sfb.conf.ReadDir, fileName)
 	if err != nil {
 		return nil, err
@@ -267,13 +277,15 @@ func (sfb *StateFileBackend) formDeliverTxPayload(fileName string) (*pb.DeliverT
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], deliverTxRes); err != nil {
 		return nil, err
 	}
-	kvPairs := make([]*types.StoreKVPair, len(messageBytes[1:len(messageBytes)-2]))
+	kvPairs := make([]*types.StoreKVPair, 0, len(messageBytes[1:len(messageBytes)-2]))
 	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
 		if err := sfb.codec.Unmarshal(messageBytes[i], kvPair); err != nil {
 			return nil, err
 		}
-		kvPairs[i-1] = kvPair
+		if listIsEmptyOrContains(storeKeys, kvPair.StoreKey) {
+			kvPairs = append(kvPairs, kvPair)
+		}
 	}
 	return &pb.DeliverTxPayload{
 		Request:      deliverTxReq,
@@ -282,7 +294,7 @@ func (sfb *StateFileBackend) formDeliverTxPayload(fileName string) (*pb.DeliverT
 	}, nil
 }
 
-func (sfb *StateFileBackend) formEndBlockResponse(fileName string) *pb.StreamResponse {
+func (sfb *StateFileBackend) formEndBlockResponse(fileName string, storeKeys []string) *pb.StreamResponse {
 	res := new(pb.StreamResponse)
 	res.ChainId = sfb.conf.ChainID
 	blockHeightStr := string(strings.TrimPrefix(fileName, sfb.trimPrefix)[0])
@@ -292,7 +304,7 @@ func (sfb *StateFileBackend) formEndBlockResponse(fileName string) *pb.StreamRes
 		return res
 	}
 	res.Height = blockHeight
-	ebp, err := sfb.formEndBlockPayload(fileName)
+	ebp, err := sfb.formEndBlockPayload(fileName, storeKeys)
 	if err != nil {
 		res.Err = err.Error()
 		return res
@@ -301,7 +313,7 @@ func (sfb *StateFileBackend) formEndBlockResponse(fileName string) *pb.StreamRes
 	return res
 }
 
-func (sfb *StateFileBackend) formEndBlockPayload(fileName string) (*pb.EndBlockPayload, error) {
+func (sfb *StateFileBackend) formEndBlockPayload(fileName string, storeKeys []string) (*pb.EndBlockPayload, error) {
 	fileBytes, err := readFile(sfb.conf.ReadDir, fileName)
 	if err != nil {
 		return nil, err
@@ -321,13 +333,15 @@ func (sfb *StateFileBackend) formEndBlockPayload(fileName string) (*pb.EndBlockP
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], endBlockRes); err != nil {
 		return nil, err
 	}
-	kvPairs := make([]*types.StoreKVPair, len(messageBytes[1:len(messageBytes)-2]))
+	kvPairs := make([]*types.StoreKVPair, 0, len(messageBytes[1:len(messageBytes)-2]))
 	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
 		if err := sfb.codec.Unmarshal(messageBytes[i], kvPair); err != nil {
 			return nil, err
 		}
-		kvPairs[i-1] = kvPair
+		if listIsEmptyOrContains(storeKeys, kvPair.StoreKey) {
+			kvPairs = append(kvPairs, kvPair)
+		}
 	}
 	return &pb.EndBlockPayload{
 		Request:      endBlockReq,
@@ -338,4 +352,16 @@ func (sfb *StateFileBackend) formEndBlockPayload(fileName string) (*pb.EndBlockP
 
 func readFile(dir, fileName string) ([]byte, error) {
 	return ioutil.ReadFile(filepath.Join(dir, fileName))
+}
+
+func listIsEmptyOrContains(list []string, str string) bool {
+	if len(list) == 0 {
+		return true
+	}
+	for _, element := range list {
+		if element == str {
+			return true
+		}
+	}
+	return false
 }

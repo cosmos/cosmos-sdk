@@ -3,8 +3,6 @@
 package v040
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
@@ -43,9 +41,9 @@ func DenomMetadataKey(denom string) []byte {
 func AddressFromBalancesStore(key []byte) sdk.AccAddress {
 	kv.AssertKeyAtLeastLength(key, 1+v040auth.AddrLen)
 	addr := key[:v040auth.AddrLen]
-	if len(addr) != v040auth.AddrLen {
-		panic(fmt.Sprintf("unexpected account address key length; got: %d, expected: %d", len(addr), v040auth.AddrLen))
-	}
-
+	kv.AssertKeyLength(addr, v040auth.AddrLen)
+	// if len(addr) != v040auth.AddrLen {
+	// 	panic(fmt.Sprintf("unexpected account address key length; got: %d, expected: %d", len(addr), v040auth.AddrLen))
+	// }
 	return sdk.AccAddress(addr)
 }

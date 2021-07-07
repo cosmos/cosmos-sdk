@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -112,9 +111,10 @@ func VoteKey(proposalID uint64, voterAddr sdk.AccAddress) []byte {
 
 // SplitProposalKey split the proposal key and returns the proposal id
 func SplitProposalKey(key []byte) (proposalID uint64) {
-	if len(key[1:]) != 8 {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ 8)", len(key[1:])))
-	}
+	kv.AssertKeyLength(key[1:], 8)
+	// if len(key[1:]) != 8 {
+	// 	panic(fmt.Sprintf("unexpected key length (%d ≠ 8)", len(key[1:])))
+	// }
 
 	return GetProposalIDFromBytes(key[1:])
 }
@@ -142,9 +142,10 @@ func SplitKeyVote(key []byte) (proposalID uint64, voterAddr sdk.AccAddress) {
 // private functions
 
 func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
-	if len(key[1:]) != 8+lenTime {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
-	}
+	kv.AssertKeyLength(key[1:], 8+lenTime)
+	// if len(key[1:]) != 8+lenTime {
+	// 	panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
+	// }
 
 	endTime, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
 	if err != nil {
@@ -160,6 +161,7 @@ func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
 	// <prefix (1 Byte)><proposalID (8 bytes)><addrLen (1 Byte)><addr_Bytes>
 	kv.AssertKeyAtLeastLength(key, 10)
 	proposalID = GetProposalIDFromBytes(key[1:9])
+	kv.AssertKeyAtLeastLength(key, 11)
 	addr = sdk.AccAddress(key[10:])
 	return
 }

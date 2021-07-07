@@ -1,7 +1,7 @@
 run:
   tests: false
-#   # timeout for analysis, e.g. 30s, 5m, default is 1m
-#   timeout: 5m
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  timeout: 5m
 
 linters:
   disable-all: true
@@ -54,7 +54,7 @@ issues:
     - text: "ST1016:"
       linters:
         - stylecheck
-    - path: "legacy"
+    - path: "migrations"
       text: "SA1019:"
       linters:
         - staticcheck

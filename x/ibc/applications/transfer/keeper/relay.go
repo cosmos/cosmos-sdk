@@ -201,8 +201,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 
 	labels := []metrics.Label{
-		telemetry.NewLabel("source-port", packet.GetSourcePort()),
-		telemetry.NewLabel("source-channel", packet.GetSourceChannel()),
+		telemetry.NewLabel(coretypes.LabelSourcePort, packet.GetSourcePort()),
+		telemetry.NewLabel(coretypes.LabelSourceChannel, packet.GetSourceChannel()),
 	}
 
 	// This is the prefix that would have been prefixed to the denomination

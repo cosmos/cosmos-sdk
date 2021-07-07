@@ -28,7 +28,7 @@ func (k Keeper) CreateClient(
 	clientID := k.GenerateClientIdentifier(ctx, clientState.ClientType())
 
 	k.SetClientState(ctx, clientID, clientState)
-	k.Logger(ctx).Info("client created at height", types.LabelClientID, clientID, "height", clientState.GetLatestHeight().String())
+	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
 
 	// verifies initial consensus state against client state and initializes client store with any client-specific metadata
 	// e.g. set ProcessedTime in Tendermint clients
@@ -41,7 +41,7 @@ func (k Keeper) CreateClient(
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
 
-	k.Logger(ctx).Info("client created at height", types.LabelClientID, clientID, "height", clientState.GetLatestHeight().String())
+	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -83,7 +83,7 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
-	k.Logger(ctx).Info("client state updated", types.LabelClientID, clientID, "height", consensusHeight.String())
+	k.Logger(ctx).Info("client state updated", "client-id", clientID, "height", consensusHeight.String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -144,7 +144,7 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 	k.SetClientState(ctx, clientID, updatedClientState)
 	k.SetClientConsensusState(ctx, clientID, updatedClientState.GetLatestHeight(), updatedConsState)
 
-	k.Logger(ctx).Info("client state upgraded", types.LabelClientID, clientID, "height", updatedClientState.GetLatestHeight().String())
+	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", updatedClientState.GetLatestHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -188,7 +188,7 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	}
 
 	k.SetClientState(ctx, misbehaviour.GetClientID(), clientState)
-	k.Logger(ctx).Info("client frozen due to misbehaviour", types.LabelClientID, misbehaviour.GetClientID(), "height", misbehaviour.GetHeight().String())
+	k.Logger(ctx).Info("client frozen due to misbehaviour", "client-id", misbehaviour.GetClientID(), "height", misbehaviour.GetHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(

@@ -143,9 +143,13 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 
 	for _, msg := range tx.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
+			if !seen[addr] {
+				signer, err := sdk.AccAddressFromBech32(addr)
+				if err != nil {
+					panic(err)
+				}
+				signers = append(signers, signer)
+				seen[addr] = true
 			}
 		}
 	}

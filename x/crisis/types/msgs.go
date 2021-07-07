@@ -21,9 +21,8 @@ func (msg MsgVerifyInvariant) Route() string { return ModuleName }
 func (msg MsgVerifyInvariant) Type() string  { return "verify_invariant" }
 
 // get the bytes for the message signer to sign on
-func (msg MsgVerifyInvariant) GetSigners() []sdk.AccAddress {
-	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
-	return []sdk.AccAddress{sender}
+func (msg MsgVerifyInvariant) GetSigners() []string {
+	return []string{msg.Sender}
 }
 
 // GetSignBytes gets the sign bytes for the msg MsgVerifyInvariant

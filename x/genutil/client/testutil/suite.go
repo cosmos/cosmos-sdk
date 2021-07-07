@@ -87,7 +87,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	s.Require().Len(msgs, 1)
 
 	s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0]))
-	s.Require().Equal([]sdk.AccAddress{val.Address}, msgs[0].GetSigners())
+	s.Require().Equal([]string{val.Address.String()}, msgs[0].GetSigners())
 	s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
 	err = tx.ValidateBasic()
 	s.Require().NoError(err)

@@ -7,8 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -26,6 +24,7 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	return &Record{name, any, item}, nil
 }
 
+/* duplicate to (ks keystore) NewLocalRecord(privKey cryptotypes.PrivKey)
 func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local, error) {
 	
 	bz, err := cdc.MarshalInterface(privKey)
@@ -34,7 +33,7 @@ func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local
 	}
 
 	return &Record_Local{string(bz), privKey.Type()}, nil
-}
+}*/
 
 
 func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
@@ -186,24 +185,10 @@ func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.Pri
 	}
 
 	bz := []byte(rl.PrivKeyArmor)
-	
-	switch rl.PrivKeyType{
-	case "ed25519":
-		privKey := new(ed25519.PrivKey)
-		if err := cdc.UnmarshalInterface(bz, privKey); err != nil {
-			fmt.Println("UnmarshalInterface ed25519.PrivKey err ", err.Error())
+	var privKey cryptotypes.PrivKey
+	if err := cdc.UnmarshalInterface(bz, &privKey); err != nil {
 			return nil, err
-		}
-
-		return privKey, nil
-	// case secp256k1
-	default:
-		privKey := new(secp256k1.PrivKey)
-		if err := cdc.UnmarshalInterface(bz, privKey); err != nil {
-			fmt.Println("UnmarshalInterface secp256k1.PrivKey err ", err.Error())
-			return nil, err
-		}
-
-		return privKey, nil
 	}
+
+	return privKey, nil
 }

@@ -18,18 +18,18 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb := keyring.NewInMemory(encCfg.Marshaler)
 
-	ke, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
+	k, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 
 	if err != nil {
 		require.Error(t, err)
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
-		require.Nil(t, ke)
+		require.Nil(t, k)
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
 
 	// The mock is available, check that the address is correct
-	pubKey, err := ke.GetPubKey()
+	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)
 	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"
 	require.Equal(t, expectedPkStr, pubKey.String())
@@ -105,7 +105,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	_, err = kr.SaveLedgerKey("key", keyring.NotSupportedAlgo{}, "cosmos", 118, 0, 0)
 	require.EqualError(t, err, keyring.ErrUnsupportedSigningAlgo.Error())
 
-	ke, err := kr.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
+	k, err := kr.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 	if err != nil {
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
@@ -113,7 +113,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	}
 	// The mock is available, check that the address is correct
 	require.Equal(t, "some_account", ke.Name)
-	pubKey, err := ke.GetPubKey()
+	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)
 	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"
 	require.Equal(t, expectedPkStr, pubKey.String())
@@ -128,7 +128,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())
 
-	ledgerInfo := ke.GetLedger()
+	ledgerInfo := k.GetLedger()
 	require.NotNil(t, ledgerInfo)
 
 	path := ledgerInfo.GetPath()

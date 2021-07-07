@@ -348,7 +348,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 }
 
 // ImportInfo implements Importer.MigrateInfo.
-// TODO do i need it or not
+// TODO do i need it or not?
 /*
 func (ks keystore) ImportInfo(oldInfo LegacyInfo) error {
 	if _, err := ks.Key(oldInfo.Name); err == nil {
@@ -477,7 +477,6 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]*Record, error) {
-	// todo migrateAll
 	if _, err := ks.MigrateAll(); err != nil {
 		return nil, err
 	}
@@ -831,8 +830,6 @@ func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 	return false, nil
 }
 
-// TO
-
 func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error) {
 	emptyRecord := NewEmptyRecord()
 	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
@@ -985,7 +982,7 @@ func (ks keystore) SetItem(item keyring.Item) error {
 	return ks.db.Set(item)
 }
 
-// bz, err := cdc.Marshal(privKey) yields an error that's why I cast privKey to curve PrivKey to serialize it
+// TODO or should I use cdc as argument in NewLocalRecord?
 func (ks keystore) NewLocalRecord(privKey types.PrivKey) (*Record_Local, error) {
 
 	bz, err := ks.cdc.MarshalInterface(privKey)

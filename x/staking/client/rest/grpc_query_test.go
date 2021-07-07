@@ -418,9 +418,10 @@ func (s *IntegrationTestSuite) TestQueryDelegationsResponseCode() {
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	newAddr,err := k.GetAddress()
+	s.Require().NoError(err)
 
 	s.T().Log("expect 404 error for address without delegations")
 	res, statusCode, err := getRequest(fmt.Sprintf("%s/cosmos/staking/v1beta1/delegations/%s", val.APIAddress, newAddr.String()))

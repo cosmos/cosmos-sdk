@@ -134,7 +134,6 @@ func Test_runMigrateCmdErr(t *testing.T) {
 	t.Log(mockOut.String())
 	err := cmd.ExecuteContext(ctx)
 	require.NoError(err)
-	//require.Equal(err.Error(), "no keys available for migration")
 }
 
 

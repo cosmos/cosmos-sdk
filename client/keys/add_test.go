@@ -33,13 +33,11 @@ func Test_runAddCmdBasic(t *testing.T) {
 	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-	
 	t.Cleanup(func() {
 		_ = kb.Delete("keyname1")
 		_ = kb.Delete("keyname2")
 	})
 	
-
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
@@ -60,9 +58,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
-	fmt.Println("keyname2 is done1")
 	require.Error(t, cmd.ExecuteContext(ctx))
-	fmt.Println("keyname2 is done2")
 
 	mockIn.Reset("y\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))

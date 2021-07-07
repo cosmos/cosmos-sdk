@@ -135,20 +135,20 @@ func TestSign(t *testing.T) {
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
 	encCfg := simapp.MakeTestEncodingConfig()
-	kr, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Marshaler)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Marshaler)
 	requireT.NoError(err)
 
 	var from1 = "test_key1"
 	var from2 = "test_key2"
 
 	// create a new key using a mnemonic generator and test if we can reuse seed to recreate that account
-	_, seed, err := kr.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	_, seed, err := kb.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	requireT.NoError(err)
-	requireT.NoError(kr.Delete(from1))
-	k1, _, err := kr.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	requireT.NoError(kb.Delete(from1))
+	k1, _, err := kb.NewMnemonic(from1, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	requireT.NoError(err)
 
-	k2, err := kr.NewAccount(from2, seed, "", path, hd.Secp256k1)
+	k2, err := kb.NewAccount(from2, seed, "", path, hd.Secp256k1)
 	requireT.NoError(err)
 
 	pubKey1, err := k1.GetPubKey()
@@ -166,7 +166,7 @@ func TestSign(t *testing.T) {
 		WithMemo("memo").
 		WithChainID("test-chain")
 	txfDirect := txfNoKeybase.
-		WithKeybase(kr).
+		WithKeybase(kb).
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	txfAmino := txfDirect.
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)

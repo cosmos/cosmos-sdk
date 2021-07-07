@@ -388,12 +388,12 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 		return err
 	}
 
-	kr, err := txf.keybase.Key(name)
+	k, err := txf.keybase.Key(name)
 	if err != nil {
 		return err
 	}
 
-	pubKey, err := kr.GetPubKey()
+	pubKey, err := k.GetPubKey()
 	if err != nil {
 		return err
 	}

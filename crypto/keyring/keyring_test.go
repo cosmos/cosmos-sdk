@@ -175,7 +175,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
-	require.NoError(t, err)
+	require.NoError(t, err) //TODO fix no registered implementations of type types.PrivKey
 
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)

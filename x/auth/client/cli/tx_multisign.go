@@ -86,16 +86,16 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		kr, err := getMultisigRecord(clientCtx, args[1])
+		k, err := getMultisigRecord(clientCtx, args[1])
 		if err != nil {
 			return err
 		}
-		pubKey, err := kr.GetPubKey()
+		pubKey, err := k.GetPubKey()
 		if err != nil {
 			return err
 		}
 
-		addr, err := kr.GetAddress()
+		addr, err := k.GetAddress()
 		if err != nil {
 			return err
 		}
@@ -263,7 +263,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
 
-		kr, err := getMultisigRecord(clientCtx, args[1])
+		k, err := getMultisigRecord(clientCtx, args[1])
 		if err != nil {
 			return err
 		}
@@ -278,7 +278,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			signatureBatch = append(signatureBatch, sigs)
 		}
 
-		addr, err := kr.GetAddress()
+		addr, err := k.GetAddress()
 		if err != nil {
 			return err
 		}
@@ -306,7 +306,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			pubKey, err := kr.GetPubKey()
+			pubKey, err := k.GetPubKey()
 			if err != nil {
 				return err
 			}

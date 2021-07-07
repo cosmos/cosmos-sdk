@@ -2705,8 +2705,9 @@ BeginBlockRequest is the message definition for requesting BeginBlock data at a 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  |  |
-| `index` | [int64](#int64) |  |  |
+| `height` | [int64](#int64) |  | height at which to return data |
+| `index` | [int64](#int64) |  | index of the tx for which to return data |
+| `store_keys` | [string](#string) | repeated | store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to |
 
 
 
@@ -2738,7 +2739,8 @@ DeliverTxRequest is the message definition for requesting DeliverTx data at a sp
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  |  |
+| `height` | [int64](#int64) |  | height at which to return data |
+| `store_keys` | [string](#string) | repeated | store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to |
 
 
 
@@ -2770,7 +2772,8 @@ EndBlockRequest is the message definition for requesting EndBlock data at a spec
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `height` | [int64](#int64) |  |  |
+| `height` | [int64](#int64) |  | height at which to return data |
+| `store_keys` | [string](#string) | repeated | store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to |
 
 
 

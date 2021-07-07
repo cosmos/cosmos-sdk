@@ -30,18 +30,28 @@ message StreamRequest {
 
 // BeginBlockRequest is the message definition for requesting BeginBlock data at a specific height
 message BeginBlockRequest {
+  // height at which to return data
   int64 height = 1;
+  // store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to
+  repeated string store_keys = 2;
 }
 
 // DeliverTxRequest is the message definition for requesting DeliverTx data at a specific height
 message DeliverTxRequest {
+  // height at which to return data
   int64 height = 1;
+  // index of the tx for which to return data
   int64 index = 2;
+  // store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to
+  repeated string store_keys = 3;
 }
 
 // EndBlockRequest is the message definition for requesting EndBlock data at a specific height
 message EndBlockRequest {
+  // height at which to return data
   int64 height = 1;
+  // store_keys is a (optional) list of store keys for which to restrict the streamed KVPairs to
+  repeated string store_keys = 2;
 }
 
 // StreamResponse contains the response data for a stream request

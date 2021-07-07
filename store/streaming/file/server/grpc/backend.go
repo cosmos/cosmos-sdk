@@ -123,12 +123,12 @@ func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.
 			case strings.Contains(fileName, "begin") && req.BeginBlock:
 				readFlag = true
 				res <- sfb.formBeginBlockResponse(fileName, req.StoreKeys)
-			case strings.Contains(fileName, "end") && req.EndBlock:
-				readFlag = true
-				res <- sfb.formEndBlockResponse(fileName, req.StoreKeys)
 			case strings.Contains(fileName, "tx") && req.DeliverTx:
 				readFlag = true
 				res <- sfb.formDeliverTxResponse(fileName, req.StoreKeys)
+			case strings.Contains(fileName, "end") && req.EndBlock:
+				readFlag = true
+				res <- sfb.formEndBlockResponse(fileName, req.StoreKeys)
 			default:
 			}
 			if sfb.conf.RemoveAfter && readFlag {

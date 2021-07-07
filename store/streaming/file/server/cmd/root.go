@@ -111,7 +111,7 @@ func initConfig() {
 func logLevel() {
 	lvl := parseLevel(viper.GetString(tomlFlagLogLevel))
 	zerolog.SetGlobalLevel(lvl)
-	log.Printf("Log level set to ", lvl.String())
+	log.Printf("Log level set to %s", lvl.String())
 }
 
 func parseLevel(lvlString string) zerolog.Level {

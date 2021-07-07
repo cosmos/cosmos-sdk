@@ -44,9 +44,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val := s.network.Validators[0]
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	newAddr, err := k.GetAddress()
+	s.Require().NoError(err)
 
 	// Send some funds to the new account.
 	out, err := banktestutil.MsgSendExec(
@@ -190,7 +191,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizationsGRPC() {
 			"",
 			func() {},
 			func(authorizations *types.QueryAuthorizationsResponse) {
-				s.Require().Len(authorizations.Authorizations), 1)
+				s.Require().Len(authorizations.Authorizations, 1)
 			},
 		},
 		{

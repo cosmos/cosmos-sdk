@@ -34,6 +34,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+* (x/ibc) [\#9640](https://github.com/cosmos/cosmos-sdk/pull/9640#pullrequestreview-699914607) Fix IBC Transfer Ack Success event as it was initially emitting opposite value.
+
 ## [v0.42.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.6) - 2021-06-18
 
 ### Improvements

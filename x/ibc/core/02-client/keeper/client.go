@@ -28,7 +28,7 @@ func (k Keeper) CreateClient(
 	clientID := k.GenerateClientIdentifier(ctx, clientState.ClientType())
 
 	k.SetClientState(ctx, clientID, clientState)
-	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
+	k.Logger(ctx).Info("client created at height", types.LabelClientID, clientID, "height", clientState.GetLatestHeight().String())
 
 	// verifies initial consensus state against client state and initializes client store with any client-specific metadata
 	// e.g. set ProcessedTime in Tendermint clients
@@ -41,13 +41,13 @@ func (k Keeper) CreateClient(
 		k.SetClientConsensusState(ctx, clientID, clientState.GetLatestHeight(), consensusState)
 	}
 
-	k.Logger(ctx).Info("client created at height", "client-id", clientID, "height", clientState.GetLatestHeight().String())
+	k.Logger(ctx).Info("client created at height", types.LabelClientID, clientID, "height", clientState.GetLatestHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{"ibc", "client", "create"},
 			1,
-			[]metrics.Label{telemetry.NewLabel("client-type", clientState.ClientType())},
+			[]metrics.Label{telemetry.NewLabel(types.LabelClientType, clientState.ClientType())},
 		)
 	}()
 
@@ -83,16 +83,16 @@ func (k Keeper) UpdateClient(ctx sdk.Context, clientID string, header exported.H
 		consensusHeight = types.GetSelfHeight(ctx)
 	}
 
-	k.Logger(ctx).Info("client state updated", "client-id", clientID, "height", consensusHeight.String())
+	k.Logger(ctx).Info("client state updated", types.LabelClientID, clientID, "height", consensusHeight.String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{"ibc", "client", "update"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("client-type", clientState.ClientType()),
-				telemetry.NewLabel("client-id", clientID),
-				telemetry.NewLabel("update-type", "msg"),
+				telemetry.NewLabel(types.LabelClientType, clientState.ClientType()),
+				telemetry.NewLabel(types.LabelClientID, clientID),
+				telemetry.NewLabel(types.LabelUpdateType, "msg"),
 			},
 		)
 	}()
@@ -144,15 +144,15 @@ func (k Keeper) UpgradeClient(ctx sdk.Context, clientID string, upgradedClient e
 	k.SetClientState(ctx, clientID, updatedClientState)
 	k.SetClientConsensusState(ctx, clientID, updatedClientState.GetLatestHeight(), updatedConsState)
 
-	k.Logger(ctx).Info("client state upgraded", "client-id", clientID, "height", updatedClientState.GetLatestHeight().String())
+	k.Logger(ctx).Info("client state upgraded", types.LabelClientID, clientID, "height", updatedClientState.GetLatestHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{"ibc", "client", "upgrade"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("client-type", updatedClientState.ClientType()),
-				telemetry.NewLabel("client-id", clientID),
+				telemetry.NewLabel(types.LabelClientType, updatedClientState.ClientType()),
+				telemetry.NewLabel(types.LabelClientID, clientID),
 			},
 		)
 	}()
@@ -188,15 +188,15 @@ func (k Keeper) CheckMisbehaviourAndUpdateState(ctx sdk.Context, misbehaviour ex
 	}
 
 	k.SetClientState(ctx, misbehaviour.GetClientID(), clientState)
-	k.Logger(ctx).Info("client frozen due to misbehaviour", "client-id", misbehaviour.GetClientID(), "height", misbehaviour.GetHeight().String())
+	k.Logger(ctx).Info("client frozen due to misbehaviour", types.LabelClientID, misbehaviour.GetClientID(), "height", misbehaviour.GetHeight().String())
 
 	defer func() {
 		telemetry.IncrCounterWithLabels(
 			[]string{"ibc", "client", "misbehaviour"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("client-type", misbehaviour.ClientType()),
-				telemetry.NewLabel("client-id", misbehaviour.GetClientID()),
+				telemetry.NewLabel(types.LabelClientType, misbehaviour.ClientType()),
+				telemetry.NewLabel(types.LabelClientID, misbehaviour.GetClientID()),
 			},
 		)
 	}()

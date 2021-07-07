@@ -13,6 +13,7 @@ import (
 	channel "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	porttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/05-port/types"
+	coretypes "github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 )
 
 var _ clienttypes.MsgServer = Keeper{}
@@ -462,10 +463,10 @@ func (k Keeper) RecvPacket(goCtx context.Context, msg *channeltypes.MsgRecvPacke
 			[]string{"tx", "msg", "ibc", msg.Type()},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("source-port", msg.Packet.SourcePort),
-				telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
-				telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
-				telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+				telemetry.NewLabel(coretypes.LabelSourcePort, msg.Packet.SourcePort),
+				telemetry.NewLabel(coretypes.LabelSourceChannel, msg.Packet.SourceChannel),
+				telemetry.NewLabel(coretypes.LabelDestinationPort, msg.Packet.DestinationPort),
+				telemetry.NewLabel(coretypes.LabelDestinationChannel, msg.Packet.DestinationChannel),
 			},
 		)
 	}()
@@ -509,11 +510,11 @@ func (k Keeper) Timeout(goCtx context.Context, msg *channeltypes.MsgTimeout) (*c
 			[]string{"ibc", "timeout", "packet"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("source-port", msg.Packet.SourcePort),
-				telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
-				telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
-				telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
-				telemetry.NewLabel("timeout-type", "height"),
+				telemetry.NewLabel(coretypes.LabelSourcePort, msg.Packet.SourcePort),
+				telemetry.NewLabel(coretypes.LabelSourceChannel, msg.Packet.SourceChannel),
+				telemetry.NewLabel(coretypes.LabelDestinationPort, msg.Packet.DestinationPort),
+				telemetry.NewLabel(coretypes.LabelDestinationChannel, msg.Packet.DestinationChannel),
+				telemetry.NewLabel(coretypes.LabelTimeoutType, "height"),
 			},
 		)
 	}()
@@ -560,11 +561,11 @@ func (k Keeper) TimeoutOnClose(goCtx context.Context, msg *channeltypes.MsgTimeo
 			[]string{"ibc", "timeout", "packet"},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("source-port", msg.Packet.SourcePort),
-				telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
-				telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
-				telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
-				telemetry.NewLabel("timeout-type", "channel-closed"),
+				telemetry.NewLabel(coretypes.LabelSourcePort, msg.Packet.SourcePort),
+				telemetry.NewLabel(coretypes.LabelSourceChannel, msg.Packet.SourceChannel),
+				telemetry.NewLabel(coretypes.LabelDestinationPort, msg.Packet.DestinationPort),
+				telemetry.NewLabel(coretypes.LabelDestinationChannel, msg.Packet.DestinationChannel),
+				telemetry.NewLabel(coretypes.LabelTimeoutType, "channel-closed"),
 			},
 		)
 	}()
@@ -604,10 +605,10 @@ func (k Keeper) Acknowledgement(goCtx context.Context, msg *channeltypes.MsgAckn
 			[]string{"tx", "msg", "ibc", msg.Type()},
 			1,
 			[]metrics.Label{
-				telemetry.NewLabel("source-port", msg.Packet.SourcePort),
-				telemetry.NewLabel("source-channel", msg.Packet.SourceChannel),
-				telemetry.NewLabel("destination-port", msg.Packet.DestinationPort),
-				telemetry.NewLabel("destination-channel", msg.Packet.DestinationChannel),
+				telemetry.NewLabel(coretypes.LabelSourcePort, msg.Packet.SourcePort),
+				telemetry.NewLabel(coretypes.LabelSourceChannel, msg.Packet.SourceChannel),
+				telemetry.NewLabel(coretypes.LabelDestinationPort, msg.Packet.DestinationPort),
+				telemetry.NewLabel(coretypes.LabelDestinationChannel, msg.Packet.DestinationChannel),
 			},
 		)
 	}()

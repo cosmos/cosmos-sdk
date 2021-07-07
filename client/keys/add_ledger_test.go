@@ -119,11 +119,11 @@ func Test_runAddCmdLedger(t *testing.T) {
 	})
 
 	mockIn.Reset("test1234\n")
-	k, err := kb.Key("keyname1")
+	key1, err := kb.Key("keyname1")
 	require.NoError(t, err)
 	require.NotNil(t, key1)
 
-	require.Equal(t, "keyname1", k.Name)
+	require.Equal(t, "keyname1", key1.Name)
 	require.Equal(t, keyring.TypeLedger, key1.GetType())
 	pub, err := k.GetPubKey()
 	require.NoError(t, err)

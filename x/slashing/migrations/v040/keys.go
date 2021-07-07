@@ -48,9 +48,6 @@ func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	return sdk.ConsAddress(addr)
 }
 

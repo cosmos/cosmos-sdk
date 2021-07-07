@@ -64,9 +64,6 @@ func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) 
 	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	kv.AssertKeyLength(addr, int(key[1]))
-	// if len(addr) != int(key[1]) {
-	// 	panic("unexpected key length")
-	// }
 
 	return sdk.ValAddress(addr)
 }
@@ -80,9 +77,6 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	kv.AssertKeyLength(addr, int(key[1]))
-	// if len(addr) != int(key[1]) {
-	// 	panic("unexpected key length")
-	// }
 
 	return sdk.AccAddress(addr)
 }
@@ -99,9 +93,6 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 	kv.AssertKeyAtLeastLength(key, 4+valAddrLen)
 	delAddr = sdk.AccAddress(key[3+valAddrLen:])
 	kv.AssertKeyLength(delAddr.Bytes(), delAddrLen)
-	// if len(delAddr.Bytes()) != delAddrLen {
-	// 	panic("unexpected key length")
-	// }
 
 	return
 }
@@ -116,9 +107,6 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
 	b := key[2+valAddrLen:]
 	kv.AssertKeyLength(b, 8)
-	// if len(b) != 8 {
-	// 	panic("unexpected key length")
-	// }
 	period = binary.LittleEndian.Uint64(b)
 	return
 }
@@ -132,9 +120,6 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	kv.AssertKeyLength(addr, int(key[1]))
-	// if len(addr) != int(key[1]) {
-	// 	panic("unexpected key length")
-	// }
 
 	return sdk.ValAddress(addr)
 }
@@ -148,9 +133,6 @@ func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddres
 	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	kv.AssertKeyLength(addr, int(key[1]))
-	// if len(addr) != int(key[1]) {
-	// 	panic("unexpected key length")
-	// }
 
 	return sdk.ValAddress(addr)
 }

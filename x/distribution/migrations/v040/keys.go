@@ -62,9 +62,6 @@ func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) 
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	return sdk.ValAddress(addr)
 }
 
@@ -73,9 +70,6 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	return sdk.AccAddress(addr)
 }
 
@@ -84,15 +78,9 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
 	addr := key[1 : 1+v040auth.AddrLen]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	valAddr = sdk.ValAddress(addr)
 	addr = key[1+v040auth.AddrLen:]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	delAddr = sdk.AccAddress(addr)
 	return
 }
@@ -102,15 +90,9 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
 	addr := key[1 : 1+v040auth.AddrLen]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	valAddr = sdk.ValAddress(addr)
 	b := key[1+v040auth.AddrLen:]
 	kv.AssertKeyLength(addr, 8)
-	// if len(b) != 8 {
-	// 	panic("unexpected key length")
-	// }
 	period = binary.LittleEndian.Uint64(b)
 	return
 }
@@ -120,9 +102,6 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	return sdk.ValAddress(addr)
 }
 
@@ -131,9 +110,6 @@ func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddres
 	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	return sdk.ValAddress(addr)
 }
 
@@ -142,9 +118,6 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
 	addr := key[1 : 1+v040auth.AddrLen]
 	kv.AssertKeyLength(addr, v040auth.AddrLen)
-	// if len(addr) != v040auth.AddrLen {
-	// 	panic("unexpected key length")
-	// }
 	valAddr = sdk.ValAddress(addr)
 	startB := 1 + v040auth.AddrLen
 	kv.AssertKeyAtLeastLength(key, startB+9)

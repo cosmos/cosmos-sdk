@@ -1,41 +1,41 @@
-"Scope: x/auth":
+"C:x/auth":
   - x/auth/**/*
-"Scope: x/authz":
+"C:x/authz":
   - x/authz/**/*
-"Scope: x/bank":
+"C:x/bank":
   - x/bank/**/*
-"Scope: x/capability":
+"C:x/capability":
   - x/capability/**/*
-"Scope: x/crisis":
+"C:x/crisis":
   - x/crisis/**/*
-"Scope: x/distribution":
+"C:x/distribution":
   - x/distribution/**/*
-"Scope: x/evidence":
+"C:x/evidence":
   - x/evidence/**/*
-"Scope: x/feegrant":
+"C:x/feegrant":
   - x/feegrant/**/*
-"Scope: x/genutil":
+"C:x/genutil":
   - x/genutil/**/*
-"Scope: x/gov":
+"C:x/gov":
   - x/gov/**/*
-"Scope: x/mint":
+"C:x/mint":
   - x/mint/**/*
-"Scope: x/params":
+"C:x/params":
   - x/params/**/*
-"Scope: Simulations":
+"C:Simulations":
   - x/simulation/**/*
   - x/*/simulation/**/*
-"Scope: x/slashing":
+"C:x/slashing":
   - x/slashing/**/*
-"Scope: x/staking":
+"C:x/staking":
   - x/staking/**/*
-"Scope: x/upgrade":
+"C:x/upgrade":
   - x/upgrade/**/*
-"Scope: Cosmovisor":
+"C:Cosmovisor":
   - cosmovisor/**/*
-"Scope: Rosetta":
+"C:Rosetta":
   - contrib/rosetta/**/*
-"Scope: Keys":
+"C:Keys":
   - client/keys/**/*
 "Type: Build":
   - Makefile
@@ -47,11 +47,8 @@
   - buf.yaml
   - .mergify.yml
   - .golangci.yml
-"Scope: CLI":
+"C:CLI":
   - client/**/*
   - x/*/client/**/*
-"Type: Docs":
-  - docs/**/*
-  - x/*/spec/**/*
 "Type: ADR":
-    - docs/architecture/**/*
+  - docs/architecture/**/*

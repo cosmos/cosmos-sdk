@@ -14,7 +14,7 @@ This document describes the lifecycle of a transaction from creation to committe
 
 ### Transaction Creation
 
-One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line](../interfaces/cli.md), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
+One of the main application interfaces is the command-line interface. The transaction `Tx` can be created by the user inputting a command in the following format from the [command-line](../core/cli.md), providing the type of transaction in `[command]`, arguments in `[args]`, and configurations such as gas prices in `[flags]`:
 
 ```bash
 [appname] tx [command] [args] [flags]
@@ -26,7 +26,7 @@ There are several required and optional flags for transaction creation. The `--f
 
 #### Gas and Fees
 
-Additionally, there are several [flags](../interfaces/cli.md) users can use to indicate how much they are willing to pay in [fees](./gas-fees.md):
+Additionally, there are several [flags](../core/cli.md) users can use to indicate how much they are willing to pay in [fees](./gas-fees.md):
 
 - `--gas` refers to how much [gas](./gas-fees.md), which represents computational resources, `Tx` consumes. Gas is dependent on the transaction and is not precisely calculated until execution, but can be estimated by providing `auto` as the value for `--gas`.
 - `--gas-adjustment` (optional) can be used to scale `gas` up in order to avoid underestimating. For example, users can specify their gas adjustment as 1.5 to use 1.5 times the estimated gas.
@@ -48,7 +48,7 @@ appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --ga
 
 #### Other Transaction Creation Methods
 
-The command-line is an easy way to interact with an application, but `Tx` can also be created using a [REST interface](../interfaces/rest.md) or some other entrypoint defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Lunie.io](https://lunie.io/#/) and signing it with a Ledger Nano S).
+The command-line is an easy way to interact with an application, but `Tx` can also be created using a [gRPC or REST interface](../core/grpc_rest.md) or some other entrypoint defined by the application developer. From the user's perspective, the interaction depends on the web interface or wallet they are using (e.g. creating `Tx` using [Lunie.io](https://lunie.io/#/) and signing it with a Ledger Nano S).
 
 ## Addition to Mempool
 
@@ -83,7 +83,7 @@ When `Tx` is received by the application from the underlying consensus engine (e
 
 ### ValidateBasic
 
-[`Msg`s](../core/transactions.md#messages) are extracted from `Tx` and `ValidateBasic`, a method of the `Msg` interface implemented by the module developer, is run for each one. It should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as account balance of an address.
+[`sdk.Msg`s](../core/transactions.md#messages) are extracted from `Tx`, and `ValidateBasic`, a method of the `sdk.Msg` interface implemented by the module developer, is run for each one. `ValidateBasic` should include basic **stateless** sanity checks. For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for nonempty addresses and a nonnegative coin amount, but does not require knowledge of state such as the account balance of an address.
 
 ### AnteHandler
 
@@ -199,12 +199,11 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
 - **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
   [`runMsgs`](../core/baseapp.md#runtx-and-runmsgs) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
-  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's [`Msg` service](../building-modules/msg-services.md).
-  For legacy `Msg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
+  to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
+  For `LegacyMsg` routing, the `Route` function is called via the [module manager](../building-modules/module-manager.md) to retrieve the route name and find the legacy [`Handler`](../building-modules/msg-services.md#handler-type) within the module.
 
-- **`Msg` service:** The `Msg` service, a step up from `AnteHandler`, is responsible for executing each
-  message in the `Tx` and causes state transitions to persist in `deliverTxState`. It is defined
-  within a module `Msg` protobuf service and writes to the appropriate stores within the module.
+- **`Msg` service:** a Protobuf `Msg` service, a step up from `AnteHandler`, is responsible for executing each
+  message in the `Tx` and causes state transitions to persist in `deliverTxState`.
 
 - **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the

@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
 )
 
 var (
@@ -22,10 +22,10 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Marshaler
+	cdc := simapp.MakeTestEncodingConfig().Codec
 	dec := simulation.NewDecodeStore(cdc)
 
-	grant, err := types.NewGrant(granterAddr, granteeAddr, &types.BasicAllowance{
+	grant, err := feegrant.NewGrant(granterAddr, granteeAddr, &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100))),
 	})
 
@@ -36,7 +36,7 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: []byte(types.FeeAllowanceKeyPrefix), Value: grantBz},
+			{Key: []byte(feegrant.FeeAllowanceKeyPrefix), Value: grantBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

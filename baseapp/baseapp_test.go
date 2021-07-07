@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
@@ -717,10 +717,10 @@ func (msg msgCounter) String() string { return "TODO" }
 func (msg msgCounter) ProtoMessage()  {}
 
 // Implements Msg
-func (msg msgCounter) Route() string                { return routeMsgCounter }
-func (msg msgCounter) Type() string                 { return "counter1" }
-func (msg msgCounter) GetSignBytes() []byte         { return nil }
-func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgCounter) Route() string        { return routeMsgCounter }
+func (msg msgCounter) Type() string         { return "counter1" }
+func (msg msgCounter) GetSignBytes() []byte { return nil }
+func (msg msgCounter) GetSigners() []string { return nil }
 func (msg msgCounter) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
@@ -762,10 +762,10 @@ func (msg msgCounter2) String() string { return "TODO" }
 func (msg msgCounter2) ProtoMessage()  {}
 
 // Implements Msg
-func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
-func (msg msgCounter2) Type() string                 { return "counter2" }
-func (msg msgCounter2) GetSignBytes() []byte         { return nil }
-func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgCounter2) Route() string        { return routeMsgCounter2 }
+func (msg msgCounter2) Type() string         { return "counter2" }
+func (msg msgCounter2) GetSignBytes() []byte { return nil }
+func (msg msgCounter2) GetSigners() []string { return nil }
 func (msg msgCounter2) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
@@ -779,13 +779,13 @@ type msgKeyValue struct {
 	Value []byte
 }
 
-func (msg msgKeyValue) Reset()                       {}
-func (msg msgKeyValue) String() string               { return "TODO" }
-func (msg msgKeyValue) ProtoMessage()                {}
-func (msg msgKeyValue) Route() string                { return routeMsgKeyValue }
-func (msg msgKeyValue) Type() string                 { return "keyValue" }
-func (msg msgKeyValue) GetSignBytes() []byte         { return nil }
-func (msg msgKeyValue) GetSigners() []sdk.AccAddress { return nil }
+func (msg msgKeyValue) Reset()               {}
+func (msg msgKeyValue) String() string       { return "TODO" }
+func (msg msgKeyValue) ProtoMessage()        {}
+func (msg msgKeyValue) Route() string        { return routeMsgKeyValue }
+func (msg msgKeyValue) Type() string         { return "keyValue" }
+func (msg msgKeyValue) GetSignBytes() []byte { return nil }
+func (msg msgKeyValue) GetSigners() []string { return nil }
 func (msg msgKeyValue) ValidateBasic() error {
 	if msg.Key == nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
@@ -950,7 +950,11 @@ func TestCheckTx(t *testing.T) {
 
 	// If a block is committed, CheckTx state should be reset.
 	header := tmproto.Header{Height: 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	app.BeginBlock(abci.RequestBeginBlock{Header: header, Hash: []byte("hash")})
+
+	require.NotNil(t, app.checkState.ctx.BlockGasMeter(), "block gas meter should have been set to checkState")
+	require.NotEmpty(t, app.checkState.ctx.HeaderHash())
+
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
 

@@ -13,6 +13,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
@@ -120,10 +121,10 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, "0.280623462081924936", msg.CommissionRate.String())
-	require.Equal(t, "rBqDOTtGTO", msg.Description.Moniker)
-	require.Equal(t, "BSpYuLyYgg", msg.Description.Identity)
-	require.Equal(t, "wNbeHVIkPZ", msg.Description.Website)
-	require.Equal(t, "MOXcnQfyze", msg.Description.SecurityContact)
+	require.Equal(t, "xKGLwQvuyN", msg.Description.Moniker)
+	require.Equal(t, "SlcxgdXhhu", msg.Description.Identity)
+	require.Equal(t, "WeLrQKjLxz", msg.Description.Website)
+	require.Equal(t, "rBqDOTtGTO", msg.Description.SecurityContact)
 	require.Equal(t, types.TypeMsgEditValidator, msg.Type())
 	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
@@ -283,7 +284,7 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, simapp.FundAccount(app, ctx, account.Address, initCoins))
+		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
 	return accounts

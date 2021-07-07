@@ -779,7 +779,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 	if exists {
-		return errors.New("public key already exist in keybase")
+		return errors.New("public key already exists in keybase")
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)

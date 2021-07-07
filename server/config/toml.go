@@ -8,7 +8,7 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
-const defaultConfigTemplate = `# This is a TOML config file.
+const DefaultConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
 ###############################################################################
@@ -184,6 +184,9 @@ enable = {{ .GRPCWeb.Enable }}
 # Address defines the gRPC-web server address to bind to.
 address = "{{ .GRPCWeb.Address }}"
 
+# EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
+enable-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
+
 ###############################################################################
 ###                        State Sync Configuration                         ###
 ###############################################################################
@@ -207,7 +210,7 @@ func init() {
 
 	tmpl := template.New("appConfigFileTemplate")
 
-	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
+	if configTemplate, err = tmpl.Parse(DefaultConfigTemplate); err != nil {
 		panic(err)
 	}
 }
@@ -221,9 +224,21 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 	return conf, err
 }
 
+// SetConfigTemplate sets the custom app config template for
+// the application
+func SetConfigTemplate(customTemplate string) {
+	var err error
+
+	tmpl := template.New("appConfigFileTemplate")
+
+	if configTemplate, err = tmpl.Parse(customTemplate); err != nil {
+		panic(err)
+	}
+}
+
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(configFilePath string, config *Config) {
+func WriteConfigFile(configFilePath string, config interface{}) {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {

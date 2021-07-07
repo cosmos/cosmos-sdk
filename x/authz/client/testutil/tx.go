@@ -28,7 +28,7 @@ type IntegrationTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
-	grantee sdk.AccAddress
+	grantee []sdk.AccAddress
 }
 
 func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
@@ -38,9 +38,12 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = network.New(s.T(), s.cfg)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
+	s.grantee = make([]sdk.AccAddress, 2)
 
 	// Create new account in the keyring.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -49,17 +52,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
-	_, err = banktestutil.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		newAddr,
-		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	)
-	s.Require().NoError(err)
-	s.grantee = newAddr
-
+	s.msgSendExec(s.grantee[0])
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
@@ -69,8 +62,50 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govtypes.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 
+	// Create new account in the keyring.
+	s.grantee[1] = s.createAccount("grantee2")
+	// Send some funds to the new account.
+	s.msgSendExec(s.grantee[1])
+
+	// grant send authorization to grantee2
+	out, err := ExecGrant(val, []string{
+		s.grantee[1].String(),
+		"send",
+		fmt.Sprintf("--%s=100steak", cli.FlagSpendLimit),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
+	})
+	s.Require().NoError(err)
+	s.Require().Contains(out.String(), `"code":0`)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+}
+
+func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
+	val := s.network.Validators[0]
+	// Create new account in the keyring.
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	return sdk.AccAddress(info.GetPubKey().Address())
+}
+
+func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
+	val := s.network.Validators[0]
+	// Send some funds to the new account.
+	out, err := banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		grantee,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	)
+	s.Require().NoError(err)
+	s.Require().Contains(out.String(), `"code":0`)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -78,12 +113,13 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-var typeMsgSend = bank.SendAuthorization{}.MethodName()
+var typeMsgSend = bank.SendAuthorization{}.MsgTypeURL()
 var typeMsgVote = sdk.MsgTypeURL(&govtypes.MsgVote{})
+var typeMsgSubmitProposal = sdk.MsgTypeURL(&govtypes.MsgSubmitProposal{})
 
 func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
-	grantee := s.grantee
+	grantee := s.grantee[0]
 
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 	pastHour := time.Now().Add(time.Minute * time.Duration(-60)).Unix()
@@ -259,13 +295,29 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			0,
 			false,
 		},
+		{
+			"Valid tx with amino",
+			[]string{
+				grantee.String(),
+				"generic",
+				fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgVote),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			},
+			0,
+			false,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
 			clientCtx := val.ClientCtx
-			out, err := ExecGrantAuthorization(
+			out, err := ExecGrant(
 				val,
 				tc.args,
 			)
@@ -274,7 +326,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
 		})
@@ -290,11 +342,11 @@ func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter,
 func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	val := s.network.Validators[0]
 
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// send-authorization
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -310,7 +362,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization
-	_, err = ExecGrantAuthorization(
+	_, err = ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -321,6 +373,23 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
 			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		},
+	)
+	s.Require().NoError(err)
+
+	// generic-authorization used for amino testing
+	_, err = ExecGrant(
+		val,
+		[]string{
+			grantee.String(),
+			"generic",
+			fmt.Sprintf("--%s=%s", cli.FlagMsgType, typeMsgSubmitProposal),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 		},
 	)
 	s.Require().NoError(err)
@@ -382,6 +451,20 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 			&sdk.TxResponse{}, 0,
 			false,
 		},
+		{
+			"Valid tx with amino",
+			[]string{
+				grantee.String(),
+				typeMsgSubmitProposal,
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			},
+			&sdk.TxResponse{}, 0,
+			false,
+		},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -394,7 +477,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -405,10 +488,10 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 
 func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	val := s.network.Validators[0]
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
 
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -445,10 +528,10 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 
 func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	val := s.network.Validators[0]
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -510,6 +593,19 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 			0,
 			false,
 		},
+		{
+			"valid tx with amino",
+			[]string{
+				execMsg.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
+			},
+			&sdk.TxResponse{}, 0,
+			false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -524,7 +620,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
 			}
@@ -534,10 +630,10 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 
 func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	val := s.network.Validators[0]
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -610,7 +706,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
@@ -619,10 +715,10 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 
 func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	val := s.network.Validators[0]
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -707,14 +803,14 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}
 
 	// test delegate no spend-limit
-	_, err = ExecGrantAuthorization(
+	_, err = ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -784,14 +880,14 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}
 
 	// test delegating to denied validator
-	_, err = ExecGrantAuthorization(
+	_, err = ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -822,11 +918,11 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 
 func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	val := s.network.Validators[0]
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// granting undelegate msg authorization
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -925,14 +1021,14 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})
 	}
 
 	// grant undelegate authorization without limit
-	_, err = ExecGrantAuthorization(
+	_, err = ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -1002,7 +1098,7 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 			} else {
 				var response sdk.TxResponse
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &response), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 				s.Require().Equal(tc.expectedCode, response.Code, out.String())
 			}
 		})

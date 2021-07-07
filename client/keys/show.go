@@ -119,7 +119,9 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	output, _ := cmd.Flags().GetString(cli.OutputFlag)
+	if isOutputSet {
+		clientCtx.OutputFormat, _ = cmd.Flags().GetString(cli.OutputFlag)
+	}
 
 	switch {
 	case isShowAddr, isShowPubKey:

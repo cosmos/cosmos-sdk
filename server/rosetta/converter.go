@@ -11,16 +11,18 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
-	crgtypes "github.com/tendermint/cosmos-rosetta-gateway/types"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	crgtypes "github.com/cosmos/cosmos-sdk/server/rosetta/lib/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	crgerrs "github.com/tendermint/cosmos-rosetta-gateway/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	crgerrs "github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -251,8 +253,8 @@ func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, e
 	for i, signer := range msg.GetSigners() {
 		op := &rosettatypes.Operation{
 			Type:     opName,
-			Status:   status,
-			Account:  &rosettatypes.AccountIdentifier{Address: signer.String()},
+			Status:   &status,
+			Account:  &rosettatypes.AccountIdentifier{Address: signer},
 			Metadata: meta,
 		}
 
@@ -395,7 +397,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 
 		op := &rosettatypes.Operation{
 			Type:    event.Type,
-			Status:  status,
+			Status:  &status,
 			Account: &rosettatypes.AccountIdentifier{Address: accountIdentifier},
 			Amount: &rosettatypes.Amount{
 				Value: value,
@@ -520,7 +522,7 @@ func (c converter) SyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.Sy
 	}
 
 	return &rosettatypes.SyncStatus{
-		CurrentIndex: status.SyncInfo.LatestBlockHeight,
+		CurrentIndex: &status.SyncInfo.LatestBlockHeight,
 		TargetIndex:  nil, // sync info does not allow us to get target height
 		Stage:        &stage,
 	}

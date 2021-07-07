@@ -9,7 +9,6 @@ import (
 
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -101,8 +100,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
-	// func RunAddCmd(cmd *cobra.Command, args []string, kb keyring.Keyring, inBuf *bufio.Reader) error {
+func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
 	name := args[0]
@@ -110,6 +108,7 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
 	showMnemonic := !noBackup
 	kb := ctx.Keyring
+	outputFormat := ctx.OutputFormat
 
 	keyringAlgos, _ := kb.SupportedAlgorithms()
 	algoStr, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
@@ -118,7 +117,10 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		return err
 	}
 
-	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); !dryRun {
+	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
+		// use in memory keybase
+		kb = keyring.NewInMemory()
+	} else {
 		_, err = kb.Key(name)
 		if err == nil {
 			// account exists, ask for user confirmation
@@ -165,19 +167,19 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-			if _, err := kb.SaveMultisig(name, pk); err != nil {
+			info, err := kb.SaveMultisig(name, pk)
+			if err != nil {
 				return err
 			}
 
-			cmd.PrintErrf("Key %q saved to disk.\n", name)
-			return nil
+			return printCreate(cmd, info, false, "", outputFormat)
 		}
 	}
 
 	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
 	if pubKey != "" {
 		var pk cryptotypes.PubKey
-		err = ctx.JSONCodec.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
+		err = ctx.Codec.UnmarshalInterfaceJSON([]byte(pubKey), &pk)
 		if err != nil {
 			return err
 		}
@@ -314,7 +316,7 @@ func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemo
 		cmd.Println(string(jsonString))
 
 	default:
-		return fmt.Errorf("invalid output format %s", output)
+		return fmt.Errorf("invalid output format %s", outputFormat)
 	}
 
 	return nil

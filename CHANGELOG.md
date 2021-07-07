@@ -213,7 +213,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (x/gov) [\#8813](https://github.com/cosmos/cosmos-sdk/pull/8813) fix `{appd} q gov deposits [proposal-id]`, `GET /gov/proposals/{proposal_id}/deposits`  to include initial deposit.
+* (x/gov) [\#8813](https://github.com/cosmos/cosmos-sdk/pull/8813) fix `{appd} q gov deposits [proposal-id]`, `GET /gov/proposals/{proposal_id}/deposits` to include initial deposit.
 * (gRPC) [\#8945](https://github.com/cosmos/cosmos-sdk/pull/8945) gRPC reflection now works correctly.
 * (keyring) [#\8635](https://github.com/cosmos/cosmos-sdk/issues/8635) Remove hardcoded default passphrase value on `NewMnemonic`
 * (x/bank) [\#8434](https://github.com/cosmos/cosmos-sdk/pull/8434) Fix legacy REST API `GET /bank/total` and `GET /bank/total/{denom}` in swagger

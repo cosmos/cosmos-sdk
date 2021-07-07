@@ -11,7 +11,8 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// ValidateBasicDecorator will call tx.ValidateBasic and return any non-nil error.
+// ValidateBasicDecorator will call tx.ValidateBasic, ValidateMsg(for each msg inside tx)
+// and return any non-nil error.
 // If ValidateBasic passes, decorator calls next AnteHandler in chain. Note,
 // ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
 // is not dependent on application state.

@@ -2,10 +2,10 @@ package types
 
 import (
 	"encoding/binary"
-	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -61,7 +61,7 @@ func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) 
 	// 0x02<valAddrLen (1 Byte)><valAddr_Bytes>
 
 	// Remove prefix and address length.
-	assertKeyAtLeastLength(key, 3)
+	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -76,7 +76,7 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	// 0x03<accAddrLen (1 Byte)><accAddr_Bytes>
 
 	// Remove prefix and address length.
-	assertKeyAtLeastLength(key, 3)
+	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -89,10 +89,10 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delAddr sdk.AccAddress) {
 	// key is in the format:
 	// 0x04<valAddrLen (1 Byte)><valAddr_Bytes><accAddrLen (1 Byte)><accAddr_Bytes>
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
 	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
-	assertKeyAtLeastLength(key, 3+valAddrLen)
+	kv.AssertKeyAtLeastLength(key, 3+valAddrLen)
 	delAddrLen := int(key[2+valAddrLen])
 	delAddr = sdk.AccAddress(key[3+valAddrLen:])
 	if len(delAddr.Bytes()) != delAddrLen {
@@ -106,10 +106,10 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
 	// key is in the format:
 	// 0x05<valAddrLen (1 Byte)><valAddr_Bytes><period_Bytes>
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
 	valAddr = sdk.ValAddress(key[2 : 2+valAddrLen])
-	assertKeyAtLeastLength(key, 3+valAddrLen)
+	kv.AssertKeyAtLeastLength(key, 3+valAddrLen)
 	b := key[2+valAddrLen:]
 	if len(b) != 8 {
 		panic("unexpected key length")
@@ -124,7 +124,7 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 	// 0x06<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
 
 	// Remove prefix and address length.
-	assertKeyAtLeastLength(key, 3)
+	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -139,7 +139,7 @@ func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddres
 	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
 
 	// Remove prefix and address length.
-	assertKeyAtLeastLength(key, 3)
+	kv.AssertKeyAtLeastLength(key, 3)
 	addr := key[2:]
 	if len(addr) != int(key[1]) {
 		panic("unexpected key length")
@@ -152,12 +152,12 @@ func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddres
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
 	// key is in the format:
 	// 0x08<valAddrLen (1 Byte)><valAddr_Bytes><height>: ValidatorSlashEvent
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	valAddrLen := int(key[1])
-	assertKeyAtLeastLength(key, 3+valAddrLen)
+	kv.AssertKeyAtLeastLength(key, 3+valAddrLen)
 	valAddr = key[2 : 2+valAddrLen]
 	startB := 2 + valAddrLen
-	assertKeyAtLeastLength(key, startB+9)
+	kv.AssertKeyAtLeastLength(key, startB+9)
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
@@ -223,10 +223,4 @@ func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	prefix := GetValidatorSlashEventKeyPrefix(v, height)
 
 	return append(prefix, periodBz...)
-}
-
-func assertKeyAtLeastLength(bz []byte, length int) {
-	if len(bz) < length {
-		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
-	}
 }

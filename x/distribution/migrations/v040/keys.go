@@ -4,9 +4,9 @@ package v040
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
 )
 
@@ -59,7 +59,7 @@ var (
 
 // gets an address from a validator's outstanding rewards key
 func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
@@ -69,7 +69,7 @@ func GetValidatorOutstandingRewardsAddress(key []byte) (valAddr sdk.ValAddress) 
 
 // gets an address from a delegator's withdraw info key
 func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
@@ -79,7 +79,7 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 
 // gets the addresses from a delegator starting info key
 func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delAddr sdk.AccAddress) {
-	assertKeyAtLeastLength(key, 2+v040auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
 	addr := key[1 : 1+v040auth.AddrLen]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
@@ -95,7 +95,7 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 
 // gets the address & period from a validator's historical rewards key
 func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
-	assertKeyAtLeastLength(key, 2+v040auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
 	addr := key[1 : 1+v040auth.AddrLen]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
@@ -111,7 +111,7 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 
 // gets the address from a validator's current rewards key
 func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
@@ -121,7 +121,7 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 
 // gets the address from a validator's accumulated commission key
 func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
@@ -131,14 +131,14 @@ func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddres
 
 // gets the height from a validator's slash event key
 func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
-	assertKeyAtLeastLength(key, 2+v040auth.AddrLen)
+	kv.AssertKeyAtLeastLength(key, 2+v040auth.AddrLen)
 	addr := key[1 : 1+v040auth.AddrLen]
 	if len(addr) != v040auth.AddrLen {
 		panic("unexpected key length")
 	}
 	valAddr = sdk.ValAddress(addr)
 	startB := 1 + v040auth.AddrLen
-	assertKeyAtLeastLength(key, startB+9)
+	kv.AssertKeyAtLeastLength(key, startB+9)
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
 	return
@@ -202,10 +202,4 @@ func GetValidatorSlashEventKey(v sdk.ValAddress, height, period uint64) []byte {
 	binary.BigEndian.PutUint64(periodBz, period)
 	prefix := GetValidatorSlashEventKeyPrefix(v, height)
 	return append(prefix, periodBz...)
-}
-
-func assertKeyAtLeastLength(bz []byte, length int) {
-	if len(bz) < length {
-		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
-	}
 }

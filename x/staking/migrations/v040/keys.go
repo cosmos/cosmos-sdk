@@ -10,6 +10,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -66,7 +67,7 @@ func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 
 // Get the validator operator address from LastValidatorPowerKey
 func AddressFromLastValidatorPowerKey(key []byte) []byte {
-	assertKeyAtLeastLength(key, 2)
+	kv.AssertKeyAtLeastLength(key, 2)
 	return key[1:] // remove prefix bytes
 }
 
@@ -197,13 +198,13 @@ func GetUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte 
 
 // rearranges the ValIndexKey to get the UBDKey
 func GetUBDKeyFromValIndexKey(indexKey []byte) []byte {
-	assertKeyAtLeastLength(indexKey, 2)
+	kv.AssertKeyAtLeastLength(indexKey, 2)
 	addrs := indexKey[1:] // remove prefix bytes
 	if len(addrs) != 2*v040auth.AddrLen {
 		panic("unexpected key length")
 	}
 
-	assertKeyAtLeastLength(addrs, v040auth.AddrLen+1)
+	kv.AssertKeyAtLeastLength(addrs, v040auth.AddrLen+1)
 	valAddr := addrs[:v040auth.AddrLen]
 	delAddr := addrs[v040auth.AddrLen:]
 
@@ -330,10 +331,4 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
-}
-
-func assertKeyAtLeastLength(bz []byte, length int) {
-	if len(bz) < length {
-		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
-	}
 }

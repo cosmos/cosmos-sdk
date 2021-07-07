@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -157,14 +158,8 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
 	// Both Vote and Deposit store keys are of format:
 	// <prefix (1 Byte)><proposalID (8 bytes)><addrLen (1 Byte)><addr_Bytes>
-	assertKeyAtLeastLength(key, 10)
+	kv.AssertKeyAtLeastLength(key, 10)
 	proposalID = GetProposalIDFromBytes(key[1:9])
 	addr = sdk.AccAddress(key[10:])
 	return
-}
-
-func assertKeyAtLeastLength(bz []byte, length int) {
-	if len(bz) < length {
-		panic(fmt.Sprintf("expected key of length at least %d, got %d", length, len(bz)))
-	}
 }

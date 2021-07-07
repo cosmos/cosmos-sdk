@@ -19,6 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
 
 // TODO set proper naming k for Record
@@ -151,11 +154,16 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, kb.Delete(n2))
 }
 
+// TODO fix that with Amaury
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
-	encCfg := simapp.MakeTestEncodingConfig()
+	//encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Marshaler)
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+
+	kb, err := keyring.New("keybasename", "test", dir, nil, cdc)
 	require.NoError(t, err)
 	algo := hd.Secp256k1
 

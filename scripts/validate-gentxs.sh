@@ -14,11 +14,11 @@ GH_URL= # ex: https://github.com/cosmos/cosmos-sdk
 BINARY_VERSION= # ex :v0.43.0-beta1
 GO_VERSION=1.15.2
 PRELAUNCH_GENESIS_URL= # ex: https://raw.githubusercontent.com/cosmos/cosmos-sdk/master/$CHAIN_ID/genesis-prelaunch.json
-GENTXS_DIR= # ex: ./$CHAIN_ID/gentxs"
+GENTXS_DIR= # ex: $GOPATH/github.com/cosmos/mainnet/$CHAIN_ID/gentxs"
 echo
 
 if [[ -z "${GH_URL}" ]]; then
-  echo "GO_URL in not set, required. Ex: https://github.com/cosmos/cosmos-sdk"
+  echo "GH_URL in not set, required. Ex: https://github.com/cosmos/cosmos-sdk"
   exit 0
 fi
 if [[ -z "${DAEMON}" ]]; then
@@ -73,7 +73,14 @@ else
 fi
 
 if [ "$(ls -A $GENTXS_DIR)" ]; then
-    for GENTX_FILE in *; do
+    echo "Install $DAEMON"
+    git clone $GH_URL $DAEMON
+    cd $DAEMON
+    git fetch && git checkout $BINARY_VERSION
+    make install
+    $DAEMON version
+
+    for GENTX_FILE in $GENTXS_DIR/*.json; do
         if [ -f "$GENTX_FILE" ]; then
             set -e
 
@@ -81,27 +88,19 @@ if [ "$(ls -A $GENTXS_DIR)" ]; then
             echo $GENTX_FILE
 
             echo "...........Init a testnet.............."
-            git clone $GH_URL $DAEMON
-            cd $DAEMON
-            git fetch && git checkout $BINARY_VERSION
-            make build
-            chmod +x ./build/$DAEMON
+            $DAEMON init --chain-id $CHAIN_ID validator --home $DAEMON_HOME
 
-            ./build/$DAEMON init --chain-id $CHAIN_ID validator --home $DAEMON_HOME
-
-            ./build/$DAEMON keys add $RANDOM_KEY --keyring-backend test --home $DAEMON_HOME
+            $DAEMON keys add $RANDOM_KEY --keyring-backend test --home $DAEMON_HOME
 
             echo "..........Fetching genesis......."
-            rm -rf $DAEMON_HOME/config/genesis.json
-            echo $DAEMON_HOME
-            curl -K -s $PRELAUNCH_GENESIS_URL -o $DAEMON_HOME/config/genesis.json
+            curl -s $PRELAUNCH_GENESIS_URL > $DAEMON_HOME/config/genesis.json
 
             # this genesis time is different from original genesis time, just for validating gentx.
             sed -i '/genesis_time/c\   \"genesis_time\" : \"2021-01-01T00:00:00Z\",' $DAEMON_HOME/config/genesis.json
 
-            GENACC=$(cat ../$GENTX_FILE | sed -n 's|.*"delegator_address":"\([^"]*\)".*|\1|p')
-            denomquery=$(jq -r '.body.messages[0].value.denom' ../$GENTX_FILE)
-            amountquery=$(jq -r '.body.messages[0].value.amount' ../$GENTX_FILE)
+            GENACC=$(cat $GENTX_FILE | sed -n 's|.*"delegator_address":"\([^"]*\)".*|\1|p')
+            denomquery=$(jq -r '.body.messages[0].value.denom' $GENTX_FILE)
+            amountquery=$(jq -r '.body.messages[0].value.amount' $GENTX_FILE)
 
             # only allow $DENOM tokens to be bonded
             if [ $denomquery != $DENOM ]; then
@@ -109,31 +108,31 @@ if [ "$(ls -A $GENTXS_DIR)" ]; then
                 exit 1
             fi
 
-            ./build/$DAEMON add-genesis-account $RANDOM_KEY 1000000000000000$DENOM --home $DAEMON_HOME \
+            $DAEMON add-genesis-account $RANDOM_KEY 1000000000000000$DENOM --home $DAEMON_HOME \
                 --keyring-backend test
 
-            ./build/$DAEMON gentx $RANDOM_KEY 900000000000000$DENOM --home $DAEMON_HOME \
+            $DAEMON gentx $RANDOM_KEY 900000000000000$DENOM --home $DAEMON_HOME \
                 --keyring-backend test --chain-id $CHAIN_ID
 
-            cp ../$GENTX_FILE $DAEMON_HOME/config/gentx/
+            cp $GENTX_FILE $DAEMON_HOME/config/gentx/
 
             echo "..........Collecting gentxs......."
-            ./build/$DAEMON collect-gentxs --home $DAEMON_HOME
-
-            ./build/$DAEMON validate-genesis --home $DAEMON_HOME
+            $DAEMON collect-gentxs --home $DAEMON_HOME
+            $DAEMON validate-genesis --home $DAEMON_HOME
 
             echo "..........Starting node......."
-            ./build/$DAEMON start --home $DAEMON_HOME &
+            $DAEMON start --home $DAEMON_HOME &
 
             sleep 10s
 
             echo "...checking network status.."
             echo "if this fails, most probably the gentx with address $GENACC is invalid"
-            ./build/$DAEMON status --node http://localhost:26657
+            $DAEMON status --node http://localhost:26657
 
             echo "...Cleaning the stuff..."
             killall $DAEMON >/dev/null 2>&1
-            rm -rf $DAEMON_HOME >/dev/null 2>&1
+            sleep 2s
+            rm -rf $DAEMON_HOME
         fi
     done
 else

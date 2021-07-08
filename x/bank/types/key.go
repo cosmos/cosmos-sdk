@@ -47,7 +47,6 @@ func AddressFromBalancesStore(key []byte) (sdk.AccAddress, error) {
 	kv.AssertKeyAtLeastLength(key, 1)
 	addrLen := key[0]
 	bound := int(addrLen)
-	kv.AssertKeyAtLeastLength(key, bound+2)
 	if len(key)-1 < bound {
 		return nil, ErrInvalidKey
 	}

@@ -404,41 +404,38 @@
   
     - [Query](#cosmos.mint.v1beta1.Query)
   
+- [cosmos/nft/v1beta1/event.proto](#cosmos/nft/v1beta1/event.proto)
+    - [EventSend](#cosmos.nft.v1beta1.EventSend)
+  
 - [cosmos/nft/v1beta1/nft.proto](#cosmos/nft/v1beta1/nft.proto)
-    - [Metadata](#cosmos.nft.v1beta1.Metadata)
+    - [Class](#cosmos.nft.v1beta1.Class)
     - [NFT](#cosmos.nft.v1beta1.NFT)
   
 - [cosmos/nft/v1beta1/genesis.proto](#cosmos/nft/v1beta1/genesis.proto)
-    - [Contract](#cosmos.nft.v1beta1.Contract)
+    - [Entry](#cosmos.nft.v1beta1.Entry)
     - [GenesisState](#cosmos.nft.v1beta1.GenesisState)
   
 - [cosmos/nft/v1beta1/query.proto](#cosmos/nft/v1beta1/query.proto)
     - [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest)
     - [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse)
+    - [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest)
+    - [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse)
+    - [QueryClassesRequest](#cosmos.nft.v1beta1.QueryClassesRequest)
+    - [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse)
     - [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest)
     - [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse)
-    - [QueryNFTsOfRequest](#cosmos.nft.v1beta1.QueryNFTsOfRequest)
-    - [QueryNFTsOfResponse](#cosmos.nft.v1beta1.QueryNFTsOfResponse)
-    - [QueryNFTsRequest](#cosmos.nft.v1beta1.QueryNFTsRequest)
-    - [QueryNFTsResponse](#cosmos.nft.v1beta1.QueryNFTsResponse)
+    - [QueryNFTsOfClassByOwnerRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerRequest)
+    - [QueryNFTsOfClassByOwnerResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerResponse)
+    - [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest)
+    - [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse)
+    - [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest)
+    - [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse)
     - [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest)
     - [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse)
-    - [QueryTypeRequest](#cosmos.nft.v1beta1.QueryTypeRequest)
-    - [QueryTypeResponse](#cosmos.nft.v1beta1.QueryTypeResponse)
-    - [QueryTypesRequest](#cosmos.nft.v1beta1.QueryTypesRequest)
-    - [QueryTypesResponse](#cosmos.nft.v1beta1.QueryTypesResponse)
   
     - [Query](#cosmos.nft.v1beta1.Query)
   
 - [cosmos/nft/v1beta1/tx.proto](#cosmos/nft/v1beta1/tx.proto)
-    - [MsgBurn](#cosmos.nft.v1beta1.MsgBurn)
-    - [MsgBurnResponse](#cosmos.nft.v1beta1.MsgBurnResponse)
-    - [MsgEdit](#cosmos.nft.v1beta1.MsgEdit)
-    - [MsgEditResponse](#cosmos.nft.v1beta1.MsgEditResponse)
-    - [MsgIssue](#cosmos.nft.v1beta1.MsgIssue)
-    - [MsgIssueResponse](#cosmos.nft.v1beta1.MsgIssueResponse)
-    - [MsgMint](#cosmos.nft.v1beta1.MsgMint)
-    - [MsgMintResponse](#cosmos.nft.v1beta1.MsgMintResponse)
     - [MsgSend](#cosmos.nft.v1beta1.MsgSend)
     - [MsgSendResponse](#cosmos.nft.v1beta1.MsgSendResponse)
   
@@ -1749,15 +1746,20 @@ GenesisState defines the bank module's genesis state.
 <a name="cosmos.bank.v1beta1.DenomOwner"></a>
 
 ### DenomOwner
-
 DenomOwner defines structure representing an account that owns or holds a
 particular denominated token. It contains the account address and account
 balance of the denominated token.
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address defines the address that owns a particular denomination. |
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance is the balance of the denominated coin for an account. |
+
+
+
+
+
 
 <a name="cosmos.bank.v1beta1.QueryAllBalancesRequest"></a>
 
@@ -5813,6 +5815,40 @@ Query provides defines the gRPC querier service.
 
 
 
+<a name="cosmos/nft/v1beta1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1beta1/event.proto
+
+
+
+<a name="cosmos.nft.v1beta1.EventSend"></a>
+
+### EventSend
+EventSend is emitted on Msg/Send
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+| `receiver` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/nft/v1beta1/nft.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5820,20 +5856,19 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="cosmos.nft.v1beta1.Metadata"></a>
+<a name="cosmos.nft.v1beta1.Class"></a>
 
-### Metadata
-
+### Class
+Class defines the class of the nft type.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  | Required, unique key, alphanumeric |
+| `id` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
 | `symbol` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `mint_restricted` | [bool](#bool) |  |  |
-| `edit_restricted` | [bool](#bool) |  |  |
+| `uri` | [string](#string) |  |  |
 
 
 
@@ -5843,13 +5878,13 @@ Query provides defines the gRPC querier service.
 <a name="cosmos.nft.v1beta1.NFT"></a>
 
 ### NFT
-
+NFT defines the nft.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  | The type of this NFT |
-| `id` | [string](#string) |  | The identifier of this NFT |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
 | `uri` | [string](#string) |  |  |
 | `data` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
@@ -5874,16 +5909,16 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="cosmos.nft.v1beta1.Contract"></a>
+<a name="cosmos.nft.v1beta1.Entry"></a>
 
-### Contract
-
+### Entry
+Entry Defines all nft owned by a person
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#cosmos.nft.v1beta1.Metadata) |  | metadata defines the metadata of the nft type. |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated | nfts defines a array that contains all nfts of the same nft type |
+| `owner` | [string](#string) |  |  |
+| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
 
 
 
@@ -5898,7 +5933,8 @@ GenesisState defines the nft module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `contracts` | [Contract](#cosmos.nft.v1beta1.Contract) | repeated |  |
+| `classes` | [Class](#cosmos.nft.v1beta1.Class) | repeated | class defines the class of the nft type. |
+| `entries` | [Entry](#cosmos.nft.v1beta1.Entry) | repeated |  |
 
 
 
@@ -5929,8 +5965,8 @@ QueryBalanceRequest is the request type for the Query/Balance RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
-| `type` | [string](#string) |  |  |
 
 
 
@@ -5952,6 +5988,67 @@ QueryBalanceResponse is the response type for the Query/Balance RPC method
 
 
 
+<a name="cosmos.nft.v1beta1.QueryClassRequest"></a>
+
+### QueryClassRequest
+QueryClassRequest is the request type for the Query/Class RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassResponse"></a>
+
+### QueryClassResponse
+QueryClassResponse is the response type for the Query/Class RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class` | [Class](#cosmos.nft.v1beta1.Class) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassesRequest"></a>
+
+### QueryClassesRequest
+QueryClassesRequest is the request type for the Query/Classes RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassesResponse"></a>
+
+### QueryClassesResponse
+QueryClassesResponse is the response type for the Query/Classes RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `classes` | [Class](#cosmos.nft.v1beta1.Class) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
 <a name="cosmos.nft.v1beta1.QueryNFTRequest"></a>
 
 ### QueryNFTRequest
@@ -5960,7 +6057,7 @@ QueryNFTRequest is the request type for the Query/NFT RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  |  |
 | `id` | [string](#string) |  |  |
 
 
@@ -5983,46 +6080,15 @@ QueryNFTResponse is the response type for the Query/NFT RPC method
 
 
 
-<a name="cosmos.nft.v1beta1.QueryNFTsOfRequest"></a>
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerRequest"></a>
 
-### QueryNFTsOfRequest
-QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryNFTsOfResponse"></a>
-
-### QueryNFTsOfResponse
-QueryNFTsOfResponse is the response type for the Query/NFTsOf RPC method
+### QueryNFTsOfClassByOwnerRequest
+QueryNFTsOfClassByOwnerRequest is the request type for the Query/NFTsOfClassByOwner RPC method
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryNFTsRequest"></a>
-
-### QueryNFTsRequest
-QueryNFTsRequest is the request type for the Query/NFTs RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
@@ -6031,16 +6097,80 @@ QueryNFTsRequest is the request type for the Query/NFTs RPC method
 
 
 
-<a name="cosmos.nft.v1beta1.QueryNFTsResponse"></a>
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerResponse"></a>
 
-### QueryNFTsResponse
-QueryNFTsResponse is the response type for the Query/NFTs RPC method
+### QueryNFTsOfClassByOwnerResponse
+QueryNFTsOfClassByOwnerResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC
+methods
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassRequest"></a>
+
+### QueryNFTsOfClassRequest
+QueryNFTsOfClassRequest is the request type for the Query/NFTsOfClass RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassResponse"></a>
+
+### QueryNFTsOfClassResponse
+QueryNFTsOfClassResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC methods
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryOwnerRequest"></a>
+
+### QueryOwnerRequest
+QueryOwnerRequest is the request type for the Query/Owner RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryOwnerResponse"></a>
+
+### QueryOwnerResponse
+QueryOwnerResponse is the response type for the Query/Owner RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
 
 
 
@@ -6055,7 +6185,7 @@ QuerySupplyRequest is the request type for the Query/Supply RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  |  |
 
 
 
@@ -6076,67 +6206,6 @@ QuerySupplyResponse is the response type for the Query/Supply RPC method
 
 
 
-
-<a name="cosmos.nft.v1beta1.QueryTypeRequest"></a>
-
-### QueryTypeRequest
-QueryTypeRequest is the request type for the Query/Type RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryTypeResponse"></a>
-
-### QueryTypeResponse
-QueryTypeResponse is the response type for the Query/Type RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#cosmos.nft.v1beta1.Metadata) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryTypesRequest"></a>
-
-### QueryTypesRequest
-QueryTypesRequest is the request type for the Query/Types RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryTypesResponse"></a>
-
-### QueryTypesResponse
-QueryTypesResponse is the response type for the Query/Types RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `metadatas` | [Metadata](#cosmos.nft.v1beta1.Metadata) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6147,17 +6216,18 @@ QueryTypesResponse is the response type for the Query/Types RPC method
 <a name="cosmos.nft.v1beta1.Query"></a>
 
 ### Query
-
+Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries NFT details based on id. | GET|/cosmos/nft/v1beta1/nfts/{id}|
-| `NFTs` | [QueryNFTsRequest](#cosmos.nft.v1beta1.QueryNFTsRequest) | [QueryNFTsResponse](#cosmos.nft.v1beta1.QueryNFTsResponse) | NFTs queries all NFTs based on the optional owner. | GET|/cosmos/nft/v1beta1/nfts|
-| `NFTsOf` | [QueryNFTsOfRequest](#cosmos.nft.v1beta1.QueryNFTsOfRequest) | [QueryNFTsOfResponse](#cosmos.nft.v1beta1.QueryNFTsOfResponse) | NFTsOf queries all NFTs based on the type. | GET|/cosmos/nft/v1beta1/nfts/{type}|
-| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the type, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{type}|
-| `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs based on the owner and type, same as balanceOf of ERC721 | GET|/cosmos/nft/v1beta1/balance/{owner}/{type}|
-| `Type` | [QueryTypeRequest](#cosmos.nft.v1beta1.QueryTypeRequest) | [QueryTypeResponse](#cosmos.nft.v1beta1.QueryTypeResponse) | Type queries the definition of a given type | GET|/cosmos/nft/v1beta1/types/{type}|
-| `Types` | [QueryTypesRequest](#cosmos.nft.v1beta1.QueryTypesRequest) | [QueryTypesResponse](#cosmos.nft.v1beta1.QueryTypesResponse) | Types queries all the types | GET|/cosmos/nft/v1beta1/types|
+| `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721 | GET|/cosmos/nft/v1beta1/balance/{class_id}/{owner}|
+| `Owner` | [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest) | [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse) | Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721 | GET|/cosmos/nft/v1beta1/owner/{class_id}/{id}|
+| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the class, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{class_id}|
+| `NFTsOfClassByOwner` | [QueryNFTsOfClassByOwnerRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerRequest) | [QueryNFTsOfClassByOwnerResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerResponse) | NFTsOfClassByOwner queries the NFTs of a given class owned by the owner, similar to tokenOfOwnerByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/owned_nfts/{class_id}/{owner}|
+| `NFTsOfClass` | [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest) | [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse) | NFTsOfClass queries all NFTs of a given class, similar to tokenByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/nfts/{class_id}|
+| `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries an NFT based on its class and id. | GET|/cosmos/nft/v1beta1/nfts/{class_id}/{id}|
+| `Class` | [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest) | [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse) | Class queries an NFT class based on its id | GET|/cosmos/nft/v1beta1/classes/{class_id}|
+| `Classes` | [QueryClassesRequest](#cosmos.nft.v1beta1.QueryClassesRequest) | [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse) | Classes queries all NFT classes | GET|/cosmos/nft/v1beta1/classes|
 
  <!-- end services -->
 
@@ -6170,111 +6240,6 @@ QueryTypesResponse is the response type for the Query/Types RPC method
 
 
 
-<a name="cosmos.nft.v1beta1.MsgBurn"></a>
-
-### MsgBurn
-MsgSend represents a message to burn a nft from one account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
-| `destroyer` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgBurnResponse"></a>
-
-### MsgBurnResponse
-MsgBurnResponse defines the Msg/Burn response type.
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgEdit"></a>
-
-### MsgEdit
-MsgEdit represents a message to edit a nft on a specific type and id.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft` | [NFT](#cosmos.nft.v1beta1.NFT) |  |  |
-| `editor` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgEditResponse"></a>
-
-### MsgEditResponse
-MsgEditResponse defines the Msg/Edit response type.
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgIssue"></a>
-
-### MsgIssue
-MsgIssue represents a message to create a new nft type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#cosmos.nft.v1beta1.Metadata) |  |  |
-| `issuer` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgIssueResponse"></a>
-
-### MsgIssueResponse
-MsgIssueResponse defines the Msg/Issue response type.
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgMint"></a>
-
-### MsgMint
-MsgMint represents a message to mint new nft on a specific nft type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft` | [NFT](#cosmos.nft.v1beta1.NFT) |  |  |
-| `minter` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgMintResponse"></a>
-
-### MsgMintResponse
-MsgMintResponse defines the Msg/Mint response type.
-
-
-
-
-
-
 <a name="cosmos.nft.v1beta1.MsgSend"></a>
 
 ### MsgSend
@@ -6283,7 +6248,7 @@ MsgSend represents a message to send a nft from one account to another account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  |  |
 | `id` | [string](#string) |  |  |
 | `sender` | [string](#string) |  |  |
 | `receiver` | [string](#string) |  |  |
@@ -6316,11 +6281,7 @@ Msg defines the nft Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Issue` | [MsgIssue](#cosmos.nft.v1beta1.MsgIssue) | [MsgIssueResponse](#cosmos.nft.v1beta1.MsgIssueResponse) | Issue defines a method to create a new nft type. | |
-| `Mint` | [MsgMint](#cosmos.nft.v1beta1.MsgMint) | [MsgMintResponse](#cosmos.nft.v1beta1.MsgMintResponse) | Mint defines a method to mint new nft on a specific nft type. | |
-| `Edit` | [MsgEdit](#cosmos.nft.v1beta1.MsgEdit) | [MsgEditResponse](#cosmos.nft.v1beta1.MsgEditResponse) | Edit defines a method to edit a nft on a specific type and id. | |
 | `Send` | [MsgSend](#cosmos.nft.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.nft.v1beta1.MsgSendResponse) | Send defines a method to send a nft from one account to another account. | |
-| `Burn` | [MsgBurn](#cosmos.nft.v1beta1.MsgBurn) | [MsgBurnResponse](#cosmos.nft.v1beta1.MsgBurnResponse) | MsgBurn defines a method to burn a nft from a specific account. | |
 
  <!-- end services -->
 
@@ -8863,3 +8824,4 @@ still be used for delegating and for governance votes even while locked.
 | <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
+

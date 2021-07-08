@@ -1,3 +1,11 @@
+/*
+ * @Description:
+ * @Author: Zhiqiang Zhang
+ * @Github: https://github.com/dreamer-zq
+ * @Date: 2021-07-02 14:36:36
+ * @LastEditors: Zhiqiang Zhang
+ * @LastEditTime: 2021-07-07 10:56:35
+ */
 package types
 
 import (

@@ -128,7 +128,7 @@ func (am AppModule) Name() string {
 
 // Route returns the evidence module's message routing key.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the evidence module's query routing key.

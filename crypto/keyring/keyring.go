@@ -365,7 +365,6 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 
 	priv, err := ExtractPrivKeyFromRecord(k)
 	if err != nil {
-		fmt.Println("Sign err", err.Error())
 		return nil, nil, err
 	}
 

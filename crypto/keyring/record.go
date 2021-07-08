@@ -84,7 +84,17 @@ func (k Record) GetType() KeyType {
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var pk cryptotypes.PubKey
-	return unpacker.UnpackAny(k.PubKey, &pk)
+	if err := unpacker.UnpackAny(k.PubKey, &pk); err != nil {
+		return err
+	}
+
+	fmt.Println("UnpackInterfaces on Record")
+	if l := k.GetLocal(); l != nil {
+		var priv cryptotypes.PrivKey
+		return unpacker.UnpackAny(l.PrivKey, &priv)
+	}
+
+	return nil
 }
 
 // encoding info
@@ -172,9 +182,7 @@ func NewLocalRecord(priv cryptotypes.PrivKey) (*Record_Local, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("NewLocalRecord any any.TypeUrl", any.TypeUrl)
-	fmt.Println("NewLocalRecord any any.Value", any.Value)
-	
+
 	return &Record_Local{any, priv.Type()}, nil
 }
 
@@ -183,14 +191,10 @@ func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
 		return nil, errors.New("private key is not available")
 	}
 
-	fmt.Println("extractPrivKeyFromLoca any any.TypeUrl", rl.PrivKey.TypeUrl)
-	fmt.Println("exteactPriv any any.Value", rl.PrivKey.Value)
-	
 	priv, ok := rl.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
 	if !ok {
-		return nil, errors.New("extractPrivKey Unable to cast any to cryptotypes.PrivKey")
+		return nil, errors.New("Unable to cast any to cryptotypes.PrivKey")
 	}
-
 
 	return priv,nil
 }

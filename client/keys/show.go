@@ -58,6 +58,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	if err != nil {
 		return err
 	}
+	outputFormat := clientCtx.OutputFormat
 
 	if len(args) == 1 {
 		k, err = fetchKey(clientCtx.Keyring, args[0])
@@ -135,7 +136,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 		fmt.Fprintln(cmd.OutOrStdout(), out)
 	default:
-		printKeyringRecord(cmd.OutOrStdout(), k, bechKeyOut, output)
+		printKeyringRecord(cmd.OutOrStdout(), k, bechKeyOut, outputFormat)
 	}
 
 	if isShowDevice {

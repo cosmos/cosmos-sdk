@@ -2,26 +2,25 @@ package keys
 
 import (
 	"context"
-	"testing"
 	"fmt"
 	"strings"
+	"testing"
 
 	design99keyring "github.com/99designs/keyring"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/stretchr/testify/require"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/stretchr/testify/require"
 )
 
 // TODO add keys for migration
 // TODO fix all tests in client/keys package
 // TODO think about table driven tests
-
 
 // TODO add more tests
 func Test_runMigrateCmdLegacyInfo(t *testing.T) {
@@ -33,7 +32,7 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	require := require.New(t)
 
     // instantiate keyring
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -45,11 +44,11 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
 	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
-	itemKey := keyring.InfoKey(n1)
+
 	
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
 	}
@@ -80,21 +79,21 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 	require := require.New(t)
 
     // instantiate keyring
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
-	localRecord, err := kb.NewLocalRecord(priv)
+	privKey := cryptotypes.PrivKey(priv)
+	localRecord, err := keyring.NewLocalRecord(privKey) 
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
 	k, err := keyring.NewRecord("test record", priv.PubKey(), localRecordItem)
-	serializedRecord, err := encCfg.Marshaler.Marshal(k)
+	serializedRecord, err := encCfg.Codec.Marshal(k)
 	require.NoError(err)
-	itemKey := keyring.InfoKey(n1)
 	
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedRecord,
 		Description: "SDK kerying version",
 	}

@@ -10,9 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
 func Test_runImportCmd(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_runImportCmd(t *testing.T) {
 	kbHome := t.TempDir()
 	
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).

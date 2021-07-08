@@ -140,7 +140,7 @@ func (p BIP44Params) DerivationPath() []uint32 {
 
 // String returns the full absolute HD path of the BIP44 (https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) params:
 // m / purpose' / coin_type' / account' / change / address_index
-func (p BIP44Params) String() string {
+func (p *BIP44Params) String() string {
 	var changeStr string
 	if p.Change {
 		changeStr = "1"

@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenerateCoinKey returns the address of a public key, along with the secret
@@ -14,7 +14,7 @@ import (
 func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error) {
 	// generate a private key, with recovery phrase
 	encCfg := simapp.MakeTestEncodingConfig()
-	k, secret, err := keyring.NewInMemory(encCfg.Marshaler).NewMnemonic("name", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	k, secret, err := keyring.NewInMemory(encCfg.Codec).NewMnemonic("name", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

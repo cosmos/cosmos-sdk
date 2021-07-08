@@ -88,7 +88,7 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	
-	return RunAddCmd(clientCtx, cmd, args, buf)
+	return runAddCmd(clientCtx, cmd, args, buf)
 }
 
 /*
@@ -118,8 +118,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	}
 
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
-		// use in memory keybase
-		kb = keyring.NewInMemory()
+		kb = keyring.NewInMemory(ctx.Codec)
 	} else {
 		_, err = kb.Key(name)
 		if err == nil {
@@ -167,12 +166,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			}
 
 			pk := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-			info, err := kb.SaveMultisig(name, pk)
+			k, err := kb.SaveMultisig(name, pk)
 			if err != nil {
 				return err
 			}
 
-			return printCreate(cmd, info, false, "", outputFormat)
+			return printCreate(cmd, k, false, "",outputFormat)
 		}
 	}
 
@@ -207,7 +206,7 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 			return err
 		}
 
-		return printCreate(cmd, k, false, "")
+		return printCreate(cmd, k, false, "", outputFormat)
 	}
 
 	// Get bip39 mnemonic
@@ -281,15 +280,14 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		mnemonic = ""
 	}
 
-	return printCreate(cmd, k, showMnemonic, mnemonic)
+	return printCreate(cmd, k, showMnemonic, mnemonic, outputFormat)
 }
 
-func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemonic string) error {
-	output, _ := cmd.Flags().GetString(cli.OutputFlag)
-	switch output {
+func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemonic, outputFormat string) error {
+	switch outputFormat {
 	case OutputFormatText:
 		cmd.PrintErrln()
-		printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, output)
+		printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, outputFormat)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {

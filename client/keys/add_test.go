@@ -29,17 +29,17 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
 	require.NoError(t, err)
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithKeyring(kb)
+	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithKeyring(kb).WithCodec(encCfg.Codec)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	t.Cleanup(func() {
 		_ = kb.Delete("keyname1")
 		_ = kb.Delete("keyname2")
 	})
-	
+
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
@@ -64,7 +64,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 
 	mockIn.Reset("y\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))
-	
+
 	cmd.SetArgs([]string{
 		"keyname4",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
@@ -187,7 +187,8 @@ func Test_runAddCmdDryRun(t *testing.T) {
 
 			kbHome := t.TempDir()
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+			encCfg := simapp.MakeTestEncodingConfig()
+			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
 			require.NoError(t, err)
 
 			appCodec := simapp.MakeTestEncodingConfig().Codec

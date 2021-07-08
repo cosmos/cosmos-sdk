@@ -49,7 +49,6 @@ type Context struct {
 	NodeURI           string
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
-	Codec			  codec.Codec
 
 	// TODO: Deprecated (remove).
 	LegacyAmino *codec.LegacyAmino
@@ -236,11 +235,6 @@ func (ctx Context) WithViper(prefix string) Context {
 	return ctx
 }
 
-// WithCodec returns a copy of the Context with an updated Codec.
-func (ctx Context) WithCodec(cdc codec.Codec) Context {
-	ctx.Codec = cdc
-	return ctx
-}
 
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {

@@ -135,7 +135,7 @@ func TestSign(t *testing.T) {
 	requireT := require.New(t)
 	path := hd.CreateHDPath(118, 0, 0).String()
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Marshaler)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	requireT.NoError(err)
 
 	var from1 = "test_key1"

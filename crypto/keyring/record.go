@@ -4,11 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -25,17 +22,6 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	}
 	return &Record{name, any, item}, nil
 }
-
-/* duplicate to (ks keystore) NewLocalRecord(privKey cryptotypes.PrivKey)
-func NewLocalRecord(cdc codec.Codec, privKey cryptotypes.PrivKey) (*Record_Local, error) {
-	
-	bz, err := cdc.MarshalInterface(privKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Record_Local{string(bz), privKey.Type()}, nil
-}*/
 
 
 func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
@@ -172,40 +158,41 @@ func (p BIP44Params) String() string {
 }
 */
 
-func ExtractPrivKeyFromRecord(cdc codec.Codec, k *Record) (cryptotypes.PrivKey, error) {
+func ExtractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	rl := k.GetLocal()
 	if rl == nil {
 		return nil, ErrPrivKeyExtr
 	}
 
-	return extractPrivKeyFromLocal(cdc, rl)
+	return extractPrivKeyFromLocal(rl)
 }
 
-func extractPrivKeyFromLocal(cdc codec.Codec, rl *Record_Local) (cryptotypes.PrivKey, error) {
-	if rl.PrivKeyArmor == "" {
-		return nil, errors.New("private key not available")
+func NewLocalRecord(priv cryptotypes.PrivKey) (*Record_Local, error) {
+	any, err := codectypes.NewAnyWithValue(priv)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("NewLocalRecord any any.TypeUrl", any.TypeUrl)
+	fmt.Println("NewLocalRecord any any.Value", any.Value)
+	
+	return &Record_Local{any, priv.Type()}, nil
+}
+
+func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
+	if rl.PrivKey == nil {
+		return nil, errors.New("private key is not available")
 	}
 
-	bz := []byte(rl.PrivKeyArmor)
-	switch rl.PrivKeyType{
-	case "ed25519":
-		var privKey *ed25519.PrivKey
-		fmt.Println("bz", bz)
-		if err := cdc.UnmarshalInterface(bz, privKey); err != nil {
-			return nil, err
-		}
-		return privKey, nil
+	fmt.Println("extractPrivKeyFromLoca any any.TypeUrl", rl.PrivKey.TypeUrl)
+	fmt.Println("exteactPriv any any.Value", rl.PrivKey.Value)
+	
+	priv, ok := rl.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
+	if !ok {
+		return nil, errors.New("extractPrivKey Unable to cast any to cryptotypes.PrivKey")
+	}
 
-	//case "secp256k1":
-	default:
-		fmt.Println("default case")
-		var privKey *secp256k1.PrivKey
-		fmt.Println("bz", bz)
-		fmt.Println("cdc", cdc)
-		if err := cdc.UnmarshalInterface(bz, privKey); err != nil {
-			return nil, err
-		}
-		return privKey, nil
-	}	
-			
+
+	return priv,nil
 }
+
+

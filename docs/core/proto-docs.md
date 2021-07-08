@@ -3455,7 +3455,7 @@ Item is a keyring item stored in a keyring backend.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `privKeyArmor` | [string](#string) |  |  |
+| `priv_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `privKeyType` | [string](#string) |  |  |
 
 

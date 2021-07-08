@@ -78,9 +78,6 @@ type Keyring interface {
 	// It fails if there is an existing key Info with the same address.
 	NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error)
 
-	// Creates a local record from given private key
-	NewLocalRecord(types.PrivKey) (*Record_Local, error)
-
 	ProtoUnmarshalRecord([]byte) (*Record, error)
 
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
@@ -145,6 +142,7 @@ type Setter interface {
 	SetItem(item keyring.Item) error
 }
 
+// TODO if it is onlyfo tests it should not bei n public interface
 // used in migration_test.go
 type Marshaler interface {
 	ProtoMarshalRecord(k *Record) ([]byte, error)
@@ -287,7 +285,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (*Record, types.PrivKey, e
 		return nil, nil, err
 	}
 	fmt.Println("ExportPrivateKeyObject ks.Key done")
-	priv, err := ExtractPrivKeyFromRecord(ks.cdc, k)
+	priv, err := ExtractPrivKeyFromRecord(k)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -365,8 +363,9 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		return nil, nil, err
 	}
 
-	priv, err := ExtractPrivKeyFromRecord(ks.cdc, k)
+	priv, err := ExtractPrivKeyFromRecord(k)
 	if err != nil {
+		fmt.Println("Sign err", err.Error())
 		return nil, nil, err
 	}
 
@@ -448,7 +447,7 @@ func (ks keystore) Delete(uid string) error {
 		return err
 	}
 
-	err = ks.db.Remove(InfoKey(uid))
+	err = ks.db.Remove(uid)
 	if err != nil {
 		return err
 	}
@@ -466,7 +465,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
 	}
 
-	return ks.key(string(ik.Data))
+	return ks.Key(string(ik.Data))
 }
 
 func wrapKeyNotFound(err error, msg string) error {
@@ -574,25 +573,21 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 	return ks.options.SupportedAlgos.Contains(algo)
 }
 
-func (ks keystore) key(infoKey string) (*Record, error) {
-	if _, err := ks.Migrate(infoKey); err != nil {
+func (ks keystore) Key(uid string) (*Record, error) {
+	if _, err := ks.Migrate(uid); err != nil {
 		return nil, err
 	}
 
-	item, err := ks.db.Get(infoKey)
+	item, err := ks.db.Get(uid)
 	if err != nil {
-		return nil, wrapKeyNotFound(err, infoKey)
+		return nil, wrapKeyNotFound(err, uid)
 	}
 
 	if len(item.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, infoKey)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
 	}
 
 	return ks.ProtoUnmarshalRecord(item.Data)
-}
-
-func (ks keystore) Key(uid string) (*Record, error) {
-	return ks.key(InfoKey(uid))
 }
 
 // SupportedAlgorithms returns the keystore Options' supported signing algorithm.
@@ -760,10 +755,12 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 }
 
 func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, error) {
-	localRecord, err := ks.NewLocalRecord(privKey)
+	localRecord, err := NewLocalRecord(privKey)
 	if err != nil {
 		return nil, err
 	}
+
+
 	localRecordItem := NewLocalRecordItem(localRecord)
 	return ks.newRecord(name, privKey.PubKey(), localRecordItem)
 }
@@ -774,7 +771,9 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 
-	exists, err := ks.existsInDb(addr, k.Name)
+	key := k.Name
+
+	exists, err := ks.existsInDb(addr, key)
 	if err != nil {
 		return err
 	}
@@ -787,8 +786,6 @@ func (ks keystore) writeRecord(k *Record) error {
 		return fmt.Errorf("Unable to serialize record, err - %s", err)
 	}
 
-	key := infoKeyBz(k.Name)
-
 	item := keyring.Item{
 		Key:  string(key),
 		Data: serializedRecord,
@@ -800,7 +797,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	item = keyring.Item{
 		Key:  addrHexKeyAsString(addr),
-		Data: key,
+		Data: []byte(key),
 	}
 
 	if err := ks.db.Set(item); err != nil {
@@ -820,7 +817,7 @@ func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(InfoKey(name)); err == nil {
+	if _, err := ks.db.Get(name); err == nil {
 		return true, nil // uid lookup succeeds - info exists
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
@@ -865,11 +862,6 @@ func (ks keystore) MigrateAll() (bool, error) {
 	}
 
 	for _, key := range keys {
-		if !strings.HasSuffix(key, infoSuffix) {
-			fmt.Printf("key %s has no infoSuffix", key)
-			continue
-		}
-
 		migrated, err = ks.Migrate(key)
 		if err != nil {
 			fmt.Printf("migrate err: %q", err)
@@ -955,7 +947,7 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 			return nil, err
 		}
 
-		localRecord, err := ks.NewLocalRecord(priv)
+		localRecord, err := NewLocalRecord(priv)
 		if err != nil {
 			return nil, err
 		}
@@ -980,17 +972,6 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 
 func (ks keystore) SetItem(item keyring.Item) error {
 	return ks.db.Set(item)
-}
-
-// TODO or should I use cdc as argument in NewLocalRecord?
-func (ks keystore) NewLocalRecord(privKey types.PrivKey) (*Record_Local, error) {
-
-	bz, err := ks.cdc.MarshalInterface(privKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Record_Local{string(bz), privKey.Type()}, nil
 }
 
 type unsafeKeystore struct {

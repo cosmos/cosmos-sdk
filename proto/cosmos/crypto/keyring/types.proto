@@ -20,7 +20,7 @@ message Record {
 
   // Item is a keyring item stored in a keyring backend.
   message Local {
-    string privKeyArmor = 1; //TODO google.protobuf.Any
+    google.protobuf.Any priv_key = 1; 
     string privKeyType = 2;
   }
   message Ledger {

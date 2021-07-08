@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenerateCoinKey(t *testing.T) {
@@ -19,7 +19,7 @@ func TestGenerateCoinKey(t *testing.T) {
 
 	// Test creation
 	encCfg := simapp.MakeTestEncodingConfig()
-	k, err := keyring.NewInMemory(encCfg.Marshaler).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
+	k, err := keyring.NewInMemory(encCfg.Codec).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
 	addr1, err := k.GetAddress()
 	require.NoError(t, err)
@@ -30,7 +30,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	t.Parallel()
 
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Marshaler)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	require.NoError(t, err)
 
 	addr, mnemonic, err := server.GenerateSaveCoinKey(kb, "keyname", false, hd.Secp256k1)
@@ -44,7 +44,7 @@ func TestGenerateSaveCoinKey(t *testing.T) {
 	require.Equal(t, addr, addr1)
 
 	// Test in-memory recovery
-	k, err = keyring.NewInMemory(encCfg.Marshaler).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
+	k, err = keyring.NewInMemory(encCfg.Codec).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
 	addr1, err = k.GetAddress()
 	require.NoError(t, err)
@@ -55,7 +55,7 @@ func TestGenerateSaveCoinKeyOverwriteFlag(t *testing.T) {
 	t.Parallel()
 
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Marshaler)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, encCfg.Codec)
 	require.NoError(t, err)
 
 	keyname := "justakey"

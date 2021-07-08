@@ -26,7 +26,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -37,10 +37,8 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	legacyLocalInfo := keyring.NewLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
 	serializedLegacyLocalInfo := keyring.MarshalInfo(legacyLocalInfo)
 
-	itemKey := keyring.InfoKey(n1)
-
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyLocalInfo,
 		Description: "SDK kerying version",
 	}
@@ -48,7 +46,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	err = kb.SetItem(item)
 	require.NoError(err)
 
-	migrated, err := kb.Migrate(itemKey)
+	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -61,7 +59,7 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -71,10 +69,10 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	legacyLedgerInfo := keyring.NewLegacyLedgerInfo(n1, pub, *hdPath, hd.Secp256k1.Name())
 	serializedLegacyLedgerInfo := keyring.MarshalInfo(legacyLedgerInfo)
-	itemKey := keyring.InfoKey(n1)
+
 
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyLedgerInfo,
 		Description: "SDK kerying version",
 	}
@@ -82,7 +80,7 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 	err = kb.SetItem(item)
 	require.NoError(err)
 
-	migrated, err := kb.Migrate(itemKey)
+	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -93,7 +91,7 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -101,10 +99,9 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 
 	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
-	itemKey := keyring.InfoKey(n1)
 
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
 		Description: "SDK kerying version",
 	}
@@ -112,7 +109,7 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 	err = kb.SetItem(item)
 	require.NoError(err)
 
-	migrated, err := kb.Migrate(itemKey)
+	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -123,7 +120,7 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -135,10 +132,9 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
 	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
-	itemKey := keyring.InfoKey(n1)
 
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
 	}
@@ -146,7 +142,7 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	err = kb.SetItem(item)
 	require.NoError(err)
 
-	migrated, err := kb.Migrate(itemKey)
+	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -157,26 +153,25 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 func TestMigrateLocalRecord(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
-
+	cdc := simapp.MakeTestEncodingConfig().Codec
+	
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
 	privKey := cryptotypes.PrivKey(priv)
 	pub := priv.PubKey()
 
-	localRecord, err := kb.NewLocalRecord(privKey)
+	localRecord, err := keyring.NewLocalRecord(privKey)
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
 	k, err := keyring.NewRecord("test record", pub, localRecordItem)
 	serializedRecord, err := kb.ProtoMarshalRecord(k)
 	require.NoError(err)
-	itemKey := keyring.InfoKey(n1)
 
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedRecord,
 		Description: "SDK kerying version",
 	}
@@ -184,7 +179,7 @@ func TestMigrateLocalRecord(t *testing.T) {
 	err = kb.SetItem(item)
 	require.NoError(err)
 
-	migrated, err := kb.Migrate(itemKey)
+	migrated, err := kb.Migrate(n1)
 	require.False(migrated)
 	require.NoError(err)
 }
@@ -196,14 +191,13 @@ func TestMigrateOneRandomItemError(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
-	itemKey := keyring.InfoKey(n1)
 
 	randomBytes := []byte("abckd0s03l")
 
 	errItem := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        randomBytes,
 		Description: "SDK kerying version",
 	}
@@ -211,7 +205,7 @@ func TestMigrateOneRandomItemError(t *testing.T) {
 	err = kb.SetItem(errItem)
 	require.NoError(err)
 
-	migrated, err := kb.Migrate(itemKey)
+	migrated, err := kb.Migrate(n1)
 	require.False(migrated)
 	require.Error(err)
 }
@@ -222,7 +216,7 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -234,10 +228,9 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
 	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
-	itemKey := keyring.InfoKey(n1)
 
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
 	}
@@ -249,10 +242,10 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 
 	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
-	itemKey = keyring.InfoKey("cosmos1")
+
 
 	item = design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
 		Description: "SDK kerying version",
 	}
@@ -271,7 +264,7 @@ func TestMigrateAllNoItem(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	migrated, err := kb.MigrateAll()
@@ -285,7 +278,7 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -293,10 +286,9 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 
 	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
-	itemKey := keyring.InfoKey(n1)
 
 	item := design99keyring.Item{
-		Key:         itemKey,
+		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
 		Description: "SDK kerying version",
 	}
@@ -304,8 +296,8 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 	err = kb.SetItem(item)
 	require.NoError(err)
 
-	incorrectItemKey := itemKey + "1"
+	incorrectItemKey := n1 + "1"
 	migrated, err := kb.Migrate(incorrectItemKey)
 	require.False(migrated)
-	require.True(strings.Contains(err.Error(), "Get error, err"))
+	require.True(strings.Contains(err.Error(), "key not found"))
 }

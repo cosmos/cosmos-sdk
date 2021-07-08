@@ -59,10 +59,10 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	privKey = priv
 
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Marshaler)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
-	localRecord, err := kb.NewLocalRecord(privKey)
+	localRecord, err := keyring.NewLocalRecord(privKey)
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
 
@@ -82,11 +82,13 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	require.NoError(err)
 	require.True(pub.Equals(pub2))
 
+	/* TODO fix that
 	localRecord2 := r2.GetLocal()
 	bzPriv, err := kb.MarshalPrivKey(priv)
 	require.NoError(err)
 	require.Equal(localRecord2.PrivKeyArmor, string(bzPriv))
 	require.Equal(localRecord2.PrivKeyType, privKey.Type())
+	*/
 }
 
 
@@ -106,27 +108,25 @@ test extractPrivKeyFrom Local
 */
 
 // TODO fix that
-/*
+// add test with Marshalling of Record
 func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	require := require.New(t)
 
-	encCfg := simapp.MakeTestEncodingConfig()
-
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
-
-	var privKey cryptotypes.PrivKey
-	privKey = priv
-
+	privKey := cryptotypes.PrivKey(priv)
+	
 	// use proto serialize
-	localRecord, err := kb.NewLocalRecord(cdc, privKey)
+	localRecord, err := keyring.NewLocalRecord(privKey)
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
 
 	k, err := keyring.NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
 
-	privKey2, err := keyring.ExtractPrivKeyFromRecord(cdc, k)
+	
+
+	privKey2, err := keyring.ExtractPrivKeyFromRecord(k)
 	require.NoError(err)
 	require.True(privKey2.Equals(privKey))
 }
@@ -134,9 +134,11 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
 	require := require.New(t)
 
+	/*
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
+	*/
 
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
@@ -147,11 +149,11 @@ func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
 	k, err := keyring.NewRecord("testrecord", pub, emptyRecordItem)
 	require.NoError(err)
 
-	privKey2, err := keyring.ExtractPrivKeyFromRecord(cdc, k)
+	privKey2, err := keyring.ExtractPrivKeyFromRecord(k)
 	require.Error(err)
 	require.Nil(privKey2)
 }
-*/
+
 
 // TODO fix that
 /*

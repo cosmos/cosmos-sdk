@@ -16,7 +16,7 @@ import (
 
 func TestInMemoryCreateLedger(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
-	kb := keyring.NewInMemory(encCfg.Marshaler)
+	kb := keyring.NewInMemory(encCfg.Codec)
 
 	k, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 
@@ -57,7 +57,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Marshaler)
+	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Codec)
 	require.NoError(t, err)
 
 	ke1, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
@@ -98,7 +98,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	dir := t.TempDir()
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, nil, encCfg.Marshaler)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, nil, encCfg.Codec)
 	require.NoError(t, err)
 
 	// Test unsupported Algo
@@ -123,7 +123,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, restoredRecord)
 	require.Equal(t, "some_account", restoredRecord.Name)
-//	require.Equal(t, TypeLedger, restoredRecord.GetType())
+	//	require.Equal(t, TypeLedger, restoredRecord.GetType())
 	pubKey, err = restoredRecord.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())

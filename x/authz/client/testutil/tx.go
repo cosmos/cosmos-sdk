@@ -46,10 +46,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee = make([]sdk.AccAddress, 2)
 
 	// Create new account in the keyring.
-	k, _, err := val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	_, _, err = val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	pub, err := k.GetPubKey()
-	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
 	s.msgSendExec(s.grantee[0])

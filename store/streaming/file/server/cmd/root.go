@@ -27,7 +27,7 @@ const (
 
 var (
 	configPath        string
-	serverCfg         *config.StateServerConfig
+	serverCfg         *config.StateFileServerConfig
 	interfaceRegistry = codecTypes.NewInterfaceRegistry()
 	marshaller        = codec.NewProtoCodec(interfaceRegistry)
 )
@@ -37,6 +37,7 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: initFuncs,
 }
 
+// Execute is the top level command entry point
 func Execute() {
 	log.Print("----- Starting Cosmos state change file server -----")
 	if err := rootCmd.Execute(); err != nil {
@@ -79,7 +80,7 @@ func initFuncs(cmd *cobra.Command, args []string) {
 }
 
 func initConfig() {
-	serverCfg = config.DefaultStateServerConfig()
+	serverCfg = config.DefaultStateFileServerConfig()
 	if configPath != "" {
 		switch _, err := os.Stat(configPath); {
 		case os.IsNotExist(err):

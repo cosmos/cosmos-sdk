@@ -18,14 +18,6 @@ import (
 )
 
 const (
-	tomlFlagRemoveAfter    = "file-server.remove-after"
-	tomlFlagFilePrefix     = "file-server.file-prefix"
-	tomlFlagReadDir        = "file-server.read-dir"
-	tomlFlagChainID        = "file-server.chain-id"
-	tomlFlagGRPCAddress    = "file-server.grpc-address"
-	tomlFlagGRPCWebEnable  = "file-server.grpc-web-enable"
-	tomlFlagGRPCWebAddress = "file-server.grpc-web-address"
-
 	cliFlagRemoveAfter    = "remove-after"
 	cliFlagFilePrefix     = "file-prefix"
 	cliFlagReadDir        = "read-dir"
@@ -33,6 +25,14 @@ const (
 	cliFlagGRPCAddress    = "grpc-address"
 	cliFlagGRPCWebEnable  = "grpc-web-enable"
 	cliFlagGRPCWebAddress = "grpc-web-address"
+
+	tomlFlagRemoveAfter    = "file-server.remove-after"
+	tomlFlagFilePrefix     = "file-server.file-prefix"
+	tomlFlagReadDir        = "file-server.read-dir"
+	tomlFlagChainID        = "file-server.chain-id"
+	tomlFlagGRPCAddress    = "file-server.grpc-address"
+	tomlFlagGRPCWebEnable  = "file-server.grpc-web-enable"
+	tomlFlagGRPCWebAddress = "file-server.grpc-web-address"
 )
 
 var (

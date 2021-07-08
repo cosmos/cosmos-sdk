@@ -21,15 +21,17 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+// StateFileBackend performs the state file reading and filtering to service Handler requests
 type StateFileBackend struct {
-	conf       *config.StateServerConfig
+	conf       *config.StateFileServerConfig
 	codec      *codec.ProtoCodec
 	logger     log.Logger
 	trimPrefix string
 	quitChan   <-chan struct{}
 }
 
-func NewStateFileBackend(conf *config.StateServerConfig, codec *codec.ProtoCodec, logger log.Logger, quitChan <-chan struct{}) *StateFileBackend {
+// NewStateFileBackend returns a new StateFileBackend
+func NewStateFileBackend(conf *config.StateFileServerConfig, codec *codec.ProtoCodec, logger log.Logger, quitChan <-chan struct{}) *StateFileBackend {
 	trimPrefix := "block-"
 	if conf.FilePrefix != "" {
 		trimPrefix = fmt.Sprintf("%s-%s", conf.FilePrefix, trimPrefix)
@@ -45,38 +47,42 @@ func NewStateFileBackend(conf *config.StateServerConfig, codec *codec.ProtoCodec
 
 // StreamData streams the requested state file data
 // this streams new data as it is written to disk
-func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.StreamResponse) error {
+func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.StreamResponse) (error, <-chan struct{}) {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
-		return err
+		return err, nil
 	}
+
+	done := make(chan struct{})
 	go func() {
 		defer w.Close()
+		defer close(done)
 		for {
 			select {
 			case event, ok := <-w.Events:
-				if !ok {
+				if !ok || event.Op != fsnotify.CloseWrite {
 					continue
 				}
-				if event.Op == fsnotify.CloseWrite {
-					fileName := event.Name
-					readFlag := false
-					switch {
-					case strings.Contains(fileName, "begin") && req.BeginBlock:
-						readFlag = true
-						res <- sfb.formBeginBlockResponse(fileName, req.StoreKeys)
-					case strings.Contains(fileName, "tx") && req.DeliverTx:
-						readFlag = true
-						res <- sfb.formDeliverTxResponse(fileName, req.StoreKeys)
-					case strings.Contains(fileName, "end") && req.EndBlock:
-						readFlag = true
-						res <- sfb.formEndBlockResponse(fileName, req.StoreKeys)
-					default:
-					}
-					if sfb.conf.RemoveAfter && readFlag {
-						if err := os.Remove(filepath.Join(sfb.conf.ReadDir, fileName)); err != nil {
-							sfb.logger.Error("unable to remove state change file", "err", err)
-						}
+
+				fileName := event.Name
+				if sfb.conf.FilePrefix != "" && !strings.HasPrefix(fileName, sfb.conf.FilePrefix) {
+					continue
+				}
+
+				switch {
+				case strings.Contains(fileName, "begin") && req.BeginBlock:
+					res <- sfb.formBeginBlockResponse(fileName, req.StoreKeys)
+				case strings.Contains(fileName, "tx") && req.DeliverTx:
+					res <- sfb.formDeliverTxResponse(fileName, req.StoreKeys)
+				case strings.Contains(fileName, "end") && req.EndBlock:
+					res <- sfb.formEndBlockResponse(fileName, req.StoreKeys)
+				default:
+					continue
+				}
+
+				if sfb.conf.RemoveAfter {
+					if err := os.Remove(filepath.Join(sfb.conf.ReadDir, fileName)); err != nil {
+						sfb.logger.Error("unable to remove state change file", "err", err)
 					}
 				}
 			case err, ok := <-w.Errors:
@@ -90,55 +96,61 @@ func (sfb *StateFileBackend) StreamData(req *pb.StreamRequest, res chan<- *pb.St
 			}
 		}
 	}()
-	return nil
+	return nil, done
 }
 
 // BackFillData stream the requested state file data
 // this stream data that is already written to disk
-func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.StreamResponse) error {
+func (sfb *StateFileBackend) BackFillData(req *pb.StreamRequest, res chan<- *pb.StreamResponse) (error, <-chan struct{}) {
 	f, err := os.Open(sfb.conf.ReadDir)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	files, err := f.Readdir(-1)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	sort.Sort(filesByTimeModified(files))
+
+	done := make(chan struct{})
 	go func() {
+		defer close(done)
 		for _, f := range files {
-			select {
-			// short circuit if the parent processes are shutting down
+			select { // short circuit if the parent processes are shutting down
 			case <-sfb.quitChan:
 				sfb.logger.Info("quiting StateFileBackend BackFillData process")
 				return
 			default:
 			}
+
 			if f.IsDir() {
 				continue
 			}
+
 			fileName := f.Name()
-			readFlag := false
+			if sfb.conf.FilePrefix != "" && !strings.HasPrefix(fileName, sfb.conf.FilePrefix) {
+				continue
+			}
+
 			switch {
 			case strings.Contains(fileName, "begin") && req.BeginBlock:
-				readFlag = true
 				res <- sfb.formBeginBlockResponse(fileName, req.StoreKeys)
 			case strings.Contains(fileName, "tx") && req.DeliverTx:
-				readFlag = true
 				res <- sfb.formDeliverTxResponse(fileName, req.StoreKeys)
 			case strings.Contains(fileName, "end") && req.EndBlock:
-				readFlag = true
 				res <- sfb.formEndBlockResponse(fileName, req.StoreKeys)
 			default:
+				continue
 			}
-			if sfb.conf.RemoveAfter && readFlag {
+
+			if sfb.conf.RemoveAfter {
 				if err := os.Remove(filepath.Join(sfb.conf.ReadDir, fileName)); err != nil {
 					sfb.logger.Error("unable to remove state change file", "err", err)
 				}
 			}
 		}
 	}()
-	return nil
+	return nil, done
 }
 
 // BeginBlockDataAt returns a BeginBlockPayload for the provided BeginBlockRequest
@@ -168,20 +180,6 @@ func (sfb *StateFileBackend) EndBlockDataAt(ctx context.Context, req *pb.EndBloc
 	return sfb.formEndBlockPayload(fileName, req.StoreKeys)
 }
 
-type filesByTimeModified []os.FileInfo
-
-func (fs filesByTimeModified) Len() int {
-	return len(fs)
-}
-
-func (fs filesByTimeModified) Swap(i, j int) {
-	fs[i], fs[j] = fs[j], fs[i]
-}
-
-func (fs filesByTimeModified) Less(i, j int) bool {
-	return fs[i].ModTime().Before(fs[j].ModTime())
-}
-
 func (sfb *StateFileBackend) formBeginBlockResponse(fileName string, storeKeys []string) *pb.StreamResponse {
 	res := new(pb.StreamResponse)
 	res.ChainId = sfb.conf.ChainID
@@ -192,6 +190,7 @@ func (sfb *StateFileBackend) formBeginBlockResponse(fileName string, storeKeys [
 		return res
 	}
 	res.Height = blockHeight
+
 	bbp, err := sfb.formBeginBlockPayload(fileName, storeKeys)
 	if err != nil {
 		res.Err = err.Error()
@@ -213,14 +212,17 @@ func (sfb *StateFileBackend) formBeginBlockPayload(fileName string, storeKeys []
 	if len(messageBytes) < 2 {
 		return nil, fmt.Errorf("expected at least two protobuf messages, got %d", len(messageBytes))
 	}
+
 	beginBlockReq := new(abci.RequestBeginBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[0], beginBlockReq); err != nil {
 		return nil, err
 	}
+
 	beginBlockRes := new(abci.ResponseBeginBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], beginBlockRes); err != nil {
 		return nil, err
 	}
+
 	kvPairs := make([]*types.StoreKVPair, 0, len(messageBytes[1:len(messageBytes)-2]))
 	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
@@ -231,6 +233,7 @@ func (sfb *StateFileBackend) formBeginBlockPayload(fileName string, storeKeys []
 			kvPairs = append(kvPairs, kvPair)
 		}
 	}
+
 	return &pb.BeginBlockPayload{
 		Request:      beginBlockReq,
 		Response:     beginBlockRes,
@@ -248,6 +251,7 @@ func (sfb *StateFileBackend) formDeliverTxResponse(fileName string, storeKeys []
 		return res
 	}
 	res.Height = blockHeight
+
 	dtp, err := sfb.formDeliverTxPayload(fileName, storeKeys)
 	if err != nil {
 		res.Err = err.Error()
@@ -269,14 +273,17 @@ func (sfb *StateFileBackend) formDeliverTxPayload(fileName string, storeKeys []s
 	if len(messageBytes) < 2 {
 		return nil, fmt.Errorf("expected at least two protobuf messages, got %d", len(messageBytes))
 	}
+
 	deliverTxReq := new(abci.RequestDeliverTx)
 	if err := sfb.codec.Unmarshal(messageBytes[0], deliverTxReq); err != nil {
 		return nil, err
 	}
+
 	deliverTxRes := new(abci.ResponseDeliverTx)
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], deliverTxRes); err != nil {
 		return nil, err
 	}
+
 	kvPairs := make([]*types.StoreKVPair, 0, len(messageBytes[1:len(messageBytes)-2]))
 	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
@@ -287,6 +294,7 @@ func (sfb *StateFileBackend) formDeliverTxPayload(fileName string, storeKeys []s
 			kvPairs = append(kvPairs, kvPair)
 		}
 	}
+
 	return &pb.DeliverTxPayload{
 		Request:      deliverTxReq,
 		Response:     deliverTxRes,
@@ -304,6 +312,7 @@ func (sfb *StateFileBackend) formEndBlockResponse(fileName string, storeKeys []s
 		return res
 	}
 	res.Height = blockHeight
+
 	ebp, err := sfb.formEndBlockPayload(fileName, storeKeys)
 	if err != nil {
 		res.Err = err.Error()
@@ -325,14 +334,17 @@ func (sfb *StateFileBackend) formEndBlockPayload(fileName string, storeKeys []st
 	if len(messageBytes) < 2 {
 		return nil, fmt.Errorf("expected at least two protobuf messages, got %d", len(messageBytes))
 	}
+
 	endBlockReq := new(abci.RequestEndBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[0], endBlockReq); err != nil {
 		return nil, err
 	}
+
 	endBlockRes := new(abci.ResponseEndBlock)
 	if err := sfb.codec.Unmarshal(messageBytes[len(messageBytes)-1], endBlockRes); err != nil {
 		return nil, err
 	}
+
 	kvPairs := make([]*types.StoreKVPair, 0, len(messageBytes[1:len(messageBytes)-2]))
 	for i := 1; i < len(messageBytes)-1; i++ {
 		kvPair := new(types.StoreKVPair)
@@ -343,6 +355,7 @@ func (sfb *StateFileBackend) formEndBlockPayload(fileName string, storeKeys []st
 			kvPairs = append(kvPairs, kvPair)
 		}
 	}
+
 	return &pb.EndBlockPayload{
 		Request:      endBlockReq,
 		Response:     endBlockRes,
@@ -364,4 +377,21 @@ func listIsEmptyOrContains(list []string, str string) bool {
 		}
 	}
 	return false
+}
+
+type filesByTimeModified []os.FileInfo
+
+// Len satisfies sort.Interface
+func (fs filesByTimeModified) Len() int {
+	return len(fs)
+}
+
+// Swap satisfies sort.Interface
+func (fs filesByTimeModified) Swap(i, j int) {
+	fs[i], fs[j] = fs[j], fs[i]
+}
+
+// Less satisfies sort.Interface
+func (fs filesByTimeModified) Less(i, j int) bool {
+	return fs[i].ModTime().Before(fs[j].ModTime())
 }

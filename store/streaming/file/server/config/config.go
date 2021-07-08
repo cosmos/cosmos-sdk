@@ -20,7 +20,8 @@ const (
 	DefaultGRPCWebAddress = "0.0.0.0:9093"
 )
 
-type StateServerConfig struct {
+// StateFileServerConfig contains configuration parameters for the state file server
+type StateFileServerConfig struct {
 	GRPCAddress    string `mapstructure:"grpc-address"`
 	GRPCWebEnabled bool   `mapstructure:"grpc-web-enabled"`
 	GRPCWebAddress string `mapstructure:"grpc-web-address"`
@@ -32,18 +33,18 @@ type StateServerConfig struct {
 	LogLevel       string `mapstructure:"log-level"`
 }
 
-// DefaultStateServerConfig returns the reference to ClientConfig with default values.
-func DefaultStateServerConfig() *StateServerConfig {
-	return &StateServerConfig{
-		DefaultGRPCAddress,
-		true,
-		DefaultGRPCWebAddress,
-		"",
-		DefaultReadDir,
-		"",
-		true,
-		"",
-		"info",
+// DefaultStateFileServerConfig returns the reference to ClientConfig with default values.
+func DefaultStateFileServerConfig() *StateFileServerConfig {
+	return &StateFileServerConfig{
+		GRPCAddress:    DefaultGRPCAddress,
+		GRPCWebEnabled: true,
+		GRPCWebAddress: DefaultGRPCWebAddress,
+		ChainID:        "",
+		ReadDir:        DefaultReadDir,
+		FilePrefix:     "",
+		RemoveAfter:    true,
+		LogFile:        "",
+		LogLevel:       "info",
 	}
 }
 
@@ -61,7 +62,7 @@ func init() {
 
 // WriteConfigFile renders config using the template and writes it to
 // configFilePath.
-func WriteConfigFile(configFilePath string, config *StateServerConfig) {
+func WriteConfigFile(configFilePath string, config *StateFileServerConfig) {
 	var buffer bytes.Buffer
 
 	if err := configTemplate.Execute(&buffer, config); err != nil {

@@ -815,7 +815,7 @@ func (ks keystore) writeInfo(info Info) error {
 }
 
 // existsInDb returns true if key is in DB. Error is returned only when we have error
-// different thant ErrKeyNotFound
+// different than ErrKeyNotFound
 func (ks keystore) existsInDb(info Info) (bool, error) {
 	if item, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
 		if item.Key == info.GetName() {

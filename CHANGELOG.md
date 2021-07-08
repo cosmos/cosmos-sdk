@@ -56,6 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9418](https://github.com/cosmos/cosmos-sdk/pull/9418) `sdk.Msg`'s  `GetSigners()` method updated to return `[]string`.
 * [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) `RESTHandlerFn` argument is removed from the `gov/NewProposalHandler`.
 * [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) `types/rest` package moved to `testutil/rest`.
+* [\#9432](https://github.com/cosmos/cosmos-sdk/pull/9432) `ConsensusParamsKeyTable` moved from `params/keeper` to `params/types`
 
 
 ### Client Breaking Changes

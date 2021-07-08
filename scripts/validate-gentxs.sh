@@ -53,7 +53,14 @@ command_exists () {
 if command_exists go ; then
     echo "Golang is already installed"
 else
-  echo "Install dependencies"
+  read -s -p "Installing go using apt. Do you want to proceed (y/n)?: " useApt
+
+  if [ "$useApt" != "y" ]; then
+    echo
+    echo "Install go manually and execute this script"
+    exit 0;
+  fi
+
   sudo apt update
   sudo apt install build-essential -y
 

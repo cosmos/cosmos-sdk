@@ -97,9 +97,14 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 
 	for _, msg := range t.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
+			if !seen[addr] {
+				signer, err := sdk.AccAddressFromBech32(addr)
+				if err != nil {
+					panic(err)
+				}
+
+				signers = append(signers, signer)
+				seen[addr] = true
 			}
 		}
 	}
@@ -189,4 +194,23 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
+}
+
+// ValidateMsg calls the `sdk.Msg.ValidateBasic()`
+// also validates all the signers are valid bech32 addresses.
+func ValidateMsg(msg sdk.Msg) error {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	signers := msg.GetSigners()
+	for _, signer := range signers {
+		_, err = sdk.AccAddressFromBech32(signer)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

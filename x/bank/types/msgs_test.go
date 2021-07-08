@@ -65,13 +65,6 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	require.Equal(t, expected, string(res))
 }
 
-func TestMsgSendGetSigners(t *testing.T) {
-	var msg = NewMsgSend(sdk.AccAddress([]byte("input111111111111111")), sdk.AccAddress{}, sdk.NewCoins())
-	res := msg.GetSigners()
-	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E707574313131313131313131313131313131]")
-}
-
 func TestMsgMultiSendRoute(t *testing.T) {
 	// Construct a MsgSend
 	addr1 := sdk.AccAddress([]byte("input"))
@@ -238,32 +231,22 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 }
 
 func TestMsgMultiSendGetSigners(t *testing.T) {
-	var msg = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(sdk.AccAddress([]byte("input111111111111111")), nil),
-			NewInput(sdk.AccAddress([]byte("input222222222222222")), nil),
-			NewInput(sdk.AccAddress([]byte("input333333333333333")), nil),
-		},
+	addrs := make([]string, 3)
+	inputs := make([]Input, 3)
+	for i, v := range []string{"input111111111111111", "input222222222222222", "input333333333333333"} {
+		addr := sdk.AccAddress([]byte(v))
+		inputs[i] = NewInput(addr, nil)
+		addrs[i] = addr.String()
 	}
+	var msg = NewMsgMultiSend(inputs, nil)
 
 	res := msg.GetSigners()
-	// TODO: fix this !
-	require.Equal(t, "[696E707574313131313131313131313131313131 696E707574323232323232323232323232323232 696E707574333333333333333333333333333333]", fmt.Sprintf("%v", res))
+	require.Equal(t, fmt.Sprintf("%v", addrs), fmt.Sprintf("%v", res))
 }
 
-func TestMsgSendSigners(t *testing.T) {
-	signers := []sdk.AccAddress{
-		{1, 2, 3},
-		{4, 5, 6},
-		{7, 8, 9},
-	}
-
-	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
-	inputs := make([]Input, len(signers))
-	for i, signer := range signers {
-		inputs[i] = NewInput(signer, someCoins)
-	}
-	tx := NewMsgMultiSend(inputs, nil)
-
-	require.Equal(t, signers, tx.GetSigners())
+func TestMsgSendGetSigners(t *testing.T) {
+	from := sdk.AccAddress([]byte("input111111111111111"))
+	msg := NewMsgSend(from, sdk.AccAddress{}, sdk.NewCoins())
+	res := msg.GetSigners()
+	require.Equal(t, fmt.Sprintf("%v", res), fmt.Sprintf("%v", []string{from.String()}))
 }

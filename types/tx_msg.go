@@ -15,10 +15,10 @@ type (
 		// doesn't require access to any other information.
 		ValidateBasic() error
 
-		// Signers returns the addrs of signers that must sign.
+		// Signers returns the bech32-encoded addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
 		// CONTRACT: Returns addrs in some deterministic order.
-		GetSigners() []AccAddress
+		GetSigners() []string
 	}
 
 	// Fee defines an interface for an application application-defined concrete

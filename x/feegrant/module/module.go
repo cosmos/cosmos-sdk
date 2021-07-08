@@ -82,7 +82,8 @@ func (a AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.Tx
 }
 
 // RegisterRESTRoutes registers the REST routes for the feegrant module.
-func (AppModuleBasic) RegisterRESTRoutes(ctx sdkclient.Context, rtr *mux.Router) {}
+// Deprecated: RegisterRESTRoutes is deprecated.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the feegrant module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
@@ -207,8 +208,7 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns all the feegrant module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	protoCdc := codec.NewProtoCodec(am.registry)
 	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper, protoCdc,
+		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
 	)
 }

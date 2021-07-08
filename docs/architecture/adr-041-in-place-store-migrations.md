@@ -84,6 +84,7 @@ We introduce a new prefix store in `x/upgrade`'s store. This store will track ea
 ```
 0x2 | {bytes(module_name)} => BigEndian(module_consensus_version)
 ```
+
 The initial state of the store is set from `app.go`'s `InitChainer` method.
 
 The UpgradeHandler signature needs to be updated to take a `VersionMap`, as well as return an upgraded `VersionMap` and an error:
@@ -118,7 +119,7 @@ Once all the migration handlers are registered inside the configurator (which ha
 - Get the old ConsensusVersion of the module from its `VersionMap` argument (let's call it `M`).
 - Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
 - If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
-  - There is a special case where there is no ConsensusVersion for the module, as this means that the module has been newly added during the upgrade. In this case, no migration function is run, and the module's current ConsensusVersion is saved to `x/upgrade`'s store.
+    - There is a special case where there is no ConsensusVersion for the module, as this means that the module has been newly added during the upgrade. In this case, no migration function is run, and the module's current ConsensusVersion is saved to `x/upgrade`'s store.
 
 If a required migration is missing (e.g. if it has not been registered in the `Configurator`), then the `RunMigrations` function will error.
 

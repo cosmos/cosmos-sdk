@@ -77,7 +77,7 @@ Cosmos SDK v0.40 uses Protobuf services to define state transitions (`Msg`s) and
 
 #### `Msg` Service
 
-For migrating `Msg`s, the handler pattern (inside the `handler.go` file) is deprecated. You may still keep it if you wish to support `Msg`s defined in older versions of the SDK. However, it is strongly recommended to add a `Msg` service to your Protobuf files, and each old `Msg` should be converted into a service method. Taking [x/bank's](../../x/bank/spec/README.md) `MsgSend` as an example, we have a corresponding `cosmos.bank.v1beta1.Msg/Send` service method:
+The handler pattern (inside the `handler.go` file) for handling `Msg`s is deprecated. You may still keep it if you wish to support `Msg`s defined in pre-Stargate versions of the SDK. However, it is strongly recommended to add a `Msg` service to your Protobuf files, and each old `Msg` handler should be converted into a service method. Taking [x/bank's](../../x/bank/spec/README.md) `MsgSend` as an example, we have a corresponding `/cosmos.bank.v1beta1.MsgSend` RPC:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/bank/v1beta1/tx.proto#L10-L31
 
@@ -89,7 +89,7 @@ For more information, please check our [`Msg` service guide](../building-modules
 
 #### `Query` Service
 
-For migrating state queries, the querier pattern (inside the `querier.go` file) is deprecated. You may still keep this file to support legacy queries, but it is strongly recommended to use a Protobuf `Query` service to handle state queries.
+The querier pattern (inside the `querier.go` file) for handling state queries is deprecated. You may still keep this file to support legacy queries, but it is strongly recommended to use a Protobuf `Query` service to handle state queries.
 
 Each query endpoint is now defined as a separate service method in the `Query` service. Still taking `x/bank` as an example, here are the queries to fetch an account's balances:
 
@@ -117,7 +117,7 @@ If you wish to expose your `Query` endpoints as REST endpoints (as proposed in t
 
 If you still use Amino (which is deprecated since Stargate), you must register related types using the `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)` method (previously it was called  `RegisterCodec(cdc *codec.Codec)`).
 
-Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules must implement. This method must register the interfaces that Protobuf messages implement, as well as the service `Msg`s used in the module. An example from x/bank is given below:
+Moreover, a new `RegisterInterfaces` method has been added to the `AppModule` interface that all modules must implement. This method must register the interfaces that Protobuf messages implement, as well as the service request `Msg`s used in the module. An example from x/bank is given below:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/x/bank/types/codec.go#L21-L34
 
@@ -146,7 +146,7 @@ clientCtx, err := client.GetClientTxContext(cmd)
 
 Some other flags helper functions are transformed: `flags.PostCommands(cmds ...*cobra.Command) []*cobra.Command` and `flags.GetCommands(...)` usage is now replaced by `flags.AddTxFlagsToCmd(cmd *cobra.Command)` and `flags.AddQueryFlagsToCmd(cmd *cobra.Command)` respectively.
 
-Moreover, new CLI commands don't take any codec as input anymore. Instead, the `clientCtx` can be retrieved from the `cmd` itself using the `GetClient{Query,Tx}Context` function above, and the codec as `clientCtx.JSONCodec`.
+Moreover, new CLI commands don't take any codec as input anymore. Instead, the `clientCtx` can be retrieved from the `cmd` itself using the `GetClient{Query,Tx}Context` function above, and the codec as `clientCtx.Codec`.
 
 ```diff
 // v0.39
@@ -154,10 +154,10 @@ Moreover, new CLI commands don't take any codec as input anymore. Instead, the `
 - 	cdc.MarshalJSON(...)
 - }
 
-// v0.40
+// v0.43
 + func NewSendTxCmd() *cobra.Command {
 +	clientCtx, err := client.GetClientTxContext(cmd)
-+	clientCtx.JSONCodec.MarshalJSON(...)
++	clientCtx.Codec.MarshalJSON(...)
 +}
 ```
 
@@ -224,7 +224,7 @@ We described in the [modules migration section](#updating-modules) `Query` and `
 - the [Tx Service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/tx/v1beta1/service.proto), to perform operations on transactions,
 - the [Tendermint service](https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/proto/cosmos/base/tendermint/v1beta1/query.proto), to have a more idiomatic interface to the [Tendermint RPC](https://docs.tendermint.com/master/rpc/).
 
-These services are optional, if you wish to use them, or if you wish to add more module-agnostic Protobuf services into your app, then you need to add them inside `app.go`:
+These services are optional. To use them, or if you wish to add more module-agnostic Protobuf services into your app, you need to register them inside `app.go`:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc6/simapp/app.go#L577-L585
 

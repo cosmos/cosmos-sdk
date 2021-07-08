@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMsgGrantAllowance(t *testing.T) {
@@ -63,7 +64,7 @@ func TestMsgGrantAllowance(t *testing.T) {
 			require.NoError(t, err)
 
 			addrSlice := msg.GetSigners()
-			require.Equal(t, tc.granter.String(), addrSlice[0].String())
+			require.Equal(t, tc.granter.String(), addrSlice[0])
 
 			allowance, err := msg.GetFeeAllowanceI()
 			require.NoError(t, err)
@@ -125,7 +126,7 @@ func TestMsgRevokeAllowance(t *testing.T) {
 		if tc.valid {
 			require.NoError(t, err)
 			addrSlice := msg.GetSigners()
-			require.Equal(t, tc.granter.String(), addrSlice[0].String())
+			require.Equal(t, tc.granter.String(), addrSlice[0])
 		} else {
 			require.Error(t, err)
 		}

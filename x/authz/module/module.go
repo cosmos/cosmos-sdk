@@ -71,8 +71,8 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEn
 }
 
 // RegisterRESTRoutes registers the REST routes for the authz module.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx sdkclient.Context, r *mux.Router) {
-}
+// Deprecated: RegisterRESTRoutes is deprecated.
+func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
@@ -187,9 +187,8 @@ func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	protoCdc := codec.NewProtoCodec(am.registry)
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.bankKeeper, am.keeper, am.cdc, protoCdc,
+		am.accountKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
 }

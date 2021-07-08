@@ -12,7 +12,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -32,11 +32,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	cfg.NumValidators = 1
 
 	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
 
-	s.Require().NotNil(s.network)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
@@ -57,7 +58,7 @@ func (s IntegrationTestSuite) TestQueryNodeInfo() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", val.APIAddress))
 	s.Require().NoError(err)
 	var getInfoRes tmservice.GetNodeInfoResponse
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &getInfoRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &getInfoRes))
 	s.Require().Equal(getInfoRes.ApplicationVersion.AppName, version.NewInfo().AppName)
 }
 
@@ -70,7 +71,7 @@ func (s IntegrationTestSuite) TestQuerySyncing() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", val.APIAddress))
 	s.Require().NoError(err)
 	var syncingRes tmservice.GetSyncingResponse
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &syncingRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &syncingRes))
 }
 
 func (s IntegrationTestSuite) TestQueryLatestBlock() {
@@ -82,7 +83,7 @@ func (s IntegrationTestSuite) TestQueryLatestBlock() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", val.APIAddress))
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetLatestBlockResponse
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &blockInfoRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
 func (s IntegrationTestSuite) TestQueryBlockByHeight() {
@@ -93,7 +94,7 @@ func (s IntegrationTestSuite) TestQueryBlockByHeight() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", val.APIAddress, 1))
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetBlockByHeightResponse
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &blockInfoRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
 func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
@@ -124,7 +125,7 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
 	s.Require().NoError(err)
 	var validatorSetRes tmservice.GetLatestValidatorSetResponse
-	s.Require().NoError(val.ClientCtx.JSONCodec.UnmarshalJSON(restRes, &validatorSetRes))
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &validatorSetRes))
 	s.Require().Equal(1, len(validatorSetRes.Validators))
 	anyPub, err := codectypes.NewAnyWithValue(val.PubKey)
 	s.Require().NoError(err)
@@ -183,7 +184,7 @@ func (s IntegrationTestSuite) TestLatestValidatorSet_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tmservice.GetLatestValidatorSetResponse
-				err = vals[0].ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				err = vals[0].ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
 				anyPub, err := codectypes.NewAnyWithValue(vals[0].PubKey)
@@ -245,7 +246,7 @@ func (s IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
 				var result tmservice.GetValidatorSetByHeightResponse
-				err = vals[0].ClientCtx.JSONCodec.UnmarshalJSON(res, &result)
+				err = vals[0].ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
 			}

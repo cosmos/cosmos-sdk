@@ -3,14 +3,18 @@ package feegrant
 import (
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
-	_, _ sdk.Msg                       = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-	_    types.UnpackInterfacesMessage = &MsgGrantAllowance{}
+	_, _ sdk.Msg            = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{} // For amino support.
+
+	_ types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
 
 // NewMsgGrantAllowance creates a new MsgGrantAllowance.
@@ -53,12 +57,23 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 }
 
 // GetSigners gets the granter account associated with an allowance
-func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{granter}
+func (msg MsgGrantAllowance) GetSigners() []string {
+	return []string{msg.Granter}
+}
+
+// Type implements the LegacyMsg.Type method.
+func (msg MsgGrantAllowance) Type() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// Route implements the LegacyMsg.Route method.
+func (msg MsgGrantAllowance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
+func (msg MsgGrantAllowance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }
 
 // GetFeeAllowanceI returns unpacked FeeAllowance
@@ -101,10 +116,21 @@ func (msg MsgRevokeAllowance) ValidateBasic() error {
 
 // GetSigners gets the granter address associated with an Allowance
 // to revoke.
-func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{granter}
+func (msg MsgRevokeAllowance) GetSigners() []string {
+	return []string{msg.Granter}
+}
+
+// Type implements the LegacyMsg.Type method.
+func (msg MsgRevokeAllowance) Type() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// Route implements the LegacyMsg.Route method.
+func (msg MsgRevokeAllowance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
+func (msg MsgRevokeAllowance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
 }

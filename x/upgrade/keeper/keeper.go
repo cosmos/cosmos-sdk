@@ -112,6 +112,41 @@ func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 	return vm
 }
 
+// GetModuleVersions gets a slice of module consensus versions
+func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	defer it.Close()
+
+	mv := make([]*types.ModuleVersion, 0)
+	for ; it.Valid(); it.Next() {
+		moduleBytes := it.Key()
+		name := string(moduleBytes[1:])
+		moduleVersion := binary.BigEndian.Uint64(it.Value())
+		mv = append(mv, &types.ModuleVersion{
+			Name:    name,
+			Version: moduleVersion,
+		})
+	}
+	return mv
+}
+
+// gets the version for a given module, and returns true if it exists, false otherwise
+func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
+	store := ctx.KVStore(k.storeKey)
+	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		moduleName := string(it.Key()[1:])
+		if moduleName == name {
+			version := binary.BigEndian.Uint64(it.Value())
+			return version, true
+		}
+	}
+	return 0, false
+}
+
 // ScheduleUpgrade schedules an upgrade based on the specified plan.
 // If there is another Plan already scheduled, it will overwrite it
 // (implicitly cancelling the current plan)

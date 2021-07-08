@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -122,7 +123,7 @@ func NewEditValidatorCmd() *cobra.Command {
 			if minSelfDelegationString != "" {
 				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
 				if !ok {
-					return types.ErrMinSelfDelegationInvalid
+					return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 				}
 
 				newMinSelfDelegation = &msb
@@ -290,7 +291,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	var pk cryptotypes.PubKey
-	if err := clientCtx.JSONCodec.UnmarshalInterfaceJSON([]byte(pkStr), &pk); err != nil {
+	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pkStr), &pk); err != nil {
 		return txf, nil, err
 	}
 
@@ -322,7 +323,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 
 	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
 	if !ok {
-		return txf, nil, types.ErrMinSelfDelegationInvalid
+		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
 	msg, err := types.NewMsgCreateValidator(
@@ -525,7 +526,7 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
 
 	if !ok {
-		return txBldr, nil, types.ErrMinSelfDelegationInvalid
+		return txBldr, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
 	msg, err := types.NewMsgCreateValidator(

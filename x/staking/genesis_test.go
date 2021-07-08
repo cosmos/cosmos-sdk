@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -64,8 +65,8 @@ func TestInitGenesis(t *testing.T) {
 	log.Printf("%#v", len(validators))
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		simapp.FundModuleAccount(
-			app,
+		testutil.FundModuleAccount(
+			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
 			sdk.NewCoins(
@@ -182,8 +183,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		simapp.FundModuleAccount(
-			app,
+		testutil.FundModuleAccount(
+			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
 			sdk.NewCoins(sdk.NewCoin(params.BondDenom, bondedPoolAmt)),

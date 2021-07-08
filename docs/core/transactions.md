@@ -12,9 +12,9 @@ order: 2
 
 ## Transactions
 
-Transactions are comprised of metadata held in [contexts](./context.md) and [`Msg`s](../building-modules/messages-and-queries.md) that trigger state changes within a module through the module's [`Msg` service](../building-modules/msg-services.md).
+Transactions are comprised of metadata held in [contexts](./context.md) and [`sdk.Msg`s](../building-modules/messages-and-queries.md) that trigger state changes within a module through the module's Protobuf [`Msg` service](../building-modules/msg-services.md).
 
-When users want to interact with an application and make state changes (e.g. sending coins), they create transactions. Each of a transaction's `Msg`s must be signed using the private key associated with the appropriate account(s), before the transaction is broadcasted to the network. A transaction must then be included in a block, validated, and approved by the network through the consensus process. To read more about the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
+When users want to interact with an application and make state changes (e.g. sending coins), they create transactions. Each of a transaction's `sdk.Msg` must be signed using the private key associated with the appropriate account(s), before the transaction is broadcasted to the network. A transaction must then be included in a block, validated, and approved by the network through the consensus process. To read more about the lifecycle of a transaction, click [here](../basics/tx-lifecycle.md).
 
 ## Type Definition
 
@@ -24,8 +24,8 @@ Transaction objects are SDK types that implement the `Tx` interface
 
 It contains the following methods:
 
-- **GetMsgs:** unwraps the transaction and returns a list of its `Msg`s - one transaction may have one or multiple [`Msg`s](../building-modules/messages-and-queries.md#messages), which are defined by module developers.
-- **ValidateBasic:** includes lightweight, [_stateless_](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for `Msg`s, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
+- **GetMsgs:** unwraps the transaction and returns a list of contained `sdk.Msg`s - one transaction may have one or multiple messages, which are defined by module developers.
+- **ValidateBasic:** includes lightweight, [_stateless_](../basics/tx-lifecycle.md#types-of-checks) checks used by ABCI messages [`CheckTx`](./baseapp.md#checktx) and [`DeliverTx`](./baseapp.md#delivertx) to make sure transactions are not invalid. For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth) module's `StdTx` `ValidateBasic` function checks that its transactions are signed by the correct number of signers and that the fees do not exceed what the user's maximum. Note that this function is to be distinct from the `ValidateBasic` functions for `sdk.Msg`s, which perform basic validity checks on messages only. For example, when [`runTx`](./baseapp.md#runtx) is checking a transaction created from the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/auth/spec) module, it first runs `ValidateBasic` on each message, then runs the `auth` module AnteHandler which calls `ValidateBasic` for the transaction itself.
 
 As a developer, you should rarely manipulate `Tx` directly, as `Tx` is really an intermediate type used for transaction generation. Instead, developers should prefer the `TxBuilder` interface, which you can learn more about [below](#transaction-generation).
 
@@ -74,14 +74,15 @@ The next paragraphs will describe each of these components, in this order.
 ### Messages
 
 ::: tip
-Module `Msg`s are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
+Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://tendermint.com/docs/spec/abci/abci.html#messages) which define interactions between the Tendermint and application layers.
 :::
 
-**Messages** (or `Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../building-modules/msg-services.md), and also implement the corresponding `MsgServer`.
+**Messages** (or `sdk.Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../building-modules/msg-services.md), and also implement the corresponding `MsgServer`.
 
-`Msg`s in a module are defined as methods in the [`Msg` service] inside each module's `tx.proto` file. Since `Msg`s are module-specific, each module needs a to process all of its message types and trigger state changes within the module's scope. This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively. To achieve this, Protobuf generates a `MsgServer` interface for each module, and the module developer needs to implement this interface. The methods on the `MsgServer` interface corresponds on how to handle each of the different `Msg`.
+Each `sdk.Msg`s is related to exactly one Protobuf [`Msg` service](../building-modules/msg-services.md) RPC, defined inside each module's `tx.proto` file. An SKD app router automatically maps every `sdk.Msg` to a corresponding RPC. Protobuf generates a `MsgServer` interface for each module `Msg` service, and the module developer needs to implement this interface.
+This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively.
 
-To learn more about `Msg` services and how to implement `MsgServer`, click [here](../building-modules/msg-services.md).
+To learn more about Protobuf `Msg` services and how to implement `MsgServer`, click [here](../building-modules/msg-services.md).
 
 While messages contain the information for state transition logic, a transaction's other metadata and relevant information are stored in the `TxBuilder` and `Context`.
 
@@ -125,7 +126,7 @@ Once the transaction bytes are generated, there are currently three ways of broa
 
 #### CLI
 
-Application developers create entrypoints to the application by creating a [command-line interface](../interfaces/cli.md) and/or [REST interface](../interfaces/rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line.
+Application developers create entrypoints to the application by creating a [command-line interface](../core/cli.md), [gRPC and/or REST interface](../core/grpc_rest.md), typically found in the application's `./cmd` folder. These interfaces allow users to interact with the application through command-line.
 
 For the [command-line interface](../building-modules/module-interfaces.md#cli), module developers create subcommands to add as children to the application top-level transaction command `TxCmd`. CLI commands actually bundle all the steps of transaction processing into one simple command: creating messages, generating transactions and broadcasting. For concrete examples, see the [Interacting with a Node](../run-node/interact-node.md) section. An example transaction made using CLI looks like:
 

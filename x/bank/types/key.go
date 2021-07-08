@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -43,6 +44,7 @@ func AddressFromBalancesStore(key []byte) (sdk.AccAddress, error) {
 	if len(key) == 0 {
 		return nil, ErrInvalidKey
 	}
+	kv.AssertKeyAtLeastLength(key, 1)
 	addrLen := key[0]
 	bound := int(addrLen)
 	if len(key)-1 < bound {

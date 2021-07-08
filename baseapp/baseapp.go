@@ -427,13 +427,6 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 		cp.Validator = &vp
 	}
 
-	if app.paramStore.Has(ctx, ParamStoreKeyVersionParams) {
-		var vp tmproto.VersionParams
-
-		app.paramStore.Get(ctx, ParamStoreKeyVersionParams, &vp)
-		cp.Version = &vp
-	}
-
 	return cp
 }
 

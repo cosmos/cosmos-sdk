@@ -27,6 +27,7 @@ func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	return
 }
 
+// SMTProofRuntime returns a ProofRuntime for sparse merkle trees.
 func SMTProofRuntime() (prt *merkle.ProofRuntime) {
 	prt = merkle.NewProofRuntime()
 	prt.RegisterOpDecoder(smt.ProofType, smt.ProofDecoder)

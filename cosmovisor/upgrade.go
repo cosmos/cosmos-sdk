@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
@@ -43,6 +44,20 @@ func DoUpgrade(cfg *Config, info *UpgradeInfo) error {
 	// and then set the binary again
 	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
 		return fmt.Errorf("downloaded binary doesn't check out: %w", err)
+	}
+
+	// take backup if `UNSAFE_UPGRADE` is not set.
+	if !cfg.UnsafeUpgrade {
+		// copy the DAEMON_HOME/data to a backup dir
+
+		// a destination directory, Format MM-DD-YYYY
+		dt := time.Now()
+		dst := fmt.Sprintf(cfg.Home + "-backup-%s", dt.Format("01-22-2000"))
+		err := copy.Copy(cfg.Home, dst)
+
+		if err != nil {
+			return fmt.Errorf("error while taking data backup: %w", err)
+		}
 	}
 
 	return cfg.SetCurrentUpgrade(info.Name)

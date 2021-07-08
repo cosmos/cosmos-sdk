@@ -1,8 +1,6 @@
 package types
 
 import (
-	"bytes"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,19 +60,17 @@ func (msg MsgCreateValidator) Type() string { return TypeMsgCreateValidator }
 // must sign over msg.GetSignBytes().
 // If the validator address is not same as delegator's, then the validator must
 // sign the msg as well.
-func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
+func (msg MsgCreateValidator) GetSigners() []string {
 	// delegator is first signer so delegator pays fees
-	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	addrs := []string{msg.DelegatorAddress}
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		panic(err)
 	}
-	addrs := []sdk.AccAddress{delAddr}
-	addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	if !bytes.Equal(delAddr.Bytes(), addr.Bytes()) {
-		addrs = append(addrs, sdk.AccAddress(addr))
+
+	valAccAddr := sdk.AccAddress(valAddr).String()
+	if msg.DelegatorAddress != valAccAddr {
+		addrs = append(addrs, valAccAddr)
 	}
 
 	return addrs
@@ -167,12 +163,12 @@ func (msg MsgEditValidator) Route() string { return RouterKey }
 func (msg MsgEditValidator) Type() string { return TypeMsgEditValidator }
 
 // GetSigners implements the sdk.Msg interface.
-func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
+func (msg MsgEditValidator) GetSigners() []string {
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{valAddr.Bytes()}
+	return []string{sdk.AccAddress(valAddr).String()}
 }
 
 // GetSignBytes implements the sdk.Msg interface.
@@ -224,12 +220,8 @@ func (msg MsgDelegate) Route() string { return RouterKey }
 func (msg MsgDelegate) Type() string { return TypeMsgDelegate }
 
 // GetSigners implements the sdk.Msg interface.
-func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+func (msg MsgDelegate) GetSigners() []string {
+	return []string{msg.DelegatorAddress}
 }
 
 // GetSignBytes implements the sdk.Msg interface.
@@ -278,12 +270,8 @@ func (msg MsgBeginRedelegate) Route() string { return RouterKey }
 func (msg MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
 
 // GetSigners implements the sdk.Msg interface
-func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+func (msg MsgBeginRedelegate) GetSigners() []string {
+	return []string{msg.DelegatorAddress}
 }
 
 // GetSignBytes implements the sdk.Msg interface.
@@ -333,12 +321,8 @@ func (msg MsgUndelegate) Route() string { return RouterKey }
 func (msg MsgUndelegate) Type() string { return TypeMsgUndelegate }
 
 // GetSigners implements the sdk.Msg interface.
-func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+func (msg MsgUndelegate) GetSigners() []string {
+	return []string{msg.DelegatorAddress}
 }
 
 // GetSignBytes implements the sdk.Msg interface.

@@ -923,3 +923,51 @@ func (rs *Store) buildCommitInfo(version int64) commitInfo {
 		StoreInfos: storeInfos,
 	}
 }
+
+func (src Store) Copy() *Store {
+	dst := &Store{
+		db: src.db,
+		pruningOpts:  src.pruningOpts,
+		storesParams: make(map[types.StoreKey]storeParams, len(src.storesParams)),
+		stores:       make(map[types.StoreKey]types.CommitKVStore, len(src.stores)),
+		keysByName:   make(map[string]types.StoreKey, len(src.keysByName)),
+		lazyLoading:  src.lazyLoading,
+		pruneHeights: make([]int64, 0),
+		versions:     make([]int64, 0),
+
+		traceWriter:     src.traceWriter,
+		traceContext:    src.traceContext,
+		interBlockCache: src.interBlockCache,
+	}
+
+	dst.lastCommitInfo = commitInfo{
+		Version: src.lastCommitInfo.Version,
+		StoreInfos: make([]storeInfo, 0),
+	}
+
+	for _, info := range src.lastCommitInfo.StoreInfos {
+		dst.lastCommitInfo.StoreInfos = append(dst.lastCommitInfo.StoreInfos, info)
+	}
+
+	for key, value := range src.storesParams {
+		dst.storesParams[key] = value
+	}
+
+	for key, value := range src.stores {
+		dst.stores[key] = value
+	}
+
+	for key, value := range src.keysByName {
+		dst.keysByName[key] = value
+	}
+
+	for _, value := range src.pruneHeights {
+		dst.pruneHeights = append(dst.pruneHeights, value)
+	}
+
+	for _, value := range src.versions {
+		dst.versions = append(dst.versions, value)
+	}
+
+	return dst
+}

@@ -963,13 +963,13 @@ func TestSimulateTx(t *testing.T) {
 		require.Nil(t, err)
 
 		// simulate a message, check gas reported
-		gInfo, result, err := app.Simulate(txBytes, tx)
+		gInfo, result, err := app.Simulate(txBytes, tx, 0)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, gasConsumed, gInfo.GasUsed)
 
 		// simulate again, same result
-		gInfo, result, err = app.Simulate(txBytes, tx)
+		gInfo, result, err = app.Simulate(txBytes, tx, 0)
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		require.Equal(t, gasConsumed, gInfo.GasUsed)

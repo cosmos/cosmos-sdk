@@ -16,6 +16,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
+	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -23,6 +25,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -33,6 +36,10 @@ const (
 
 	// MainStoreKey is the string representation of the main store
 	MainStoreKey = "main"
+
+	// LatestSimulateTxHeight is the height to simulate tx based on the state of latest block height
+	// only for runTxModeSimulate
+	LatestSimulateTxHeight = 0
 )
 
 var (
@@ -523,6 +530,81 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 	return ctx
 }
 
+// retrieve the context for simulating the tx w/ txBytes
+func (app *BaseApp) getContextForSimTx(txBytes []byte, height int64) (sdk.Context, error) {
+	cms, ok := app.cms.(*rootmulti.Store)
+	if !ok {
+		return sdk.Context{}, fmt.Errorf("get context for simulate tx failed!")
+	}
+
+	simCms := *cms.Copy()
+	simCms.LoadVersion(height)
+
+	ms := simCms.CacheMultiStore()
+
+	abciHeader, err := GetABCIHeader(height)
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	simState := &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, abciHeader, true, app.logger).WithMinGasPrices(app.minGasPrices),
+	}
+
+	ctx := simState.ctx.WithTxBytes(txBytes)
+
+	return ctx, nil
+}
+
+func GetABCIHeader(height int64) (abci.Header, error) {
+	laddr := viper.GetString("rpc.laddr")
+	splits := strings.Split(laddr, ":")
+	if len(splits) < 2 {
+		return abci.Header{}, fmt.Errorf("get ABCI header failed!")
+	}
+
+	rpcCli, err := tmhttp.New(fmt.Sprintf("tcp://127.0.0.1:%s", splits[len(splits)-1]), "/websocket")
+	if err != nil {
+		return abci.Header{}, fmt.Errorf("get ABCI header failed!")
+	}
+
+	block, err := rpcCli.Block(&height)
+	if err != nil {
+		return abci.Header{}, fmt.Errorf("get ABCI header failed!")
+	}
+
+	return blockHeaderToABCIHeader(block.Block.Header), nil
+}
+
+func blockHeaderToABCIHeader(header tmtypes.Header) abci.Header {
+	return abci.Header{
+		Version: abci.Version{
+			Block: uint64(header.Version.Block),
+			App: uint64(header.Version.App),
+		},
+		ChainID: header.ChainID,
+		Height: header.Height,
+		Time: header.Time,
+		LastBlockId: abci.BlockID{
+			Hash: header.LastBlockID.Hash,
+			PartsHeader: abci.PartSetHeader{
+				Total: int32(header.LastBlockID.PartsHeader.Total),
+				Hash: header.LastBlockID.PartsHeader.Hash,
+			},
+		},
+		LastCommitHash: header.LastCommitHash,
+		DataHash: header.DataHash,
+		ValidatorsHash: header.ValidatorsHash,
+		NextValidatorsHash: header.NextValidatorsHash,
+		ConsensusHash: header.ConsensusHash,
+		AppHash: header.AppHash,
+		LastResultsHash: header.LastResultsHash,
+		EvidenceHash: header.EvidenceHash,
+		ProposerAddress: header.ProposerAddress,
+	}
+}
+
 // cacheTxContext returns a new context based off of the provided context with
 // a cache wrapped multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
@@ -549,13 +631,22 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 // Note, gas execution info is always returned. A reference to a Result is
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, err error) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx, height int64) (gInfo sdk.GasInfo, result *sdk.Result, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
 	var gasWanted uint64
+	var ctx sdk.Context
+	// simulate tx 
+	if mode == runTxModeSimulate && height > tmtypes.GetStartBlockHeight() && height < app.LastBlockHeight() {
+		ctx, err = app.getContextForSimTx(txBytes, height)
+		if err != nil {
+			return
+		}
+	} else {
+		ctx = app.getContextForTx(mode, txBytes)
+	}
 
-	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining

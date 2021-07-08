@@ -11,15 +11,15 @@ import (
 var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
 func (app *BaseApp) Check(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeCheck, nil, tx)
+	return app.runTx(runTxModeCheck, nil, tx, LatestSimulateTxHeight)
 }
 
-func (app *BaseApp) Simulate(txBytes []byte, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeSimulate, txBytes, tx)
+func (app *BaseApp) Simulate(txBytes []byte, tx sdk.Tx, height int64) (sdk.GasInfo, *sdk.Result, error) {
+	return app.runTx(runTxModeSimulate, txBytes, tx, height)
 }
 
 func (app *BaseApp) Deliver(tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeDeliver, nil, tx)
+	return app.runTx(runTxModeDeliver, nil, tx, LatestSimulateTxHeight)
 }
 
 // Context with current {check, deliver}State of the app used by tests.

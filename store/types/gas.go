@@ -99,7 +99,7 @@ func addUint64Overflow(a, b uint64) (uint64, bool) {
 	return a + b, false
 }
 
-// ConsumeGas allows to add given amount of gas to the gas consumed and panics if it overflows the limit or out of gas.
+// ConsumeGas adds the given amount of gas to the gas consumed and panics if it overflows the limit or out of gas.
 func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	var overflow bool
 	// TODO: Should we set the consumed field after overflow checking?
@@ -173,7 +173,7 @@ func (g *infiniteGasMeter) Limit() Gas {
 	return math.MaxUint64
 }
 
-// ConsumeGas allows to add given amount of gas to the gas consumed and panics if it overflows the limit.
+// ConsumeGas adds the given amount of gas to the gas consumed and panics if it overflows the limit.
 func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	var overflow bool
 	// TODO: Should we set the consumed field after overflow checking?

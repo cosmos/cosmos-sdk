@@ -67,8 +67,8 @@ func ResponseDeliverTx(err error, gw, gu uint64, debug bool) abci.ResponseDelive
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error) abci.ResponseQuery {
-	space, code, log := ABCIInfo(err, false)
+func QueryResult(err error, debug bool) abci.ResponseQuery {
+	space, code, log := ABCIInfo(err, debug)
 	return abci.ResponseQuery{
 		Codespace: space,
 		Code:      code,

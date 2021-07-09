@@ -68,6 +68,9 @@ func (g *basicGasMeter) GasConsumed() Gas {
 }
 
 func (g *basicGasMeter) GasLeft() Gas {
+	if g.IsPastLimit() {
+		return 0
+	}
 	return g.limit - g.consumed
 }
 

@@ -91,6 +91,52 @@ func (suite *HandlerTestSuite) TestMsgCreateVestingAccount() {
 	}
 }
 
+func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
+	ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
+
+	balances := sdk.NewCoins(sdk.NewInt64Coin("test", 1000))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+
+	period := []types.Period{{Length: 5000, Amount: balances}}
+	suite.app.AccountKeeper.SetAccount(ctx, acc1)
+	suite.Require().NoError(simapp.FundAccount(suite.app, ctx, addr1, balances))
+
+	testCases := []struct {
+		name      string
+		msg       *types.MsgCreatePeriodicVestingAccount
+		expectErr bool
+	}{
+		{
+			name:      "continuous vesting account already exists",
+			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, period),
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			res, err := suite.handler(ctx, tc.msg)
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+
+				toAddr, err := sdk.AccAddressFromBech32(tc.msg.ToAddress)
+				suite.Require().NoError(err)
+				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
+				suite.Require().NotNil(accI)
+
+			}
+		})
+	}
+}
+
 func TestHandlerTestSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))
 }

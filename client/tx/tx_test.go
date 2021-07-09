@@ -176,7 +176,7 @@ func TestSign(t *testing.T) {
 	requireT.NoError(err)
 	msg1 := banktypes.NewMsgSend(addr1, sdk.AccAddress("to"), nil)
 	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
-	txb, err := tx.BuildUnsignedTx(txfNoKeybase, msg1, msg2)
+	txb, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 	txb2, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)

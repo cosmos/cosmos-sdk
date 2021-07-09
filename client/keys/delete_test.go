@@ -53,7 +53,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.EqualError(t, err, "blah.info: key not found")
+	require.EqualError(t, err, "blah: key not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{

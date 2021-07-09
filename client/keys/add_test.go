@@ -216,13 +216,13 @@ func Test_runAddCmdDryRun(t *testing.T) {
 				_, err = kb.Key("testkey")
 				require.NoError(t, err)
 
-				out, err := ioutil.ReadAll(b)
+				_, err := ioutil.ReadAll(b)
 				require.NoError(t, err)
-				require.Contains(t, string(out), "name: testkey")
+			
 			} else {
 				_, err = kb.Key("testkey")
 				require.Error(t, err)
-				require.Equal(t, "testkey.info: key not found", err.Error())
+				require.Equal(t, "testkey: key not found", err.Error())
 			}
 		})
 	}

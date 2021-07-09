@@ -54,7 +54,7 @@ func TestMsgSubmitEvidence(t *testing.T) {
 		require.Equal(t, tc.expectErr, tc.msg.ValidateBasic() != nil, "unexpected result for tc #%d", i)
 
 		if !tc.expectErr {
-			require.Equal(t, tc.msg.GetSigners(), []sdk.AccAddress{tc.submitter}, "unexpected result for tc #%d", i)
+			require.Equal(t, tc.msg.GetSigners(), []string{tc.submitter.String()}, "unexpected result for tc #%d", i)
 		}
 	}
 }

@@ -52,7 +52,7 @@ message Supply {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/legacy/v040.SupplyI";
+  option (cosmos_proto.implements_interface) = "*github.com/cosmos/cosmos-sdk/x/bank/migrations/v040.SupplyI";
 
   repeated cosmos.base.v1beta1.Coin total = 1
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

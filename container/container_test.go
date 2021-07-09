@@ -56,11 +56,50 @@ func (ModuleA) Provide(key KVStoreKey) (KeeperA, Handler, Command) {
 
 type ModuleB struct{}
 
-func (ModuleB) Provide(key KVStoreKey, a MsgClientA) (KeeperB, Handler, []Command) {
-	return KeeperB{
-		key:        key,
-		msgClientA: a,
-	}, Handler{}, []Command{{}, {}}
+type BDependencies struct {
+	container.StructArgs
+
+	Key KVStoreKey
+	A   MsgClientA
+}
+
+type BProvides struct {
+	KeeperB  KeeperB
+	Handler  Handler
+	Commands []Command
+}
+
+func (ModuleB) Provide(dependencies BDependencies) BProvides {
+	return BProvides{
+		KeeperB: KeeperB{
+			key:        dependencies.Key,
+			msgClientA: dependencies.A,
+		},
+		Handler:  Handler{},
+		Commands: []Command{{}, {}},
+	}
+}
+
+func TestRun(t *testing.T) {
+	t.Skip("Expecting this test to fail for now")
+	require.NoError(t,
+		container.Run(func(handlers map[container.Scope]Handler, commands []Command, a KeeperA, b KeeperB) {
+			// TODO:
+			// require one Handler for module a and a scopes
+			// require 3 commands
+			// require KeeperA have store key a
+			// require KeeperB have store key b and MsgClientA
+		}),
+		container.AutoGroupTypes(reflect.TypeOf(Command{})),
+		container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
+		container.Provide(
+			ProvideKVStoreKey,
+			ProvideModuleKey,
+			ProvideMsgClientA,
+		),
+		container.ProvideWithScope(container.NewScope("a"), wrapProvideMethod(ModuleA{})),
+		container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
+	)
 }
 
 func wrapProvideMethod(module interface{}) container.ReflectConstructor {
@@ -85,26 +124,4 @@ func wrapProvideMethod(module interface{}) container.ReflectConstructor {
 		},
 		Location: container.LocationFromPC(method.Func.Pointer()),
 	}
-}
-
-func TestRun(t *testing.T) {
-	t.Skip("Expecting this test to fail for now")
-	require.NoError(t,
-		container.Run(func(handlers map[container.Scope]Handler, commands []Command, a KeeperA, b KeeperB) {
-			// TODO:
-			// require one Handler for module a and a scopes
-			// require 3 commands
-			// require KeeperA have store key a
-			// require KeeperB have store key b and MsgClientA
-		}),
-		container.AutoGroupTypes(reflect.TypeOf(Command{})),
-		container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
-		container.Provide(
-			ProvideKVStoreKey,
-			ProvideModuleKey,
-			ProvideMsgClientA,
-		),
-		container.ProvideWithScope(container.NewScope("a"), wrapProvideMethod(ModuleA{})),
-		container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
-	)
 }

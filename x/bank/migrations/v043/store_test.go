@@ -23,10 +23,11 @@ func TestSupplyMigration(t *testing.T) {
 
 	oldFooCoin := sdk.NewCoin("foo", sdk.NewInt(100))
 	oldBarCoin := sdk.NewCoin("bar", sdk.NewInt(200))
+	oldFooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0)) // to ensure the zero denom coins pruned.
 
 	// Old supply was stored as a single blob under the `SupplyKey`.
 	var oldSupply v040bank.SupplyI
-	oldSupply = &types.Supply{Total: sdk.NewCoins(oldFooCoin, oldBarCoin)}
+	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
 	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
 	require.NoError(t, err)
 	store.Set(v040bank.SupplyKey, oldSupplyBz)
@@ -57,6 +58,10 @@ func TestSupplyMigration(t *testing.T) {
 		Amount: amount,
 	}
 	require.Equal(t, oldBarCoin, newBarCoin)
+
+	// foobar shouldn't be existed in the store.
+	bz = supplyStore.Get([]byte("foobar"))
+	require.Nil(t, bz)
 }
 
 func TestBalanceKeysMigration(t *testing.T) {

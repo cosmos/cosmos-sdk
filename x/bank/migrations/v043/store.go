@@ -82,12 +82,12 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec)
 		return err
 	}
 
-	if err := pruneZeroSupply(store); err != nil {
+	if err := migrateSupply(store, cdc); err != nil {
 		return err
 	}
 
 	migrateBalanceKeys(store)
-	return migrateSupply(store, cdc)
+	return pruneZeroSupply(store)
 }
 
 func pruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) error {

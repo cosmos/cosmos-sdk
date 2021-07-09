@@ -10,6 +10,7 @@ func migrateBalances(oldBalances []types.Balance) []types.Balance {
 
 	for _, b := range oldBalances {
 		if !b.Coins.IsZero() {
+			b.Coins = sdk.NewCoins(b.Coins...) // prunes zero denom.
 			balances = append(balances, b)
 		}
 	}
@@ -21,7 +22,7 @@ func MigrateJSON(oldState *types.GenesisState) *types.GenesisState {
 	return &types.GenesisState{
 		Params:        oldState.Params,
 		Balances:      migrateBalances(oldState.Balances),
-		Supply:        sdk.NewCoins(oldState.Supply...), // NewCoins used here to remove zero coin denoms from supply
+		Supply:        sdk.NewCoins(oldState.Supply...), // NewCoins used here to remove zero coin denoms from supply.
 		DenomMetadata: oldState.DenomMetadata,
 	}
 }

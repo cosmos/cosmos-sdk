@@ -1,6 +1,7 @@
 package container_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -57,6 +58,7 @@ func TestRun(t *testing.T) {
 		container.Run(func(handlers []Handler) {
 			// TODO
 		}),
+		container.DefineGroupTypes(reflect.TypeOf(Handler{})),
 		container.Provide(
 			ProvideKVStoreKey,
 			ProvideModuleKey,

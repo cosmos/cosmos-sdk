@@ -41,7 +41,7 @@ type ErrorGasOverflow struct {
 type GasMeter interface {
 	GasConsumed() Gas
 	GasConsumedToLimit() Gas
-	GasLeft() Gas
+	GasRemaining() Gas
 	Limit() Gas
 	ConsumeGas(amount Gas, descriptor string)
 	RefundGas(amount Gas, descriptor string)
@@ -67,7 +67,7 @@ func (g *basicGasMeter) GasConsumed() Gas {
 	return g.consumed
 }
 
-func (g *basicGasMeter) GasLeft() Gas {
+func (g *basicGasMeter) GasRemaining() Gas {
 	if g.IsPastLimit() {
 		return 0
 	}
@@ -153,7 +153,7 @@ func (g *infiniteGasMeter) GasConsumedToLimit() Gas {
 	return g.consumed
 }
 
-func (g *infiniteGasMeter) GasLeft() Gas {
+func (g *infiniteGasMeter) GasRemaining() Gas {
 	return math.MaxUint64
 }
 

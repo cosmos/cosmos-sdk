@@ -256,13 +256,13 @@ func initTestnetFiles(
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 		genFiles = append(genFiles, nodeConfig.GenesisFile())
 
-		// TODO should I make a function for that?
+		// TODO should I make a function for that? or use simapp.MakeTestEncodingConfig().Codec for that?
 		registry := codectypes.NewInterfaceRegistry()
 		cryptocodec.RegisterInterfaces(registry)
 		cdc := codec.NewProtoCodec(registry)
 	
 
-		kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, nodeDir, inBuf, cdc)
+		kb, err := keyring.New(sdk.KeyringServiceName(), args.keyringBackend, nodeDir, inBuf, cdc)
 		if err != nil {
 			return err
 		}

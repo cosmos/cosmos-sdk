@@ -167,7 +167,8 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 
 			kbHome := t.TempDir()
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+			cdc := simapp.MakeTestEncodingConfig().Codec
+			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 			require.NoError(t, err)
 
 			clientCtx := client.Context{}.

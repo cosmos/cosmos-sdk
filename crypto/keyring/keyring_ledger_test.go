@@ -112,7 +112,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 		return
 	}
 	// The mock is available, check that the address is correct
-	require.Equal(t, "some_account", ke.Name)
+	require.Equal(t, "some_account", k.Name)
 	pubKey, err := k.GetPubKey()
 	require.NoError(t, err)
 	expectedPkStr := "PubKeySecp256k1{03602C0CB4D8C0081FEE794BDE96E7B95FA16F2B5283B764AC070584327B2C7202}"

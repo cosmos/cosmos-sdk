@@ -864,29 +864,6 @@ func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
 	require.Error(t, err)
 }
 
-// TODO fixt that
-/*
-got:
-Bob
-key 144c2d0cee3e70ff1300fae2797e9ec182a155c5.address has no infoSuffixProtoUnmarshalRecord continue
-key 812d8daaf6a323038d318e240a5ffd01475bb7bc.address has no infoSuffixProtoUnmarshalRecord continue
-key af7b60b8c0fb782094bbe91250f649fb6742767e.address has no infoSuffixProtoUnmarshalRecord continue
-Alice
-Bob
-Carl
-ProtoUnmarshalRecord continue
-ProtoUnmarshalRecord continue
-signed by Bob
-want:
-Bob
-Alice
-Bob
-Carl
-signed by Bob
-FAIL
-FAIL	github.com/cosmos/cosmos-sdk/crypto/keyring	0.055s
-FAIL
-*/
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
 	encCfg := simapp.MakeTestEncodingConfig()

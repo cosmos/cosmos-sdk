@@ -47,7 +47,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(simapp.DefaultNodeHome).
 		WithViper(""). // In simapp, we don't use any prefix for env variables.
-		WithCodec(encodingConfig.Marshaler)
+		WithCodec(encodingConfig.Codec)
 
 	rootCmd := &cobra.Command{
 		Use:   "simd",

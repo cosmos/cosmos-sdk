@@ -1,6 +1,7 @@
 package v043
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -20,7 +21,7 @@ func MigrateJSON(oldState *types.GenesisState) *types.GenesisState {
 	return &types.GenesisState{
 		Params:        oldState.Params,
 		Balances:      migrateBalances(oldState.Balances),
-		Supply:        oldState.Supply,
+		Supply:        sdk.NewCoins(oldState.Supply...), // NewCoins used here to remove zero coin denoms from supply
 		DenomMetadata: oldState.DenomMetadata,
 	}
 }

@@ -78,20 +78,51 @@ func migrateBalanceKeys(store sdk.KVStore) {
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 
+	if err := pruneZeroBalances(store, cdc); err != nil {
+		return err
+	}
+
+	if err := pruneZeroSupply(store); err != nil {
+		return err
+	}
+
 	migrateBalanceKeys(store)
 	return migrateSupply(store, cdc)
 }
 
-func PruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) {
+func pruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	balancesStore := prefix.NewStore(store, BalancesPrefix)
 	iterator := balancesStore.Iterator(nil, nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		var balance sdk.Coin
-		cdc.MustUnmarshal(iterator.Value(), &balance)
+		if err := cdc.Unmarshal(iterator.Value(), &balance); err != nil {
+			return err
+		}
+
 		if balance.Amount.IsZero() {
 			balancesStore.Delete(iterator.Key())
 		}
 	}
+	return nil
+}
+
+func pruneZeroSupply(store sdk.KVStore) error {
+	supplyStore := prefix.NewStore(store, SupplyKey)
+	iterator := supplyStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var amount sdk.Int
+		if err := amount.Unmarshal(iterator.Value()); err != nil {
+			return err
+		}
+
+		if amount.IsZero() {
+			supplyStore.Delete(iterator.Key())
+		}
+	}
+
+	return nil
 }

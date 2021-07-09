@@ -78,8 +78,6 @@ type Keyring interface {
 	// It fails if there is an existing key Info with the same address.
 	NewAccount(uid, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error)
 
-	ProtoUnmarshalRecord([]byte) (*Record, error)
-
 	// SaveLedgerKey retrieves a public key reference from a Ledger device and persists it.
 	SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error)
 
@@ -146,7 +144,7 @@ type Setter interface {
 // used in migration_test.go
 type Marshaler interface {
 	ProtoMarshalRecord(k *Record) ([]byte, error)
-	MarshalPrivKey(priv types.PrivKey) ([]byte, error)
+	ProtoUnmarshalRecord(bz []byte) (*Record, error)
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -488,7 +486,7 @@ func (ks keystore) List() ([]*Record, error) {
 
 	sort.Strings(keys)
 	for _, key := range keys {
-		if !strings.HasSuffix(key, infoSuffix) {
+		if strings.Contains(key, "address") {
 			continue
 		}
 
@@ -562,7 +560,7 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 	// if found
 	address := sdk.AccAddress(privKey.PubKey().Address())
 	if _, err := ks.KeyByAddress(address); err == nil {
-		return nil, err
+		return nil, errors.New("duplicated address created")
 	}
 
 	return ks.writeLocalKey(name, privKey)
@@ -759,7 +757,6 @@ func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, e
 		return nil, err
 	}
 
-
 	localRecordItem := NewLocalRecordItem(localRecord)
 	return ks.newRecord(name, privKey.PubKey(), localRecordItem)
 }
@@ -772,7 +769,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	key := k.Name
 
-	exists, err := ks.existsInDb(addr, key)
+	exists, err := ks.existsInDb(addr, string(key))
 	if err != nil {
 		return err
 	}
@@ -786,7 +783,7 @@ func (ks keystore) writeRecord(k *Record) error {
 	}
 
 	item := keyring.Item{
-		Key:  string(key),
+		Key:  key,
 		Data: serializedRecord,
 	}
 
@@ -849,7 +846,6 @@ func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (
 
 func (ks keystore) MigrateAll() (bool, error) {
 	var migrated bool
-
 	keys, err := ks.db.Keys()
 	if err != nil {
 		return migrated, fmt.Errorf("Keys() error, err: %s", err)
@@ -861,6 +857,10 @@ func (ks keystore) MigrateAll() (bool, error) {
 	}
 
 	for _, key := range keys {
+		if strings.Contains(key, "address") {
+			continue
+		}
+
 		migrated, err = ks.Migrate(key)
 		if err != nil {
 			fmt.Printf("migrate err: %q", err)
@@ -888,7 +888,7 @@ func (ks keystore) Migrate(key string) (bool, error) {
 		return migrated, nil
 	}
 
-	legacyInfo, err := unMarshalInfo(item.Data)
+	legacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
 		return migrated, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 	}
@@ -921,6 +921,7 @@ func (ks keystore) ProtoUnmarshalRecord(bz []byte) (*Record, error) {
 	if err := ks.cdc.Unmarshal(bz, k); err != nil {
 		return nil, err
 	}
+
 	return k, nil
 }
 

@@ -254,7 +254,7 @@ func MarshalInfo(i LegacyInfo) []byte {
 }
 
 // decoding info
-func unMarshalInfo(bz []byte) (info LegacyInfo, err error) {
+func unMarshalLegacyInfo(bz []byte) (info LegacyInfo, err error) {
 	err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err

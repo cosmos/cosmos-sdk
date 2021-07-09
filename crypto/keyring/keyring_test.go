@@ -57,11 +57,13 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "foo", re.Name)
 }
 
-// TODO do we require lines 91,92?
+
 func TestKeyManagementKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New("keybasename", "test", t.TempDir(), nil, encCfg.Codec)
 	require.NoError(t, err)
+	require.NotNil(t, encCfg.Codec)
+	t.Log("encCfg.Codec", encCfg.Codec)
 
 	algo := hd.Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -83,8 +85,9 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.Equal(t, n1, kr.Name)
 
 	// save localKey with "n2"
-	_, _, err = kb.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
+	kr2, _, err := kb.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.NoError(t, err)
+	require.Equal(t, n2, kr2.Name)
 
 	r2, err := kb.Key(n2)
 	require.NoError(t, err)
@@ -97,7 +100,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	addr, err = sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
 	_, err = kb.KeyByAddress(addr)
-	require.NotNil(t, err)
+	require.Error(t, err)
 
 	// list shows them in order
 	keyS, err := kb.List()
@@ -154,25 +157,11 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, kb.Delete(n2))
 }
 
-// TODO fix that with Amaury
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
 	
 	encCfg := simapp.MakeTestEncodingConfig()
 	cdc := encCfg.Codec
-
-	//registry := codectypes.NewInterfaceRegistry()
-	//cryptocodec.RegisterInterfaces(registry)
-	//cdc := codec.NewProtoCodec(registry)
-
-
-	/*
-
-	types.Privkey in marshalInterface (converts to any, marshal any to bytes)
-	from bytes iu se unMarshsalInterfaceconv ertsto  any andthent totypes .PrivKey
-
-
-	*/
 
 	kb, err := keyring.New("keybasename", "test", dir, nil, cdc)
 	require.NoError(t, err)
@@ -196,7 +185,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	// try signing both data with both ..
 	s11, pub1, err := kb.Sign(n1, d1)
-	require.NoError(t, err) // TODO fix extractPrivKeyFromLocal Unable to cast any to cryptotypes.PrivKey
+	require.NoError(t, err)
 
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)
@@ -454,7 +443,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 
 	// try export non existing key
 	_, err = kb.ExportPrivKeyArmor("john3", "wrongpassword")
-	require.EqualError(t, err, "Get error, err - The specified item could not be found in the keyring")
+	require.EqualError(t, err, "john3: key not found")
 }
 
 func TestInMemoryLanguage(t *testing.T) {

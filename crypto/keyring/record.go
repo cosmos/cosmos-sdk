@@ -88,7 +88,6 @@ func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 		return err
 	}
 
-	fmt.Println("UnpackInterfaces on Record")
 	if l := k.GetLocal(); l != nil {
 		var priv cryptotypes.PrivKey
 		return unpacker.UnpackAny(l.PrivKey, &priv)
@@ -97,76 +96,6 @@ func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return nil
 }
 
-// encoding info
-// we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on reystore
-/*
-func protoMarshalInfo(i Info) ([]byte, error) {
-	re, ok := i.(*Record)
-	if !ok {
-		return nil, fmt.Errorf("Unable to cast Info to *Record")
-	}
-
-	bz, err := proto.Marshal(re)
-	if err != nil {
-		return nil, sdrerrors.Wrap(err, "Unable to marshal Record to bytes")
-	}
-
-	return bz, nil
-}
-*/
-
-// decoding info
-// we remove tis function aso we can pass cdc.Marrshal install ,we put cdc on reystore
-/*
-func protoUnMarshalInfo(bz []byte, cdc codec.Codec) (Info, error) {
-
-	var k Record // will not work cause we use any, use InterfaceRegistry
-	// dont forget to merge master to my branch, UnmarshalBinaryBare has been renamed
-	// cdcc.Marshaler.UnmarshalBinaryBare()  // lire proto.UnMarshal but works with Any
-	if err := cdc.UnmarshalInterface(bz, &re); err != nil {
-		return nil, sdrerrors.Wrap(err, "failed to unmarshal bytes to Info")
-	}
-
-	return re, nil
-}
-
-
-
-func NewBIP44Params(purpose uint32, coinType uint32, account uint32, change bool, adressIndex uint32) *BIP44Params {
-	return &BIP44Params{purpose, coinType, account, change, adressIndex}
-}
-
-// DerivationPath returns the BIP44 fields as an array.
-func (p hd.BIP44Params) DerivationPath() []uint32 {
-	change := uint32(0)
-	if p.Change {
-		change = 1
-	}
-
-	return []uint32{
-		p.Purpose,
-		p.Cointype,
-		p.Account,
-		change,
-		p.Adressindex,
-	}
-}
-
-func (p BIP44Params) String() string {
-	var changeStr string
-	if p.Change {
-		changeStr = "1"
-	} else {
-		changeStr = "0"
-	}
-	return fmt.Sprintf("m/%d'/%d'/%d'/%s/%d",
-		p.Purpose,
-		p.Cointype,
-		p.Account,
-		changeStr,
-		p.Adressindex)
-}
-*/
 
 func ExtractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	rl := k.GetLocal()

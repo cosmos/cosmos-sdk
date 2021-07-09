@@ -13,6 +13,7 @@ import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
 	channeltypes "github.com/cosmos/cosmos-sdk/x/ibc/core/04-channel/types"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/core/24-host"
+	coretypes "github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 )
 
 // SendTransfer handles transfer sending logic. There are 2 possible cases:
@@ -101,8 +102,8 @@ func (k Keeper) SendTransfer(
 	}
 
 	labels := []metrics.Label{
-		telemetry.NewLabel("destination-port", destinationPort),
-		telemetry.NewLabel("destination-channel", destinationChannel),
+		telemetry.NewLabel(coretypes.LabelDestinationPort, destinationPort),
+		telemetry.NewLabel(coretypes.LabelDestinationChannel, destinationChannel),
 	}
 
 	// NOTE: SendTransfer simply sends the denomination as it exists on its own
@@ -110,7 +111,7 @@ func (k Keeper) SendTransfer(
 	// prefixing as necessary.
 
 	if types.SenderChainIsSource(sourcePort, sourceChannel, fullDenomPath) {
-		labels = append(labels, telemetry.NewLabel("source", "true"))
+		labels = append(labels, telemetry.NewLabel(coretypes.LabelSource, "true"))
 
 		// create the escrow address for the tokens
 		escrowAddress := types.GetEscrowAddress(sourcePort, sourceChannel)
@@ -123,7 +124,7 @@ func (k Keeper) SendTransfer(
 		}
 
 	} else {
-		labels = append(labels, telemetry.NewLabel("source", "false"))
+		labels = append(labels, telemetry.NewLabel(coretypes.LabelSource, "false"))
 
 		// transfer the coins to the module account and burn them
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(
@@ -165,7 +166,7 @@ func (k Keeper) SendTransfer(
 		telemetry.SetGaugeWithLabels(
 			[]string{"tx", "msg", "ibc", "transfer"},
 			float32(token.Amount.Int64()),
-			[]metrics.Label{telemetry.NewLabel("denom", fullDenomPath)},
+			[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, fullDenomPath)},
 		)
 
 		telemetry.IncrCounterWithLabels(
@@ -200,8 +201,8 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 	}
 
 	labels := []metrics.Label{
-		telemetry.NewLabel("source-port", packet.GetSourcePort()),
-		telemetry.NewLabel("source-channel", packet.GetSourceChannel()),
+		telemetry.NewLabel(coretypes.LabelSourcePort, packet.GetSourcePort()),
+		telemetry.NewLabel(coretypes.LabelSourceChannel, packet.GetSourceChannel()),
 	}
 
 	// This is the prefix that would have been prefixed to the denomination
@@ -244,14 +245,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 			telemetry.SetGaugeWithLabels(
 				[]string{"ibc", types.ModuleName, "packet", "receive"},
 				float32(data.Amount),
-				[]metrics.Label{telemetry.NewLabel("denom", unprefixedDenom)},
+				[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, unprefixedDenom)},
 			)
 
 			telemetry.IncrCounterWithLabels(
 				[]string{"ibc", types.ModuleName, "receive"},
 				1,
 				append(
-					labels, telemetry.NewLabel("source", "true"),
+					labels, telemetry.NewLabel(coretypes.LabelSource, "true"),
 				),
 			)
 		}()
@@ -303,14 +304,14 @@ func (k Keeper) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, data t
 		telemetry.SetGaugeWithLabels(
 			[]string{"ibc", types.ModuleName, "packet", "receive"},
 			float32(data.Amount),
-			[]metrics.Label{telemetry.NewLabel("denom", data.Denom)},
+			[]metrics.Label{telemetry.NewLabel(coretypes.LabelDenom, data.Denom)},
 		)
 
 		telemetry.IncrCounterWithLabels(
 			[]string{"ibc", types.ModuleName, "receive"},
 			1,
 			append(
-				labels, telemetry.NewLabel("source", "false"),
+				labels, telemetry.NewLabel(coretypes.LabelSource, "false"),
 			),
 		)
 	}()

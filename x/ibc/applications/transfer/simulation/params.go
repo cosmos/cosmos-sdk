@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -19,13 +18,13 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeySendEnabled),
 			func(r *rand.Rand) string {
 				sendEnabled := RadomEnabled(r)
-				return fmt.Sprintf("%s", types.ModuleCdc.MustMarshalJSON(&gogotypes.BoolValue{Value: sendEnabled}))
+				return string(types.ModuleCdc.MustMarshalJSON(&gogotypes.BoolValue{Value: sendEnabled}))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, string(types.KeyReceiveEnabled),
 			func(r *rand.Rand) string {
 				receiveEnabled := RadomEnabled(r)
-				return fmt.Sprintf("%s", types.ModuleCdc.MustMarshalJSON(&gogotypes.BoolValue{Value: receiveEnabled}))
+				return string(types.ModuleCdc.MustMarshalJSON(&gogotypes.BoolValue{Value: receiveEnabled}))
 			},
 		),
 	}

@@ -81,3 +81,17 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec)
 	migrateBalanceKeys(store)
 	return migrateSupply(store, cdc)
 }
+
+func PruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) {
+	balancesStore := prefix.NewStore(store, BalancesPrefix)
+	iterator := balancesStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var balance sdk.Coin
+		cdc.MustUnmarshal(iterator.Value(), &balance)
+		if balance.Amount.IsZero() {
+			balancesStore.Delete(iterator.Key())
+		}
+	}
+}

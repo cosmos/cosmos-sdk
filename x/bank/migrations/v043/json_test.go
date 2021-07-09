@@ -2,7 +2,6 @@ package v043_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -89,8 +88,6 @@ func TestMigrateJSON(t *testing.T) {
 		}
 	]
 }`
-
-	fmt.Println(string(indentedBz))
 
 	require.Equal(t, expected, string(indentedBz))
 }

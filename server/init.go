@@ -20,7 +20,7 @@ func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error)
 	}
 	addr, err := k.GetAddress()
 	if err != nil {
-		return nil,"",err
+		return nil, "", err
 	}
 	return addr, secret, nil
 }
@@ -56,7 +56,7 @@ func GenerateSaveCoinKey(keybase keyring.Keyring, keyName string, overwrite bool
 
 	addr, err := k.GetAddress()
 	if err != nil {
-		return nil,"",err
+		return nil, "", err
 	}
 
 	return addr, secret, nil

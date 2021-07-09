@@ -24,7 +24,7 @@ func GetTxCmd() *cobra.Command {
 		Short:                      "Vesting transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(

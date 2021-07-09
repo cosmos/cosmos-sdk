@@ -33,7 +33,7 @@ func NewTxCmd() *cobra.Command {
 		Short:                      "Distribution transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	distTxCmd.AddCommand(

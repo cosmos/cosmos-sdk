@@ -218,7 +218,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 
 				_, err := ioutil.ReadAll(b)
 				require.NoError(t, err)
-			
+
 			} else {
 				_, err = kb.Key("testkey")
 				require.Error(t, err)

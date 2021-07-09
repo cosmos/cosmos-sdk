@@ -235,7 +235,6 @@ func (ctx Context) WithViper(prefix string) Context {
 	return ctx
 }
 
-
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -347,7 +346,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 	if err != nil {
 		return nil, "", 0, err
 	}
-	
+
 	return addr, k.Name, k.GetType(), nil
 }
 

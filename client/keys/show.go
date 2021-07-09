@@ -80,15 +80,14 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		multisigThreshold, _ := cmd.Flags().GetInt(flagMultiSigThreshold)
-		
+
 		if err := validateMultisigThreshold(multisigThreshold, len(args)); err != nil {
 			return err
 		}
-	
+
 		multikey := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
 		emptyRecord := keyring.NewEmptyRecord()
 		emptyRecordItem := keyring.NewEmptyRecordItem(emptyRecord)
-
 
 		k, err = keyring.NewRecord(k.Name, multikey, emptyRecordItem)
 		if err != nil {

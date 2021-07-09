@@ -17,7 +17,7 @@ func NewTxCmd() *cobra.Command {
 		Short:                      "Slashing transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	slashingTxCmd.AddCommand(NewUnjailTxCmd())

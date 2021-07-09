@@ -26,7 +26,7 @@ func GetQueryCmd() *cobra.Command {
 		Short:                      "Querying commands for the bank module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	cmd.AddCommand(

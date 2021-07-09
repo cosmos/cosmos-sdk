@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	design99keyring "github.com/99designs/keyring"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -15,7 +17,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/stretchr/testify/require"
 )
 
 // TODO add keys for migration
@@ -31,7 +32,7 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	require := require.New(t)
 
-    // instantiate keyring
+	// instantiate keyring
 	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
@@ -45,7 +46,6 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	require.NoError(err)
 	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
 
-	
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{
 		Key:         n1,
@@ -78,19 +78,19 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 	require := require.New(t)
 
-    // instantiate keyring
+	// instantiate keyring
 	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
 	privKey := cryptotypes.PrivKey(priv)
-	localRecord, err := keyring.NewLocalRecord(privKey) 
+	localRecord, err := keyring.NewLocalRecord(privKey)
 	require.NoError(err)
 	localRecordItem := keyring.NewLocalRecordItem(localRecord)
 	k, err := keyring.NewRecord("test record", priv.PubKey(), localRecordItem)
 	serializedRecord, err := encCfg.Codec.Marshal(k)
 	require.NoError(err)
-	
+
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{
 		Key:         n1,
@@ -115,7 +115,6 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 	require.NoError(cmd.ExecuteContext(ctx))
 }
 
-
 func Test_runMigrateCmdErr(t *testing.T) {
 	require := require.New(t)
 	kbHome := t.TempDir()
@@ -134,5 +133,3 @@ func Test_runMigrateCmdErr(t *testing.T) {
 	err := cmd.ExecuteContext(ctx)
 	require.NoError(err)
 }
-
-

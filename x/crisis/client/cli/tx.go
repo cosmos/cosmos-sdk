@@ -18,7 +18,7 @@ func NewTxCmd() *cobra.Command {
 		Short:                      "Crisis transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(NewMsgVerifyInvariantTxCmd())

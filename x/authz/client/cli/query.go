@@ -22,7 +22,7 @@ func GetQueryCmd() *cobra.Command {
 		Long:                       "",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	authorizationQueryCmd.AddCommand(

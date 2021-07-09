@@ -231,8 +231,8 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 		home := copyTestData(s.T(), "download")
 
 		cfg := &cosmovisor.Config{
-			Home:                  home,
-			Name:                  "autod",
+			Home: home,
+			Name: "autod",
 			AllowDownloadBinaries: true,
 		}
 

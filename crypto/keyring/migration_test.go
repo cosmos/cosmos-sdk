@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	design99keyring "github.com/99designs/keyring"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -12,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/stretchr/testify/require"
 )
 
 const n1 = "cosmos"
@@ -69,7 +70,6 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	legacyLedgerInfo := keyring.NewLegacyLedgerInfo(n1, pub, *hdPath, hd.Secp256k1.Name())
 	serializedLegacyLedgerInfo := keyring.MarshalInfo(legacyLedgerInfo)
-
 
 	item := design99keyring.Item{
 		Key:         n1,
@@ -154,7 +154,7 @@ func TestMigrateLocalRecord(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	cdc := simapp.MakeTestEncodingConfig().Codec
-	
+
 	require := require.New(t)
 	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
@@ -242,7 +242,6 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 
 	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
-
 
 	item = design99keyring.Item{
 		Key:         n1,

@@ -64,7 +64,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	pub2, err := account2.GetPubKey()
 	s.Require().NoError(err)
-	
+
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
 	_, err = kb.SaveMultisig("multi", multi)
 	s.Require().NoError(err)
@@ -326,7 +326,7 @@ func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 
 	sendTokens := sdk.NewCoin(s.cfg.BondDenom, sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction))
 
-	addr,err := account.GetAddress()
+	addr, err := account.GetAddress()
 	s.Require().NoError(err)
 	normalGeneratedTx, err := s.createBankMsg(val1, addr,
 		sdk.NewCoins(sendTokens), fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
@@ -471,7 +471,7 @@ func (s *IntegrationTestSuite) TestCLIMultisignInsufficientCosigners() {
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
-	addr,err  := multisigRecord.GetAddress()
+	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 	// Send coins from validator to multisig.
 	_, err = s.createBankMsg(

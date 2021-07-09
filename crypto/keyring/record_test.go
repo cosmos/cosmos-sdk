@@ -91,7 +91,6 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	*/
 }
 
-
 /* TODO implement tests
 TestNewRecordGetItem
 input: name, anyPub, a)Empty b)Local 3)ledger
@@ -115,7 +114,7 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 	privKey := cryptotypes.PrivKey(priv)
-	
+
 	// use proto serialize
 	localRecord, err := keyring.NewLocalRecord(privKey)
 	require.NoError(err)
@@ -123,8 +122,6 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 
 	k, err := keyring.NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
-
-	
 
 	privKey2, err := keyring.ExtractPrivKeyFromRecord(k)
 	require.NoError(err)
@@ -135,9 +132,9 @@ func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
 	require := require.New(t)
 
 	/*
-	registry := codectypes.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	cdc := codec.NewProtoCodec(registry)
+		registry := codectypes.NewInterfaceRegistry()
+		cryptocodec.RegisterInterfaces(registry)
+		cdc := codec.NewProtoCodec(registry)
 	*/
 
 	priv := ed25519.GenPrivKey()
@@ -153,7 +150,6 @@ func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
 	require.Error(err)
 	require.Nil(privKey2)
 }
-
 
 // TODO fix that
 /*

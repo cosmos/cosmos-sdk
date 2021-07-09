@@ -22,7 +22,7 @@ func Test_runImportCmd(t *testing.T) {
 
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
-	
+
 	encCfg := simapp.MakeTestEncodingConfig()
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
 

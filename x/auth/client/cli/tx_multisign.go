@@ -174,7 +174,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				Tx:   stdTx,
 				Mode: "block|sync|async",
 			}
-			
+
 			json, _ = clientCtx.LegacyAmino.MarshalJSON(req)
 
 		} else {

@@ -7,13 +7,16 @@ import (
 	"testing"
 
 	keyring99designs "github.com/99designs/keyring"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	//"github.com/cosmos/cosmos-sdk/codec"
 	//codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	//cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	bip39 "github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -21,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bip39 "github.com/cosmos/go-bip39"
 )
 
 // TODO set proper naming k for Record
@@ -56,7 +58,6 @@ func TestNewKeyring(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "foo", re.Name)
 }
-
 
 func TestKeyManagementKeyRing(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
@@ -159,7 +160,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
-	
+
 	encCfg := simapp.MakeTestEncodingConfig()
 	cdc := encCfg.Codec
 
@@ -173,10 +174,8 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	kr1, _, err := kb.NewMnemonic(n1, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
 
-	
 	kr2, _, err := kb.NewMnemonic(n2, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	require.Nil(t, err)
-	
 
 	// let's try to sign some messages
 	d1 := []byte("my first message")

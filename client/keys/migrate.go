@@ -1,13 +1,10 @@
 package keys
 
 import (
-
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client"
-
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // migratePassphrase is used as a no-op migration key passphrase as a passphrase
@@ -47,8 +44,7 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 	if _, err := clientCtx.Keyring.MigrateAll(); err != nil {
 		return err
 	}
-	
-	return nil
 
+	return nil
 
 }

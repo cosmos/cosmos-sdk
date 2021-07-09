@@ -17,7 +17,7 @@ func NewTxCmd() *cobra.Command {
 		Short:                      "Bank transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
+		RunE: client.ValidateCmd,
 	}
 
 	txCmd.AddCommand(NewSendTxCmd())

@@ -23,7 +23,6 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	return &Record{name, any, item}, nil
 }
 
-
 func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
 	return &Record_Local_{localRecord}
 }
@@ -96,7 +95,6 @@ func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return nil
 }
 
-
 func ExtractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	rl := k.GetLocal()
 	if rl == nil {
@@ -125,7 +123,5 @@ func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
 		return nil, errors.New("Unable to cast any to cryptotypes.PrivKey")
 	}
 
-	return priv,nil
+	return priv, nil
 }
-
-

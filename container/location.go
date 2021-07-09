@@ -27,7 +27,13 @@ import (
 	"strings"
 )
 
-type Location struct {
+type Location interface {
+	isLocation()
+	fmt.Stringer
+	fmt.Formatter
+}
+
+type location struct {
 	name string
 	pkg  string
 	file string
@@ -38,7 +44,7 @@ func LocationFromPC(pc uintptr) Location {
 	f := runtime.FuncForPC(pc)
 	pkgName, funcName := splitFuncName(f.Name())
 	fileName, lineNum := f.FileLine(pc)
-	return Location{
+	return &location{
 		name: funcName,
 		pkg:  pkgName,
 		file: fileName,
@@ -46,14 +52,18 @@ func LocationFromPC(pc uintptr) Location {
 	}
 }
 
+func (f *location) isLocation() {
+	panic("implement me")
+}
+
 // String returns a string representation of the function.
-func (f Location) String() string {
+func (f *location) String() string {
 	return fmt.Sprint(f)
 }
 
 // Format implements fmt.Formatter for Func, printing a single-line
 // representation for %v and a multi-line one for %+v.
-func (f Location) Format(w fmt.State, c rune) {
+func (f *location) Format(w fmt.State, c rune) {
 	if w.Flag('+') && c == 'v' {
 		// "path/to/package".MyFunction
 		// 	path/to/file.go:42

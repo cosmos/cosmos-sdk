@@ -48,21 +48,55 @@ func ProvideMsgClientA(key ModuleKey) MsgClientA {
 	return MsgClientA{key}
 }
 
-func ProvideKeeperA(key KVStoreKey) (KeeperA, Handler, Command) {
+type ModuleA struct{}
+
+func (ModuleA) Provide(key KVStoreKey) (KeeperA, Handler, Command) {
 	return KeeperA{key}, Handler{}, Command{}
 }
 
-func ProvideKeeperB(key KVStoreKey, a MsgClientA) (KeeperB, Handler, []Command) {
+type ModuleB struct{}
+
+func (ModuleB) Provide(key KVStoreKey, a MsgClientA) (KeeperB, Handler, []Command) {
 	return KeeperB{
 		key:        key,
 		msgClientA: a,
 	}, Handler{}, []Command{{}, {}}
 }
 
+func wrapProvideMethod(module interface{}) container.ReflectConstructor {
+	method := reflect.TypeOf(module).Method(0)
+	methodTy := method.Type
+	var in []reflect.Type
+	var out []reflect.Type
+
+	for i := 1; i < methodTy.NumIn(); i++ {
+		in = append(in, methodTy.In(i))
+	}
+	for i := 0; i < methodTy.NumOut(); i++ {
+		out = append(out, methodTy.Out(i))
+	}
+
+	return container.ReflectConstructor{
+		In:  in,
+		Out: out,
+		Fn: func(values []reflect.Value) []reflect.Value {
+			values = append([]reflect.Value{reflect.ValueOf(module)}, values...)
+			return method.Func.Call(values)
+		},
+		Location: container.LocationFromPC(method.Func.Pointer()),
+	}
+}
+
 func TestRun(t *testing.T) {
 	t.Skip("Expecting this test to fail for now")
 	require.NoError(t,
-		container.Run(func(handlers map[container.Scope]Handler, commands []Command) {}),
+		container.Run(func(handlers map[container.Scope]Handler, commands []Command, a KeeperA, b KeeperB) {
+			// TODO:
+			// require one Handler for module a and a scopes
+			// require 3 commands
+			// require KeeperA have store key a
+			// require KeeperB have store key b and MsgClientA
+		}),
 		container.AutoGroupTypes(reflect.TypeOf(Command{})),
 		container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
 		container.Provide(
@@ -70,7 +104,7 @@ func TestRun(t *testing.T) {
 			ProvideModuleKey,
 			ProvideMsgClientA,
 		),
-		container.ProvideWithScope(container.NewScope("a"), ProvideKeeperA),
-		container.ProvideWithScope(container.NewScope("b"), ProvideKeeperB),
+		container.ProvideWithScope(container.NewScope("a"), wrapProvideMethod(ModuleA{})),
+		container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
 	)
 }

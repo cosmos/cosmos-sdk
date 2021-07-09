@@ -32,7 +32,7 @@ type key struct {
 }
 
 type node struct {
-	Provider
+	provider
 	called bool
 	values []reflect.Value
 	err    error
@@ -42,7 +42,7 @@ type node struct {
 // to receive scoped dependencies and gain access to general dependencies within
 // its security policy. Access to dependencies provided by this provider can optionally
 // be restricted to certain scopes based on SecurityCheckers.
-type Provider struct {
+type provider struct {
 	// Constructor provides the dependencies
 	Constructor func(deps []reflect.Value, scope Scope) ([]reflect.Value, error)
 
@@ -59,7 +59,7 @@ type Provider struct {
 }
 
 type scopeNode struct {
-	Provider
+	provider
 	calledForScope map[Scope]bool
 	valuesForScope map[Scope][]reflect.Value
 	errsForScope   map[Scope]error

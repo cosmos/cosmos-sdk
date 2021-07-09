@@ -2,9 +2,8 @@ package container
 
 import "reflect"
 
-type Option struct {
-	prepare func(*container)
-	provide func(*container)
+type Option interface {
+	isOption()
 }
 
 func Provide(constructors ...interface{}) Option {

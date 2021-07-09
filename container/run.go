@@ -1,5 +1,7 @@
 package container
 
+import "fmt"
+
 func Run(invoker interface{}, opts ...Option) error {
-	panic("TODO")
+	return fmt.Errorf("not implemented")
 }

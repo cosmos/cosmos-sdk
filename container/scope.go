@@ -1,13 +1,21 @@
 package container
 
-type Scope struct {
-	name string
+type Scope interface {
+	isScope()
+
+	Name() string
 }
 
 func NewScope(name string) Scope {
-	return Scope{name: name}
+	return &scope{name: name}
 }
 
-func (s Scope) Name() string {
+type scope struct {
+	name string
+}
+
+func (s *scope) isScope() {}
+
+func (s *scope) Name() string {
 	return s.name
 }

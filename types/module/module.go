@@ -30,7 +30,6 @@ package module
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

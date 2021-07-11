@@ -1095,6 +1095,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 		val0.ClientCtx,
 		signedTxFile.Name(),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 200000),
 	)
 
 	require.NoError(err)

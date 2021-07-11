@@ -425,9 +425,6 @@ func getMultisigRecord(clientCtx client.Context, name string) (*keyring.Record, 
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting keybase multisig account")
 	}
-	if multisigRecord.GetType() != keyring.TypeMulti {
-		return nil, fmt.Errorf("%q must be of type %s: %s", name, keyring.TypeMulti, multisigRecord.GetType())
-	}
 
 	return multisigRecord, nil
 }

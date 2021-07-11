@@ -86,9 +86,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
 	val := s.network.Validators[0]
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	return sdk.AccAddress(info.GetPubKey().Address())
+
+	addr,_ := k.GetAddress()
+	return addr
 }
 
 func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {

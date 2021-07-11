@@ -60,13 +60,13 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Codec)
 	require.NoError(t, err)
 
-	ke1, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
+	k, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
 	if err != nil {
 		require.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
-	require.Equal(t, "key", ke1.Name)
+	require.Equal(t, "key", k.Name)
 
 	d1 := []byte("my first message")
 	s1, pub1, err := kb.Sign("key", d1)

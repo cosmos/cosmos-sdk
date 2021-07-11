@@ -3,6 +3,8 @@ package vesting
 import (
 	"context"
 
+	"github.com/armon/go-metrics"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"

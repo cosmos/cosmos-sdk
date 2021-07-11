@@ -30,6 +30,7 @@ package module
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -298,10 +299,12 @@ func (m *Manager) RegisterServices(cfg Configurator) {
 // InitGenesis performs init genesis functionality for modules
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) abci.ResponseInitChain {
 	var validatorUpdates []abci.ValidatorUpdate
+	ctx.Logger().Info("Initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
 		if genesisData[moduleName] == nil {
 			continue
 		}
+		ctx.Logger().Debug(fmt.Sprintf("Running initialization for module %s", moduleName))
 
 		moduleValUpdates := m.Modules[moduleName].InitGenesis(ctx, cdc, genesisData[moduleName])
 

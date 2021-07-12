@@ -221,10 +221,10 @@
     - [BIP44Params](#cosmos.crypto.hd.BIP44Params)
   
 - [cosmos/crypto/keyring/types.proto](#cosmos/crypto/keyring/types.proto)
-    - [Record](#cosmos.crypto.keyring.Record)
-    - [Record.Empty](#cosmos.crypto.keyring.Record.Empty)
-    - [Record.Ledger](#cosmos.crypto.keyring.Record.Ledger)
-    - [Record.Local](#cosmos.crypto.keyring.Record.Local)
+    - [Record](#cosmos.crypto.keyring.v1.Record)
+    - [Record.Empty](#cosmos.crypto.keyring.v1.Record.Empty)
+    - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
+    - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
   
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
@@ -3403,7 +3403,7 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
-<a name="cosmos.crypto.keyring.Record"></a>
+<a name="cosmos.crypto.keyring.v1.Record"></a>
 
 ### Record
 
@@ -3413,16 +3413,16 @@ then you must create a new proto message and follow ADR-28 for Address construct
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
 | `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `local` | [Record.Local](#cosmos.crypto.keyring.Record.Local) |  |  |
-| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.Record.Ledger) |  |  |
-| `empty` | [Record.Empty](#cosmos.crypto.keyring.Record.Empty) |  |  |
+| `local` | [Record.Local](#cosmos.crypto.keyring.v1.Record.Local) |  |  |
+| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  |  |
+| `empty` | [Record.Empty](#cosmos.crypto.keyring.v1.Record.Empty) |  |  |
 
 
 
 
 
 
-<a name="cosmos.crypto.keyring.Record.Empty"></a>
+<a name="cosmos.crypto.keyring.v1.Record.Empty"></a>
 
 ### Record.Empty
 
@@ -3432,7 +3432,7 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
-<a name="cosmos.crypto.keyring.Record.Ledger"></a>
+<a name="cosmos.crypto.keyring.v1.Record.Ledger"></a>
 
 ### Record.Ledger
 
@@ -3447,7 +3447,7 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
-<a name="cosmos.crypto.keyring.Record.Local"></a>
+<a name="cosmos.crypto.keyring.v1.Record.Local"></a>
 
 ### Record.Local
 Item is a keyring item stored in a keyring backend.

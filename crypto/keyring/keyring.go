@@ -364,23 +364,23 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	var priv types.PrivKey
 
 	switch {
-		case k.GetLocal() != nil:
-			priv, err = extractPrivKeyFromLocal(k.GetLocal())
-			if err != nil {
-				return nil, nil, err
-			}
-		
-		case k.GetLedger() != nil:
-			return SignWithLedger(k, msg)
-		
-			// empty record
-		default:
-			pub, err := k.GetPubKey()
-			if err != nil {
-				return nil, nil, err
-			}
+	case k.GetLocal() != nil:
+		priv, err = extractPrivKeyFromLocal(k.GetLocal())
+		if err != nil {
+			return nil, nil, err
+		}
 
-			return nil, pub, errors.New("cannot sign with offline keys")
+	case k.GetLedger() != nil:
+		return SignWithLedger(k, msg)
+
+		// empty record
+	default:
+		pub, err := k.GetPubKey()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return nil, pub, errors.New("cannot sign with offline keys")
 	}
 
 	sig, err := priv.Sign(msg)

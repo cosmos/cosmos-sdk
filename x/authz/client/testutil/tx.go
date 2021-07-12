@@ -46,10 +46,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee = make([]sdk.AccAddress, 2)
 
 	// Create new account in the keyring.
+	/*
 	_, _, err = val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-
+	*/
 	// Send some funds to the new account.
+	// Create new account in the keyring.
+	s.grantee[0] = s.createAccount("grantee1")
 	s.msgSendExec(s.grantee[0])
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -63,6 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// Create new account in the keyring.
 	s.grantee[1] = s.createAccount("grantee2")
 	// Send some funds to the new account.
+	fmt.Println("s.msgSendExec(s.grantee[1])")
 	s.msgSendExec(s.grantee[1])
 
 	// grant send authorization to grantee2
@@ -89,7 +93,7 @@ func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	addr,_ := k.GetAddress()
+	addr, _ := k.GetAddress()
 	return addr
 }
 

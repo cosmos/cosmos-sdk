@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.crypto.keyring;
+package cosmos.crypto.keyring.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";

@@ -97,7 +97,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	kbHome := t.TempDir()
 
 	encCfg := simapp.MakeTestEncodingConfig()
-	
+
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
 	require.NoError(t, err)
 

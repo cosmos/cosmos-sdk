@@ -82,6 +82,11 @@ func QueryTxsByEvents(cliCtx context.CLIContext, events []string, page, limit in
 // QueryTx queries for a single transaction by a hash string in hex format. An
 // error is returned if the transaction does not exist or cannot be queried.
 func QueryTx(cliCtx context.CLIContext, hashHexStr string) (sdk.TxResponse, error) {
+	// strip 0x prefix
+	if strings.HasPrefix(hashHexStr, "0x") {
+		hashHexStr = hashHexStr[2:]
+	}
+
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return sdk.TxResponse{}, err

@@ -1,8 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
-
 	"github.com/gogo/protobuf/proto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -17,10 +15,10 @@ type (
 		// doesn't require access to any other information.
 		ValidateBasic() error
 
-		// Signers returns the addrs of signers that must sign.
+		// Signers returns the bech32-encoded addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
 		// CONTRACT: Returns addrs in some deterministic order.
-		GetSigners() []AccAddress
+		GetSigners() []string
 	}
 
 	// Fee defines an interface for an application application-defined concrete
@@ -79,5 +77,5 @@ type TxEncoder func(tx Tx) ([]byte, error)
 
 // MsgTypeURL returns the TypeURL of a `sdk.Msg`.
 func MsgTypeURL(msg Msg) string {
-	return fmt.Sprintf("/%s", proto.MessageName(msg))
+	return "/" + proto.MessageName(msg)
 }

@@ -48,10 +48,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.app = simapp.Setup(false)
 	s.cfg = network.DefaultConfig()
 	s.cfg.NumValidators = 1
-	s.network = network.New(s.T(), s.cfg)
-	s.Require().NotNil(s.network)
 
-	_, err := s.network.WaitForHeight(2)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(2)
 	s.Require().NoError(err)
 
 	val0 := s.network.Validators[0]

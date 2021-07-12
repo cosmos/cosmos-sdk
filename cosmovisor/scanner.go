@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -26,6 +27,8 @@ type fileWatcher struct {
 	cancel      chan bool
 	ticker      *time.Ticker
 	needsUpdate bool
+
+	initialized bool
 }
 
 func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatcher, error) {
@@ -43,14 +46,17 @@ func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatche
 		return nil, fmt.Errorf("wrong path, %s must be an existing directory, [%w]", dirname, err)
 	}
 
-	return &fileWatcher{filenameAbs, interval, UpgradeInfo{}, time.Time{}, make(chan bool), time.NewTicker(interval), false}, nil
+	return &fileWatcher{filenameAbs, interval, UpgradeInfo{}, time.Time{}, make(chan bool), time.NewTicker(interval), false, false}, nil
 }
 
 func (fw *fileWatcher) Stop() {
 	close(fw.cancel)
 }
 
-func (fw *fileWatcher) MonitorUpdate() <-chan struct{} {
+// pools the filesystem to check for new upgrade currentInfo. currentName is the name
+// of currently running upgrade. The check is rejected if it finds an upgrade with the same
+// name.
+func (fw *fileWatcher) MonitorUpdate(currentName string) <-chan struct{} {
 	fw.ticker.Reset(fw.interval)
 	done := make(chan struct{})
 	fw.cancel = make(chan bool)
@@ -60,7 +66,7 @@ func (fw *fileWatcher) MonitorUpdate() <-chan struct{} {
 		for {
 			select {
 			case <-fw.ticker.C:
-				if fw.CheckUpdate() {
+				if fw.CheckUpdate(currentName) {
 					done <- struct{}{}
 				}
 			case <-fw.cancel:
@@ -72,25 +78,42 @@ func (fw *fileWatcher) MonitorUpdate() <-chan struct{} {
 }
 
 // CheckUpdate reads update plan from file and checks if there is a new update request
-func (fw *fileWatcher) CheckUpdate() bool {
+// currentName is the name of currently running upgrade. The check is rejected if it finds
+// an upgrade with the same name.
+func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 	if fw.needsUpdate {
+		fmt.Println("\n>>>>>>>>>>>>>>>> NEEDS UPGRADE! (cache)\n")
 		return true
 	}
 	stat, err := os.Stat(fw.filename)
-	if err != nil {
+	if err != nil { // file doesn't exists
 		return false
 	}
 	if !stat.ModTime().After(fw.lastModTime) {
 		return false
 	}
-	ui, err := parseUpgradeInfoFile(fw.filename)
-	fmt.Println(">>>> UpgradeInfo", ui, err, fw.currentInfo.Height, ui.Height)
+	info, err := parseUpgradeInfoFile(fw.filename)
+	fmt.Println("\n>>>> UpgradeInfo", info, err, fw.currentInfo.Height, info.Height)
 	if err != nil {
-		// TODO: print error!
+		log.Fatal("Can't parse upgrade info file, probably need to update cosmovisor", err)
 		return false
 	}
-	if ui.Height > fw.currentInfo.Height {
-		fw.currentInfo = ui
+	if !fw.initialized { // daemon has restarted
+		fw.initialized = true
+		fw.currentInfo = info
+		fw.lastModTime = stat.ModTime()
+		// heuristic: deamon has restarted, so we don't know if we successfully downloaded the upgrade or not.
+		// so we try to compare the running upgrade name (read from the cosmovisor file) with the upgrade info
+		if currentName != fw.currentInfo.Name {
+			fw.needsUpdate = true
+			return true
+		}
+	}
+	fmt.Printf("---------- is the name the same? %q %q \n\n", currentName, fw.currentInfo.Name)
+
+	if info.Height > fw.currentInfo.Height {
+		fw.currentInfo = info
+		fw.lastModTime = stat.ModTime()
 		fw.needsUpdate = true
 		return true
 	}

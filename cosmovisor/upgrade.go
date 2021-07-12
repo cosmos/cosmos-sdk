@@ -147,33 +147,6 @@ func OSArch() string {
 	return fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 }
 
-// SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
-func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
-	// ensure named upgrade exists
-	bin := cfg.UpgradeBin(upgradeName)
-
-	if err := EnsureBinary(bin); err != nil {
-		return err
-	}
-
-	// set a symbolic link
-	link := filepath.Join(cfg.Root(), currentLink)
-	safeName := url.PathEscape(upgradeName)
-	upgrade := filepath.Join(cfg.Root(), upgradesDir, safeName)
-
-	// remove link if it exists
-	if _, err := os.Stat(link); err == nil {
-		os.Remove(link)
-	}
-
-	// point to the new directory
-	if err := os.Symlink(upgrade, link); err != nil {
-		return fmt.Errorf("creating current symlink: %w", err)
-	}
-
-	return nil
-}
-
 // EnsureBinary ensures the file exists and is executable, or returns an error
 func EnsureBinary(path string) error {
 	info, err := os.Stat(path)

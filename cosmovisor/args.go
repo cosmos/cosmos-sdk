@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	rootName    = "cosmovisor"
-	genesisDir  = "genesis"
-	upgradesDir = "upgrades"
-	currentLink = "current"
+	rootName        = "cosmovisor"
+	genesisDir      = "genesis"
+	upgradesDir     = "upgrades"
+	currentLink     = "current"
+	upgradeFilename = "upgrade_name.txt"
 )
 
 // should be the same as x/upgrade/types.UpgradeInfoFilename
@@ -28,6 +29,9 @@ type Config struct {
 	RestartAfterUpgrade   bool
 	UpgradeInfoFilename   string
 	PoolInterval          time.Duration
+
+	// name of the currently running upgrade (based on the upgrade info)
+	upgradeName string
 }
 
 // Root returns the root directory where all info lives
@@ -60,7 +64,7 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
 
-// Symlink to genesis
+// SymLinkToGenesis creates a "./current" symbolic link from to the genesis directory.
 func (cfg *Config) SymLinkToGenesis() (string, error) {
 	genesis := filepath.Join(cfg.Root(), genesisDir)
 	link := filepath.Join(cfg.Root(), currentLink)
@@ -163,4 +167,53 @@ func (cfg *Config) validate() error {
 	}
 
 	return nil
+}
+
+// SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
+func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
+	// ensure named upgrade exists
+	bin := cfg.UpgradeBin(upgradeName)
+
+	if err := EnsureBinary(bin); err != nil {
+		return err
+	}
+
+	// set a symbolic link
+	link := filepath.Join(cfg.Root(), currentLink)
+	safeName := url.PathEscape(upgradeName)
+	upgrade := filepath.Join(cfg.Root(), upgradesDir, safeName)
+
+	// remove link if it exists
+	if _, err := os.Stat(link); err == nil {
+		os.Remove(link)
+	}
+
+	// point to the new directory
+	if err := os.Symlink(upgrade, link); err != nil {
+		return fmt.Errorf("creating current symlink: %w", err)
+	}
+
+	cfg.upgradeName = upgradeName
+	return os.WriteFile(filepath.Join(upgrade, upgradeFilename), []byte(upgradeName), 0600)
+}
+
+func (cfg *Config) UpgradeName() string {
+	if cfg.upgradeName != "" {
+		return cfg.upgradeName
+	}
+
+	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
+	_, err := os.Lstat(filename)
+	if err != nil { // no current directory
+		cfg.upgradeName = "_"
+		return cfg.upgradeName
+	}
+	bz, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println("[cosmovisor], error reading", filename, err)
+		cfg.upgradeName = "_"
+		return cfg.upgradeName
+	}
+	cfg.upgradeName = string(bz)
+	return cfg.upgradeName
 }

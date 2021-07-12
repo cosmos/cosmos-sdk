@@ -90,6 +90,7 @@ func TestSetLoader(t *testing.T) {
 		loadStoreKey string
 	}{
 		"don't set loader": {
+			setLoader:    nil,
 			origStoreKey: "foo",
 			loadStoreKey: "foo",
 		},
@@ -145,9 +146,13 @@ func TestSetLoader(t *testing.T) {
 			res := app.Commit()
 			require.NotNil(t, res.Data)
 
+			// checking the case of the store being renamed
+			if tc.setLoader != nil {
+				checkStore(t, db, upgradeHeight, tc.origStoreKey, k, nil)
+			}
+
 			// check db is properly updated
 			checkStore(t, db, upgradeHeight, tc.loadStoreKey, k, v)
-			checkStore(t, db, upgradeHeight, tc.loadStoreKey, []byte("foo"), nil)
 		})
 	}
 }

@@ -38,14 +38,14 @@ The storage model presented here doesn't deal with data structure nor serializat
 
 Separation of storage and commitment (by the SMT) will allow the optimization of different components according to their usage and access patterns.
 
-`SS` (SMT) is used to commit to a data and compute merkle proofs. `SC` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SC` will store each `(key, value)` pair directly (map key -> value).
+`SC` (SMT) is used to commit to a data and compute merkle proofs. `SS` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SS` will store each `(key, value)` pair directly (map key -> value).
 
-SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is stored in a path (we hash a key to evenly distribute keys in the tree) and `hash(key, value)` in a leaf. Since we don't know a structure of a value (in particular if it contains the key) we hash both the key and the value in the `SC` leaf.
+SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is stored in a path (we hash a key to evenly distribute keys in the tree) and `hash(value)` in a leaf.
 
-For data access we propose 2 additional KV buckets (namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
+For data access we propose 2 additional KV buckets (implemented as namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
-2. B2: `hash(key, value) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(key, value))`. So, we can get an object value by composing `SMT_path → B2 → B1`.
+2. B2: `hash(key) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(value))`. So, we can get an object value by composing `SMT_path → B2 → B1`.
 3. we could use more buckets to optimize the app usage if needed.
 
 Above, we propose to use a KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.

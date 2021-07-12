@@ -494,13 +494,12 @@ func (ks keystore) List() ([]*Record, error) {
 		return nil, err
 	}
 
-	var res []*Record
-
 	keys, err := ks.db.Keys()
 	if err != nil {
 		return nil, err
 	}
 
+	var res []*Record
 	sort.Strings(keys)
 	for _, key := range keys {
 		if strings.Contains(key, "address") {

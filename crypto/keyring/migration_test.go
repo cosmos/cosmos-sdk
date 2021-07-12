@@ -18,8 +18,7 @@ import (
 
 const n1 = "cosmos"
 
-// TODO consider to make table driven testMigrationLegacy tests
-// TODO test MigrateAll
+
 func TestMigrateLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring
 	dir := t.TempDir()
@@ -147,9 +146,6 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	require.NoError(err)
 }
 
-// TODO  do i need to test migration for ledger,offline record items as well?
-// TODO make keystore.Cdc field public
-
 func TestMigrateLocalRecord(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
@@ -184,7 +180,6 @@ func TestMigrateLocalRecord(t *testing.T) {
 	require.NoError(err)
 }
 
-// TODO insert multiple incorrect migration keys and output errors to user
 func TestMigrateOneRandomItemError(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")

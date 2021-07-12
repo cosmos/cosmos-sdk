@@ -83,7 +83,8 @@ func (g *basicGasMeter) Limit() Gas {
 
 // GasConsumedToLimit returns the gas limit if gas consumed is past the limit,
 // otherwise it returns the consumed gas.
-// NOTE: This behaviour is only called when recovering from panic when BlockGasMeter consumes gas past the limit.
+// NOTE: This behaviour is only called when recovering from panic when
+// BlockGasMeter consumes gas past the limit.
 func (g *basicGasMeter) GasConsumedToLimit() Gas {
 	if g.IsPastLimit() {
 		return g.limit

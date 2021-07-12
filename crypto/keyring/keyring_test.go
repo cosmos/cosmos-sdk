@@ -244,7 +244,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 
 	_, _, err = kb.Sign(n3, d3)
 	require.Error(t, err)
-	require.Equal(t, "Private key extraction works only for Local", err.Error())
+	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
 func TestExportImportKeyRing(t *testing.T) {
@@ -654,7 +654,7 @@ func TestInMemorySignVerify(t *testing.T) {
 	// Now try to sign data with a secret-less key
 	_, _, err = cstore.Sign(n3, d3)
 	require.Error(t, err)
-	require.Equal(t, "Private key extraction works only for Local", err.Error())
+	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
 
 // TestInMemoryExportImport tests exporting and importing

@@ -72,13 +72,13 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	s1, pub1, err := kb.Sign("key", d1)
 	require.NoError(t, err)
 
-	s2, pub2, err := keyring.SignWithLedger(ke1, d1)
+	s2, pub2, err := keyring.SignWithLedger(k, d1)
 	require.NoError(t, err)
 
 	require.True(t, pub1.Equals(pub2))
 	require.True(t, bytes.Equal(s1, s2))
 
-	key1, err := ke1.GetPubKey()
+	key1, err := k.GetPubKey()
 	require.NoError(t, err)
 
 	require.Equal(t, key1, pub1)
@@ -87,9 +87,9 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	require.True(t, key1.VerifySignature(d1, s1))
 	require.True(t, bytes.Equal(s1, s2))
 
-	ke, _, err := kb.NewMnemonic("test", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err = kb.NewMnemonic("test", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = keyring.SignWithLedger(ke, d1)
+	_, _, err = keyring.SignWithLedger(k, d1)
 	require.Error(t, err)
 	require.Equal(t, "not a ledger object", err.Error())
 }

@@ -33,7 +33,7 @@ We decide to keep [Buf's](https://docs.buf.build/) recommendations with the foll
 
 On top of Buf's recommendations we add the following guidelines that are specific to the SDK.
 
-### Updating Protobuf Definition Withouth Bumping Version
+### Updating Protobuf Definition Without Bumping Version
 
 #### 1. `Msg`s SHALL NOT have new fields.
 

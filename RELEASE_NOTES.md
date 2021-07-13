@@ -52,3 +52,9 @@ In this release, we deprecated a couple of fields in our Protobuf definitions. W
 - `cosmos.upgrade.v1beta1.Plan#upgraded_client_state` is deprecated as IBC logic has been moved to the IBC repo. If this field is set, the node will error.
 
 The SDK team is planning to document Protobuf change process using an ADR. It will be a guideline for all chain developers, follow [#9477](https://github.com/cosmos/cosmos-sdk/issues/9477) for more info.
+
+## Rosetta (Beta Feature)
+
+[Rosetta](https://www.rosetta-api.org/) is an open standard of API endpoints designed to simplify blockchain deployment and interaction. It is maintained by Coinbase and used by their team to integrate various blockchains within their exchange platform. In order to facilitate integrating Cosmos-based chains with third-party services using Rosetta, the Cosmos SDK natively supports Rosetta via the `{appd} rosetta` CLI command, which runs a Rosetta API server as a sidecar.
+
+Please note that this feature is still in the **beta** phase, and rough edges will be polished in the next releases.

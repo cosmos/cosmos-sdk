@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
@@ -20,26 +19,6 @@ import (
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
 func DoUpgrade(cfg *Config, info *UpgradeInfo) error {
-	fmt.Println("inside doupgrade")
-
-	fmt.Println("unsafeSkipBackup?", cfg.UnsafeSkipBackup)
-
-	// take backup if `UNSAFE_UPGRADE` is not set.
-	if !cfg.UnsafeSkipBackup {
-		// a destination directory, Format MM-DD-YYYY
-		dt := time.Now()
-		dst := fmt.Sprintf(cfg.Home + "/data"+"-backup-%s", dt.Format("01-22-2000"))
-
-		// copy the $DAEMON_HOME/data to a backup dir
-		err := copy.Copy(cfg.Home + "/data", dst)
-
-		if err != nil {
-			return fmt.Errorf("error while taking data backup: %w", err)
-		}
-
-		fmt.Println("*****\n\n\n\n\nbackup done:::::\n\n\n\n", dst)
-	}
-
 	// Simplest case is to switch the link
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {

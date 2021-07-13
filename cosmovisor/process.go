@@ -11,6 +11,9 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
+
+	"github.com/otiai10/copy"
 )
 
 // LaunchProcess runs a subprocess and returns when the subprocess exits,
@@ -70,10 +73,34 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	}
 
 	if upgradeInfo != nil {
+		if err := doBackup(cfg); err != nil {
+			return false, err
+		}
+
 		return true, DoUpgrade(cfg, upgradeInfo)
 	}
 
 	return false, nil
+}
+
+func doBackup(cfg *Config) error {
+	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
+	if !cfg.UnsafeSkipBackup {
+		// a destination directory, Format MM-DD-YYYY
+		dt := time.Now()
+		dst := fmt.Sprintf(cfg.Home+"/data"+"-backup-%s", dt.Format("01-22-2000"))
+
+		// copy the $DAEMON_HOME/data to a backup dir
+		err := copy.Copy(cfg.Home+"/data", dst)
+
+		if err != nil {
+			return fmt.Errorf("error while taking data backup: %w", err)
+		}
+
+		fmt.Println("Backup saved at ", dst)
+	}
+
+	return nil
 }
 
 // WaitResult is used to wrap feedback on cmd state with some mutex logic.

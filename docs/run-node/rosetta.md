@@ -1,3 +1,7 @@
+<!--
+order: 6
+-->
+
 # Rosetta
 
 Package rosetta implements the rosetta API for the current cosmos sdk release series.

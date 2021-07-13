@@ -53,7 +53,7 @@ func TestTestSuite(t *testing.T) {
 
 func (s *TestSuite) TestNewClass() {
 	except := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -72,7 +72,7 @@ func (s *TestSuite) TestNewClass() {
 
 func (s *TestSuite) TestUpdateClass() {
 	class := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -82,7 +82,7 @@ func (s *TestSuite) TestUpdateClass() {
 	s.Require().NoError(err)
 
 	except := nft.Class{
-		Id:          "kitty1",
+		ID:          "kitty1",
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -93,7 +93,7 @@ func (s *TestSuite) TestUpdateClass() {
 	s.Require().Error(err)
 
 	except = nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        "My crypto Kitty",
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -110,7 +110,7 @@ func (s *TestSuite) TestUpdateClass() {
 
 func (s *TestSuite) TestMint() {
 	except := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -155,7 +155,7 @@ func (s *TestSuite) TestMint() {
 
 func (s *TestSuite) TestBurn() {
 	except := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -202,7 +202,7 @@ func (s *TestSuite) TestBurn() {
 
 func (s *TestSuite) TestUpdate() {
 	class := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -236,7 +236,7 @@ func (s *TestSuite) TestUpdate() {
 
 func (s *TestSuite) TestTransfer() {
 	class := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -274,7 +274,7 @@ func (s *TestSuite) TestTransfer() {
 
 func (s *TestSuite) TestExportGenesis() {
 	class := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
@@ -304,7 +304,7 @@ func (s *TestSuite) TestExportGenesis() {
 
 func (s *TestSuite) TestInitGenesis() {
 	expClass := nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,

@@ -32,7 +32,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *nft.GenesisState {
 	classes := k.GetClasses(ctx)
 	nftMap := make(map[string][]nft.NFT)
 	for _, class := range classes {
-		nfts := k.GetNFTsOfClass(ctx, class.Id)
+		nfts := k.GetNFTsOfClass(ctx, class.ID)
 		for _, n := range nfts {
 			owner := k.GetOwner(ctx, n.ClassID, n.ID)
 			nftArr, ok := nftMap[owner.String()]

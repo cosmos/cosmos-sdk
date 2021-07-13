@@ -37,7 +37,7 @@ DDzEQAPXBQflzNW6wbne9IfT651zCSm+j1MWaGk=
 
 var (
 	ExpClass = nft.Class{
-		Id:          testClassID,
+		ID:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,

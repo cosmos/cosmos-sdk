@@ -11,7 +11,7 @@ message Class {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = false;
 
-  string id          = 1;
+  string id          = 1 [(gogoproto.customname) = "ID"];
   string name        = 2;
   string symbol      = 3;
   string description = 4;

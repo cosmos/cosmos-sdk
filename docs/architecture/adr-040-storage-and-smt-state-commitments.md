@@ -110,6 +110,28 @@ We need to be able to process transactions and roll-back state updates if a tran
 
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
+
+### Low-Level Interface
+
+Modules should be able to commit a value fully managed by the module itself. For example, a module can manage its own special database and commit its state by setting a value only to `SC`. Currently the store is exposed only through `sdk.Context` through `MultiStore`. We are deprecating the "multistore" concept, however the root store interface will be the same. We should extend the root store interface with the following function:
+
+```
+    GetSCStore(key []byte) BasicKVStore
+```
+
+And the interface for `BasicKVStore` is:
+
+```
+type BasicKVStore interface {
+	Get(key []byte) []byte
+	Has(key []byte) bool
+	Set(key, value []byte)
+}
+```
+
+For `SC` store, the `BasicKVStore` provides access to the `SC` implementation without exposing its specific behavior. That means that `sc.Get(key)` will pass the query to the SC store which will search for `hash(key)`. To keep the interface as minimal as possible, we don't provide a `Delete` method. If needed, it can be added in the future as a non-breaking change.
+
+
 ## Consequences
 
 ### Backwards Compatibility

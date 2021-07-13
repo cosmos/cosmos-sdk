@@ -15,7 +15,7 @@ message Class {
   string name        = 2;
   string symbol      = 3;
   string description = 4;
-  string uri         = 5;
+  string uri         = 5 [(gogoproto.customname) = "URI"];
 }
 
 // NFT defines the nft.

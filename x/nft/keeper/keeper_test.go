@@ -57,7 +57,7 @@ func (s *TestSuite) TestNewClass() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, except)
 	s.Require().NoError(err)
@@ -76,7 +76,7 @@ func (s *TestSuite) TestUpdateClass() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
@@ -86,7 +86,7 @@ func (s *TestSuite) TestUpdateClass() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 
 	err = s.app.NFTKeeper.UpdateClass(s.ctx, except)
@@ -97,7 +97,7 @@ func (s *TestSuite) TestUpdateClass() {
 		Name:        "My crypto Kitty",
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 
 	err = s.app.NFTKeeper.UpdateClass(s.ctx, except)
@@ -114,7 +114,7 @@ func (s *TestSuite) TestMint() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, except)
 	s.Require().NoError(err)
@@ -159,7 +159,7 @@ func (s *TestSuite) TestBurn() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, except)
 	s.Require().NoError(err)
@@ -206,7 +206,7 @@ func (s *TestSuite) TestUpdate() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
@@ -240,7 +240,7 @@ func (s *TestSuite) TestTransfer() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
@@ -278,7 +278,7 @@ func (s *TestSuite) TestExportGenesis() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
@@ -308,7 +308,7 @@ func (s *TestSuite) TestInitGenesis() {
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 	expNFT := nft.NFT{
 		ClassID: testClassID,

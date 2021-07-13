@@ -41,7 +41,7 @@ var (
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		Uri:         testClassURI,
+		URI:         testClassURI,
 	}
 
 	ExpNFT = nft.NFT{

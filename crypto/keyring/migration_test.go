@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const n1 = "cosmos"
@@ -292,5 +293,29 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 	incorrectItemKey := n1 + "1"
 	migrated, err := kb.Migrate(incorrectItemKey)
 	require.False(migrated)
-	require.True(strings.Contains(err.Error(), "key not found"))
+	require.EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, incorrectItemKey).Error())
+}
+
+
+func TestMigrateErrEmptyItemData(t *testing.T) {
+	dir := t.TempDir()
+	mockIn := strings.NewReader("")
+	encCfg := simapp.MakeTestEncodingConfig()
+
+	require := require.New(t)
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	require.NoError(err)
+
+	item := design99keyring.Item{
+		Key:         n1,
+		Data:        []byte{},
+		Description: "SDK kerying version",
+	}
+
+	err = kb.SetItem(item)
+	require.NoError(err)
+
+	migrated, err := kb.Migrate(n1)
+	require.False(migrated)
+	require.EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }

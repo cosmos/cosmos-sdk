@@ -41,7 +41,7 @@ func TestContext_PrintObject(t *testing.T) {
 	// proto
 	//
 	registry := testdata.NewTestInterfaceRegistry()
-	ctx = ctx.WithJSONCodec(codec.NewProtoCodec(registry))
+	ctx = ctx.WithCodec(codec.NewProtoCodec(registry))
 
 	// json
 	buf := &bytes.Buffer{}
@@ -105,7 +105,8 @@ func TestCLIQueryConn(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 
-	n := network.New(t, cfg)
+	n, err := network.New(t, t.TempDir(), cfg)
+	require.NoError(t, err)
 	defer n.Cleanup()
 
 	testClient := testdata.NewQueryClient(n.Validators[0].ClientCtx)

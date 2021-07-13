@@ -254,7 +254,7 @@ func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, e
 		op := &rosettatypes.Operation{
 			Type:     opName,
 			Status:   &status,
-			Account:  &rosettatypes.AccountIdentifier{Address: signer.String()},
+			Account:  &rosettatypes.AccountIdentifier{Address: signer},
 			Metadata: meta,
 		}
 

@@ -68,9 +68,10 @@ message SignDocAux {
   google.protobuf.Any public_key     = 2;
   string              chain_id       = 3;
   uint64              account_number = 4;
+  uint64              sequence = 5;
 
   // tip should be left empty if the signer is not the tipper for this transaction
-  Tip tip = 5;
+  Tip tip = 6;
 }
 
 // TxBody is the body of a transaction that all signers sign over.

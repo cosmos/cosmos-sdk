@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -94,7 +95,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
 	app.Commit()
 
@@ -129,7 +130,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
 	app.Commit()
 
@@ -199,9 +200,9 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	app.Commit()
 
@@ -248,11 +249,11 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr2, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr4, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr4, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	app.Commit()
 
@@ -295,7 +296,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	app := simapp.SetupWithGenesisAccounts(genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
+	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
 	app.Commit()
 

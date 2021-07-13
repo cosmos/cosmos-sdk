@@ -217,6 +217,15 @@
     - [PrivKey](#cosmos.crypto.ed25519.PrivKey)
     - [PubKey](#cosmos.crypto.ed25519.PubKey)
   
+- [cosmos/crypto/hd/hd.proto](#cosmos/crypto/hd/hd.proto)
+    - [BIP44Params](#cosmos.crypto.hd.BIP44Params)
+  
+- [cosmos/crypto/keyring/types.proto](#cosmos/crypto/keyring/types.proto)
+    - [Record](#cosmos.crypto.keyring.v1.Record)
+    - [Record.Empty](#cosmos.crypto.keyring.v1.Record.Empty)
+    - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
+    - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
+  
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
   
@@ -3407,6 +3416,117 @@ then you must create a new proto message and follow ADR-28 for Address construct
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `key` | [bytes](#bytes) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/hd/hd.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/hd/hd.proto
+
+
+
+<a name="cosmos.crypto.hd.BIP44Params"></a>
+
+### BIP44Params
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `purpose` | [uint32](#uint32) |  |  |
+| `coinType` | [uint32](#uint32) |  |  |
+| `account` | [uint32](#uint32) |  |  |
+| `change` | [bool](#bool) |  |  |
+| `addressIndex` | [uint32](#uint32) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/crypto/keyring/types.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/crypto/keyring/types.proto
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record"></a>
+
+### Record
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `name` | [string](#string) |  |  |
+| `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `local` | [Record.Local](#cosmos.crypto.keyring.v1.Record.Local) |  |  |
+| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  |  |
+| `empty` | [Record.Empty](#cosmos.crypto.keyring.v1.Record.Empty) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Empty"></a>
+
+### Record.Empty
+
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Ledger"></a>
+
+### Record.Ledger
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `path` | [cosmos.crypto.hd.BIP44Params](#cosmos.crypto.hd.BIP44Params) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Local"></a>
+
+### Record.Local
+Item is a keyring item stored in a keyring backend.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `priv_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `privKeyType` | [string](#string) |  |  |
 
 
 

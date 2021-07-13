@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -8,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Info is the publicly exposed information about a keypair
-type Info interface {
+type LegacyInfo interface {
 	// Human-readable type for key listing
 	GetType() KeyType
 	// Name of the key
@@ -20,7 +21,7 @@ type Info interface {
 	// Public key
 	GetPubKey() cryptotypes.PubKey
 	// Address
-	GetAddress() types.AccAddress
+	GetAddress() sdk.AccAddress
 	// Bip44 Path
 	GetPath() (*hd.BIP44Params, error)
 	// Algo
@@ -28,23 +29,23 @@ type Info interface {
 }
 
 var (
-	_ Info = &localInfo{}
-	_ Info = &ledgerInfo{}
-	_ Info = &offlineInfo{}
-	_ Info = &multiInfo{}
+	_ LegacyInfo = &legacyLocalInfo{}
+	_ LegacyInfo = &legacyLedgerInfo{}
+	_ LegacyInfo = &legacyOfflineInfo{}
+	_ LegacyInfo = &legacyMultiInfo{}
 )
 
-// localInfo is the public information about a locally stored key
+// legacyLocalInfo is the public information about a locally stored key
 // Note: Algo must be last field in struct for backwards amino compatibility
-type localInfo struct {
+type legacyLocalInfo struct {
 	Name         string             `json:"name"`
 	PubKey       cryptotypes.PubKey `json:"pubkey"`
 	PrivKeyArmor string             `json:"privkey.armor"`
 	Algo         hd.PubKeyType      `json:"algo"`
 }
 
-func newLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) Info {
-	return &localInfo{
+func NewLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) LegacyInfo {
+	return &legacyLocalInfo{
 		Name:         name,
 		PubKey:       pub,
 		PrivKeyArmor: privArmor,
@@ -53,46 +54,51 @@ func newLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd
 }
 
 // GetType implements Info interface
-func (i localInfo) GetType() KeyType {
+func (i legacyLocalInfo) GetType() KeyType {
 	return TypeLocal
 }
 
 // GetType implements Info interface
-func (i localInfo) GetName() string {
+func (i legacyLocalInfo) GetName() string {
 	return i.Name
 }
 
 // GetType implements Info interface
-func (i localInfo) GetPubKey() cryptotypes.PubKey {
+func (i legacyLocalInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
 // GetType implements Info interface
-func (i localInfo) GetAddress() types.AccAddress {
+func (i legacyLocalInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+// GetPrivKeyArmor
+func (i legacyLocalInfo) GetPrivKeyArmor() string {
+	return i.PrivKeyArmor
+}
+
 // GetType implements Info interface
-func (i localInfo) GetAlgo() hd.PubKeyType {
+func (i legacyLocalInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
 // GetType implements Info interface
-func (i localInfo) GetPath() (*hd.BIP44Params, error) {
+func (i legacyLocalInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
-// ledgerInfo is the public information about a Ledger key
+// legacyLedgerInfo is the public information about a Ledger key
 // Note: Algo must be last field in struct for backwards amino compatibility
-type ledgerInfo struct {
+type legacyLedgerInfo struct {
 	Name   string             `json:"name"`
 	PubKey cryptotypes.PubKey `json:"pubkey"`
 	Path   hd.BIP44Params     `json:"path"`
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func newLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) Info {
-	return &ledgerInfo{
+func NewLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) LegacyInfo {
+	return &legacyLedgerInfo{
 		Name:   name,
 		PubKey: pub,
 		Path:   path,
@@ -101,46 +107,46 @@ func newLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, alg
 }
 
 // GetType implements Info interface
-func (i ledgerInfo) GetType() KeyType {
+func (i legacyLedgerInfo) GetType() KeyType {
 	return TypeLedger
 }
 
 // GetName implements Info interface
-func (i ledgerInfo) GetName() string {
+func (i legacyLedgerInfo) GetName() string {
 	return i.Name
 }
 
 // GetPubKey implements Info interface
-func (i ledgerInfo) GetPubKey() cryptotypes.PubKey {
+func (i legacyLedgerInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
 // GetAddress implements Info interface
-func (i ledgerInfo) GetAddress() types.AccAddress {
+func (i legacyLedgerInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
 // GetPath implements Info interface
-func (i ledgerInfo) GetAlgo() hd.PubKeyType {
+func (i legacyLedgerInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
 // GetPath implements Info interface
-func (i ledgerInfo) GetPath() (*hd.BIP44Params, error) {
+func (i legacyLedgerInfo) GetPath() (*hd.BIP44Params, error) {
 	tmp := i.Path
 	return &tmp, nil
 }
 
-// offlineInfo is the public information about an offline key
+// legacyOfflineInfo is the public information about an offline key
 // Note: Algo must be last field in struct for backwards amino compatibility
-type offlineInfo struct {
+type legacyOfflineInfo struct {
 	Name   string             `json:"name"`
 	PubKey cryptotypes.PubKey `json:"pubkey"`
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func newOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) Info {
-	return &offlineInfo{
+func NewLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
+	return &legacyOfflineInfo{
 		Name:   name,
 		PubKey: pub,
 		Algo:   algo,
@@ -148,32 +154,32 @@ func newOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) Inf
 }
 
 // GetType implements Info interface
-func (i offlineInfo) GetType() KeyType {
+func (i legacyOfflineInfo) GetType() KeyType {
 	return TypeOffline
 }
 
 // GetName implements Info interface
-func (i offlineInfo) GetName() string {
+func (i legacyOfflineInfo) GetName() string {
 	return i.Name
 }
 
 // GetPubKey implements Info interface
-func (i offlineInfo) GetPubKey() cryptotypes.PubKey {
+func (i legacyOfflineInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
 // GetAlgo returns the signing algorithm for the key
-func (i offlineInfo) GetAlgo() hd.PubKeyType {
+func (i legacyOfflineInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
 // GetAddress implements Info interface
-func (i offlineInfo) GetAddress() types.AccAddress {
+func (i legacyOfflineInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
 // GetPath implements Info interface
-func (i offlineInfo) GetPath() (*hd.BIP44Params, error) {
+func (i legacyOfflineInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
@@ -187,7 +193,7 @@ type multisigPubKeyInfo struct {
 }
 
 // multiInfo is the public information about a multisig key
-type multiInfo struct {
+type legacyMultiInfo struct {
 	Name      string               `json:"name"`
 	PubKey    cryptotypes.PubKey   `json:"pubkey"`
 	Threshold uint                 `json:"threshold"`
@@ -195,60 +201,60 @@ type multiInfo struct {
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func NewMultiInfo(name string, pub cryptotypes.PubKey) (Info, error) {
+func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
 		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
-	return &multiInfo{
+	return &legacyMultiInfo{
 		Name:   name,
 		PubKey: pub,
 	}, nil
 }
 
 // GetType implements Info interface
-func (i multiInfo) GetType() KeyType {
+func (i legacyMultiInfo) GetType() KeyType {
 	return TypeMulti
 }
 
 // GetName implements Info interface
-func (i multiInfo) GetName() string {
+func (i legacyMultiInfo) GetName() string {
 	return i.Name
 }
 
 // GetPubKey implements Info interface
-func (i multiInfo) GetPubKey() cryptotypes.PubKey {
+func (i legacyMultiInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
 // GetAddress implements Info interface
-func (i multiInfo) GetAddress() types.AccAddress {
+func (i legacyMultiInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
 // GetPath implements Info interface
-func (i multiInfo) GetAlgo() hd.PubKeyType {
+func (i legacyMultiInfo) GetAlgo() hd.PubKeyType {
 	return hd.MultiType
 }
 
 // GetPath implements Info interface
-func (i multiInfo) GetPath() (*hd.BIP44Params, error) {
+func (i legacyMultiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (i multiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (i legacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
 
 	return codectypes.UnpackInterfaces(multiPK, unpacker)
 }
 
 // encoding info
-func marshalInfo(i Info) []byte {
+func MarshalInfo(i LegacyInfo) []byte {
 	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }
 
 // decoding info
-func unmarshalInfo(bz []byte) (info Info, err error) {
+func unMarshalLegacyInfo(bz []byte) (info LegacyInfo, err error) {
 	err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
@@ -261,13 +267,33 @@ func unmarshalInfo(bz []byte) (info Info, err error) {
 	//
 	// This is a workaround, as go cannot check that an interface (Info)
 	// implements another interface (UnpackInterfacesMessage).
-	_, ok := info.(multiInfo)
+	_, ok := info.(legacyMultiInfo)
 	if ok {
-		var multi multiInfo
+		var multi legacyMultiInfo
 		err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &multi)
 
 		return multi, err
 	}
 
 	return
+}
+
+// func (ks keystore) ExportPrivateKeyFromLegacyInfo(uid string) (types.PrivKey, error) {
+func exportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) {
+
+	switch linfo := info.(type) {
+	case legacyLocalInfo:
+		if linfo.PrivKeyArmor == "" {
+			return nil, fmt.Errorf("private key not available")
+		}
+		priv, err := legacy.PrivKeyFromBytes([]byte(linfo.PrivKeyArmor))
+		if err != nil {
+			return nil, err
+		}
+
+		return priv, nil
+	//case legacyLedgerInfo, legacyOfflineInfo, legacyMultiInfo:
+	default:
+		return nil, errors.New("only works on local private keys")
+	}
 }

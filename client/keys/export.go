@@ -36,6 +36,7 @@ and export your keys in ASCII-armored encrypted format.`,
 			if err != nil {
 				return err
 			}
+
 			unarmored, _ := cmd.Flags().GetBool(flagUnarmoredHex)
 			unsafe, _ := cmd.Flags().GetBool(flagUnsafe)
 

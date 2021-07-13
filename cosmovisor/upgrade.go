@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
 )
 

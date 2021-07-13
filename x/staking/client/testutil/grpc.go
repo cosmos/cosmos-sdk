@@ -358,10 +358,11 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
-	// Create new account in the keyring for address without delegations.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	// Create new account in the keyring.
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	newAddr, err := k.GetAddress()
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name         string

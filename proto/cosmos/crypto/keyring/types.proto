@@ -1,0 +1,30 @@
+syntax = "proto3";
+package cosmos.crypto.keyring.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos/crypto/hd/hd.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
+option (gogoproto.goproto_getters_all) = false;
+
+message Record {
+  string name = 1;
+  google.protobuf.Any pub_key = 2;
+
+  oneof item {
+    Local local = 3;
+    Ledger ledger  = 4;
+    Empty empty  = 5;
+  }
+
+  // Item is a keyring item stored in a keyring backend.
+  message Local {
+    google.protobuf.Any priv_key = 1; 
+    string privKeyType = 2;
+  }
+  message Ledger {
+    hd.BIP44Params path = 1;
+  }
+  message Empty {}
+}

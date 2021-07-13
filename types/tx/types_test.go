@@ -3,9 +3,10 @@ package tx_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/stretchr/testify/suite"
 )
 
 type testMsgSuite struct {

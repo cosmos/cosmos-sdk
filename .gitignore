@@ -22,6 +22,8 @@ dist
 tools-stamp
 buf-stamp
 artifacts
+private/*.sh
+test
 
 # Data - ideally these don't exist
 baseapp/data/*

@@ -13,18 +13,6 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 )
 
-// BIP44Params wraps BIP 44 params (5 level BIP 32 path).
-// To receive a canonical string representation ala
-// m / purpose' / coinType' / account' / change / addressIndex
-// call String() on a BIP44Params instance.
-type BIP44Params struct {
-	Purpose      uint32 `json:"purpose"`
-	CoinType     uint32 `json:"coinType"`
-	Account      uint32 `json:"account"`
-	Change       bool   `json:"change"`
-	AddressIndex uint32 `json:"addressIndex"`
-}
-
 // NewParams creates a BIP 44 parameter object from the params:
 // m / purpose' / coinType' / account' / change / addressIndex
 func NewParams(purpose, coinType, account uint32, change bool, addressIdx uint32) *BIP44Params {
@@ -152,7 +140,7 @@ func (p BIP44Params) DerivationPath() []uint32 {
 
 // String returns the full absolute HD path of the BIP44 (https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) params:
 // m / purpose' / coin_type' / account' / change / address_index
-func (p BIP44Params) String() string {
+func (p *BIP44Params) String() string {
 	var changeStr string
 	if p.Change {
 		changeStr = "1"

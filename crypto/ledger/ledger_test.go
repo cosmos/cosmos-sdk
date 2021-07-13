@@ -140,7 +140,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 	// Check with device
 	for i := 0; i < len(expectedAddrs); i++ {
 		path := *hd.NewFundraiserParams(0, sdk.CoinType, uint32(i))
-		t.Logf("Checking keys at %s\n", path)
+		t.Logf("Checking keys at %s\n", path.String())
 
 		priv, addr, err := NewPrivKeySecp256k1(path, "cosmos")
 		require.NoError(t, err)

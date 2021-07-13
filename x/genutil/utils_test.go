@@ -2,12 +2,13 @@ package genutil
 
 import (
 	"encoding/json"
-	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/privval"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
+
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/privval"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/config"

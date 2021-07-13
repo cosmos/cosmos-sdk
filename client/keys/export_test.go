@@ -13,9 +13,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO fix test
 func Test_runExportCmd(t *testing.T) {
 	cmd := ExportKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
@@ -25,7 +27,8 @@ func Test_runExportCmd(t *testing.T) {
 	kbHome := t.TempDir()
 
 	// create a key
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	encCfg := simapp.MakeTestEncodingConfig()
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("keyname1") // nolint:errcheck
@@ -39,7 +42,6 @@ func Test_runExportCmd(t *testing.T) {
 	args := []string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	}
 
 	mockIn.Reset("123456789\n123456789\n")

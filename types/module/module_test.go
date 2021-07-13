@@ -5,8 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/gorilla/mux"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"

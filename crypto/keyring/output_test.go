@@ -1,4 +1,4 @@
-package keyring
+package keyring_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -17,14 +18,17 @@ func TestBech32KeysOutput(t *testing.T) {
 	tmpKey := sk.PubKey()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
 
-	info, err := NewMultiInfo("multisig", multisigPk)
+	k, err := keyring.NewRecord("multisig", multisigPk, keyring.NewEmptyRecordItem(keyring.NewEmptyRecord()))
+	require.NotNil(t, k)
 	require.NoError(t, err)
-	accAddr := sdk.AccAddress(info.GetPubKey().Address())
-	expectedOutput, err := NewKeyOutput(info.GetName(), info.GetType(), accAddr, multisigPk)
+	pubKey, err := k.GetPubKey()
+	require.NoError(t, err)
+	accAddr := sdk.AccAddress(pubKey.Address())
+	expectedOutput, err := keyring.NewKeyOutput(k.Name, k.GetType(), accAddr, multisigPk)
 	require.NoError(t, err)
 
-	out, err := MkAccKeyOutput(info)
+	out, err := keyring.MkAccKeyOutput(k)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, out)
-	require.Equal(t, `{Name:multisig Type:multi Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{"@type":"/cosmos.crypto.multisig.LegacyAminoPubKey","threshold":1,"public_keys":[{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}]} Mnemonic:}`, fmt.Sprintf("%+v", out))
+	require.Equal(t, "{Name:multisig Type:local Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":1,\"public_keys\":[{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ\"}]} Mnemonic:}", fmt.Sprintf("%+v", out))
 }

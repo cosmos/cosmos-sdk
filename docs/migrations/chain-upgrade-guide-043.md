@@ -34,21 +34,25 @@ We recommend validators use [Cosmovisor](../run-node/cosmovisor.html), which is 
 
 Validators can use the auto-restart option to prevent unecessary downtime during the upgrade process. The auto-restart option will automatically restart the chain with the upgrade binary once the chain has halted at the proposed upgrade height. With the auto-restart option, validators can prepare the upgrade binary in advance and then relax at the time of the upgrade.
 
+## Migrating app.toml
+
+With the update to `v0.43`, new server configuration options have been added to `app.toml`. The updates include new configuration sections for Rosetta and gRPC Web as well as a new configuration option for State Sync. Check out the default [`app.toml`](https://github.com/cosmos/cosmos-sdk/blob/release/v0.43.x/server/config/toml.go) file in the latest version of `v0.43` for more information.
+
 ## Example: Simapp Upgrade
 
 The following example will walk through the upgrade process using `simapp` as our blockchain application. We will be upgrading `simapp` from v0.42 to v0.43. We will be building the upgrade binary ourselves and enabling the auto-restart option.
 
-*Note: In this example, we will be starting a new chain from `v0.42.6`. The binary for this version will be the genesis binary. For validators using Cosmovisor for the first time, the binary for the current version of the chain should be used as the genesis binary (i.e. the starting binary). For more information, see [Cosmovisor](../run-node/cosmovisor.html).*
+*Note: In this example, we will be starting a new chain from `v0.42`. The binary for this version will be the genesis binary. For validators using Cosmovisor for the first time, the binary for the current version of the chain should be used as the genesis binary (i.e. the starting binary). For more information, see [Cosmovisor](../run-node/cosmovisor.html).*
 
 ### Initial Setup
 
-From within the `cosmos-sdk` repository, check out `v0.42.6`:
+From within the `cosmos-sdk` repository, check out the latest `v0.42.x` release:
 
 ```
-git checkout v0.42.6
+git checkout release/v0.42.x
 ```
 
-Build the `simd` binary for `v0.42.6` (the genesis binary):
+Build the `simd` binary for the latest `v0.42.x` release (the genesis binary):
 
 ```
 make build
@@ -123,7 +127,7 @@ Set the optional environment variable to trigger an automatic restart:
 export DAEMON_RESTART_AFTER_UPGRADE=true
 ```
 
-Create the folder for the genesis binary and copy the `v0.42.6` binary:
+Create the folder for the genesis binary and copy the `v0.42.x` binary:
 
 ```
 mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
@@ -134,7 +138,7 @@ Now that `cosmovisor` is installed and the genesis binary has been added, let's 
 
 ### Chain Upgrade
 
-<!-- TODO: update example to use v0.43.0 -->
+<!-- TODO: update example to use v0.43.x -->
 
 Check out `release/v0.43.x`:
 
@@ -142,13 +146,13 @@ Check out `release/v0.43.x`:
 git checkout release/v0.43.x
 ```
 
-Add the following to `simapp/app.go` inside `NewSimApp`:
+Add the following to `simapp/app.go` inside `NewSimApp` and after `app.UpgradeKeeper`:
 
 ```go
 	app.registerUpgradeHandlers()
 ```
 
-Add the following to `simapp/app.go` starting on line 420 (to learn more about the upgrade handler, see the [In-Place Store Migrations](../core/upgrade.html)):
+Add the following to `simapp/app.go` after `NewSimApp` (to learn more about the upgrade handler, see the [In-Place Store Migrations](../core/upgrade.html)):
 
 ```go
 func (app *SimApp) registerUpgradeHandlers() {
@@ -199,13 +203,13 @@ Add `storetypes` to imports:
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 ```
 
-Build the `simd` binary for `v0.43.0` (the upgrade binary):
+Build the `simd` binary for `v0.43.x` (the upgrade binary):
 
 ```
 make build
 ```
 
-Create the folder for the upgrade binary and copy the `v0.43.0` binary:
+Create the folder for the upgrade binary and copy the `v0.43.x` binary:
 
 ```
 mkdir -p $DAEMON_HOME/cosmovisor/upgrades/v0.43/bin

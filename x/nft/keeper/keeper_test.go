@@ -225,9 +225,8 @@ func (s *TestSuite) TestUpdate() {
 		URI:     "updated",
 	}
 
-	//valid owner
 	err = s.app.NFTKeeper.Update(s.ctx, expNFT)
-	s.Require().Error(err)
+	s.Require().NoError(err)
 
 	// test GetNFT
 	actNFT, has := s.app.NFTKeeper.GetNFT(s.ctx, testClassID, testID)
@@ -255,7 +254,7 @@ func (s *TestSuite) TestTransfer() {
 	s.Require().NoError(err)
 
 	//valid owner
-	err = s.app.NFTKeeper.Transfer(s.ctx, testClassID, testID, s.addrs[0])
+	err = s.app.NFTKeeper.Transfer(s.ctx, testClassID, testID, s.addrs[1])
 	s.Require().NoError(err)
 
 	// test GetOwner

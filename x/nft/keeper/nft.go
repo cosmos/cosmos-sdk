@@ -28,7 +28,12 @@ func (k Keeper) Mint(ctx sdk.Context, newNFT nft.NFT, minter sdk.AccAddress) err
 
 	k.setNFT(ctx, newNFT)
 	k.setOwner(ctx, newNFT.ClassID, newNFT.ID, minter)
-	return nil
+	k.incrTotalSupply(ctx, newNFT.ClassID)
+	return ctx.EventManager().EmitTypedEvent(&nft.EventMint{
+		ClassID: newNFT.ClassID,
+		ID:      newNFT.ID,
+		Minter:  minter.String(),
+	})
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -46,6 +51,7 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 	nftStore.Delete([]byte(nftID))
 
 	k.deleteOwner(ctx, classID, nftID, owner)
+	k.decrTotalSupply(ctx, classID)
 	return nil
 }
 
@@ -135,8 +141,9 @@ func (k Keeper) GetBalance(ctx sdk.Context, classID string, owner sdk.AccAddress
 
 // GetTotalSupply returns the number of all nfts under the specified classID
 func (k Keeper) GetTotalSupply(ctx sdk.Context, classID string) uint64 {
-	nfts := k.GetNFTsOfClass(ctx, classID)
-	return uint64(len(nfts))
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(classTotalSupply(classID))
+	return sdk.BigEndianToUint64(bz)
 }
 
 func (k Keeper) hasNFT(ctx sdk.Context, classID, id string) bool {
@@ -175,4 +182,18 @@ func (k Keeper) getOwnerStore(ctx sdk.Context, owner sdk.AccAddress, classID str
 	store := ctx.KVStore(k.storeKey)
 	key := nftOfClassByOwnerStoreKey(owner, classID)
 	return prefix.NewStore(store, key)
+}
+
+func (k Keeper) incrTotalSupply(ctx sdk.Context, classID string) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(classTotalSupply(classID))
+	supply := sdk.BigEndianToUint64(bz) + 1
+	store.Set(classTotalSupply(classID), sdk.Uint64ToBigEndian(supply))
+}
+
+func (k Keeper) decrTotalSupply(ctx sdk.Context, classID string) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(classTotalSupply(classID))
+	supply := sdk.BigEndianToUint64(bz) - 1
+	store.Set(classTotalSupply(classID), sdk.Uint64ToBigEndian(supply))
 }

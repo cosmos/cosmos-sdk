@@ -12,6 +12,7 @@ var (
 	NFTKey               = []byte{0x02}
 	NFTOfClassByOwnerKey = []byte{0x03}
 	OwnerKey             = []byte{0x04}
+	ClassTotalSupply     = []byte{0x05}
 )
 
 // StoreKey is the store key string for nft
@@ -25,6 +26,11 @@ func classStoreKey(classID string) []byte {
 // nftStoreKey returns the byte representation of the nft
 func nftStoreKey(classID string) []byte {
 	return append(NFTKey, []byte(classID)...)
+}
+
+// classTotalSupply returns the byte representation of the ClassTotalSupply
+func classTotalSupply(classID string) []byte {
+	return append(ClassTotalSupply, []byte(classID)...)
 }
 
 // nftOfClassByOwnerStoreKey returns the byte representation of the nft owner

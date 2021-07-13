@@ -24,7 +24,7 @@ type Config struct {
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
 	LogBufferSize         int
-	UnsafeSkipBackup		bool
+	UnsafeSkipBackup      bool
 }
 
 // Root returns the root directory where all info lives
@@ -117,8 +117,6 @@ func GetConfigFromEnv() (*Config, error) {
 	if os.Getenv("UNSAFE_SKIP_BACKUP") == "true" {
 		cfg.UnsafeSkipBackup = true
 	}
-
-	fmt.Println(cfg, "Cosmovisor Config")
 
 	if err := cfg.validate(); err != nil {
 		return nil, err

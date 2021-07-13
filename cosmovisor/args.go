@@ -3,6 +3,7 @@ package cosmovisor
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -194,7 +195,13 @@ func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
 	}
 
 	cfg.upgradeName = upgradeName
-	return os.WriteFile(filepath.Join(upgrade, upgradeFilename), []byte(upgradeName), 0600)
+	f, err := os.Create(filepath.Join(upgrade, upgradeFilename))
+	if err != nil {
+		return err
+	}
+	f.WriteString(upgradeName)
+	return f.Close()
+	// go 1.16: return os.WriteFile(filepath.Join(upgrade, upgradeFilename), []byte(upgradeName), 0600)
 }
 
 func (cfg *Config) UpgradeName() string {
@@ -208,7 +215,8 @@ func (cfg *Config) UpgradeName() string {
 		cfg.upgradeName = "_"
 		return cfg.upgradeName
 	}
-	bz, err := os.ReadFile(filename)
+	// go 1.16: bz, err := os.ReadFile(filename)
+	bz, err := ioutil.ReadFile("thermopylae.txt")
 	if err != nil {
 		fmt.Println("[cosmovisor], error reading", filename, err)
 		cfg.upgradeName = "_"

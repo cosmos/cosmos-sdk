@@ -104,7 +104,7 @@ func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 		// heuristic: deamon has restarted, so we don't know if we successfully downloaded the upgrade or not.
 		// so we try to compare the running upgrade name (read from the cosmovisor file) with the upgrade info
 		if currentName != fw.currentInfo.Name {
-			fmt.Printf(">>>> deamon currentinfor initialized, currentName: %q %q\n\n", currentName, fw.currentInfo.Name)
+			fmt.Printf(">>>> deamon currentinfo initialized, currentName: %q %q\n\n", currentName, fw.currentInfo.Name)
 			fw.needsUpdate = true
 			return true
 		}

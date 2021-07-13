@@ -212,6 +212,7 @@ func (cfg *Config) UpgradeName() string {
 	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
 	_, err := os.Lstat(filename)
 	if err != nil { // no current directory
+		fmt.Println(">>>>> UpgradeName, no filename", filename)
 		cfg.upgradeName = "_"
 		return cfg.upgradeName
 	}

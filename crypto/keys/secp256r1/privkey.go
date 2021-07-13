@@ -11,6 +11,13 @@ func GenPrivKey() (*PrivKey, error) {
 	return &PrivKey{&ecdsaSK{key}}, err
 }
 
+// NewPrivKeyFromSecret creates a private key derived for the secret number
+// represented in big-endian. The `secret` must be a valid ECDSA field element.
+func NewPrivKeyFromSecret(secret []byte) (*PrivKey, error) {
+	key, err := ecdsa.NewPrivKeyFromSecret(secp256r1, secret)
+	return &PrivKey{&ecdsaSK{key}}, err
+}
+
 // PubKey implements SDK PrivKey interface.
 func (m *PrivKey) PubKey() cryptotypes.PubKey {
 	return &PubKey{&ecdsaPK{m.Secret.PubKey()}}
@@ -18,12 +25,12 @@ func (m *PrivKey) PubKey() cryptotypes.PubKey {
 
 // String implements SDK proto.Message interface.
 func (m *PrivKey) String() string {
-	return m.Secret.String(name)
+	return m.Secret.String(Name)
 }
 
 // Type returns key type name. Implements SDK PrivKey interface.
 func (m *PrivKey) Type() string {
-	return name
+	return Name
 }
 
 // Sign hashes and signs the message usign ECDSA. Implements sdk.PrivKey interface.

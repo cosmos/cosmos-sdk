@@ -173,16 +173,23 @@ func TestDeriveHDPathRange(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.path, func(t *testing.T) {
+			require := require.New(t)
 			master, ch := hd.ComputeMastersFromSeed(seed)
-			_, err := hd.DerivePrivateKeyForPath(master, ch, tt.path)
+			_, err := hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, tt.path)
+			checkError(require, err, tt.wantErr)
 
-			if tt.wantErr == "" {
-				require.NoError(t, err, "unexpected error")
-			} else {
-				require.Error(t, err, "expected a report of an int overflow")
-				require.Contains(t, err.Error(), tt.wantErr)
-			}
+			_, err = hd.DeriveECDSAPrivKey(secp256r1Curve, master, ch, tt.path)
+			checkError(require, err, tt.wantErr)
 		})
+	}
+}
+
+func checkError(require *require.Assertions, err error, wantErr string) {
+	if wantErr == "" {
+		require.NoError(err, "unexpected error")
+	} else {
+		require.Error(err, "expected a report of an int overflow")
+		require.Contains(err.Error(), wantErr)
 	}
 }
 
@@ -203,34 +210,34 @@ func ExampleSomeBIP32TestVecs() {
 	fmt.Println("keys from fundraiser test-vector (cosmos, bitcoin, ether)")
 	fmt.Println()
 	// cosmos
-	priv, err := hd.DerivePrivateKeyForPath(master, ch, types.FullFundraiserPath)
+	priv, err := hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, types.FullFundraiserPath)
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// bitcoin
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/0")
+	priv, err = hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "44'/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// ether
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "44'/60'/0'/0/0")
+	priv, err = hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "44'/60'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
 	// INVALID
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "X/0'/0'/0/0")
+	priv, err = hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "X/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
 		fmt.Println(hex.EncodeToString(priv[:]))
 	}
-	priv, err = hd.DerivePrivateKeyForPath(master, ch, "-44/0'/0'/0/0")
+	priv, err = hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "-44/0'/0'/0/0")
 	if err != nil {
 		fmt.Println("INVALID")
 	} else {
@@ -245,13 +252,13 @@ func ExampleSomeBIP32TestVecs() {
 		"advice process birth april short trust crater change bacon monkey medal garment " +
 			"gorilla ranch hour rival razor call lunar mention taste vacant woman sister")
 	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
+	priv, _ = hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "44'/1'/1'/0/4")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	seed = mnemonicToSeed("idea naive region square margin day captain habit " +
 		"gun second farm pact pulse someone armed")
 	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
+	priv, _ = hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "44'/0'/0'/0/420")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	fmt.Println()
@@ -261,7 +268,7 @@ func ExampleSomeBIP32TestVecs() {
 	// bip32 path: m/0/7
 	seed = mnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
 	master, ch = hd.ComputeMastersFromSeed(seed)
-	priv, _ = hd.DerivePrivateKeyForPath(master, ch, "0/7")
+	priv, _ = hd.DeriveECDSAPrivKey(secp256k1Curve, master, ch, "0/7")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
 	// Output: keys from fundraiser test-vector (cosmos, bitcoin, ether)
@@ -300,7 +307,7 @@ func TestDerivePrivateKeyForPathDoNotCrash(t *testing.T) {
 	for _, path := range paths {
 		path := path
 		t.Run(path, func(t *testing.T) {
-			hd.DerivePrivateKeyForPath([32]byte{}, [32]byte{}, path)
+			hd.DeriveECDSAPrivKey(secp256k1Curve, [32]byte{}, [32]byte{}, path)
 		})
 	}
 }

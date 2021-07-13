@@ -21,7 +21,7 @@ func NewSigningAlgoFromString(str string, algoList SigningAlgoList) (SignatureAl
 			return algo, nil
 		}
 	}
-	return nil, fmt.Errorf("provided algorithm %q is not supported", str)
+	return nil, fmt.Errorf("provided algorithm %q is not supported, supported algorithms: %v", str, algoList)
 }
 
 // SigningAlgoList is a slice of signature algorithms

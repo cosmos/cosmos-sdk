@@ -17,7 +17,7 @@ This ADR provides guidelines and recommended practices when updating Protobuf de
 The SDK maintains a set of [Protobuf definitions](https://github.com/cosmos/cosmos-sdk/tree/master/proto/cosmos). When making changes to these Protobuf definitions, the SDK currently only follows [Buf's](https://docs.buf.build/) recommendations. We noticed however that Buf's recommendations might still result in breaking changes in the SDK in some cases. For example:
 
 - Adding fields to `Msg`s. Adding fields is a not a Protubuf spec-breaking operation. However, when adding new fields to `Msg`s, the unknown field rejection will throw an error when sending the new `Msg` to an older node.
-- Marking fields as `reserved`. Protobuf proposes the `reserved` keyword for removing fields without the need to bump the package version. However, by doing so, client backwards compatability is broken as Protobuf doesn't generate anything for `reserved` fields. See [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) for more details on this issue.
+- Marking fields as `reserved`. Protobuf proposes the `reserved` keyword for removing fields without the need to bump the package version. However, by doing so, client backwards compatibility is broken as Protobuf doesn't generate anything for `reserved` fields. See [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) for more details on this issue.
 
 Moreover, module developers often face other questions around Protobuf definitions such as "Can I rename a field?" or "Can I deprecate a field?" This ADR aims to answer all these questions by providing clear guidelines on allowed updates for Protobuf definitions.
 

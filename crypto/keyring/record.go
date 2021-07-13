@@ -12,9 +12,7 @@ import (
 
 var ErrPrivKeyExtr = errors.New("Private key extraction works only for Local")
 
-//TODO replace Info by reyring entry in client/reys
-// check  NewLedgerInfo, newLocalInfo, newMultiInfo in whole codebase
-// TODO count how many times NewLedgerInfo or newLocalInfo is used and perhaps consider create a separate functions for that
+
 func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {

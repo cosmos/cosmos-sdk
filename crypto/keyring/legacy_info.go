@@ -292,7 +292,7 @@ func exportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error
 		}
 
 		return priv, nil
-	//case legacyLedgerInfo, legacyOfflineInfo, legacyMultiInfo:
+	// case legacyLedgerInfo, legacyOfflineInfo, legacyMultiInfo:
 	default:
 		return nil, errors.New("only works on local private keys")
 	}

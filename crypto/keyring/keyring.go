@@ -908,7 +908,7 @@ func (ks keystore) Migrate(key string) (bool, error) {
 		return migrated, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 	}
 
-	//4.serialize info using proto
+	// 4.serialize info using proto
 	k, err := ks.convertFromLegacyInfo(legacyInfo)
 	if err != nil {
 		return migrated, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
@@ -919,7 +919,7 @@ func (ks keystore) Migrate(key string) (bool, error) {
 		return migrated, fmt.Errorf("unable to serialize record, err - %w", err)
 	}
 
-	//5.overwrite the keyring entry with
+	// 5.overwrite the keyring entry with
 	if err := ks.db.Set(keyring.Item{
 		Key:         key,
 		Data:        serializedRecord,

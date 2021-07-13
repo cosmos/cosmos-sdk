@@ -217,7 +217,7 @@ func (cfg *Config) UpgradeName() string {
 		return cfg.upgradeName
 	}
 	// go 1.16: bz, err := os.ReadFile(filename)
-	bz, err := ioutil.ReadFile("thermopylae.txt")
+	bz, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Println("[cosmovisor], error reading", filename, err)
 		cfg.upgradeName = "_"

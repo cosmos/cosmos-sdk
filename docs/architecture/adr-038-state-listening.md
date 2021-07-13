@@ -32,7 +32,7 @@ In a new file, `store/types/listening.go`, we will create a `WriteListener` inte
 type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
-	// set bool indicates if it was a set; true: set, false: delete
+	// delete bool indicates if it was a delete; true: delete, false: set
     OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 ```
@@ -48,10 +48,10 @@ and determine the source of each KV pair.
 
 ```protobuf
 message StoreKVPair {
-  optional string store_key = 1; // the store key for the KVStore this pair originates from
-  required bool set = 2; // true indicates a set operation, false indicates a delete operation
-  required bytes key = 3;
-  required bytes value = 4;
+  string store_key = 1; // the store key for the KVStore this pair originates from
+  bool set = 2; // true indicates a set operation, false indicates a delete operation
+  bytes key = 3;
+  bytes value = 4;
 }
 ```
 
@@ -209,9 +209,9 @@ We will introduce a new `StreamingService` interface for exposing `WriteListener
 ```go
 // Hook interface used to hook into the ABCI message processing of the BaseApp
 type Hook interface {
-	ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) // update the streaming service with the latest BeginBlock messages
-	ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) // update the steaming service with the latest EndBlock messages
-	ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) // update the steaming service with the latest DeliverTx messages
+	ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error // update the streaming service with the latest BeginBlock messages
+	ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error// update the steaming service with the latest EndBlock messages
+	ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error // update the steaming service with the latest DeliverTx messages
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
@@ -384,8 +384,8 @@ using the provided `AppOptions` and TOML configuration fields.
 We will add a new method to the `BaseApp` to enable the registration of `StreamingService`s:
 
 ```go
-// RegisterStreamingService is used to register a streaming service with the BaseApp
-func (app *BaseApp) RegisterHooks(s StreamingService) {
+// SetStreamingService is used to register a streaming service with the BaseApp
+func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// set the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
 		app.cms.AddListeners(key, lis)
@@ -482,60 +482,60 @@ We will also provide a mapping of the TOML `store.streamers` "file" configuratio
 streaming service. In the future, as other streaming services are added, their constructors will be added here as well.
 
 ```go
-// StreamingServiceConstructor is used to construct a streaming service
-type StreamingServiceConstructor func(opts servertypes.AppOptions, keys []sdk.StoreKey) (StreamingService, error)
+// ServiceConstructor is used to construct a streaming service
+type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error)
 
-// StreamingServiceType enum for specifying the type of StreamingService
-type StreamingServiceType int
+// ServiceType enum for specifying the type of StreamingService
+type ServiceType int
 
 const (
-	Unknown StreamingServiceType = iota
-	File
-	// add more in the future
+  Unknown ServiceType = iota
+  File
+  // add more in the future
 )
 
-// NewStreamingServiceType returns the StreamingServiceType corresponding to the provided name
-func NewStreamingServiceType(name string) StreamingServiceType {
-	switch strings.ToLower(name) {
-	case "file", "f":
-		return File
-	default:
-		return Unknown
-	}
+// NewStreamingServiceType returns the streaming.ServiceType corresponding to the provided name
+func NewStreamingServiceType(name string) ServiceType {
+  switch strings.ToLower(name) {
+  case "file", "f":
+    return File
+  default:
+    return Unknown
+  }
 }
 
-// String returns the string name of a StreamingServiceType
-func (sst StreamingServiceType) String() string {
-	switch sst {
-	case File:
-		return "file"
-	default:
-		return ""
-	}
+// String returns the string name of a streaming.ServiceType
+func (sst ServiceType) String() string {
+  switch sst {
+  case File:
+    return "file"
+  default:
+    return ""
+  }
 }
 
-// StreamingServiceConstructorLookupTable is a mapping of StreamingServiceTypes to StreamingServiceConstructors
-var StreamingServiceConstructorLookupTable = map[StreamingServiceType]StreamingServiceConstructor{
-	File: FileStreamingConstructor,
+// ServiceConstructorLookupTable is a mapping of streaming.ServiceTypes to streaming.ServiceConstructors
+var ServiceConstructorLookupTable = map[ServiceType]ServiceConstructor{
+  File: FileStreamingConstructor,
 }
 
-// NewStreamingServiceConstructor returns the StreamingServiceConstructor corresponding to the provided name
-func NewStreamingServiceConstructor(name string) (StreamingServiceConstructor, error) {
-	ssType := NewStreamingServiceType(name)
-	if ssType == Unknown {
-		return nil, fmt.Errorf("unrecognized streaming service name %s", name)
-	}
-	if constructor, ok := StreamingServiceConstructorLookupTable[ssType]; ok {
-		return constructor, nil
-	}
-	return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
+// NewServiceConstructor returns the streaming.ServiceConstructor corresponding to the provided name
+func NewServiceConstructor(name string) (ServiceConstructor, error) {
+  ssType := NewStreamingServiceType(name)
+  if ssType == Unknown {
+    return nil, fmt.Errorf("unrecognized streaming service name %s", name)
+  }
+  if constructor, ok := ServiceConstructorLookupTable[ssType]; ok {
+    return constructor, nil
+  }
+  return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
 }
 
-// FileStreamingConstructor is the StreamingServiceConstructor function for creating a FileStreamingService
-func FileStreamingConstructor(opts servertypes.AppOptions, keys []sdk.StoreKey) (StreamingService, error) {
-	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
-	fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
-	return streaming.NewFileStreamingService(fileDir, filePrefix, keys), nil
+// FileStreamingConstructor is the streaming.ServiceConstructor function for creating a FileStreamingService
+func FileStreamingConstructor(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error) {
+  filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
+  fileDir := cast.ToString(opts.Get("streamers.file.writeDir"))
+  return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
 }
 ```
 
@@ -564,8 +564,8 @@ func NewSimApp(
 	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
 	for _, listenerName := range listeners {
 		// get the store keys allowed to be exposed for this streaming service/state listeners
-		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", listenerName))
-		exposeStoreKeys = make([]storeTypes.StoreKey, 0, len(exposeKeyStrs))
+		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", listenerName)))
+		exposeStoreKeys := make([]storeTypes.StoreKey, 0, len(exposeKeyStrs))
 		for _, keyStr := range exposeKeyStrs {
 			if storeKey, ok := keys[keyStr]; ok {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)
@@ -577,7 +577,7 @@ func NewSimApp(
 			tmos.Exit(err.Error()) // or continue?
 		}
 		// generate the streaming service using the constructor, appOptions, and the StoreKeys we want to expose
-		streamingService, err := constructor(appOpts, exposeStoreKeys)
+		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
 		if err != nil {
 			tmos.Exit(err.Error())
 		}
@@ -585,7 +585,7 @@ func NewSimApp(
 		bApp.RegisterStreamingService(streamingService)
 		// waitgroup and quit channel for optional shutdown coordination of the streaming service
 		wg := new(sync.WaitGroup)
-		quitChan := new(chan struct{}))
+		quitChan := make(chan struct{}))
 		// kick off the background streaming service loop
 		streamingService.Stream(wg, quitChan) // maybe this should be done from inside BaseApp instead?
 	}

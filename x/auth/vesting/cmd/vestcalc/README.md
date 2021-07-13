@@ -23,6 +23,13 @@ since the desired vesting schedule is commonly specified in local time.
 To use another timezone, set your `TZ` environment variable before
 running the command.
 
+## Build and install
+
+Run `go install` in this directory, which will create or update the
+`vestcalc` binary in (by default) your `~/go/bin` directory. See the
+[documentation](https://pkg.go.dev/cmd/go) for the `go` command-line
+tool for other options.
+
 ## Writing a schedule
 
 When the `--write` flag is set, the tool will write a schedule in JSON to

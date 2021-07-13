@@ -78,6 +78,7 @@ func migrateBalanceKeys(store sdk.KVStore) {
 // - Prune balances & supply with zero coins (ref: https://github.com/cosmos/cosmos-sdk/pull/9229)
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
+	migrateBalanceKeys(store)
 
 	if err := pruneZeroBalances(store, cdc); err != nil {
 		return err
@@ -87,7 +88,6 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec)
 		return err
 	}
 
-	migrateBalanceKeys(store)
 	return pruneZeroSupply(store)
 }
 
@@ -103,7 +103,7 @@ func pruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) error {
 			return err
 		}
 
-		if balance.Amount.IsZero() {
+		if balance.IsZero() {
 			balancesStore.Delete(iterator.Key())
 		}
 	}

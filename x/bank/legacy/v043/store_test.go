@@ -28,7 +28,7 @@ func TestSupplyMigration(t *testing.T) {
 	// Old supply was stored as a single blob under the `SupplyKey`.
 	var oldSupply v040bank.SupplyI
 	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
-	oldSupplyBz, err := encCfg.Codec.MarshalInterface(oldSupply)
+	oldSupplyBz, err := encCfg.Marshaler.MarshalInterface(oldSupply)
 	require.NoError(t, err)
 	store.Set(v040bank.SupplyKey, oldSupplyBz)
 
@@ -75,19 +75,19 @@ func TestBalanceKeysMigration(t *testing.T) {
 	// set 10 foo coin
 	fooCoin := sdk.NewCoin("foo", sdk.NewInt(10))
 	oldFooKey := append(append(v040bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
-	fooBz, err := encCfg.Codec.Marshal(&fooCoin)
+	fooBz, err := encCfg.Marshaler.Marshal(&fooCoin)
 	require.NoError(t, err)
 	store.Set(oldFooKey, fooBz)
 
 	// set 0 foobar coin
 	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
 	oldKeyFooBar := append(append(v040bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
-	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
+	fooBarBz, err := encCfg.Marshaler.Marshal(&fooBarCoin)
 	require.NoError(t, err)
 	store.Set(oldKeyFooBar, fooBarBz)
 	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
 
-	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Codec)
+	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
 	require.NoError(t, err)
 
 	newKey := append(types.CreateAccountBalancesPrefix(addr), []byte(fooCoin.Denom)...)

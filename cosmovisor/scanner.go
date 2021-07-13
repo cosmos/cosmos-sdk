@@ -82,7 +82,6 @@ func (fw *fileWatcher) MonitorUpdate(currentName string) <-chan struct{} {
 // an upgrade with the same name.
 func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 	if fw.needsUpdate {
-		fmt.Println("\n>>>>>>>>>>>>>>>> NEEDS UPGRADE! (cache)\n")
 		return true
 	}
 	stat, err := os.Stat(fw.filename)
@@ -105,6 +104,7 @@ func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 		// heuristic: deamon has restarted, so we don't know if we successfully downloaded the upgrade or not.
 		// so we try to compare the running upgrade name (read from the cosmovisor file) with the upgrade info
 		if currentName != fw.currentInfo.Name {
+			fmt.Printf(">>>> deamon currentinfor initialized, currentName: %q %q\n\n", currentName, fw.currentInfo.Name)
 			fw.needsUpdate = true
 			return true
 		}

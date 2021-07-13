@@ -1295,6 +1295,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 	pub, err := k.GetPubKey()
+	require.NoError(err)
 	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.

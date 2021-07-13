@@ -8,10 +8,12 @@ import "cosmos/crypto/hd/hd.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
 
+// Record is used for keyring migration from legacyInfo to proto.
 message Record {
   string name = 1;
   google.protobuf.Any pub_key = 2;
 
+  // Record contains one of the following items
   oneof item {
     Local local = 3;
     Ledger ledger  = 4;
@@ -21,10 +23,14 @@ message Record {
   // Item is a keyring item stored in a keyring backend.
   message Local {
     google.protobuf.Any priv_key = 1; 
-    string privKeyType = 2;
+    string priv_key_type = 2;
   }
+
+  // Ledger item 
   message Ledger {
     hd.BIP44Params path = 1;
   }
+
+  // Empty item
   message Empty {}
 }

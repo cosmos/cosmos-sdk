@@ -3441,16 +3441,16 @@ then you must create a new proto message and follow ADR-28 for Address construct
 <a name="cosmos.crypto.hd.BIP44Params"></a>
 
 ### BIP44Params
-
+BIP44Params is used as path field in ledger item in Record.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `purpose` | [uint32](#uint32) |  |  |
-| `coinType` | [uint32](#uint32) |  |  |
+| `coin_type` | [uint32](#uint32) |  |  |
 | `account` | [uint32](#uint32) |  |  |
 | `change` | [bool](#bool) |  |  |
-| `addressIndex` | [uint32](#uint32) |  |  |
+| `address_index` | [uint32](#uint32) |  |  |
 
 
 
@@ -3476,7 +3476,7 @@ then you must create a new proto message and follow ADR-28 for Address construct
 <a name="cosmos.crypto.keyring.v1.Record"></a>
 
 ### Record
-
+Record is used for keyring migration from legacyInfo to proto.
 
 
 | Field | Type | Label | Description |
@@ -3495,7 +3495,7 @@ then you must create a new proto message and follow ADR-28 for Address construct
 <a name="cosmos.crypto.keyring.v1.Record.Empty"></a>
 
 ### Record.Empty
-
+Empty item
 
 
 
@@ -3505,7 +3505,7 @@ then you must create a new proto message and follow ADR-28 for Address construct
 <a name="cosmos.crypto.keyring.v1.Record.Ledger"></a>
 
 ### Record.Ledger
-
+Ledger item
 
 
 | Field | Type | Label | Description |
@@ -3526,7 +3526,7 @@ Item is a keyring item stored in a keyring backend.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `priv_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `privKeyType` | [string](#string) |  |  |
+| `priv_key_type` | [string](#string) |  |  |
 
 
 

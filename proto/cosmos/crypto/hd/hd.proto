@@ -6,12 +6,13 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/hd";
 option (gogoproto.goproto_getters_all) = false;
 
+// BIP44Params is used as path field in ledger item in Record.
 message BIP44Params  {
 	option (gogoproto.goproto_stringer) = false;
 
 	uint32 purpose = 1;
-	uint32 coinType = 2;
+	uint32 coin_type = 2;
 	uint32 account = 3;
 	bool   change = 4;
-	uint32 addressIndex = 5;
+	uint32 address_index = 5;
 }

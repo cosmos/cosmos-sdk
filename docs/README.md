@@ -48,24 +48,24 @@ aside: false
 ## Get Started
 
 - **[SDK Intro](./intro/overview.md)**: High-level overview of the Cosmos SDK.
-- **[Starport](https://github.com/tendermint/starport/blob/develop/docs/README.md)**: A developer-friendly interface to the Cosmos SDK to scaffold a standard Cosmos SDK blockchain app.
-- **[SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial that showcases how to build a Cosmos SDK-based blockchain from scratch and explains the basic principles of the SDK in the process.
+- **[Starport](https://docs.starport.network/)**: A developer-friendly interface to the Cosmos SDK to scaffold a standard Cosmos SDK blockchain app.
+- **[SDK Tutorials](https://tutorials.cosmos.network/)**: Tutorials that showcase how to build Cosmos SDK-based blockchains from scratch and explain the basic principles of the SDK in the process.
 
 ## Reference
 
 - **[Basics](./basics/)**: Documentation on the basic concepts of the Cosmos SDK, like the standard anatomy of an application, the transaction lifecycle, and accounts management.
 - **[Core](./core/)**: Documentation on the core concepts of the Cosmos SDK, like `baseapp`, the `store`, or the `server`.
-- **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`, `keeper`, `handler`, and `querier`.
+- **[Building Modules](./building-modules/)**: Important concepts for module developers like `message`, `keeper`, and `querier`.
 - **[IBC](./ibc/)**: Documentation for the IBC protocol integration and concepts.
 - **[Running a Node, API, CLI](./run-node/)**: Documentation on how to run a node and interact with the node using the CLI and the API.
-- **[Migrations](./migrations/)**: Migration guides for updating to Stargate.
+- **[Migrations](./migrations/)**: Migration guides for updating to newer versions of the SDK.
 
 ## Other Resources
 
 - **[Module Directory](../x/)**: Cosmos SDK module implementations and their respective documentation.
 - **[Specifications](./spec/)**: Specifications of modules and other parts of the Cosmos SDK.
 - **[SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk)**: Godocs of the Cosmos SDK.
-- **[REST API spec](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node through REST.
+- **[REST and RPC Endpoints](https://cosmos.network/rpc/)**: List of endpoints to interact with a `gaia` full-node.
 
 ## Cosmos Hub
 
@@ -73,11 +73,8 @@ The Cosmos Hub (`gaia`) docs have moved to [github.com/cosmos/gaia](https://gith
 
 ## Languages
 
-The Cosmos SDK is written in [Golang](https://golang.org/), though the
-framework could be implemented similarly in other languages.
-Contact us for information about funding an implementation in another language.
+The Cosmos SDK is written in [Golang](https://golang.org/), though the framework could be implemented similarly in other languages. Contact us for information about funding an implementation in another language.
 
 ## Contribute
 
-See the [DOCS_README.md](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
-considerations when making changes.
+See the [DOCS_README.md](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and considerations when making changes.

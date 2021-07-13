@@ -56,11 +56,14 @@ arbitrary state changes.
 
 ## Deposit
 
-To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param. The voting period will not start until the proposal's deposit equals `MinDeposit`.
+To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param.
 
-When a proposal is submitted, it has to be accompanied by a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own. If a proposal's deposit is inferior to `MinDeposit`, other token holders can increase the proposal's deposit by sending a `Deposit` transaction. The deposit is kept in an escrow in the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
+When a proposal is submitted, it has to be accompanied by a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own.
+The newly created proposal is stored in an _inactive proposal queue_ and stays there until its deposit passes the `MinDeposit`. Other token holders can increase the proposal's deposit by sending a `Deposit` transaction.
+If a proposal won't pass the `MinDeposit` before the deposit end time (the time when users can make deposits), it will be killed: removed from the state and the deposit will be burned (x/gov EndBlocker).
+When a proposal has at least 2 deposits (so at least one more account must call `Depoist`) and passes the `MinDeposit` threshold before the deposit end time, it will be moved into the _active proposal queue_ and enters voting period.
 
-Once the proposal's deposit reaches `MinDeposit`, it enters voting period. If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, proposal closes and nobody can deposit on it anymore.
+The deposit is kept in an escrow in the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
 
 ### Deposit refund and burn
 

@@ -63,7 +63,7 @@ The newly created proposal is stored in an _inactive proposal queue_ and stays t
 If a proposal doesn't pass the `MinDeposit` before the deposit end time (the time when users can make deposits), it will be destroyed: removed from the state and the deposit will be burned (x/gov EndBlocker).
 When a proposal deposit passes the `MinDeposit` threshold (even during the proposal submission) before the deposit end time, it will be moved into the _active proposal queue_ and enters voting period.
 
-The deposit is kept in an escrow in the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
+The deposit is kept in escrow and held by the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
 
 ### Deposit refund and burn
 

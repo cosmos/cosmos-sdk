@@ -46,8 +46,10 @@ func DoUpgrade(cfg *Config, info *UpgradeInfo) error {
 		return fmt.Errorf("downloaded binary doesn't check out: %w", err)
 	}
 
+	fmt.Println("unsafeSkipBackup?", cfg.UnsafeSkipBackup)
+
 	// take backup if `UNSAFE_UPGRADE` is not set.
-	if !cfg.UnsafeUpgrade {
+	if !cfg.UnsafeSkipBackup {
 		// copy the DAEMON_HOME/data to a backup dir
 
 		// a destination directory, Format MM-DD-YYYY
@@ -58,6 +60,8 @@ func DoUpgrade(cfg *Config, info *UpgradeInfo) error {
 		if err != nil {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
+
+		fmt.Println("*****\n\n\n\n\nbackup done:::::\n\n\n\n", dst)
 	}
 
 	return cfg.SetCurrentUpgrade(info.Name)

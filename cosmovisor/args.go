@@ -24,7 +24,7 @@ type Config struct {
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
 	LogBufferSize         int
-	UnsafeUpgrade		bool
+	UnsafeSkipBackup		bool
 }
 
 // Root returns the root directory where all info lives
@@ -114,9 +114,11 @@ func GetConfigFromEnv() (*Config, error) {
 		cfg.LogBufferSize = bufio.MaxScanTokenSize
 	}
 
-	if os.Getenv("UNSAFE_UPGRADE") == "true" {
-		cfg.UnsafeUpgrade = true
+	if os.Getenv("UNSAFE_SKIP_BACKUP") == "true" {
+		cfg.UnsafeSkipBackup = true
 	}
+
+	fmt.Println(cfg, "Cosmovisor Config")
 
 	if err := cfg.validate(); err != nil {
 		return nil, err

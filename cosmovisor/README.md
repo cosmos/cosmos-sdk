@@ -41,8 +41,9 @@ subprocesses that are controlled by it. The folder content is organised as follo
 │       └── $DAEMON_NAME
 └── upgrades
     └── <name>
-        └── bin
-            └── $DAEMON_NAME
+        ├── bin
+        │   └── $DAEMON_NAME
+        └── upgrade_name.txt
 ```
 
 Each version of the Cosmos SDK application is stored under either `genesis` or `upgrades/<name>`, which holds `bin/$DAEMON_NAME`
@@ -82,6 +83,17 @@ for those who wish to sync a fullnode from start.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc) are performed as normal.
 Application binaries' directives such as command-line flags and environment variables work normally.
+
+
+### Detecting Updates
+
+`cosmovisor` is pooling the `$DAEMON_UPDATE_INFO_FILE` (default to `$DAEMON_HOME/data/upgrade-info.json`) file for new update instructions. The following heuristic is applied to detect update:
++ When, starting `cosmovisor` doesn't know much about currently running upgrade, except the binary (which is either in `current/bin/` or `genesis/bin` if the former doesn't exists). It tries to read the `current/upgrade_name.txt` file to get an information about the current update name.
++ If `current/upgrade_name.txt` doesn't exist then we assume that `upgrade-info.json` is an upgrade request. So, if the `upgrade-info.json` when starting a cosmovisor but `current/upgrade_name.txt` doesn't exist then we try to make an upgrade according to the `name` attribute in `upgrade-info.json`.
++ Otherwise, we wait for the changes in `upgrade-info.json` - as soon as a new upgrade name will be recorded in that file, we trigger an upgrade mechanism.
+
+During the upgrade we auto-download a new binary (if auto-download is enabled), and link a new directory to the `current` based on the `upgrade-info.json:name`. At the end we save `upgrade-info.json:name` to `current/upgrade_name.txt`.
+
 
 ## Auto-Download
 

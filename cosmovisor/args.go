@@ -84,25 +84,24 @@ func (cfg *Config) CurrentBin() (string, error) {
 	// if nothing here, fallback to genesis
 	info, err := os.Lstat(cur)
 	if err != nil {
-		//Create symlink to the genesis
+		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 	// if it is there, ensure it is a symlink
 	if info.Mode()&os.ModeSymlink == 0 {
-		//Create symlink to the genesis
+		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 
 	// resolve it
 	dest, err := os.Readlink(cur)
 	if err != nil {
-		//Create symlink to the genesis
+		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 
 	// and return the binary
 	binpath := filepath.Join(dest, "bin", cfg.Name)
-	fmt.Println(">>> current binary resolved correctly, binary path:", binpath)
 	return binpath, nil
 }
 
@@ -199,9 +198,11 @@ func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
 	if err != nil {
 		return err
 	}
-	f.WriteString(upgradeName)
-	return f.Close()
 	// go 1.16: return os.WriteFile(filepath.Join(upgrade, upgradeFilename), []byte(upgradeName), 0600)
+	if _, err := f.WriteString(upgradeName); err != nil {
+		return err
+	}
+	return f.Close()
 }
 
 func (cfg *Config) UpgradeName() string {
@@ -212,7 +213,6 @@ func (cfg *Config) UpgradeName() string {
 	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
 	_, err := os.Lstat(filename)
 	if err != nil { // no current directory
-		fmt.Println(">>>>> UpgradeName, no filename", filename)
 		cfg.upgradeName = "_"
 		return cfg.upgradeName
 	}

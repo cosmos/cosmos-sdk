@@ -65,7 +65,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcessWithDownloads() {
-	// this is a fun path
+	// test case upgrade path:
 	// genesis -> "chain2" = zip_binary
 	// zip_binary -> "chain3" = ref_zipped -> zip_directory
 	// zip_directory no upgrade

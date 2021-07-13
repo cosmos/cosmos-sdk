@@ -43,7 +43,7 @@ Now imagine a v0.43 node accepting a `MsgExample` transaction, and in v0.44 the 
 
 For this reason, module developers SHALL NOT add new fields to existing `Msg`s.
 
-It is worth mentioning that this does not limit to adding fields to a `Msg`, but also to all nested structs and `Any`s inside the `Msg`.
+It is worth mentioning that this does not limit adding fields to a `Msg`, but also to all nested structs and `Any`s inside a `Msg`.
 
 On the other hand, module developers MAY add new fields to Protobuf definitions related to the `Query` service, as the unknown field rejection does not apply to queries.
 

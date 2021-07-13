@@ -142,7 +142,7 @@ Check out `release/v0.43.x`:
 git checkout release/v0.43.x
 ```
 
-Add the following to `simapp/app.go` starting on line 260:
+Add the following to `simapp/app.go` inside `NewSimApp`:
 
 ```go
 	app.registerUpgradeHandlers()

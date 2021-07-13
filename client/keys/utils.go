@@ -13,9 +13,6 @@ import (
 const (
 	OutputFormatText = "text"
 	OutputFormatJSON = "json"
-
-	// defaultKeyDBName is the client's subdirectory where keys are stored.
-	defaultKeyDBName = "keys"
 )
 
 type bechKeyOutFn func(k *cryptokeyring.Record) (cryptokeyring.KeyOutput, error)

@@ -502,7 +502,7 @@ func (ks keystore) List() ([]*Record, error) {
 	var res []*Record
 	sort.Strings(keys)
 	for _, key := range keys {
-		if strings.Contains(key, "address") {
+		if strings.Contains(key, addressSuffix) {
 			continue
 		}
 
@@ -873,7 +873,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 	}
 
 	for _, key := range keys {
-		if strings.Contains(key, "address") {
+		if strings.Contains(key, addressSuffix) {
 			continue
 		}
 

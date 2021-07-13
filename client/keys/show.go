@@ -27,8 +27,6 @@ const (
 	FlagDevice = "device"
 
 	flagMultiSigThreshold = "multisig-threshold"
-
-	defaultMultiSigKeyName = "multi"
 )
 
 // ShowKeysCmd shows key information for a given key name.

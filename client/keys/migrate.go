@@ -7,10 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
-// migratePassphrase is used as a no-op migration key passphrase as a passphrase
-// is not needed for importing into the Keyring keystore.
-const migratePassphrase = "NOOP_PASSPHRASE"
-
 // MigrateCommand migrates key information from legacy keybase to OS secret store.
 func MigrateCommand() *cobra.Command {
 	// TODO update description

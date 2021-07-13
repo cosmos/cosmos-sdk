@@ -78,8 +78,8 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 // SetVote sets a Vote to the gov store
 func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
 	// vote.Option is a deprecated field, we don't set it in state
-	if vote.Option != types.OptionEmpty { //nolint
-		vote.Option = types.OptionEmpty //nolint
+	if vote.Option != types.OptionEmpty { // nolint
+		vote.Option = types.OptionEmpty // nolint
 	}
 
 	store := ctx.KVStore(keeper.storeKey)
@@ -135,6 +135,6 @@ func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sd
 // there's only 1 VoteOption.
 func populateLegacyOption(vote *types.Vote) {
 	if len(vote.Options) == 1 && vote.Options[0].Weight.Equal(sdk.MustNewDecFromStr("1.0")) {
-		vote.Option = vote.Options[0].Option //nolint
+		vote.Option = vote.Options[0].Option // nolint
 	}
 }

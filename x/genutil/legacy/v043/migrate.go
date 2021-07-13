@@ -2,8 +2,8 @@ package v043
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
-	v040bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v040"
-	v043bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
+	v040bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v040"
+	v043bank "github.com/cosmos/cosmos-sdk/x/bank/legacy/v043"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v040gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v040"

@@ -40,7 +40,7 @@ Separation of storage and commitment (by the SMT) will allow the optimization of
 
 `SC` (SMT) is used to commit to a data and compute merkle proofs. `SS` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SS` will store each `(key, value)` pair directly (map key -> value).
 
-SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is stored in a path (we hash a key to evenly distribute keys in the tree) and `hash(value)` in a leaf.
+SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is used as leaf path (we hash a key to uniformly distribute leaves in the tree) and `(hash(key),  hash(value))` as the leaf contents.
 
 For data access we propose 2 additional KV buckets (implemented as namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 

@@ -63,6 +63,16 @@ message SignDoc {
   uint64 account_number = 4;
 }
 
+message SignDocAux {
+  bytes               body_bytes     = 1;
+  google.protobuf.Any public_key     = 2;
+  string              chain_id       = 3;
+  uint64              account_number = 4;
+
+  // tip should be left empty if the signer is not the tipper for this transaction
+  Tip tip = 5;
+}
+
 // TxBody is the body of a transaction that all signers sign over.
 message TxBody {
   // messages is a list of messages to be executed. The required signers of
@@ -108,6 +118,8 @@ message AuthInfo {
   // based on the cost of evaluating the body and doing signature verification
   // of the signers. This can be estimated via simulation.
   Fee fee = 2;
+
+  Tip tip = 3;
 }
 
 // SignerInfo describes the public key and signing mode of a single top-level
@@ -115,7 +127,7 @@ message AuthInfo {
 message SignerInfo {
   // public_key is the public key of the signer. It is optional for accounts
   // that already exist in state. If unset, the verifier can use the required \
-  // signer address for this position and lookup the public key.
+    // signer address for this position and lookup the public key.
   google.protobuf.Any public_key = 1;
 
   // mode_info describes the signing mode of the signer and is a nested
@@ -180,4 +192,10 @@ message Fee {
   // to pay fees instead of the fee payer's own balance. If an appropriate fee grant does not exist or the chain does
   // not support fee grants, this will fail
   string granter = 4;
+}
+
+message Tip {
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string tipper = 2;
 }

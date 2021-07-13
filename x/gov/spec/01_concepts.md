@@ -61,7 +61,7 @@ To prevent spam, proposals must be submitted with a deposit in the coins defined
 When a proposal is submitted, it has to be accompanied with a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own.
 The newly created proposal is stored in an _inactive proposal queue_ and stays there until its deposit passes the `MinDeposit`. Other token holders can increase the proposal's deposit by sending a `Deposit` transaction.
 If a proposal doesn't pass the `MinDeposit` before the deposit end time (the time when users can make deposits), it will be destroyed: removed from the state and the deposit will be burned (x/gov EndBlocker).
-When a proposal deposit passes the `MinDeposit` threshold (even during the proposal submission) before the deposit end time, it will be moved into the _active proposal queue_ and enters voting period.
+When a proposal deposit passes the `MinDeposit` threshold (even during the proposal submission) before the deposit end time, the proposal will be moved into the _active proposal queue_ and the voting period will begin.
 
 The deposit is kept in escrow and held by the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
 

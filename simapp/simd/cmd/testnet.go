@@ -92,7 +92,7 @@ func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBala
 		Short:                      "subcommands for starting or configuring local testnets",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	testnetCmd.AddCommand(testnetStartCmd())

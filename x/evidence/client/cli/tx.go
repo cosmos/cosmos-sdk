@@ -18,7 +18,7 @@ func GetTxCmd(childCmds []*cobra.Command) *cobra.Command {
 		Short:                      "Evidence transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	submitEvidenceCmd := SubmitEvidenceCmd()

@@ -76,7 +76,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			},
 		},
 		{
-			name: "Unknown field in midst of repeated values, allowUnknownNonCriticals set",
+			name:                     "Unknown field in midst of repeated values, allowUnknownNonCriticals set",
 			allowUnknownNonCriticals: true,
 			in: &testdata.TestVersion2{
 				C: []*testdata.TestVersion2{
@@ -178,7 +178,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 			hasUnknownNonCriticals: true,
 		},
 		{
-			name: "Unknown field in midst of repeated values, non-critical field ignored",
+			name:                     "Unknown field in midst of repeated values, non-critical field ignored",
 			allowUnknownNonCriticals: true,
 			in: &testdata.TestVersion3{
 				C: []*testdata.TestVersion3{
@@ -257,7 +257,7 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 			},
 		},
 		{
-			name: "Field that's in the reserved range, toggle allowUnknownNonCriticals",
+			name:                     "Field that's in the reserved range, toggle allowUnknownNonCriticals",
 			allowUnknownNonCriticals: true,
 			in: &testdata.Customer2{
 				Id:       289,
@@ -266,7 +266,7 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "Unknown fields that are critical, but with allowUnknownNonCriticals set",
+			name:                     "Unknown fields that are critical, but with allowUnknownNonCriticals set",
 			allowUnknownNonCriticals: true,
 			in: &testdata.Customer2{
 				Id:   289,

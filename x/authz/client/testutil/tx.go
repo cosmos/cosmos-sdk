@@ -47,8 +47,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// Create new account in the keyring.
 	/*
-	_, _, err = val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
+		_, _, err = val.ClientCtx.Keyring.NewMnemonic("grantee", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+		s.Require().NoError(err)
 	*/
 	// Send some funds to the new account.
 	// Create new account in the keyring.

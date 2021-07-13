@@ -32,7 +32,7 @@ func GetTxCmd() *cobra.Command {
 		Long:                       "Grant and revoke fee allowance for a grantee by a granter",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	feegrantTxCmd.AddCommand(

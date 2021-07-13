@@ -56,7 +56,7 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 		Short:                      "Governance transactions subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
-		RunE: client.ValidateCmd,
+		RunE:                       client.ValidateCmd,
 	}
 
 	cmdSubmitProp := NewCmdSubmitProposal()

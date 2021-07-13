@@ -61,7 +61,7 @@ func TestUnknownFields(t *testing.T) {
 		{
 			name: "non-critical fields in TxBody should not error on decode, but should error with amino",
 			body: &testdata.TestUpdatedTxBody{
-				Memo: "foo",
+				Memo:                         "foo",
 				SomeNewFieldNonCriticalField: "blah",
 			},
 			authInfo:       &testdata.TestUpdatedAuthInfo{},

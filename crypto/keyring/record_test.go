@@ -124,7 +124,7 @@ func TestLedgerRecordMarshaling(t *testing.T) {
 	ledgerRecord2 := r2.GetLedger()
 	require.NotNil(ledgerRecord2)
 	require.Nil(r2.GetLocal())
-	
+
 	require.Equal(ledgerRecord2.Path.String(), path.String())
 }
 

@@ -693,7 +693,7 @@ func (s *coinTestSuite) TestParseCoins() {
 		expected sdk.Coins // if valid is true, make sure this is returned
 	}{
 		{"", true, nil},
-		{"0stake", true, sdk.Coins{}},                                                 // remove zero coins
+		{"0stake", true, sdk.Coins{}}, // remove zero coins
 		{"0stake,1foo,99bar", true, sdk.Coins{{"bar", sdk.NewInt(99)}, {"foo", one}}}, // remove zero coins
 		{"1foo", true, sdk.Coins{{"foo", one}}},
 		{"10btc,1atom,20btc", false, nil},

@@ -18,7 +18,6 @@ import (
 
 const n1 = "cosmos"
 
-
 func TestMigrateLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring
 	dir := t.TempDir()

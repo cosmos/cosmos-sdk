@@ -75,9 +75,57 @@ func migrateBalanceKeys(store sdk.KVStore) {
 // - Change addresses to be length-prefixed.
 // - Change balances prefix to 1 byte
 // - Change supply to be indexed by denom
+// - Prune balances & supply with zero coins (ref: https://github.com/cosmos/cosmos-sdk/pull/9229)
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
-
 	migrateBalanceKeys(store)
-	return migrateSupply(store, cdc)
+
+	if err := pruneZeroBalances(store, cdc); err != nil {
+		return err
+	}
+
+	if err := migrateSupply(store, cdc); err != nil {
+		return err
+	}
+
+	return pruneZeroSupply(store)
+}
+
+// pruneZeroBalances removes the zero balance addresses from balances store.
+func pruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) error {
+	balancesStore := prefix.NewStore(store, BalancesPrefix)
+	iterator := balancesStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var balance sdk.Coin
+		if err := cdc.Unmarshal(iterator.Value(), &balance); err != nil {
+			return err
+		}
+
+		if balance.IsZero() {
+			balancesStore.Delete(iterator.Key())
+		}
+	}
+	return nil
+}
+
+// pruneZeroSupply removes zero balance denom from supply store.
+func pruneZeroSupply(store sdk.KVStore) error {
+	supplyStore := prefix.NewStore(store, SupplyKey)
+	iterator := supplyStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var amount sdk.Int
+		if err := amount.Unmarshal(iterator.Value()); err != nil {
+			return err
+		}
+
+		if amount.IsZero() {
+			supplyStore.Delete(iterator.Key())
+		}
+	}
+
+	return nil
 }

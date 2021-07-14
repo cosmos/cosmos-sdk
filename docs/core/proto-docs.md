@@ -533,7 +533,9 @@
     - [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi)
     - [ModeInfo.Single](#cosmos.tx.v1beta1.ModeInfo.Single)
     - [SignDoc](#cosmos.tx.v1beta1.SignDoc)
+    - [SignDocAux](#cosmos.tx.v1beta1.SignDocAux)
     - [SignerInfo](#cosmos.tx.v1beta1.SignerInfo)
+    - [Tip](#cosmos.tx.v1beta1.Tip)
     - [Tx](#cosmos.tx.v1beta1.Tx)
     - [TxBody](#cosmos.tx.v1beta1.TxBody)
     - [TxRaw](#cosmos.tx.v1beta1.TxRaw)
@@ -7427,6 +7429,8 @@ SignMode represents a signing mode with its own security guarantees.
 | SIGN_MODE_UNSPECIFIED | 0 | SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected |
 | SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx |
 | SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT |
+| SIGN_MODE_DIRECT_AUX | 3 |  |
+| SIGN_MODE_TEXTUAL_AUX | 4 |  |
 | SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future |
 
 
@@ -7456,6 +7460,7 @@ transaction.
 | ----- | ---- | ----- | ----------- |
 | `signer_infos` | [SignerInfo](#cosmos.tx.v1beta1.SignerInfo) | repeated | signer_infos defines the signing modes for the required signers. The number and order of elements must match the required signers from TxBody's messages. The first element is the primary signer and the one which pays the fee. |
 | `fee` | [Fee](#cosmos.tx.v1beta1.Fee) |  | Fee is the fee and gas limit for the transaction. The first signer is the primary signer and the one which pays the fee. The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation. |
+| `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  |  |
 
 
 
@@ -7549,6 +7554,26 @@ SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
 
 
 
+<a name="cosmos.tx.v1beta1.SignDocAux"></a>
+
+### SignDocAux
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `body_bytes` | [bytes](#bytes) |  |  |
+| `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `chain_id` | [string](#string) |  |  |
+| `account_number` | [uint64](#uint64) |  |  |
+| `sequence` | [uint64](#uint64) |  |  |
+| `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | tip should be left empty if the signer is not the tipper for this transaction |
+
+
+
+
+
+
 <a name="cosmos.tx.v1beta1.SignerInfo"></a>
 
 ### SignerInfo
@@ -7561,6 +7586,22 @@ signer.
 | `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  | public_key is the public key of the signer. It is optional for accounts that already exist in state. If unset, the verifier can use the required \ signer address for this position and lookup the public key. |
 | `mode_info` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) |  | mode_info describes the signing mode of the signer and is a nested structure to support nested multisig pubkey's |
 | `sequence` | [uint64](#uint64) |  | sequence is the sequence of the account, which describes the number of committed transactions signed by a given address. It is used to prevent replay attacks. |
+
+
+
+
+
+
+<a name="cosmos.tx.v1beta1.Tip"></a>
+
+### Tip
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `tipper` | [string](#string) |  |  |
 
 
 

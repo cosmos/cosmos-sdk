@@ -130,9 +130,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
 }
 
-// Route returns the message routing key for the gov module.
+// Deprecated: Route returns the message routing key for the gov module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	panic("this method is deprecated and not implemented by the SDK anymore")
 }
 
 // QuerierRoute returns the gov module's querier route name.

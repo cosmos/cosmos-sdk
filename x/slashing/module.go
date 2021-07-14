@@ -119,9 +119,9 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the slashing module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the slashing module.
+// Deprecated: Route returns the message routing key for the slashing module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	panic("this method is deprecated and not implemented by the SDK anymore")
 }
 
 // QuerierRoute returns the slashing module's querier route name.

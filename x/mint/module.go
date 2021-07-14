@@ -107,8 +107,10 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the mint module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the mint module.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
+// Deprecated: Route returns the message routing key for the mint module.
+func (AppModule) Route() sdk.Route {
+	panic("this method is deprecated and not implemented by the SDK anymore")
+}
 
 // QuerierRoute returns the mint module's querier route name.
 func (AppModule) QuerierRoute() string {

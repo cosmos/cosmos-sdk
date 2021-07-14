@@ -117,9 +117,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Route returns the message routing key for the staking module.
+// Deprecated: Route returns the message routing key for the staking module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	panic("this method is deprecated and not implemented by the SDK anymore")
 }
 
 // QuerierRoute returns the staking module's querier route name.

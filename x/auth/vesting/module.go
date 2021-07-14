@@ -92,9 +92,9 @@ func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 // RegisterInvariants performs a no-op; there are no invariants to enforce.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the module's message router and handler.
+// Deprecated: Route returns the module's message router and handler.
 func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
+	panic("this method is deprecated and not implemented by the SDK anymore")
 }
 
 // QuerierRoute returns an empty string as the module contains no query

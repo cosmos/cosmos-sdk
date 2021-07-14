@@ -36,7 +36,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+
 ## [v0.43.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc1) - 2021-07-14
+
+### Improvements
+
+* (cli) [\#9593](https://github.com/cosmos/cosmos-sdk/pull/9593) Check if chain-id is blank before verifying signatures in multisign and error.
+
+### CLI Breaking Changes
+
+* [\#9621](https://github.com/cosmos/cosmos-sdk/pull/9621) Rollback [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) and log warning if there's an empty value for min-gas-price in app.toml
+
+## [v0.43.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc0) - 2021-06-25
 
 ### Features
 
@@ -283,7 +294,7 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * [\#8628](https://github.com/cosmos/cosmos-sdk/issues/8628) Commands no longer print outputs using `stderr` by default
 * [\#9134](https://github.com/cosmos/cosmos-sdk/pull/9134) Renamed the CLI flag `--memo` to `--note`.
 * [\#9291](https://github.com/cosmos/cosmos-sdk/pull/9291) Migration scripts prior to v0.38 have been removed from the CLI `migrate` command. The oldest supported migration is v0.39->v0.42.
-
+* [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml
 
 ### Improvements
 
@@ -312,7 +323,6 @@ Every module contains its own CHANGELOG.md. Please refer to the module you are i
 * [\#8093](https://github.com/cosmos/cosmos-sdk/pull/8093) Limit usage of context.background.
 * [\#8460](https://github.com/cosmos/cosmos-sdk/pull/8460) Ensure b.ReportAllocs() in all the benchmarks
 * [\#8461](https://github.com/cosmos/cosmos-sdk/pull/8461) Fix upgrade tx commands not showing up in CLI
-* (cli) [\#9593](https://github.com/cosmos/cosmos-sdk/pull/9593) Check if chain-id is blank before verifying signatures in multisign and error.
 
 
 ### Bug Fixes

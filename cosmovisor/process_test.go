@@ -22,106 +22,113 @@ func TestProcessTestSuite(t *testing.T) {
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcess() {
+	// binaries from testdata/validate directory
+	require := s.Require()
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PoolInterval: 20}
-	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
 	var stdout, stderr = NewBuffer(), NewBuffer()
 	currentBin, err := cfg.CurrentBin()
-	s.Require().NoError(err)
-	s.Require().Equal(cfg.GenesisBin(), currentBin)
+	require.NoError(err)
+	require.Equal(cfg.GenesisBin(), currentBin)
 
 	launcher, err := cosmovisor.NewLauncher(cfg)
-	s.Require().NoError(err)
+	require.NoError(err)
 
+	upgradeFile := cfg.UpgradeInfoFilePath()
 	args := []string{"foo", "bar", "1234", upgradeFile}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
-	s.Require().NoError(err)
-	s.Require().True(doUpgrade)
-	s.Require().Equal("", stderr.String())
-	s.Require().Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile),
+	require.NoError(err)
+	require.True(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile),
 		stdout.String())
 
 	// ensure this is upgraded now and produces new output
 
 	currentBin, err = cfg.CurrentBin()
-	s.Require().NoError(err)
-	s.Require().Equal(cfg.UpgradeBin("chain2"), currentBin)
+	require.NoError(err)
+
+	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
 	args = []string{"second", "run", "--verbose"}
 	stdout.Reset()
 	stderr.Reset()
 
 	doUpgrade, err = launcher.Run(args, stdout, stderr)
-	s.Require().NoError(err)
-	s.Require().False(doUpgrade)
-	s.Require().Equal("", stderr.String())
-	s.Require().Equal("Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
+	require.NoError(err)
+	require.False(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal("Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
 	// ended without other upgrade
-	s.Require().Equal(cfg.UpgradeBin("chain2"), currentBin)
+	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
 }
 
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcessWithDownloads() {
-	// test case upgrade path:
+	// test case upgrade path (binaries from testdata/download directory):
 	// genesis -> "chain2" = zip_binary
 	// zip_binary -> "chain3" = ref_zipped -> zip_directory
 	// zip_directory no upgrade
+	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PoolInterval: 100}
+	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output
-	var stdout, stderr = NewBuffer(), NewBuffer()
 	currentBin, err := cfg.CurrentBin()
-	s.Require().NoError(err)
-
-	s.Require().Equal(cfg.GenesisBin(), currentBin)
-	args := []string{"some", "args", cfg.UpgradeInfoFilePath()}
+	require.NoError(err)
+	require.Equal(cfg.GenesisBin(), currentBin)
 
 	launcher, err := cosmovisor.NewLauncher(cfg)
-	s.Require().NoError(err)
+	require.NoError(err)
 
+	var stdout, stderr = NewBuffer(), NewBuffer()
+	args := []string{"some", "args", upgradeFilename}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
-	fmt.Println(">>>>", stderr.String())
-	fmt.Println(">>>>", stdout.String())
+	fmt.Println("stderr: ", stderr.String())
+	fmt.Println("stdout: ", stdout.String())
 
-	s.Require().NoError(err)
-	s.Require().True(doUpgrade)
-	s.Require().Equal("", stderr.String())
-	s.Require().Equal("Preparing auto-download some args "+cfg.UpgradeInfoFilePath()+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: {"binaries":{"linux/amd64":"https://github.com/cosmos/cosmos-sdk/raw/robert/cosmvisor-file-watch/cosmovisor/testdata/repo/zip_binary/autod.zip?checksum=sha256:9428a1c135430d89243fa48e2ae67cb73530c636818a49bdc4ae6335a576370a"}} module=main`+"\n", stdout.String())
+	require.NoError(err)
+	require.True(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal("Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
 
 	// ensure this is upgraded now and produces new output
 	currentBin, err = cfg.CurrentBin()
-	s.Require().NoError(err)
-	s.Require().Equal(cfg.UpgradeBin("chain2"), currentBin)
-	args = []string{"run", "--fast"}
+	require.NoError(err)
+	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
+
 	stdout.Reset()
 	stderr.Reset()
-
+	args = []string{"run", "--fast", upgradeFilename}
 	doUpgrade, err = launcher.Run(args, stdout, stderr)
-	s.Require().NoError(err)
-	s.Require().True(doUpgrade)
-	s.Require().Equal("", stderr.String())
-	s.Require().Equal("Chain 2 from zipped binary link to referral\nArgs: run --fast\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ttps://github.com/cosmos/cosmos-sdk/raw/robert/cosmvisor-file-watch/cosmovisor/testdata/repo/zip_binary/autod.zip?checksum=sha256:9428a1c135430d89243fa48e2ae67cb73530c636818a49bdc4ae6335a576370a module=main`+"\n", stdout.String())
+	require.NoError(err)
+	fmt.Println("stderr: ", stderr.String())
+	fmt.Println("stdout: ", stdout.String())
+
+	require.True(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal("Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_zipped module=main`+"\n", stdout.String())
 
 	// ended with one more upgrade
 	currentBin, err = cfg.CurrentBin()
-	s.Require().NoError(err)
-	s.Require().Equal(cfg.UpgradeBin("chain3"), currentBin)
+	require.NoError(err)
+	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
 	// make sure this is the proper binary now....
-	args = []string{"end", "--halt"}
+	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
 	doUpgrade, err = launcher.Run(args, stdout, stderr)
-	s.Require().NoError(err)
-	s.Require().False(doUpgrade)
-	s.Require().Equal("", stderr.String())
-	s.Require().Equal("Chain 2 from zipped directory\nArgs: end --halt\n", stdout.String())
+	require.NoError(err)
+	require.False(doUpgrade)
+	require.Equal("", stderr.String())
+	require.Equal("Chain 2 from zipped directory\nArgs: end --halt\n", stdout.String())
 
 	// and this doesn't upgrade
 	currentBin, err = cfg.CurrentBin()
-	s.Require().NoError(err)
-	s.Require().Equal(cfg.UpgradeBin("chain3"), currentBin)
+	require.NoError(err)
+	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
 }

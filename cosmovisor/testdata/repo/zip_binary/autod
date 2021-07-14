@@ -1,9 +1,9 @@
 #!/bin/sh
 
-echo Chain 2 from zipped binary link to referral
+echo Chain 2 from zipped binary
 echo Args: $@
 # note that we just have a url (follow the ref), not a full link
-echo 'ERROR: UPGRADE "chain3" NEEDED at height: 936: https://github.com/cosmos/cosmos-sdk/raw/robert/cosmvisor-file-watch/cosmovisor/testdata/repo/ref_zipped module=main'
+echo 'ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_zipped module=main'
 
 echo '{"name":"chain3","height":936,"info":"{\"binaries\":{\"linux/amd64\":\"https://github.com/cosmos/cosmos-sdk/raw/robert/cosmvisor-file-watch/cosmovisor/testdata/repo/ref_zipped\"}}"}' > $3
 

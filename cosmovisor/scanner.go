@@ -94,7 +94,7 @@ func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 	info, err := parseUpgradeInfoFile(fw.filename)
 	fmt.Println("\n>>>> UpgradeInfo: ***", info, err)
 	if err != nil {
-		log.Fatal("Can't parse upgrade info file, probably need to update cosmovisor", err)
+		log.Fatal("Can't parse upgrade info file. Err: ", err)
 		return false
 	}
 	if !fw.initialized { // daemon has restarted

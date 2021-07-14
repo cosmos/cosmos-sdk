@@ -17,15 +17,15 @@ const (
 )
 
 var (
-	// reClassIDString can be 3 ~ 128 characters long and support letters, followed by either
+	// reClassIDString can be 3 ~ 100 characters long and support letters, followed by either
 	// a letter, a number or a separator ('/') or a separator (':') .
 	reClassIDString = `[a-zA-Z][a-zA-Z0-9/-:]{2,100}`
 	reClassID       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reClassIDString))
 
-	// reNFTIdString can be 3 ~ 128 characters long and support letters, followed by either
+	// reNFTIDString can be 3 ~ 100 characters long and support letters, followed by either
 	// a letter, a number or a separator ('/') or a separator (':') .
-	reNFTIdString = `[a-zA-Z][a-zA-Z0-9/-:]{2,100}`
-	reNFTID       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reNFTIdString))
+	reNFTIDString = `[a-zA-Z][a-zA-Z0-9/-:]{2,100}`
+	reNFTID       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reNFTIDString))
 )
 
 func ValidateClassID(id string) error {

@@ -11,11 +11,11 @@ import (
 
 // Mint defines a method for minting a new nft
 func (k Keeper) Mint(ctx sdk.Context, newNFT nft.NFT, minter sdk.AccAddress) error {
-	if !k.hasClass(ctx, newNFT.ClassID) {
+	if !k.HasClass(ctx, newNFT.ClassID) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, newNFT.ClassID)
 	}
 
-	if k.hasNFT(ctx, newNFT.ClassID, newNFT.ID) {
+	if k.HasNFT(ctx, newNFT.ClassID, newNFT.ID) {
 		return sdkerrors.Wrap(nft.ErrNFTExists, newNFT.ID)
 	}
 
@@ -38,11 +38,11 @@ func (k Keeper) Mint(ctx sdk.Context, newNFT nft.NFT, minter sdk.AccAddress) err
 
 // Burn defines a method for burning a nft from a specific account.
 func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
-	if !k.hasClass(ctx, classID) {
+	if !k.HasClass(ctx, classID) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
 	}
 
-	if !k.hasNFT(ctx, classID, nftID) {
+	if !k.HasNFT(ctx, classID, nftID) {
 		return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
@@ -57,11 +57,11 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 
 // Update defines a method for update a exist nft
 func (k Keeper) Update(ctx sdk.Context, updNFT nft.NFT) error {
-	if !k.hasClass(ctx, updNFT.ClassID) {
+	if !k.HasClass(ctx, updNFT.ClassID) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, updNFT.ClassID)
 	}
 
-	if !k.hasNFT(ctx, updNFT.ClassID, updNFT.ID) {
+	if !k.HasNFT(ctx, updNFT.ClassID, updNFT.ID) {
 		return sdkerrors.Wrap(nft.ErrNFTNotExists, updNFT.ID)
 	}
 	k.setNFT(ctx, updNFT)
@@ -73,11 +73,11 @@ func (k Keeper) Transfer(ctx sdk.Context,
 	classID string,
 	nftID string,
 	receiver sdk.AccAddress) error {
-	if !k.hasClass(ctx, classID) {
+	if !k.HasClass(ctx, classID) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
 	}
 
-	if !k.hasNFT(ctx, classID, nftID) {
+	if !k.HasNFT(ctx, classID, nftID) {
 		return sdkerrors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
@@ -146,7 +146,8 @@ func (k Keeper) GetTotalSupply(ctx sdk.Context, classID string) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-func (k Keeper) hasNFT(ctx sdk.Context, classID, id string) bool {
+// HasNFT determines whether the specified classID and nftID exist
+func (k Keeper) HasNFT(ctx sdk.Context, classID, id string) bool {
 	store := k.getNFTStore(ctx, classID)
 	return store.Has([]byte(id))
 }

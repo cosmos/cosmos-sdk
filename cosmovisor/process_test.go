@@ -88,8 +88,6 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	var stdout, stderr = NewBuffer(), NewBuffer()
 	args := []string{"some", "args", upgradeFilename}
 	doUpgrade, err := launcher.Run(args, stdout, stderr)
-	fmt.Println("stderr: ", stderr.String())
-	fmt.Println("stdout: ", stdout.String())
 
 	require.NoError(err)
 	require.True(doUpgrade)
@@ -105,8 +103,6 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	args = []string{"run", "--fast", upgradeFilename}
 	doUpgrade, err = launcher.Run(args, stdout, stderr)
 	require.NoError(err)
-	fmt.Println("stderr: ", stderr.String())
-	fmt.Println("stdout: ", stdout.String())
 
 	require.Equal("", stderr.String())
 	require.Equal("Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", stdout.String())
@@ -116,7 +112,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.NoError(err)
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
 
-	// run the last upgrade
+	// run the last chain
 	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
@@ -124,7 +120,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.NoError(err)
 	require.False(doUpgrade)
 	require.Equal("", stderr.String())
-	require.Equal("Chain 2 from zipped directory\nArgs: end --halt "+upgradeFilename+"\n", stdout.String())
+	require.Equal("Chain 3 from zipped directory\nArgs: end --halt "+upgradeFilename+"\n", stdout.String())
 
 	// and this doesn't upgrade
 	currentBin, err = cfg.CurrentBin()

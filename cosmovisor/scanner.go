@@ -92,7 +92,6 @@ func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 		return false
 	}
 	info, err := parseUpgradeInfoFile(fw.filename)
-	fmt.Println("\n>>>> UpgradeInfo: ***", info, err)
 	if err != nil {
 		log.Fatal("Can't parse upgrade info file. Err: ", err)
 		return false
@@ -104,12 +103,10 @@ func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 		// heuristic: deamon has restarted, so we don't know if we successfully downloaded the upgrade or not.
 		// so we try to compare the running upgrade name (read from the cosmovisor file) with the upgrade info
 		if currentName != fw.currentInfo.Name {
-			fmt.Printf(">>>> deamon currentinfo initialized, currentName: %q %q\n\n", currentName, fw.currentInfo.Name)
 			fw.needsUpdate = true
 			return true
 		}
 	}
-	fmt.Printf("---------- is the name the same? %q %q \n\n", currentName, fw.currentInfo.Name)
 
 	if info.Height > fw.currentInfo.Height {
 		fw.currentInfo = info
@@ -125,7 +122,6 @@ func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
 	// byteValue, _ := ioutil.ReadAll(f)
 	var ui UpgradeInfo
 	bz, err := os.ReadFile(filename)
-	fmt.Println("upgrade-file.json", err, string(bz))
 	f, err := os.Open(filename)
 	if err != nil {
 		return ui, err

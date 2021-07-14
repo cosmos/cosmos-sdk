@@ -95,12 +95,11 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.True(doUpgrade)
 	require.Equal("", stderr.String())
 	require.Equal("Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
-
-	// ensure this is upgraded now and produces new output
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
 
+	// start chain2
 	stdout.Reset()
 	stderr.Reset()
 	args = []string{"run", "--fast", upgradeFilename}

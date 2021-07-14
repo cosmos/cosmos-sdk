@@ -32,7 +32,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err := EnsureBinary(bin); err != nil {
 		return false, fmt.Errorf("current binary is invalid: %w", err)
 	}
-	fmt.Println(">>> running", bin, args)
+	fmt.Println("[cosmovisor] running ", bin, args)
 	cmd := exec.Command(bin, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -66,7 +66,6 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 // to happened with "start" but may happened with short-lived commands like `gaiad export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgradeName := l.cfg.UpgradeName()
-	fmt.Printf(">>>> current upgrade name: %q\n", currentUpgradeName)
 	var cmdDone = make(chan error)
 	go func() {
 		cmdDone <- cmd.Wait()

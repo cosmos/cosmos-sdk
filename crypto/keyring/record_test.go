@@ -128,8 +128,6 @@ func TestLedgerRecordMarshaling(t *testing.T) {
 	require.Equal(ledgerRecord2.Path.String(), path.String())
 }
 
-// TODO fix that
-// add test with Marshalling of Record
 func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	require := require.New(t)
 

@@ -62,6 +62,7 @@ func (k Record) GetAddress() (types.AccAddress, error) {
 	return pk.Address().Bytes(), nil
 }
 
+// TODO fix that GetAlgo() corresponds to pubKey type
 func (k Record) GetAlgo() string {
 
 	if l := k.GetLocal(); l != nil {
@@ -72,7 +73,7 @@ func (k Record) GetAlgo() string {
 	return ""
 }
 
-// TODO remove it later
+// TODO consider to remove it
 func (k Record) GetType() KeyType {
 	return 0
 }

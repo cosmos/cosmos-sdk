@@ -17,7 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO fix test
 func Test_runExportCmd(t *testing.T) {
 	cmd := ExportKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())

@@ -19,11 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
-// TODO add keys for migration
-// TODO fix all tests in client/keys package
-// TODO think about table driven tests
-
-// TODO add more tests
 func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	const n1 = "cosmos"
 

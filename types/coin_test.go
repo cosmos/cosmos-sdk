@@ -96,6 +96,7 @@ func (s *coinTestSuite) TestCoinIsValid() {
 		{sdk.Coin{loremIpsum, sdk.OneInt()}, false},
 		{sdk.Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()}, true},
 		{sdk.Coin{"atOm", sdk.OneInt()}, true},
+		{sdk.Coin{"x:y-z.1_2", sdk.OneInt()}, true},
 		{sdk.Coin{"     ", sdk.OneInt()}, false},
 	}
 

@@ -269,8 +269,9 @@ func (s *upgradeTestSuite) TestDownloadBinary() {
 // "cp -r" a subdirectory under testdata there
 // returns the directory (which can now be used as Config.Home) and modified safely
 func copyTestData(t *testing.T, subdir string) string {
-	t.Helper()
-	tmpdir := t.TempDir()
+	// t.Helper()
+	// tmpdir := t.TempDir()
+	tmpdir := "/tmp/test-launchprocess"
 	require.NoError(t, copy.Copy(filepath.Join("testdata", subdir), tmpdir))
 
 	return tmpdir

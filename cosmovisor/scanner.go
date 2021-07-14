@@ -92,7 +92,7 @@ func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 		return false
 	}
 	info, err := parseUpgradeInfoFile(fw.filename)
-	fmt.Println("\n>>>> UpgradeInfo: ***", info, err, fw.currentInfo.Height, info.Height)
+	fmt.Println("\n>>>> UpgradeInfo: ***", info, err)
 	if err != nil {
 		log.Fatal("Can't parse upgrade info file, probably need to update cosmovisor", err)
 		return false
@@ -124,6 +124,8 @@ func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
 	// f, _ := os.Open(filename)
 	// byteValue, _ := ioutil.ReadAll(f)
 	var ui UpgradeInfo
+	bz, err := os.ReadFile(filename)
+	fmt.Println("upgrade-file.json", err, string(bz))
 	f, err := os.Open(filename)
 	if err != nil {
 		return ui, err

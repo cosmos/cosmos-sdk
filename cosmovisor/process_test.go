@@ -70,7 +70,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	// test case upgrade path (binaries from testdata/download directory):
 	// genesis -> "chain2" = zip_binary
-	// zip_binary -> "chain3" = ref_zipped -> zip_directory
+	// zip_binary -> "chain3" = ref_zipped (json for the next download instructions) -> zip_directory
 	// zip_directory no upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
@@ -109,15 +109,15 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	fmt.Println("stderr: ", stderr.String())
 	fmt.Println("stdout: ", stdout.String())
 
-	require.True(doUpgrade)
 	require.Equal("", stderr.String())
 	require.Equal("Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_zipped module=main`+"\n", stdout.String())
-
 	// ended with one more upgrade
+	require.True(doUpgrade)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
-	// make sure this is the proper binary now....
+
+	// run the last upgrade
 	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
@@ -125,7 +125,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.NoError(err)
 	require.False(doUpgrade)
 	require.Equal("", stderr.String())
-	require.Equal("Chain 2 from zipped directory\nArgs: end --halt\n", stdout.String())
+	require.Equal("Chain 2 from zipped directory\nArgs: end --halt "+upgradeFilename+"\n", stdout.String())
 
 	// and this doesn't upgrade
 	currentBin, err = cfg.CurrentBin()

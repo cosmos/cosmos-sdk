@@ -44,7 +44,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	val := s.network.Validators[0]
 	s.grantee = make([]sdk.AccAddress, 2)
-	
+
 	// Send some funds to the new account.
 	// Create new account in the keyring.
 	s.grantee[0] = s.createAccount("grantee1")

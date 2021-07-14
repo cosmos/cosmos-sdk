@@ -12,7 +12,6 @@ import (
 
 var ErrPrivKeyExtr = errors.New("Private key extraction works only for Local")
 
-
 func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {

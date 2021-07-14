@@ -819,7 +819,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
-    hdPath := hd.NewFundraiserParams(0, sdk.CoinType, 0).String()
+	hdPath := hd.NewFundraiserParams(0, sdk.CoinType, 0).String()
 	k1, err := cstore.NewAccount(n2, mnemonic, keyring.DefaultBIP39Passphrase, hdPath, algo)
 	require.NoError(t, err)
 	require.Equal(t, n2, k1.Name)

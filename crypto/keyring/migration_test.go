@@ -296,7 +296,6 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 	require.EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, incorrectItemKey).Error())
 }
 
-
 func TestMigrateErrEmptyItemData(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")

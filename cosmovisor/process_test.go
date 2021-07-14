@@ -110,7 +110,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	fmt.Println("stdout: ", stdout.String())
 
 	require.Equal("", stderr.String())
-	require.Equal("Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_zipped module=main`+"\n", stdout.String())
+	require.Equal("Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", stdout.String())
 	// ended with one more upgrade
 	require.True(doUpgrade)
 	currentBin, err = cfg.CurrentBin()

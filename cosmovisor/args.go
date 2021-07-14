@@ -56,8 +56,7 @@ func (cfg *Config) UpgradeDir(upgradeName string) string {
 	return filepath.Join(cfg.Home, rootName, upgradesDir, safeName)
 }
 
-// UpgradeInfoFile is the expecte filenmame used in `x/upgrade/keeper` for dumping
-// upgrade info.
+// UpgradeInfoFile is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
 	if cfg.UpgradeInfoFilename != "" {
 		return cfg.UpgradeInfoFilename

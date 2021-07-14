@@ -20,17 +20,19 @@ func Run(args []string) error {
 	if err != nil {
 		return err
 	}
-	luncher, err := cosmovisor.NewLauncher(cfg)
+	launcher, err := cosmovisor.NewLauncher(cfg)
 	if err != nil {
 		return err
 	}
 
-	doUpgrade, err := luncher.Run(args, os.Stdout, os.Stderr)
+	doUpgrade, err := launcher.Run(args, os.Stdout, os.Stderr)
 	// if RestartAfterUpgrade, we launch after a successful upgrade (only condition LaunchProcess returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
-		fmt.Println(">>>>>>>>>>>> RE LAUNCH !!!")
-		doUpgrade, err = luncher.Run(args, os.Stdout, os.Stderr)
+		fmt.Println("[cosmovisor] upgrade detected, relaunching the app ", cfg.Name)
+		doUpgrade, err = launcher.Run(args, os.Stdout, os.Stderr)
 	}
-	fmt.Println("\n>>>>>>>>>>>>> AFTER FOR LOOP", doUpgrade, err, "##")
+	if doUpgrade {
+		fmt.Println("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
+	}
 	return err
 }

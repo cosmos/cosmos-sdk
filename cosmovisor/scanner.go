@@ -121,7 +121,6 @@ func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
 	// f, _ := os.Open(filename)
 	// byteValue, _ := ioutil.ReadAll(f)
 	var ui UpgradeInfo
-	bz, err := os.ReadFile(filename)
 	f, err := os.Open(filename)
 	if err != nil {
 		return ui, err

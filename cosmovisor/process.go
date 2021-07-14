@@ -57,12 +57,12 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
 }
 
-// WaitForUpgradeOrExit checks upgrade plan file a the process state itself
-// When it returns, the process is finished.
+// WaitForUpgradeOrExit checks upgrade plan file created by the app.
+// When it returns, the process (app) is finished.
 //
-// It returns (info, nil) if an upgrade should be initiated (and we killed the process)
-// It returns (nil, err) if the process died by itself, or there was an issue reading the pipes
-// It returns (nil, nil) if the process exited normally without triggering an upgrade. This is very unlikely
+// It returns (true, nil) if an upgrade should be initiated (and we killed the process)
+// It returns (false, err) if the process died by itself, or there was an issue reading the upgrade-info file.
+// It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
 // to happened with "start" but may happened with short-lived commands like `gaiad export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	currentUpgradeName := l.cfg.UpgradeName()
@@ -78,13 +78,12 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
 		l.fw.Stop()
-		// if the command exits normally (eg. short command like `gaiad version`), just
-		// return (nil, nil) we often get broken read pipes if it runs too fast.
-		// if we had upgrade info, we would have killed it, and thus got a non-nil error code
+		// no error -> command exits normally (eg. short command like `gaiad version`)
 		if err == nil {
 			return false, nil
 		}
-		// the app update can causes a panic before the filwatcher finds the update, so we need to recheck
+		// the app x/upgrade causes a panic and the app can die before the filwatcher finds the
+		// update, so we need to recheck update-info file.
 		if !l.fw.CheckUpdate(currentUpgradeName) {
 			return false, err
 		}

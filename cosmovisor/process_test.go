@@ -69,9 +69,9 @@ func (s *processTestSuite) TestLaunchProcess() {
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	// test case upgrade path (binaries from testdata/download directory):
-	// genesis -> "chain2" = zip_binary
-	// zip_binary -> "chain3" = ref_zipped (json for the next download instructions) -> zip_directory
-	// zip_directory no upgrade
+	// genesis -> chain2-zip_bin
+	// chain2-zip_bin -> ref_to_chain3-zip_dir.json = (json for the next download instructions) -> chain3-zip_dir
+	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
 	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PoolInterval: 100}

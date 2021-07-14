@@ -123,7 +123,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // Deprecated: Route returns the message routing key for the distribution module.
 func (am AppModule) Route() sdk.Route {
-	panic("this method is deprecated and not implemented by the SDK anymore")
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the distribution module's querier route name.

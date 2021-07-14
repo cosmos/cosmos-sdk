@@ -128,7 +128,7 @@ func (am AppModule) Name() string {
 
 // Deprecated: Route returns the evidence module's message routing key.
 func (am AppModule) Route() sdk.Route {
-	panic("this method is deprecated and not implemented by the SDK anymore")
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the evidence module's query routing key.

@@ -94,7 +94,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the module's message router and handler.
 func (am AppModule) Route() sdk.Route {
-	panic("this method is deprecated and not implemented by the SDK anymore")
+	return sdk.Route{}
 }
 
 // QuerierRoute returns an empty string as the module contains no query

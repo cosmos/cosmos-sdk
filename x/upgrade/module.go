@@ -84,7 +84,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Deprecated: Route returns the message routing key for the upgrade module.
 func (AppModule) Route() sdk.Route {
-	panic("this method is deprecated and not implemented by the SDK anymore")
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the route we respond to for abci queries

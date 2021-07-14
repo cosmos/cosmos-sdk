@@ -105,7 +105,7 @@ func (am AppModule) Name() string {
 
 // Deprecated: Route returns the capability module's message routing key.
 func (AppModule) Route() sdk.Route {
-	panic("this method is deprecated and not implemented by the SDK anymore")
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the capability module's query routing key.

@@ -6,7 +6,7 @@ order: 7
 
 The `simd testnet` subcommand makes it easy to initialize and start a simulated test network for testing purposes. {synopsis}
 
-In addition to the commands for [running a node](/run-node/run-node.html), the `simd` binary also includes a `testnet` command that allows you to start a simulated test network in-process or to initialize files for a simulated test network that runs in a separate process. 
+In addition to the commands for [running a node](./run-node.html), the `simd` binary also includes a `testnet` command that allows you to start a simulated test network in-process or to initialize files for a simulated test network that runs in a separate process. 
 
 ## Initialize Files
 
@@ -14,7 +14,7 @@ First, let's take a look at the `init-files` subcommand.
 
 This is similar to the `init` command when initializing a single node, but in this case we are initializing multiple nodes, generating the genesis transactions for each node, and then collecting those transactions.
 
-The `init-files` subcommand initializes a test network that will run in a separate process. It is not a prerequisite for the `start` subcommand ([see below](#start-testnet)).
+The `init-files` subcommand initializes the necessary files to run a test network in a separate process (i.e. using a Docker container). Running this command is not a prerequisite for the `start` subcommand ([see below](#start-testnet)).
 
 In order to initialize the files for a test network, run the following command:
 
@@ -32,11 +32,11 @@ The default output directory is a relative `.testnets` directory. Let's take a l
 
 ### gentxs
 
-Within the `.testnets` directory, there is a `gentxs` directory that includes a genesis transaction for each validator node. The default number of nodes is `4`, so you should see four files that include JSON encoded genesis transactions.
+The `gentxs` directory includes a genesis transaction for each validator node. Each file includes a JSON encoded genesis transaction used to register a validator node at the time of genesis. The genesis transactions are added to the `genesis.json` file within each node directory during the initilization process.
 
 ### nodes
 
-Within the `.testnets` directory, there is a `node` directory for each node. Within each `node` directory, there is a `simd` directory. The `simd` directory is the home directory for each node (i.e. each `simd` directory includes the same configuration and data files as the default `~/.simapp` directory when running a single node).
+A node directory is created for each validator node. Within each node directory is a `simd` directory. The `simd` directory is the home directory for each node, which includes the configuration and data files for that node (i.e. the same files included in the default `~/.simapp` directory when running a single node).
 
 ## Start Testnet
 
@@ -72,11 +72,9 @@ started test network
 press the Enter Key to terminate
 ```
 
-The test network is running in-process, which means the test network will terminate once you either close the terminal window or you press the Enter key.
+The first validator node is now running in-process, which means the test network will terminate once you either close the terminal window or you press the Enter key. In the output, the mnemonic phrase for the first validator node is provided for testing purposes. The validator node is using the same default addresses being used when initializing and starting a single node (no need to provide a `--node` flag).
 
-In order to test the test network, use the `simd` binary. The first node uses the same default addresses when starting a single node network.
-
-Check the status of the first node:
+Check the status of the first validator node:
 
 ```
 simd status
@@ -94,10 +92,8 @@ Check the balance of the account address:
 simd q bank balances [address]
 ```
 
-Use this test account to execute transactions.
+Use this test account to manually test against the test network.
 
 ## Testnet Options
 
-You can customize the configuration of the testnet with flags. In order to see all flag options, append the `--help` flag to each command.
-
-One of the flag options is the `--v` flag. This flag allows you to set the number of validators that the test network will have (i.e. the number of nodes to initialize and genesis transactions to generate). The default value for the `--v` flag is `4`, which is why four node directories were initialized in the example above.
+You can customize the configuration of the test network with flags. In order to see all flag options, append the `--help` flag to each command.

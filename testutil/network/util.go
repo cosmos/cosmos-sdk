@@ -16,6 +16,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
+	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -90,7 +91,7 @@ func startInProcess(cfg Config, val *Validator) error {
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(5 * time.Second): // assume server started successfully
+		case <-time.After(srvtypes.ServerStartTime): // assume server started successfully
 		}
 
 		val.api = apiSrv
@@ -117,7 +118,7 @@ func startInProcess(cfg Config, val *Validator) error {
 			select {
 			case err := <-errCh1:
 				return err
-			case <-time.After(5 * time.Second): // assume server started successfully
+			case <-time.After(srvtypes.ServerStartTime): // assume server started successfully
 			}
 
 		}

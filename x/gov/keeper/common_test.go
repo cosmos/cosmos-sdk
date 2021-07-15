@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	TestProposal = types.NewTextProposal("Test", "description")
+	TestProposalMsg = types.NewMsgSignal("Test", "description")
 )
 
 func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {

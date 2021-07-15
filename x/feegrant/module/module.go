@@ -190,9 +190,9 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the feegrant content functions used to
+// ProposalMessages returns all the feegrant content functions used to
 // simulate governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (AppModule) ProposalMessages(simState module.SimulationState) []simtypes.WeightedProposalMessageSim {
 	return nil
 }
 

@@ -40,18 +40,18 @@ func TestIncrementProposalNumber(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tp := TestProposal
-	_, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	tp := TestProposalMsg
+	_, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
-	_, err = app.GovKeeper.SubmitProposal(ctx, tp)
+	_, err = app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
-	proposal6, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	proposal6, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.ProposalId)
@@ -62,8 +62,8 @@ func TestProposalQueues(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// create test proposals
-	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	tp := TestProposalMsg
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
 
 	inactiveIterator := app.GovKeeper.InactiveProposalQueueIterator(ctx, proposal.DepositEndTime)

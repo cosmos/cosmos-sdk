@@ -34,6 +34,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+proposal.ModuleName)
 }
 
+func (k Keeper) ChangeParameter(ctx sdk.Context, msg *types.MsgChangeParameter)
+
 // Allocate subspace used for keepers
 func (k Keeper) Subspace(s string) types.Subspace {
 	_, ok := k.spaces[s]

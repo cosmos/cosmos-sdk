@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 
@@ -18,6 +19,7 @@ const (
 	TypeMsgVote           = "vote"
 	TypeMsgVoteWeighted   = "weighted_vote"
 	TypeMsgSubmitProposal = "submit_proposal"
+	TypeMsgSignal         = "signal"
 )
 
 var (
@@ -27,15 +29,23 @@ var (
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //nolint:interfacer
-func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+	msgsAny := make([]*types.Any, len(messages))
+	for i, msg := range messages {
+		any, err := types.NewAnyWithValue(msg)
+		if err != nil {
+			return &MsgSubmitProposal{}, err
+		}
+
+		msgsAny[i] = any
+	}
+
 	m := &MsgSubmitProposal{
+		Messages:       msgsAny,
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),
 	}
-	err := m.SetContent(content)
-	if err != nil {
-		return nil, err
-	}
+
 	return m, nil
 }
 
@@ -46,6 +56,20 @@ func (m *MsgSubmitProposal) GetProposer() sdk.AccAddress {
 	return proposer
 }
 
+func (m *MsgSubmitProposal) GetMessages() ([]sdk.Msg, error) {
+	msgs := make([]sdk.Msg, len(m.Messages))
+	for i, msgAny := range m.Messages {
+		msg, ok := msgAny.GetCachedValue().(sdk.Msg)
+		if !ok {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "messages contains %T which is not a sdk.Msg", msgAny)
+		}
+		msgs[i] = msg
+	}
+
+	return msgs, nil
+}
+
+// Deprecated: Content is no longer used. Use Messages instead
 func (m *MsgSubmitProposal) GetContent() Content {
 	content, ok := m.Content.GetCachedValue().(Content)
 	if !ok {
@@ -62,6 +86,7 @@ func (m *MsgSubmitProposal) SetProposer(address fmt.Stringer) {
 	m.Proposer = address.String()
 }
 
+// Deprecated: Content is no longer used. Use Messages instead
 func (m *MsgSubmitProposal) SetContent(content Content) error {
 	msg, ok := content.(proto.Message)
 	if !ok {
@@ -83,7 +108,7 @@ func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
 
 // ValidateBasic implements Msg
 func (m MsgSubmitProposal) ValidateBasic() error {
-	if m.Proposer == "" {
+	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, m.Proposer)
 	}
 	if !m.InitialDeposit.IsValid() {
@@ -92,15 +117,11 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	if m.InitialDeposit.IsAnyNegative() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
 	}
+	if m.Messages == nil || len(m.Messages) == 0 {
+		return ErrNoProposalMsgs
+	}
 
-	content := m.GetContent()
-	if content == nil {
-		return sdkerrors.Wrap(ErrInvalidProposalContent, "missing content")
-	}
-	if !IsValidProposalType(content.ProposalType()) {
-		return sdkerrors.Wrap(ErrInvalidProposalType, content.ProposalType())
-	}
-	if err := content.ValidateBasic(); err != nil {
+	if _, err := m.GetMessages(); err != nil {
 		return err
 	}
 
@@ -277,4 +298,47 @@ func (msg MsgVoteWeighted) GetSignBytes() []byte {
 // GetSigners implements Msg
 func (msg MsgVoteWeighted) GetSigners() []string {
 	return []string{msg.Voter}
+}
+
+func NewMsgSignal(title, description string) *MsgSignal {
+	return &MsgSignal{title, description}
+}
+
+// Route implements Msg
+func (msg MsgSignal) Route() string { return RouterKey }
+
+// Type implements Msg
+func (msg MsgSignal) Type() string { return TypeMsgSignal }
+
+// String implements the Stringer interface
+func (msg MsgSignal) String() string {
+	out, _ := yaml.Marshal(msg)
+	return string(out)
+}
+
+// ValidateBasic implements Msg
+func (msg MsgSignal) ValidateBasic() error {
+	if len(strings.TrimSpace(msg.Title)) == 0 {
+		return sdkerrors.Wrap(ErrInvalidSignalMsg, "title cannot be blank")
+	}
+	if len(msg.Title) > MaxTitleLength {
+		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("title is longer than max length of %d", MaxTitleLength))
+	}
+
+	if len(msg.Description) > MaxDescriptionLength {
+		return sdkerrors.Wrap(ErrInvalidSignalMsg, fmt.Sprintf("description is longer than max length of %d", MaxDescriptionLength))
+	}
+
+	return nil
+}
+
+// GetSignBytes implements Msg
+func (msg MsgSignal) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg *MsgSignal) GetSigners() []string {
+	return []string{""}
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/armon/go-metrics"
 
@@ -142,4 +143,37 @@ func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCo
 	)
 
 	return &types.MsgFundCommunityPoolResponse{}, nil
+}
+
+func (k msgServer) SpendCommunityPool(goCtx context.Context, msg *types.MsgSpendCommunityPool) (*types.MsgSpendCommunityPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	recipient, err := sdk.AccAddressFromBech32(msg.Recipient)
+	if err != nil {
+		return nil, err
+	}
+
+	signers := msg.GetSigners()
+	if len(signers) != 1 {
+		return nil, fmt.Errorf("must have a single authority to sign the spend community pool msg, got: %d",
+			len(signers))
+	}
+
+	authority, err := sdk.AccAddressFromBech32(signers[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.SpendCommunityPool(ctx, msg.Amount, authority, recipient); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
+	return &types.MsgSpendCommunityPoolResponse{}, nil
 }

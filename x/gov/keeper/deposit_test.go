@@ -17,8 +17,8 @@ func TestDeposits(t *testing.T) {
 
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000000))
 
-	tp := TestProposal
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp)
+	tp := TestProposalMsg
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{tp})
 	require.NoError(t, err)
 	proposalID := proposal.ProposalId
 

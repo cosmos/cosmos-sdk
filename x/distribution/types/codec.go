@@ -6,7 +6,6 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/distribution interfaces and concrete types
@@ -16,7 +15,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgWithdrawValidatorCommission{}, "cosmos-sdk/MsgWithdrawValidatorCommission", nil)
 	cdc.RegisterConcrete(&MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress", nil)
 	cdc.RegisterConcrete(&MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool", nil)
-	cdc.RegisterConcrete(&CommunityPoolSpendProposal{}, "cosmos-sdk/CommunityPoolSpendProposal", nil)
+	cdc.RegisterConcrete(&MsgSpendCommunityPool{}, "cosmos-sdk/MsgSpendCommunityPool", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -26,10 +25,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgWithdrawValidatorCommission{},
 		&MsgSetWithdrawAddress{},
 		&MsgFundCommunityPool{},
-	)
-	registry.RegisterImplementations(
-		(*govtypes.Content)(nil),
-		&CommunityPoolSpendProposal{},
+		&MsgSpendCommunityPool{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

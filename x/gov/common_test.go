@@ -17,7 +17,7 @@ import (
 
 var (
 	valTokens           = sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
-	TestProposal        = types.NewTextProposal("Test", "description")
+	TestProposalMsg     = types.NewMsgSignal("Test", "description")
 	TestDescription     = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
 	TestCommissionRates = stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )

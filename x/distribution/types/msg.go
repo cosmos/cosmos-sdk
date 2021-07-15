@@ -11,6 +11,7 @@ const (
 	TypeMsgWithdrawDelegatorReward     = "withdraw_delegator_reward"
 	TypeMsgWithdrawValidatorCommission = "withdraw_validator_commission"
 	TypeMsgFundCommunityPool           = "fund_community_pool"
+	TypeMsgSpendCommunityPool          = "spend_community_pool"
 )
 
 // Verify interface at compile time
@@ -152,3 +153,43 @@ func (msg MsgFundCommunityPool) ValidateBasic() error {
 
 	return nil
 }
+
+func NewMsgSpendCommunityPool(amount sdk.Coins, recipient sdk.AccAddress) *MsgSpendCommunityPool {
+	return &MsgSpendCommunityPool{
+		Amount:    amount,
+		Recipient: recipient.String(),
+	}
+}
+
+// Route returns the MsgSpendCommunityPool message route.
+func (msg MsgSpendCommunityPool) Route() string { return ModuleName }
+
+// Type returns the MsgSpendCommunityPool message type.
+func (msg MsgSpendCommunityPool) Type() string { return TypeMsgSpendCommunityPool }
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes.
+func (msg MsgSpendCommunityPool) GetSigners() []string {
+	return []string{""}
+}
+
+// GetSignBytes returns the raw bytes for a MsgSpendCommunityPool message that
+// the expected signer needs to sign.
+func (msg MsgSpendCommunityPool) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic performs basic MsgSpendCommunityPool message validation.
+func (msg MsgSpendCommunityPool) ValidateBasic() error {
+	if !msg.Amount.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid recepient address")
+	}
+
+	return nil
+}
+

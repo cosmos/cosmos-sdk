@@ -13,12 +13,16 @@ const (
 	MaxTitleLength       int = 140
 )
 
+// TODO: The following struct/functions need to be removed in the following release.
+
 // Content defines an interface that a proposal must implement. It contains
 // information such as the title and description along with the type and routing
 // information for the appropriate handler to process the proposal. Content can
 // have additional fields, which will handled by a proposal's Handler.
 // TODO Try to unify this interface with types/module/simulation
 // https://github.com/cosmos/cosmos-sdk/issues/5853
+//
+// Deprecated: No longer used. Use messages instead
 type Content interface {
 	GetTitle() string
 	GetDescription() string
@@ -30,10 +34,14 @@ type Content interface {
 
 // Handler defines a function that handles a proposal after it has passed the
 // governance process.
+//
+// Deprecated: No longer used. MsgServiceRouter used instead
 type Handler func(ctx sdk.Context, content Content) error
 
 // ValidateAbstract validates a proposal's abstract contents returning an error
 // if invalid.
+//
+// Deprecated: No longer used
 func ValidateAbstract(c Content) error {
 	title := c.GetTitle()
 	if len(strings.TrimSpace(title)) == 0 {

@@ -126,26 +126,26 @@ func (spc ParamChange) ComposedKey() string {
 
 // WeightedProposalContent defines a common struct for proposal contents defined by
 // external modules (i.e outside gov)
-type WeightedProposalContent struct {
-	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
-	defaultWeight      int                           // default weight
-	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
+type WeightedProposalMessageSim struct {
+	appParamsKey        string                         // key used to retrieve the value of the weight from the simulation application params
+	defaultWeight       int                            // default weight
+	proposalSimulatorFn simulation.ProposalSimulatorFn // content simulator function
 }
 
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent {
-	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
+func NewWeightedProposalMessageSim(appParamsKey string, defaultWeight int, proposalSimulatorFn simulation.ProposalSimulatorFn) simulation.WeightedProposalMessageSim {
+	return &WeightedProposalMessageSim{appParamsKey: appParamsKey, defaultWeight: defaultWeight, proposalSimulatorFn: proposalSimulatorFn}
 }
 
-func (w WeightedProposalContent) AppParamsKey() string {
+func (w WeightedProposalMessageSim) AppParamsKey() string {
 	return w.appParamsKey
 }
 
-func (w WeightedProposalContent) DefaultWeight() int {
+func (w WeightedProposalMessageSim) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
-	return w.contentSimulatorFn
+func (w WeightedProposalMessageSim) ProposalSimulatorFn() simulation.ProposalSimulatorFn {
+	return w.proposalSimulatorFn
 }
 
 // Param change proposals

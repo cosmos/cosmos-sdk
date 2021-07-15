@@ -56,13 +56,26 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		}
 
 		if passes {
-			handler := keeper.Router().GetRoute(proposal.ProposalRoute())
-			cacheCtx, writeCache := ctx.CacheContext()
 
-			// The proposal handler may execute state mutating logic depending
-			// on the proposal content. If the handler fails, no state mutation
-			// is written and the error message is logged.
-			err := handler(cacheCtx, proposal.GetContent())
+			// attempt to execute all messages within the passed proposal
+			// Messages may mutate state thus we use a cached context. If one of
+			// the handlers fails, no state mutation is written and the error
+			// message is logged.
+			cacheCtx, writeCache := ctx.CacheContext()
+			messages, _ := proposal.GetMessages()
+			var (
+				err error
+				idx int
+				msg sdk.Msg
+			)
+			for idx, msg = range messages {
+				handler := keeper.Router().Handler(msg)
+				_, err := handler(cacheCtx, msg)
+				if err != nil {
+					break
+				}
+			}
+
 			if err == nil {
 				proposal.Status = types.StatusPassed
 				tagValue = types.AttributeValueProposalPassed
@@ -79,7 +92,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			} else {
 				proposal.Status = types.StatusFailed
 				tagValue = types.AttributeValueProposalFailed
-				logMsg = fmt.Sprintf("passed, but failed on execution: %s", err)
+				logMsg = fmt.Sprintf("passed, but msg %d failed on execution: %s", idx, err)
 			}
 		} else {
 			proposal.Status = types.StatusRejected
@@ -98,8 +111,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		logger.Info(
 			"proposal tallied",
 			"proposal", proposal.ProposalId,
-			"title", proposal.GetTitle(),
-			"result", logMsg,
+			"results", logMsg,
 		)
 
 		ctx.EventManager().EmitEvent(

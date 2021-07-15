@@ -25,7 +25,7 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(app.DistrKeeper)
+	weightedProposalContent := simulation.ProposalMessages(app.DistrKeeper)
 	require.Len(t, weightedProposalContent, 1)
 
 	w0 := weightedProposalContent[0]
@@ -40,10 +40,7 @@ func TestProposalContents(t *testing.T) {
 	feePool.CommunityPool = sdk.NewDecCoinsFromCoins(amount...)
 	app.DistrKeeper.SetFeePool(ctx, feePool)
 
-	content := w0.ContentSimulatorFn()(r, ctx, accounts)
+	proposal := w0.ProposalSimulatorFn()(r, ctx, accounts)
 
-	require.Equal(t, "sTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhu", content.GetDescription())
-	require.Equal(t, "xKGLwQvuyN", content.GetTitle())
-	require.Equal(t, "distribution", content.ProposalRoute())
-	require.Equal(t, "CommunityPoolSpend", content.ProposalType())
+	require.Equal(t, "sTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhu", proposal)
 }

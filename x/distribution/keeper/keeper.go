@@ -20,6 +20,8 @@ type Keeper struct {
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
+	// account that can authorize community pool spends
+	authority sdk.AccAddress
 
 	blockedAddrs map[string]bool
 
@@ -30,7 +32,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
-	feeCollectorName string, blockedAddrs map[string]bool,
+	feeCollectorName string, blockedAddrs map[string]bool, authority sdk.AccAddress,
 ) Keeper {
 
 	// ensure distribution module account is set
@@ -52,6 +54,7 @@ func NewKeeper(
 		stakingKeeper:    sk,
 		feeCollectorName: feeCollectorName,
 		blockedAddrs:     blockedAddrs,
+		authority:        authority,
 	}
 }
 
@@ -178,6 +181,29 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...)
 	k.SetFeePool(ctx, feePool)
+
+	return nil
+}
+
+// SpendCommunityPool allows an authority to send coins to a recipient account.
+// An error is returned if not sufficient funds exist all the caller of the msg
+// isn't the keepers authority
+func (k Keeper) SpendCommunityPool(ctx sdk.Context, amount sdk.Coins, authority, recipient sdk.AccAddress) error {
+	if !authority.Equals(k.authority) {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s not authorized to spend community pool funds", authority.String())
+	}
+
+	if k.blockedAddrs[recipient.String()] {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", recipient.String())
+	}
+
+	err := k.DistributeFromFeePool(ctx, amount, recipient)
+	if err != nil {
+		return err
+	}
+
+	logger := k.Logger(ctx)
+	logger.Info("transferred from the community pool to recipient", "amount", amount.String(), "recipient", recipient)
 
 	return nil
 }

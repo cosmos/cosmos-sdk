@@ -32,13 +32,14 @@ message MsgSubmitProposal {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  google.protobuf.Any content = 1 [deprecated = true, (cosmos_proto.accepts_interface) = "Content"];
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"initial_deposit\""
   ];
-  string proposer = 3;
+  string   proposer                     = 3;
+  repeated google.protobuf.Any messages = 4;
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
@@ -91,3 +92,15 @@ message MsgDeposit {
 
 // MsgDepositResponse defines the Msg/Deposit response type.
 message MsgDepositResponse {}
+
+// MsgSignal is a simple text-based message that can be added to a proposal if
+// the proposer wants to signal a change. Nothing is executed.
+message MsgSignal {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.stringer)         = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  string title       = 1;
+  string description = 2;
+}

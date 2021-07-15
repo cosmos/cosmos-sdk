@@ -1,9 +1,9 @@
 package types
 
 const (
-	// ModuleName defines the module name
+	// ModuleName defines the name of the module
 	ModuleName = "params"
 
-	// QuerierRoute defines the module's query routing key
-	QuerierRoute = ModuleName
+	// RouterKey defines the routing key for a ParameterChangeProposal
+	RouterKey = "params"
 )

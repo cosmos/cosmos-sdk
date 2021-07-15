@@ -49,8 +49,8 @@ func (s *DepositTestSuite) TestQueryDepositsInitialDeposit() {
 	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(20))).String()
 
 	// create a proposal with deposit
-	_, err := MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
+	_, err := MsgSubmitSignalProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 1", "Where is the title!?",
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit))
 	s.Require().NoError(err)
 
@@ -77,8 +77,8 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	clientCtx := val.ClientCtx
 
 	// create a proposal without deposit
-	_, err := MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
+	_, err := MsgSubmitSignalProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 2", "Where is the title!?")
 	s.Require().NoError(err)
 
 	// deposit amount
@@ -105,8 +105,8 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(2000))).String()
 
 	// create a proposal with deposit
-	_, err := MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
+	_, err := MsgSubmitSignalProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 3", "Where is the title!?",
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit))
 	s.Require().NoError(err)
 
@@ -131,8 +131,8 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens)
 
 	// create a proposal with deposit
-	_, err := MsgSubmitProposal(clientCtx, val.Address.String(),
-		"Text Proposal 4", "Where is the title!?", types.ProposalTypeText,
+	_, err := MsgSubmitSignalProposal(clientCtx, val.Address.String(),
+		"Text Proposal 4", "Where is the title!?",
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit))
 	s.Require().NoError(err)
 

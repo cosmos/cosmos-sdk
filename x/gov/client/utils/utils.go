@@ -40,17 +40,6 @@ func NormalizeWeightedVoteOptions(options string) string {
 	return strings.Join(newOptions, ",")
 }
 
-// NormalizeProposalType - normalize user specified proposal type.
-func NormalizeProposalType(proposalType string) string {
-	switch proposalType {
-	case "Text", "text":
-		return types.ProposalTypeText
-
-	default:
-		return ""
-	}
-}
-
 // NormalizeProposalStatus - normalize user specified proposal status.
 func NormalizeProposalStatus(status string) string {
 	switch status {

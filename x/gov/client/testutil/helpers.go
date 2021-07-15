@@ -18,17 +18,16 @@ var commonArgs = []string{
 }
 
 // MsgSubmitProposal creates a tx for submit proposal
-func MsgSubmitProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
+func MsgSubmitSignalProposal(clientCtx client.Context, from, title, description string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := append([]string{
 		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
 		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),
-		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType),
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),
 	}, commonArgs...)
 
 	args = append(args, extraArgs...)
 
-	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdSubmitProposal(), args)
+	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdSubmitSignalProposal(), args)
 }
 
 // MsgVote votes for a proposal

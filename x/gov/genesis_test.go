@@ -32,12 +32,12 @@ func TestImportExportQueues(t *testing.T) {
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// Create two proposals, put the second into the voting period
-	proposal := TestProposal
-	proposal1, err := app.GovKeeper.SubmitProposal(ctx, proposal)
+	proposal := TestProposalMsg
+	proposal1, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{proposal})
 	require.NoError(t, err)
 	proposalID1 := proposal1.ProposalId
 
-	proposal2, err := app.GovKeeper.SubmitProposal(ctx, proposal)
+	proposal2, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{proposal})
 	require.NoError(t, err)
 	proposalID2 := proposal2.ProposalId
 
@@ -144,11 +144,11 @@ func TestEqualProposals(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	// Submit two proposals
-	proposal := TestProposal
-	proposal1, err := app.GovKeeper.SubmitProposal(ctx, proposal)
+	proposal := TestProposalMsg
+	proposal1, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{proposal})
 	require.NoError(t, err)
 
-	proposal2, err := app.GovKeeper.SubmitProposal(ctx, proposal)
+	proposal2, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{proposal})
 	require.NoError(t, err)
 
 	// They are similar but their IDs should be different

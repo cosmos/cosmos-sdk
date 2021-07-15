@@ -14,20 +14,19 @@ import (
 const OpWeightSubmitTextProposal = "op_weight_submit_text_proposal"
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents() []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{
-		simulation.NewWeightedProposalContent(
+func ProposalMessages() []simtypes.WeightedProposalMessageSim {
+	return []simtypes.WeightedProposalMessageSim{
+		simulation.NewWeightedProposalMessageSim(
 			OpWeightMsgDeposit,
 			simappparams.DefaultWeightTextProposal,
-			SimulateTextProposalContent,
+			SimulateSignalProposal,
 		),
 	}
 }
 
-// SimulateTextProposalContent returns a random text proposal content.
-func SimulateTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
-	return types.NewTextProposal(
+func SimulateSignalProposal(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) []sdk.Msg {
+	return []sdk.Msg{types.NewMsgSignal(
 		simtypes.RandStringOfLength(r, 140),
 		simtypes.RandStringOfLength(r, 5000),
-	)
+	)}
 }

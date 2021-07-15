@@ -7,21 +7,18 @@ import (
 
 	"github.com/spf13/pflag"
 
-	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func parseSubmitProposalFlags(fs *pflag.FlagSet) (*proposal, error) {
-	proposal := &proposal{}
+func parseSignalProposalFlags(fs *pflag.FlagSet) (*types.MsgSignal, error) {
+	msg := &types.MsgSignal{}
 	proposalFile, _ := fs.GetString(FlagProposal)
 
 	if proposalFile == "" {
-		proposalType, _ := fs.GetString(FlagProposalType)
-
-		proposal.Title, _ = fs.GetString(FlagTitle)
-		proposal.Description, _ = fs.GetString(FlagDescription)
-		proposal.Type = govutils.NormalizeProposalType(proposalType)
-		proposal.Deposit, _ = fs.GetString(FlagDeposit)
-		return proposal, nil
+		msg.Title, _ = fs.GetString(FlagTitle)
+		msg.Description, _ = fs.GetString(FlagDescription)
+		return msg, nil
 	}
 
 	for _, flag := range ProposalFlags {
@@ -35,10 +32,22 @@ func parseSubmitProposalFlags(fs *pflag.FlagSet) (*proposal, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(contents, proposal)
+	err = json.Unmarshal(contents, msg)
 	if err != nil {
 		return nil, err
 	}
 
-	return proposal, nil
+	return msg, nil
+}
+
+func parseMsgs(msgFile string) ([]sdk.Msg, error) {
+	msgs := []sdk.Msg{}
+
+	msgBytes, err := ioutil.ReadFile(msgFile)
+	if err != nil {
+		return msgs, err
+	}
+
+	err = json.Unmarshal(msgBytes, msgs)
+	return msgs, err
 }

@@ -78,27 +78,71 @@ func NewTxCmd(propCmds []*cobra.Command) *cobra.Command {
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal",
+		Use:   "submit-proposal [path/to/msgs.json]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Submit a proposal along with an initial deposit",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a proposal along with an initial deposit.
-Proposal title, description, type and deposit can be given directly or through a proposal JSON file.
+Proposal messages are passed through a msgs JSON file.
 
 Example:
-$ %s tx gov submit-proposal --proposal="path/to/proposal.json" --from mykey
+$ %s tx gov submit-proposal path/to/msgs.json 10stake --from mykey
 
-Where proposal.json contains:
+Where msgs.json contains an array of sdk messages to be executed:
 
 {
   "title": "Test Proposal",
   "description": "My awesome proposal",
-  "type": "Text",
-  "deposit": "10test"
+}
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msgs, err := parseMsgs(args[0])
+			if err != nil {
+				return fmt.Errorf("failed to parse proposal: %w", err)
+			}
+
+			amount, err := sdk.ParseCoinsNormalized(FlagDeposit)
+			if err != nil {
+				return err
+			}
+
+			proposal, err := types.NewMsgSubmitProposal(msgs, amount, clientCtx.GetFromAddress())
+			if err != nil {
+				return fmt.Errorf("invalid message: %w", err)
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+		},
+	}
+	cmd.Flags().String(FlagDeposit, "", "The proposal initial deposit")
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
 
-Which is equivalent to:
+func NewCmdSubmitSignalProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "submit-signal-proposal",
+		Short: "Submit a signalling proposal with a title, description and initial deposit",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a signalling proposal containing a title, description and initial deposit.
 
-$ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+Example:
+
+$ %s tx gov submit-signal-proposal --title TestProposal --description My awesome proposal --deposit 10stake --from mykey
+
+Alternatively, submit the signalling proposal as a JSON file
+
+$ %s tx gov submit-signal-proposal --proposal="path/to/proposal.json" --deposit 10stake --from mykey
+			
 `,
 				version.AppName, version.AppName,
 			),
@@ -109,32 +153,29 @@ $ %s tx gov submit-proposal --title="Test Proposal" --description="My awesome pr
 				return err
 			}
 
-			proposal, err := parseSubmitProposalFlags(cmd.Flags())
+			msg, err := parseSignalProposalFlags(cmd.Flags())
 			if err != nil {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
 
-			amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			amount, err := sdk.ParseCoinsNormalized(FlagDeposit)
 			if err != nil {
 				return err
 			}
 
-			content := types.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-
-			msg, err := types.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+			proposal, err := types.NewMsgSubmitProposal([]sdk.Msg{msg}, amount, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
 		},
 	}
 
 	cmd.Flags().String(FlagTitle, "", "The proposal title")
 	cmd.Flags().String(FlagDescription, "", "The proposal description")
-	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
-	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagDeposit, "", "The proposal initial deposit")
+	cmd.Flags().String(FlagProposal, "", "Signal proposal file path (if this path is given, other proposal flags are ignored)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

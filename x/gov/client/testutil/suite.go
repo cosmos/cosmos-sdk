@@ -43,8 +43,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val := s.network.Validators[0]
 
 	// create a proposal with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
+	_, err = MsgSubmitSignalProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 1", "Where is the title!?",
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
@@ -55,15 +55,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// create a proposal without deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
+	_, err = MsgSubmitSignalProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 2", "Where is the title!?")
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	// create a proposal3 with deposit
-	_, err = MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
+	_, err = MsgSubmitSignalProposal(val.ClientCtx, val.Address.String(),
+		"Text Proposal 3", "Where is the title!?",
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	_, err = s.network.WaitForHeight(1)
@@ -312,7 +312,6 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 			"invalid proposal",
 			[]string{
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -336,7 +335,6 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 			[]string{
 				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, types.ProposalTypeText),
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

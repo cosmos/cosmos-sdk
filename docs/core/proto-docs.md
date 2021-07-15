@@ -233,8 +233,6 @@
     - [PubKey](#cosmos.crypto.secp256r1.PubKey)
   
 - [cosmos/distribution/v1beta1/distribution.proto](#cosmos/distribution/v1beta1/distribution.proto)
-    - [CommunityPoolSpendProposal](#cosmos.distribution.v1beta1.CommunityPoolSpendProposal)
-    - [CommunityPoolSpendProposalWithDeposit](#cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit)
     - [DelegationDelegatorReward](#cosmos.distribution.v1beta1.DelegationDelegatorReward)
     - [DelegatorStartingInfo](#cosmos.distribution.v1beta1.DelegatorStartingInfo)
     - [FeePool](#cosmos.distribution.v1beta1.FeePool)
@@ -283,6 +281,8 @@
     - [MsgFundCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse)
     - [MsgSetWithdrawAddress](#cosmos.distribution.v1beta1.MsgSetWithdrawAddress)
     - [MsgSetWithdrawAddressResponse](#cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse)
+    - [MsgSpendCommunityPool](#cosmos.distribution.v1beta1.MsgSpendCommunityPool)
+    - [MsgSpendCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgSpendCommunityPoolResponse)
     - [MsgWithdrawDelegatorReward](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward)
     - [MsgWithdrawDelegatorRewardResponse](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse)
     - [MsgWithdrawValidatorCommission](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission)
@@ -344,7 +344,6 @@
     - [Proposal](#cosmos.gov.v1beta1.Proposal)
     - [TallyParams](#cosmos.gov.v1beta1.TallyParams)
     - [TallyResult](#cosmos.gov.v1beta1.TallyResult)
-    - [TextProposal](#cosmos.gov.v1beta1.TextProposal)
     - [Vote](#cosmos.gov.v1beta1.Vote)
     - [VotingParams](#cosmos.gov.v1beta1.VotingParams)
     - [WeightedVoteOption](#cosmos.gov.v1beta1.WeightedVoteOption)
@@ -378,6 +377,7 @@
 - [cosmos/gov/v1beta1/tx.proto](#cosmos/gov/v1beta1/tx.proto)
     - [MsgDeposit](#cosmos.gov.v1beta1.MsgDeposit)
     - [MsgDepositResponse](#cosmos.gov.v1beta1.MsgDepositResponse)
+    - [MsgSignal](#cosmos.gov.v1beta1.MsgSignal)
     - [MsgSubmitProposal](#cosmos.gov.v1beta1.MsgSubmitProposal)
     - [MsgSubmitProposalResponse](#cosmos.gov.v1beta1.MsgSubmitProposalResponse)
     - [MsgVote](#cosmos.gov.v1beta1.MsgVote)
@@ -476,7 +476,6 @@
   
 - [cosmos/params/v1beta1/params.proto](#cosmos/params/v1beta1/params.proto)
     - [ParamChange](#cosmos.params.v1beta1.ParamChange)
-    - [ParameterChangeProposal](#cosmos.params.v1beta1.ParameterChangeProposal)
   
 - [cosmos/params/v1beta1/query.proto](#cosmos/params/v1beta1/query.proto)
     - [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest)
@@ -3611,46 +3610,6 @@ PubKey defines a secp256r1 ECDSA public key.
 
 
 
-<a name="cosmos.distribution.v1beta1.CommunityPoolSpendProposal"></a>
-
-### CommunityPoolSpendProposal
-CommunityPoolSpendProposal details a proposal for use of community funds,
-together with how many coins are proposed to be spent, and to which
-recipient account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit"></a>
-
-### CommunityPoolSpendProposalWithDeposit
-CommunityPoolSpendProposalWithDeposit defines a CommunityPoolSpendProposal
-with a deposit
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `recipient` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-| `deposit` | [string](#string) |  |  |
-
-
-
-
-
-
 <a name="cosmos.distribution.v1beta1.DelegationDelegatorReward"></a>
 
 ### DelegationDelegatorReward
@@ -4380,6 +4339,33 @@ MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
 
 
 
+<a name="cosmos.distribution.v1beta1.MsgSpendCommunityPool"></a>
+
+### MsgSpendCommunityPool
+MsgSpendCommunityPool allows an authority account of the community pool to
+transfer coins to a recipient address
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `recipient` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.distribution.v1beta1.MsgSpendCommunityPoolResponse"></a>
+
+### MsgSpendCommunityPoolResponse
+MsgSpendCommunityPoolResponse defines the Msg/SpendCommunityPool response type.
+
+
+
+
+
+
 <a name="cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"></a>
 
 ### MsgWithdrawDelegatorReward
@@ -4450,6 +4436,7 @@ Msg defines the distribution Msg service.
 | `WithdrawDelegatorReward` | [MsgWithdrawDelegatorReward](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward) | [MsgWithdrawDelegatorRewardResponse](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse) | WithdrawDelegatorReward defines a method to withdraw rewards of delegator from a single validator. | |
 | `WithdrawValidatorCommission` | [MsgWithdrawValidatorCommission](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission) | [MsgWithdrawValidatorCommissionResponse](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse) | WithdrawValidatorCommission defines a method to withdraw the full commission to the validator address. | |
 | `FundCommunityPool` | [MsgFundCommunityPool](#cosmos.distribution.v1beta1.MsgFundCommunityPool) | [MsgFundCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse) | FundCommunityPool defines a method to allow an account to directly fund the community pool. | |
+| `SpendCommunityPool` | [MsgSpendCommunityPool](#cosmos.distribution.v1beta1.MsgSpendCommunityPool) | [MsgSpendCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgSpendCommunityPoolResponse) | SpendCommunityPool defined a method to transfer tokens from the community pool to a recipient address | |
 
  <!-- end services -->
 
@@ -5038,7 +5025,7 @@ Proposal defines the core field members of a governance proposal.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `proposal_id` | [uint64](#uint64) |  |  |
-| `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `content` | [google.protobuf.Any](#google.protobuf.Any) |  | **Deprecated.**  |
 | `status` | [ProposalStatus](#cosmos.gov.v1beta1.ProposalStatus) |  |  |
 | `final_tally_result` | [TallyResult](#cosmos.gov.v1beta1.TallyResult) |  |  |
 | `submit_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
@@ -5046,6 +5033,7 @@ Proposal defines the core field members of a governance proposal.
 | `total_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `voting_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `voting_end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
 
 
 
@@ -5081,23 +5069,6 @@ TallyResult defines a standard tally for a governance proposal.
 | `abstain` | [string](#string) |  |  |
 | `no` | [string](#string) |  |  |
 | `no_with_veto` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.gov.v1beta1.TextProposal"></a>
-
-### TextProposal
-TextProposal defines a standard text proposal whose changes need to be
-manually updated in case of approval.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
 
 
 
@@ -5551,6 +5522,23 @@ MsgDepositResponse defines the Msg/Deposit response type.
 
 
 
+<a name="cosmos.gov.v1beta1.MsgSignal"></a>
+
+### MsgSignal
+MsgSignal is a simple text-based message that can be added to a proposal if
+the proposer wants to signal a change. Nothing is executed.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="cosmos.gov.v1beta1.MsgSubmitProposal"></a>
 
 ### MsgSubmitProposal
@@ -5560,9 +5548,10 @@ proposal Content.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `content` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `content` | [google.protobuf.Any](#google.protobuf.Any) |  | **Deprecated.**  |
 | `initial_deposit` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `proposer` | [string](#string) |  |  |
+| `messages` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
 
 
 
@@ -6859,23 +6848,6 @@ ParameterChangeProposal.
 | `subspace` | [string](#string) |  |  |
 | `key` | [string](#string) |  |  |
 | `value` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.params.v1beta1.ParameterChangeProposal"></a>
-
-### ParameterChangeProposal
-ParameterChangeProposal defines a proposal to change one or more parameters.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `title` | [string](#string) |  |  |
-| `description` | [string](#string) |  |  |
-| `changes` | [ParamChange](#cosmos.params.v1beta1.ParamChange) | repeated |  |
 
 
 

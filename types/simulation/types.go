@@ -11,22 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-type WeightedProposalContent interface {
-	AppParamsKey() string                   // key used to retrieve the value of the weight from the simulation application params
-	DefaultWeight() int                     // default weight
-	ContentSimulatorFn() ContentSimulatorFn // content simulator function
+type WeightedProposalMessageSim interface {
+	AppParamsKey() string                     // key used to retrieve the value of the weight from the simulation application params
+	DefaultWeight() int                       // default weight
+	ProposalSimulatorFn() ProposalSimulatorFn // proposal message simulator function
 }
 
-type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) Content
-
-type Content interface {
-	GetTitle() string
-	GetDescription() string
-	ProposalRoute() string
-	ProposalType() string
-	ValidateBasic() error
-	String() string
-}
+type ProposalSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) []sdk.Msg
 
 type SimValFn func(r *rand.Rand) string
 

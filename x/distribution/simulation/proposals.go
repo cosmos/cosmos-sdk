@@ -15,19 +15,19 @@ import (
 const OpWeightSubmitCommunitySpendProposal = "op_weight_submit_community_spend_proposal"
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{
-		simulation.NewWeightedProposalContent(
+func ProposalMessages(k keeper.Keeper) []simtypes.WeightedProposalMessageSim {
+	return []simtypes.WeightedProposalMessageSim{
+		simulation.NewWeightedProposalMessageSim(
 			OpWeightSubmitCommunitySpendProposal,
 			simappparams.DefaultWeightCommunitySpendProposal,
-			SimulateCommunityPoolSpendProposalContent(k),
+			SimulateCommunityPoolSpendProposalMessage(k),
 		),
 	}
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
+func SimulateCommunityPoolSpendProposalMessage(k keeper.Keeper) simtypes.ProposalSimulatorFn {
+	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) []sdk.Msg {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		balance := k.GetFeePool(ctx).CommunityPool
@@ -41,11 +41,9 @@ func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simtypes.Content
 			return nil
 		}
 
-		return types.NewCommunityPoolSpendProposal(
-			simtypes.RandStringOfLength(r, 10),
-			simtypes.RandStringOfLength(r, 100),
-			simAccount.Address,
+		return []sdk.Msg{types.NewMsgSpendCommunityPool(
 			sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount)),
-		)
+			simAccount.Address,
+		)}
 	}
 }

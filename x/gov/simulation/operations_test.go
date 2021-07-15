@@ -20,34 +20,34 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-type MockWeightedProposalContent struct {
+type MockWeightedProposalSim struct {
 	n int
 }
 
-func (m MockWeightedProposalContent) AppParamsKey() string {
+func (m MockWeightedProposalSim) AppParamsKey() string {
 	return fmt.Sprintf("AppParamsKey-%d", m.n)
 }
 
-func (m MockWeightedProposalContent) DefaultWeight() int {
+func (m MockWeightedProposalSim) DefaultWeight() int {
 	return m.n
 }
 
-func (m MockWeightedProposalContent) ContentSimulatorFn() simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
-		return types.NewTextProposal(
+func (m MockWeightedProposalSim) ProposalSimulatorFn() simtypes.ProposalSimulatorFn {
+	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) []sdk.Msg {
+		return []sdk.Msg{types.NewMsgSignal(
 			fmt.Sprintf("title-%d: %s", m.n, simtypes.RandStringOfLength(r, 100)),
 			fmt.Sprintf("description-%d: %s", m.n, simtypes.RandStringOfLength(r, 4000)),
-		)
+		)}
 	}
 }
 
-// make sure the MockWeightedProposalContent satisfied the WeightedProposalContent interface
-var _ simtypes.WeightedProposalContent = MockWeightedProposalContent{}
+// make sure the MockWeightedProposalSim satisfied the WeightedProposalContent interface
+var _ simtypes.WeightedProposalMessageSim = MockWeightedProposalSim{}
 
-func mockWeightedProposalContent(n int) []simtypes.WeightedProposalContent {
-	wpc := make([]simtypes.WeightedProposalContent, n)
+func mockWeightedProposalSim(n int) []simtypes.WeightedProposalMessageSim {
+	wpc := make([]simtypes.WeightedProposalMessageSim, n)
 	for i := 0; i < n; i++ {
-		wpc[i] = MockWeightedProposalContent{i}
+		wpc[i] = MockWeightedProposalSim{i}
 
 	}
 	return wpc
@@ -63,7 +63,7 @@ func TestWeightedOperations(t *testing.T) {
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper,
-		app.BankKeeper, app.GovKeeper, mockWeightedProposalContent(3),
+		app.BankKeeper, app.GovKeeper, mockWeightedProposalSim(3),
 	)
 
 	// setup 3 accounts
@@ -109,7 +109,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSubmitProposal(app.AccountKeeper, app.BankKeeper, app.GovKeeper, MockWeightedProposalContent{3}.ContentSimulatorFn())
+	op := simulation.SimulateMsgSubmitProposal(app.AccountKeeper, app.BankKeeper, app.GovKeeper, MockWeightedProposalSim{3}.ProposalSimulatorFn())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -138,12 +138,12 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
 	// setup a proposal
-	content := types.NewTextProposal("Test", "description")
+	proposalMsg := types.NewMsgSignal("Test", "description")
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := types.NewProposal([]sdk.Msg{proposalMsg}, 1, submitTime, submitTime.Add(depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -180,12 +180,12 @@ func TestSimulateMsgVote(t *testing.T) {
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
 	// setup a proposal
-	content := types.NewTextProposal("Test", "description")
+	proposalMsg := types.NewMsgSignal("Test", "description")
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := types.NewProposal([]sdk.Msg{proposalMsg}, 1, submitTime, submitTime.Add(depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -222,12 +222,12 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
 	// setup a proposal
-	content := types.NewTextProposal("Test", "description")
+	proposalMsg := types.NewMsgSignal("Test", "description")
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(content, 1, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := types.NewProposal([]sdk.Msg{proposalMsg}, 1, submitTime, submitTime.Add(depositPeriod))
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)

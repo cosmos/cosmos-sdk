@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
-	tp := TestProposal
-	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
+	tp := TestProposalMsg
+	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, []sdk.Msg{tp})
 	suite.Require().NoError(err)
 	proposalID := proposal.ProposalId
 	suite.app.GovKeeper.SetProposal(suite.ctx, proposal)
@@ -23,8 +23,8 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 }
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
-	tp := TestProposal
-	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tp)
+	tp := TestProposalMsg
+	proposal, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, []sdk.Msg{tp})
 	suite.Require().NoError(err)
 
 	suite.Require().True(proposal.VotingStartTime.Equal(time.Time{}))
@@ -44,27 +44,20 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	activeIterator.Close()
 }
 
-type invalidProposalRoute struct{ types.TextProposal }
-
-func (invalidProposalRoute) ProposalRoute() string { return "nonexistingroute" }
+type invalidMsg struct{ sdk.Msg }
 
 func (suite *KeeperTestSuite) TestSubmitProposal() {
 	testCases := []struct {
-		content     types.Content
+		messages    []sdk.Msg
 		expectedErr error
 	}{
-		{&types.TextProposal{Title: "title", Description: "description"}, nil},
-		// Keeper does not check the validity of title and description, no error
-		{&types.TextProposal{Title: "", Description: "description"}, nil},
-		{&types.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, nil},
-		{&types.TextProposal{Title: "title", Description: ""}, nil},
-		{&types.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, nil},
+		{[]sdk.Msg{}, nil},
 		// error only when invalid route
-		{&invalidProposalRoute{}, types.ErrNoProposalHandlerExists},
+		{[]sdk.Msg{&testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}}, types.ErrUnroutableProposalMsg},
 	}
 
 	for i, tc := range testCases {
-		_, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tc.content)
+		_, err := suite.app.GovKeeper.SubmitProposal(suite.ctx, tc.messages)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
@@ -77,7 +70,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := types.NewProposal(TestProposal, proposalID, time.Now(), time.Now())
+			p, err := types.NewProposal([]sdk.Msg{TestProposalMsg}, proposalID, time.Now(), time.Now())
 			suite.Require().NoError(err)
 
 			p.Status = s

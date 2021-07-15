@@ -12,6 +12,18 @@ type (
 	}
 )
 
+func NewMsgParamsChange(subspace, key, value string) *ParamChange {
+	return &ParamChange{
+		Subspace: subspace,
+		Key: key,
+		Value: value,
+	}
+}
+
+func (p ParamChange) String() string { 
+	return p.Subspace
+}
+
 // NewParamSetPair creates a new ParamSetPair instance.
 func NewParamSetPair(key []byte, value interface{}, vfn ValueValidatorFn) ParamSetPair {
 	return ParamSetPair{key, value, vfn}
@@ -24,3 +36,5 @@ type ParamSetPairs []ParamSetPair
 type ParamSet interface {
 	ParamSetPairs() ParamSetPairs
 }
+
+

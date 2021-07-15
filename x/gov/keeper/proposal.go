@@ -10,18 +10,13 @@ import (
 )
 
 // SubmitProposal create new proposal given a content
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (types.Proposal, error) {
-	if !keeper.router.HasRoute(content.ProposalRoute()) {
-		return types.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, content.ProposalRoute())
-	}
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg) (types.Proposal, error) {
 
-	// Execute the proposal content in a new context branch (with branched store)
-	// to validate the actual parameter changes before the proposal proceeds
-	// through the governance process. State is not persisted.
-	cacheCtx, _ := ctx.CacheContext()
-	handler := keeper.router.GetRoute(content.ProposalRoute())
-	if err := handler(cacheCtx, content); err != nil {
-		return types.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
+	// Loop through all messages and confirm that each has a handler
+	for _, msg := range messages {
+		if keeper.router.Handler(msg) == nil {
+			return types.Proposal{}, sdkerrors.Wrap(types.ErrUnroutableProposalMsg, sdk.MsgTypeURL(msg))
+		}
 	}
 
 	proposalID, err := keeper.GetProposalID(ctx)
@@ -32,7 +27,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := types.NewProposal(content, proposalID, submitTime, submitTime.Add(depositPeriod))
+	proposal, err := types.NewProposal(messages, proposalID, submitTime, submitTime.Add(depositPeriod))
 	if err != nil {
 		return types.Proposal{}, err
 	}

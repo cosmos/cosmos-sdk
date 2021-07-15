@@ -189,9 +189,9 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the evidence content functions used to
+// ProposalMessages returns all the evidence content functions used to
 // simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (am AppModule) ProposalMessages(simState module.SimulationState) []simtypes.WeightedProposalMessageSim {
 	return nil
 }
 

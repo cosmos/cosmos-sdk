@@ -193,10 +193,10 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents returns all the gov content functions used to
+// ProposalMessages returns all the gov content functions used to
 // simulate governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents()
+func (AppModule) ProposalMessages(simState module.SimulationState) []simtypes.WeightedProposalMessageSim {
+	return simulation.ProposalMessages()
 }
 
 // RandomizedParams creates randomized gov param changes for the simulator.

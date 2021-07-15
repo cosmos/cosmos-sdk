@@ -26,10 +26,10 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	endTime := time.Now().UTC()
-	content := types.ContentFromProposalType("test", "test", types.ProposalTypeText)
-	proposalA, err := types.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour))
+	msg := types.NewMsgSignal("test", "test")
+	proposalA, err := types.NewProposal([]sdk.Msg{msg}, 1, endTime, endTime.Add(24*time.Hour))
 	require.NoError(t, err)
-	proposalB, err := types.NewProposal(content, 2, endTime, endTime.Add(24*time.Hour))
+	proposalB, err := types.NewProposal([]sdk.Msg{msg}, 2, endTime, endTime.Add(24*time.Hour))
 	require.NoError(t, err)
 
 	proposalIDBz := make([]byte, 8)

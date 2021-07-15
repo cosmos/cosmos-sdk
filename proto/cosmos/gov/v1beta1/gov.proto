@@ -39,17 +39,6 @@ message WeightedVoteOption {
   ];
 }
 
-// TextProposal defines a standard text proposal whose changes need to be
-// manually updated in case of approval.
-message TextProposal {
-  option (cosmos_proto.implements_interface) = "Content";
-
-  option (gogoproto.equal) = true;
-
-  string title       = 1;
-  string description = 2;
-}
-
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 message Deposit {
@@ -67,7 +56,7 @@ message Proposal {
   option (gogoproto.equal) = true;
 
   uint64              proposal_id        = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
-  google.protobuf.Any content            = 2 [(cosmos_proto.accepts_interface) = "Content"];
+  google.protobuf.Any content            = 2 [deprecated = true, (cosmos_proto.accepts_interface) = "Content"];
   ProposalStatus      status             = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
   TallyResult         final_tally_result = 4
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"final_tally_result\""];
@@ -84,6 +73,7 @@ message Proposal {
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_start_time\""];
   google.protobuf.Timestamp voting_end_time = 9
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"voting_end_time\""];
+  repeated google.protobuf.Any messages = 10;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.

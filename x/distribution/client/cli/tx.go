@@ -256,25 +256,14 @@ func GetCmdSubmitProposal() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
-		Use:   "community-pool-spend [proposal-file]",
-		Args:  cobra.ExactArgs(1),
-		Short: "Submit a community pool spend proposal",
+		Use:   "submit-community-pool-spend-proposal [amount] [recipient] [deposit]",
+		Args:  cobra.ExactArgs(3),
+		Short: "Submit a community pool spend proposal through the root governance account",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a community pool spend proposal along with an initial deposit.
-The proposal details must be supplied via a JSON file.
 
 Example:
-$ %s tx gov submit-proposal community-pool-spend <path/to/proposal.json> --from=<key_or_address>
-
-Where proposal.json contains:
-
-{
-  "title": "Community Pool Spend",
-  "description": "Pay me some Atoms!",
-  "recipient": "%s1s5afhd6gxevu37mkqcvvsj8qeylhn0rz46zdlq",
-  "amount": "1000stake",
-  "deposit": "1000stake"
-}
+$ %s tx distribution submit-community-pool-spend-proposal 100atom %s 100uatom
 `,
 				version.AppName, bech32PrefixAccAddr,
 			),
@@ -284,29 +273,27 @@ Where proposal.json contains:
 			if err != nil {
 				return err
 			}
-			proposal, err := ParseCommunityPoolSpendProposalWithDeposit(clientCtx.Codec, args[0])
+
+			amount, err := sdk.ParseCoinsNormalized(args[0])
 			if err != nil {
 				return err
 			}
 
-			amount, err := sdk.ParseCoinsNormalized(proposal.Amount)
+			recipient, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			deposit, err := sdk.ParseCoinsNormalized(args[2])
 			if err != nil {
 				return err
 			}
 
-			from := clientCtx.GetFromAddress()
-			recpAddr, err := sdk.AccAddressFromBech32(proposal.Recipient)
-			if err != nil {
-				return err
-			}
-			content := types.NewCommunityPoolSpendProposal(proposal.Title, proposal.Description, recpAddr, amount)
+			proposer := clientCtx.GetFromAddress()
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			spendMsg := types.NewMsgSpendCommunityPool(amount, recipient)
+
+			msg, err := govtypes.NewMsgSubmitProposal([]sdk.Msg{spendMsg}, deposit, proposer)
 			if err != nil {
 				return err
 			}

@@ -155,7 +155,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalContents performs a no-op
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (am AppModule) ProposalMessages(simState module.SimulationState) []simtypes.WeightedProposalMessageSim {
 	return nil
 }
 

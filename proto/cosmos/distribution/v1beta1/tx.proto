@@ -24,6 +24,10 @@ service Msg {
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+
+  // SpendCommunityPool defined a method to transfer tokens from the community
+  // pool to a recipient address
+  rpc SpendCommunityPool(MsgSpendCommunityPool) returns (MsgSpendCommunityPoolResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
@@ -77,3 +81,14 @@ message MsgFundCommunityPool {
 
 // MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
 message MsgFundCommunityPoolResponse {}
+
+// MsgSpendCommunityPool allows an authority account of the community pool to
+// transfer coins to a recipient address
+message MsgSpendCommunityPool {
+  repeated cosmos.base.v1beta1.Coin amount = 1
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string recipient = 2;
+}
+
+// MsgSpendCommunityPoolResponse defines the Msg/SpendCommunityPool response type.
+message MsgSpendCommunityPoolResponse {}

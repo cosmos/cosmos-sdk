@@ -63,10 +63,10 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 }
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
-func Setup(t *testing.T, isCheckTx bool) *SimApp {
+func Setup(isCheckTx bool) *SimApp {
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
-	require.NoError(t, err)
+	pubKey, _ := privVal.GetPubKey()
+	// require.NoError(t, err)
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
@@ -79,7 +79,7 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
+	app := SetupWithGenesisValSet(nil, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	return app
 }

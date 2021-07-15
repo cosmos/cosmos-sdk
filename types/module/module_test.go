@@ -206,7 +206,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
 
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
-	require.Equal(t, abci.ResponseInitChain{Validators: []abci.ValidatorUpdate(nil)}, mm.InitGenesis(ctx, cdc, genesisData))
+	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 
 	// test panic
 	genesisData = map[string]json.RawMessage{

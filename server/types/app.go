@@ -19,7 +19,7 @@ import (
 
 // ServerStartTime defines the time duration that the server need to stay running after startup
 // for the startup be considered successful
-const ServerStartTime = 3 * time.Second
+const ServerStartTime = 5 * time.Second
 
 type (
 	// AppOptions defines an interface that is passed into an application

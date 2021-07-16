@@ -17,18 +17,18 @@ func NewBuffer() *buffer {
 
 func (b *buffer) Write(bz []byte) (int, error) {
 	b.m.Lock()
-	b.m.Unlock()
+	defer b.m.Unlock()
 	return b.b.Write(bz)
 }
 
 func (b *buffer) String() string {
 	b.m.Lock()
-	b.m.Unlock()
+	defer b.m.Unlock()
 	return b.b.String()
 }
 
 func (b *buffer) Reset() {
 	b.m.Lock()
-	b.m.Unlock()
+	defer b.m.Unlock()
 	b.b.Reset()
 }

@@ -2,6 +2,7 @@ package query_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -15,7 +16,7 @@ import (
 var addr1 = sdk.AccAddress([]byte("addr1"))
 
 func (s *paginationTestSuite) TestFilteredPaginations() {
-	app, ctx, appCodec := setupTest()
+	app, ctx, appCodec := setupTest(s.T())
 
 	var balances sdk.Coins
 	for i := 0; i < numBalances; i++ {
@@ -90,7 +91,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 }
 
 func (s *paginationTestSuite) TestReverseFilteredPaginations() {
-	app, ctx, appCodec := setupTest()
+	app, ctx, appCodec := setupTest(s.T())
 
 	var balances sdk.Coins
 	for i := 0; i < numBalances; i++ {
@@ -170,8 +171,8 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 
 }
 
-func ExampleFilteredPaginate() {
-	app, ctx, appCodec := setupTest()
+func ExampleFilteredPaginate(t *testing.T) {
+	app, ctx, appCodec := setupTest(t)
 
 	var balances sdk.Coins
 	for i := 0; i < numBalances; i++ {

@@ -22,8 +22,8 @@ var (
 	dummyRouteWhichFails  = types.NewInvarRoute(testModuleName, "which-fails", func(_ sdk.Context) (string, bool) { return "whoops", true })
 )
 
-func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
-	app := simapp.Setup(false)
+func createTestApp(t *testing.T) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
+	app := simapp.Setup(t, false)
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	constantFee := sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)
@@ -43,7 +43,7 @@ func createTestApp() (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
 }
 
 func TestHandleMsgVerifyInvariant(t *testing.T) {
-	app, ctx, addrs := createTestApp()
+	app, ctx, addrs := createTestApp(t)
 	sender := addrs[0]
 
 	cases := []struct {
@@ -83,7 +83,7 @@ func TestHandleMsgVerifyInvariant(t *testing.T) {
 }
 
 func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
-	app, ctx, addrs := createTestApp()
+	app, ctx, addrs := createTestApp(t)
 	sender := addrs[0]
 	coin := app.BankKeeper.GetAllBalances(ctx, sender)[0]
 	excessCoins := sdk.NewCoin(coin.Denom, coin.Amount.AddRaw(1))
@@ -98,7 +98,7 @@ func TestHandleMsgVerifyInvariantWithNotEnoughSenderCoins(t *testing.T) {
 }
 
 func TestHandleMsgVerifyInvariantWithInvariantBrokenAndNotEnoughPoolCoins(t *testing.T) {
-	app, ctx, addrs := createTestApp()
+	app, ctx, addrs := createTestApp(t)
 	sender := addrs[0]
 
 	// set the community pool to empty

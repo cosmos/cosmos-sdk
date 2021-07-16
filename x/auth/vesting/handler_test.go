@@ -22,7 +22,7 @@ type HandlerTestSuite struct {
 
 func (suite *HandlerTestSuite) SetupTest() {
 	checkTx := false
-	app := simapp.Setup(checkTx)
+	app := simapp.Setup(suite.T(), checkTx)
 
 	suite.handler = vesting.NewHandler(app.AccountKeeper, app.BankKeeper)
 	suite.app = app

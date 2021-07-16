@@ -8,6 +8,7 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -736,6 +737,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 }
 
 func TestContinuousVestingAccountMarshal(t *testing.T) {
+	app := createTestApp(t)
 	baseAcc, coins := initBaseAccount()
 	baseVesting := types.NewBaseVestingAccount(baseAcc, coins, time.Now().Unix())
 	acc := types.NewContinuousVestingAccountRaw(baseVesting, baseVesting.EndTime)
@@ -754,6 +756,7 @@ func TestContinuousVestingAccountMarshal(t *testing.T) {
 }
 
 func TestPeriodicVestingAccountMarshal(t *testing.T) {
+	app := createTestApp(t)
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPeriodicVestingAccount(baseAcc, coins, time.Now().Unix(), types.Periods{types.Period{3600, coins}})
 
@@ -771,6 +774,7 @@ func TestPeriodicVestingAccountMarshal(t *testing.T) {
 }
 
 func TestDelayedVestingAccountMarshal(t *testing.T) {
+	app := createTestApp(t)
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewDelayedVestingAccount(baseAcc, coins, time.Now().Unix())
 
@@ -787,6 +791,7 @@ func TestDelayedVestingAccountMarshal(t *testing.T) {
 	require.NotNil(t, err)
 }
 func TestPermanentLockedAccountMarshal(t *testing.T) {
+	app := createTestApp(t)
 	baseAcc, coins := initBaseAccount()
 	acc := types.NewPermanentLockedAccount(baseAcc, coins)
 
@@ -809,4 +814,8 @@ func initBaseAccount() (*authtypes.BaseAccount, sdk.Coins) {
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 
 	return bacc, origCoins
+}
+
+func createTestApp(t *testing.T) *simapp.SimApp {
+	return simapp.Setup(t, false)
 }

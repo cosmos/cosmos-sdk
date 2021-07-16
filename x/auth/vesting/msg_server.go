@@ -134,20 +134,6 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 
 	ak.SetAccount(ctx, acc)
 
-	defer func() {
-		telemetry.IncrCounter(1, "new", "account")
-
-		for _, a := range totalCoins {
-			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "create_periodic_vesting_account"},
-					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-				)
-			}
-		}
-	}()
-
 	err = bk.SendCoins(ctx, from, to, totalCoins)
 	if err != nil {
 		return nil, err

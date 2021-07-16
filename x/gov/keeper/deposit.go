@@ -182,3 +182,15 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		return false
 	})
 }
+
+// BurnDeposits burns all the deposits on a specific proposal.
+func (keeper Keeper) BurnDeposits(ctx sdk.Context, proposalID uint64) {
+	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
+		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, deposit.Amount)
+		if err != nil {
+			panic(err)
+		}
+
+		return false
+	})
+}

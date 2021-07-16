@@ -83,7 +83,7 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{from}
 }
 
-// NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
+// NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
 //nolint:interfacer
 func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{

@@ -285,7 +285,9 @@ message QueryClassesResponse {
 ### Interoperability
 
 Interoperability is all about reusing assets between modules and chains. The former one is achieved by ADR-33: Protobuf client - server communication. At the time of writing ADR-33 is not finalized. The latter is achieved by IBC. Here we will focus on the IBC side.
-IBC is implemented per module. Here, we aligned that NFTs will be recorded and managed in the x/nft. This requires creation of a new IBC standard and implementation of it. To interoperate between x/nft custom modules on IBC level will require that all NFT assets will have the same proto type. This means that custom NFT implementations will need to use the canonical x/nft module and proxy all NFT balance keeping from a custom module (eg x/cryptokitties) to x/nft. This was [discussed](https://github.com/cosmos/cosmos-sdk/discussions/9065#discussioncomment-873206) in a context of using x/bank as a general asset balance book. Not using x/nft will require implementing another app for IBC.
+IBC is implemented per module. Here, we aligned that NFTs will be recorded and managed in the x/nft. This requires creation of a new IBC standard and implementation of it.
+
+For IBC interoperability, NFT custom modules MUST use NFT object type understood by the IBC client. So for x/nft interoperabilty, custom NFT implementations (eg x/cryptokitties) will need to use the canonical x/nft module and proxy all NFT balance keeping functionality to x/nft. This was [discussed](https://github.com/cosmos/cosmos-sdk/discussions/9065#discussioncomment-873206) in a context of using x/bank as a general asset balance book. Not using x/nft will require implementing another app for IBC.
 
 
 
@@ -307,6 +309,7 @@ This specification conforms to the ERC-721 smart contract specification for NFT 
 
 ### Negative
 
++ New IBC app is required for x/nft
 
 ### Neutral
 

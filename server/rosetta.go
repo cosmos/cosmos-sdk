@@ -5,10 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server/rosetta"
 )
 
 // RosettaCommand builds the rosetta root command given
@@ -18,6 +17,8 @@ func RosettaCommand(ir codectypes.InterfaceRegistry, cdc codec.Codec) *cobra.Com
 		Use:   "rosetta",
 		Short: "spin up a rosetta server",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Println("WARNING: The Rosetta server is still a beta feature. Please do not use it in production.")
+
 			conf, err := rosetta.FromFlags(cmd.Flags())
 			if err != nil {
 				return err

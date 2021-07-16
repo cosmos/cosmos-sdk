@@ -38,53 +38,8 @@ func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmo
 
 	// set non bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	require.NoError(t, simapp.FundModuleAccount(app, ctx, notBondedPool.GetName(), totalSupply))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
 	return app, ctx, addrDels, addrVals
-}
-
-func TestPowerReductionChangeValidatorSetUpdates(t *testing.T) {
-	initPower := int64(1000000)
-	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 10, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
-	validatorAddr, validatorAddr3 := valAddrs[0], valAddrs[1]
-	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
-
-	// create validator
-	tstaking.CreateValidatorWithValPower(validatorAddr, PKs[0], initPower, true)
-
-	// must end-block
-	updates, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(updates))
-
-	// create a second validator keep it bonded
-	tstaking.CreateValidatorWithValPower(validatorAddr3, PKs[2], initPower, true)
-
-	// must end-block
-	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(updates))
-
-	// modify power reduction to 10 times bigger one
-	params := app.StakingKeeper.GetParams(ctx)
-	params.PowerReduction = sdk.DefaultPowerReduction.Mul(sdk.NewInt(10))
-	app.StakingKeeper.SetParams(ctx, params)
-
-	// validator updates for tendermint power
-	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 2, len(updates))
-	require.Equal(t, updates[0].Power, initPower/10)
-	require.Equal(t, updates[1].Power, initPower/10)
-
-	// power reduction back to default
-	params = app.StakingKeeper.GetParams(ctx)
-	params.PowerReduction = sdk.DefaultPowerReduction
-	app.StakingKeeper.SetParams(ctx, params)
-
-	// validator updates for tendermint power
-	updates, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
-	require.Equal(t, 2, len(updates))
 }
 
 func TestValidatorByPowerIndex(t *testing.T) {

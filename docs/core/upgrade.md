@@ -10,19 +10,17 @@ Read and understand all of the in-place store migration documentation before you
 
 Upgrade your app modules smoothly with custom in-place migration logic. {synopsis}
 
-The Cosmos SDK uses two methods to perform upgrades. 
+The Cosmos SDK uses two methods to perform upgrades.
 
-- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See the [Chain Upgrade Guide](../migrations/chain-upgrade-guide-040.md#upgrade-procedure). 
+- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See the [Chain Upgrade Guide](../migrations/chain-upgrade-guide-040.md#upgrade-procedure).
 
 - Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Migration Upgrade Guide](../building-modules/upgrade.md) guide to set up your application modules to take advantage of in-place upgrades.
   
-
 This document provides steps to use the In-Place Store Migrations upgrade method.
 
 ## Tracking Module Versions
 
 Each module gets assigned a consensus version by the module developer. The consensus version serves as the breaking change version of the module. The SDK keeps track of all module consensus versions in the x/upgrade `VersionMap` store. During an upgrade, the difference between the old `VersionMap` stored in state and the new `VersionMap` is calculated by the Cosmos SDK. For each identified difference, the module-specific migrations are run and the respective consensus version of each upgraded module is incremented.
-
 
 ## Genesis State
 
@@ -36,13 +34,15 @@ func (app *MyApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.R
 }
 ```
 
-This information is used by the Cosmos SDK to detect when modules with newer versions are introduced to the app. 
+This information is used by the Cosmos SDK to detect when modules with newer versions are introduced to the app.
 
 ### Consensus Version
+
 The consensus version is defined on each app module by the module developer and serves as the breaking change version of the module. The consensus version informs the SDK on which modules need to be upgraded. For example, if the bank module was version 2 and an upgrade introduces bank module 3, the SDK upgrades the bank module and runs the "version 2 to 3" migration script.
 
 ### Version Map
-The version map is a mapping of module names to consensus versions. The map is persisted to x/upgrade's state for use during in-place migrations. When migrations finish, the updated version map is persisted to state. 
+
+The version map is a mapping of module names to consensus versions. The map is persisted to x/upgrade's state for use during in-place migrations. When migrations finish, the updated version map is persisted to state.
 
 ## Upgrade Handlers
 
@@ -82,6 +82,29 @@ To learn more about configuring migration scripts for your modules, see the [Mig
 
 You can introduce entirely new modules to the application during an upgrade. New modules are recognized because they have not yet been registered in `x/upgrade`'s `VersionMap` store. In this case, `RunMigrations` calls the `InitGenesis` function from the corresponding module to set up its initial state.
 
+### Add StoreUpgrades for New Modules
+
+All chains preparing to run in-place store migrations will need to manually add store upgrades for new modules and then configure the store loader to apply those upgrades. This ensures that the new module's stores are added to the multistore before the migrations begin.
+
+```golang
+upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+if err != nil {
+	panic(err)
+}
+
+if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	storeUpgrades := storetypes.StoreUpgrades{
+		// add store upgrades for new modules
+		// Example: 
+		//    Added: []string{"foo", "bar"},
+		// ...
+	}
+
+	// configure store loader that checks if version == upgradeHeight and applies store upgrades
+	app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+}
+```
+
 ## Overwriting Genesis Functions
 
 The Cosmos SDK offers modules that the application developer can import in their app. These modules often have an `InitGenesis` function already defined.
@@ -89,7 +112,7 @@ The Cosmos SDK offers modules that the application developer can import in their
 You can write your own `InitGenesis` function for an imported module. To do this, manually trigger your custom genesis function in the upgrade handler.
 
 ::: warning
-You MUST manually set the consensus version in the version map passed to the `UpgradeHandler` function. Without this, the SDK will run the Module's existing `InitGenesis` code even if you triggered your custom function in the `UpgradeHandler`. 
+You MUST manually set the consensus version in the version map passed to the `UpgradeHandler` function. Without this, the SDK will run the Module's existing `InitGenesis` code even if you triggered your custom function in the `UpgradeHandler`.
 :::
 
 ```go
@@ -98,8 +121,8 @@ import foo "github.com/my/module/foo"
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap)  (module.VersionMap, error) {
   
     // Register the consensus version in the version map
-    // to avoid the SDK from triggering the default 
-    // InitGenesis function. 
+    // to avoid the SDK from triggering the default
+    // InitGenesis function.
     vm["foo"] = foo.AppModule{}.ConsensusVersion()
 
     // Run custom InitGenesis for foo
@@ -126,8 +149,8 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 
 ## Syncing a Full Node to an Upgraded Blockchain
 
-You can sync a full node to an existing blockchain which has been upgraded using Cosmovisor 
+You can sync a full node to an existing blockchain which has been upgraded using Cosmovisor
 
-In order to successfully sync, you must start with the initial binary that the blockchain started with at genesis. Cosmovisor will handle downloading and switching to the binaries associated with each sequential upgrade. 
+In order to successfully sync, you must start with the initial binary that the blockchain started with at genesis. Cosmovisor will handle downloading and switching to the binaries associated with each sequential upgrade.
 
 To learn more about Cosmovisor, see the [Cosmovisor Quick Start](../run-node/cosmovisor.md).

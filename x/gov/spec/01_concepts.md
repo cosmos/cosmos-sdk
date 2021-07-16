@@ -14,9 +14,9 @@ The governance process is divided in a few steps that are outlined below:
   confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
 - If the proposal involves a software upgrade:
-  - **Signal:** Validators start signaling that they are ready to switch to the
+    - **Signal:** Validators start signaling that they are ready to switch to the
     new version.
-  - **Switch:** Once more than 75% of validators have signaled that they are
+    - **Switch:** Once more than 75% of validators have signaled that they are
     ready to switch, their software automatically flips to the new version.
 
 ## Proposal submission

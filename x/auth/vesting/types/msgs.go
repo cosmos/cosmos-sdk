@@ -110,7 +110,7 @@ func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
 }
 
 // GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgCreateVestingAccount.
+// MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) GetSignBytes() []byte {
 	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
 }

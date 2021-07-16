@@ -68,8 +68,10 @@ func (fw *fileWatcher) MonitorUpdate(currentName string) <-chan struct{} {
 			case <-fw.ticker.C:
 				if fw.CheckUpdate(currentName) {
 					done <- struct{}{}
+					return
 				}
 			case <-fw.cancel:
+				fmt.Println("Done!!", currentName)
 				return
 			}
 		}

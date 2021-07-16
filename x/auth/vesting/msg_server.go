@@ -130,7 +130,9 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 
 	baseAccount := ak.NewAccountWithAddress(ctx, to)
 
-	types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+	acc := types.NewPeriodicVestingAccount(baseAccount.(*authtypes.BaseAccount), totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
+
+	ak.SetAccount(ctx, acc)
 
 	err = bk.SendCoins(ctx, from, to, totalCoins)
 	if err != nil {

@@ -38,24 +38,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	})
 }
 
-func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
-	// require no error when the upgrade info file does not exist
-	_, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	s.Require().NoError(err)
-
-	expected := types.Plan{
-		Name:   "test_upgrade",
-		Height: 100,
-	}
-
-	// create an upgrade info file
-	s.Require().NoError(s.app.UpgradeKeeper.DumpUpgradeInfoToDisk(expected.Height, expected.Name))
-
-	ui, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	s.Require().NoError(err)
-	s.Require().Equal(expected, ui)
-}
-
 func (s *KeeperTestSuite) TestScheduleUpgrade() {
 	cases := []struct {
 		name    string

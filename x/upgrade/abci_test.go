@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -16,7 +15,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -173,7 +171,7 @@ func VerifyCleared(t *testing.T, newCtx sdk.Context) {
 	t.Log("Verify that the upgrade plan has been cleared")
 	bz, err := s.querier(newCtx, []string{types.QueryCurrent}, abci.RequestQuery{})
 	require.NoError(t, err)
-	require.Nil(t, bz)
+	require.Nil(t, bz, string(bz))
 }
 
 func TestCanClear(t *testing.T) {
@@ -388,26 +386,29 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
 
-	planHeight := s.ctx.BlockHeight() + 1
-	name := "test"
-	t.Log("verify if upgrade height is dumped to file")
-	err := s.keeper.DumpUpgradeInfoToDisk(planHeight, name)
-	require.Nil(t, err)
-
-	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
-	require.Nil(t, err)
-
-	data, err := ioutil.ReadFile(upgradeInfoFilePath)
+	// require no error when the upgrade info file does not exist
+	_, err := s.keeper.ReadUpgradeInfoFromDisk()
 	require.NoError(t, err)
 
-	var upgradeInfo storetypes.UpgradeInfo
-	err = json.Unmarshal(data, &upgradeInfo)
+	planHeight := s.ctx.BlockHeight() + 1
+	plan := types.Plan{
+		Name:   "test",
+		Height: 0, // this should be overwritten by DumpUpgradeInfoToFile
+	}
+	t.Log("verify if upgrade height is dumped to file")
+	err = s.keeper.DumpUpgradeInfoToDisk(planHeight, plan)
 	require.Nil(t, err)
+
+	upgradeInfo, err := s.keeper.ReadUpgradeInfoFromDisk()
+	require.NoError(t, err)
 
 	t.Log("Verify upgrade height from file matches ")
 	require.Equal(t, upgradeInfo.Height, planHeight)
+	require.Equal(t, upgradeInfo.Name, plan.Name)
 
 	// clear the test file
+	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
+	require.Nil(t, err)
 	err = os.Remove(upgradeInfoFilePath)
 	require.Nil(t, err)
 }

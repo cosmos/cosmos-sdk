@@ -106,21 +106,10 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.grpc = grpcSrv
 
 		if val.AppConfig.GRPCWeb.Enable {
-			errCh1 := make(chan error)
-			go func() {
-				grpcWeb, err := servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
-				if err != nil {
-					errCh1 <- err
-				}
-
-				val.grpcWeb = grpcWeb
-			}()
-			select {
-			case err := <-errCh1:
+			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
+			if err != nil {
 				return err
-			case <-time.After(srvtypes.ServerStartTime): // assume server started successfully
 			}
-
 		}
 	}
 

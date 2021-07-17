@@ -71,7 +71,6 @@ func (fw *fileWatcher) MonitorUpdate(currentName string) <-chan struct{} {
 					return
 				}
 			case <-fw.cancel:
-				fmt.Println("Done!!", currentName)
 				return
 			}
 		}

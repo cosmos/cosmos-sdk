@@ -130,7 +130,7 @@ func GetConfigFromEnv() (*Config, error) {
 		}
 		cfg.PoolInterval = time.Millisecond * time.Duration(i)
 	} else {
-		cfg.PoolInterval = time.Duration(300 * time.Millisecond)
+		cfg.PoolInterval = 300 * time.Millisecond
 	}
 
 	if err := cfg.validate(); err != nil {

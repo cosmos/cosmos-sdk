@@ -36,7 +36,7 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 			logger.Info(skipUpgradeMsg)
 
 			// Clear the upgrade plan at current height
-			// k.ClearUpgradePlan(ctx)
+			k.ClearUpgradePlan(ctx)
 			return
 		}
 

@@ -385,10 +385,11 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(10, map[int64]bool{})
+	require := require.New(t)
 
 	// require no error when the upgrade info file does not exist
 	_, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(t, err)
+	require.NoError(err)
 
 	planHeight := s.ctx.BlockHeight() + 1
 	plan := types.Plan{
@@ -397,18 +398,18 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	}
 	t.Log("verify if upgrade height is dumped to file")
 	err = s.keeper.DumpUpgradeInfoToDisk(planHeight, plan)
-	require.Nil(t, err)
+	require.Nil(err)
 
 	upgradeInfo, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(t, err)
+	require.NoError(err)
 
 	t.Log("Verify upgrade height from file matches ")
-	require.Equal(t, upgradeInfo.Height, planHeight)
-	require.Equal(t, upgradeInfo.Name, plan.Name)
+	require.Equal(upgradeInfo.Height, planHeight)
+	require.Equal(upgradeInfo.Name, plan.Name)
 
 	// clear the test file
 	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
-	require.Nil(t, err)
+	require.Nil(err)
 	err = os.Remove(upgradeInfoFilePath)
-	require.Nil(t, err)
+	require.Nil(err)
 }

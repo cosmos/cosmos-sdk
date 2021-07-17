@@ -36,7 +36,7 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 
 	// ensure we cannot set this to an invalid value
 	for _, name := range []string{"missing", "nobin", "noexec"} {
-		s.Require().Error(cfg.SetCurrentUpgrade(name), name)
+		s.Require().Error(cfg.SetCurrentUpgrade(cosmovisor.UpgradeInfo{Name: name}), name)
 
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
@@ -45,15 +45,15 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 	}
 
 	// try a few times to make sure this can be reproduced
-	for _, upgrade := range []string{"chain2", "chain3", "chain2"} {
+	for _, name := range []string{"chain2", "chain3", "chain2"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
-		err = cfg.SetCurrentUpgrade(upgrade)
+		err = cfg.SetCurrentUpgrade(cosmovisor.UpgradeInfo{Name: name})
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
 
-		s.Require().Equal(cfg.UpgradeBin(upgrade), currentBin)
+		s.Require().Equal(cfg.UpgradeBin(name), currentBin)
 	}
 }
 
@@ -66,7 +66,7 @@ func (s *upgradeTestSuite) TestCurrentAlwaysSymlinkToDirectory() {
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 	s.assertCurrentLink(cfg, "genesis")
 
-	err = cfg.SetCurrentUpgrade("chain2")
+	err = cfg.SetCurrentUpgrade(cosmovisor.UpgradeInfo{Name: "chain2"})
 	s.Require().NoError(err)
 	currentBin, err = cfg.CurrentBin()
 	s.Require().NoError(err)

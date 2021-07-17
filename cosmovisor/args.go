@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -16,7 +17,7 @@ const (
 	genesisDir      = "genesis"
 	upgradesDir     = "upgrades"
 	currentLink     = "current"
-	upgradeFilename = "upgrade_name.txt"
+	upgradeFilename = "upgrade-info.json"
 )
 
 // should be the same as x/upgrade/types.UpgradeInfoFilename
@@ -31,8 +32,8 @@ type Config struct {
 	UpgradeInfoFilename   string
 	PoolInterval          time.Duration
 
-	// name of the currently running upgrade (based on the upgrade info)
-	upgradeName string
+	// currently running upgrade
+	currentUpgrade UpgradeInfo
 }
 
 // Root returns the root directory where all info lives
@@ -169,9 +170,9 @@ func (cfg *Config) validate() error {
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
-func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
+func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
 	// ensure named upgrade exists
-	bin := cfg.UpgradeBin(upgradeName)
+	bin := cfg.UpgradeBin(u.Name)
 
 	if err := EnsureBinary(bin); err != nil {
 		return err
@@ -179,7 +180,7 @@ func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
 
 	// set a symbolic link
 	link := filepath.Join(cfg.Root(), currentLink)
-	safeName := url.PathEscape(upgradeName)
+	safeName := url.PathEscape(u.Name)
 	upgrade := filepath.Join(cfg.Root(), upgradesDir, safeName)
 
 	// remove link if it exists
@@ -192,36 +193,44 @@ func (cfg *Config) SetCurrentUpgrade(upgradeName string) error {
 		return fmt.Errorf("creating current symlink: %w", err)
 	}
 
-	cfg.upgradeName = upgradeName
+	cfg.currentUpgrade = u
 	f, err := os.Create(filepath.Join(upgrade, upgradeFilename))
 	if err != nil {
 		return err
 	}
-	// go 1.16: return os.WriteFile(filepath.Join(upgrade, upgradeFilename), []byte(upgradeName), 0600)
-	if _, err := f.WriteString(upgradeName); err != nil {
+	bz, err := json.Marshal(u)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(bz); err != nil {
 		return err
 	}
 	return f.Close()
 }
 
-func (cfg *Config) UpgradeName() string {
-	if cfg.upgradeName != "" {
-		return cfg.upgradeName
+func (cfg *Config) UpgradeInfo() UpgradeInfo {
+	if cfg.currentUpgrade.Name != "" {
+		return cfg.currentUpgrade
 	}
 
 	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
 	_, err := os.Lstat(filename)
+	var u UpgradeInfo
+	var bz []byte
 	if err != nil { // no current directory
-		cfg.upgradeName = "_"
-		return cfg.upgradeName
+		goto returnError
 	}
-	// go 1.16: bz, err := os.ReadFile(filename)
-	bz, err := ioutil.ReadFile(filename)
-	if err != nil {
-		fmt.Println("[cosmovisor], error reading", filename, err)
-		cfg.upgradeName = "_"
-		return cfg.upgradeName
+	if bz, err = ioutil.ReadFile(filename); err != nil {
+		goto returnError
 	}
-	cfg.upgradeName = string(bz)
-	return cfg.upgradeName
+	if err = json.Unmarshal(bz, &u); err != nil {
+		goto returnError
+	}
+	cfg.currentUpgrade = u
+	return cfg.currentUpgrade
+
+returnError:
+	fmt.Println("[cosmovisor], error reading", filename, err)
+	cfg.currentUpgrade.Name = "_"
+	return cfg.currentUpgrade
 }

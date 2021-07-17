@@ -65,14 +65,14 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 // It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
 // to happened with "start" but may happened with short-lived commands like `gaiad export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
-	currentUpgradeName := l.cfg.UpgradeName()
+	currentUpgrade := l.cfg.UpgradeInfo()
 	var cmdDone = make(chan error)
 	go func() {
 		cmdDone <- cmd.Wait()
 	}()
 
 	select {
-	case <-l.fw.MonitorUpdate(currentUpgradeName):
+	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
@@ -83,7 +83,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		}
 		// the app x/upgrade causes a panic and the app can die before the filwatcher finds the
 		// update, so we need to recheck update-info file.
-		if !l.fw.CheckUpdate(currentUpgradeName) {
+		if !l.fw.CheckUpdate(currentUpgrade) {
 			return false, err
 		}
 	}

@@ -12,9 +12,9 @@ import (
 
 // UpgradeInfo is the update details created by `x/upgrade/keeper.DumpUpgradeInfoToDisk`.
 type UpgradeInfo struct {
-	Name   string
-	Info   string
-	Height uint
+	Name   string `json:"name"`
+	Info   string `json:"info"`
+	Height uint   `json:"height"`
 }
 
 type fileWatcher struct {
@@ -56,7 +56,7 @@ func (fw *fileWatcher) Stop() {
 // pools the filesystem to check for new upgrade currentInfo. currentName is the name
 // of currently running upgrade. The check is rejected if it finds an upgrade with the same
 // name.
-func (fw *fileWatcher) MonitorUpdate(currentName string) <-chan struct{} {
+func (fw *fileWatcher) MonitorUpdate(currentUpgrade UpgradeInfo) <-chan struct{} {
 	fw.ticker.Reset(fw.interval)
 	done := make(chan struct{})
 	fw.cancel = make(chan bool)
@@ -66,7 +66,7 @@ func (fw *fileWatcher) MonitorUpdate(currentName string) <-chan struct{} {
 		for {
 			select {
 			case <-fw.ticker.C:
-				if fw.CheckUpdate(currentName) {
+				if fw.CheckUpdate(currentUpgrade) {
 					done <- struct{}{}
 					return
 				}
@@ -81,7 +81,7 @@ func (fw *fileWatcher) MonitorUpdate(currentName string) <-chan struct{} {
 // CheckUpdate reads update plan from file and checks if there is a new update request
 // currentName is the name of currently running upgrade. The check is rejected if it finds
 // an upgrade with the same name.
-func (fw *fileWatcher) CheckUpdate(currentName string) bool {
+func (fw *fileWatcher) CheckUpdate(currentUpgrade UpgradeInfo) bool {
 	if fw.needsUpdate {
 		return true
 	}
@@ -103,7 +103,7 @@ func (fw *fileWatcher) CheckUpdate(currentName string) bool {
 		fw.lastModTime = stat.ModTime()
 		// heuristic: deamon has restarted, so we don't know if we successfully downloaded the upgrade or not.
 		// so we try to compare the running upgrade name (read from the cosmovisor file) with the upgrade info
-		if currentName != fw.currentInfo.Name {
+		if currentUpgrade.Name != fw.currentInfo.Name {
 			fw.needsUpdate = true
 			return true
 		}

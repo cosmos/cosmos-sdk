@@ -23,7 +23,7 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
 		// we have the binary - do it
-		return cfg.SetCurrentUpgrade(info.Name)
+		return cfg.SetCurrentUpgrade(info)
 	}
 	// if auto-download is disabled, we fail
 	if !cfg.AllowDownloadBinaries {
@@ -45,7 +45,7 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 		return fmt.Errorf("downloaded binary doesn't check out: %w", err)
 	}
 
-	return cfg.SetCurrentUpgrade(info.Name)
+	return cfg.SetCurrentUpgrade(info)
 }
 
 // DownloadBinary will grab the binary and place it in the proper directory

@@ -21,12 +21,9 @@ func StartGRPCWeb(grpcSrv *grpc.Server, config config.Config) (*http.Server, err
 	}
 
 	wrappedServer := grpcweb.WrapServer(grpcSrv, options...)
-	handler := func(resp http.ResponseWriter, req *http.Request) {
-		wrappedServer.ServeHTTP(resp, req)
-	}
 	grpcWebSrv := &http.Server{
 		Addr:    config.GRPCWeb.Address,
-		Handler: http.HandlerFunc(handler),
+		Handler: wrappedServer,
 	}
 	if err := grpcWebSrv.ListenAndServe(); err != nil {
 		return nil, err

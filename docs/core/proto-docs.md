@@ -8024,8 +8024,6 @@ RPC method.
 
 
 
-
-
 <a name="cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse"></a>
 
 ### QueryUpgradedConsensusStateResponse

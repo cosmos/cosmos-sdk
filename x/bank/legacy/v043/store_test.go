@@ -23,10 +23,11 @@ func TestSupplyMigration(t *testing.T) {
 
 	oldFooCoin := sdk.NewCoin("foo", sdk.NewInt(100))
 	oldBarCoin := sdk.NewCoin("bar", sdk.NewInt(200))
+	oldFooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0)) // to ensure the zero denom coins pruned.
 
 	// Old supply was stored as a single blob under the `SupplyKey`.
 	var oldSupply v040bank.SupplyI
-	oldSupply = &types.Supply{Total: sdk.NewCoins(oldFooCoin, oldBarCoin)}
+	oldSupply = &types.Supply{Total: sdk.Coins{oldFooCoin, oldBarCoin, oldFooBarCoin}}
 	oldSupplyBz, err := encCfg.Marshaler.MarshalInterface(oldSupply)
 	require.NoError(t, err)
 	store.Set(v040bank.SupplyKey, oldSupplyBz)
@@ -57,6 +58,10 @@ func TestSupplyMigration(t *testing.T) {
 		Amount: amount,
 	}
 	require.Equal(t, oldBarCoin, newBarCoin)
+
+	// foobar shouldn't be existed in the store.
+	bz = supplyStore.Get([]byte("foobar"))
+	require.Nil(t, bz)
 }
 
 func TestBalanceKeysMigration(t *testing.T) {
@@ -66,19 +71,32 @@ func TestBalanceKeysMigration(t *testing.T) {
 	store := ctx.KVStore(bankKey)
 
 	_, _, addr := testdata.KeyTestPubAddr()
-	denom := []byte("foo")
-	value := []byte("bar")
 
-	oldKey := append(append(v040bank.BalancesPrefix, addr...), denom...)
-	store.Set(oldKey, value)
+	// set 10 foo coin
+	fooCoin := sdk.NewCoin("foo", sdk.NewInt(10))
+	oldFooKey := append(append(v040bank.BalancesPrefix, addr...), []byte(fooCoin.Denom)...)
+	fooBz, err := encCfg.Marshaler.Marshal(&fooCoin)
+	require.NoError(t, err)
+	store.Set(oldFooKey, fooBz)
 
-	err := v043bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
+	// set 0 foobar coin
+	fooBarCoin := sdk.NewCoin("foobar", sdk.NewInt(0))
+	oldKeyFooBar := append(append(v040bank.BalancesPrefix, addr...), []byte(fooBarCoin.Denom)...)
+	fooBarBz, err := encCfg.Marshaler.Marshal(&fooBarCoin)
+	require.NoError(t, err)
+	store.Set(oldKeyFooBar, fooBarBz)
+	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
+
+	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Marshaler)
 	require.NoError(t, err)
 
-	newKey := append(types.CreateAccountBalancesPrefix(addr), denom...)
+	newKey := append(types.CreateAccountBalancesPrefix(addr), []byte(fooCoin.Denom)...)
 	// -7 because we replaced "balances" with 0x02,
 	// +1 because we added length-prefix to address.
-	require.Equal(t, len(oldKey)-7+1, len(newKey))
-	require.Nil(t, store.Get(oldKey))
-	require.Equal(t, value, store.Get(newKey))
+	require.Equal(t, len(oldFooKey)-7+1, len(newKey))
+	require.Nil(t, store.Get(oldFooKey))
+	require.Equal(t, fooBz, store.Get(newKey))
+
+	newKeyFooBar := append(types.CreateAccountBalancesPrefix(addr), []byte(fooBarCoin.Denom)...)
+	require.Nil(t, store.Get(newKeyFooBar)) // after migration zero balances pruned from store.
 }

@@ -2,7 +2,7 @@
 
 This release introduces several new important updates to the Cosmos SDK. The release notes below provide an overview of the larger high-level changes introduced in the v0.43 release series.
 
-That being said, this release does contain many more minor and module-level changes besides those mentioned below. For a comprehsive list of all breaking changes and improvements since the v0.42 "Stargate" release series, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-rc0/CHANGELOG.md).
+That being said, this release does contain many more minor and module-level changes besides those mentioned below. For a comprehsive list of all breaking changes and improvements since the v0.42 "Stargate" release series, please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.43.x/CHANGELOG.md).
 
 ## Two new modules: `x/authz` and `x/feegrant`
 
@@ -52,3 +52,9 @@ In this release, we deprecated a couple of fields in our Protobuf definitions. W
 - `cosmos.upgrade.v1beta1.Plan#upgraded_client_state` is deprecated as IBC logic has been moved to the IBC repo. If this field is set, the node will error.
 
 The SDK team is planning to document Protobuf change process using an ADR. It will be a guideline for all chain developers, follow [#9477](https://github.com/cosmos/cosmos-sdk/issues/9477) for more info.
+
+## Rosetta (Beta Feature)
+
+[Rosetta](https://www.rosetta-api.org/) is an open standard of API endpoints designed to simplify blockchain deployment and interaction. It is maintained by Coinbase and used by their team to integrate various blockchains within their exchange platform. In order to facilitate integrating Cosmos-based chains with third-party services using Rosetta, the Cosmos SDK natively supports Rosetta via the `{appd} rosetta` CLI command, which runs a Rosetta API server as a sidecar.
+
+Please note that this feature is still in the **beta** phase, and rough edges will be polished in the next releases.

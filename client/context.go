@@ -240,6 +240,11 @@ func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
 }
 
+// PrintOutput print the raw bytes to ctx.Output if it's defined , otherwise to os.Stdout
+func (ctx Context) PrintOutput(o []byte) error {
+	return ctx.printOutput(o)
+}
+
 // PrintBytes prints the raw bytes to ctx.Output if it's defined, otherwise to os.Stdout.
 // NOTE: for printing a complex state object, you should use ctx.PrintOutput
 func (ctx Context) PrintBytes(o []byte) error {

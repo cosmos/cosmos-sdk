@@ -7,6 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
+const (
+	ModuleName = "bank"
+)
+
 var (
 	SupplyKey      = []byte{0x00}
 	BalancesPrefix = []byte{0x02}

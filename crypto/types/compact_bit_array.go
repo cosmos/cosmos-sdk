@@ -238,7 +238,7 @@ func (bA *CompactBitArray) CompactMarshal() []byte {
 		return []byte("null")
 	}
 
-	bz := make([]byte, 0, size/8)
+	bz := make([]byte, 0, binary.MaxVarintLen64+size/8)
 	// length prefix number of bits, not number of bytes. This difference
 	// takes 3-4 bits in encoding, as opposed to instead encoding the number of
 	// bytes (saving 3-4 bits) and including the offset as a full byte.

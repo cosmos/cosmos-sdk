@@ -70,11 +70,7 @@ The `DAEMON` specific code and operations (e.g. tendermint config, the applicati
 
 Generally, `cosmovisor` requires that the system administrator place all relevant binaries on disk before the upgrade happens. However, for people who don't need such control and want an easier setup (maybe they are syncing a non-validating fullnode and want to do little maintenance), there is another option.
 
-<<<<<<< HEAD
-If you set `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and no local binary can be found when an upgrade is triggered, `cosmovisor` will attempt to download and install the binary itself. The plan stored in the upgrade module has an info field for arbitrary JSON. This info is expected to be outputed on the halt log message. There are two valid formats to specify a download in such a message:
-=======
 If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be found when an upgrade is triggered, `cosmovisor` will attempt to download and install the binary itself. The plan stored in the upgrade module has an info field for arbitrary JSON. This info is expected to be outputed on the halt log message. There are two valid formats to specify a download in such a message:
->>>>>>> 6098d7ed5 (docs: add chain upgrade guide v0.43 (#9567))
 
 1. Store an os/architecture -> binary URI map in the upgrade plan info field as JSON under the `"binaries"` key. For example:
 
@@ -92,13 +88,7 @@ If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be
 https://example.com/testnet-1001-info.json?checksum=sha256:deaaa99fda9407c4dbe1d04bd49bab0cc3c1dd76fa392cd55a9425be074af01e
 ```
 
-<<<<<<< HEAD
-This file contained in the link will be retrieved by [go-getter](https://github.com/hashicorp/go-getter) and the `"binaries"` field will be parsed as above.
-
-If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can access a canonical url for the new binary, then the `cosmovisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and unpack it into the `upgrades/<name>` folder to be run as if we installed it manually.
-=======
 When `cosmovisor` is triggered to download the new binary, `cosmovisor` will parse the `"binaries"` field, download the new binary with [go-getter](https://github.com/hashicorp/go-getter), and unpack the new binary in the `upgrades/<name>` folder so that it can be run as if it was installed manually.
->>>>>>> 6098d7ed5 (docs: add chain upgrade guide v0.43 (#9567))
 
 Note that for this mechanism to provide strong security guarantees, all URLs should include a SHA 256/512 checksum. This ensures that no false binary is run, even if someone hacks the server or hijacks the DNS. `go-getter` will always ensure the downloaded file matches the checksum if it is provided.
 

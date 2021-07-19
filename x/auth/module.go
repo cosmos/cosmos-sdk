@@ -111,8 +111,10 @@ func (AppModule) Name() string {
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the auth module.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
+// Deprecated: Route returns the message routing key for the auth module.
+func (AppModule) Route() sdk.Route {
+	return sdk.Route{}
+}
 
 // QuerierRoute returns the auth module's querier route name.
 func (AppModule) QuerierRoute() string {

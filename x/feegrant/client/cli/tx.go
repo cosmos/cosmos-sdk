@@ -63,10 +63,6 @@ Examples:
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
 
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)

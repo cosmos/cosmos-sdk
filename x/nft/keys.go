@@ -18,12 +18,12 @@ const (
 
 var (
 	// reClassIDString can be 3 ~ 100 characters long and support letters, followed by either
-	// a letter, a number or a separator ('/') or a separator (':') .
+	// a letter, a number or a separator ('/') or a separator (':').
 	reClassIDString = `[a-zA-Z][a-zA-Z0-9/-:]{2,100}`
 	reClassID       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reClassIDString))
 
 	// reNFTIDString can be 3 ~ 100 characters long and support letters, followed by either
-	// a letter, a number or a separator ('/') or a separator (':') .
+	// a letter, a number or a separator ('/') or a separator (':').
 	reNFTIDString = `[a-zA-Z][a-zA-Z0-9/-:]{2,100}`
 	reNFTID       = regexp.MustCompile(fmt.Sprintf(`^%s$`, reNFTIDString))
 )

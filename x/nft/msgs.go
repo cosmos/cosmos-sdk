@@ -21,21 +21,21 @@ var (
 // GetSigners implements the Msg.ValidateBasic method.
 func (m MsgSend) ValidateBasic() error {
 	if err := ValidateClassID(m.ClassID); err != nil {
-		return sdkerrors.Wrap(ErrInvalidID, "class id")
+		return sdkerrors.Wrapf(ErrInvalidID, "Invalid class id (%s)", m.ClassID)
 	}
 
 	if err := ValidateNFTID(m.ID); err != nil {
-		return sdkerrors.Wrap(ErrInvalidID, "class id")
+		return sdkerrors.Wrapf(ErrInvalidID, "Invalid nft id (%s)", m.ID)
 	}
 
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid sender address")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", m.Sender)
 	}
 
 	_, err = sdk.AccAddressFromBech32(m.Receiver)
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "invalid receiver address")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid receiver address (%s)", m.Receiver)
 	}
 	return nil
 }

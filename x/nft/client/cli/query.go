@@ -115,7 +115,6 @@ func GetCmdQueryNFT() *cobra.Command {
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "classes")
 	return cmd
 }
 

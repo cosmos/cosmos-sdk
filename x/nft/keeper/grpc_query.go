@@ -141,7 +141,7 @@ func (k Keeper) NFT(goCtx context.Context, request *nft.QueryNFTRequest) (*nft.Q
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	n, has := k.GetNFT(ctx, request.ClassId, request.Id)
 	if !has {
-		return nil, status.Errorf(codes.InvalidArgument,
+		return nil, status.Errorf(codes.NotFound,
 			"not found nft: class: %s, id: %s", request.ClassId, request.Id)
 	}
 	return &nft.QueryNFTResponse{Nft: &n}, nil
@@ -160,7 +160,7 @@ func (k Keeper) Class(goCtx context.Context, request *nft.QueryClassRequest) (*n
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	class, has := k.GetClass(ctx, request.ClassId)
 	if !has {
-		return nil, status.Errorf(codes.InvalidArgument,
+		return nil, status.Errorf(codes.NotFound,
 			"not found class: %s", request.ClassId)
 	}
 	return &nft.QueryClassResponse{Class: &class}, nil

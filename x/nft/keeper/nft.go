@@ -19,7 +19,6 @@ func (k Keeper) Mint(ctx sdk.Context, newNFT nft.NFT, minter sdk.AccAddress) err
 		return sdkerrors.Wrap(nft.ErrNFTExists, newNFT.ID)
 	}
 
-	// TODO
 	nftDenom := fmt.Sprintf("%s/%s", newNFT.ClassID, newNFT.ID)
 	_, has := k.bk.GetDenomMetaData(ctx, nftDenom)
 	if has {

@@ -95,7 +95,10 @@ func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMess
 	return []abci.ValidatorUpdate{}
 }
 
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
+// Deprecated: Route returns the message routing key for the params module.
+func (AppModule) Route() sdk.Route {
+	return sdk.Route{}
+}
 
 // GenerateGenesisState performs a no-op.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}

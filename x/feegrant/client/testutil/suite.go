@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -255,11 +256,12 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	val := s.network.Validators[0]
 	granter := val.Address
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("granter", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	s.Require().NoError(err)
-	granterName := info.GetName()
 	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
+
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
+	s.Require().Equal(fromAddr, granter)
+	s.Require().NoError(err)
 
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -330,10 +332,10 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			"valid basic fee grant with granter key name",
 			append(
 				[]string{
-					granterName,
+					fromName,
 					"cosmos16dun6ehcc86e03wreqqww89ey569wuj4em572w",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
-					fmt.Sprintf("--%s=%s", flags.FlagFrom, granterName),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, fromName),
 				},
 				commonFlags...,
 			),

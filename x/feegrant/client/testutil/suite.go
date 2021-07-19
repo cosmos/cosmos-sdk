@@ -255,6 +255,9 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrants() {
 func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	val := s.network.Validators[0]
 	granter := val.Address
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("granter", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
+	granterName := info.GetName()
 	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
@@ -298,6 +301,19 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, 0, nil,
 		},
 		{
+			"wrong granter key name",
+			append(
+				[]string{
+					"invalid_granter",
+					"cosmos16dun6ehcc86e03wreqqww89ey569wuj4em572w",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true, 0, nil,
+		},
+		{
 			"valid basic fee grant",
 			append(
 				[]string{
@@ -305,6 +321,19 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"valid basic fee grant with granter key name",
+			append(
+				[]string{
+					granterName,
+					"cosmos16dun6ehcc86e03wreqqww89ey569wuj4em572w",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granterName),
 				},
 				commonFlags...,
 			),

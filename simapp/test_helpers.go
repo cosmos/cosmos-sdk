@@ -62,34 +62,13 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	return app, GenesisState{}
 }
 
-// BenchSetup initializes a new SimApp. A Nop logger is set in SimApp.
-func BenchSetup(isCheckTx bool) *SimApp {
-	app, genesisState := setup(!isCheckTx, 5)
-	if !isCheckTx {
-		// init chain must be called to stop deliverState from being nil
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
-		}
-
-		// Initialize the chain
-		app.InitChain(
-			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-			},
-		)
-	}
-
-	return app
-}
-
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
 func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
-	require.NoError(t, err)
+	if t != nil {
+		require.NoError(t, err)
+	}
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
@@ -124,9 +103,13 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
-		require.NoError(t, err)
+		if t != nil {
+			require.NoError(t, err)
+		}
 		pkAny, err := codectypes.NewAnyWithValue(pk)
-		require.NoError(t, err)
+		if t != nil {
+			require.NoError(t, err)
+		}
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey:   pkAny,
@@ -165,7 +148,9 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	require.NoError(t, err)
+	if t != nil {
+		require.NoError(t, err)
+	}
 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(

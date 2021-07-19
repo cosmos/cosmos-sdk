@@ -3,15 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	b.ReportAllocs()
-	app, ctx := createBenchApp(false)
+	app, ctx := createTestApp(nil, false)
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -30,7 +27,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 
 func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	b.ReportAllocs()
-	app, ctx := createBenchApp(false)
+	app, ctx := createTestApp(nil, false)
 
 	b.ResetTimer()
 
@@ -41,12 +38,4 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
-}
-
-func createBenchApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.BenchSetup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-
-	return app, ctx
 }

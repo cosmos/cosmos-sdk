@@ -114,9 +114,8 @@ func (m MsgSubmitProposal) GetSignBytes() []byte {
 }
 
 // GetSigners implements Msg
-func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
-	proposer, _ := sdk.AccAddressFromBech32(m.Proposer)
-	return []sdk.AccAddress{proposer}
+func (m MsgSubmitProposal) GetSigners() []string {
+	return []string{m.Proposer}
 }
 
 // String implements the Stringer interface
@@ -171,9 +170,8 @@ func (msg MsgDeposit) GetSignBytes() []byte {
 }
 
 // GetSigners implements Msg
-func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
-	return []sdk.AccAddress{depositor}
+func (msg MsgDeposit) GetSigners() []string {
+	return []string{msg.Depositor}
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
@@ -214,9 +212,8 @@ func (msg MsgVote) GetSignBytes() []byte {
 }
 
 // GetSigners implements Msg
-func (msg MsgVote) GetSigners() []sdk.AccAddress {
-	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
-	return []sdk.AccAddress{voter}
+func (msg MsgVote) GetSigners() []string {
+	return []string{msg.Voter}
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
@@ -278,7 +275,6 @@ func (msg MsgVoteWeighted) GetSignBytes() []byte {
 }
 
 // GetSigners implements Msg
-func (msg MsgVoteWeighted) GetSigners() []sdk.AccAddress {
-	voter, _ := sdk.AccAddressFromBech32(msg.Voter)
-	return []sdk.AccAddress{voter}
+func (msg MsgVoteWeighted) GetSigners() []string {
+	return []string{msg.Voter}
 }

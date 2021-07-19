@@ -79,7 +79,10 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		if len(signers) != 1 {
 			return nil, sdkerrors.ErrInvalidRequest.Wrap("authorization can be given to msg with only one signer")
 		}
-		granter := signers[0]
+		granter, err := sdk.AccAddressFromBech32(signers[0])
+		if err != nil {
+			return nil, err
+		}
 		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
 		if !granter.Equals(grantee) {
 			authorization, _ := k.GetCleanAuthorization(ctx, grantee, granter, sdk.MsgTypeURL(msg))

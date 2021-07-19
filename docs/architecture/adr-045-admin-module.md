@@ -96,13 +96,16 @@ func EndBlocker {
 ```
 
 ### Adding a new admin
+
 - First admin address should be in `genesis.json`.
 - `MsgService.AddAdmin` handler verifies `MsgAddAdminRequest.Requester` to be in the list of admins. If so, it adds `MsgAddAdminRequest.Admin` to the list of admins.
 
 ### Removing an admin
+
 `MsgService.DeleteAdmin` handler verifies `MsgDeleteAdminRequest.Requester` to be in the list of admins. If so, it deletes `MsgDeleteAdminRequest.Admin` from the list of admins.
 
 ### Turning the admin module off
+
 There'll be two ways to switch off the admin module:
 - the last admin deletes themself;
 - the admin module is removed via software upgrade mechanism.

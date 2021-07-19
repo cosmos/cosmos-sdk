@@ -35,6 +35,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v0.43.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc2) - 2021-07-19
+
+### Bug Fixes
+
+* (server) [#9704](https://github.com/cosmos/cosmos-sdk/pull/9704) Start GRPCWebServer in goroutine, avoid blocking other services from starting.
 
 ## [v0.43.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc1) - 2021-07-14
 

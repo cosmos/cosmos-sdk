@@ -86,6 +86,23 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	return app
 }
 
+// SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
+// accounts and possible balances.
+func SetupWithGenesisAccounts(t *testing.T, isCheckTx bool, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	if t != nil {
+		require.NoError(t, err)
+	}
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	app := SetupWithGenesisValSet(t, valSet, genAccs, balances...)
+
+	return app
+}
+
 // SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
@@ -133,8 +150,13 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
-		// add genesis acc tokens and delegated tokens to total supply
-		totalSupply = totalSupply.Add(b.Coins.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))...)
+		// add genesis acc tokens to total supply
+		totalSupply = totalSupply.Add(b.Coins...)
+	}
+
+	for range delegations {
+		// add delegated tokens to total supply
+		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
 	}
 
 	// add bonded amount to bonded pool module account
@@ -175,37 +197,37 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 // SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
 // accounts and possible balances.
-func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	app, genesisState := setup(true, 0)
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
+// func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+// 	app, genesisState := setup(true, 0)
+// 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
+// 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
 
-	totalSupply := sdk.NewCoins()
-	for _, b := range balances {
-		totalSupply = totalSupply.Add(b.Coins...)
-	}
+// 	totalSupply := sdk.NewCoins()
+// 	for _, b := range balances {
+// 		totalSupply = totalSupply.Add(b.Coins...)
+// 	}
 
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
+// 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+// 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		panic(err)
-	}
+// 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
+// 	app.InitChain(
+// 		abci.RequestInitChain{
+// 			Validators:      []abci.ValidatorUpdate{},
+// 			ConsensusParams: DefaultConsensusParams,
+// 			AppStateBytes:   stateBytes,
+// 		},
+// 	)
 
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
+// 	app.Commit()
+// 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
 
-	return app
-}
+// 	return app
+// }
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 

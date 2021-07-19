@@ -1,6 +1,7 @@
 package staking_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,10 +41,13 @@ func checkDelegation(
 }
 
 func TestStakingMsgs(t *testing.T) {
+	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	genTokens := sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
 	bondTokens := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
+	fmt.Println(addr1.String(), genCoin.String())
+	fmt.Println(addr2.String(), bondCoin.String())
 
 	acc1 := &authtypes.BaseAccount{Address: addr1.String()}
 	acc2 := &authtypes.BaseAccount{Address: addr2.String()}
@@ -59,7 +63,7 @@ func TestStakingMsgs(t *testing.T) {
 		},
 	}
 
-	app := simapp.SetupWithGenesisAccounts(accs, balances...)
+	app := simapp.SetupWithGenesisAccounts(t, false, accs, balances...)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin})
 

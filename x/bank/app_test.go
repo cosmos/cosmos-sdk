@@ -92,7 +92,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc}
-	app := simapp.SetupWithGenesisAccounts(genAccs)
+	app := simapp.SetupWithGenesisAccounts(t, false, genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
@@ -127,7 +127,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc}
-	app := simapp.SetupWithGenesisAccounts(genAccs)
+	app := simapp.SetupWithGenesisAccounts(t, false, genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
@@ -197,7 +197,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
-	app := simapp.SetupWithGenesisAccounts(genAccs)
+	app := simapp.SetupWithGenesisAccounts(t, false, genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
@@ -246,7 +246,7 @@ func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	}
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2, acc4}
-	app := simapp.SetupWithGenesisAccounts(genAccs)
+	app := simapp.SetupWithGenesisAccounts(t, false, genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
@@ -293,7 +293,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	require.NoError(t, err)
 
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
-	app := simapp.SetupWithGenesisAccounts(genAccs)
+	app := simapp.SetupWithGenesisAccounts(t, false, genAccs)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))

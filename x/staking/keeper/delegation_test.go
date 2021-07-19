@@ -82,7 +82,7 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, bond2to2, resBonds[1])
 	require.Equal(t, bond2to3, resBonds[2])
 	allBonds := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Equal(t, 6, len(allBonds))
+	require.Equal(t, 6+1, len(allBonds)) // +1 delegation from simapp.Setup
 	require.Equal(t, bond1to1, allBonds[0])
 	require.Equal(t, bond1to2, allBonds[1])
 	require.Equal(t, bond1to3, allBonds[2])

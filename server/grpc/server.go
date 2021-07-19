@@ -54,7 +54,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, address st
 	select {
 	case err := <-errCh:
 		return nil, err
-	case <-time.After(5 * time.Second): // assume server started successfully
+	case <-time.After(types.ServerStartTime): // assume server started successfully
 		return grpcSrv, nil
 	}
 }

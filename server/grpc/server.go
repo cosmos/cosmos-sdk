@@ -99,7 +99,8 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 		return nil
 
 	case err := <-errCh:
-		logger.Error("failed to start gRPC server", "err", err)
-		return err
+		return nil, err
+	case <-time.After(types.ServerStartTime): // assume server started successfully
+		return grpcSrv, nil
 	}
 }

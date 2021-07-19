@@ -449,29 +449,10 @@ func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, e
 		}
 		sum := sha256.Sum256(bz)
 
-		return node.ChecksummedGenesisDoc{
-			GenesisDoc:     gen,
-			Sha256Checksum: sum[:],
-		}, nil
-	}
-}
-
-// SetupTraceWriter sets up the trace writer and returns a cleanup function.
-func SetupTraceWriter(logger log.Logger, traceWriterFile string) (traceWriter io.WriteCloser, cleanup func(), err error) {
-	// clean up the traceWriter when the server is shutting down
-	cleanup = func() {}
-
-	traceWriter, err = openTraceWriter(traceWriterFile)
-	if err != nil {
-		return traceWriter, cleanup, err
-	}
-
-	// if flagTraceStore is not used then traceWriter is nil
-	if traceWriter != nil {
-		cleanup = func() {
-			if err = traceWriter.Close(); err != nil {
-				logger.Error("failed to close trace writer", "err", err)
-			}
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(types.ServerStartTime): // assume server started successfully
 		}
 	}
 
@@ -748,7 +729,8 @@ you want to test the upgrade handler itself.
 			}
 
 			return err
-		},
+		case <-time.After(types.ServerStartTime): // assume server started successfully
+		}
 	}
 
 	addStartNodeFlags(cmd, opts)

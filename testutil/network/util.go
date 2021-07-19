@@ -27,8 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
-	"github.com/cosmos/cosmos-sdk/testutil"
+	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -115,8 +114,17 @@ func startInProcess(cfg Config, val *Validator) error {
 
 	grpcCfg := val.AppConfig.GRPC
 
-	if grpcCfg.Enable {
-		grpcSrv, err := servergrpc.NewGRPCServer(val.clientCtx, app, grpcCfg)
+		select {
+		case err := <-errCh:
+			return err
+		case <-time.After(srvtypes.ServerStartTime): // assume server started successfully
+		}
+
+		val.api = apiSrv
+	}
+
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC.Address)
 		if err != nil {
 			return err
 		}
@@ -130,15 +138,12 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.grpc = grpcSrv
 	}
 
-	if val.aPIAddress != "" {
-		apiSrv := api.New(val.clientCtx, logger.With(log.ModuleKey, "api-server"), val.grpc)
-		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
-
-		val.errGroup.Go(func() error {
-			return apiSrv.Start(ctx, *val.AppConfig)
-		})
-
-		val.api = apiSrv
+		if val.AppConfig.GRPCWeb.Enable {
+			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

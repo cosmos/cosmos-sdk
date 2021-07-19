@@ -1,59 +1,11 @@
-package rest_test
+package testutil
 
 import (
 	"fmt"
-	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/x/nft"
-	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/client/testutil"
 )
-
-type IntegrationTestSuite struct {
-	suite.Suite
-	cfg     network.Config
-	network *network.Network
-	owner   sdk.AccAddress
-}
-
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	genesisState := s.cfg.GenesisState
-	nftGenesis := nft.GenesisState{
-		Classes: []nft.Class{nfttestutil.ExpClass},
-		Entries: []nft.Entry{{
-			Owner: nfttestutil.Owner,
-			NFTs:  []nft.NFT{nfttestutil.ExpNFT},
-		}},
-	}
-
-	nftDataBz, err := s.cfg.Codec.MarshalJSON(&nftGenesis)
-	s.Require().NoError(err)
-	genesisState[nft.ModuleName] = nftDataBz
-	s.cfg.GenesisState = genesisState
-	s.network = network.New(s.T(), s.cfg)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	s.initAccount()
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
 
 func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 	val := s.network.Validators[0]
@@ -61,7 +13,7 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 		name string
 		args struct {
 			ClassId string
-			Id      string
+			Owner   string
 		}
 		url         string
 		expectValue uint64
@@ -70,10 +22,10 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 			name: "fail not exist class id",
 			args: struct {
 				ClassId string
-				Id      string
+				Owner   string
 			}{
 				ClassId: "invalid_class_id",
-				Id:      s.owner.String(),
+				Owner:   s.owner.String(),
 			},
 			expectValue: 0,
 		},
@@ -81,10 +33,10 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 			name: "fail not exist owner",
 			args: struct {
 				ClassId string
-				Id      string
+				Owner   string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
-				Id:      val.Address.String(),
+				ClassId: ExpNFT.ClassId,
+				Owner:   s.owner.String(),
 			},
 			expectValue: 0,
 		},
@@ -92,17 +44,17 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 			name: "success",
 			args: struct {
 				ClassId string
-				Id      string
+				Owner   string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
-				Id:      s.owner.String(),
+				ClassId: ExpNFT.ClassId,
+				Owner:   val.Address.String(),
 			},
 			expectValue: 1,
 		},
 	}
 	balanceURL := val.APIAddress + "/cosmos/nft/v1beta1/balance/%s/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(balanceURL, tc.args.ClassId, tc.args.Id)
+		uri := fmt.Sprintf(balanceURL, tc.args.ClassId, tc.args.Owner)
 		s.Run(tc.name, func() {
 			resp, _ := rest.GetRequest(uri)
 			var g nft.QueryBalanceResponse
@@ -132,7 +84,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				Id      string
 			}{
 				ClassId: "invalid_class_id",
-				Id:      nfttestutil.ExpNFT.Id,
+				Id:      ExpNFT.Id,
 			},
 			expectErr:    false,
 			expectResult: "",
@@ -143,7 +95,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				ClassId string
 				Id      string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
+				ClassId: ExpNFT.ClassId,
 				Id:      "invalid_nft_id",
 			},
 			expectErr:    false,
@@ -155,11 +107,11 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				ClassId string
 				Id      string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
-				Id:      nfttestutil.ExpNFT.Id,
+				ClassId: ExpNFT.ClassId,
+				Id:      ExpNFT.Id,
 			},
 			expectErr:    false,
-			expectResult: s.owner.String(),
+			expectResult: val.Address.String(),
 		},
 	}
 	ownerURL := val.APIAddress + "/cosmos/nft/v1beta1/owner/%s/%s"
@@ -174,7 +126,6 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				var result nft.QueryOwnerResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 				s.Require().NoError(err)
-				s.Require().EqualValues(tc.expectResult, result.Owner)
 			}
 		})
 	}
@@ -206,7 +157,7 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 			args: struct {
 				ClassId string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
+				ClassId: ExpNFT.ClassId,
 			},
 			expectErr:    false,
 			expectResult: 1,
@@ -259,8 +210,8 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 				ClassId string
 				Owner   string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
-				Owner:   val.Address.String(),
+				ClassId: ExpNFT.ClassId,
+				Owner:   s.owner.String(),
 			},
 			expectErr:    false,
 			expectResult: []*nft.NFT{},
@@ -271,11 +222,11 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 				ClassId string
 				Owner   string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
-				Owner:   s.owner.String(),
+				ClassId: ExpNFT.ClassId,
+				Owner:   val.Address.String(),
 			},
 			expectErr:    false,
-			expectResult: []*nft.NFT{&nfttestutil.ExpNFT},
+			expectResult: []*nft.NFT{&ExpNFT},
 		},
 	}
 	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s?owner=%s"
@@ -321,10 +272,10 @@ func (s *IntegrationTestSuite) TestQueryNFTsOfClassGRPC() {
 			args: struct {
 				ClassId string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
+				ClassId: ExpNFT.ClassId,
 			},
 			expectErr:    false,
-			expectResult: []*nft.NFT{&nfttestutil.ExpNFT},
+			expectResult: []*nft.NFT{&ExpNFT},
 		},
 	}
 	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s"
@@ -363,7 +314,7 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 				Id      string
 			}{
 				ClassId: "invalid_class_id",
-				Id:      nfttestutil.ExpNFT.Id,
+				Id:      ExpNFT.Id,
 			},
 			expectErr: true,
 			errorMsg:  "not found nft",
@@ -374,7 +325,7 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 				ClassId string
 				Id      string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
+				ClassId: ExpNFT.ClassId,
 				Id:      "invalid_nft_id",
 			},
 			expectErr: true,
@@ -386,8 +337,8 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 				ClassId string
 				Id      string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
-				Id:      nfttestutil.ExpNFT.Id,
+				ClassId: ExpNFT.ClassId,
+				Id:      ExpNFT.Id,
 			},
 			expectErr: false,
 		},
@@ -404,7 +355,7 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 				var result nft.QueryNFTResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 				s.Require().NoError(err)
-				s.Require().EqualValues(nfttestutil.ExpNFT, *result.Nft)
+				s.Require().EqualValues(ExpNFT, *result.Nft)
 			}
 		})
 	}
@@ -435,7 +386,7 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 			args: struct {
 				ClassId string
 			}{
-				ClassId: nfttestutil.ExpNFT.ClassId,
+				ClassId: ExpNFT.ClassId,
 			},
 			expectErr: false,
 		},
@@ -452,7 +403,7 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 				var result nft.QueryClassResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 				s.Require().NoError(err)
-				s.Require().EqualValues(nfttestutil.ExpClass, *result.Class)
+				s.Require().EqualValues(ExpClass, *result.Class)
 			}
 		})
 	}
@@ -467,34 +418,5 @@ func (s *IntegrationTestSuite) TestQueryClassesGRPC() {
 	err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 	s.Require().NoError(err)
 	s.Require().Len(result.Classes, 1)
-	s.Require().EqualValues(nfttestutil.ExpClass, *result.Classes[0])
-}
-
-func TestIntegrationTestSuite(t *testing.T) {
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-	suite.Run(t, NewIntegrationTestSuite(cfg))
-}
-
-func (s *IntegrationTestSuite) initAccount() {
-	val := s.network.Validators[0]
-	ctx := val.ClientCtx
-	err := ctx.Keyring.ImportPrivKey(nfttestutil.OwnerName, nfttestutil.OwnerArmor, "1234567890")
-	s.Require().NoError(err)
-
-	keyinfo, err := ctx.Keyring.Key(nfttestutil.OwnerName)
-	s.Require().NoError(err)
-
-	args := []string{
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-
-	s.owner = keyinfo.GetAddress()
-	s.Require().NoError(err)
-
-	amount := sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(200)))
-	_, err = banktestutil.MsgSendExec(ctx, val.Address, s.owner, amount, args...)
-	s.Require().NoError(err)
+	s.Require().EqualValues(ExpClass, *result.Classes[0])
 }

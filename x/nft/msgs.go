@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 const (
@@ -40,13 +40,9 @@ func (m MsgSend) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners implements the Msg.GetSigners method.
-func (m MsgSend) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(m.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
+// GetSigners implements Msg
+func (m MsgSend) GetSigners() []string {
+	return []string{m.Sender}
 }
 
 // Type implements the LegacyMsg.Type method.

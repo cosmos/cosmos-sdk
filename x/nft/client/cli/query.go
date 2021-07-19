@@ -144,21 +144,15 @@ $ %s query %s nfts <class-id> <owner>
 			if err != nil {
 				return err
 			}
-			if len(args) == 1 {
-				res, err := queryClient.NFTsOfClass(cmd.Context(), &nft.QueryNFTsOfClassRequest{
-					ClassId:    args[0],
-					Pagination: pageReq,
-				})
-				if err != nil {
-					return err
-				}
-				return clientCtx.PrintProto(res)
-			}
-			res, err := queryClient.NFTsOfClassByOwner(cmd.Context(), &nft.QueryNFTsOfClassByOwnerRequest{
+
+			request := &nft.QueryNFTsOfClassRequest{
 				ClassId:    args[0],
-				Owner:      args[1],
 				Pagination: pageReq,
-			})
+			}
+			if len(args) == 2 {
+				request.Owner = args[1]
+			}
+			res, err := queryClient.NFTsOfClass(cmd.Context(), request)
 			if err != nil {
 				return err
 			}

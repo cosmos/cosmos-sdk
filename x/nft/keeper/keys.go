@@ -14,7 +14,8 @@ var (
 	OwnerKey             = []byte{0x04}
 	ClassTotalSupply     = []byte{0x05}
 
-	Delimiter = []byte{0x00}
+	Delimiter   = []byte{0x00}
+	Placeholder = []byte{0x01}
 )
 
 // StoreKey is the store key string for nft

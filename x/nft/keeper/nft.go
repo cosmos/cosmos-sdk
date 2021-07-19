@@ -8,23 +8,19 @@ import (
 )
 
 // Mint defines a method for minting a new nft
-func (k Keeper) Mint(ctx sdk.Context, newNFT nft.NFT, minter sdk.AccAddress) error {
-	if !k.HasClass(ctx, newNFT.ClassId) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, newNFT.ClassId)
+func (k Keeper) Mint(ctx sdk.Context, token nft.NFT, receiver sdk.AccAddress) error {
+	if !k.HasClass(ctx, token.ClassId) {
+		return sdkerrors.Wrap(nft.ErrClassNotExists, token.ClassId)
 	}
 
-	if k.HasNFT(ctx, newNFT.ClassId, newNFT.Id) {
-		return sdkerrors.Wrap(nft.ErrNFTExists, newNFT.Id)
+	if k.HasNFT(ctx, token.ClassId, token.Id) {
+		return sdkerrors.Wrap(nft.ErrNFTExists, token.Id)
 	}
 
-	k.setNFT(ctx, newNFT)
-	k.setOwner(ctx, newNFT.ClassId, newNFT.Id, minter)
-	k.incrTotalSupply(ctx, newNFT.ClassId)
-	return ctx.EventManager().EmitTypedEvent(&nft.EventMint{
-		ClassId: newNFT.ClassId,
-		Id:      newNFT.Id,
-		Minter:  minter.String(),
-	})
+	k.setNFT(ctx, token)
+	k.setOwner(ctx, token.ClassId, token.Id, receiver)
+	k.incrTotalSupply(ctx, token.ClassId)
+	return nil
 }
 
 // Burn defines a method for burning a nft from a specific account.
@@ -46,16 +42,16 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 	return nil
 }
 
-// Update defines a method for update a exist nft
-func (k Keeper) Update(ctx sdk.Context, updNFT nft.NFT) error {
-	if !k.HasClass(ctx, updNFT.ClassId) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, updNFT.ClassId)
+// Update defines a method for updating an exist nft
+func (k Keeper) Update(ctx sdk.Context, token nft.NFT) error {
+	if !k.HasClass(ctx, token.ClassId) {
+		return sdkerrors.Wrap(nft.ErrClassNotExists, token.ClassId)
 	}
 
-	if !k.HasNFT(ctx, updNFT.ClassId, updNFT.Id) {
-		return sdkerrors.Wrap(nft.ErrNFTNotExists, updNFT.Id)
+	if !k.HasNFT(ctx, token.ClassId, token.Id) {
+		return sdkerrors.Wrap(nft.ErrNFTNotExists, token.Id)
 	}
-	k.setNFT(ctx, updNFT)
+	k.setNFT(ctx, token)
 	return nil
 }
 
@@ -92,7 +88,7 @@ func (k Keeper) GetNFT(ctx sdk.Context, classID, nftID string) (nft.NFT, bool) {
 
 // GetNFTsOfClassByOwner returns all nft information of the specified classID under the specified owner
 func (k Keeper) GetNFTsOfClassByOwner(ctx sdk.Context, classID string, owner sdk.AccAddress) (nfts []nft.NFT) {
-	ownerStore := k.getOwnerStore(ctx, owner, classID)
+	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
 	iterator := ownerStore.Iterator(nil, nil)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -143,25 +139,25 @@ func (k Keeper) HasNFT(ctx sdk.Context, classID, id string) bool {
 	return store.Has([]byte(id))
 }
 
-func (k Keeper) setNFT(ctx sdk.Context, nft nft.NFT) {
-	nftStore := k.getNFTStore(ctx, nft.ClassId)
-	bz := k.cdc.MustMarshal(&nft)
-	nftStore.Set([]byte(nft.Id), bz)
+func (k Keeper) setNFT(ctx sdk.Context, token nft.NFT) {
+	nftStore := k.getNFTStore(ctx, token.ClassId)
+	bz := k.cdc.MustMarshal(&token)
+	nftStore.Set([]byte(token.Id), bz)
 }
 
 func (k Keeper) setOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(ownerStoreKey(classID, nftID), owner.Bytes())
 
-	ownerStore := k.getOwnerStore(ctx, owner, classID)
-	ownerStore.Set([]byte(nftID), []byte{0x01})
+	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
+	ownerStore.Set([]byte(nftID), Placeholder)
 }
 
 func (k Keeper) deleteOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(ownerStoreKey(classID, nftID))
 
-	ownerStore := k.getOwnerStore(ctx, owner, classID)
+	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
 	ownerStore.Delete([]byte(nftID))
 }
 
@@ -170,7 +166,7 @@ func (k Keeper) getNFTStore(ctx sdk.Context, classID string) prefix.Store {
 	return prefix.NewStore(store, nftStoreKey(classID))
 }
 
-func (k Keeper) getOwnerStore(ctx sdk.Context, owner sdk.AccAddress, classID string) prefix.Store {
+func (k Keeper) getClassStoreByOwner(ctx sdk.Context, owner sdk.AccAddress, classID string) prefix.Store {
 	store := ctx.KVStore(k.storeKey)
 	key := nftOfClassByOwnerStoreKey(owner, classID)
 	return prefix.NewStore(store, key)

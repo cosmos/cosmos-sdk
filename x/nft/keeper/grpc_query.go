@@ -63,41 +63,6 @@ func (k Keeper) Supply(goCtx context.Context, request *nft.QuerySupplyRequest) (
 	return &nft.QuerySupplyResponse{Amount: supply}, nil
 }
 
-func (k Keeper) NFTsOfClassByOwner(goCtx context.Context, request *nft.QueryNFTsOfClassByOwnerRequest) (*nft.QueryNFTsOfClassByOwnerResponse, error) {
-	if request == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
-	}
-
-	if len(request.ClassId) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "class id can not be empty")
-	}
-
-	owner, err := sdk.AccAddressFromBech32(request.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	var nfts []*nft.NFT
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	ownerStore := k.getOwnerStore(ctx, owner, request.ClassId)
-	pageRes, err := query.Paginate(ownerStore, request.Pagination, func(key []byte, _ []byte) error {
-		nft, has := k.GetNFT(ctx, request.ClassId, string(key))
-		if has {
-			nfts = append(nfts, &nft)
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return &nft.QueryNFTsOfClassByOwnerResponse{
-		Nfts:       nfts,
-		Pagination: pageRes,
-	}, nil
-
-}
-
 func (k Keeper) NFTsOfClass(goCtx context.Context, request *nft.QueryNFTsOfClassRequest) (*nft.QueryNFTsOfClassResponse, error) {
 	if request == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -109,6 +74,32 @@ func (k Keeper) NFTsOfClass(goCtx context.Context, request *nft.QueryNFTsOfClass
 
 	var nfts []*nft.NFT
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// if owner is not empty, filter nft by owner
+	if len(request.Owner) > 0 {
+		owner, err := sdk.AccAddressFromBech32(request.Owner)
+		if err != nil {
+			return nil, err
+		}
+
+		ownerStore := k.getClassStoreByOwner(ctx, owner, request.ClassId)
+		pageRes, err := query.Paginate(ownerStore, request.Pagination, func(key []byte, _ []byte) error {
+			nft, has := k.GetNFT(ctx, request.ClassId, string(key))
+			if has {
+				nfts = append(nfts, &nft)
+			}
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+		return &nft.QueryNFTsOfClassResponse{
+			Nfts:       nfts,
+			Pagination: pageRes,
+		}, nil
+	}
+
 	nftStore := k.getNFTStore(ctx, request.ClassId)
 	pageRes, err := query.Paginate(nftStore, request.Pagination, func(_ []byte, value []byte) error {
 		var nft nft.NFT

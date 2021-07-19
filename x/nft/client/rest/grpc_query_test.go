@@ -278,16 +278,16 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 			expectResult: []*nft.NFT{&nfttestutil.ExpNFT},
 		},
 	}
-	nftsByOwnerURL := val.APIAddress + "/cosmos/nft/v1beta1/owned_nfts/%s/%s"
+	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s?owner=%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(nftsByOwnerURL, tc.args.ClassId, tc.args.Owner)
+		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassId, tc.args.Owner)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var result nft.QueryNFTsOfClassByOwnerResponse
+				var result nft.QueryNFTsOfClassResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
 				s.Require().NoError(err)
 				s.Require().EqualValues(tc.expectResult, result.Nfts)

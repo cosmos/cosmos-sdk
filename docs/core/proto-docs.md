@@ -405,7 +405,6 @@
     - [Query](#cosmos.mint.v1beta1.Query)
   
 - [cosmos/nft/v1beta1/event.proto](#cosmos/nft/v1beta1/event.proto)
-    - [EventMint](#cosmos.nft.v1beta1.EventMint)
     - [EventSend](#cosmos.nft.v1beta1.EventSend)
   
 - [cosmos/nft/v1beta1/nft.proto](#cosmos/nft/v1beta1/nft.proto)
@@ -425,8 +424,6 @@
     - [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse)
     - [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest)
     - [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse)
-    - [QueryNFTsOfClassByOwnerRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerRequest)
-    - [QueryNFTsOfClassByOwnerResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerResponse)
     - [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest)
     - [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse)
     - [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest)
@@ -5823,23 +5820,6 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="cosmos.nft.v1beta1.EventMint"></a>
-
-### EventMint
-EventMint is emitted on mint nft
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
-| `minter` | [string](#string) |  |  |
-
-
-
-
-
-
 <a name="cosmos.nft.v1beta1.EventSend"></a>
 
 ### EventSend
@@ -6098,40 +6078,6 @@ QueryNFTResponse is the response type for the Query/NFT RPC method
 
 
 
-<a name="cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerRequest"></a>
-
-### QueryNFTsOfClassByOwnerRequest
-QueryNFTsOfClassByOwnerRequest is the request type for the Query/NFTsOfClassByOwner RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `class_id` | [string](#string) |  |  |
-| `owner` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerResponse"></a>
-
-### QueryNFTsOfClassByOwnerResponse
-QueryNFTsOfClassByOwnerResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC
-methods
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
-
-
-
-
-
-
 <a name="cosmos.nft.v1beta1.QueryNFTsOfClassRequest"></a>
 
 ### QueryNFTsOfClassRequest
@@ -6141,6 +6087,7 @@ QueryNFTsOfClassRequest is the request type for the Query/NFTsOfClass RPC method
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `class_id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
 
@@ -6241,8 +6188,7 @@ Query defines the gRPC querier service.
 | `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721 | GET|/cosmos/nft/v1beta1/balance/{class_id}/{owner}|
 | `Owner` | [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest) | [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse) | Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721 | GET|/cosmos/nft/v1beta1/owner/{class_id}/{id}|
 | `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the class, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{class_id}|
-| `NFTsOfClassByOwner` | [QueryNFTsOfClassByOwnerRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerRequest) | [QueryNFTsOfClassByOwnerResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassByOwnerResponse) | NFTsOfClassByOwner queries the NFTs of a given class owned by the owner, similar to tokenOfOwnerByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/owned_nfts/{class_id}/{owner}|
-| `NFTsOfClass` | [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest) | [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse) | NFTsOfClass queries all NFTs of a given class, similar to tokenByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/nfts/{class_id}|
+| `NFTsOfClass` | [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest) | [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse) | NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/nfts/{class_id}|
 | `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries an NFT based on its class and id. | GET|/cosmos/nft/v1beta1/nfts/{class_id}/{id}|
 | `Class` | [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest) | [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse) | Class queries an NFT class based on its id | GET|/cosmos/nft/v1beta1/classes/{class_id}|
 | `Classes` | [QueryClassesRequest](#cosmos.nft.v1beta1.QueryClassesRequest) | [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse) | Classes queries all NFT classes | GET|/cosmos/nft/v1beta1/classes|

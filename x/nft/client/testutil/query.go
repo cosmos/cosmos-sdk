@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwner() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var result nft.QueryNFTsOfClassByOwnerResponse
+				var result nft.QueryNFTsOfClassResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &result)
 				s.Require().NoError(err)
 				s.Require().EqualValues(tc.expectResult, result.Nfts)

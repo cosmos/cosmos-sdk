@@ -18,9 +18,9 @@ func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespo
 		return nil, err
 	}
 
-	owner := k.GetOwner(ctx, msg.ClassID, msg.ID)
+	owner := k.GetOwner(ctx, msg.ClassId, msg.Id)
 	if !owner.Equals(sender) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", sender, msg.ID)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not the owner of nft %s", sender, msg.Id)
 	}
 
 	receiver, err := sdk.AccAddressFromBech32(msg.Receiver)
@@ -28,13 +28,13 @@ func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendRespo
 		return nil, err
 	}
 
-	if err := k.Transfer(ctx, msg.ClassID, msg.ID, receiver); err != nil {
+	if err := k.Transfer(ctx, msg.ClassId, msg.Id, receiver); err != nil {
 		return nil, err
 	}
 
 	ctx.EventManager().EmitTypedEvent(&nft.EventSend{
-		ClassID:  msg.ClassID,
-		ID:       msg.ID,
+		ClassId:  msg.ClassId,
+		Id:       msg.Id,
 		Sender:   msg.Sender,
 		Receiver: msg.Receiver,
 	})

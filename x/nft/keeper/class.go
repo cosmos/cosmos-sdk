@@ -8,23 +8,23 @@ import (
 
 // NewClass defines a method for creating a new nft class
 func (k Keeper) NewClass(ctx sdk.Context, class nft.Class) error {
-	if k.HasClass(ctx, class.ID) {
-		return sdkerrors.Wrap(nft.ErrClassExists, class.ID)
+	if k.HasClass(ctx, class.Id) {
+		return sdkerrors.Wrap(nft.ErrClassExists, class.Id)
 	}
 	bz := k.cdc.MustMarshal(&class)
 	store := ctx.KVStore(k.storeKey)
-	store.Set(classStoreKey(class.ID), bz)
+	store.Set(classStoreKey(class.Id), bz)
 	return nil
 }
 
 // UpdateClass defines a method for updating a exist nft class
 func (k Keeper) UpdateClass(ctx sdk.Context, class nft.Class) error {
-	if !k.HasClass(ctx, class.ID) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, class.ID)
+	if !k.HasClass(ctx, class.Id) {
+		return sdkerrors.Wrap(nft.ErrClassNotExists, class.Id)
 	}
 	bz := k.cdc.MustMarshal(&class)
 	store := ctx.KVStore(k.storeKey)
-	store.Set(classStoreKey(class.ID), bz)
+	store.Set(classStoreKey(class.Id), bz)
 	return nil
 }
 

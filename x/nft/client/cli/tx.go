@@ -46,8 +46,8 @@ func NewCmdSend() *cobra.Command {
 			}
 
 			msg := nft.MsgSend{
-				ClassID:  args[0],
-				ID:       args[1],
+				ClassId:  args[0],
+				Id:       args[1],
 				Sender:   clientCtx.GetFromAddress().String(),
 				Receiver: args[2],
 			}

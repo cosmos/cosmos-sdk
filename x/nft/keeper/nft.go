@@ -9,20 +9,20 @@ import (
 
 // Mint defines a method for minting a new nft
 func (k Keeper) Mint(ctx sdk.Context, newNFT nft.NFT, minter sdk.AccAddress) error {
-	if !k.HasClass(ctx, newNFT.ClassID) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, newNFT.ClassID)
+	if !k.HasClass(ctx, newNFT.ClassId) {
+		return sdkerrors.Wrap(nft.ErrClassNotExists, newNFT.ClassId)
 	}
 
-	if k.HasNFT(ctx, newNFT.ClassID, newNFT.ID) {
-		return sdkerrors.Wrap(nft.ErrNFTExists, newNFT.ID)
+	if k.HasNFT(ctx, newNFT.ClassId, newNFT.Id) {
+		return sdkerrors.Wrap(nft.ErrNFTExists, newNFT.Id)
 	}
 
 	k.setNFT(ctx, newNFT)
-	k.setOwner(ctx, newNFT.ClassID, newNFT.ID, minter)
-	k.incrTotalSupply(ctx, newNFT.ClassID)
+	k.setOwner(ctx, newNFT.ClassId, newNFT.Id, minter)
+	k.incrTotalSupply(ctx, newNFT.ClassId)
 	return ctx.EventManager().EmitTypedEvent(&nft.EventMint{
-		ClassID: newNFT.ClassID,
-		ID:      newNFT.ID,
+		ClassId: newNFT.ClassId,
+		Id:      newNFT.Id,
 		Minter:  minter.String(),
 	})
 }
@@ -48,12 +48,12 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 
 // Update defines a method for update a exist nft
 func (k Keeper) Update(ctx sdk.Context, updNFT nft.NFT) error {
-	if !k.HasClass(ctx, updNFT.ClassID) {
-		return sdkerrors.Wrap(nft.ErrClassNotExists, updNFT.ClassID)
+	if !k.HasClass(ctx, updNFT.ClassId) {
+		return sdkerrors.Wrap(nft.ErrClassNotExists, updNFT.ClassId)
 	}
 
-	if !k.HasNFT(ctx, updNFT.ClassID, updNFT.ID) {
-		return sdkerrors.Wrap(nft.ErrNFTNotExists, updNFT.ID)
+	if !k.HasNFT(ctx, updNFT.ClassId, updNFT.Id) {
+		return sdkerrors.Wrap(nft.ErrNFTNotExists, updNFT.Id)
 	}
 	k.setNFT(ctx, updNFT)
 	return nil
@@ -144,9 +144,9 @@ func (k Keeper) HasNFT(ctx sdk.Context, classID, id string) bool {
 }
 
 func (k Keeper) setNFT(ctx sdk.Context, nft nft.NFT) {
-	nftStore := k.getNFTStore(ctx, nft.ClassID)
+	nftStore := k.getNFTStore(ctx, nft.ClassId)
 	bz := k.cdc.MustMarshal(&nft)
-	nftStore.Set([]byte(nft.ID), bz)
+	nftStore.Set([]byte(nft.Id), bz)
 }
 
 func (k Keeper) setOwner(ctx sdk.Context, classID, nftID string, owner sdk.AccAddress) {

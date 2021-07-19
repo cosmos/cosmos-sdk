@@ -37,17 +37,17 @@ DDzEQAPXBQflzNW6wbne9IfT651zCSm+j1MWaGk=
 
 var (
 	ExpClass = nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 
 	ExpNFT = nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     testURI,
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
 	}
 )
 

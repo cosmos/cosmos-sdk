@@ -11,11 +11,11 @@ message Class {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = false;
 
-  string id          = 1 [(gogoproto.customname) = "ID"];
+  string id          = 1;
   string name        = 2;
   string symbol      = 3;
   string description = 4;
-  string uri         = 5 [(gogoproto.customname) = "URI"];
+  string uri         = 5;
 }
 
 // NFT defines the nft.
@@ -23,8 +23,8 @@ message NFT {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = false;
 
-  string              class_id = 1 [(gogoproto.customname) = "ClassID"];
-  string              id       = 2 [(gogoproto.customname) = "ID"];
-  string              uri      = 3 [(gogoproto.customname) = "URI"];
+  string              class_id = 1;
+  string              id       = 2;
+  string              uri      = 3;
   google.protobuf.Any data     = 10;
 }

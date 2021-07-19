@@ -13,11 +13,11 @@ func genClasses(r *rand.Rand, accounts []simtypes.Account) []nft.Class {
 	classes := make([]nft.Class, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
 		classes[i] = nft.Class{
-			ID:          simtypes.RandStringOfLength(r, 10),
+			Id:          simtypes.RandStringOfLength(r, 10),
 			Name:        simtypes.RandStringOfLength(r, 10),
 			Symbol:      simtypes.RandStringOfLength(r, 10),
 			Description: simtypes.RandStringOfLength(r, 10),
-			URI:         simtypes.RandStringOfLength(r, 10),
+			Uri:         simtypes.RandStringOfLength(r, 10),
 		}
 	}
 	return classes
@@ -32,9 +32,9 @@ func genNFT(r *rand.Rand, classID string, accounts []simtypes.Account) []nft.Ent
 			Owner: owner.Address.String(),
 			NFTs: []nft.NFT{
 				{
-					ClassID: classID,
-					ID:      simtypes.RandStringOfLength(r, 10),
-					URI:     simtypes.RandStringOfLength(r, 10),
+					ClassId: classID,
+					Id:      simtypes.RandStringOfLength(r, 10),
+					Uri:     simtypes.RandStringOfLength(r, 10),
 				},
 			},
 		}
@@ -55,7 +55,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		simState.Cdc, "nft", &entries, simState.Rand,
 		func(r *rand.Rand) {
 			class := classes[r.Int63n(int64(len(classes)))]
-			entries = genNFT(r, class.ID, simState.Accounts)
+			entries = genNFT(r, class.Id, simState.Accounts)
 		},
 	)
 

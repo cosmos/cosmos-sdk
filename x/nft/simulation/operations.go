@@ -81,8 +81,8 @@ func SimulateMsgSend(ak nft.AccountKeeper, bk nft.BankKeeper, k keeper.Keeper) s
 		}
 
 		msg := &nft.MsgSend{
-			ClassID:  n.ClassID,
-			ID:       n.ID,
+			ClassId:  n.ClassId,
+			Id:       n.Id,
 			Sender:   senderAcc.GetAddress().String(),
 			Receiver: receiver.Address.String(),
 		}
@@ -115,15 +115,15 @@ func randNFT(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, minter sdk.AccAddre
 	if err != nil {
 		return nft.NFT{}, err
 	}
-	ns := k.GetNFTsOfClassByOwner(ctx, c.ID, minter)
+	ns := k.GetNFTsOfClassByOwner(ctx, c.Id, minter)
 	if len(ns) > 0 {
 		return ns[r.Intn(len(ns))], nil
 	}
 
 	n := nft.NFT{
-		ClassID: c.ID,
-		ID:      simtypes.RandStringOfLength(r, 10),
-		URI:     simtypes.RandStringOfLength(r, 10),
+		ClassId: c.Id,
+		Id:      simtypes.RandStringOfLength(r, 10),
+		Uri:     simtypes.RandStringOfLength(r, 10),
 	}
 	err = k.Mint(ctx, n, minter)
 	if err != nil {
@@ -136,11 +136,11 @@ func randClass(ctx sdk.Context, r *rand.Rand, k keeper.Keeper) (nft.Class, error
 	classes := k.GetClasses(ctx)
 	if len(classes) == 0 {
 		c := nft.Class{
-			ID:          simtypes.RandStringOfLength(r, 10),
+			Id:          simtypes.RandStringOfLength(r, 10),
 			Name:        simtypes.RandStringOfLength(r, 10),
 			Symbol:      simtypes.RandStringOfLength(r, 10),
 			Description: simtypes.RandStringOfLength(r, 10),
-			URI:         simtypes.RandStringOfLength(r, 10),
+			Uri:         simtypes.RandStringOfLength(r, 10),
 		}
 		err := k.NewClass(ctx, c)
 		if err != nil {

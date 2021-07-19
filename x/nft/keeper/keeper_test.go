@@ -53,11 +53,11 @@ func TestTestSuite(t *testing.T) {
 
 func (s *TestSuite) TestNewClass() {
 	except := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, except)
 	s.Require().NoError(err)
@@ -72,32 +72,32 @@ func (s *TestSuite) TestNewClass() {
 
 func (s *TestSuite) TestUpdateClass() {
 	class := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	except := nft.Class{
-		ID:          "kitty1",
+		Id:          "kitty1",
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 
 	err = s.app.NFTKeeper.UpdateClass(s.ctx, except)
 	s.Require().Error(err)
 
 	except = nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        "My crypto Kitty",
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 
 	err = s.app.NFTKeeper.UpdateClass(s.ctx, except)
@@ -110,19 +110,19 @@ func (s *TestSuite) TestUpdateClass() {
 
 func (s *TestSuite) TestMint() {
 	except := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, except)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     testURI,
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
 	}
 	err = s.app.NFTKeeper.Mint(s.ctx, expNFT, s.addrs[0])
 	s.Require().NoError(err)
@@ -155,19 +155,19 @@ func (s *TestSuite) TestMint() {
 
 func (s *TestSuite) TestBurn() {
 	except := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, except)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     testURI,
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
 	}
 	err = s.app.NFTKeeper.Mint(s.ctx, expNFT, s.addrs[0])
 	s.Require().NoError(err)
@@ -202,27 +202,27 @@ func (s *TestSuite) TestBurn() {
 
 func (s *TestSuite) TestUpdate() {
 	class := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	myNFT := nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     testURI,
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
 	}
 	err = s.app.NFTKeeper.Mint(s.ctx, myNFT, s.addrs[0])
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     "updated",
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     "updated",
 	}
 
 	err = s.app.NFTKeeper.Update(s.ctx, expNFT)
@@ -236,19 +236,19 @@ func (s *TestSuite) TestUpdate() {
 
 func (s *TestSuite) TestTransfer() {
 	class := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     testURI,
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
 	}
 	err = s.app.NFTKeeper.Mint(s.ctx, expNFT, s.addrs[0])
 	s.Require().NoError(err)
@@ -274,19 +274,19 @@ func (s *TestSuite) TestTransfer() {
 
 func (s *TestSuite) TestExportGenesis() {
 	class := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	err := s.app.NFTKeeper.NewClass(s.ctx, class)
 	s.Require().NoError(err)
 
 	expNFT := nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     testURI,
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
 	}
 	err = s.app.NFTKeeper.Mint(s.ctx, expNFT, s.addrs[0])
 	s.Require().NoError(err)
@@ -304,16 +304,16 @@ func (s *TestSuite) TestExportGenesis() {
 
 func (s *TestSuite) TestInitGenesis() {
 	expClass := nft.Class{
-		ID:          testClassID,
+		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
 		Description: testClassDescription,
-		URI:         testClassURI,
+		Uri:         testClassURI,
 	}
 	expNFT := nft.NFT{
-		ClassID: testClassID,
-		ID:      testID,
-		URI:     testURI,
+		ClassId: testClassID,
+		Id:      testID,
+		Uri:     testURI,
 	}
 	expGenesis := &nft.GenesisState{
 		Classes: []nft.Class{expClass},

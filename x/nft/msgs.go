@@ -20,12 +20,12 @@ var (
 
 // GetSigners implements the Msg.ValidateBasic method.
 func (m MsgSend) ValidateBasic() error {
-	if err := ValidateClassID(m.ClassID); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidID, "Invalid class id (%s)", m.ClassID)
+	if err := ValidateClassID(m.ClassId); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidID, "Invalid class id (%s)", m.ClassId)
 	}
 
-	if err := ValidateNFTID(m.ID); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidID, "Invalid nft id (%s)", m.ID)
+	if err := ValidateNFTID(m.Id); err != nil {
+		return sdkerrors.Wrapf(ErrInvalidID, "Invalid nft id (%s)", m.Id)
 	}
 
 	_, err := sdk.AccAddressFromBech32(m.Sender)

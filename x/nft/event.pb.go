@@ -25,8 +25,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventMint is emitted on mint nft
 type EventMint struct {
-	ClassID string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	ID      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
 	Minter  string `protobuf:"bytes,3,opt,name=minter,proto3" json:"minter,omitempty"`
 }
 
@@ -63,16 +63,16 @@ func (m *EventMint) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventMint proto.InternalMessageInfo
 
-func (m *EventMint) GetClassID() string {
+func (m *EventMint) GetClassId() string {
 	if m != nil {
-		return m.ClassID
+		return m.ClassId
 	}
 	return ""
 }
 
-func (m *EventMint) GetID() string {
+func (m *EventMint) GetId() string {
 	if m != nil {
-		return m.ID
+		return m.Id
 	}
 	return ""
 }
@@ -86,8 +86,8 @@ func (m *EventMint) GetMinter() string {
 
 // EventSend is emitted on Msg/Send
 type EventSend struct {
-	ClassID  string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	ID       string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	ClassId  string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	Id       string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
 	Sender   string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
 	Receiver string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
 }
@@ -125,16 +125,16 @@ func (m *EventSend) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_EventSend proto.InternalMessageInfo
 
-func (m *EventSend) GetClassID() string {
+func (m *EventSend) GetClassId() string {
 	if m != nil {
-		return m.ClassID
+		return m.ClassId
 	}
 	return ""
 }
 
-func (m *EventSend) GetID() string {
+func (m *EventSend) GetId() string {
 	if m != nil {
-		return m.ID
+		return m.Id
 	}
 	return ""
 }
@@ -161,23 +161,22 @@ func init() {
 func init() { proto.RegisterFile("cosmos/nft/v1beta1/event.proto", fileDescriptor_49f05440d2b8ed9d) }
 
 var fileDescriptor_49f05440d2b8ed9d = []byte{
-	// 256 bytes of a gzipped FileDescriptorProto
+	// 237 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0xce, 0x2f, 0xce,
 	0xcd, 0x2f, 0xd6, 0xcf, 0x4b, 0x2b, 0xd1, 0x2f, 0x33, 0x4c, 0x4a, 0x2d, 0x49, 0x34, 0xd4, 0x4f,
 	0x2d, 0x4b, 0xcd, 0x2b, 0xd1, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x82, 0xc8, 0xeb, 0xe5,
 	0xa5, 0x95, 0xe8, 0x41, 0xe5, 0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0xd2, 0xfa, 0x20, 0x16,
-	0x44, 0xa5, 0x52, 0x32, 0x17, 0xa7, 0x2b, 0x48, 0xa3, 0x6f, 0x66, 0x5e, 0x89, 0x90, 0x1a, 0x17,
-	0x47, 0x72, 0x4e, 0x62, 0x71, 0x71, 0x7c, 0x66, 0x8a, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0xa7, 0x13,
-	0xf7, 0xa3, 0x7b, 0xf2, 0xec, 0xce, 0x20, 0x31, 0x4f, 0x97, 0x20, 0x76, 0xb0, 0xa4, 0x67, 0x8a,
-	0x90, 0x18, 0x17, 0x53, 0x66, 0x8a, 0x04, 0x13, 0x58, 0x05, 0xdb, 0xa3, 0x7b, 0xf2, 0x4c, 0x9e,
-	0x2e, 0x41, 0x4c, 0x99, 0x20, 0x71, 0xb6, 0xdc, 0xcc, 0xbc, 0x92, 0xd4, 0x22, 0x09, 0x66, 0x90,
-	0x5c, 0x10, 0x94, 0xa7, 0x54, 0x0f, 0xb5, 0x24, 0x38, 0x35, 0x2f, 0x85, 0x1a, 0x96, 0x14, 0xa7,
-	0xe6, 0xa5, 0x20, 0x2c, 0x81, 0xf0, 0x84, 0xa4, 0xb8, 0x38, 0x8a, 0x52, 0x93, 0x53, 0x33, 0xcb,
-	0x52, 0x8b, 0x24, 0x58, 0xc0, 0x32, 0x70, 0xbe, 0x93, 0xcd, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e,
-	0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37,
-	0x1e, 0xcb, 0x31, 0x44, 0x29, 0xa5, 0x67, 0x96, 0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea,
-	0x43, 0x03, 0x15, 0x42, 0xe9, 0x16, 0xa7, 0x64, 0xeb, 0x57, 0x80, 0x42, 0x38, 0x89, 0x0d, 0x1c,
-	0x54, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x79, 0x5f, 0x20, 0x76, 0x01, 0x00, 0x00,
+	0x44, 0xa5, 0x92, 0x1f, 0x17, 0xa7, 0x2b, 0x48, 0xa3, 0x6f, 0x66, 0x5e, 0x89, 0x90, 0x24, 0x17,
+	0x47, 0x72, 0x4e, 0x62, 0x71, 0x71, 0x7c, 0x66, 0x8a, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0x67, 0x10,
+	0x3b, 0x98, 0xef, 0x99, 0x22, 0xc4, 0xc7, 0xc5, 0x94, 0x99, 0x22, 0xc1, 0x04, 0x16, 0x64, 0xca,
+	0x4c, 0x11, 0x12, 0xe3, 0x62, 0xcb, 0xcd, 0xcc, 0x2b, 0x49, 0x2d, 0x92, 0x60, 0x06, 0x8b, 0x41,
+	0x79, 0x4a, 0x59, 0x50, 0xf3, 0x82, 0x53, 0xf3, 0x52, 0x48, 0x34, 0xaf, 0x38, 0x35, 0x2f, 0x05,
+	0x61, 0x1e, 0x84, 0x27, 0x24, 0xc5, 0xc5, 0x51, 0x94, 0x9a, 0x9c, 0x9a, 0x59, 0x96, 0x5a, 0x24,
+	0xc1, 0x02, 0x96, 0x81, 0xf3, 0x9d, 0x6c, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1,
+	0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e,
+	0x21, 0x4a, 0x29, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x1f, 0x1a, 0x54,
+	0x10, 0x4a, 0xb7, 0x38, 0x25, 0x5b, 0xbf, 0x02, 0x14, 0x6e, 0x49, 0x6c, 0xe0, 0x00, 0x30, 0x06,
+	0x04, 0x00, 0x00, 0xff, 0xff, 0x39, 0xb3, 0xf0, 0xd0, 0x4c, 0x01, 0x00, 0x00,
 }
 
 func (m *EventMint) Marshal() (dAtA []byte, err error) {
@@ -207,17 +206,17 @@ func (m *EventMint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.ID) > 0 {
-		i -= len(m.ID)
-		copy(dAtA[i:], m.ID)
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.ID)))
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClassID) > 0 {
-		i -= len(m.ClassID)
-		copy(dAtA[i:], m.ClassID)
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.ClassID)))
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.ClassId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -258,17 +257,17 @@ func (m *EventSend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.ID) > 0 {
-		i -= len(m.ID)
-		copy(dAtA[i:], m.ID)
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.ID)))
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ClassID) > 0 {
-		i -= len(m.ClassID)
-		copy(dAtA[i:], m.ClassID)
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.ClassID)))
+	if len(m.ClassId) > 0 {
+		i -= len(m.ClassId)
+		copy(dAtA[i:], m.ClassId)
+		i = encodeVarintEvent(dAtA, i, uint64(len(m.ClassId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -292,11 +291,11 @@ func (m *EventMint) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClassID)
+	l = len(m.ClassId)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	l = len(m.ID)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
@@ -313,11 +312,11 @@ func (m *EventSend) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClassID)
+	l = len(m.ClassId)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
-	l = len(m.ID)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovEvent(uint64(l))
 	}
@@ -369,7 +368,7 @@ func (m *EventMint) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClassID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -397,11 +396,11 @@ func (m *EventMint) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClassID = string(dAtA[iNdEx:postIndex])
+			m.ClassId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -429,7 +428,7 @@ func (m *EventMint) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ID = string(dAtA[iNdEx:postIndex])
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -515,7 +514,7 @@ func (m *EventSend) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClassID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ClassId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -543,11 +542,11 @@ func (m *EventSend) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ClassID = string(dAtA[iNdEx:postIndex])
+			m.ClassId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -575,7 +574,7 @@ func (m *EventSend) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ID = string(dAtA[iNdEx:postIndex])
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {

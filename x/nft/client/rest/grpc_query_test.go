@@ -60,8 +60,8 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 	testCases := []struct {
 		name string
 		args struct {
-			ClassID string
-			ID      string
+			ClassId string
+			Id      string
 		}
 		url         string
 		expectValue uint64
@@ -69,40 +69,40 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 		{
 			name: "fail not exist class id",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: "invalid_class_id",
-				ID:      s.owner.String(),
+				ClassId: "invalid_class_id",
+				Id:      s.owner.String(),
 			},
 			expectValue: 0,
 		},
 		{
 			name: "fail not exist owner",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
-				ID:      val.Address.String(),
+				ClassId: nfttestutil.ExpNFT.ClassId,
+				Id:      val.Address.String(),
 			},
 			expectValue: 0,
 		},
 		{
 			name: "success",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
-				ID:      s.owner.String(),
+				ClassId: nfttestutil.ExpNFT.ClassId,
+				Id:      s.owner.String(),
 			},
 			expectValue: 1,
 		},
 	}
 	balanceURL := val.APIAddress + "/cosmos/nft/v1beta1/balance/%s/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(balanceURL, tc.args.ClassID, tc.args.ID)
+		uri := fmt.Sprintf(balanceURL, tc.args.ClassId, tc.args.Id)
 		s.Run(tc.name, func() {
 			resp, _ := rest.GetRequest(uri)
 			var g nft.QueryBalanceResponse
@@ -119,8 +119,8 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 	testCases := []struct {
 		name string
 		args struct {
-			ClassID string
-			ID      string
+			ClassId string
+			Id      string
 		}
 		expectErr    bool
 		expectResult string
@@ -128,11 +128,11 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 		{
 			name: "class id does not exist",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: "invalid_class_id",
-				ID:      nfttestutil.ExpNFT.ID,
+				ClassId: "invalid_class_id",
+				Id:      nfttestutil.ExpNFT.Id,
 			},
 			expectErr:    false,
 			expectResult: "",
@@ -140,11 +140,11 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 		{
 			name: "nft id does not exist",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
-				ID:      "invalid_nft_id",
+				ClassId: nfttestutil.ExpNFT.ClassId,
+				Id:      "invalid_nft_id",
 			},
 			expectErr:    false,
 			expectResult: "",
@@ -152,11 +152,11 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 		{
 			name: "nft exist",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
-				ID:      nfttestutil.ExpNFT.ID,
+				ClassId: nfttestutil.ExpNFT.ClassId,
+				Id:      nfttestutil.ExpNFT.Id,
 			},
 			expectErr:    false,
 			expectResult: s.owner.String(),
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 	}
 	ownerURL := val.APIAddress + "/cosmos/nft/v1beta1/owner/%s/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(ownerURL, tc.args.ClassID, tc.args.ID)
+		uri := fmt.Sprintf(ownerURL, tc.args.ClassId, tc.args.Id)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {
@@ -186,7 +186,7 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 	testCases := []struct {
 		name string
 		args struct {
-			ClassID string
+			ClassId string
 		}
 		expectErr    bool
 		expectResult uint64
@@ -194,9 +194,9 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 		{
 			name: "class id does not exist",
 			args: struct {
-				ClassID string
+				ClassId string
 			}{
-				ClassID: "invalid_class_id",
+				ClassId: "invalid_class_id",
 			},
 			expectErr:    false,
 			expectResult: 0,
@@ -204,9 +204,9 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 		{
 			name: "class id exist",
 			args: struct {
-				ClassID string
+				ClassId string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
+				ClassId: nfttestutil.ExpNFT.ClassId,
 			},
 			expectErr:    false,
 			expectResult: 1,
@@ -214,7 +214,7 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 	}
 	supplyURL := val.APIAddress + "/cosmos/nft/v1beta1/supply/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(supplyURL, tc.args.ClassID)
+		uri := fmt.Sprintf(supplyURL, tc.args.ClassId)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {
@@ -235,7 +235,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 	testCases := []struct {
 		name string
 		args struct {
-			ClassID string
+			ClassId string
 			Owner   string
 		}
 		expectErr    bool
@@ -244,10 +244,10 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 		{
 			name: "class id does not exist",
 			args: struct {
-				ClassID string
+				ClassId string
 				Owner   string
 			}{
-				ClassID: "invalid_class_id",
+				ClassId: "invalid_class_id",
 				Owner:   s.owner.String(),
 			},
 			expectErr:    false,
@@ -256,10 +256,10 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 		{
 			name: "owner does not exist",
 			args: struct {
-				ClassID string
+				ClassId string
 				Owner   string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
+				ClassId: nfttestutil.ExpNFT.ClassId,
 				Owner:   val.Address.String(),
 			},
 			expectErr:    false,
@@ -268,10 +268,10 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 		{
 			name: "nft exist",
 			args: struct {
-				ClassID string
+				ClassId string
 				Owner   string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
+				ClassId: nfttestutil.ExpNFT.ClassId,
 				Owner:   s.owner.String(),
 			},
 			expectErr:    false,
@@ -280,7 +280,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsByOwnerGRPC() {
 	}
 	nftsByOwnerURL := val.APIAddress + "/cosmos/nft/v1beta1/owned_nfts/%s/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(nftsByOwnerURL, tc.args.ClassID, tc.args.Owner)
+		uri := fmt.Sprintf(nftsByOwnerURL, tc.args.ClassId, tc.args.Owner)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {
@@ -301,7 +301,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsOfClassGRPC() {
 	testCases := []struct {
 		name string
 		args struct {
-			ClassID string
+			ClassId string
 		}
 		expectErr    bool
 		expectResult []*nft.NFT
@@ -309,9 +309,9 @@ func (s *IntegrationTestSuite) TestQueryNFTsOfClassGRPC() {
 		{
 			name: "class id does not exist",
 			args: struct {
-				ClassID string
+				ClassId string
 			}{
-				ClassID: "invalid_class_id",
+				ClassId: "invalid_class_id",
 			},
 			expectErr:    false,
 			expectResult: []*nft.NFT{},
@@ -319,9 +319,9 @@ func (s *IntegrationTestSuite) TestQueryNFTsOfClassGRPC() {
 		{
 			name: "class id exist",
 			args: struct {
-				ClassID string
+				ClassId string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
+				ClassId: nfttestutil.ExpNFT.ClassId,
 			},
 			expectErr:    false,
 			expectResult: []*nft.NFT{&nfttestutil.ExpNFT},
@@ -329,7 +329,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsOfClassGRPC() {
 	}
 	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassID)
+		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassId)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {
@@ -350,8 +350,8 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 	testCases := []struct {
 		name string
 		args struct {
-			ClassID string
-			ID      string
+			ClassId string
+			Id      string
 		}
 		expectErr bool
 		errorMsg  string
@@ -359,11 +359,11 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 		{
 			name: "class id does not exist",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: "invalid_class_id",
-				ID:      nfttestutil.ExpNFT.ID,
+				ClassId: "invalid_class_id",
+				Id:      nfttestutil.ExpNFT.Id,
 			},
 			expectErr: true,
 			errorMsg:  "not found nft",
@@ -371,11 +371,11 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 		{
 			name: "nft id does not exist",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
-				ID:      "invalid_nft_id",
+				ClassId: nfttestutil.ExpNFT.ClassId,
+				Id:      "invalid_nft_id",
 			},
 			expectErr: true,
 			errorMsg:  "not found nft",
@@ -383,18 +383,18 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 		{
 			name: "exist nft",
 			args: struct {
-				ClassID string
-				ID      string
+				ClassId string
+				Id      string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
-				ID:      nfttestutil.ExpNFT.ID,
+				ClassId: nfttestutil.ExpNFT.ClassId,
+				Id:      nfttestutil.ExpNFT.Id,
 			},
 			expectErr: false,
 		},
 	}
 	nftURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(nftURL, tc.args.ClassID, tc.args.ID)
+		uri := fmt.Sprintf(nftURL, tc.args.ClassId, tc.args.Id)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {
@@ -415,7 +415,7 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 	testCases := []struct {
 		name string
 		args struct {
-			ClassID string
+			ClassId string
 		}
 		expectErr bool
 		errorMsg  string
@@ -423,9 +423,9 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 		{
 			name: "class id does not exist",
 			args: struct {
-				ClassID string
+				ClassId string
 			}{
-				ClassID: "invalid_class_id",
+				ClassId: "invalid_class_id",
 			},
 			expectErr: true,
 			errorMsg:  "not found class",
@@ -433,16 +433,16 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 		{
 			name: "class id exist",
 			args: struct {
-				ClassID string
+				ClassId string
 			}{
-				ClassID: nfttestutil.ExpNFT.ClassID,
+				ClassId: nfttestutil.ExpNFT.ClassId,
 			},
 			expectErr: false,
 		},
 	}
 	classURL := val.APIAddress + "/cosmos/nft/v1beta1/classes/%s"
 	for _, tc := range testCases {
-		uri := fmt.Sprintf(classURL, tc.args.ClassID)
+		uri := fmt.Sprintf(classURL, tc.args.ClassId)
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(uri)
 			if tc.expectErr {

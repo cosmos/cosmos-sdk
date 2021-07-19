@@ -25,19 +25,19 @@ func TestDecodeStore(t *testing.T) {
 	dec := simulation.NewDecodeStore(cdc)
 
 	class := nft.Class{
-		ID:          "ClassID",
+		Id:          "ClassID",
 		Name:        "ClassName",
 		Symbol:      "ClassSymbol",
 		Description: "ClassDescription",
-		URI:         "ClassURI",
+		Uri:         "ClassURI",
 	}
 	classBz, err := cdc.Marshal(&class)
 	require.NoError(t, err)
 
 	nft := nft.NFT{
-		ClassID: "ClassID",
-		ID:      "NFTID",
-		URI:     "NFTURI",
+		ClassId: "ClassID",
+		Id:      "NFTID",
+		Uri:     "NFTURI",
 	}
 	nftBz, err := cdc.Marshal(&nft)
 	require.NoError(t, err)

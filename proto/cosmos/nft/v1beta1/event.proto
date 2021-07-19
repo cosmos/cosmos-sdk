@@ -6,15 +6,15 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
 // EventMint is emitted on mint nft
 message EventMint {
-  string class_id = 1 [(gogoproto.customname) = "ClassID"];
-  string id       = 2 [(gogoproto.customname) = "ID"];
+  string class_id = 1;
+  string id       = 2;
   string minter   = 3;
 }
 
 // EventSend is emitted on Msg/Send
 message EventSend {
-  string class_id = 1 [(gogoproto.customname) = "ClassID"];
-  string id       = 2 [(gogoproto.customname) = "ID"];
+  string class_id = 1;
+  string id       = 2;
   string sender   = 3;
   string receiver = 4;
 }

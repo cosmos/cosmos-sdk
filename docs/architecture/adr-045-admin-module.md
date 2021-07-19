@@ -113,6 +113,7 @@ It will allow using the admin module during the first stages after a network lau
 Software upgrade mechanism allow adding the admins module to existing testnets via governance.
 
 ### Interaction with the admin module
+
 There'll be new CLI commands for admin module functionality:
 ```sh
 # submit proposal

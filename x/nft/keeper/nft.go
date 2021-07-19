@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,12 +14,6 @@ func (k Keeper) Mint(ctx sdk.Context, newNFT nft.NFT, minter sdk.AccAddress) err
 	}
 
 	if k.HasNFT(ctx, newNFT.ClassID, newNFT.ID) {
-		return sdkerrors.Wrap(nft.ErrNFTExists, newNFT.ID)
-	}
-
-	nftDenom := fmt.Sprintf("%s/%s", newNFT.ClassID, newNFT.ID)
-	_, has := k.bk.GetDenomMetaData(ctx, nftDenom)
-	if has {
 		return sdkerrors.Wrap(nft.ErrNFTExists, newNFT.ID)
 	}
 

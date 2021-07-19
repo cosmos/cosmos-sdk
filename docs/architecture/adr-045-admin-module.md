@@ -113,6 +113,7 @@ There'll be two ways to switch off the admin module:
 It will allow using the admin module during the first stages after a network launch and switcing it off later.
 
 ### Adding the admin module to existing testnets
+
 Software upgrade mechanism allow adding the admins module to existing testnets via governance.
 
 ### Interaction with the admin module

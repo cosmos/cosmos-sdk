@@ -534,6 +534,7 @@
     - [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi)
     - [ModeInfo.Single](#cosmos.tx.v1beta1.ModeInfo.Single)
     - [SignDoc](#cosmos.tx.v1beta1.SignDoc)
+    - [SignDocJSON](#cosmos.tx.v1beta1.SignDocJSON)
     - [SignerInfo](#cosmos.tx.v1beta1.SignerInfo)
     - [Tx](#cosmos.tx.v1beta1.Tx)
     - [TxBody](#cosmos.tx.v1beta1.TxBody)
@@ -7456,10 +7457,11 @@ SignMode represents a signing mode with its own security guarantees.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| SIGN_MODE_UNSPECIFIED | 0 | SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected |
-| SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx |
-| SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT |
-| SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future |
+| SIGN_MODE_UNSPECIFIED | 0 | SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected. |
+| SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx. |
+| SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT. It is currently not supported. |
+| SIGN_MODE_DIRECT_JSON | 3 | SIGN_MODE_DIRECT_JSON specifies a signing mode which uses SignDocJSON. It is verified using a canonical JSON representation of the bytes used in SIGN_MODE_DIRECT. |
+| SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future. |
 
 
  <!-- end enums -->
@@ -7575,6 +7577,28 @@ SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
 | `auth_info_bytes` | [bytes](#bytes) |  | auth_info_bytes is a protobuf serialization of an AuthInfo that matches the representation in TxRaw. |
 | `chain_id` | [string](#string) |  | chain_id is the unique identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
 | `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state |
+
+
+
+
+
+
+<a name="cosmos.tx.v1beta1.SignDocJSON"></a>
+
+### SignDocJSON
+SignDocJSON is the type used for generating sign bytes for
+SIGN_MODE_DIRECT_JSON. It is designed to be serialized as proto3 JSON
+following the rules defined here:
+https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `body` | [TxBody](#cosmos.tx.v1beta1.TxBody) |  | body is the processable content of the transaction |
+| `auth_info` | [AuthInfo](#cosmos.tx.v1beta1.AuthInfo) |  | auth_info is the authorization related content of the transaction, specifically signers, signer modes and fee |
+| `chain_id` | [string](#string) |  | chain_id is the identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
+| `account_number` | [uint64](#uint64) |  | account_number is the account number of the signing account in state |
+| `sign_doc_sha256_hash` | [bytes](#bytes) |  | sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to reduce the malleability attack surface of SIGN_MODE_DIRECT_JSON vs SIGN_MODE_DIRECT to zero. Basically this means that any discrepancy between protobuf bytes over the wire and protobuf bytes that are signed cannot be exploited. This information is obviously redundant with information already in SignDocJSON, but is included as a security check for scenarios where this information may have inadvertently been excluded. We include the hash of SignDoc rather than the full SignDoc bytes to reduce the size of SignDocJSON for scenarios where large payloads could cause problems for hardware wallets. |
 
 
 

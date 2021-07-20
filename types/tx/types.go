@@ -23,13 +23,9 @@ func (t *Tx) GetMsgs() []sdk.Msg {
 	}
 
 	anys := t.Body.Messages
-	res := make([]sdk.Msg, len(anys))
-	for i, any := range anys {
-		cached := any.GetCachedValue()
-		if cached == nil {
-			panic("Any cached value is nil. Transaction messages must be correctly packed Any values.")
-		}
-		res[i] = cached.(sdk.Msg)
+	res, err := GetMsgs(anys, "transaction")
+	if err != nil {
+		panic(err)
 	}
 	return res
 }
@@ -101,9 +97,14 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 
 	for _, msg := range t.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
-			if !seen[addr.String()] {
-				signers = append(signers, addr)
-				seen[addr.String()] = true
+			if !seen[addr] {
+				signer, err := sdk.AccAddressFromBech32(addr)
+				if err != nil {
+					panic(err)
+				}
+
+				signers = append(signers, signer)
+				seen[addr] = true
 			}
 		}
 	}
@@ -170,15 +171,7 @@ func (t *Tx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
 func (m *TxBody) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	for _, any := range m.Messages {
-		var msg sdk.Msg
-		err := unpacker.UnpackAny(any, &msg)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return UnpackInterfaces(unpacker, m.Messages)
 }
 
 // UnpackInterfaces implements the UnpackInterfaceMessages.UnpackInterfaces method
@@ -201,4 +194,23 @@ func (m *SignerInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
+}
+
+// ValidateMsg calls the `sdk.Msg.ValidateBasic()`
+// also validates all the signers are valid bech32 addresses.
+func ValidateMsg(msg sdk.Msg) error {
+	err := msg.ValidateBasic()
+	if err != nil {
+		return err
+	}
+
+	signers := msg.GetSigners()
+	for _, signer := range signers {
+		_, err = sdk.AccAddressFromBech32(signer)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

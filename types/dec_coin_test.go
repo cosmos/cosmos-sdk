@@ -618,8 +618,8 @@ func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
 
 		// Appropriate index case
 		{sdk.DecCoins{
-			sdk.NewDecCoinFromDec(testDenom1, sdk.NewDecWithPrec(50400000000000, sdk.Precision)),
-			sdk.NewDecCoinFromDec(testDenom2, sdk.NewDecWithPrec(40000000000000, sdk.Precision)),
+			sdk.DecCoin{testDenom1, sdk.NewDec(5)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(57)},
 		}, 1, testDenom2, false},
 	}
 
@@ -629,6 +629,50 @@ func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
 		} else {
 			res := tc.input.GetDenomByIndex(tc.index)
 			s.Require().Equal(tc.expectedResult, res, "Unexpected result for test case #%d, expected output: %s, input: %v", i, tc.expectedResult, tc.input)
+		}
+	}
+}
+
+func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
+	testCases := []struct {
+		input          sdk.DecCoins
+		expectedResult bool
+		msg            string
+	}{
+		// No Coins
+		{sdk.DecCoins{}, false, "No coins. Should be false."},
+
+		// One Coin - Zero value
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, false, "One coin with zero amount value. Should be false."},
+
+		// One Coin - Postive value
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, true, "One coin with positive amount. Should be true."},
+
+		// One Coin - Negative value
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(-15)}}, false, "One coin with negative amount. Should be false."},
+
+		// Multiple Coins - All positive value
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(51)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(123)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(50)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(92233720)},
+		}, true, "All positive amount. Should be true."},
+
+		// Multiple Coins - Some negative value
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(51)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(-123)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(92233720)},
+		}, false, "Not all positive amount. Should be false."},
+	}
+
+	for i, tc := range testCases {
+		if tc.expectedResult {
+			s.Require().True(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.msg)
+		} else {
+			s.Require().False(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.msg)
 		}
 	}
 }

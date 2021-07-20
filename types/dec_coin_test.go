@@ -599,3 +599,36 @@ func (s *decCoinTestSuite) TestDecCoins_Empty() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
+	testCases := []struct {
+		input          sdk.DecCoins
+		index          int
+		expectedResult string
+		expectedErr    bool
+	}{
+		// No DecCoins in Slice
+		{sdk.DecCoins{}, 0, "", true},
+
+		// When index out of bounds
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, 2, "", true},
+
+		// When negative index
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, -1, "", true},
+
+		// Appropriate index case
+		{sdk.DecCoins{
+			sdk.NewDecCoinFromDec(testDenom1, sdk.NewDecWithPrec(50400000000000, sdk.Precision)),
+			sdk.NewDecCoinFromDec(testDenom2, sdk.NewDecWithPrec(40000000000000, sdk.Precision)),
+		}, 1, testDenom2, false},
+	}
+
+	for i, tc := range testCases {
+		if tc.expectedErr {
+			s.Require().Panics(func() { tc.input.GetDenomByIndex(tc.index) }, "Test should have panicked")
+		} else {
+			res := tc.input.GetDenomByIndex(tc.index)
+			s.Require().Equal(tc.expectedResult, res, "Unexpected result for test case #%d, expected output: %s, input: %v", i, tc.expectedResult, tc.input)
+		}
+	}
+}

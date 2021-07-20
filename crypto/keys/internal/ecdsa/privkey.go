@@ -87,7 +87,7 @@ func (sk *PrivKey) Bytes() []byte {
 func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 	digest := sha256.Sum256(msg)
-	r, s, err := ecdsa.Sign( rand.Reader, &sk.PrivateKey, digest[:] )
+	r, s, err := ecdsa.Sign(rand.Reader, &sk.PrivateKey, digest[:])
 
 	if err != nil {
 
@@ -95,7 +95,7 @@ func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 	}
 
-	normS := NormalizeS( s )
+	normS := NormalizeS(s)
 	var b cryptobyte.Builder
 
 	b.AddASN1(asn1.SEQUENCE, func(b *cryptobyte.Builder) {

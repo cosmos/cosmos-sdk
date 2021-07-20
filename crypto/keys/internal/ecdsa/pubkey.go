@@ -46,9 +46,19 @@ func (pk *PubKey) Bytes() []byte {
 }
 
 // VerifySignature checks if sig is a valid ECDSA signature for msg.
+// This includes checking for low-s normalized signatures
+// where the s integer component of the signature is in the
+// lower half of the curve order
+
 func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	s := new(signature)
+
 	if _, err := asn1.Unmarshal(sig, s); err != nil || s == nil {
+		return false
+	}
+
+	// if not low-s, then fail validation
+	if !IsSNormalized( s.S ){
 		return false
 	}
 

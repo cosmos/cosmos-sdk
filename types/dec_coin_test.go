@@ -580,3 +580,22 @@ func (s *decCoinTestSuite) TestDecCoins_AddDecCoinWithIsValid() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_Empty() {
+	testCases := []struct {
+		input          sdk.DecCoins
+		expectedResult bool
+		msg            string
+	}{
+		{sdk.DecCoins{}, true, "No coins as expected."},
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, false, "DecCoins is not empty"},
+	}
+
+	for _, tc := range testCases {
+		if tc.expectedResult {
+			s.Require().True(tc.input.Empty(), tc.msg)
+		} else {
+			s.Require().False(tc.input.Empty(), tc.msg)
+		}
+	}
+}

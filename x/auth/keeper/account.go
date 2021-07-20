@@ -5,6 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+type dummy struct{}
+
 // NewAccountWithAddress implements AccountKeeperI.
 func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	acc := ak.proto()

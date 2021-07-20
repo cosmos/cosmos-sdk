@@ -109,6 +109,31 @@ func SetupWithGenesisAccounts(t *testing.T, isCheckTx bool, genAccs []authtypes.
 // account. A Nop logger is set in SimApp.
 func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	app, genesisState := setup(true, 5)
+
+	stateBytes := SetupGenesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+
+	// init chain will set the validator set and initialize the genesis accounts
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
+		},
+	)
+
+	// commit genesis changes
+	app.Commit()
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		Height:             app.LastBlockHeight() + 1,
+		AppHash:            app.LastCommitID().Hash,
+		ValidatorsHash:     valSet.Hash(),
+		NextValidatorsHash: valSet.Hash(),
+	}})
+
+	return app
+}
+
+func SetupGenesisStateWithValSet(t *testing.T, app *SimApp, genesisState GenesisState, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) []byte {
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
@@ -174,25 +199,8 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 		require.NoError(t, err)
 	}
 
-	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
+	return stateBytes
 
-	// commit genesis changes
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
-		NextValidatorsHash: valSet.Hash(),
-	}})
-
-	return app
 }
 
 // SetupWithGenesisAccounts initializes a new SimApp with the provided genesis

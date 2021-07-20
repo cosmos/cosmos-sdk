@@ -10,13 +10,17 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -36,9 +40,41 @@ import (
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balances := []banktypes.Balance{
+		{
+			Address: acc.GetAddress().String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+		},
+	}
+
 	db := dbm.NewMemDB()
+	encCfg := MakeTestEncodingConfig()
 	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	genesisState := NewDefaultGenesisState(encCfg.Codec)
+	genAccs := []authtypes.GenesisAccount{acc}
+
+	stateBytes := SetupGenesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+
+	// init chain will set the validator set and initialize the genesis accounts
+	app.InitChain(
+		abci.RequestInitChain{
+			Validators:      []abci.ValidatorUpdate{},
+			ConsensusParams: DefaultConsensusParams,
+			AppStateBytes:   stateBytes,
+		},
+	)
 
 	for acc := range maccPerms {
 		require.True(
@@ -48,17 +84,6 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		)
 	}
 
-	genesisState := NewDefaultGenesisState(encCfg.Codec)
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
-	require.NoError(t, err)
-
-	// Initialize the chain
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
-		},
-	)
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called

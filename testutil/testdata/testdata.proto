@@ -35,3 +35,8 @@ message BadMultiSignature {
   repeated bytes signatures               = 1;
   bytes          malicious_field          = 5;
 }
+
+message TableModel {
+  uint64 id = 1;
+  string name = 2;
+}

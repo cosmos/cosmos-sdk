@@ -54,7 +54,7 @@ type Iterator interface {
 	io.Closer
 }
 
-// IndexKeyCodec defines the encoding/ decoding methods for building/ splitting index keys.
+// IndexKeyCodec defines the encoding/decoding methods for building/splitting index keys.
 type IndexKeyCodec interface {
 	// BuildIndexKey encodes a searchable key and the target RowID.
 	BuildIndexKey(searchableKey []byte, rowID RowID) []byte

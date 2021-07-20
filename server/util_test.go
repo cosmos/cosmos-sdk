@@ -18,8 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
 var cancelledInPreRun = errors.New("Cancelled in prerun")
@@ -414,7 +414,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	encCfg := simapp.MakeTestEncodingConfig()
 
 	// Run InitCmd to create necessary config files.
-	clientCtx := client.Context{}.WithHomeDir(tempDir).WithJSONCodec(encCfg.Marshaler)
+	clientCtx := client.Context{}.WithHomeDir(tempDir).WithCodec(encCfg.Codec)
 	serverCtx := server.NewDefaultContext()
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)

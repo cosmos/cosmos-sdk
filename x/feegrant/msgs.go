@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
@@ -57,12 +57,8 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 }
 
 // GetSigners gets the granter account associated with an allowance
-func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{granter}
+func (msg MsgGrantAllowance) GetSigners() []string {
+	return []string{msg.Granter}
 }
 
 // Type implements the LegacyMsg.Type method.
@@ -120,12 +116,8 @@ func (msg MsgRevokeAllowance) ValidateBasic() error {
 
 // GetSigners gets the granter address associated with an Allowance
 // to revoke.
-func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
-	granter, err := sdk.AccAddressFromBech32(msg.Granter)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{granter}
+func (msg MsgRevokeAllowance) GetSigners() []string {
+	return []string{msg.Granter}
 }
 
 // Type implements the LegacyMsg.Type method.

@@ -83,3 +83,23 @@ func (ak AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
+
+func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	// do we need use  UnwrapSDKContext here?
+	bech32Prefix := ak.GetBech32Prefix()
+
+	return &types.Bech32PrefixResponse{bech32Prefix}, nil
+
+}
+
+func (ak AccountKeeper) Bech32AccString(ctx context.Context, req *types.Bech32AccStringRequest) (*types.Bech32AccStringResponse, error) {
+
+}
+
+func (ak AccountKeeper) AccStringBech32(ctx context.Context, req *types.AccStringBech32Request) (*types.AccStringBech32Response, error)
+
+}

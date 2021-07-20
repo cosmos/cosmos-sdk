@@ -26,6 +26,23 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/params";
   }
+
+  // define 3 rpc methods
+
+  // Bech32 queries bech32Prefix
+  rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
+  }
+
+  // Bech32AccString converts Bech32 to Account string
+  rpc Bech32AccString(Bech32AccStringRequest) returns (Bech32AccStringResponse) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
+  }
+
+  // AccStringBech32 converts Account string to Bech32
+  rpc AccStringBech32(AccStringBech32Request) returns (AccStringBech32Response) {
+    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
+  }
 }
 
 // QueryAccountsRequest is the request type for the Query/Accounts RPC method.
@@ -66,3 +83,34 @@ message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
+
+// should I include account in Bech32PrefixRequest Account or Address?
+message Bech32PrefixRequest  {
+  string address = 1;
+}
+
+message Bech32PrefixResponse  {
+  string bech32_prefix = 1;
+}
+
+message Bech32AccStringRequest {
+  string bech32 = 1;
+}
+
+message Bech32AccStringResponse {
+  string account = 1;
+}
+
+message AccStringBech32Request {
+  string account = 1;
+}
+
+message AccStringBech32Response {
+  string bech32 = 1;
+}
+
+
+
+
+
+

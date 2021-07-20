@@ -8,16 +8,14 @@ sidebar_position: 1
 Read and understand all the in-place store migration documentation before you run a migration on a live chain.
 :::
 
-:::note Synopsis
-Upgrade your app modules smoothly with custom in-place store migration logic.
-:::
-
-The Cosmos SDK uses two methods to perform upgrades:
+Upgrade your app modules smoothly with custom in-place store migration logic. {synopsis}
 
 * Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file.
 
-* Perform upgrades in place, which significantly decrease the upgrade time for chains with a larger state. Use the [Module Upgrade Guide](../../build/building-modules/13-upgrade.md) to set up your application modules to take advantage of in-place upgrades.
+- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See [Chain Upgrade Guide to v0.42](/v0.42/migrations/chain-upgrade-guide-040.html).
 
+- Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Module Upgrade Guide](../building-modules/upgrade.md) to set up your application modules to take advantage of in-place upgrades.
+  
 This document provides steps to use the In-Place Store Migrations upgrade method.
 
 ## Tracking Module Versions
@@ -63,13 +61,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 })
 ```
 
-To learn more about configuring migration scripts for your modules, see the [Module Upgrade Guide](../../build/building-modules/13-upgrade.md).
-
-### Order Of Migrations
-
-By default, all migrations are run in module name alphabetical ascending order, except `x/auth` which is run last. The reason is state dependencies between x/auth and other modules (you can read more in [issue #10606](https://github.com/cosmos/cosmos-sdk/issues/10606)).
-
-If you want to change the order of migration, then you should call `app.mm.SetOrderMigrations(module1, module2, ...)` in your app.go file. The function will panic if you forget to include a module in the argument list.
+To learn more about configuring migration scripts for your modules, see the [Module Upgrade Guide](../building-modules/upgrade.md).
 
 ## Adding New Modules During Upgrades
 

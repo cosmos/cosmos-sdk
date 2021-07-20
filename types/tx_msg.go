@@ -1,3 +1,11 @@
+/*
+ * @Description:
+ * @Author: Zhiqiang Zhang
+ * @Github: https://github.com/dreamer-zq
+ * @Date: 2021-07-02 14:36:36
+ * @LastEditors: Zhiqiang Zhang
+ * @LastEditTime: 2021-07-07 10:56:35
+ */
 package types
 
 import (
@@ -15,10 +23,10 @@ type (
 		// doesn't require access to any other information.
 		ValidateBasic() error
 
-		// Signers returns the addrs of signers that must sign.
+		// Signers returns the bech32-encoded addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
 		// CONTRACT: Returns addrs in some deterministic order.
-		GetSigners() []AccAddress
+		GetSigners() []string
 	}
 
 	// Fee defines an interface for an application application-defined concrete

@@ -4,82 +4,22 @@ package cosmos.nft.v1beta1;
 import "cosmos/nft/v1beta1/nft.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/nft/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
 // Msg defines the nft Msg service.
 service Msg {
-  // Issue defines a method to create a new nft type.
-  rpc Issue(MsgIssue) returns (MsgIssueResponse);
-
-  // Mint defines a method to mint new nft on a specific nft type.
-  rpc Mint(MsgMint) returns (MsgMintResponse);
-
-  // Edit defines a method to edit a nft on a specific type and id.
-  rpc Edit(MsgEdit) returns (MsgEditResponse);
-
   // Send defines a method to send a nft from one account to another account.
   rpc Send(MsgSend) returns (MsgSendResponse);
-
-  // MsgBurn defines a method to burn a nft from a specific account.
-  rpc Burn(MsgBurn) returns (MsgBurnResponse);
 }
-
-// MsgIssue represents a message to create a new nft type.
-message MsgIssue {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
-
-  cosmos.nft.v1beta1.Metadata metadata = 1;
-  string                      issuer   = 2;
-}
-
-// MsgIssueResponse defines the Msg/Issue response type.
-message MsgIssueResponse {}
-
-// MsgMint represents a message to mint new nft on a specific nft type.
-message MsgMint {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
-
-  cosmos.nft.v1beta1.NFT nft    = 1 [(gogoproto.customname) = "NFT"];
-  string                 minter = 2;
-}
-
-// MsgMintResponse defines the Msg/Mint response type.
-message MsgMintResponse {}
-
-// MsgEdit represents a message to edit a nft on a specific type and id.
-message MsgEdit {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
-  cosmos.nft.v1beta1.NFT nft          = 1 [(gogoproto.customname) = "NFT"];
-  string                 editor       = 2;
-}
-
-// MsgEditResponse defines the Msg/Edit response type.
-message MsgEditResponse {}
-
 // MsgSend represents a message to send a nft from one account to another account.
 message MsgSend {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = true;
 
-  string type     = 1;
-  string id       = 2 [(gogoproto.customname) = "ID"];
+  string class_id = 1;
+  string id       = 2;
   string sender   = 3;
   string receiver = 4;
 }
 // MsgSendResponse defines the Msg/Send response type.
 message MsgSendResponse {}
-
-// MsgSend represents a message to burn a nft from one account.
-message MsgBurn {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
-
-  string type      = 1;
-  string id        = 2 [(gogoproto.customname) = "ID"];
-  string destroyer = 3;
-}
-// MsgBurnResponse defines the Msg/Burn response type.
-message MsgBurnResponse {}

@@ -387,6 +387,76 @@
   
     - [Msg](#cosmos.gov.v1beta1.Msg)
   
+- [cosmos/group/v1beta1/types.proto](#cosmos/group/v1beta1/types.proto)
+    - [GroupAccountInfo](#cosmos.group.v1beta1.GroupAccountInfo)
+    - [GroupInfo](#cosmos.group.v1beta1.GroupInfo)
+    - [GroupMember](#cosmos.group.v1beta1.GroupMember)
+    - [Member](#cosmos.group.v1beta1.Member)
+    - [Members](#cosmos.group.v1beta1.Members)
+    - [Proposal](#cosmos.group.v1beta1.Proposal)
+    - [Tally](#cosmos.group.v1beta1.Tally)
+    - [ThresholdDecisionPolicy](#cosmos.group.v1beta1.ThresholdDecisionPolicy)
+    - [Vote](#cosmos.group.v1beta1.Vote)
+  
+    - [Choice](#cosmos.group.v1beta1.Choice)
+    - [Proposal.ExecutorResult](#cosmos.group.v1beta1.Proposal.ExecutorResult)
+    - [Proposal.Result](#cosmos.group.v1beta1.Proposal.Result)
+    - [Proposal.Status](#cosmos.group.v1beta1.Proposal.Status)
+  
+- [cosmos/group/v1beta1/query.proto](#cosmos/group/v1beta1/query.proto)
+    - [QueryGroupAccountInfoRequest](#cosmos.group.v1beta1.QueryGroupAccountInfoRequest)
+    - [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse)
+    - [QueryGroupAccountsByAdminRequest](#cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest)
+    - [QueryGroupAccountsByAdminResponse](#cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse)
+    - [QueryGroupAccountsByGroupRequest](#cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest)
+    - [QueryGroupAccountsByGroupResponse](#cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse)
+    - [QueryGroupInfoRequest](#cosmos.group.v1beta1.QueryGroupInfoRequest)
+    - [QueryGroupInfoResponse](#cosmos.group.v1beta1.QueryGroupInfoResponse)
+    - [QueryGroupMembersRequest](#cosmos.group.v1beta1.QueryGroupMembersRequest)
+    - [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse)
+    - [QueryGroupsByAdminRequest](#cosmos.group.v1beta1.QueryGroupsByAdminRequest)
+    - [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse)
+    - [QueryProposalRequest](#cosmos.group.v1beta1.QueryProposalRequest)
+    - [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse)
+    - [QueryProposalsByGroupAccountRequest](#cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest)
+    - [QueryProposalsByGroupAccountResponse](#cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse)
+    - [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest)
+    - [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse)
+    - [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest)
+    - [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse)
+    - [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest)
+    - [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse)
+  
+    - [Query](#cosmos.group.v1beta1.Query)
+  
+- [cosmos/group/v1beta1/tx.proto](#cosmos/group/v1beta1/tx.proto)
+    - [MsgCreateGroupAccountRequest](#cosmos.group.v1beta1.MsgCreateGroupAccountRequest)
+    - [MsgCreateGroupAccountResponse](#cosmos.group.v1beta1.MsgCreateGroupAccountResponse)
+    - [MsgCreateGroupRequest](#cosmos.group.v1beta1.MsgCreateGroupRequest)
+    - [MsgCreateGroupResponse](#cosmos.group.v1beta1.MsgCreateGroupResponse)
+    - [MsgCreateProposalRequest](#cosmos.group.v1beta1.MsgCreateProposalRequest)
+    - [MsgCreateProposalResponse](#cosmos.group.v1beta1.MsgCreateProposalResponse)
+    - [MsgExecRequest](#cosmos.group.v1beta1.MsgExecRequest)
+    - [MsgExecResponse](#cosmos.group.v1beta1.MsgExecResponse)
+    - [MsgUpdateGroupAccountAdminRequest](#cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest)
+    - [MsgUpdateGroupAccountAdminResponse](#cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse)
+    - [MsgUpdateGroupAccountDecisionPolicyRequest](#cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest)
+    - [MsgUpdateGroupAccountDecisionPolicyResponse](#cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse)
+    - [MsgUpdateGroupAccountMetadataRequest](#cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest)
+    - [MsgUpdateGroupAccountMetadataResponse](#cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse)
+    - [MsgUpdateGroupAdminRequest](#cosmos.group.v1beta1.MsgUpdateGroupAdminRequest)
+    - [MsgUpdateGroupAdminResponse](#cosmos.group.v1beta1.MsgUpdateGroupAdminResponse)
+    - [MsgUpdateGroupMembersRequest](#cosmos.group.v1beta1.MsgUpdateGroupMembersRequest)
+    - [MsgUpdateGroupMembersResponse](#cosmos.group.v1beta1.MsgUpdateGroupMembersResponse)
+    - [MsgUpdateGroupMetadataRequest](#cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest)
+    - [MsgUpdateGroupMetadataResponse](#cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse)
+    - [MsgVoteRequest](#cosmos.group.v1beta1.MsgVoteRequest)
+    - [MsgVoteResponse](#cosmos.group.v1beta1.MsgVoteResponse)
+  
+    - [Exec](#cosmos.group.v1beta1.Exec)
+  
+    - [Msg](#cosmos.group.v1beta1.Msg)
+  
 - [cosmos/mint/v1beta1/mint.proto](#cosmos/mint/v1beta1/mint.proto)
     - [Minter](#cosmos.mint.v1beta1.Minter)
     - [Params](#cosmos.mint.v1beta1.Params)
@@ -404,41 +474,36 @@
   
     - [Query](#cosmos.mint.v1beta1.Query)
   
+- [cosmos/nft/v1beta1/event.proto](#cosmos/nft/v1beta1/event.proto)
+    - [EventSend](#cosmos.nft.v1beta1.EventSend)
+  
 - [cosmos/nft/v1beta1/nft.proto](#cosmos/nft/v1beta1/nft.proto)
-    - [Metadata](#cosmos.nft.v1beta1.Metadata)
+    - [Class](#cosmos.nft.v1beta1.Class)
     - [NFT](#cosmos.nft.v1beta1.NFT)
   
 - [cosmos/nft/v1beta1/genesis.proto](#cosmos/nft/v1beta1/genesis.proto)
-    - [Contract](#cosmos.nft.v1beta1.Contract)
+    - [Entry](#cosmos.nft.v1beta1.Entry)
     - [GenesisState](#cosmos.nft.v1beta1.GenesisState)
   
 - [cosmos/nft/v1beta1/query.proto](#cosmos/nft/v1beta1/query.proto)
     - [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest)
     - [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse)
+    - [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest)
+    - [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse)
+    - [QueryClassesRequest](#cosmos.nft.v1beta1.QueryClassesRequest)
+    - [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse)
     - [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest)
     - [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse)
-    - [QueryNFTsOfRequest](#cosmos.nft.v1beta1.QueryNFTsOfRequest)
-    - [QueryNFTsOfResponse](#cosmos.nft.v1beta1.QueryNFTsOfResponse)
-    - [QueryNFTsRequest](#cosmos.nft.v1beta1.QueryNFTsRequest)
-    - [QueryNFTsResponse](#cosmos.nft.v1beta1.QueryNFTsResponse)
+    - [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest)
+    - [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse)
+    - [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest)
+    - [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse)
     - [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest)
     - [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse)
-    - [QueryTypeRequest](#cosmos.nft.v1beta1.QueryTypeRequest)
-    - [QueryTypeResponse](#cosmos.nft.v1beta1.QueryTypeResponse)
-    - [QueryTypesRequest](#cosmos.nft.v1beta1.QueryTypesRequest)
-    - [QueryTypesResponse](#cosmos.nft.v1beta1.QueryTypesResponse)
   
     - [Query](#cosmos.nft.v1beta1.Query)
   
 - [cosmos/nft/v1beta1/tx.proto](#cosmos/nft/v1beta1/tx.proto)
-    - [MsgBurn](#cosmos.nft.v1beta1.MsgBurn)
-    - [MsgBurnResponse](#cosmos.nft.v1beta1.MsgBurnResponse)
-    - [MsgEdit](#cosmos.nft.v1beta1.MsgEdit)
-    - [MsgEditResponse](#cosmos.nft.v1beta1.MsgEditResponse)
-    - [MsgIssue](#cosmos.nft.v1beta1.MsgIssue)
-    - [MsgIssueResponse](#cosmos.nft.v1beta1.MsgIssueResponse)
-    - [MsgMint](#cosmos.nft.v1beta1.MsgMint)
-    - [MsgMintResponse](#cosmos.nft.v1beta1.MsgMintResponse)
     - [MsgSend](#cosmos.nft.v1beta1.MsgSend)
     - [MsgSendResponse](#cosmos.nft.v1beta1.MsgSendResponse)
   
@@ -1607,6 +1672,8 @@ a basic token.
 | `display` | [string](#string) |  | display indicates the suggested denom that should be displayed in clients. |
 | `name` | [string](#string) |  | name defines the name of the token (eg: Cosmos Atom) |
 | `symbol` | [string](#string) |  | symbol is the token symbol usually shown on exchanges (eg: ATOM). This can be the same as the display. |
+| `uri` | [string](#string) |  | URI to a document (on or off-chain) that contains additional information. Optional. |
+| `uri_hash` | [string](#string) |  | URIHash is a sha256 hash of a document pointed by URI. It's used to verify that the document didn't change. Optional. |
 
 
 
@@ -1749,15 +1816,20 @@ GenesisState defines the bank module's genesis state.
 <a name="cosmos.bank.v1beta1.DenomOwner"></a>
 
 ### DenomOwner
-
 DenomOwner defines structure representing an account that owns or holds a
 particular denominated token. It contains the account address and account
 balance of the denominated token.
+
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  | address defines the address that owns a particular denomination. |
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance is the balance of the denominated coin for an account. |
+
+
+
+
+
 
 <a name="cosmos.bank.v1beta1.QueryAllBalancesRequest"></a>
 
@@ -5623,6 +5695,996 @@ Msg defines the bank Msg service.
 
 
 
+<a name="cosmos/group/v1beta1/types.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/group/v1beta1/types.proto
+
+
+
+<a name="cosmos.group.v1beta1.GroupAccountInfo"></a>
+
+### GroupAccountInfo
+GroupAccountInfo represents the high-level on-chain information for a group account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the group account address. |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the group account. |
+| `version` | [uint64](#uint64) |  | version is used to track changes to a group's GroupAccountInfo structure that would create a different result on a running proposal. |
+| `decision_policy` | [google.protobuf.Any](#google.protobuf.Any) |  | decision_policy specifies the group account's decision policy. |
+| `derivation_key` | [bytes](#bytes) |  | derivation_key is the "derivation" key of the group account, which is needed to derive the group root module key and execute proposals. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.GroupInfo"></a>
+
+### GroupInfo
+GroupInfo represents the high-level on-chain information for a group.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `admin` | [string](#string) |  | admin is the account address of the group's admin. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the group. |
+| `version` | [uint64](#uint64) |  | version is used to track changes to a group's membership structure that would break existing proposals. Whenever any members weight is changed, or any member is added or removed this version is incremented and will cause proposals based on older versions of this group to fail |
+| `total_weight` | [string](#string) |  | total_weight is the sum of the group members' weights. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.GroupMember"></a>
+
+### GroupMember
+GroupMember represents the relationship between a group and a member.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `member` | [Member](#cosmos.group.v1beta1.Member) |  | member is the member data. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.Member"></a>
+
+### Member
+Member represents a group member with an account address,
+non-zero weight and metadata.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the member's account address. |
+| `weight` | [string](#string) |  | weight is the member's voting weight that should be greater than 0. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the member. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.Members"></a>
+
+### Members
+Members defines a repeated slice of Member objects.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `members` | [Member](#cosmos.group.v1beta1.Member) | repeated | members is the list of members. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.Proposal"></a>
+
+### Proposal
+Proposal defines a group proposal. Any member of a group can submit a proposal
+for a group account to decide upon.
+A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
+passes as well as some optional metadata associated with the proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the unique id of the proposal. |
+| `address` | [string](#string) |  | address is the group account address. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the proposal. |
+| `proposers` | [string](#string) | repeated | proposers are the account addresses of the proposers. |
+| `submitted_at` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | submitted_at is a timestamp specifying when a proposal was submitted. |
+| `group_version` | [uint64](#uint64) |  | group_version tracks the version of the group that this proposal corresponds to. When group membership is changed, existing proposals from previous group versions will become invalid. |
+| `group_account_version` | [uint64](#uint64) |  | group_account_version tracks the version of the group account that this proposal corresponds to. When a decision policy is changed, existing proposals from previous policy versions will become invalid. |
+| `status` | [Proposal.Status](#cosmos.group.v1beta1.Proposal.Status) |  | Status represents the high level position in the life cycle of the proposal. Initial value is Submitted. |
+| `result` | [Proposal.Result](#cosmos.group.v1beta1.Proposal.Result) |  | result is the final result based on the votes and election rule. Initial value is unfinalized. The result is persisted so that clients can always rely on this state and not have to replicate the logic. |
+| `vote_state` | [Tally](#cosmos.group.v1beta1.Tally) |  | vote_state contains the sums of all weighted votes for this proposal. |
+| `timeout` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | timeout is the timestamp of the block where the proposal execution times out. Header times of the votes and execution messages must be before this end time to be included in the election. After the timeout timestamp the proposal can not be executed anymore and should be considered pending delete. |
+| `executor_result` | [Proposal.ExecutorResult](#cosmos.group.v1beta1.Proposal.ExecutorResult) |  | executor_result is the final result based on the votes and election rule. Initial value is NotRun. |
+| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated | msgs is a list of Msgs that will be executed if the proposal passes. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.Tally"></a>
+
+### Tally
+Tally represents the sum of weighted votes.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `yes_count` | [string](#string) |  | yes_count is the weighted sum of yes votes. |
+| `no_count` | [string](#string) |  | no_count is the weighted sum of no votes. |
+| `abstain_count` | [string](#string) |  | abstain_count is the weighted sum of abstainers |
+| `veto_count` | [string](#string) |  | veto_count is the weighted sum of vetoes. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.ThresholdDecisionPolicy"></a>
+
+### ThresholdDecisionPolicy
+ThresholdDecisionPolicy implements the DecisionPolicy interface
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `threshold` | [string](#string) |  | threshold is the minimum weighted sum of yes votes that must be met or exceeded for a proposal to succeed. |
+| `timeout` | [google.protobuf.Duration](#google.protobuf.Duration) |  | timeout is the duration from submission of a proposal to the end of voting period Within this times votes and exec messages can be submitted. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.Vote"></a>
+
+### Vote
+Vote represents a vote for a proposal.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal is the unique ID of the proposal. |
+| `voter` | [string](#string) |  | voter is the account address of the voter. |
+| `choice` | [Choice](#cosmos.group.v1beta1.Choice) |  | choice is the voter's choice on the proposal. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the vote. |
+| `submitted_at` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | submitted_at is the timestamp when the vote was submitted. |
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="cosmos.group.v1beta1.Choice"></a>
+
+### Choice
+Choice defines available types of choices for voting.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| CHOICE_UNSPECIFIED | 0 | CHOICE_UNSPECIFIED defines a no-op voting choice. |
+| CHOICE_NO | 1 | CHOICE_NO defines a no voting choice. |
+| CHOICE_YES | 2 | CHOICE_YES defines a yes voting choice. |
+| CHOICE_ABSTAIN | 3 | CHOICE_ABSTAIN defines an abstaining voting choice. |
+| CHOICE_VETO | 4 | CHOICE_VETO defines a voting choice with veto. |
+
+
+
+<a name="cosmos.group.v1beta1.Proposal.ExecutorResult"></a>
+
+### Proposal.ExecutorResult
+ExecutorResult defines types of proposal executor results.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| EXECUTOR_RESULT_UNSPECIFIED | 0 | An empty value is not allowed. |
+| EXECUTOR_RESULT_NOT_RUN | 1 | We have not yet run the executor. |
+| EXECUTOR_RESULT_SUCCESS | 2 | The executor was successful and proposed action updated state. |
+| EXECUTOR_RESULT_FAILURE | 3 | The executor returned an error and proposed action didn't update state. |
+
+
+
+<a name="cosmos.group.v1beta1.Proposal.Result"></a>
+
+### Proposal.Result
+Result defines types of proposal results.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| RESULT_UNSPECIFIED | 0 | An empty value is invalid and not allowed |
+| RESULT_UNFINALIZED | 1 | Until a final tally has happened the status is unfinalized |
+| RESULT_ACCEPTED | 2 | Final result of the tally |
+| RESULT_REJECTED | 3 | Final result of the tally |
+
+
+
+<a name="cosmos.group.v1beta1.Proposal.Status"></a>
+
+### Proposal.Status
+Status defines proposal statuses.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| STATUS_UNSPECIFIED | 0 | An empty value is invalid and not allowed. |
+| STATUS_SUBMITTED | 1 | Initial status of a proposal when persisted. |
+| STATUS_CLOSED | 2 | Final status of a proposal when the final tally was executed. |
+| STATUS_ABORTED | 3 | Final status of a proposal when the group was modified before the final tally. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/group/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/group/v1beta1/query.proto
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupAccountInfoRequest"></a>
+
+### QueryGroupAccountInfoRequest
+QueryGroupAccountInfoRequest is the Query/GroupAccountInfo request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address of the group account. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupAccountInfoResponse"></a>
+
+### QueryGroupAccountInfoResponse
+QueryGroupAccountInfoResponse is the Query/GroupAccountInfo response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `info` | [GroupAccountInfo](#cosmos.group.v1beta1.GroupAccountInfo) |  | info is the GroupAccountInfo for the group account. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest"></a>
+
+### QueryGroupAccountsByAdminRequest
+QueryGroupAccountsByAdminRequest is the Query/GroupAccountsByAdmin request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the admin address of the group account. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse"></a>
+
+### QueryGroupAccountsByAdminResponse
+QueryGroupAccountsByAdminResponse is the Query/GroupAccountsByAdmin response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_accounts` | [GroupAccountInfo](#cosmos.group.v1beta1.GroupAccountInfo) | repeated | group_accounts are the group accounts info with provided admin. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest"></a>
+
+### QueryGroupAccountsByGroupRequest
+QueryGroupAccountsByGroupRequest is the Query/GroupAccountsByGroup request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group account's group. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse"></a>
+
+### QueryGroupAccountsByGroupResponse
+QueryGroupAccountsByGroupResponse is the Query/GroupAccountsByGroup response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_accounts` | [GroupAccountInfo](#cosmos.group.v1beta1.GroupAccountInfo) | repeated | group_accounts are the group accounts info associated with the provided group. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupInfoRequest"></a>
+
+### QueryGroupInfoRequest
+QueryGroupInfoRequest is the Query/GroupInfo request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupInfoResponse"></a>
+
+### QueryGroupInfoResponse
+QueryGroupInfoResponse is the Query/GroupInfo response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `info` | [GroupInfo](#cosmos.group.v1beta1.GroupInfo) |  | info is the GroupInfo for the group. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupMembersRequest"></a>
+
+### QueryGroupMembersRequest
+QueryGroupMembersRequest is the Query/GroupMembersRequest request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupMembersResponse"></a>
+
+### QueryGroupMembersResponse
+QueryGroupMembersResponse is the Query/GroupMembersResponse response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `members` | [GroupMember](#cosmos.group.v1beta1.GroupMember) | repeated | members are the members of the group with given group_id. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupsByAdminRequest"></a>
+
+### QueryGroupsByAdminRequest
+QueryGroupsByAdminRequest is the Query/GroupsByAdminRequest request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of a group's admin. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryGroupsByAdminResponse"></a>
+
+### QueryGroupsByAdminResponse
+QueryGroupsByAdminResponse is the Query/GroupsByAdminResponse response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `groups` | [GroupInfo](#cosmos.group.v1beta1.GroupInfo) | repeated | groups are the groups info with the provided admin. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryProposalRequest"></a>
+
+### QueryProposalRequest
+QueryProposalRequest is the Query/Proposal request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the unique ID of a proposal. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryProposalResponse"></a>
+
+### QueryProposalResponse
+QueryProposalResponse is the Query/Proposal response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal` | [Proposal](#cosmos.group.v1beta1.Proposal) |  | proposal is the proposal info. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest"></a>
+
+### QueryProposalsByGroupAccountRequest
+QueryProposalsByGroupAccountRequest is the Query/ProposalByGroupAccount request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the group account address related to proposals. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse"></a>
+
+### QueryProposalsByGroupAccountResponse
+QueryProposalsByGroupAccountResponse is the Query/ProposalByGroupAccount response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposals` | [Proposal](#cosmos.group.v1beta1.Proposal) | repeated | proposals are the proposals with given group account. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryVoteByProposalVoterRequest"></a>
+
+### QueryVoteByProposalVoterRequest
+QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the unique ID of a proposal. |
+| `voter` | [string](#string) |  | voter is a proposal voter account address. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryVoteByProposalVoterResponse"></a>
+
+### QueryVoteByProposalVoterResponse
+QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `vote` | [Vote](#cosmos.group.v1beta1.Vote) |  | vote is the vote with given proposal_id and voter. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryVotesByProposalRequest"></a>
+
+### QueryVotesByProposalRequest
+QueryVotesByProposalResponse is the Query/VotesByProposal request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal_id is the unique ID of a proposal. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryVotesByProposalResponse"></a>
+
+### QueryVotesByProposalResponse
+QueryVotesByProposalResponse is the Query/VotesByProposal response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `votes` | [Vote](#cosmos.group.v1beta1.Vote) | repeated | votes are the list of votes for given proposal_id. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryVotesByVoterRequest"></a>
+
+### QueryVotesByVoterRequest
+QueryVotesByVoterResponse is the Query/VotesByVoter request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `voter` | [string](#string) |  | voter is a proposal voter account address. |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.QueryVotesByVoterResponse"></a>
+
+### QueryVotesByVoterResponse
+QueryVotesByVoterResponse is the Query/VotesByVoter response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `votes` | [Vote](#cosmos.group.v1beta1.Vote) | repeated | votes are the list of votes by given voter. |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.group.v1beta1.Query"></a>
+
+### Query
+Query is the cosmos.group.v1beta1 Query service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `GroupInfo` | [QueryGroupInfoRequest](#cosmos.group.v1beta1.QueryGroupInfoRequest) | [QueryGroupInfoResponse](#cosmos.group.v1beta1.QueryGroupInfoResponse) | GroupInfo queries group info based on group id. | |
+| `GroupAccountInfo` | [QueryGroupAccountInfoRequest](#cosmos.group.v1beta1.QueryGroupAccountInfoRequest) | [QueryGroupAccountInfoResponse](#cosmos.group.v1beta1.QueryGroupAccountInfoResponse) | GroupAccountInfo queries group account info based on group account address. | |
+| `GroupMembers` | [QueryGroupMembersRequest](#cosmos.group.v1beta1.QueryGroupMembersRequest) | [QueryGroupMembersResponse](#cosmos.group.v1beta1.QueryGroupMembersResponse) | GroupMembers queries members of a group | |
+| `GroupsByAdmin` | [QueryGroupsByAdminRequest](#cosmos.group.v1beta1.QueryGroupsByAdminRequest) | [QueryGroupsByAdminResponse](#cosmos.group.v1beta1.QueryGroupsByAdminResponse) | GroupsByAdmin queries groups by admin address. | |
+| `GroupAccountsByGroup` | [QueryGroupAccountsByGroupRequest](#cosmos.group.v1beta1.QueryGroupAccountsByGroupRequest) | [QueryGroupAccountsByGroupResponse](#cosmos.group.v1beta1.QueryGroupAccountsByGroupResponse) | GroupAccountsByGroup queries group accounts by group id. | |
+| `GroupAccountsByAdmin` | [QueryGroupAccountsByAdminRequest](#cosmos.group.v1beta1.QueryGroupAccountsByAdminRequest) | [QueryGroupAccountsByAdminResponse](#cosmos.group.v1beta1.QueryGroupAccountsByAdminResponse) | GroupsByAdmin queries group accounts by admin address. | |
+| `Proposal` | [QueryProposalRequest](#cosmos.group.v1beta1.QueryProposalRequest) | [QueryProposalResponse](#cosmos.group.v1beta1.QueryProposalResponse) | Proposal queries a proposal based on proposal id. | |
+| `ProposalsByGroupAccount` | [QueryProposalsByGroupAccountRequest](#cosmos.group.v1beta1.QueryProposalsByGroupAccountRequest) | [QueryProposalsByGroupAccountResponse](#cosmos.group.v1beta1.QueryProposalsByGroupAccountResponse) | ProposalsByGroupAccount queries proposals based on group account address. | |
+| `VoteByProposalVoter` | [QueryVoteByProposalVoterRequest](#cosmos.group.v1beta1.QueryVoteByProposalVoterRequest) | [QueryVoteByProposalVoterResponse](#cosmos.group.v1beta1.QueryVoteByProposalVoterResponse) | VoteByProposalVoter queries a vote by proposal id and voter. | |
+| `VotesByProposal` | [QueryVotesByProposalRequest](#cosmos.group.v1beta1.QueryVotesByProposalRequest) | [QueryVotesByProposalResponse](#cosmos.group.v1beta1.QueryVotesByProposalResponse) | VotesByProposal queries a vote by proposal. | |
+| `VotesByVoter` | [QueryVotesByVoterRequest](#cosmos.group.v1beta1.QueryVotesByVoterRequest) | [QueryVotesByVoterResponse](#cosmos.group.v1beta1.QueryVotesByVoterResponse) | VotesByVoter queries a vote by voter. | |
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/group/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/group/v1beta1/tx.proto
+
+
+
+<a name="cosmos.group.v1beta1.MsgCreateGroupAccountRequest"></a>
+
+### MsgCreateGroupAccountRequest
+MsgCreateGroupAccountRequest is the Msg/CreateGroupAccount request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the group account. |
+| `decision_policy` | [google.protobuf.Any](#google.protobuf.Any) |  | decision_policy specifies the group account's decision policy. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgCreateGroupAccountResponse"></a>
+
+### MsgCreateGroupAccountResponse
+MsgCreateGroupAccountResponse is the Msg/CreateGroupAccount response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the account address of the newly created group account. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgCreateGroupRequest"></a>
+
+### MsgCreateGroupRequest
+MsgCreateGroupRequest is the Msg/CreateGroup request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `members` | [Member](#cosmos.group.v1beta1.Member) | repeated | members defines the group members. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the group. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgCreateGroupResponse"></a>
+
+### MsgCreateGroupResponse
+MsgCreateGroupResponse is the Msg/CreateGroup response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the newly created group. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgCreateProposalRequest"></a>
+
+### MsgCreateProposalRequest
+MsgCreateProposalRequest is the Msg/CreateProposal request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  | address is the group account address. |
+| `proposers` | [string](#string) | repeated | proposers are the account addresses of the proposers. Proposers signatures will be counted as yes votes. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the proposal. |
+| `msgs` | [google.protobuf.Any](#google.protobuf.Any) | repeated | msgs is a list of Msgs that will be executed if the proposal passes. |
+| `exec` | [Exec](#cosmos.group.v1beta1.Exec) |  | exec defines the mode of execution of the proposal, whether it should be executed immediately on creation or not. If so, proposers signatures are considered as Yes votes. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgCreateProposalResponse"></a>
+
+### MsgCreateProposalResponse
+MsgCreateProposalResponse is the Msg/CreateProposal response type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal is the unique ID of the proposal. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgExecRequest"></a>
+
+### MsgExecRequest
+MsgExecRequest is the Msg/Exec request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal is the unique ID of the proposal. |
+| `signer` | [string](#string) |  | signer is the account address used to execute the proposal. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgExecResponse"></a>
+
+### MsgExecResponse
+MsgExecResponse is the Msg/Exec request type.
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest"></a>
+
+### MsgUpdateGroupAccountAdminRequest
+MsgUpdateGroupAccountAdminRequest is the Msg/UpdateGroupAccountAdmin request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `address` | [string](#string) |  | address is the group account address. |
+| `new_admin` | [string](#string) |  | new_admin is the new group account admin. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse"></a>
+
+### MsgUpdateGroupAccountAdminResponse
+MsgUpdateGroupAccountAdminResponse is the Msg/UpdateGroupAccountAdmin response type.
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest"></a>
+
+### MsgUpdateGroupAccountDecisionPolicyRequest
+MsgUpdateGroupAccountDecisionPolicyRequest is the Msg/UpdateGroupAccountDecisionPolicy request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `address` | [string](#string) |  | address is the group account address. |
+| `decision_policy` | [google.protobuf.Any](#google.protobuf.Any) |  | decision_policy is the updated group account decision policy. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse"></a>
+
+### MsgUpdateGroupAccountDecisionPolicyResponse
+MsgUpdateGroupAccountDecisionPolicyResponse is the Msg/UpdateGroupAccountDecisionPolicy response type.
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest"></a>
+
+### MsgUpdateGroupAccountMetadataRequest
+MsgUpdateGroupAccountMetadataRequest is the Msg/UpdateGroupAccountMetadata request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `address` | [string](#string) |  | address is the group account address. |
+| `metadata` | [bytes](#bytes) |  | metadata is the updated group account metadata. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse"></a>
+
+### MsgUpdateGroupAccountMetadataResponse
+MsgUpdateGroupAccountMetadataResponse is the Msg/UpdateGroupAccountMetadata response type.
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAdminRequest"></a>
+
+### MsgUpdateGroupAdminRequest
+MsgUpdateGroupAdminRequest is the Msg/UpdateGroupAdmin request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the current account address of the group admin. |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `new_admin` | [string](#string) |  | new_admin is the group new admin account address. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupAdminResponse"></a>
+
+### MsgUpdateGroupAdminResponse
+MsgUpdateGroupAdminResponse is the Msg/UpdateGroupAdmin response type.
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupMembersRequest"></a>
+
+### MsgUpdateGroupMembersRequest
+MsgUpdateGroupMembersRequest is the Msg/UpdateGroupMembers request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `member_updates` | [Member](#cosmos.group.v1beta1.Member) | repeated | member_updates is the list of members to update, set weight to 0 to remove a member. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupMembersResponse"></a>
+
+### MsgUpdateGroupMembersResponse
+MsgUpdateGroupMembersResponse is the Msg/UpdateGroupMembers response type.
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest"></a>
+
+### MsgUpdateGroupMetadataRequest
+MsgUpdateGroupMetadataRequest is the Msg/UpdateGroupMetadata request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `admin` | [string](#string) |  | admin is the account address of the group admin. |
+| `group_id` | [uint64](#uint64) |  | group_id is the unique ID of the group. |
+| `metadata` | [bytes](#bytes) |  | metadata is the updated group's metadata. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse"></a>
+
+### MsgUpdateGroupMetadataResponse
+MsgUpdateGroupMetadataResponse is the Msg/UpdateGroupMetadata response type.
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgVoteRequest"></a>
+
+### MsgVoteRequest
+MsgVoteRequest is the Msg/Vote request type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `proposal_id` | [uint64](#uint64) |  | proposal is the unique ID of the proposal. |
+| `voter` | [string](#string) |  | voter is the voter account address. |
+| `choice` | [Choice](#cosmos.group.v1beta1.Choice) |  | choice is the voter's choice on the proposal. |
+| `metadata` | [bytes](#bytes) |  | metadata is any arbitrary metadata to attached to the vote. |
+| `exec` | [Exec](#cosmos.group.v1beta1.Exec) |  | exec defines whether the proposal should be executed immediately after voting or not. |
+
+
+
+
+
+
+<a name="cosmos.group.v1beta1.MsgVoteResponse"></a>
+
+### MsgVoteResponse
+MsgVoteResponse is the Msg/Vote response type.
+
+
+
+
+
+ <!-- end messages -->
+
+
+<a name="cosmos.group.v1beta1.Exec"></a>
+
+### Exec
+Exec defines modes of execution of a proposal on creation or on new vote.
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| EXEC_UNSPECIFIED | 0 | An empty value means that there should be a separate MsgExec request for the proposal to execute. |
+| EXEC_TRY | 1 | Try to execute the proposal immediately. If the proposal is not allowed per the DecisionPolicy, the proposal will still be open and could be executed at a later point. |
+
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.group.v1beta1.Msg"></a>
+
+### Msg
+Msg is the cosmos.group.v1beta1 Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateGroup` | [MsgCreateGroupRequest](#cosmos.group.v1beta1.MsgCreateGroupRequest) | [MsgCreateGroupResponse](#cosmos.group.v1beta1.MsgCreateGroupResponse) | CreateGroup creates a new group with an admin account address, a list of members and some optional metadata. | |
+| `UpdateGroupMembers` | [MsgUpdateGroupMembersRequest](#cosmos.group.v1beta1.MsgUpdateGroupMembersRequest) | [MsgUpdateGroupMembersResponse](#cosmos.group.v1beta1.MsgUpdateGroupMembersResponse) | UpdateGroupMembers updates the group members with given group id and admin address. | |
+| `UpdateGroupAdmin` | [MsgUpdateGroupAdminRequest](#cosmos.group.v1beta1.MsgUpdateGroupAdminRequest) | [MsgUpdateGroupAdminResponse](#cosmos.group.v1beta1.MsgUpdateGroupAdminResponse) | UpdateGroupAdmin updates the group admin with given group id and previous admin address. | |
+| `UpdateGroupMetadata` | [MsgUpdateGroupMetadataRequest](#cosmos.group.v1beta1.MsgUpdateGroupMetadataRequest) | [MsgUpdateGroupMetadataResponse](#cosmos.group.v1beta1.MsgUpdateGroupMetadataResponse) | UpdateGroupMetadata updates the group metadata with given group id and admin address. | |
+| `CreateGroupAccount` | [MsgCreateGroupAccountRequest](#cosmos.group.v1beta1.MsgCreateGroupAccountRequest) | [MsgCreateGroupAccountResponse](#cosmos.group.v1beta1.MsgCreateGroupAccountResponse) | CreateGroupAccount creates a new group account using given DecisionPolicy. | |
+| `UpdateGroupAccountAdmin` | [MsgUpdateGroupAccountAdminRequest](#cosmos.group.v1beta1.MsgUpdateGroupAccountAdminRequest) | [MsgUpdateGroupAccountAdminResponse](#cosmos.group.v1beta1.MsgUpdateGroupAccountAdminResponse) | UpdateGroupAccountAdmin updates a group account admin. | |
+| `UpdateGroupAccountDecisionPolicy` | [MsgUpdateGroupAccountDecisionPolicyRequest](#cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyRequest) | [MsgUpdateGroupAccountDecisionPolicyResponse](#cosmos.group.v1beta1.MsgUpdateGroupAccountDecisionPolicyResponse) | UpdateGroupAccountDecisionPolicy allows a group account decision policy to be updated. | |
+| `UpdateGroupAccountMetadata` | [MsgUpdateGroupAccountMetadataRequest](#cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataRequest) | [MsgUpdateGroupAccountMetadataResponse](#cosmos.group.v1beta1.MsgUpdateGroupAccountMetadataResponse) | UpdateGroupAccountMetadata updates a group account metadata. | |
+| `CreateProposal` | [MsgCreateProposalRequest](#cosmos.group.v1beta1.MsgCreateProposalRequest) | [MsgCreateProposalResponse](#cosmos.group.v1beta1.MsgCreateProposalResponse) | CreateProposal submits a new proposal. | |
+| `Vote` | [MsgVoteRequest](#cosmos.group.v1beta1.MsgVoteRequest) | [MsgVoteResponse](#cosmos.group.v1beta1.MsgVoteResponse) | Vote allows a voter to vote on a proposal. | |
+| `Exec` | [MsgExecRequest](#cosmos.group.v1beta1.MsgExecRequest) | [MsgExecResponse](#cosmos.group.v1beta1.MsgExecResponse) | Exec executes a proposal. | |
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/mint/v1beta1/mint.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5813,6 +6875,40 @@ Query provides defines the gRPC querier service.
 
 
 
+<a name="cosmos/nft/v1beta1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1beta1/event.proto
+
+
+
+<a name="cosmos.nft.v1beta1.EventSend"></a>
+
+### EventSend
+EventSend is emitted on Msg/Send
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+| `receiver` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/nft/v1beta1/nft.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -5820,20 +6916,19 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="cosmos.nft.v1beta1.Metadata"></a>
+<a name="cosmos.nft.v1beta1.Class"></a>
 
-### Metadata
-
+### Class
+Class defines the class of the nft type.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  | Required, unique key, alphanumeric |
+| `id` | [string](#string) |  |  |
 | `name` | [string](#string) |  |  |
 | `symbol` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
-| `mint_restricted` | [bool](#bool) |  |  |
-| `edit_restricted` | [bool](#bool) |  |  |
+| `uri` | [string](#string) |  |  |
 
 
 
@@ -5843,13 +6938,13 @@ Query provides defines the gRPC querier service.
 <a name="cosmos.nft.v1beta1.NFT"></a>
 
 ### NFT
-
+NFT defines the nft.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  | The type of this NFT |
-| `id` | [string](#string) |  | The identifier of this NFT |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
 | `uri` | [string](#string) |  |  |
 | `data` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
@@ -5874,16 +6969,16 @@ Query provides defines the gRPC querier service.
 
 
 
-<a name="cosmos.nft.v1beta1.Contract"></a>
+<a name="cosmos.nft.v1beta1.Entry"></a>
 
-### Contract
-
+### Entry
+Entry Defines all nft owned by a person
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#cosmos.nft.v1beta1.Metadata) |  | metadata defines the metadata of the nft type. |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated | nfts defines a array that contains all nfts of the same nft type |
+| `owner` | [string](#string) |  |  |
+| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
 
 
 
@@ -5898,7 +6993,8 @@ GenesisState defines the nft module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `contracts` | [Contract](#cosmos.nft.v1beta1.Contract) | repeated |  |
+| `classes` | [Class](#cosmos.nft.v1beta1.Class) | repeated | class defines the class of the nft type. |
+| `entries` | [Entry](#cosmos.nft.v1beta1.Entry) | repeated |  |
 
 
 
@@ -5929,8 +7025,8 @@ QueryBalanceRequest is the request type for the Query/Balance RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
-| `type` | [string](#string) |  |  |
 
 
 
@@ -5952,6 +7048,67 @@ QueryBalanceResponse is the response type for the Query/Balance RPC method
 
 
 
+<a name="cosmos.nft.v1beta1.QueryClassRequest"></a>
+
+### QueryClassRequest
+QueryClassRequest is the request type for the Query/Class RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassResponse"></a>
+
+### QueryClassResponse
+QueryClassResponse is the response type for the Query/Class RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class` | [Class](#cosmos.nft.v1beta1.Class) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassesRequest"></a>
+
+### QueryClassesRequest
+QueryClassesRequest is the request type for the Query/Classes RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassesResponse"></a>
+
+### QueryClassesResponse
+QueryClassesResponse is the response type for the Query/Classes RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `classes` | [Class](#cosmos.nft.v1beta1.Class) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
 <a name="cosmos.nft.v1beta1.QueryNFTRequest"></a>
 
 ### QueryNFTRequest
@@ -5960,7 +7117,7 @@ QueryNFTRequest is the request type for the Query/NFT RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  |  |
 | `id` | [string](#string) |  |  |
 
 
@@ -5983,46 +7140,15 @@ QueryNFTResponse is the response type for the Query/NFT RPC method
 
 
 
-<a name="cosmos.nft.v1beta1.QueryNFTsOfRequest"></a>
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassRequest"></a>
 
-### QueryNFTsOfRequest
-QueryNFTsOfRequest is the request type for the Query/NFTsOf RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryNFTsOfResponse"></a>
-
-### QueryNFTsOfResponse
-QueryNFTsOfResponse is the response type for the Query/NFTsOf RPC method
+### QueryNFTsOfClassRequest
+QueryNFTsOfClassRequest is the request type for the Query/NFTsOfClass RPC method
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryNFTsRequest"></a>
-
-### QueryNFTsRequest
-QueryNFTsRequest is the request type for the Query/NFTs RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
 | `owner` | [string](#string) |  |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
@@ -6031,16 +7157,47 @@ QueryNFTsRequest is the request type for the Query/NFTs RPC method
 
 
 
-<a name="cosmos.nft.v1beta1.QueryNFTsResponse"></a>
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassResponse"></a>
 
-### QueryNFTsResponse
-QueryNFTsResponse is the response type for the Query/NFTs RPC method
+### QueryNFTsOfClassResponse
+QueryNFTsOfClassResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC methods
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryOwnerRequest"></a>
+
+### QueryOwnerRequest
+QueryOwnerRequest is the request type for the Query/Owner RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryOwnerResponse"></a>
+
+### QueryOwnerResponse
+QueryOwnerResponse is the response type for the Query/Owner RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
 
 
 
@@ -6055,7 +7212,7 @@ QuerySupplyRequest is the request type for the Query/Supply RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  |  |
 
 
 
@@ -6076,67 +7233,6 @@ QuerySupplyResponse is the response type for the Query/Supply RPC method
 
 
 
-
-<a name="cosmos.nft.v1beta1.QueryTypeRequest"></a>
-
-### QueryTypeRequest
-QueryTypeRequest is the request type for the Query/Type RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryTypeResponse"></a>
-
-### QueryTypeResponse
-QueryTypeResponse is the response type for the Query/Type RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#cosmos.nft.v1beta1.Metadata) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryTypesRequest"></a>
-
-### QueryTypesRequest
-QueryTypesRequest is the request type for the Query/Types RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.QueryTypesResponse"></a>
-
-### QueryTypesResponse
-QueryTypesResponse is the response type for the Query/Types RPC method
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `metadatas` | [Metadata](#cosmos.nft.v1beta1.Metadata) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
-
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6147,17 +7243,17 @@ QueryTypesResponse is the response type for the Query/Types RPC method
 <a name="cosmos.nft.v1beta1.Query"></a>
 
 ### Query
-
+Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries NFT details based on id. | GET|/cosmos/nft/v1beta1/nfts/{id}|
-| `NFTs` | [QueryNFTsRequest](#cosmos.nft.v1beta1.QueryNFTsRequest) | [QueryNFTsResponse](#cosmos.nft.v1beta1.QueryNFTsResponse) | NFTs queries all NFTs based on the optional owner. | GET|/cosmos/nft/v1beta1/nfts|
-| `NFTsOf` | [QueryNFTsOfRequest](#cosmos.nft.v1beta1.QueryNFTsOfRequest) | [QueryNFTsOfResponse](#cosmos.nft.v1beta1.QueryNFTsOfResponse) | NFTsOf queries all NFTs based on the type. | GET|/cosmos/nft/v1beta1/nfts/{type}|
-| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the type, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{type}|
-| `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs based on the owner and type, same as balanceOf of ERC721 | GET|/cosmos/nft/v1beta1/balance/{owner}/{type}|
-| `Type` | [QueryTypeRequest](#cosmos.nft.v1beta1.QueryTypeRequest) | [QueryTypeResponse](#cosmos.nft.v1beta1.QueryTypeResponse) | Type queries the definition of a given type | GET|/cosmos/nft/v1beta1/types/{type}|
-| `Types` | [QueryTypesRequest](#cosmos.nft.v1beta1.QueryTypesRequest) | [QueryTypesResponse](#cosmos.nft.v1beta1.QueryTypesResponse) | Types queries all the types | GET|/cosmos/nft/v1beta1/types|
+| `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721 | GET|/cosmos/nft/v1beta1/balance/{class_id}/{owner}|
+| `Owner` | [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest) | [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse) | Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721 | GET|/cosmos/nft/v1beta1/owner/{class_id}/{id}|
+| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the class, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{class_id}|
+| `NFTsOfClass` | [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest) | [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse) | NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/nfts/{class_id}|
+| `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries an NFT based on its class and id. | GET|/cosmos/nft/v1beta1/nfts/{class_id}/{id}|
+| `Class` | [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest) | [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse) | Class queries an NFT class based on its id | GET|/cosmos/nft/v1beta1/classes/{class_id}|
+| `Classes` | [QueryClassesRequest](#cosmos.nft.v1beta1.QueryClassesRequest) | [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse) | Classes queries all NFT classes | GET|/cosmos/nft/v1beta1/classes|
 
  <!-- end services -->
 
@@ -6170,111 +7266,6 @@ QueryTypesResponse is the response type for the Query/Types RPC method
 
 
 
-<a name="cosmos.nft.v1beta1.MsgBurn"></a>
-
-### MsgBurn
-MsgSend represents a message to burn a nft from one account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
-| `id` | [string](#string) |  |  |
-| `destroyer` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgBurnResponse"></a>
-
-### MsgBurnResponse
-MsgBurnResponse defines the Msg/Burn response type.
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgEdit"></a>
-
-### MsgEdit
-MsgEdit represents a message to edit a nft on a specific type and id.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft` | [NFT](#cosmos.nft.v1beta1.NFT) |  |  |
-| `editor` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgEditResponse"></a>
-
-### MsgEditResponse
-MsgEditResponse defines the Msg/Edit response type.
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgIssue"></a>
-
-### MsgIssue
-MsgIssue represents a message to create a new nft type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `metadata` | [Metadata](#cosmos.nft.v1beta1.Metadata) |  |  |
-| `issuer` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgIssueResponse"></a>
-
-### MsgIssueResponse
-MsgIssueResponse defines the Msg/Issue response type.
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgMint"></a>
-
-### MsgMint
-MsgMint represents a message to mint new nft on a specific nft type.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `nft` | [NFT](#cosmos.nft.v1beta1.NFT) |  |  |
-| `minter` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.nft.v1beta1.MsgMintResponse"></a>
-
-### MsgMintResponse
-MsgMintResponse defines the Msg/Mint response type.
-
-
-
-
-
-
 <a name="cosmos.nft.v1beta1.MsgSend"></a>
 
 ### MsgSend
@@ -6283,7 +7274,7 @@ MsgSend represents a message to send a nft from one account to another account.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `type` | [string](#string) |  |  |
+| `class_id` | [string](#string) |  |  |
 | `id` | [string](#string) |  |  |
 | `sender` | [string](#string) |  |  |
 | `receiver` | [string](#string) |  |  |
@@ -6316,11 +7307,7 @@ Msg defines the nft Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Issue` | [MsgIssue](#cosmos.nft.v1beta1.MsgIssue) | [MsgIssueResponse](#cosmos.nft.v1beta1.MsgIssueResponse) | Issue defines a method to create a new nft type. | |
-| `Mint` | [MsgMint](#cosmos.nft.v1beta1.MsgMint) | [MsgMintResponse](#cosmos.nft.v1beta1.MsgMintResponse) | Mint defines a method to mint new nft on a specific nft type. | |
-| `Edit` | [MsgEdit](#cosmos.nft.v1beta1.MsgEdit) | [MsgEditResponse](#cosmos.nft.v1beta1.MsgEditResponse) | Edit defines a method to edit a nft on a specific type and id. | |
 | `Send` | [MsgSend](#cosmos.nft.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.nft.v1beta1.MsgSendResponse) | Send defines a method to send a nft from one account to another account. | |
-| `Burn` | [MsgBurn](#cosmos.nft.v1beta1.MsgBurn) | [MsgBurnResponse](#cosmos.nft.v1beta1.MsgBurnResponse) | MsgBurn defines a method to burn a nft from a specific account. | |
 
  <!-- end services -->
 
@@ -8863,3 +9850,4 @@ still be used for delegating and for governance votes even while locked.
 | <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
+

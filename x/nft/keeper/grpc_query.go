@@ -3,188 +3,182 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/nft/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ nft.QueryServer = Keeper{}
 
-func (k Keeper) NFT(ctx context.Context,
-	request *types.QueryNFTRequest) (*types.QueryNFTResponse, error) {
+func (k Keeper) Balance(goCtx context.Context, request *nft.QueryBalanceRequest) (*nft.QueryBalanceResponse, error) {
 	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	nft, has := k.GetNFT(sdkCtx, request.Type, request.Id)
-	if !has {
-		return nil, status.Errorf(codes.InvalidArgument, "not found nft")
-	}
-	return &types.QueryNFTResponse{NFT: &nft}, nil
-}
-
-func (k Keeper) NFTs(ctx context.Context,
-	request *types.QueryNFTsRequest) (*types.QueryNFTsResponse, error) {
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	var nfts []*types.NFT
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if len(request.Owner) == 0 {
-		store := sdkCtx.KVStore(k.storeKey)
-		typeStore := prefix.NewStore(store, types.NFTKey)
-		pageRes, err := query.Paginate(typeStore, request.Pagination, func(_, value []byte) error {
-			var nft types.NFT
-			err := k.cdc.Unmarshal(value, &nft)
-			if err != nil {
-				return err
-			}
-			nfts = append(nfts, &nft)
-			return nil
-		})
-		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
-		}
-		return &types.QueryNFTsResponse{
-			NFTs:       nfts,
-			Pagination: pageRes,
-		}, nil
+	if len(request.ClassId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "class id can not be empty")
 	}
 
 	owner, err := sdk.AccAddressFromBech32(request.Owner)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+		return nil, err
 	}
 
-	balances := k.bk.GetAllBalances(sdkCtx, owner)
-	for _, b := range balances {
-		typ, id, err := types.GetTypeAndIDFrom(b.GetDenom())
-		if err != nil {
-			continue
-		}
-		if nft, has := k.GetNFT(sdkCtx, typ, id); has {
-			nfts = append(nfts, &nft)
-		}
-	}
-	return &types.QueryNFTsResponse{
-		NFTs: nfts,
-	}, nil
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	balance := k.GetBalance(ctx, request.ClassId, owner)
+	return &nft.QueryBalanceResponse{Amount: balance}, nil
 }
 
-func (k Keeper) NFTsOf(ctx context.Context,
-	request *types.QueryNFTsOfRequest) (*types.QueryNFTsOfResponse, error) {
+func (k Keeper) Owner(goCtx context.Context, request *nft.QueryOwnerRequest) (*nft.QueryOwnerResponse, error) {
 	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	nftStore := k.getNFTStore(sdkCtx, request.Type)
+	if len(request.ClassId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "class id can not be empty")
+	}
+	if len(request.Id) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "nft id can not be empty")
+	}
 
-	var nfts []*types.NFT
-	pageRes, err := query.Paginate(nftStore, request.Pagination, func(_, value []byte) error {
-		var nft types.NFT
-		err := k.cdc.Unmarshal(value, &nft)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	owner := k.GetOwner(ctx, request.ClassId, request.Id)
+	return &nft.QueryOwnerResponse{Owner: owner.String()}, nil
+}
+
+func (k Keeper) Supply(goCtx context.Context, request *nft.QuerySupplyRequest) (*nft.QuerySupplyResponse, error) {
+	if request == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if len(request.ClassId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "class id can not be empty")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	supply := k.GetTotalSupply(ctx, request.ClassId)
+	return &nft.QuerySupplyResponse{Amount: supply}, nil
+}
+
+func (k Keeper) NFTsOfClass(goCtx context.Context, request *nft.QueryNFTsOfClassRequest) (*nft.QueryNFTsOfClassResponse, error) {
+	if request == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if len(request.ClassId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "class id can not be empty")
+	}
+
+	var nfts []*nft.NFT
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// if owner is not empty, filter nft by owner
+	if len(request.Owner) > 0 {
+		owner, err := sdk.AccAddressFromBech32(request.Owner)
 		if err != nil {
-			return err
+			return nil, err
 		}
+
+		ownerStore := k.getClassStoreByOwner(ctx, owner, request.ClassId)
+		pageRes, err := query.Paginate(ownerStore, request.Pagination, func(key []byte, _ []byte) error {
+			nft, has := k.GetNFT(ctx, request.ClassId, string(key))
+			if has {
+				nfts = append(nfts, &nft)
+			}
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+		return &nft.QueryNFTsOfClassResponse{
+			Nfts:       nfts,
+			Pagination: pageRes,
+		}, nil
+	}
+
+	nftStore := k.getNFTStore(ctx, request.ClassId)
+	pageRes, err := query.Paginate(nftStore, request.Pagination, func(_ []byte, value []byte) error {
+		var nft nft.NFT
+		k.cdc.MustUnmarshal(value, &nft)
 		nfts = append(nfts, &nft)
 		return nil
 	})
 
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return nil, err
 	}
-	return &types.QueryNFTsOfResponse{
-		NFTs:       nfts,
+	return &nft.QueryNFTsOfClassResponse{
+		Nfts:       nfts,
 		Pagination: pageRes,
 	}, nil
 }
 
-func (k Keeper) Supply(ctx context.Context, request *types.QuerySupplyRequest) (*types.QuerySupplyResponse, error) {
+func (k Keeper) NFT(goCtx context.Context, request *nft.QueryNFTRequest) (*nft.QueryNFTResponse, error) {
 	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	nftStore := k.getNFTStore(sdkCtx, request.Type)
-
-	iterator := nftStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	var supply uint64
-	for ; iterator.Valid(); iterator.Next() {
-		supply++
+	if len(request.ClassId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "class id can not be empty")
 	}
-	return &types.QuerySupplyResponse{Amount: supply}, nil
-}
-
-func (k Keeper) Balance(ctx context.Context, request *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error) {
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+	if len(request.Id) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "nft id can not be empty")
 	}
 
-	owner, err := sdk.AccAddressFromBech32(request.Owner)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
-	}
-
-	var balance uint64
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	balances := k.bk.GetAllBalances(sdkCtx, owner)
-	for _, b := range balances {
-		typ, id, err := types.GetTypeAndIDFrom(b.GetDenom())
-		if err != nil {
-			continue
-		}
-		if k.HasNFT(sdkCtx, typ, id) {
-			balance++
-		}
-	}
-	return &types.QueryBalanceResponse{Amount: balance}, nil
-}
-
-func (k Keeper) Type(ctx context.Context, request *types.QueryTypeRequest) (*types.QueryTypeResponse, error) {
-	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	metadata, has := k.GetMetadata(sdkCtx, request.Type)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	n, has := k.GetNFT(ctx, request.ClassId, request.Id)
 	if !has {
-		return nil, status.Errorf(codes.InvalidArgument, "type not found: %s", request.Type)
+		return nil, status.Errorf(codes.NotFound,
+			"not found nft: class: %s, id: %s", request.ClassId, request.Id)
 	}
-	return &types.QueryTypeResponse{Metadata: &metadata}, nil
+	return &nft.QueryNFTResponse{Nft: &n}, nil
+
 }
 
-func (k Keeper) Types(ctx context.Context, request *types.QueryTypesRequest) (*types.QueryTypesResponse, error) {
+func (k Keeper) Class(goCtx context.Context, request *nft.QueryClassRequest) (*nft.QueryClassResponse, error) {
 	if request == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	var metadatas []*types.Metadata
+	if len(request.ClassId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "class id can not be empty")
+	}
 
-	store := sdkCtx.KVStore(k.storeKey)
-	typeStore := prefix.NewStore(store, types.TypeKey)
-	pageRes, err := query.Paginate(typeStore, request.Pagination, func(_, value []byte) error {
-		var metadata types.Metadata
-		err := k.cdc.Unmarshal(value, &metadata)
-		if err != nil {
-			return err
-		}
-		metadatas = append(metadatas, &metadata)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	class, has := k.GetClass(ctx, request.ClassId)
+	if !has {
+		return nil, status.Errorf(codes.NotFound,
+			"not found class: %s", request.ClassId)
+	}
+	return &nft.QueryClassResponse{Class: &class}, nil
+}
+
+func (k Keeper) Classes(goCtx context.Context, request *nft.QueryClassesRequest) (*nft.QueryClassesResponse, error) {
+	if request == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := ctx.KVStore(k.storeKey)
+	classStore := prefix.NewStore(store, ClassKey)
+
+	var classes []*nft.Class
+	pageRes, err := query.Paginate(classStore, request.Pagination, func(_ []byte, value []byte) error {
+		var class nft.Class
+		k.cdc.MustUnmarshal(value, &class)
+		classes = append(classes, &class)
 		return nil
 	})
 
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "paginate: %v", err)
+		return nil, err
 	}
-	return &types.QueryTypesResponse{
-		Metadatas:  metadatas,
+	return &nft.QueryClassesResponse{
+		Classes:    classes,
 		Pagination: pageRes,
 	}, nil
 }

@@ -5,22 +5,20 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/nft/v1beta1/nft.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/nft/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
 // GenesisState defines the nft module's genesis state.
 message GenesisState {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  repeated Contract contracts = 1;
+  // class defines the class of the nft type.
+  repeated cosmos.nft.v1beta1.Class classes = 1 [(gogoproto.nullable) = false];
+  repeated Entry                    entries = 2 [(gogoproto.nullable) = false];
 }
 
-message Contract {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // metadata defines the metadata of the nft type.
-  cosmos.nft.v1beta1.Metadata metadata = 1 [(gogoproto.nullable) = false];
-  // nfts defines a array that contains all nfts of the same nft type
+// Entry Defines all nft owned by a person
+message Entry {
+  string   owner                       = 1;
   repeated cosmos.nft.v1beta1.NFT nfts = 2 [(gogoproto.customname) = "NFTs", (gogoproto.nullable) = false];
 }

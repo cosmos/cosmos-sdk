@@ -39,11 +39,12 @@ func IsSNormalized(sigS *big.Int) bool {
 // lower half of curve order
 
 func NormalizeS(sigS *big.Int) *big.Int {
+
 	if IsSNormalized(sigS) {
 		return sigS
-	} else {
-		return new(big.Int).Sub(p256Order(), sigS)
 	}
+
+	return new(big.Int).Sub(p256Order(), sigS)
 }
 
 // GenPrivKey generates a new secp256r1 private key. It uses operating

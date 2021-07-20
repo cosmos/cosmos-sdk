@@ -54,12 +54,8 @@ func (msg MsgSend) GetSignBytes() []byte {
 }
 
 // GetSigners Implements Msg.
-func (msg MsgSend) GetSigners() []sdk.AccAddress {
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{from}
+func (msg MsgSend) GetSigners() []string {
+	return []string{msg.FromAddress}
 }
 
 var _ sdk.Msg = &MsgMultiSend{}
@@ -96,11 +92,10 @@ func (msg MsgMultiSend) GetSignBytes() []byte {
 }
 
 // GetSigners Implements Msg.
-func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
-	addrs := make([]sdk.AccAddress, len(msg.Inputs))
+func (msg MsgMultiSend) GetSigners() []string {
+	addrs := make([]string, len(msg.Inputs))
 	for i, in := range msg.Inputs {
-		addr, _ := sdk.AccAddressFromBech32(in.Address)
-		addrs[i] = addr
+		addrs[i] = in.Address
 	}
 
 	return addrs

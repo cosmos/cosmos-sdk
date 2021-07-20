@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 type msgServer struct {
@@ -15,15 +15,16 @@ type msgServer struct {
 
 // NewMsgServerImpl returns an implementation of the feegrant MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(k Keeper) types.MsgServer {
+func NewMsgServerImpl(k Keeper) feegrant.MsgServer {
 	return &msgServer{
 		Keeper: k,
 	}
 }
 
-var _ types.MsgServer = msgServer{}
+var _ feegrant.MsgServer = msgServer{}
 
-func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantFeeAllowance) (*types.MsgGrantFeeAllowanceResponse, error) {
+// GrantAllowance grants an allowance from the granter's funds to be used by the grantee.
+func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantAllowance) (*feegrant.MsgGrantAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
@@ -37,7 +38,7 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 	}
 
 	// Checking for duplicate entry
-	if f, _ := k.Keeper.GetFeeAllowance(ctx, granter, grantee); f != nil {
+	if f, _ := k.Keeper.GetAllowance(ctx, granter, grantee); f != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "fee allowance already exists")
 	}
 
@@ -46,15 +47,16 @@ func (k msgServer) GrantFeeAllowance(goCtx context.Context, msg *types.MsgGrantF
 		return nil, err
 	}
 
-	err = k.Keeper.GrantFeeAllowance(ctx, granter, grantee, allowance)
+	err = k.Keeper.GrantAllowance(ctx, granter, grantee, allowance)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgGrantFeeAllowanceResponse{}, nil
+	return &feegrant.MsgGrantAllowanceResponse{}, nil
 }
 
-func (k msgServer) RevokeFeeAllowance(goCtx context.Context, msg *types.MsgRevokeFeeAllowance) (*types.MsgRevokeFeeAllowanceResponse, error) {
+// RevokeAllowance revokes a fee allowance between a granter and grantee.
+func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
@@ -67,10 +69,10 @@ func (k msgServer) RevokeFeeAllowance(goCtx context.Context, msg *types.MsgRevok
 		return nil, err
 	}
 
-	err = k.Keeper.revokeFeeAllowance(ctx, granter, grantee)
+	err = k.Keeper.revokeAllowance(ctx, granter, grantee)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgRevokeFeeAllowanceResponse{}, nil
+	return &feegrant.MsgRevokeAllowanceResponse{}, nil
 }

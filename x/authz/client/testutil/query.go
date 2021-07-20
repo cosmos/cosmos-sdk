@@ -10,18 +10,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
-
-	"github.com/cosmos/cosmos-sdk/x/authz/types"
 )
 
 func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -77,7 +76,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryAuthorizations()
+			cmd := cli.GetCmdQueryGrants()
 			clientCtx := val.ClientCtx
 			resp, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -85,8 +84,8 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 				s.Require().Contains(string(resp.Bytes()), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
-				var grants types.QueryAuthorizationsResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp.Bytes(), &grants)
+				var grants authz.QueryGrantsResponse
+				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &grants)
 				s.Require().NoError(err)
 			}
 		})
@@ -96,10 +95,10 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	val := s.network.Validators[0]
 
-	grantee := s.grantee
+	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := ExecGrantAuthorization(
+	_, err := ExecGrant(
 		val,
 		[]string{
 			grantee.String(),
@@ -169,7 +168,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.GetCmdQueryAuthorization()
+			cmd := cli.GetCmdQueryGrants()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {

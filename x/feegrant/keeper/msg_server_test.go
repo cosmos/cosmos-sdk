@@ -3,22 +3,24 @@ package keeper_test
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/cosmos/cosmos-sdk/x/feegrant/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
-func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
+func (suite *KeeperTestSuite) TestGrantAllowance() {
+	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
+
 	testCases := []struct {
 		name      string
-		req       func() *types.MsgGrantFeeAllowance
+		req       func() *feegrant.MsgGrantAllowance
 		expectErr bool
 		errMsg    string
 	}{
 		{
 			"invalid granter address",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{})
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &feegrant.MsgGrantAllowance{
 					Granter:   "invalid-granter",
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
@@ -29,10 +31,10 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"invalid grantee address",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{})
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &feegrant.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   "invalid-grantee",
 					Allowance: any,
@@ -43,13 +45,13 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"valid: basic fee allowance",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
-					Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &feegrant.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
@@ -60,13 +62,13 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"fail: fee allowance exists",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.BasicFeeAllowance{
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{
 					SpendLimit: suite.atom,
-					Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+					Expiration: &oneYear,
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &feegrant.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
@@ -77,15 +79,15 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"valid: periodic fee allowance",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
-					Basic: types.BasicFeeAllowance{
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
+					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
-						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &feegrant.MsgGrantAllowance{
 					Granter:   suite.addrs[1].String(),
 					Grantee:   suite.addrs[2].String(),
 					Allowance: any,
@@ -96,15 +98,15 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 		},
 		{
 			"error: fee allowance exists",
-			func() *types.MsgGrantFeeAllowance {
-				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
-					Basic: types.BasicFeeAllowance{
+			func() *feegrant.MsgGrantAllowance {
+				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
+					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
-						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
-				return &types.MsgGrantFeeAllowance{
+				return &feegrant.MsgGrantAllowance{
 					Granter:   suite.addrs[1].String(),
 					Grantee:   suite.addrs[2].String(),
 					Allowance: any,
@@ -116,7 +118,7 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 	}
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-			_, err := suite.msgSrvr.GrantFeeAllowance(suite.ctx, tc.req())
+			_, err := suite.msgSrvr.GrantAllowance(suite.ctx, tc.req())
 			if tc.expectErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.errMsg)
@@ -125,18 +127,19 @@ func (suite *KeeperTestSuite) TestGrantFeeAllowance() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
+func (suite *KeeperTestSuite) TestRevokeAllowance() {
+	oneYear := suite.sdkCtx.BlockTime().AddDate(1, 0, 0)
 
 	testCases := []struct {
 		name      string
-		request   *types.MsgRevokeFeeAllowance
+		request   *feegrant.MsgRevokeAllowance
 		preRun    func()
 		expectErr bool
 		errMsg    string
 	}{
 		{
 			"error: invalid granter",
-			&types.MsgRevokeFeeAllowance{
+			&feegrant.MsgRevokeAllowance{
 				Granter: "invalid-granter",
 				Grantee: suite.addrs[1].String(),
 			},
@@ -146,7 +149,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"error: invalid grantee",
-			&types.MsgRevokeFeeAllowance{
+			&feegrant.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: "invalid-grantee",
 			},
@@ -156,7 +159,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"error: fee allowance not found",
-			&types.MsgRevokeFeeAllowance{
+			&feegrant.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
@@ -166,29 +169,29 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"success: revoke fee allowance",
-			&types.MsgRevokeFeeAllowance{
+			&feegrant.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
 			func() {
 				// removing fee allowance from previous tests if exists
-				suite.msgSrvr.RevokeFeeAllowance(suite.ctx, &types.MsgRevokeFeeAllowance{
+				suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
 					Granter: suite.addrs[0].String(),
 					Grantee: suite.addrs[1].String(),
 				})
-				any, err := codectypes.NewAnyWithValue(&types.PeriodicFeeAllowance{
-					Basic: types.BasicFeeAllowance{
+				any, err := codectypes.NewAnyWithValue(&feegrant.PeriodicAllowance{
+					Basic: feegrant.BasicAllowance{
 						SpendLimit: suite.atom,
-						Expiration: types.ExpiresAtTime(suite.sdkCtx.BlockTime().AddDate(1, 0, 0)),
+						Expiration: &oneYear,
 					},
 				})
 				suite.Require().NoError(err)
-				req := &types.MsgGrantFeeAllowance{
+				req := &feegrant.MsgGrantAllowance{
 					Granter:   suite.addrs[0].String(),
 					Grantee:   suite.addrs[1].String(),
 					Allowance: any,
 				}
-				_, err = suite.msgSrvr.GrantFeeAllowance(suite.ctx, req)
+				_, err = suite.msgSrvr.GrantAllowance(suite.ctx, req)
 				suite.Require().NoError(err)
 			},
 			false,
@@ -196,7 +199,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 		},
 		{
 			"error: check fee allowance revoked",
-			&types.MsgRevokeFeeAllowance{
+			&feegrant.MsgRevokeAllowance{
 				Granter: suite.addrs[0].String(),
 				Grantee: suite.addrs[1].String(),
 			},
@@ -209,7 +212,7 @@ func (suite *KeeperTestSuite) TestRevokeFeeAllowance() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			tc.preRun()
-			_, err := suite.msgSrvr.RevokeFeeAllowance(suite.ctx, tc.request)
+			_, err := suite.msgSrvr.RevokeAllowance(suite.ctx, tc.request)
 			if tc.expectErr {
 				suite.Require().Error(err)
 				suite.Require().Contains(err.Error(), tc.errMsg)

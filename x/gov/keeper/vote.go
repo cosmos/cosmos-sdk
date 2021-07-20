@@ -44,6 +44,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 // GetAllVotes returns all the votes from the store
 func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes types.Votes) {
 	keeper.IterateAllVotes(ctx, func(vote types.Vote) bool {
+		populateLegacyOption(&vote)
 		votes = append(votes, vote)
 		return false
 	})
@@ -53,6 +54,7 @@ func (keeper Keeper) GetAllVotes(ctx sdk.Context) (votes types.Votes) {
 // GetVotes returns all the votes from a proposal
 func (keeper Keeper) GetVotes(ctx sdk.Context, proposalID uint64) (votes types.Votes) {
 	keeper.IterateVotes(ctx, proposalID, func(vote types.Vote) bool {
+		populateLegacyOption(&vote)
 		votes = append(votes, vote)
 		return false
 	})
@@ -68,11 +70,18 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	}
 
 	keeper.cdc.MustUnmarshal(bz, &vote)
+	populateLegacyOption(&vote)
+
 	return vote, true
 }
 
 // SetVote sets a Vote to the gov store
 func (keeper Keeper) SetVote(ctx sdk.Context, vote types.Vote) {
+	// vote.Option is a deprecated field, we don't set it in state
+	if vote.Option != types.OptionEmpty { //nolint
+		vote.Option = types.OptionEmpty //nolint
+	}
+
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&vote)
 	addr, err := sdk.AccAddressFromBech32(vote.Voter)
@@ -91,6 +100,7 @@ func (keeper Keeper) IterateAllVotes(ctx sdk.Context, cb func(vote types.Vote) (
 	for ; iterator.Valid(); iterator.Next() {
 		var vote types.Vote
 		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
+		populateLegacyOption(&vote)
 
 		if cb(vote) {
 			break
@@ -107,6 +117,7 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 	for ; iterator.Valid(); iterator.Next() {
 		var vote types.Vote
 		keeper.cdc.MustUnmarshal(iterator.Value(), &vote)
+		populateLegacyOption(&vote)
 
 		if cb(vote) {
 			break
@@ -118,4 +129,12 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(types.VoteKey(proposalID, voterAddr))
+}
+
+// populateLegacyOption adds graceful fallback of deprecated `Option` field, in case
+// there's only 1 VoteOption.
+func populateLegacyOption(vote *types.Vote) {
+	if len(vote.Options) == 1 && vote.Options[0].Weight.Equal(sdk.MustNewDecFromStr("1.0")) {
+		vote.Option = vote.Options[0].Option //nolint
+	}
 }

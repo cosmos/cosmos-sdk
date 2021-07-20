@@ -27,9 +27,11 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = network.New(s.T(), s.cfg)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -122,7 +124,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bw.Bytes(), tc.respType), bw.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bw.Bytes(), tc.respType), bw.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)

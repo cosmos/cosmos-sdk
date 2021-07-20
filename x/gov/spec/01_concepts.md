@@ -14,9 +14,9 @@ The governance process is divided in a few steps that are outlined below:
   confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
 - If the proposal involves a software upgrade:
-  - **Signal:** Validators start signaling that they are ready to switch to the
+    - **Signal:** Validators start signaling that they are ready to switch to the
     new version.
-  - **Switch:** Once more than 75% of validators have signaled that they are
+    - **Switch:** Once more than 75% of validators have signaled that they are
     ready to switch, their software automatically flips to the new version.
 
 ## Proposal submission
@@ -43,8 +43,8 @@ proposals:
   `SoftwareUpgradeProposals`.
 - `CommunityPoolSpendProposal` details a proposal for use of community funds,
   together with how many coins are proposed to be spent, and to which recipient account.
-- `ParameterChangeProposal` defines a proposal to change one or 
-  more parameters. If accepted, the requested parameter change is updated 
+- `ParameterChangeProposal` defines a proposal to change one or
+  more parameters. If accepted, the requested parameter change is updated
   automatically by the proposal handler upon conclusion of the voting period.
 - `CancelSoftwareUpgradeProposal` is a gov Content type for cancelling a software upgrade.
 
@@ -56,11 +56,14 @@ arbitrary state changes.
 
 ## Deposit
 
-To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param. The voting period will not start until the proposal's deposit equals `MinDeposit`.
+To prevent spam, proposals must be submitted with a deposit in the coins defined in the `MinDeposit` param.
 
-When a proposal is submitted, it has to be accompanied by a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own. If a proposal's deposit is inferior to `MinDeposit`, other token holders can increase the proposal's deposit by sending a `Deposit` transaction. The deposit is kept in an escrow in the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
+When a proposal is submitted, it has to be accompanied with a deposit that must be strictly positive, but can be inferior to `MinDeposit`. The submitter doesn't need to pay for the entire deposit on their own.
+The newly created proposal is stored in an _inactive proposal queue_ and stays there until its deposit passes the `MinDeposit`. Other token holders can increase the proposal's deposit by sending a `Deposit` transaction.
+If a proposal doesn't pass the `MinDeposit` before the deposit end time (the time when deposits are no longer accepted), the proposal will be destroyed: the proposal will be removed from state and the deposit will be burned (see x/gov `EndBlocker`).
+When a proposal deposit passes the `MinDeposit` threshold (even during the proposal submission) before the deposit end time, the proposal will be moved into the _active proposal queue_ and the voting period will begin.
 
-Once the proposal's deposit reaches `MinDeposit`, it enters voting period. If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, proposal closes and nobody can deposit on it anymore.
+The deposit is kept in escrow and held by the governance `ModuleAccount` until the proposal is finalized (passed or rejected).
 
 ### Deposit refund and burn
 
@@ -117,6 +120,20 @@ proposal but accept the result of the vote.
 
 _Note: from the UI, for urgent proposals we should maybe add a ‘Not Urgent’
 option that casts a `NoWithVeto` vote._
+
+### Weighted Votes
+
+[ADR-037](../../../docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
+
+Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+
+To represent weighted vote on chain, we use the following Protobuf message.
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L32-L40
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-alpha1/proto/cosmos/gov/v1beta1/gov.proto#L126-L137
+
+For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
 
 ### Quorum
 

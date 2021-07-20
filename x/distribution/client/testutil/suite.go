@@ -50,7 +50,8 @@ func (s *IntegrationTestSuite) SetupTest() {
 	genesisState[minttypes.ModuleName] = mintDataBz
 	s.cfg.GenesisState = genesisState
 
-	s.network = network.New(s.T(), s.cfg)
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -502,7 +503,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawRewardsCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(bz, tc.respType), string(bz))
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(bz, tc.respType), string(bz))
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
@@ -555,7 +556,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawAllRewardsCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
@@ -610,7 +611,7 @@ func (s *IntegrationTestSuite) TestNewSetWithdrawAddrCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
@@ -665,7 +666,7 @@ func (s *IntegrationTestSuite) TestNewFundCommunityPoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code)
@@ -739,7 +740,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())

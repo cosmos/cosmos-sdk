@@ -50,7 +50,7 @@ $ <appd> query slashing signing-info '{"@type":"/cosmos.crypto.ed25519.PubKey","
 			}
 
 			var pk cryptotypes.PubKey
-			if err := clientCtx.JSONMarshaler.UnmarshalInterfaceJSON([]byte(args[0]), &pk); err != nil {
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(args[0]), &pk); err != nil {
 				return err
 			}
 

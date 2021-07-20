@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -103,7 +103,7 @@ func (s *TestSuite) TestCopyTx() {
 	s.Require().Equal(sigsV2_1, sigsV2_2)
 	s.Require().Equal(aminoBuilder.GetTx().GetSigners(), aminoBuilder2.GetTx().GetSigners())
 	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[0], aminoBuilder2.GetTx().GetMsgs()[0])
-	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[1], aminoBuilder2.GetTx().GetMsgs()[1]) // We lose the "ServiceMsg" information
+	s.Require().Equal(aminoBuilder.GetTx().GetMsgs()[1], aminoBuilder2.GetTx().GetMsgs()[1])
 }
 
 func (s *TestSuite) TestConvertTxToStdTx() {

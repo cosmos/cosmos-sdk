@@ -57,11 +57,11 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			cdc := clientCtx.JSONMarshaler
+			cdc := clientCtx.Codec
 
 			config := serverCtx.Config
 			config.SetRoot(clientCtx.HomeDir)
@@ -78,7 +78,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 
 			// read --pubkey, if empty take it from priv_validator.json
 			if val, _ := cmd.Flags().GetString(cli.FlagPubKey); val != "" {
-				err = clientCtx.JSONMarshaler.UnmarshalJSON([]byte(val), valPubKey)
+				err = clientCtx.Codec.UnmarshalJSON([]byte(val), valPubKey)
 				if err != nil {
 					return errors.Wrap(err, "failed to unmarshal consensus node public key")
 				}
@@ -156,14 +156,14 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 
 			if key.GetType() == keyring.TypeOffline || key.GetType() == keyring.TypeMulti {
 				cmd.PrintErrln("Offline key passed in. Use `tx sign` command to sign.")
-				return authclient.PrintUnsignedStdTx(txBldr, clientCtx, []sdk.Msg{msg})
+				return txBldr.PrintUnsignedTx(clientCtx, msg)
 			}
 
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			clientCtx = clientCtx.WithOutput(w)
 
-			if err = authclient.PrintUnsignedStdTx(txBldr, clientCtx, []sdk.Msg{msg}); err != nil {
+			if err = txBldr.PrintUnsignedTx(clientCtx, msg); err != nil {
 				return errors.Wrap(err, "failed to print unsigned std tx")
 			}
 

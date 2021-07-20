@@ -122,7 +122,7 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 	}
 }
 
-// MarshalJSON implements JSONMarshaler.MarshalJSON method,
+// MarshalJSON implements JSONCodec.MarshalJSON method,
 // it marshals to JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
@@ -135,7 +135,7 @@ func (pc *ProtoCodec) MarshalJSON(o proto.Message) ([]byte, error) {
 	return ProtoMarshalJSON(m, pc.interfaceRegistry)
 }
 
-// MustMarshalJSON implements JSONMarshaler.MustMarshalJSON method,
+// MustMarshalJSON implements JSONCodec.MustMarshalJSON method,
 // it executes MarshalJSON except it panics upon failure.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
@@ -148,7 +148,7 @@ func (pc *ProtoCodec) MustMarshalJSON(o proto.Message) []byte {
 	return bz
 }
 
-// UnmarshalJSON implements JSONMarshaler.UnmarshalJSON method,
+// UnmarshalJSON implements JSONCodec.UnmarshalJSON method,
 // it unmarshals from JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
@@ -167,7 +167,7 @@ func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr proto.Message) error {
 	return types.UnpackInterfaces(ptr, pc.interfaceRegistry)
 }
 
-// MustUnmarshalJSON implements JSONMarshaler.MustUnmarshalJSON method,
+// MustUnmarshalJSON implements JSONCodec.MustUnmarshalJSON method,
 // it executes UnmarshalJSON except it panics upon failure.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON

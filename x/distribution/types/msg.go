@@ -27,12 +27,8 @@ func (msg MsgSetWithdrawAddress) Route() string { return ModuleName }
 func (msg MsgSetWithdrawAddress) Type() string  { return TypeMsgSetWithdrawAddress }
 
 // Return address that must sign over msg.GetSignBytes()
-func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+func (msg MsgSetWithdrawAddress) GetSigners() []string {
+	return []string{msg.DelegatorAddress}
 }
 
 // get the bytes for the message signer to sign on
@@ -64,12 +60,8 @@ func (msg MsgWithdrawDelegatorReward) Route() string { return ModuleName }
 func (msg MsgWithdrawDelegatorReward) Type() string  { return TypeMsgWithdrawDelegatorReward }
 
 // Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
-	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{delAddr}
+func (msg MsgWithdrawDelegatorReward) GetSigners() []string {
+	return []string{msg.DelegatorAddress}
 }
 
 // get the bytes for the message signer to sign on
@@ -99,12 +91,12 @@ func (msg MsgWithdrawValidatorCommission) Route() string { return ModuleName }
 func (msg MsgWithdrawValidatorCommission) Type() string  { return TypeMsgWithdrawValidatorCommission }
 
 // Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
+func (msg MsgWithdrawValidatorCommission) GetSigners() []string {
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{valAddr.Bytes()}
+	return []string{sdk.AccAddress(valAddr).String()}
 }
 
 // get the bytes for the message signer to sign on
@@ -138,12 +130,8 @@ func (msg MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool 
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
-func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
-	depoAddr, err := sdk.AccAddressFromBech32(msg.Depositor)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{depoAddr}
+func (msg MsgFundCommunityPool) GetSigners() []string {
+	return []string{msg.Depositor}
 }
 
 // GetSignBytes returns the raw bytes for a MsgFundCommunityPool message that

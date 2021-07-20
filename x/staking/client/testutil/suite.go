@@ -43,9 +43,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	s.network = network.New(s.T(), s.cfg)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	unbond, err := sdk.ParseCoinNormalized("10stake")
@@ -69,6 +71,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// unbonding
 	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
@@ -200,7 +203,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				require.Error(err)
 			} else {
 				require.NoError(err, "test: %s\noutput: %s", tc.name, out.String())
-				err = clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType)
+				err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				require.NoError(err, out.String(), "test: %s, output\n:", tc.name, out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
@@ -230,7 +233,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 		},
 		{
 			"happy case",
-			[]string{fmt.Sprintf("%s", val.ValAddress), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 		},
 	}
@@ -245,7 +248,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 				s.Require().NotEqual("internal", err.Error())
 			} else {
 				var result types.Validator
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().Equal(val.ValAddress.String(), result.OperatorAddress)
 			}
 		})
@@ -286,7 +289,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 			s.Require().NoError(err)
 
 			var result types.QueryValidatorsResponse
-			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
+			s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(tc.minValidatorCount, len(result.Validators))
 		})
 	}
@@ -352,7 +355,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -408,14 +411,14 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDelegations() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -464,7 +467,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegationsTo() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 				s.Require().Equal(tc.expected.String(), tc.respType.String())
 			}
 		})
@@ -509,7 +512,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
 				s.Require().Error(err)
 			} else {
 				var ubds types.QueryDelegatorUnbondingDelegationsResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubds)
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ubds)
 
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
@@ -569,7 +572,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
 			} else {
 				var ubd types.UnbondingDelegation
 
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubd)
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ubd)
 				s.Require().NoError(err)
 				s.Require().Equal(ubd.DelegatorAddress, val.Address.String())
 				s.Require().Equal(ubd.ValidatorAddress, val.ValAddress.String())
@@ -617,7 +620,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 				s.Require().Error(err)
 			} else {
 				var ubds types.QueryValidatorUnbondingDelegationsResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &ubds)
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ubds)
 
 				s.Require().NoError(err)
 				s.Require().Len(ubds.UnbondingResponses, 1)
@@ -666,7 +669,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
 				s.Require().Error(err)
 			} else {
 				var redelegations types.QueryRedelegationsResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &redelegations)
 
 				s.Require().NoError(err)
 
@@ -743,7 +746,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 			} else {
 				var redelegations types.QueryRedelegationsResponse
 
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &redelegations)
 				s.Require().NoError(err)
 
 				s.Require().Len(redelegations.RedelegationResponses, 1)
@@ -755,7 +758,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
+func (s *IntegrationTestSuite) TestGetCmdQueryValidatorRedelegations() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -794,7 +797,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegationsFrom() {
 				s.Require().Error(err)
 			} else {
 				var redelegations types.QueryRedelegationsResponse
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &redelegations)
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &redelegations)
 
 				s.Require().NoError(err)
 
@@ -845,7 +848,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
 			} else {
 				var historicalInfo types.HistoricalInfo
 
-				err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &historicalInfo)
+				err = val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &historicalInfo)
 				s.Require().NoError(err)
 				s.Require().NotNil(historicalInfo)
 			}
@@ -867,13 +870,12 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
-power_reduction: "1000000"
 unbonding_time: 1814400s`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","power_reduction":"1000000"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -925,7 +927,7 @@ not_bonded_tokens: "0"`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
+func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 	val := s.network.Validators[0]
 
 	details := "bio"
@@ -1032,7 +1034,7 @@ func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -1041,7 +1043,7 @@ func (s *IntegrationTestSuite) TestNewCmdEditValidator() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdDelegate() {
+func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -1114,7 +1116,7 @@ func (s *IntegrationTestSuite) TestNewCmdDelegate() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -1123,7 +1125,7 @@ func (s *IntegrationTestSuite) TestNewCmdDelegate() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
+func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -1157,7 +1159,7 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 4, &sdk.TxResponse{},
+			false, 3, &sdk.TxResponse{},
 		},
 		{
 			"with wrong destination validator address",
@@ -1170,7 +1172,7 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 39, &sdk.TxResponse{},
+			false, 31, &sdk.TxResponse{},
 		},
 		{
 			"valid transaction of delegate",
@@ -1200,7 +1202,7 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -1209,7 +1211,7 @@ func (s *IntegrationTestSuite) TestNewCmdRedelegate() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdUnbond() {
+func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -1267,7 +1269,7 @@ func (s *IntegrationTestSuite) TestNewCmdUnbond() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())

@@ -1,6 +1,6 @@
 <!-- order: 1 -->
 
- # IBC Overview
+# IBC Overview
 
 Learn what IBC is, its components, and use cases. {synopsis}
 
@@ -144,7 +144,7 @@ After an acknowledgement is received successfully on the original sender the cha
 To learn more about IBC, check out the following specifications:
 
 - [IBC specs](https://github.com/cosmos/ibc/tree/master/spec)
-- [IBC protocol on the Cosmos SDK](https://github.com/cosmos/ibc-go/blob/main/docs/spec.md)
+- [IBC protocol on the Cosmos SDK](https://github.com/cosmos/ibc-go/tree/main/docs)
 
 ## Next {hide}
 

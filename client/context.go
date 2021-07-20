@@ -25,7 +25,7 @@ type Context struct {
 	FromAddress       sdk.AccAddress
 	Client            rpcclient.Client
 	ChainID           string
-	JSONMarshaler     codec.JSONCodec
+	Codec             codec.Codec
 	InterfaceRegistry codectypes.InterfaceRegistry
 	Input             io.Reader
 	Keyring           keyring.Keyring
@@ -72,9 +72,9 @@ func (ctx Context) WithInput(r io.Reader) Context {
 	return ctx
 }
 
-// WithJSONMarshaler returns a copy of the Context with an updated JSONMarshaler.
-func (ctx Context) WithJSONMarshaler(m codec.JSONCodec) Context {
-	ctx.JSONMarshaler = m
+// WithCodec returns a copy of the Context with an updated Codec.
+func (ctx Context) WithCodec(m codec.Codec) Context {
+	ctx.Codec = m
 	return ctx
 }
 
@@ -254,10 +254,10 @@ func (ctx Context) PrintBytes(o []byte) error {
 
 // PrintProto outputs toPrint to the ctx.Output based on ctx.OutputFormat which is
 // either text or json. If text, toPrint will be YAML encoded. Otherwise, toPrint
-// will be JSON encoded using ctx.JSONMarshaler. An error is returned upon failure.
+// will be JSON encoded using ctx.Codec. An error is returned upon failure.
 func (ctx Context) PrintProto(toPrint proto.Message) error {
 	// always serialize JSON initially because proto json can't be directly YAML encoded
-	out, err := ctx.JSONMarshaler.MarshalJSON(toPrint)
+	out, err := ctx.Codec.MarshalJSON(toPrint)
 	if err != nil {
 		return err
 	}

@@ -31,9 +31,11 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = network.New(s.T(), s.cfg)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -173,7 +175,7 @@ func (s *IntegrationTestSuite) TestNewUnjailTxCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())

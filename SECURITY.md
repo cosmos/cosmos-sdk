@@ -51,7 +51,7 @@ the code.
 
 - HD key derivation, local and Ledger, and all key-management functionality
 - Side-channel attack vectors with our implementations
-  - e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
+    - e.g. key exfiltration based on time or memory-access patterns when decrypting privkey
   
 ## Disclosure Process
 
@@ -73,6 +73,7 @@ This process can take some time. Every effort is made to handle the bug in as ti
 ### Disclosure Communications
 
 Communications to partners usually include the following details:
+
 1. Affected version or versions
 1. New release version
 1. Impact on user funds
@@ -81,13 +82,14 @@ Communications to partners usually include the following details:
 1. Potential required actions if an adverse condition arises during the security release process
 
 An example notice looks like:
+
 ```
 Dear Cosmos SDK partners,
 
-A critical security vulnerability has been identified in Cosmos SDK vX.X.X. 
+A critical security vulnerability has been identified in Cosmos SDK vX.X.X.
 User funds are NOT at risk; however, the vulnerability can result in a chain halt.
 
-This notice is to inform you that on [[**March 1 at 1pm EST/6pm UTC**]], we will be releasing Cosmos SDK vX.X.Y to fix the security issue. 
+This notice is to inform you that on [[**March 1 at 1pm EST/6pm UTC**]], we will be releasing Cosmos SDK vX.X.Y to fix the security issue.
 We ask all validators to upgrade their nodes ASAP.
 
 If the chain halts, validators with sufficient voting power must upgrade and come online for the chain to resume.

@@ -1,3 +1,7 @@
+<!--
+order: 5
+-->
+
 # Cosmosvisor Quick Start
 
 `cosmovisor` is a small process manager around Cosmos SDK binaries that monitors the governance module via stdout to see if there's a chain upgrade proposal coming in. If it see a proposal that gets approved it can be run manually or automatically to download the new code, stop the node, run the migration script, replace the node binary, and start with the new genesis file.
@@ -25,10 +29,11 @@ binary).
 command line arguments and flags (but new binary) after a successful upgrade. By default, `cosmovisor` dies
 afterwards and allows the supervisor to restart it if needed. Note that this will not auto-restart the child
 if there was an error.
+* `DAEMON_LOG_BUFFER_SIZE` (*optional*) is the buffer size for cosmovisor to scan log. If not set, it will use the default [64](https://github.com/golang/go/blob/2217e89ba326875470a856cd0da79f3ec9a896b8/src/bufio/scan.go#L80). (e.g. set to `256` or `512`) It is to avoid scanning stuck in case of long line of the log.
 
 ## Data Folder Layout
 
-`$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and 
+`$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and
 subprocesses that are controlled by it. The folder content is organised as follows:
 
 ```
@@ -66,6 +71,7 @@ directory layout:
 ## Usage
 
 The system administrator admin is responsible for:
+
 * installing the `cosmovisor` binary and configure the host's init system (e.g. `systemd`, `launchd`, etc) along with the environmental variables appropriately;
 * installing the `genesis` folder manually;
 * installing the `upgrades/<name>` folders manually.
@@ -79,6 +85,54 @@ for those who wish to sync a fullnode from start.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc) are performed as normal.
 Application binaries' directives such as command-line flags and environment variables work normally.
+
+## Auto-Download
+
+Generally, the system requires that the system administrator place all relevant binaries
+on the disk before the upgrade happens. However, for people who don't need such
+control and want an easier setup (maybe they are syncing a non-validating fullnode
+and want to  do little maintenance), there is another option.
+
+If you set `DAEMON_ALLOW_DOWNLOAD_BINARIES=on` then when an upgrade is triggered and no local binary
+can be found, the `cosmovisor` will attempt to download and install the binary itself.
+The plan stored in the upgrade module has an info field for arbitrary json.
+This info is expected to be outputed on the halt log message. There are two
+valid format to specify a download in such a message:
+
+1. Store an os/architecture -> binary URI map in the upgrade plan info field
+as JSON under the `"binaries"` key, eg:
+
+```json
+{
+  "binaries": {
+    "linux/amd64":"https://example.com/gaia.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f"
+  }
+}
+```
+
+2. Store a link to a file that contains all information in the above format (eg. if you want
+to specify lots of binaries, changelog info, etc without filling up the blockchain).
+
+e.g. `https://example.com/testnet-1001-info.json?checksum=sha256:deaaa99fda9407c4dbe1d04bd49bab0cc3c1dd76fa392cd55a9425be074af01e`
+
+This file contained in the link will be retrieved by [go-getter](https://github.com/hashicorp/go-getter)
+and the `"binaries"` field will be parsed as above.
+
+If there is no local binary, `DAEMON_ALLOW_DOWNLOAD_BINARIES=on`, and we can access a canonical url for the new binary,
+then the `cosmovisor` will download it with [go-getter](https://github.com/hashicorp/go-getter) and
+unpack it into the `upgrades/<name>` folder to be run as if we installed it manually.
+
+Note that for this mechanism to provide strong security guarantees, all URLS should include a
+sha{256,512} checksum. This ensures that no false binary is run, even if someone hacks the server
+or hijacks the DNS. go-getter will always ensure the downloaded file matches the checksum if it
+is provided. go-getter will also handle unpacking archives into directories (so these download links should be
+a zip of all data in the `bin` directory).
+
+To properly create a checksum on linux, you can use the `sha256sum` utility. e.g.
+`sha256sum ./testdata/repo/zip_directory/autod.zip`
+which should return `29139e1381b8177aec909fab9a75d11381cab5adf7d3af0c05ff1c9c117743a7`.
+You can also use `sha512sum` if you like longer hashes, or `md5sum` if you like to use broken hashes.
+Make sure to set the hash algorithm properly in the checksum argument to the url.
 
 ## Example: simd
 
@@ -128,13 +182,13 @@ Submit a software upgrade proposal:
 ```
 ./build/simd tx gov submit-proposal software-upgrade test1 --title "upgrade-demo" --description "upgrade"  --from validator --upgrade-height 100 --deposit 10000000stake --chain-id test --keyring-backend test -y
 ```
- 
+
 Query the proposal to ensure it was correctly broadcast and added to a block:
 
 ```
 ./build/simd query gov proposal 1
 ```
- 
+
 Submit a `Yes` vote for the upgrade proposal:
 
 ```

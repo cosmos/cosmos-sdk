@@ -104,7 +104,7 @@ func rejectNonADR027(txBytes []byte) error {
 	for len(txBytes) > 0 {
 		tagNum, _, m := protowire.ConsumeTag(txBytes)
 		if m < 0 {
-			return fmt.Errorf("invalid length %w", protowire.ParseError(m))
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
 		}
 
 		if tagNum < prevTagNum {
@@ -117,7 +117,7 @@ func rejectNonADR027(txBytes []byte) error {
 		// We make sure that the varint is as short as possible.
 		lengthPrefix, m := protowire.ConsumeVarint(txBytes[m:])
 		if m < 0 {
-			return fmt.Errorf("invalid length %w", protowire.ParseError(m))
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
 		}
 		buf := make([]byte, m)
 		n := binary.PutUvarint(buf, lengthPrefix) // `n` is the shortest length for varint-encoding `lengthPrefix`.
@@ -128,7 +128,7 @@ func rejectNonADR027(txBytes []byte) error {
 		// Skip over the bytes that store fieldNumber and wireType bytes.
 		_, _, m = protowire.ConsumeField(txBytes)
 		if m < 0 {
-			return fmt.Errorf("invalid length %w", protowire.ParseError(m))
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
 		}
 		txBytes = txBytes[m:]
 	}

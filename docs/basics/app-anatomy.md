@@ -212,17 +212,6 @@ The REST endpoints are defined in the Protobuf files, along with the gRPC servic
 
 The SDK also provides a development endpoint to generate [Swagger](https://swagger.io/) definition files for these REST endpoints. This endpoint can be enabled inside the [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml) config file, under the `api.swagger` key.
 
-#### Legacy API REST Endpoints
-
-The [module's Legacy REST interface](../building-modules/module-interfaces.md#legacy-rest) lets users generate transactions and query the state through REST calls to the application's Legacy API Service. REST routes are defined in a file `client/rest/rest.go`, which is composed of:
-
-- A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
-- Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/rest/rest.go#L62-L76
-- One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
-
-These Legacy API endpoints are present in the SDK for backward compatibility purposes and will be removed in the next release.
-
 ## Application Interface
 
 [Interfaces](#command-line-grpc-services-and-rest-interfaces) let end-users interact with full-node clients. This means querying data from the full-node or creating and sending new transactions to be relayed by the full-node and eventually included in a block.

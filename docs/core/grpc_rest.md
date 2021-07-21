@@ -36,7 +36,7 @@ Cosmos SDK v0.40 introduced Protobuf as the main [encoding](./encoding) library,
 
 Each module exposes [`Msg` and `Query` Protobuf services](../building-modules/messages-and-queries.md) to define state transitions and state queries. These services are hooked up to gRPC via the following function inside the application:
 
-<https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/server/types/app.go#L39-L41>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/server/types/app.go#L39-L41
 
 The `grpc.Server` is a concrete gRPC server, which spawns and serves any gRPC requests. This server can be configured inside `~/.simapp/config/app.toml`:
 
@@ -53,7 +53,7 @@ An overview of all available gRPC endpoints shipped with the Cosmos SDK is [Prot
 
 ## REST Server
 
-In Cosmos SDK v0.40, the node continues to serve a REST server. However, the existing routes present in version v0.39 and earlier are now marked as deprecated, and new routes have been added via gRPC-gateway.
+Cosmos SDK supports REST routes via gRPC-gateway.
 
 All routes are configured under the following fields in `~/.simapp/config/app.toml`:
 
@@ -70,12 +70,6 @@ If, for various reasons, you cannot use gRPC (for example, you are building a we
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/proto/cosmos/bank/v1beta1/query.proto#L19-L22
 
 For application developers, gRPC-gateway REST routes needs to be wired up to the REST server, this is done by calling the `RegisterGRPCGatewayRoutes` function on the ModuleManager.
-
-### Legacy REST API Routes
-
-The REST routes present in Cosmos SDK v0.39 and earlier are marked as deprecated via a [HTTP deprecation header](https://tools.ietf.org/id/draft-dalal-deprecation-header-01.html). They are still maintained to keep backwards compatibility, but will be removed in v0.41. For updating from Legacy REST routes to new gRPC-gateway REST routes, please refer to our [migration guide](../migrations/rest.md).
-
-For application developers, Legacy REST API routes needs to be wired up to the REST server, this is done by calling the `RegisterRESTRoutes` function on the ModuleManager.
 
 ### Swagger
 

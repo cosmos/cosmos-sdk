@@ -6,7 +6,7 @@ parent:
 
 # Rosetta
 
-This folder contains instructions about how to use the Coinbase Rosetta API integration.
+This document provides instructions on how to use the Coinbase Rosetta API integration.
 
 ## Motivations and design
 

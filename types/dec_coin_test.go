@@ -801,3 +801,57 @@ func (s *decCoinTestSuite) TestDecCoins_IsZero() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_MulDec() {
+	testCases := []struct {
+		coins          sdk.DecCoins
+		multiplier     sdk.Dec
+		expectedResult sdk.DecCoins
+		msg            string
+	}{
+		// No Coins
+		{sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), "No coins. Should return empty slice."},
+
+		// Multiple coins - zero multiplier
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(30)},
+		}, sdk.NewDec(0), sdk.DecCoins(nil), "Multipler is zero. Should return empty slice."},
+
+		// Multiple coins - positive multiplier
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(2)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
+		}, sdk.NewDec(2), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+		}, "Multipler is positive. Should return multiplied deccoins."},
+
+		// Multiple coins - negative multiplier
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(2)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
+		}, sdk.NewDec(-2), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(-20)},
+		}, "Multipler is negative. Should return multiplied deccoins."},
+
+		// Multiple coins - Different denom
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(2)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(4)},
+		}, sdk.NewDec(2), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(8)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(12)},
+		}, "Multiple coins with different denoms. Should return multiplied deccoins with appropriate denoms."},
+	}
+
+	for i, tc := range testCases {
+		res := tc.coins.MulDec(tc.multiplier)
+		s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s %s", i, tc.msg, res)
+	}
+}

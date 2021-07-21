@@ -14,7 +14,7 @@ For information about the motivation and design choices, refer to [ADR 035](../a
 
 ## Usage
 
-The Rosetta API server is a stand-alone server that connects to a node of a chain developed with the Cosmos-SDK. 
+The Rosetta API server is a stand-alone server that connects to a node of a chain developed with the Cosmos SDK. 
 
 To enable the Rosetta API server support it's required to Add the `RosettaCommand` to your application root command file.
 After the 

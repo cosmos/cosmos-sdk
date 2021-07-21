@@ -62,7 +62,6 @@ func (pk *PubKey) Bytes() []byte {
 // 7/21/21 - expects raw encoded signature (fixed-width 64-bytes, R || S)
 
 func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
-	s := new(signature)
 
 	// check length for raw signature
 	// which is two 32-byte padded big.Ints
@@ -73,7 +72,7 @@ func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 		return false
 	}
 
-	s = signatureFromBytes(sig)
+	s := signatureFromBytes(sig)
 
 	// if not low-s, then fail validation
 	if !IsSNormalized(s.S) {

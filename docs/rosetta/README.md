@@ -37,7 +37,11 @@ The application root command file is in the server package in `github.com/cosmos
 Since we’ve updated the Cosmos SDK to work with the Rosetta API, updating the application root command file is all you need to do.
 
 To run Rosetta in your application CLI, use the following command:
-`appd rosetta --help`.
+
+```
+appd rosetta --help
+```
+
 To test and run Rosetta API endpoints for applications that are running and exposed, use the following command:
 
 ```

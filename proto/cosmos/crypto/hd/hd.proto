@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.crypto.hd;
+package cosmos.crypto.hd.v1;
 
 import "gogoproto/gogo.proto";
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	bip39 "github.com/cosmos/go-bip39"
+	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 

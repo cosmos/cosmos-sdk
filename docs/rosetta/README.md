@@ -10,7 +10,7 @@ This document provides instructions on how to use the Coinbase Rosetta API integ
 
 ## Motivations and design
 
-For the motivation an design choices refer to the [ADR 035](../architecture/adr-035-rosetta-api-support.md)
+For information about the motivation and design choices, refer to [ADR 035](../architecture/adr-035-rosetta-api-support.md).
 
 ## Usage
 

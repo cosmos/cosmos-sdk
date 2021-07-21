@@ -17,7 +17,10 @@ import (
 )
 
 const (
-	flagEvents = "events"
+	flagEvents    = "events"
+	flagSignature = "signature"
+	flagAddress   = "address"
+	flagSequence  = "sequence"
 
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -212,19 +215,49 @@ func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Query for a transaction by hash in a committed block",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-			output, err := authtx.QueryTx(clientCtx, args[0])
-			if err != nil {
-				return err
-			}
 
-			if output.Empty() {
-				return fmt.Errorf("no transaction found with hash %s", args[0])
+			var output *sdk.TxResponse
+			fmt.Println("QueryTxCmd args=", args)
+			if len(args) > 0 && args[0] != "" {
+				// If hash is given, then query the tx by hash.
+				output, err = authtx.QueryTx(clientCtx, args[0])
+				if err != nil {
+					return err
+				}
+
+				if output.Empty() {
+					return fmt.Errorf("no transaction found with hash %s", args[0])
+				}
+			} else {
+				// If hash is omitted, then query the tx:
+				// - either by signature
+				// - or by address and sequence
+
+				addr, _ := cmd.Flags().GetString(flagAddress)
+				seq, _ := cmd.Flags().GetUint64(flagSequence)
+				if addr == "" && seq == 0 {
+					return fmt.Errorf("either")
+				}
+				tmEvents := []string{
+					fmt.Sprintf("%s.%s=%s", sdk.EventTypeMessage, sdk.AttributeKeySender, addr),
+					fmt.Sprintf("%s.%s=%d", sdk.EventTypeTx, sdk.AttributeKeySequence, seq),
+				}
+				fmt.Println("QueryTxCmd tmEvents=", tmEvents)
+				txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
+				if err != nil {
+					return err
+				}
+				if len(txs.Txs) == 0 {
+					return fmt.Errorf("found no txs matching address and sequence combination")
+				}
+
+				return clientCtx.PrintProto(txs.Txs[0])
 			}
 
 			return clientCtx.PrintProto(output)
@@ -232,6 +265,8 @@ func QueryTxCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer, to be used in conjunction with --%s", flagSequence))
+	cmd.Flags().Int(flagSequence, 0, fmt.Sprintf("Query the tx by sequence, to be used in conjunction with --%s", flagAddress))
 
 	return cmd
 }

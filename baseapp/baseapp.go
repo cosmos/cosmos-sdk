@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -21,6 +22,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
@@ -675,6 +677,27 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
+
+	// Also emit the following events, so that txs can be indexed by these
+	// indices:
+	// - signature,
+	// - address and sequence.
+	events = append(events)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return sdk.GasInfo{}, nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (*authsigning.SigVerifiableTx)(nil), tx)
+	}
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+
+	for _, sig := range sigs {
+		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(sdk.AttributeKeySequence, strconv.FormatUint(sig.Sequence, 10)),
+			// sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sig.Data)),
+		))
+	}
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a

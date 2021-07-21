@@ -245,7 +245,7 @@ func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output 
 	}
 }
 
-func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
+func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByHash() {
 	val := s.network.Validators[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
@@ -270,22 +270,25 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 		rawLogContains string
 	}{
 		{
+			"not enough args",
+			[]string{},
+			true, "",
+		},
+		{
 			"with invalid hash",
 			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			true,
-			"",
+			true, "",
 		},
 		{
 			"with valid and not existing hash",
 			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			true,
-			"",
+			true, "",
 		},
 		{
-			"happy case",
+			"with hash happy case",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-			"/cosmos.bank.v1beta1.MsgSend",
+			sdk.MsgTypeURL(&banktypes.MsgSend{}),
 		},
 	}
 
@@ -305,6 +308,68 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
 				s.Require().Contains(result.RawLog, tc.rawLogContains)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
+	val := s.network.Validators[0]
+
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
+	// Send coins.
+	out, err := s.createBankMsg(
+		val, account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+	)
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// Query the tx by hash to get the inner tx.
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+
+	protoTx := txRes.GetTx().(*tx.Tx)
+	fmt.Printf("%T %s\n", txRes.GetTx(), txRes.GetTx().(*tx.Tx).Signatures)
+
+	testCases := []struct {
+		name      string
+		args      []string
+		expectErr bool
+	}{
+		{
+			"with --address and --sequence happy case",
+			[]string{
+				fmt.Sprintf("--address=%s", val.Address.String()),
+				fmt.Sprintf("--sequence=%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryTxCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var result sdk.TxResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NotNil(result.Height)
 			}
 		})
 	}

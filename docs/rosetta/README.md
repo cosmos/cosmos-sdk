@@ -32,7 +32,7 @@ rootCmd.AddCommand(
 ```
 
 
-The application root command file is in the server package in `github.com/cosmos/cosmos-sdk/server`.
+The `RosettaCommand` function builds the `rosetta` root command and is defined in the `server` package within Cosmos SDK.
 
 Since we’ve updated the Cosmos SDK to work with the Rosetta API, updating the application root command file is all you need to do.
 

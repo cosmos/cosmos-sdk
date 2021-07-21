@@ -34,7 +34,7 @@ rootCmd.AddCommand(
 
 The `RosettaCommand` function builds the `rosetta` root command and is defined in the `server` package within Cosmos SDK.
 
-Since we’ve updated the Cosmos SDK to work with the Rosetta API, updating the application root command file is all you need to do.
+Since we’ve updated the Cosmos SDK to work with the Rosetta API, updating the application's root command file is all you need to do.
 
 To run Rosetta in your application CLI, use the following command:
 

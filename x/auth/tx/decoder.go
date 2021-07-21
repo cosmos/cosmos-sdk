@@ -1,6 +1,11 @@
 package tx
 
 import (
+	"errors"
+	"fmt"
+
+	"google.golang.org/protobuf/encoding/protowire"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,10 +16,16 @@ import (
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler.
 func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
+		// Make sure txBytes adheres to ADR-027.
+		err := rejectNonADR027(txBytes)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
 		var raw tx.TxRaw
 
 		// reject all unknown proto fields in the root TxRaw
-		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, cdc.InterfaceRegistry())
+		err = unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -78,4 +89,29 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 			tx: &theTx,
 		}, nil
 	}
+}
+
+// rejectNonADR027 rejects txBytes that do not adhere to ADR-027. This function
+// only checks that field numbers are in ascending order, as all other ADR-027
+// edge cases (e.g. TxRaw fields having default values) will not happen with
+// TxRaw.
+func rejectNonADR027(txBytes []byte) error {
+	// Make sure all fields are ordered in ascending order.
+	prevTagNum := protowire.Number(0)
+	for len(txBytes) > 0 {
+		tagNum, _, m := protowire.ConsumeField(txBytes)
+		if m < 0 {
+			return errors.New("invalid length")
+		}
+
+		if tagNum < prevTagNum {
+			return fmt.Errorf("txRaw must follow ADR-027, got tagNum %d after tagNum %d", tagNum, prevTagNum)
+		}
+		prevTagNum = tagNum
+
+		// Skip over the bytes that store fieldNumber and wireType bytes.
+		txBytes = txBytes[m:]
+	}
+
+	return nil
 }

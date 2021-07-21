@@ -8,7 +8,7 @@ parent:
 
 This document provides instructions on how to use the Coinbase Rosetta API integration.
 
-## Motivations and design
+## Motivation and Design
 
 For information about the motivation and design choices, refer to [ADR 035](../architecture/adr-035-rosetta-api-support.md).
 

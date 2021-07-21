@@ -7,15 +7,18 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math/big"
-
-	"golang.org/x/crypto/cryptobyte"
-	"golang.org/x/crypto/cryptobyte/asn1"
 )
 
 // returns the curve order for the secp256r1 curve
 // NOTE: this is specific to the secp256r1/P256 curve,
 // and not taken from the domain params for the key itself
 // (which would be a more generic approach for all EC)
+// In *here* I don't need to do it as a method on the key
+// since this code is only called for secp256r1
+// if called on a key:
+// func (sk PrivKey) pCurveOrder() *.big.Int {
+//     return sk.Curve.Params().N
+// }
 
 func p256Order() *big.Int {
 	return elliptic.P256().Params().N
@@ -45,6 +48,21 @@ func NormalizeS(sigS *big.Int) *big.Int {
 	}
 
 	return new(big.Int).Sub(p256Order(), sigS)
+}
+
+// Serialize signature to R || S.
+// R, S are padded to 32 bytes respectively.
+// code roughly copied from secp256k1_nocgo.go
+
+func signatureRaw(r *big.Int, s *big.Int) []byte {
+
+	rBytes := r.Bytes()
+	sBytes := s.Bytes()
+	sigBytes := make([]byte, 64)
+	// 0 pad the byte arrays from the left if they aren't big enough.
+	copy(sigBytes[32-len(rBytes):32], rBytes)
+	copy(sigBytes[64-len(sBytes):64], sBytes)
+	return sigBytes
 }
 
 // GenPrivKey generates a new secp256r1 private key. It uses operating
@@ -82,8 +100,8 @@ func (sk *PrivKey) Bytes() []byte {
 // NOTE: this now calls the ecdsa Sign function
 // (not method!) directly as the s value of the signature is needed to
 // low-s normalize the signature value
-// It then ASN DER encodes in exactly the same way as the underlying
-// go-lang crypto code does (as of 7/20/2021 anyway)
+// It then raw encodes the signature as two fixed width 32-byte values
+// concatenated, reusing the code copied from secp256k1_nocgo.go
 
 func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 
@@ -97,15 +115,7 @@ func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 	}
 
 	normS := NormalizeS(s)
-	var b cryptobyte.Builder
-
-	b.AddASN1(asn1.SEQUENCE, func(b *cryptobyte.Builder) {
-
-		b.AddASN1BigInt(r)
-		b.AddASN1BigInt(normS)
-	})
-
-	return b.Bytes()
+	return signatureRaw(r, normS), nil
 }
 
 // String returns a string representation of the public key based on the curveName.

@@ -677,7 +677,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
 	}
 }
 
-func (s *decCoinTestSuite) TestDecCoins_IsLT() {
+func (s *decCoinTestSuite) TestDecCoin_IsLT() {
 	testCases := []struct {
 		coin           sdk.DecCoin
 		otherCoin      sdk.DecCoin
@@ -719,7 +719,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsLT() {
 	}
 }
 
-func (s *decCoinTestSuite) TestDecCoins_IsGTE() {
+func (s *decCoinTestSuite) TestDecCoin_IsGTE() {
 	testCases := []struct {
 		coin           sdk.DecCoin
 		otherCoin      sdk.DecCoin
@@ -757,6 +757,47 @@ func (s *decCoinTestSuite) TestDecCoins_IsGTE() {
 			} else {
 				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
 			}
+		}
+	}
+}
+
+func (s *decCoinTestSuite) TestDecCoins_IsZero() {
+	testCases := []struct {
+		coins          sdk.DecCoins
+		expectedResult bool
+		msg            string
+	}{
+		// No Coins
+		{sdk.DecCoins{}, true, "No coins. Should be true."},
+
+		// One Coin - Zero value
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, true, "One coin with zero amount value. Should be true."},
+
+		// One Coin - Postive value
+		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, false, "One coin with positive amount. Should be false."},
+
+		// Multiple Coins - All zero value
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+		}, true, "All zero amount coins. Should be true."},
+
+		// Multiple Coins - Some positive value
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(92233720)},
+		}, false, "Not all zero amount coins. Should be false."},
+	}
+
+	for i, tc := range testCases {
+		if tc.expectedResult {
+			s.Require().True(tc.coins.IsZero(), "Test case #%d: %s", i, tc.msg)
+		} else {
+			s.Require().False(tc.coins.IsZero(), "Test case #%d: %s", i, tc.msg)
 		}
 	}
 }

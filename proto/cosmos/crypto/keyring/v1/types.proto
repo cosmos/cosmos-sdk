@@ -23,12 +23,16 @@ message Record {
 
   // Record contains one of the following items
   oneof item {
+    // local stores the public information about a locally stored key
     Local local = 3;
+    // ledger stores the public information about a Ledger key
     Ledger ledger  = 4;
+    // Empty does not store any information.
     Empty empty  = 5;
   }
 
   // Item is a keyring item stored in a keyring backend.
+  // Local item
   message Local {
     google.protobuf.Any priv_key = 1; 
     string priv_key_type = 2;

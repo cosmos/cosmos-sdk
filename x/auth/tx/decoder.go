@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 
@@ -92,14 +93,17 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 }
 
 // rejectNonADR027 rejects txBytes that do not adhere to ADR-027. This function
-// only checks that field numbers are in ascending order, as all other ADR-027
-// edge cases (e.g. TxRaw fields having default values) will not happen with
-// TxRaw.
+// only checks that:
+// - field numbers are in ascending order (1, 2, and potentially multiple 3s),
+// - and varints as as short as possible.
+// All other ADR-027 edge cases (e.g. TxRaw fields having default values) will
+// not happen with TxRaw.
 func rejectNonADR027(txBytes []byte) error {
-	// Make sure all fields are ordered in ascending order.
+	// Make sure all fields are ordered in ascending order with this variable.
 	prevTagNum := protowire.Number(0)
+
 	for len(txBytes) > 0 {
-		tagNum, _, m := protowire.ConsumeField(txBytes)
+		tagNum, _, m := protowire.ConsumeTag(txBytes)
 		if m < 0 {
 			return errors.New("invalid length")
 		}
@@ -109,7 +113,24 @@ func rejectNonADR027(txBytes []byte) error {
 		}
 		prevTagNum = tagNum
 
+		// All 3 fields of TxRaw have wireType == 2, so their next component
+		// is a varint.
+		// We make sure that the varint is as short as possible.
+		lengthPrefix, m := protowire.ConsumeVarint(txBytes[m:])
+		if m < 0 {
+			return errors.New("invalid length")
+		}
+		buf := make([]byte, m)
+		n := binary.PutUvarint(buf, lengthPrefix) // `n` is the shortest length for varint-encoding `lengthPrefix`.
+		if n != m {
+			return fmt.Errorf("length prefix varint for tagNum %d is not as short as possible, read %d, only need %d", tagNum, m, n)
+		}
+
 		// Skip over the bytes that store fieldNumber and wireType bytes.
+		_, _, m = protowire.ConsumeField(txBytes)
+		if m < 0 {
+			return errors.New("invalid length")
+		}
 		txBytes = txBytes[m:]
 	}
 

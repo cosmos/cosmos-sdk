@@ -167,7 +167,7 @@ func TestRejectNonADR027(t *testing.T) {
 	body := &testdata.TestUpdatedTxBody{Memo: "AAA"} // Look for "65 65 65" when debugging the bytes stream.
 	bodyBz, err := body.Marshal()
 	require.NoError(t, err)
-	authInfo := &testdata.TestUpdatedAuthInfo{Fee: &tx.Fee{GasLimit: 128}} // Look for "128" when debugging the bytes stream.
+	authInfo := &testdata.TestUpdatedAuthInfo{Fee: &tx.Fee{GasLimit: 127}} // Look for "127" when debugging the bytes stream.
 	authInfoBz, err := authInfo.Marshal()
 	txRaw := &tx.TxRaw{
 		BodyBytes:     bodyBz,
@@ -193,6 +193,10 @@ func TestRejectNonADR027(t *testing.T) {
 	txBz = txBz[m:] // Skip over "AuthInfoBytes" bytes.
 	// Consume "Signature" field, it's the remaining bytes.
 	sigsBz := append([]byte{}, txBz...)
+
+	// bodyBz's length prefix is 5, with `5` as varint encoding. We also try a
+	// longer varint encoding for 5: `133 00`.
+	longVarintBodyBz := append(append([]byte{bodyBz[0]}, byte(133), byte(00)), bodyBz[2:]...)
 
 	tests := []struct {
 		name      string
@@ -228,6 +232,11 @@ func TestRejectNonADR027(t *testing.T) {
 			"body, authInfo, sigs (valid txRaw)",
 			append(append(bodyBz, authInfoBz...), sigsBz...),
 			false,
+		},
+		{
+			"longer varint than needed",
+			append(append(longVarintBodyBz, authInfoBz...), sigsBz...),
+			true,
 		},
 	}
 

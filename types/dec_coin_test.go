@@ -718,3 +718,45 @@ func (s *decCoinTestSuite) TestDecCoins_IsLT() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_IsGTE() {
+	testCases := []struct {
+		coin           sdk.DecCoin
+		otherCoin      sdk.DecCoin
+		expectedResult bool
+		expectedPanic  bool
+		msg            string
+	}{
+
+		// Same Denom - Less than other coin
+		{sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom1, sdk.NewDec(19)}, false, false, "DecCoin amount lesser than other coin. Should be false."},
+
+		// Same Denom - Greater than other coin
+		{sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom1, sdk.NewDec(14)}, true, false, "DecCoin amount greater than other coin. Should be true."},
+
+		// Same Denom - Same as other coin
+		{sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom1, sdk.NewDec(20)}, true, false, "DecCoin amount equal to other coin. Should be true."},
+
+		// Different Denom - Less than other coin
+		{sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom2, sdk.NewDec(19)}, true, true, "DecCoin denom different than other coin. Should panic."},
+
+		// Different Denom - Greater than other coin
+		{sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom2, sdk.NewDec(14)}, true, true, "DecCoin denom different than other coin. Should panic."},
+
+		// Different Denom - Same as other coin
+		{sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom2, sdk.NewDec(20)}, true, true, "DecCoin denom different than other coin. Should panic."},
+	}
+
+	for i, tc := range testCases {
+		if tc.expectedPanic {
+			s.Require().Panics(func() { tc.coin.IsGTE(tc.otherCoin) }, "Test case #%d: %s", i, tc.msg)
+		} else {
+			res := tc.coin.IsGTE(tc.otherCoin)
+			if tc.expectedResult {
+				s.Require().True(res, "Test case #%d: %s", i, tc.msg)
+			} else {
+				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
+			}
+		}
+	}
+}

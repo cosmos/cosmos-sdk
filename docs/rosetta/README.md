@@ -17,13 +17,13 @@ For information about the motivation and design choices, refer to [ADR 035](../a
 The Rosetta API server is a stand-alone server that connects to a node of a chain developed with the Cosmos SDK. 
 
 To enable Rosetta API support, it's required to add the `RosettaCommand` to your application's root command file.
-After the 
+Find the following line within the root command file:
 
 ```
 initRootCmd(rootCmd, encodingConfig)
 ```
 
-line, add the following lines:
+After that line, add the following:
 
 ```
 rootCmd.AddCommand(

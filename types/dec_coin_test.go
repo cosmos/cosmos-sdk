@@ -969,3 +969,47 @@ func (s *decCoinTestSuite) TestDecCoins_QuoDec() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoin_IsEqual() {
+	testCases := []struct {
+		coin           sdk.DecCoin
+		otherCoin      sdk.DecCoin
+		expectedResult bool
+		expectedPanic  bool
+		msg            string
+	}{
+
+		// Different Denom Same Amount
+		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(20)},
+			false, true, "Different demon for coins. Should panic."},
+
+		// Different Denom Different Amount
+		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(10)},
+			false, true, "Different demon for coins.. Should panic."},
+
+		// Same Denom Different Amount
+		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
+			false, false, "Same denom but different amount. Should be false."},
+
+		// Same Denom Same Amount
+		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+			true, false, "Same denom and same amount. Should be true."},
+	}
+
+	for i, tc := range testCases {
+		if tc.expectedPanic {
+			s.Require().Panics(func() { tc.coin.IsEqual(tc.otherCoin) }, "Test case #%d: %s", i, tc.msg)
+		} else {
+			res := tc.coin.IsEqual(tc.otherCoin)
+			if tc.expectedResult {
+				s.Require().True(res, "Test case #%d: %s", i, tc.msg)
+			} else {
+				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
+			}
+		}
+	}
+}

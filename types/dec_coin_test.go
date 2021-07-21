@@ -855,3 +855,60 @@ func (s *decCoinTestSuite) TestDecCoins_MulDec() {
 		s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s %s", i, tc.msg, res)
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
+	testCases := []struct {
+		coins          sdk.DecCoins
+		multiplier     sdk.Dec
+		expectedResult sdk.DecCoins
+		expectedPanic  bool
+		msg            string
+	}{
+		// No Coins
+		{sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), false, "No coins. Should return nil."},
+
+		// Multiple coins - zero multiplier
+		// TODO - Fix test - Function comment documentation for MulDecTruncate says if multiplier d is zero, it should panic.
+		// However, that is not the observed behaviour. Currently nil is returned.
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(10, 3)},
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(30, 2)},
+		}, sdk.NewDec(0), sdk.DecCoins(nil), false, "Multipler is zero. Should return nil."},
+
+		// Multiple coins - positive multiplier
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
+		}, sdk.NewDec(1), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(3, 0)},
+		}, false, "Multipler is positive. Should return truncated multiplied deccoins."},
+
+		// Multiple coins - positive multiplier
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
+		}, sdk.NewDec(-2), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(-6, 0)},
+		}, false, "Multipler is positive. Should return truncated multiplied deccoins."},
+
+		// Multiple coins - Different denom
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
+			sdk.DecCoin{testDenom2, sdk.NewDecWithPrec(3333, 4)},
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
+			sdk.DecCoin{testDenom2, sdk.NewDecWithPrec(333, 4)},
+		}, sdk.NewDec(10), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(30, 0)},
+			sdk.DecCoin{testDenom2, sdk.NewDecWithPrec(3666, 3)},
+		}, false, "Multipler is positive. Should return truncated multiplied deccoins with appropriate denoms."},
+	}
+
+	for i, tc := range testCases {
+		if tc.expectedPanic {
+			s.Require().Panics(func() { tc.coins.MulDecTruncate(tc.multiplier) }, "Test case #%d: %s", i, tc.msg)
+		} else {
+			res := tc.coins.MulDecTruncate(tc.multiplier)
+			s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s %s", i, tc.msg, res)
+		}
+	}
+}

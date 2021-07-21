@@ -912,3 +912,60 @@ func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_QuoDec() {
+
+	testCases := []struct {
+		coins          sdk.DecCoins
+		input          sdk.Dec
+		expectedResult sdk.DecCoins
+		panics         bool
+		msg            string
+	}{
+		// No Coins
+		{sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), false, "No coins. Should return empty slice."},
+
+		// Multiple coins - zero input
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(30)},
+		}, sdk.NewDec(0), sdk.DecCoins(nil), true, "Input is zero. Should panic."},
+
+		// Multiple coins - positive input
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
+		}, sdk.NewDec(2), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(35, 1)},
+		}, false, "Input is positive. Should return divided deccoins."},
+
+		// Multiple coins - negative input
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
+		}, sdk.NewDec(-2), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(-35, 1)},
+		}, false, "Input is negative. Should return divided deccoins."},
+
+		// Multiple coins - Different input
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(2)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(4)},
+		}, sdk.NewDec(2), sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(2)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(3)},
+		}, false, "Input coins with different denoms. Should return divided deccoins with appropriate denoms."},
+	}
+
+	for i, tc := range testCases {
+		tc := tc
+		if tc.panics {
+			s.Require().Panics(func() { tc.coins.QuoDec(tc.input) })
+		} else {
+			res := tc.coins.QuoDec(tc.input)
+			s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s %s", i, tc.msg, res)
+		}
+	}
+}

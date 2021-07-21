@@ -1013,3 +1013,61 @@ func (s *decCoinTestSuite) TestDecCoin_IsEqual() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoins_IsEqual() {
+	testCases := []struct {
+		coinsA         sdk.DecCoins
+		coinsB         sdk.DecCoins
+		expectedResult bool
+		expectedPanic  bool
+		msg            string
+	}{
+		// Different length sets
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
+		}, sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(35)},
+		}, false, false, "Different length coin sets. Should be false."},
+
+		// Same length - different denoms
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
+		}, sdk.DecCoins{
+			sdk.DecCoin{testDenom2, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom2, sdk.NewDec(4)},
+		}, false, true, "Same length coin sets with different denoms. Should panic."},
+
+		// Same length - different amounts
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
+		}, sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(41)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(343)},
+		}, false, false, "Same length coin sets with different amounts. Should be false."},
+
+		// Same length - same amounts
+		{sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(33)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(344)},
+		}, sdk.DecCoins{
+			sdk.DecCoin{testDenom1, sdk.NewDec(33)},
+			sdk.DecCoin{testDenom1, sdk.NewDec(344)},
+		}, true, false, "Same length coin sets with same amounts and denoms. Should be true,"},
+	}
+
+	for i, tc := range testCases {
+		if tc.expectedPanic {
+			s.Require().Panics(func() { tc.coinsA.IsEqual(tc.coinsB) }, "Test case #%d: %s", i, tc.msg)
+		} else {
+			res := tc.coinsA.IsEqual(tc.coinsB)
+			if tc.expectedResult {
+				s.Require().True(res, "Test case #%d: %s", i, tc.msg)
+			} else {
+				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
+			}
+		}
+	}
+}

@@ -1,14 +1,14 @@
 <!--
-order: 3
+order: 2
 -->
 
 # REST Endpoints Migration
 
-Migrate your REST endpoints to the Stargate ones. {synopsis}
+Migrate your REST endpoints. Legacy REST endpoints have been deprecated since v0.40 and they will be removed in v0.44. {synopsis}
 
 ## Deprecation of Legacy REST Endpoints
 
-The Cosmos SDK versions v0.39 and earlier provided REST endpoints to query the state and broadcast transactions. These endpoints are kept in Cosmos SDK v0.40 (Stargate), but they are marked as deprecated, and will be removed in v0.41. We therefore call these endpoints legacy REST endpoints.
+The Cosmos SDK versions v0.39 and earlier provided REST endpoints to query the state and broadcast transactions. These endpoints were kept in Cosmos SDK v0.40 and they are still available in v0.43, but they are marked as deprecated and will be removed in v0.44. We therefore call these endpoints legacy REST endpoints.
 
 Some important information concerning all legacy REST endpoints:
 
@@ -32,9 +32,9 @@ Some important information concerning all legacy REST endpoints:
 
 ## Migrating to New REST Endpoints
 
-Thanks to the Protocol Buffers migration in v0.40, we are able to take advantage of a vast number of gRPC tools and solutions. For most of the legacy REST endpoints, Cosmos SDK v0.40 provides new REST endpoints generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/). We usually call them _gRPC-gateway REST endpoints_.
+Thanks to the Protocol Buffers migration in v0.40, we are able to take advantage of a vast number of gRPC tools and solutions. Most of the legacy REST endpoints have been replaced by REST endpoints generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/). We usually call them _gRPC-gateway REST endpoints_.
 
-Some modules expose legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints have been removed. We recommend to use [service `Msg`s](../building-modules/msg-services.md) directly, and use Protobuf to do client-side transaction generation. A guide can be found [here](../run-node/txs.md).
+Previously, some modules exposed legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints were removed in v0.40. We recommend using [Protobuf `Msg` service](../building-modules/msg-services.md) directly to do client-side transaction generation. A guide can be found [here](../run-node/txs.md).
 
 | Legacy REST Endpoint                                                            | Description                                                         | New gRPC-gateway REST Endpoint                                                                        |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |

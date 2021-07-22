@@ -20,12 +20,12 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	const prefixKey = 0x2
 	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{prefixKey})
 	md := testdata.TableModel{
-		Id:   "my-id",
+		Id:   1,
 		Name: "some name",
 	}
 	bz, err := md.Marshal()
 	require.NoError(t, err)
-	store.Set([]byte("my-id"), bz)
+	store.Set(EncodeSequence(1), bz)
 
 	specs := map[string]struct {
 		srcRowID     RowID
@@ -34,17 +34,17 @@ func TestTypeSafeRowGetter(t *testing.T) {
 		expErr       *errors.Error
 	}{
 		"happy path": {
-			srcRowID:     []byte("my-id"),
+			srcRowID:     EncodeSequence(1),
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
 			expObj:       md,
 		},
 		"unknown rowID should return ErrNotFound": {
-			srcRowID:     []byte("unknown"),
+			srcRowID:     EncodeSequence(2),
 			srcModelType: reflect.TypeOf(testdata.TableModel{}),
 			expErr:       ErrNotFound,
 		},
 		"wrong type should cause ErrType": {
-			srcRowID:     []byte("my-id"),
+			srcRowID:     EncodeSequence(1),
 			srcModelType: reflect.TypeOf(testdata.Cat{}),
 			expErr:       ErrType,
 		},

@@ -58,7 +58,7 @@ func TestCreate(t *testing.T) {
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
-				Id:   "my-id",
+				Id:   1,
 				Name: "some name",
 			},
 		},
@@ -71,7 +71,7 @@ func TestCreate(t *testing.T) {
 		},
 		"model validation fails": {
 			src: &testdata.TableModel{
-				Id:   "my-id",
+				Id:   1,
 				Name: "",
 			},
 			expErr: testdata.ErrTest,
@@ -89,15 +89,15 @@ func TestCreate(t *testing.T) {
 			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, Max255DynamicLengthIndexKeyCodec{}, cdc)
 			myTable := tableBuilder.Build()
 
-			err := myTable.Create(store, []byte("my-id"), spec.src)
+			err := myTable.Create(store, EncodeSequence(1), spec.src)
 
 			require.True(t, spec.expErr.Is(err), err)
 			shouldExists := spec.expErr == nil
-			assert.Equal(t, shouldExists, myTable.Has(store, []byte("my-id")), fmt.Sprintf("expected %v", shouldExists))
+			assert.Equal(t, shouldExists, myTable.Has(store, EncodeSequence(1)), fmt.Sprintf("expected %v", shouldExists))
 
 			// then
 			var loaded testdata.TableModel
-			err = myTable.GetOne(store, []byte("my-id"), &loaded)
+			err = myTable.GetOne(store, EncodeSequence(1), &loaded)
 			if spec.expErr != nil {
 				require.True(t, ErrNotFound.Is(err))
 				return
@@ -115,7 +115,7 @@ func TestUpdate(t *testing.T) {
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
-				Id:   "my-id",
+				Id:   1,
 				Name: "some name",
 			},
 		},
@@ -128,7 +128,7 @@ func TestUpdate(t *testing.T) {
 		},
 		"model validation fails": {
 			src: &testdata.TableModel{
-				Id:   "my-id",
+				Id:   1,
 				Name: "",
 			},
 			expErr: testdata.ErrTest,
@@ -147,20 +147,20 @@ func TestUpdate(t *testing.T) {
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
-				Id:   "my-id",
+				Id:   1,
 				Name: "old name",
 			}
 
-			err := myTable.Create(store, []byte("my-id"), &initValue)
+			err := myTable.Create(store, EncodeSequence(1), &initValue)
 			require.NoError(t, err)
 
 			// when
-			err = myTable.Save(store, []byte("my-id"), spec.src)
+			err = myTable.Save(store, EncodeSequence(1), spec.src)
 			require.True(t, spec.expErr.Is(err), "got ", err)
 
 			// then
 			var loaded testdata.TableModel
-			require.NoError(t, myTable.GetOne(store, []byte("my-id"), &loaded))
+			require.NoError(t, myTable.GetOne(store, EncodeSequence(1), &loaded))
 			if spec.expErr == nil {
 				assert.Equal(t, spec.src, &loaded)
 			} else {
@@ -176,7 +176,7 @@ func TestDelete(t *testing.T) {
 		expErr *errors.Error
 	}{
 		"happy path": {
-			rowId: []byte("my-id"),
+			rowId: EncodeSequence(1),
 		},
 		"not found": {
 			rowId:  []byte("not-found"),
@@ -196,11 +196,11 @@ func TestDelete(t *testing.T) {
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
-				Id:   "my-id",
+				Id:   1,
 				Name: "some name",
 			}
 
-			err := myTable.Create(store, []byte("my-id"), &initValue)
+			err := myTable.Create(store, EncodeSequence(1), &initValue)
 			require.NoError(t, err)
 
 			// when
@@ -210,10 +210,10 @@ func TestDelete(t *testing.T) {
 			// then
 			var loaded testdata.TableModel
 			if spec.expErr == ErrNotFound {
-				require.NoError(t, myTable.GetOne(store, []byte("my-id"), &loaded))
+				require.NoError(t, myTable.GetOne(store, EncodeSequence(1), &loaded))
 				assert.Equal(t, initValue, loaded)
 			} else {
-				err := myTable.GetOne(store, []byte("my-id"), &loaded)
+				err := myTable.GetOne(store, EncodeSequence(1), &loaded)
 				require.Error(t, err)
 				require.Equal(t, err, ErrNotFound)
 			}

@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	flagEvents    = "events"
-	flagSignature = "signature"
-	flagAddress   = "address"
-	flagSequence  = "sequence"
+	flagEvents     = "events"
+	flagSignatures = "signatures"
+	flagAddress    = "address"
+	flagSequence   = "sequence"
 
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -222,50 +222,77 @@ func QueryTxCmd() *cobra.Command {
 				return err
 			}
 
-			var output *sdk.TxResponse
-			if len(args) > 0 && args[0] != "" {
-				// If hash is given, then query the tx by hash.
-				output, err = authtx.QueryTx(clientCtx, args[0])
-				if err != nil {
-					return err
-				}
+			addr, _ := cmd.Flags().GetString(flagAddress)
+			seq, _ := cmd.Flags().GetInt(flagSequence)
+			sigs, _ := cmd.Flags().GetString(flagSignatures)
 
-				if output.Empty() {
-					return fmt.Errorf("no transaction found with hash %s", args[0])
-				}
-			} else {
-				// If hash is omitted, then query the tx:
-				// - either by signature
-				// - or by address and sequence
+			switch {
+			// Query tx by hash.
+			case len(args) > 0 && args[0] != "":
+				{
+					// If hash is given, then query the tx by hash.
+					output, err := authtx.QueryTx(clientCtx, args[0])
+					if err != nil {
+						return err
+					}
 
-				addr, _ := cmd.Flags().GetString(flagAddress)
-				seq, _ := cmd.Flags().GetInt(flagSequence)
-				if addr == "" || seq < 0 {
-					return fmt.Errorf("both --address and --sequence need to be set")
-				}
+					if output.Empty() {
+						return fmt.Errorf("no transaction found with hash %s", args[0])
+					}
 
-				tmEvents := []string{
-					fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, addr),
-					fmt.Sprintf("%s.%s='%d'", sdk.EventTypeTx, sdk.AttributeKeySequence, seq),
+					return clientCtx.PrintProto(output)
 				}
-				txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
-				if err != nil {
-					return err
-				}
-				if len(txs.Txs) == 0 {
-					return fmt.Errorf("found no txs matching given address and sequence combination")
-				}
+			// Query tx by signature.
+			case sigs != "":
+				{
+					tmEvents := []string{
+						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sigs),
+					}
+					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
+					if err != nil {
+						return err
+					}
+					if len(txs.Txs) == 0 {
+						return fmt.Errorf("found no txs matching given signatures")
+					}
+					if len(txs.Txs) > 1 {
+						// This case means there's a bug somewhere else in the code. Should not happen.
+						return fmt.Errorf("found %d txs matching given signatures", len(txs.Txs))
+					}
 
-				return clientCtx.PrintProto(txs.Txs[0])
+					return clientCtx.PrintProto(txs.Txs[0])
+				}
+			// Query tx by addr+seq combo.
+			case addr != "" && seq >= 0:
+				{
+					tmEvents := []string{
+						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, addr),
+						fmt.Sprintf("%s.%s='%d'", sdk.EventTypeTx, sdk.AttributeKeySequence, seq),
+					}
+					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
+					if err != nil {
+						return err
+					}
+					if len(txs.Txs) == 0 {
+						return fmt.Errorf("found no txs matching given address and sequence combination")
+					}
+					if len(txs.Txs) > 1 {
+						// This case means there's a bug somewhere else in the code. Should not happen.
+						return fmt.Errorf("found %d txs matching given address and sequence combination", len(txs.Txs))
+					}
+
+					return clientCtx.PrintProto(txs.Txs[0])
+				}
+			default:
+				return fmt.Errorf("either pass a tx hash, OR a --signature flag, OR both --address and --sequence flags")
 			}
-
-			return clientCtx.PrintProto(output)
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer, to be used in conjunction with --%s", flagSequence))
 	cmd.Flags().Int(flagSequence, -1, fmt.Sprintf("Query the tx by sequence, to be used in conjunction with --%s", flagAddress))
+	cmd.Flags().String(flagSignatures, "", "Query the tx by comma-separated signatures in base64 encoding")
 
 	return cmd
 }

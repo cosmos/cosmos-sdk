@@ -344,12 +344,17 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
 		expectErrStr string
 	}{
 		{
+			"with no flags",
+			[]string{},
+			true, "either pass a tx hash, OR a --signature flag, OR both --address and --sequence flags",
+		},
+		{
 			"with --address only",
 			[]string{
 				fmt.Sprintf("--address=%s", val.Address.String()),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			true, "both --address and --sequence need to be set",
+			true, "either pass a tx hash, OR a --signature flag, OR both --address and --sequence flags",
 		},
 		{
 			"with --sequence only",
@@ -357,7 +362,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
 				fmt.Sprintf("--sequence=%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			true, "both --address and --sequence need to be set",
+			true, "either pass a tx hash, OR a --signature flag, OR both --address and --sequence flags",
 		},
 		{
 			"non-existing --address and --sequence combo",
@@ -376,6 +381,14 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false, "",
+		},
+		{
+			"non-existing --signatures",
+			[]string{
+				fmt.Sprintf("--signatures=%s", "foo"),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "found no txs matching given signatures",
 		},
 	}
 

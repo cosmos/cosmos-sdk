@@ -287,7 +287,7 @@ func QueryTxCmd() *cobra.Command {
 					return clientCtx.PrintProto(txs.Txs[0])
 				}
 			default:
-				return fmt.Errorf("either pass a tx hash, OR a --signature flag, OR both --address and --sequence flags")
+				return fmt.Errorf("either pass a tx hash, OR a --%s flag, OR both --%s and --%s flags", flagSignatures, flagAddress, flagSequence)
 			}
 		},
 	}

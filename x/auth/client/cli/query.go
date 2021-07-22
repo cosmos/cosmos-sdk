@@ -17,10 +17,13 @@ import (
 )
 
 const (
-	flagEvents     = "events"
-	flagSignatures = "signatures"
-	flagAddress    = "address"
-	flagSequence   = "sequence"
+	flagEvents  = "events"
+	flagType    = "type"
+	flagAddress = "address"
+
+	typeHash = "hash"
+	typeSeq  = "sequence"
+	typeSig  = "signature"
 
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -215,21 +218,22 @@ func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
 		Short: "Query for a transaction by hash in a committed block",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			addr, _ := cmd.Flags().GetString(flagAddress)
-			seq, _ := cmd.Flags().GetInt(flagSequence)
-			sigs, _ := cmd.Flags().GetString(flagSignatures)
+			typ, _ := cmd.Flags().GetString(flagType)
 
-			switch {
-			// Query tx by hash.
-			case len(args) > 0 && args[0] != "":
+			switch typ {
+			case typeHash:
 				{
+					if args[0] == "" {
+						return fmt.Errorf("argument should be a tx hash")
+					}
+
 					// If hash is given, then query the tx by hash.
 					output, err := authtx.QueryTx(clientCtx, args[0])
 					if err != nil {
@@ -242,10 +246,13 @@ func QueryTxCmd() *cobra.Command {
 
 					return clientCtx.PrintProto(output)
 				}
-			// Query tx by signature.
-			case sigs != "":
+			case typeSig:
 				{
-					sigParts := strings.Split(sigs, ",")
+					if args[0] == "" {
+						return fmt.Errorf("argument should be comma-separated signatures")
+					}
+
+					sigParts := strings.Split(args[0], ",")
 					tmEvents := make([]string, len(sigParts))
 					for i, sig := range sigParts {
 						tmEvents[i] = fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
@@ -265,12 +272,19 @@ func QueryTxCmd() *cobra.Command {
 
 					return clientCtx.PrintProto(txs.Txs[0])
 				}
-			// Query tx by addr+seq combo.
-			case addr != "" && seq >= 0:
+			case typeSeq:
 				{
+					if args[0] == "" {
+						return fmt.Errorf("argument should be a sequence")
+					}
+					addr, _ := cmd.Flags().GetString(flagAddress)
+					if addr == "" {
+						return fmt.Errorf("--%s is required when using --%s=%s", flagAddress, flagType, typeSeq)
+					}
+
 					tmEvents := []string{
 						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, addr),
-						fmt.Sprintf("%s.%s='%d'", sdk.EventTypeTx, sdk.AttributeKeySequence, seq),
+						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySequence, args[0]),
 					}
 					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
 					if err != nil {
@@ -287,15 +301,14 @@ func QueryTxCmd() *cobra.Command {
 					return clientCtx.PrintProto(txs.Txs[0])
 				}
 			default:
-				return fmt.Errorf("either pass a tx hash, OR a --%s flag, OR both --%s and --%s flags", flagSignatures, flagAddress, flagSequence)
+				return fmt.Errorf("unknown --%s value %s", flagType, typ)
 			}
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer, to be used in conjunction with --%s", flagSequence))
-	cmd.Flags().Int(flagSequence, -1, fmt.Sprintf("Query the tx by sequence, to be used in conjunction with --%s", flagAddress))
-	cmd.Flags().String(flagSignatures, "", "Query the tx by comma-separated signatures in base64 encoding")
+	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer and sequence, required if --%s=%s", flagType, typeSeq))
+	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of %s, %s,%s", typeHash, typeSeq, typeSig))
 
 	return cmd
 }

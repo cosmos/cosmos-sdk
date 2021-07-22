@@ -345,48 +345,66 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 		expectErrStr string
 	}{
 		{
-			"with no flags",
-			[]string{},
-			true, "either pass a tx hash, OR a --signatures flag, OR both --address and --sequence flags",
-		},
-		{
-			"with --address only",
+			"invalid --type",
 			[]string{
-				fmt.Sprintf("--address=%s", val.Address.String()),
+				fmt.Sprintf("--type=%s", "foo"),
+				"bar",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			true, "either pass a tx hash, OR a --signatures flag, OR both --address and --sequence flags",
+			true, "unknown --type value foo",
 		},
 		{
-			"with --sequence only",
+			"--type=sequence with no sequence",
 			[]string{
-				fmt.Sprintf("--sequence=%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
+				"--type=sequence",
+				"",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			true, "either pass a tx hash, OR a --signatures flag, OR both --address and --sequence flags",
+			true, "argument should be a sequence",
 		},
 		{
-			"non-existing --address and --sequence combo",
+			"--type=sequence with no address",
 			[]string{
+				"--type=sequence",
+				fmt.Sprintf("%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "--address is required when using --type=sequence",
+		},
+		{
+			"non-existing addr+seq combo",
+			[]string{
+				"--type=sequence",
+				"42",
 				fmt.Sprintf("--address=%s", val.Address.String()),
-				fmt.Sprintf("--sequence=%d", 42),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true, "found no txs matching given address and sequence combination",
 		},
 		{
-			"with --address and --sequence happy case",
+			"addr+seq happy case",
 			[]string{
+				"--type=sequence",
+				fmt.Sprintf("%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
 				fmt.Sprintf("--address=%s", val.Address.String()),
-				fmt.Sprintf("--sequence=%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false, "",
 		},
 		{
-			"non-existing --signatures",
+			"--type=signature with no signature",
 			[]string{
-				fmt.Sprintf("--signatures=%s", "foo"),
+				"--type=signature",
+				"",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "argument should be comma-separated signatures",
+		},
+		{
+			"non-existing signatures",
+			[]string{
+				"--type=signature",
+				"foo",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true, "found no txs matching given signatures",
@@ -394,7 +412,8 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 		{
 			"with --signatures happy case",
 			[]string{
-				fmt.Sprintf("--signatures=%s", base64.StdEncoding.EncodeToString(protoTx.Signatures[0])),
+				"--type=signature",
+				base64.StdEncoding.EncodeToString(protoTx.Signatures[0]),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false, "",

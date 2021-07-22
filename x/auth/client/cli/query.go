@@ -216,9 +216,15 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tx [hash]",
-		Short: "Query for a transaction by hash in a committed block",
-		Args:  cobra.ExactArgs(1),
+		Use:   "tx [hash|sequence|signature] --type=[hash|sequence|signature]",
+		Short: "Query for a transaction by hash, sequence or signature in a committed block",
+		Long: strings.TrimSpace(fmt.Sprintf(`
+Example:
+$ %s query tx <hash>
+$ %s query tx --%s=%s <sequence> --%s=<addr>
+$ %s query tx --%s=%s <sig1_base64,sig2_base64...>
+`, version.AppName, version.AppName, flagType, typeSeq, flagAddress, version.AppName, flagType, typeSig)),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -307,8 +313,8 @@ func QueryTxCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer and sequence, required if --%s=%s", flagType, typeSeq))
-	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of %s, %s,%s", typeHash, typeSeq, typeSig))
+	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer and sequence, required if --%s=%s is set", flagType, typeSeq))
+	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeSeq, typeSig))
 
 	return cmd
 }

@@ -476,6 +476,7 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 // signatureDataToBz converts a SignatureData into raw bytes signature. It is
 // the same function as in auth/tx/sigs.go, but copied here because of import
 // cycles.
+// TODO: https://github.com/cosmos/cosmos-sdk/issues/9753
 func signatureDataToBz(data signing.SignatureData) ([]byte, error) {
 	if data == nil {
 		return nil, fmt.Errorf("got empty SignatureData")

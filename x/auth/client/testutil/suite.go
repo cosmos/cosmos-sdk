@@ -246,7 +246,7 @@ func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output 
 	}
 }
 
-func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByHash() {
+func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 	val := s.network.Validators[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
@@ -314,7 +314,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByHash() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
+func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 	val := s.network.Validators[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")

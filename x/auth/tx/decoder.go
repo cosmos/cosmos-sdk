@@ -101,11 +101,13 @@ func rejectNonADR027(txBytes []byte) error {
 	prevTagNum := protowire.Number(0)
 
 	for len(txBytes) > 0 {
-		tagNum, _, m := protowire.ConsumeTag(txBytes)
+		tagNum, wireType, m := protowire.ConsumeTag(txBytes)
 		if m < 0 {
 			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
 		}
-
+		if wireType != protowire.BytesType {
+			return fmt.Errorf("expected %d wire type, got %d", protowire.VarintType, wireType)
+		}
 		if tagNum < prevTagNum {
 			return fmt.Errorf("txRaw must follow ADR-027, got tagNum %d after tagNum %d", tagNum, prevTagNum)
 		}

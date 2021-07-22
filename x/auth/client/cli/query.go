@@ -245,9 +245,12 @@ func QueryTxCmd() *cobra.Command {
 			// Query tx by signature.
 			case sigs != "":
 				{
-					tmEvents := []string{
-						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sigs),
+					sigParts := strings.Split(sigs, ",")
+					tmEvents := make([]string, len(sigParts))
+					for i, sig := range sigParts {
+						tmEvents[i] = fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
 					}
+
 					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
 					if err != nil {
 						return err

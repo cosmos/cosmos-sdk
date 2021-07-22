@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -285,7 +286,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByHash() {
 			true, "",
 		},
 		{
-			"with hash happy case",
+			"happy case",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
 			sdk.MsgTypeURL(&banktypes.MsgSend{}),
@@ -389,6 +390,14 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true, "found no txs matching given signatures",
+		},
+		{
+			"with --signatures happy case",
+			[]string{
+				fmt.Sprintf("--signatures=%s", base64.StdEncoding.EncodeToString(protoTx.Signatures[0])),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, "",
 		},
 	}
 
@@ -782,7 +791,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-	// Sign with account1
+	// Sign with account2
 	account2Signature, err := TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 

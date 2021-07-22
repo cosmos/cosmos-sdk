@@ -335,15 +335,39 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-
 	protoTx := txRes.GetTx().(*tx.Tx)
-	fmt.Printf("%T %s\n", txRes.GetTx(), txRes.GetTx().(*tx.Tx).Signatures)
 
 	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrStr string
 	}{
+		{
+			"with --address only",
+			[]string{
+				fmt.Sprintf("--address=%s", val.Address.String()),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "both --address and --sequence need to be set",
+		},
+		{
+			"with --sequence only",
+			[]string{
+				fmt.Sprintf("--sequence=%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "both --address and --sequence need to be set",
+		},
+		{
+			"non-existing --address and --sequence combo",
+			[]string{
+				fmt.Sprintf("--address=%s", val.Address.String()),
+				fmt.Sprintf("--sequence=%d", 42),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "found no txs matching given address and sequence combination",
+		},
 		{
 			"with --address and --sequence happy case",
 			[]string{
@@ -351,7 +375,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
 				fmt.Sprintf("--sequence=%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false,
+			false, "",
 		},
 	}
 
@@ -362,10 +386,9 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd_ByEvents() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-
 			if tc.expectErr {
 				s.Require().Error(err)
-				s.Require().NotEqual("internal", err.Error())
+				s.Require().Contains(err.Error(), tc.expectErrStr)
 			} else {
 				var result sdk.TxResponse
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))

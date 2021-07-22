@@ -223,7 +223,6 @@ func QueryTxCmd() *cobra.Command {
 			}
 
 			var output *sdk.TxResponse
-			fmt.Println("QueryTxCmd args=", args)
 			if len(args) > 0 && args[0] != "" {
 				// If hash is given, then query the tx by hash.
 				output, err = authtx.QueryTx(clientCtx, args[0])
@@ -240,21 +239,21 @@ func QueryTxCmd() *cobra.Command {
 				// - or by address and sequence
 
 				addr, _ := cmd.Flags().GetString(flagAddress)
-				seq, _ := cmd.Flags().GetUint64(flagSequence)
-				if addr == "" && seq == 0 {
-					return fmt.Errorf("either")
+				seq, _ := cmd.Flags().GetInt(flagSequence)
+				if addr == "" || seq < 0 {
+					return fmt.Errorf("both --address and --sequence need to be set")
 				}
+
 				tmEvents := []string{
-					fmt.Sprintf("%s.%s=%s", sdk.EventTypeMessage, sdk.AttributeKeySender, addr),
-					fmt.Sprintf("%s.%s=%d", sdk.EventTypeTx, sdk.AttributeKeySequence, seq),
+					fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, addr),
+					fmt.Sprintf("%s.%s='%d'", sdk.EventTypeTx, sdk.AttributeKeySequence, seq),
 				}
-				fmt.Println("QueryTxCmd tmEvents=", tmEvents)
 				txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
 				if err != nil {
 					return err
 				}
 				if len(txs.Txs) == 0 {
-					return fmt.Errorf("found no txs matching address and sequence combination")
+					return fmt.Errorf("found no txs matching given address and sequence combination")
 				}
 
 				return clientCtx.PrintProto(txs.Txs[0])
@@ -266,7 +265,7 @@ func QueryTxCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer, to be used in conjunction with --%s", flagSequence))
-	cmd.Flags().Int(flagSequence, 0, fmt.Sprintf("Query the tx by sequence, to be used in conjunction with --%s", flagAddress))
+	cmd.Flags().Int(flagSequence, -1, fmt.Sprintf("Query the tx by sequence, to be used in conjunction with --%s", flagAddress))
 
 	return cmd
 }

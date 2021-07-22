@@ -1,19 +1,30 @@
 syntax = "proto3";
 package cosmos.nft.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "gogoproto/gogo.proto";
 
-option go_package                      = "github.com/cosmos/cosmos-sdk/x/nft/types";
-option (gogoproto.goproto_getters_all) = false;
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
-// BaseNFT defines a base NFT type.
-message BaseNFT {
-  option (gogoproto.equal) = true;
+// Class defines the class of the nft type.
+message Class {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
 
-  string id    = 1;
-  string name  = 2;
-  string uri   = 3 [(gogoproto.customname) = "URI"];
-  string data  = 4;
-  string owner = 5;
+  string id          = 1;
+  string name        = 2;
+  string symbol      = 3;
+  string description = 4;
+  string uri         = 5;
+}
+
+// NFT defines the nft.
+message NFT {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
+
+  string              class_id = 1;
+  string              id       = 2;
+  string              uri      = 3;
+  google.protobuf.Any data     = 10;
 }

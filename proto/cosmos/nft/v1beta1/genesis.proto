@@ -2,12 +2,23 @@ syntax = "proto3";
 package cosmos.nft.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
-import "cosmos_proto/cosmos.proto";
+import "google/api/annotations.proto";
+import "cosmos/nft/v1beta1/nft.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/nft/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
-// GenesisState defines the NFT module's genesis state
+// GenesisState defines the nft module's genesis state.
 message GenesisState {
-  repeated google.protobuf.Any nfts = 1 [(cosmos_proto.accepts_interface) = "NFTI", (gogoproto.customname) = "NFTs"];
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // class defines the class of the nft type.
+  repeated cosmos.nft.v1beta1.Class classes = 1 [(gogoproto.nullable) = false];
+  repeated Entry                    entries = 2 [(gogoproto.nullable) = false];
+}
+
+// Entry Defines all nft owned by a person
+message Entry {
+  string   owner                       = 1;
+  repeated cosmos.nft.v1beta1.NFT nfts = 2 [(gogoproto.customname) = "NFTs", (gogoproto.nullable) = false];
 }

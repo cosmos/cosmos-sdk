@@ -1093,3 +1093,32 @@ func (s *decCoinTestSuite) TestDecCoins_IsEqual() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoin_Validate() {
+	var empty sdk.DecCoin
+	testCases := []struct {
+		input        sdk.DecCoin
+		expectedPass bool
+	}{
+		// uninitalized deccoin
+		{empty, false},
+
+		// invalid denom string
+		{sdk.DecCoin{"(){9**&})", sdk.NewDec(33)}, false},
+
+		// negative coin amount
+		{sdk.DecCoin{testDenom1, sdk.NewDec(-33)}, false},
+
+		// valid coin
+		{sdk.DecCoin{testDenom1, sdk.NewDec(33)}, true},
+	}
+
+	for i, tc := range testCases {
+		err := tc.input.Validate()
+		if tc.expectedPass {
+			s.Require().NoError(err, "unexpected result for test case #%d, input: %v", i, tc.input)
+		} else {
+			s.Require().Error(err, "unexpected result for test case #%d, input: %v", i, tc.input)
+		}
+	}
+}

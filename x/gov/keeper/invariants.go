@@ -25,19 +25,19 @@ func AllInvariants(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 // deposit amounts held on store
 func ModuleAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
-		var deposits sdk.Coins
+		var expectedDeposits sdk.Coins
 
 		keeper.IterateAllDeposits(ctx, func(deposit types.Deposit) bool {
-			deposits = deposits.Add(deposit.Amount...)
+			expectedDeposits = expectedDeposits.Add(deposit.Amount...)
 			return false
 		})
 
 		macc := keeper.GetGovernanceAccount(ctx)
 		balances := bk.GetAllBalances(ctx, macc.GetAddress())
-		broken := deposits.IsAllGT(balances)
+		broken := !balances.IsEqual(expectedDeposits)
 
 		return sdk.FormatInvariant(types.ModuleName, "deposits",
 			fmt.Sprintf("\tgov ModuleAccount coins: %s\n\tsum of deposit amounts:  %s\n",
-				balances, deposits)), broken
+				balances, expectedDeposits)), broken
 	}
 }

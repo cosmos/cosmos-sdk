@@ -49,8 +49,10 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
 
-		if !burnDeposits {
-			keeper.RefundDeposits(ctx, proposal.ProposalId)
+		if burnDeposits {
+			keeper.DeleteAndBurnDeposits(ctx, proposal.ProposalId)
+		} else {
+			keeper.RefundAndDeleteDeposits(ctx, proposal.ProposalId)
 		}
 
 		if passes {

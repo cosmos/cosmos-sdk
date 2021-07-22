@@ -27,6 +27,7 @@ func MsgSubmitProposal(clientCtx client.Context, from, title, description, propo
 	}, commonArgs...)
 
 	args = append(args, extraArgs...)
+	fmt.Println("args", args)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, govcli.NewCmdSubmitProposal(), args)
 }

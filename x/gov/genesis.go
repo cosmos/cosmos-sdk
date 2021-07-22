@@ -48,8 +48,8 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	}
 
 	// check if total deposits equals balance, if it doesn't panic because there were export/import errors
-	if totalDeposits.IsAllGT(balance) {
-		panic(fmt.Sprintf("expected module account balance to be less than %s but got %s", totalDeposits.String(), balance.String()))
+	if !balance.IsEqual(totalDeposits) {
+		panic(fmt.Sprintf("expected module account was %s but we got %s", balance.String(), totalDeposits.String()))
 	}
 }
 

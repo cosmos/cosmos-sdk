@@ -95,9 +95,9 @@ func TestDeposits(t *testing.T) {
 	deposit, found = app.GovKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])
 	require.True(t, found)
 	require.Equal(t, fourStake, deposit.Amount)
-	app.GovKeeper.RefundDeposits(ctx, proposalID)
+	app.GovKeeper.RefundAndDeleteDeposits(ctx, proposalID)
 	deposit, found = app.GovKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])
-	require.True(t, found) // deposits will be refunded but not deleted from store
+	require.False(t, found)
 	require.Equal(t, addr0Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[0]))
 	require.Equal(t, addr1Initial, app.BankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 

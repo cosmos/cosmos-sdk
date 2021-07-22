@@ -41,33 +41,49 @@ func (s *DepositTestSuite) SetupSuite() {
 	deposits := sdk.Coins{
 		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
 		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
-		sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens),
 	}
 	s.deposits = deposits
 
-	// create 3 proposals for testing
+	// create 2 proposals for testing
 	for i := 0; i < len(deposits); i++ {
-		var exactArgs []string
 		id := i + 1
+		deposit := deposits[i]
 
-		if !deposits[i].IsZero() {
-			exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", cli.FlagDeposit, deposits[i]))
-		}
-
-		_, err := MsgSubmitProposal(
-			val.ClientCtx,
-			val.Address.String(),
-			fmt.Sprintf("Text Proposal %d", id),
-			"Where is the title!?",
-			types.ProposalTypeText,
-			exactArgs...,
-		)
-
-		s.Require().NoError(err)
-		_, err = s.network.WaitForHeight(1)
-		s.Require().NoError(err)
+		s.createProposal(val, deposit, id)
 		s.proposalIDs = append(s.proposalIDs, fmt.Sprintf("%d", id))
 	}
+}
+
+func (s *DepositTestSuite) SetupNewSuite() {
+	s.T().Log("setting up new test suite")
+
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+}
+
+func (s *DepositTestSuite) createProposal(val *network.Validator, initialDeposit sdk.Coin, id int) {
+	var exactArgs []string
+
+	if !initialDeposit.IsZero() {
+		exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit.String()))
+	}
+
+	_, err := MsgSubmitProposal(
+		val.ClientCtx,
+		val.Address.String(),
+		fmt.Sprintf("Text Proposal %d", id),
+		"Where is the title!?",
+		types.ProposalTypeText,
+		exactArgs...,
+	)
+
+	s.Require().NoError(err)
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
 }
 
 func (s *DepositTestSuite) TearDownSuite() {
@@ -123,10 +139,17 @@ func (s *DepositTestSuite) TestQueryProposalNotEnoughDeposits() {
 }
 
 func (s *DepositTestSuite) TestRejectedProposalDeposits() {
+	// resetting state required (proposal is getting removed from state and proposalID is not in sequence)
+	s.TearDownSuite()
+	s.SetupNewSuite()
+
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	initialDeposit := s.deposits[2]
-	proposalID := s.proposalIDs[2]
+	initialDeposit := sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens)
+	id := 1
+	proposalID := fmt.Sprintf("%d", id)
+
+	s.createProposal(val, initialDeposit, id)
 
 	// query deposits
 	var deposits types.QueryDepositsResponse
@@ -137,7 +160,7 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &deposits))
 	s.Require().Equal(len(deposits.Deposits), 1)
 	// verify initial deposit
-	s.Require().Equal(deposits.Deposits[0].Amount.String(), sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String())
+	s.Require().Equal(deposits.Deposits[0].Amount.String(), initialDeposit.String())
 
 	// vote
 	_, err = MsgVote(clientCtx, val.Address.String(), proposalID, "no")

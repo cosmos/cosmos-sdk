@@ -166,8 +166,10 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return activatedVotingPeriod, nil
 }
 
-// RefundDeposits refunds all the deposits on a specific proposal.
-func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
+// RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.
+func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64) {
+	store := ctx.KVStore(keeper.storeKey)
+
 	keeper.IterateDeposits(ctx, proposalID, func(deposit types.Deposit) bool {
 		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
 		if err != nil {
@@ -179,6 +181,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 			panic(err)
 		}
 
+		store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
 }

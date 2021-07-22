@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -108,7 +107,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	var events sdk.Events
 	for _, sig := range sigs {
-		_, sigBz := authtx.SignatureDataToModeInfoAndSig(sig.Data)
+		sigBz, err := signatureDataToBz(sig.Data)
 		if err != nil {
 			return ctx, err
 		}
@@ -472,4 +471,41 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 	}
 
 	return numKeys
+}
+
+// signatureDataToBz converts a SignatureData into raw bytes signature. It is
+// the same function as in auth/tx/sigs.go, but copied here because of import
+// cycles.
+func signatureDataToBz(data signing.SignatureData) ([]byte, error) {
+	if data == nil {
+		return nil, fmt.Errorf("got empty SignatureData")
+	}
+
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		return data.Signature, nil
+	case *signing.MultiSignatureData:
+		n := len(data.Signatures)
+		sigs := make([][]byte, n)
+		var err error
+
+		for i, d := range data.Signatures {
+			sigs[i], err = signatureDataToBz(d)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		multisig := cryptotypes.MultiSignature{
+			Signatures: sigs,
+		}
+		sig, err := multisig.Marshal()
+		if err != nil {
+			return nil, err
+		}
+
+		return sig, nil
+	default:
+		return nil, fmt.Errorf("unexpected signature data type %T", data)
+	}
 }

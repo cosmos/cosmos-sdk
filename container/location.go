@@ -4,7 +4,8 @@ import (
 	"fmt"
 )
 
-// Location describes the location of dependency injection constructor.
+// Location describes the source code location of a dependency injection
+// constructor.
 type Location interface {
 	isLocation()
 	fmt.Stringer

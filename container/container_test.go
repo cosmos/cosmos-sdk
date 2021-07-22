@@ -44,7 +44,7 @@ func ProvideModuleKey(scope container.Scope) ModuleKey {
 	return ModuleKey(scope.Name())
 }
 
-func ProvideMsgClientA(key ModuleKey) MsgClientA {
+func ProvideMsgClientA(_ container.Scope, key ModuleKey) MsgClientA {
 	return MsgClientA{key}
 }
 
@@ -83,13 +83,14 @@ func (ModuleB) Provide(dependencies BDependencies) BProvides {
 func TestRun(t *testing.T) {
 	t.Skip("Expecting this test to fail for now")
 	require.NoError(t,
-		container.Run(func(handlers map[container.Scope]Handler, commands []Command, a KeeperA, b KeeperB) {
-			// TODO:
-			// require one Handler for module a and a scopes
-			// require 3 commands
-			// require KeeperA have store key a
-			// require KeeperB have store key b and MsgClientA
-		}),
+		container.Run(
+			func(handlers map[container.Scope]Handler, commands []Command, a KeeperA, b KeeperB) {
+				// TODO:
+				// require one Handler for module a and a scopes
+				// require 3 commands
+				// require KeeperA have store key a
+				// require KeeperB have store key b and MsgClientA
+			}),
 		container.AutoGroupTypes(reflect.TypeOf(Command{})),
 		container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
 		container.Provide(

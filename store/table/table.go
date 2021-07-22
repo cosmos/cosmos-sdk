@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ Indexable = &TableBuilder{}
+var _ Indexable = &Builder{}
 
-type TableBuilder struct {
+type Builder struct {
 	model         reflect.Type
 	prefixData    byte
 	indexKeyCodec IndexKeyCodec
@@ -21,7 +21,7 @@ type TableBuilder struct {
 }
 
 // NewTableBuilder creates a builder to setup a Table object.
-func NewTableBuilder(prefixData byte, model codec.ProtoMarshaler, idxKeyCodec IndexKeyCodec, cdc codec.Codec) *TableBuilder {
+func NewTableBuilder(prefixData byte, model codec.ProtoMarshaler, idxKeyCodec IndexKeyCodec, cdc codec.Codec) *Builder {
 	if model == nil {
 		panic("Model must not be nil")
 	}
@@ -32,7 +32,7 @@ func NewTableBuilder(prefixData byte, model codec.ProtoMarshaler, idxKeyCodec In
 	if tp.Kind() == reflect.Ptr {
 		tp = tp.Elem()
 	}
-	return &TableBuilder{
+	return &Builder{
 		prefixData:    prefixData,
 		model:         tp,
 		indexKeyCodec: idxKeyCodec,
@@ -40,17 +40,17 @@ func NewTableBuilder(prefixData byte, model codec.ProtoMarshaler, idxKeyCodec In
 	}
 }
 
-func (a TableBuilder) IndexKeyCodec() IndexKeyCodec {
+func (a Builder) IndexKeyCodec() IndexKeyCodec {
 	return a.indexKeyCodec
 }
 
 // RowGetter returns a type safe RowGetter.
-func (a TableBuilder) RowGetter() RowGetter {
+func (a Builder) RowGetter() RowGetter {
 	return NewTypeSafeRowGetter(a.prefixData, a.model, a.cdc)
 }
 
 // Build creates a new Table object.
-func (a TableBuilder) Build() Table {
+func (a Builder) Build() Table {
 	return Table{
 		model:       a.model,
 		prefix:      a.prefixData,
@@ -61,12 +61,12 @@ func (a TableBuilder) Build() Table {
 }
 
 // AddAfterSaveInterceptor can be used to register a callback function that is executed after an object is created and/or updated.
-func (a *TableBuilder) AddAfterSaveInterceptor(interceptor AfterSaveInterceptor) {
+func (a *Builder) AddAfterSaveInterceptor(interceptor AfterSaveInterceptor) {
 	a.afterSave = append(a.afterSave, interceptor)
 }
 
 // AddAfterDeleteInterceptor can be used to register a callback function that is executed after an object is deleted.
-func (a *TableBuilder) AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor) {
+func (a *Builder) AddAfterDeleteInterceptor(interceptor AfterDeleteInterceptor) {
 	a.afterDelete = append(a.afterDelete, interceptor)
 }
 

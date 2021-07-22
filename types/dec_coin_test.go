@@ -1122,3 +1122,45 @@ func (s *decCoinTestSuite) TestDecCoin_Validate() {
 		}
 	}
 }
+
+func (s *decCoinTestSuite) TestDecCoin_ParseDecCoin() {
+	var empty sdk.DecCoin
+	testCases := []struct {
+		input          string
+		expectedResult sdk.DecCoin
+		expectedErr    bool
+	}{
+		// empty input
+		{"", empty, true},
+
+		// bad input
+		{"✨🌟⭐", empty, true},
+
+		// invalid decimal coin
+		{"9.3.0stake", empty, true},
+
+		// precision over limit
+		{"9.11111111111111111111stake", empty, true},
+
+		// invalid denom
+		// TODO - Clarify - According to error message for ValidateDenom call, supposed to
+		// throw error when upper case characters are used. Currently uppercase denoms are allowed.
+		{"9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
+
+		// valid input - amount and denom seperated by space
+		{"9.3 stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
+
+		// valid input - amount and denom concatenated
+		{"9.3stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
+	}
+
+	for i, tc := range testCases {
+		res, err := sdk.ParseDecCoin(tc.input)
+		if tc.expectedErr {
+			s.Require().Error(err, "expected error for test case #%d, input: %v", i, tc.input)
+		} else {
+			s.Require().NoError(err, "unexpected error for test case #%d, input: %v", i, tc.input)
+			s.Require().Equal(tc.expectedResult, res, "unexpected result for test case #%d, input: %v", i, tc.input)
+		}
+	}
+}

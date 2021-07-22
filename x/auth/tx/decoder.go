@@ -15,7 +15,7 @@ import (
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler.
 func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
-		// Make sure txBytes adheres to ADR-027.
+		// Make sure txBytes follow ADR-027.
 		err := rejectNonADR027(txBytes)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
@@ -90,7 +90,7 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	}
 }
 
-// rejectNonADR027 rejects txBytes that do not adhere to ADR-027. This function
+// rejectNonADR027 rejects txBytes that do not follow ADR-027. This function
 // only checks that:
 // - field numbers are in ascending order (1, 2, and potentially multiple 3s),
 // - and varints as as short as possible.

@@ -63,6 +63,39 @@ message SignDoc {
   uint64 account_number = 4;
 }
 
+// SignDocJSON is the type used for generating sign bytes for
+// SIGN_MODE_DIRECT_JSON. It is designed to be serialized as proto3 JSON
+// following the rules defined here:
+// https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
+message SignDocJSON {
+  // body is the processable content of the transaction
+  TxBody body = 1;
+
+  // auth_info is the authorization related content of the transaction,
+  // specifically signers, signer modes and fee
+  AuthInfo auth_info = 2;
+
+  // chain_id is the identifier of the chain this transaction targets.
+  // It prevents signed transactions from being used on another chain by an
+  // attacker
+  string chain_id = 3;
+
+  // account_number is the account number of the signing account in state
+  uint64 account_number = 4;
+
+  // sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to
+  // reduce the malleability attack surface of SIGN_MODE_DIRECT_JSON vs
+  // SIGN_MODE_DIRECT to zero. Basically this means that any discrepancy between
+  // protobuf bytes over the wire and protobuf bytes that are signed cannot be
+  // exploited. This information is obviously redundant with information already
+  // in SignDocJSON, but is included as a security check for scenarios where
+  // this information may have inadvertently been excluded. We include the hash
+  // of SignDoc rather than the full SignDoc bytes to reduce the size of
+  // SignDocJSON for scenarios where large payloads could cause problems for
+  // hardware wallets.
+  bytes sign_doc_sha256_hash = 5;
+}
+
 // TxBody is the body of a transaction that all signers sign over.
 message TxBody {
   // messages is a list of messages to be executed. The required signers of

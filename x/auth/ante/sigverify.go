@@ -2,8 +2,10 @@ package ante
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -16,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -93,6 +96,29 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 		spkd.ak.SetAccount(ctx, acc)
 	}
+
+	// Also emit the following events, so that txs can be indexed by these
+	// indices:
+	// - signature (via `tx.signature='<sig_as_base64>'`),
+	// - address and sequence (via `message.sender=<addr> AND tx.sequence='<seq>' `).
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return ctx, err
+	}
+
+	var events sdk.Events
+	for _, sig := range sigs {
+		_, sigBz := authtx.SignatureDataToModeInfoAndSig(sig.Data)
+		if err != nil {
+			return ctx, err
+		}
+
+		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(sdk.AttributeKeySequence, strconv.FormatUint(sig.Sequence, 10)),
+			sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
+		))
+	}
+	ctx.EventManager().EmitEvents(events)
 
 	return next(ctx, tx, simulate)
 }

@@ -1,11 +1,9 @@
 package baseapp
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -16,16 +14,13 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
@@ -681,31 +676,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 
-	// Also emit the following events, so that txs can be indexed by these
-	// indices:
-	// - signature (via `tx.signature='<sig_as_base64>'`),
-	// - address and sequence (via `message.sender=<addr> AND tx.sequence='<seq>' `).
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
-	if !ok {
-		return sdk.GasInfo{}, nil, sdkerrors.ErrInvalidType.Wrapf("expected %T, got %T", (*authsigning.SigVerifiableTx)(nil), tx)
-	}
-	sigs, err := sigTx.GetSignaturesV2()
-	if err != nil {
-		return sdk.GasInfo{}, nil, err
-	}
-
-	for _, sig := range sigs {
-		sigBz, err := signatureDataToBz(sig.Data)
-		if err != nil {
-			return sdk.GasInfo{}, nil, err
-		}
-
-		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeySequence, strconv.FormatUint(sig.Sequence, 10)),
-			sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
-		))
-	}
-
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
@@ -798,41 +768,4 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		Log:    strings.TrimSpace(msgLogs.String()),
 		Events: events.ToABCIEvents(),
 	}, nil
-}
-
-// signatureDataToBz converts a SignatureData into raw bytes signature. It is
-// the same function as in auth/tx/sigs.go, but copied here because of import
-// cycles.
-func signatureDataToBz(data signing.SignatureData) ([]byte, error) {
-	if data == nil {
-		return nil, fmt.Errorf("got empty SignatureData")
-	}
-
-	switch data := data.(type) {
-	case *signing.SingleSignatureData:
-		return data.Signature, nil
-	case *signing.MultiSignatureData:
-		n := len(data.Signatures)
-		sigs := make([][]byte, n)
-		var err error
-
-		for i, d := range data.Signatures {
-			sigs[i], err = signatureDataToBz(d)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		multisig := cryptotypes.MultiSignature{
-			Signatures: sigs,
-		}
-		sig, err := multisig.Marshal()
-		if err != nil {
-			return nil, err
-		}
-
-		return sig, nil
-	default:
-		return nil, fmt.Errorf("unexpected signature data type %T", data)
-	}
 }

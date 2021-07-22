@@ -25,10 +25,10 @@ func TestNewTableBuilder(t *testing.T) {
 	}{
 		"happy path": {
 			model:       &testdata.TableModel{},
-			idxKeyCodec: Max255DynamicLengthIndexKeyCodec{},
+			idxKeyCodec: FixLengthIndexKeys(EncodedSeqLength),
 		},
 		"nil model": {
-			idxKeyCodec: Max255DynamicLengthIndexKeyCodec{},
+			idxKeyCodec: FixLengthIndexKeys(EncodedSeqLength),
 			expPanic:    true,
 		},
 		"nil idxKeyCodec": {
@@ -86,7 +86,7 @@ func TestCreate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, Max255DynamicLengthIndexKeyCodec{}, cdc)
+			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
 			myTable := tableBuilder.Build()
 
 			err := myTable.Create(store, EncodeSequence(1), spec.src)
@@ -143,7 +143,7 @@ func TestUpdate(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, Max255DynamicLengthIndexKeyCodec{}, cdc)
+			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{
@@ -192,7 +192,7 @@ func TestDelete(t *testing.T) {
 			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
 
 			const anyPrefix = 0x10
-			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, Max255DynamicLengthIndexKeyCodec{}, cdc)
+			tableBuilder := NewTableBuilder(anyPrefix, &testdata.TableModel{}, FixLengthIndexKeys(EncodedSeqLength), cdc)
 			myTable := tableBuilder.Build()
 
 			initValue := testdata.TableModel{

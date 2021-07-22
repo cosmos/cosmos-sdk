@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	"google.golang.org/protobuf/encoding/protowire"
@@ -119,8 +118,7 @@ func rejectNonADR027(txBytes []byte) error {
 		if m < 0 {
 			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
 		}
-		buf := make([]byte, m)
-		n := binary.PutUvarint(buf, lengthPrefix) // `n` is the shortest length for varint-encoding `lengthPrefix`.
+		n := varintMinLength(lengthPrefix)
 		if n != m {
 			return fmt.Errorf("length prefix varint for tagNum %d is not as short as possible, read %d, only need %d", tagNum, m, n)
 		}
@@ -134,4 +132,32 @@ func rejectNonADR027(txBytes []byte) error {
 	}
 
 	return nil
+}
+
+// varintMinLength returns the minimum number of bytes necessary to encode an
+// uint using varint encoding.
+func varintMinLength(n uint64) int {
+	switch {
+	// Note: 1<<N == 2**N.
+	case n < 1<<7:
+		return 1
+	case n < 1<<14:
+		return 2
+	case n < 1<<21:
+		return 3
+	case n < 1<<28:
+		return 4
+	case n < 1<<35:
+		return 5
+	case n < 1<<42:
+		return 6
+	case n < 1<<49:
+		return 7
+	case n < 1<<56:
+		return 8
+	case n < 1<<63:
+		return 9
+	default:
+		return 10
+	}
 }

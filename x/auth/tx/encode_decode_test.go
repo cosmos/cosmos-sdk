@@ -1,7 +1,9 @@
 package tx
 
 import (
+	"encoding/binary"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -249,6 +251,33 @@ func TestRejectNonADR027(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestVarintMinLength(t *testing.T) {
+	tests := []struct {
+		n uint64
+	}{
+		{1<<7 - 1}, {1 << 7},
+		{1<<14 - 1}, {1 << 14},
+		{1<<21 - 1}, {1 << 21},
+		{1<<28 - 1}, {1 << 28},
+		{1<<35 - 1}, {1 << 35},
+		{1<<42 - 1}, {1 << 42},
+		{1<<49 - 1}, {1 << 49},
+		{1<<56 - 1}, {1 << 56},
+		{1<<63 - 1}, {1 << 63},
+		{math.MaxUint64},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(fmt.Sprintf("test %d", tt.n), func(t *testing.T) {
+			l1 := varintMinLength(tt.n)
+			buf := make([]byte, binary.MaxVarintLen64)
+			l2 := binary.PutUvarint(buf, tt.n)
+			require.Equal(t, l2, l1)
 		})
 	}
 }

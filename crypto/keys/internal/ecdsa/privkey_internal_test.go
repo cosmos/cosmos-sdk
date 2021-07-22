@@ -61,10 +61,6 @@ func (suite *SKSuite) TestSign() {
 		require.False(suite.pk.VerifySignature(msg, sigCpy))
 	}
 
-	// Mutate the message
-	msg[1] ^= byte(2)
-	require.False(suite.pk.VerifySignature(msg, sig))
-
 	// mutate the signature by scalar neg'ing the s value
 	// to give a high-s signature, valid ECDSA but should
 	// be invalid with Cosmos signatures.
@@ -89,4 +85,9 @@ func (suite *SKSuite) TestSign() {
 	copy(sigBytes[64-len(sBytes):64], sBytes)
 
 	require.False(suite.pk.VerifySignature(msg, sigBytes))
+
+	// Mutate the message
+	msg[1] ^= byte(2)
+	require.False(suite.pk.VerifySignature(msg, sig))
+
 }

@@ -1,4 +1,4 @@
-package testutil
+package testdata
 
 import "github.com/cosmos/cosmos-sdk/types/errors"
 

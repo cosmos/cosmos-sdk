@@ -1,9 +1,10 @@
 package ecdsa
 
 import (
-	"testing"
-
+	"crypto/elliptic"
 	"github.com/tendermint/tendermint/crypto"
+	"math/big"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -63,4 +64,29 @@ func (suite *SKSuite) TestSign() {
 	// Mutate the message
 	msg[1] ^= byte(2)
 	require.False(suite.pk.VerifySignature(msg, sig))
+
+	// mutate the signature by scalar neg'ing the s value
+	// to give a high-s signature, valid ECDSA but should
+	// be invalid with Cosmos signatures.
+	// code mostly copied from privkey/pubkey.go
+
+	// extract the r, s values from sig
+	r := new(big.Int).SetBytes(sig[:32])
+	low_s := new(big.Int).SetBytes(sig[32:64])
+
+	// flip the s value into high order of curve P256
+	// leave r untouched!
+	high_s := new(big.Int).Mod(new(big.Int).Neg(low_s), elliptic.P256().Params().N)
+
+	// turn these big ints back into 0-padded bytes
+	// replicating what happens in signature
+	rBytes := r.Bytes()
+	sBytes := high_s.Bytes()
+	sigBytes := make([]byte, 64)
+
+	// 0 pad the byte arrays from the left if they aren't big enough.
+	copy(sigBytes[32-len(rBytes):32], rBytes)
+	copy(sigBytes[64-len(sBytes):64], sBytes)
+
+	require.False(suite.pk.VerifySignature(msg, sigBytes))
 }

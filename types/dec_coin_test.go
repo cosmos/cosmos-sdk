@@ -112,6 +112,7 @@ func (s *decCoinTestSuite) TestFilteredZeroDecCoins() {
 		input    sdk.DecCoins
 		original string
 		expected string
+		panic    bool
 	}{
 		{
 			name: "all greater than zero",
@@ -124,6 +125,7 @@ func (s *decCoinTestSuite) TestFilteredZeroDecCoins() {
 			},
 			original: "1.000000000000000000testa,2.000000000000000000testb,3.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
 			expected: "1.000000000000000000testa,2.000000000000000000testb,3.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
+			panic:    false,
 		},
 		{
 			name: "zero coin in middle",
@@ -136,6 +138,7 @@ func (s *decCoinTestSuite) TestFilteredZeroDecCoins() {
 			},
 			original: "1.000000000000000000testa,2.000000000000000000testb,0.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
 			expected: "1.000000000000000000testa,2.000000000000000000testb,4.000000000000000000testd,5.000000000000000000teste",
+			panic:    false,
 		},
 		{
 			name: "zero coin end (unordered)",
@@ -148,13 +151,32 @@ func (s *decCoinTestSuite) TestFilteredZeroDecCoins() {
 			},
 			original: "5.000000000000000000teste,3.000000000000000000testc,1.000000000000000000testa,4.000000000000000000testd,0.000000000000000000testb",
 			expected: "1.000000000000000000testa,3.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
+			panic:    false,
+		},
+
+		{
+			name: "panic when same denoms in multiple coins",
+			input: sdk.DecCoins{
+				{"testa", sdk.NewDec(5)},
+				{"testa", sdk.NewDec(3)},
+				{"testa", sdk.NewDec(1)},
+				{"testd", sdk.NewDec(4)},
+				{"testb", sdk.NewDec(2)},
+			},
+			original: "5.000000000000000000teste,3.000000000000000000testc,1.000000000000000000testa,4.000000000000000000testd,0.000000000000000000testb",
+			expected: "1.000000000000000000testa,3.000000000000000000testc,4.000000000000000000testd,5.000000000000000000teste",
+			panic:    true,
 		},
 	}
 
 	for _, tt := range cases {
-		undertest := sdk.NewDecCoins(tt.input...)
-		s.Require().Equal(tt.expected, undertest.String(), "NewDecCoins must return expected results")
-		s.Require().Equal(tt.original, tt.input.String(), "input must be unmodified and match original")
+		if tt.panic {
+			s.Require().Panics(func() { sdk.NewDecCoins(tt.input...) }, "Should panic due to multiple coins with same denom")
+		} else {
+			undertest := sdk.NewDecCoins(tt.input...)
+			s.Require().Equal(tt.expected, undertest.String(), "NewDecCoins must return expected results")
+			s.Require().Equal(tt.original, tt.input.String(), "input must be unmodified and match original")
+		}
 	}
 }
 

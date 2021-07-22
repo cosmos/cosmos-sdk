@@ -70,7 +70,7 @@ func (a *TableBuilder) AddAfterDeleteInterceptor(interceptor AfterDeleteIntercep
 	a.afterDelete = append(a.afterDelete, interceptor)
 }
 
-// Table is the high level object to storage mapper functionality. Persistent entities are stored by an unique identifier
+// Table is the high level object for storage mapper functionality. Persistent entities are stored by an unique identifier
 // called `RowID`.
 // The Table struct does not enforce uniqueness of the `RowID` but expects this to be satisfied by the callers and conditions
 // to optimize Gas usage.

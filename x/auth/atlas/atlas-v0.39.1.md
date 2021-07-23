@@ -39,7 +39,7 @@ account types for an application, as well as AnteHandler and authentication logi
    func NewApp(...) *App {
       // ...
       app.AccountKeeper = auth.NewAccountKeeper(
-       app.cdc, keys[auth.StoreKey], app.subspaces[auth.ModuleName], auth.ProtoBaseAccount,
+       app.cdc, keys[auth.StoreKey], app.subspaces[auth.ModuleName], DefaultBech32Prefix, auth.ProtoBaseAccount,
       )
    }
    ```

@@ -46,7 +46,7 @@ func GetTxCmd() *cobra.Command {
 // NewCmdFeeGrant returns a CLI command handler for creating a MsgGrantAllowance transaction.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "grant [granter] [grantee]",
+		Use:   "grant [granter_key_or_address] [grantee]",
 		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
@@ -63,10 +63,6 @@ Examples:
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
 
 			cmd.Flags().Set(flags.FlagFrom, args[0])
 			clientCtx, err := client.GetClientTxContext(cmd)

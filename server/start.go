@@ -11,6 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -217,7 +218,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	var cpuProfileCleanup func()
 
 	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		f, err := os.Create(cpuProfile)
+		fullPath, err := homedir.Expand(cpuProfile)
+		if err != nil {
+			return err
+		}
+		f, err := os.Create(fullPath)
 		if err != nil {
 			return err
 		}

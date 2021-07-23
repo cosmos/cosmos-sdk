@@ -1,7 +1,9 @@
 package ecdsa
 
 import (
+	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/sha256"
 	"github.com/tendermint/tendermint/crypto"
 	"math/big"
 	"testing"
@@ -85,6 +87,12 @@ func (suite *SKSuite) TestSign() {
 	copy(sigBytes[64-len(sBytes):64], sBytes)
 
 	require.False(suite.pk.VerifySignature(msg, sigBytes))
+
+	// check whether msg can be verified with same key, and high_s
+	// value using "regular ecdsa signature
+	hash := sha256.Sum256([]byte(msg))
+
+	require.True(ecdsa.Verify(&suite.pk.PublicKey, hash[:], r, high_s))
 
 	// Mutate the message
 	msg[1] ^= byte(2)

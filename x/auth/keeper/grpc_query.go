@@ -2,9 +2,12 @@ package keeper
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -85,21 +88,44 @@ func (ak AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest)
 }
 
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
+	bech32Prefix := ak.GetBech32Prefix()
+	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
+}
+
+func (ak AccountKeeper) Bech32FromAccAddr(ctx context.Context, req *types.Bech32FromAccAddrRequest) (*types.Bech32FromAccAddrResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	// do we need use  UnwrapSDKContext here?
-	bech32Prefix := ak.GetBech32Prefix()
+	if len(req.AccountAddr) == 0 {
+		return nil, errors.New("empty bech32 string is not allowed")
+	}
 
-	return &types.Bech32PrefixResponse{bech32Prefix}, nil
+	bech32,err := bech32.ConvertAndEncode(ak.bech32Prefix, req.AccountAddr)
+	if err != nil {
+		return nil, err
+	}
 
+	return &types.Bech32FromAccAddrResponse{Bech32: bech32},nil
 }
 
-func (ak AccountKeeper) Bech32AccString(ctx context.Context, req *types.Bech32AccStringRequest) (*types.Bech32AccStringResponse, error) {
+func (ak AccountKeeper) AccAddrFromBech32(ctx context.Context, req *types.AccAddrFromBech32Request) (*types.AccAddrFromBech32Response, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
 
-}
+	if len(strings.TrimSpace(req.Bech32)) == 0 {
+		return nil, errors.New("empty bech32 string is not allowed")
+	}
 
-func (ak AccountKeeper) AccStringBech32(ctx context.Context, req *types.AccStringBech32Request) (*types.AccStringBech32Response, error)
+	_, bz, err := bech32.DecodeAndConvert(req.Bech32)
+	if err != nil {
+		return nil, err
+	}
 
+	if err := sdk.VerifyAddressFormat(bz); err != nil {
+		return nil, err
+	}
+
+	return &types.AccAddrFromBech32Response{AccountAddr: bz},nil
 }

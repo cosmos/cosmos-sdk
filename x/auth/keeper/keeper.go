@@ -236,8 +236,5 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 // GetCodec return codec.Codec object used by the keeper
 func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
-// add getter anc setter for bech32Prefix
-func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix}
-func (ak AccountKeeper) SetBech32Prefix(bech32Prefix string) { 
-	ak.bech32Prefix = bech32Prefix
-}
+// add getter for bech32Prefix
+func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix }

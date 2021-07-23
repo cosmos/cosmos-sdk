@@ -17,10 +17,10 @@
     - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
   
 - [cosmos/auth/v1beta1/query.proto](#cosmos/auth/v1beta1/query.proto)
-    - [AccStringBech32Request](#cosmos.auth.v1beta1.AccStringBech32Request)
-    - [AccStringBech32Response](#cosmos.auth.v1beta1.AccStringBech32Response)
-    - [Bech32AccStringRequest](#cosmos.auth.v1beta1.Bech32AccStringRequest)
-    - [Bech32AccStringResponse](#cosmos.auth.v1beta1.Bech32AccStringResponse)
+    - [AccAddrFromBech32Request](#cosmos.auth.v1beta1.AccAddrFromBech32Request)
+    - [AccAddrFromBech32Response](#cosmos.auth.v1beta1.AccAddrFromBech32Response)
+    - [Bech32FromAccAddrRequest](#cosmos.auth.v1beta1.Bech32FromAccAddrRequest)
+    - [Bech32FromAccAddrResponse](#cosmos.auth.v1beta1.Bech32FromAccAddrResponse)
     - [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest)
     - [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse)
     - [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest)
@@ -842,24 +842,9 @@ corresponding request message has used PageRequest.
 
 
 
-<a name="cosmos.auth.v1beta1.AccStringBech32Request"></a>
+<a name="cosmos.auth.v1beta1.AccAddrFromBech32Request"></a>
 
-### AccStringBech32Request
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `account` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.auth.v1beta1.AccStringBech32Response"></a>
-
-### AccStringBech32Response
+### AccAddrFromBech32Request
 
 
 
@@ -872,30 +857,45 @@ corresponding request message has used PageRequest.
 
 
 
-<a name="cosmos.auth.v1beta1.Bech32AccStringRequest"></a>
+<a name="cosmos.auth.v1beta1.AccAddrFromBech32Response"></a>
 
-### Bech32AccStringRequest
+### AccAddrFromBech32Response
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account_addr` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.Bech32FromAccAddrRequest"></a>
+
+### Bech32FromAccAddrRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `account_addr` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.Bech32FromAccAddrResponse"></a>
+
+### Bech32FromAccAddrResponse
 
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `bech32` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="cosmos.auth.v1beta1.Bech32AccStringResponse"></a>
-
-### Bech32AccStringResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `account` | [string](#string) |  |  |
 
 
 
@@ -905,12 +905,7 @@ corresponding request message has used PageRequest.
 <a name="cosmos.auth.v1beta1.Bech32PrefixRequest"></a>
 
 ### Bech32PrefixRequest
-should I include account in Bech32PrefixRequest Account or Address?
 
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
 
 
 
@@ -1035,8 +1030,8 @@ Query defines the gRPC querier service.
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
 | `Bech32Prefix` | [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest) | [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse) | Bech32 queries bech32Prefix | GET|/cosmos/auth/v1beta1/bech32|
-| `Bech32AccString` | [Bech32AccStringRequest](#cosmos.auth.v1beta1.Bech32AccStringRequest) | [Bech32AccStringResponse](#cosmos.auth.v1beta1.Bech32AccStringResponse) | Bech32AccString converts Bech32 to Account string | GET|/cosmos/auth/v1beta1/bech32|
-| `AccStringBech32` | [AccStringBech32Request](#cosmos.auth.v1beta1.AccStringBech32Request) | [AccStringBech32Response](#cosmos.auth.v1beta1.AccStringBech32Response) | AccStringBech32 converts Bech32 to Account string | GET|/cosmos/auth/v1beta1/bech32|
+| `Bech32FromAccAddr` | [Bech32FromAccAddrRequest](#cosmos.auth.v1beta1.Bech32FromAccAddrRequest) | [Bech32FromAccAddrResponse](#cosmos.auth.v1beta1.Bech32FromAccAddrResponse) | Bech32FromAccAddr converts Bech32 to Account string | GET|/cosmos/auth/v1beta1/bech32|
+| `AccAddrFromBech32` | [AccAddrFromBech32Request](#cosmos.auth.v1beta1.AccAddrFromBech32Request) | [AccAddrFromBech32Response](#cosmos.auth.v1beta1.AccAddrFromBech32Response) | AccAddrFromBech32 converts Account string to Bech32 | GET|/cosmos/auth/v1beta1/bech32|
 
  <!-- end services -->
 

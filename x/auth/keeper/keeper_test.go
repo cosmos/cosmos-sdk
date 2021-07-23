@@ -132,7 +132,7 @@ func TestSupply_ValidatePermissions(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Codec
 	keeper := keeper.NewAccountKeeper(
 		cdc, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		types.ProtoBaseAccount, maccPerms,
+		"cosmos", types.ProtoBaseAccount, maccPerms,
 	)
 
 	err := keeper.ValidatePermissions(multiPermAcc)

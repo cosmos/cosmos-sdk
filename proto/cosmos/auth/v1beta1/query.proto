@@ -34,13 +34,13 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
-  // Bech32AccString converts Bech32 to Account string
-  rpc Bech32AccString(Bech32AccStringRequest) returns (Bech32AccStringResponse) {
+  // Bech32FromAccAddr converts Bech32 to Account string
+  rpc Bech32FromAccAddr(Bech32FromAccAddrRequest) returns (Bech32FromAccAddrResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
-  // AccStringBech32 converts Account string to Bech32
-  rpc AccStringBech32(AccStringBech32Request) returns (AccStringBech32Response) {
+  // AccAddrFromBech32 converts Account string to Bech32
+  rpc AccAddrFromBech32(AccAddrFromBech32Request) returns (AccAddrFromBech32Response) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 }
@@ -84,33 +84,24 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// should I include account in Bech32PrefixRequest Account or Address?
-message Bech32PrefixRequest  {
-  string address = 1;
-}
+message Bech32PrefixRequest  {}
 
 message Bech32PrefixResponse  {
   string bech32_prefix = 1;
 }
 
-message Bech32AccStringRequest {
+message Bech32FromAccAddrRequest {
+  bytes account_addr = 1;
+}
+
+message Bech32FromAccAddrResponse {
   string bech32 = 1;
 }
 
-message Bech32AccStringResponse {
-  string account = 1;
-}
-
-message AccStringBech32Request {
-  string account = 1;
-}
-
-message AccStringBech32Response {
+message AccAddrFromBech32Request {
   string bech32 = 1;
 }
 
-
-
-
-
-
+message AccAddrFromBech32Response {
+  bytes account_addr = 1;
+}

@@ -10,5 +10,19 @@ import "fmt"
 // Ex:
 //  Run(func (x int) error { println(x) }, Provide(func() int { return 1 }))
 func Run(invoker interface{}, opts ...Option) error {
-	return fmt.Errorf("not implemented")
+	opt := Options(opts...)
+
+	cfg := &config{}
+	err := opt.applyConfig(cfg)
+	if cfg.err != nil {
+		return err
+	}
+
+	ctr := &container{}
+	err = opt.applyContainer(ctr)
+	if cfg.err != nil {
+		return err
+	}
+
+	return fmt.Errorf("TODO call invoker")
 }

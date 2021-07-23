@@ -1,5 +1,7 @@
 package container
 
+import "reflect"
+
 // Scope is a special type used to define a provider scope.
 //
 // Special scoped constructors can be used with Provide by declaring a
@@ -31,3 +33,5 @@ func (s *scope) isScope() {}
 func (s *scope) Name() string {
 	return s.name
 }
+
+var scopeTyp = reflect.TypeOf((*Scope)(nil))

@@ -179,7 +179,7 @@ func (k BaseViewKeeper) LockedCoins(ctx context.Context, addr sdk.AccAddress) sd
 	if acc != nil {
 		vacc, ok := acc.(types.VestingAccount)
 		if ok {
-			return vacc.LockedCoins(k.HeaderService.HeaderInfo(ctx).Time)
+			return vacc.LockedCoins(ctx)
 		}
 	}
 

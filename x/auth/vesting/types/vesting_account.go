@@ -228,8 +228,8 @@ func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coi
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
 // defined as the vesting coins that are not delegated.
-func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return cva.BaseVestingAccount.LockedCoinsFromVesting(cva.GetVestingCoins(blockTime))
+func (cva ContinuousVestingAccount) LockedCoins(ctx sdk.Context) sdk.Coins {
+	return cva.BaseVestingAccount.LockedCoinsFromVesting(cva.GetVestingCoins(ctx.BlockTime()))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -333,8 +333,8 @@ func (pva PeriodicVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
 // defined as the vesting coins that are not delegated.
-func (pva PeriodicVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return pva.BaseVestingAccount.LockedCoinsFromVesting(pva.GetVestingCoins(blockTime))
+func (pva PeriodicVestingAccount) LockedCoins(ctx sdk.Context) sdk.Coins {
+	return pva.BaseVestingAccount.LockedCoinsFromVesting(pva.GetVestingCoins(ctx.BlockTime()))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -432,8 +432,8 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
 // defined as the vesting coins that are not delegated.
-func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
-	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(blockTime))
+func (dva DelayedVestingAccount) LockedCoins(ctx sdk.Context) sdk.Coins {
+	return dva.BaseVestingAccount.LockedCoinsFromVesting(dva.GetVestingCoins(ctx.BlockTime()))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
@@ -488,7 +488,7 @@ func (plva PermanentLockedAccount) GetVestingCoins(_ time.Time) sdk.Coins {
 
 // LockedCoins returns the set of coins that are not spendable (i.e. locked),
 // defined as the vesting coins that are not delegated.
-func (plva PermanentLockedAccount) LockedCoins(_ time.Time) sdk.Coins {
+func (plva PermanentLockedAccount) LockedCoins(_ sdk.Context) sdk.Coins {
 	return plva.BaseVestingAccount.LockedCoinsFromVesting(plva.OriginalVesting)
 }
 

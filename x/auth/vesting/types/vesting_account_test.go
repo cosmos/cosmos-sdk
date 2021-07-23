@@ -19,6 +19,10 @@ var (
 	feeDenom   = "fee"
 )
 
+func contextAt(t time.Time) sdk.Context {
+	return sdk.Context{}.WithBlockTime(t)
+}
+
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
@@ -72,15 +76,15 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 
 	// require that all original coins are locked at the end of the vesting
 	// schedule
-	lockedCoins := cva.LockedCoins(now)
+	lockedCoins := cva.LockedCoins(contextAt(now))
 	require.Equal(t, origCoins, lockedCoins)
 
 	// require that there exist no locked coins in the beginning of the
-	lockedCoins = cva.LockedCoins(endTime)
+	lockedCoins = cva.LockedCoins(contextAt(endTime))
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all vested coins (50%) are spendable
-	lockedCoins = cva.LockedCoins(now.Add(12 * time.Hour))
+	lockedCoins = cva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
@@ -208,23 +212,23 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	// require that all coins are locked in the beginning of the vesting
 	// schedule
 	dva := types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
-	lockedCoins := dva.LockedCoins(now)
+	lockedCoins := dva.LockedCoins(contextAt(now))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// require that all coins are spendable after the maturation of the vesting
 	// schedule
-	lockedCoins = dva.LockedCoins(endTime)
+	lockedCoins = dva.LockedCoins(contextAt(endTime))
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all coins are still vesting after some time
-	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
+	lockedCoins = dva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// delegate some locked coins
 	// require that locked is reduced
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
 	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
-	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
+	lockedCoins = dva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
 	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount)))
 }
 
@@ -403,16 +407,16 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 
 	// require that there exist no spendable coins at the beginning of the
 	// vesting schedule
-	lockedCoins := pva.LockedCoins(now)
+	lockedCoins := pva.LockedCoins(contextAt(now))
 	require.Equal(t, origCoins, lockedCoins)
 
 	// require that all original coins are spendable at the end of the vesting
 	// schedule
-	lockedCoins = pva.LockedCoins(endTime)
+	lockedCoins = pva.LockedCoins(contextAt(endTime))
 	require.Equal(t, sdk.NewCoins(), lockedCoins)
 
 	// require that all still vesting coins (50%) are locked
-	lockedCoins = pva.LockedCoins(now.Add(12 * time.Hour))
+	lockedCoins = pva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
 }
 
@@ -571,18 +575,18 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 	// require that all coins are locked in the beginning of the vesting
 	// schedule
 	plva := types.NewPermanentLockedAccount(bacc, origCoins)
-	lockedCoins := plva.LockedCoins(now)
+	lockedCoins := plva.LockedCoins(contextAt(now))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// require that all coins are still locked at end time
-	lockedCoins = plva.LockedCoins(endTime)
+	lockedCoins = plva.LockedCoins(contextAt(endTime))
 	require.True(t, lockedCoins.IsEqual(origCoins))
 
 	// delegate some locked coins
 	// require that locked is reduced
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
 	plva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
-	lockedCoins = plva.LockedCoins(now.Add(12 * time.Hour))
+	lockedCoins = plva.LockedCoins(contextAt(now.Add(12 * time.Hour)))
 	require.True(t, lockedCoins.IsEqual(origCoins.Sub(delegatedAmount)))
 }
 

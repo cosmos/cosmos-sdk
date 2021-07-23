@@ -624,34 +624,40 @@ func (s *decCoinTestSuite) TestDecCoins_Empty() {
 
 func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
 	testCases := []struct {
+		name           string
 		input          sdk.DecCoins
 		index          int
 		expectedResult string
 		expectedErr    bool
 	}{
-		// No DecCoins in Slice
-		{sdk.DecCoins{}, 0, "", true},
-
-		// When index out of bounds
-		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, 2, "", true},
-
-		// When negative index
-		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, -1, "", true},
-
-		// Appropriate index case
-		{sdk.DecCoins{
-			sdk.DecCoin{testDenom1, sdk.NewDec(5)},
-			sdk.DecCoin{testDenom2, sdk.NewDec(57)},
-		}, 1, testDenom2, false},
+		{
+			"No DecCoins in Slice",
+			sdk.DecCoins{},
+			0,
+			"",
+			true,
+		},
+		{"When index out of bounds", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, 2, "", true},
+		{"When negative index", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, -1, "", true},
+		{
+			"Appropriate index case",
+			sdk.DecCoins{
+				sdk.DecCoin{testDenom1, sdk.NewDec(5)},
+				sdk.DecCoin{testDenom2, sdk.NewDec(57)},
+			}, 1, testDenom2, false,
+		},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedErr {
-			s.Require().Panics(func() { tc.input.GetDenomByIndex(tc.index) }, "Test should have panicked")
-		} else {
-			res := tc.input.GetDenomByIndex(tc.index)
-			s.Require().Equal(tc.expectedResult, res, "Unexpected result for test case #%d, expected output: %s, input: %v", i, tc.expectedResult, tc.input)
-		}
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedErr {
+				s.Require().Panics(func() { tc.input.GetDenomByIndex(tc.index) }, "Test should have panicked")
+			} else {
+				res := tc.input.GetDenomByIndex(tc.index)
+				s.Require().Equal(tc.expectedResult, res, "Unexpected result for test case #%d, expected output: %s, input: %v", i, tc.expectedResult, tc.input)
+			}
+		})
 	}
 }
 

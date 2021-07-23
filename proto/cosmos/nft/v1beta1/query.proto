@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.nft.v1beta1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/nft/v1beta1/nft.proto";
 

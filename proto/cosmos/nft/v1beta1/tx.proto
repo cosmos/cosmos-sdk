@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.nft.v1beta1;
 
 import "cosmos/nft/v1beta1/nft.proto";
-import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
@@ -13,9 +12,6 @@ service Msg {
 }
 // MsgSend represents a message to send a nft from one account to another account.
 message MsgSend {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
-
   string class_id = 1;
   string id       = 2;
   string sender   = 3;

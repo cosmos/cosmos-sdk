@@ -2,15 +2,11 @@ syntax = "proto3";
 package cosmos.nft.v1beta1;
 
 import "google/protobuf/any.proto";
-import "gogoproto/gogo.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
 // Class defines the class of the nft type.
 message Class {
-  option (gogoproto.goproto_getters) = false;
-  option (gogoproto.equal)           = false;
-
   string id          = 1;
   string name        = 2;
   string symbol      = 3;
@@ -20,9 +16,6 @@ message Class {
 
 // NFT defines the nft.
 message NFT {
-  option (gogoproto.goproto_getters) = false;
-  option (gogoproto.equal)           = false;
-
   string              class_id = 1;
   string              id       = 2;
   string              uri      = 3;

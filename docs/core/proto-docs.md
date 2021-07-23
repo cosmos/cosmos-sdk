@@ -475,6 +475,8 @@
     - [Query](#cosmos.mint.v1beta1.Query)
   
 - [cosmos/nft/v1beta1/event.proto](#cosmos/nft/v1beta1/event.proto)
+    - [EventBurn](#cosmos.nft.v1beta1.EventBurn)
+    - [EventMint](#cosmos.nft.v1beta1.EventMint)
     - [EventSend](#cosmos.nft.v1beta1.EventSend)
   
 - [cosmos/nft/v1beta1/nft.proto](#cosmos/nft/v1beta1/nft.proto)
@@ -6880,6 +6882,40 @@ Query provides defines the gRPC querier service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## cosmos/nft/v1beta1/event.proto
+
+
+
+<a name="cosmos.nft.v1beta1.EventBurn"></a>
+
+### EventBurn
+EventBurn is emitted on Burn
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.EventMint"></a>
+
+### EventMint
+EventMint is emitted on Mint
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
 
 
 

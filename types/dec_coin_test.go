@@ -663,211 +663,194 @@ func (s *decCoinTestSuite) TestDecCoins_GetDenomByIndex() {
 
 func (s *decCoinTestSuite) TestDecCoins_IsAllPositive() {
 	testCases := []struct {
+		name           string
 		input          sdk.DecCoins
 		expectedResult bool
-		msg            string
 	}{
-		// No Coins
-		{sdk.DecCoins{}, false, "No coins. Should be false."},
+		{"No Coins", sdk.DecCoins{}, false},
 
-		// One Coin - Zero value
-		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, false, "One coin with zero amount value. Should be false."},
+		{"One Coin - Zero value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, false},
 
-		// One Coin - Postive value
-		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, true, "One coin with positive amount. Should be true."},
+		{"One Coin - Postive value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, true},
 
-		// One Coin - Negative value
-		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(-15)}}, false, "One coin with negative amount. Should be false."},
+		{"One Coin - Negative value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(-15)}}, false},
 
-		// Multiple Coins - All positive value
-		{sdk.DecCoins{
+		{"Multiple Coins - All positive value", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(51)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(123)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(50)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(92233720)},
-		}, true, "All positive amount. Should be true."},
+		}, true},
 
-		// Multiple Coins - Some negative value
-		{sdk.DecCoins{
+		{"Multiple Coins - Some negative value", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(51)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(-123)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(92233720)},
-		}, false, "Not all positive amount. Should be false."},
+		}, false},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedResult {
-			s.Require().True(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.msg)
-		} else {
-			s.Require().False(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.msg)
-		}
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedResult {
+				s.Require().True(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.name)
+			} else {
+				s.Require().False(tc.input.IsAllPositive(), "Test case #%d: %s", i, tc.name)
+			}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoin_IsLT() {
 	testCases := []struct {
+		name           string
 		coin           sdk.DecCoin
 		otherCoin      sdk.DecCoin
 		expectedResult bool
 		expectedPanic  bool
-		msg            string
 	}{
 
-		// Same Denom - Less than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom1, sdk.NewDec(19)}, true, false, "DecCoin amount lesser than other coin. Should be true."},
+		{"Same Denom - Less than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom1, sdk.NewDec(19)}, true, false},
 
-		// Same Denom - Greater than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom1, sdk.NewDec(14)}, false, false, "DecCoin amount greater than other coin. Should be false."},
+		{"Same Denom - Greater than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom1, sdk.NewDec(14)}, false, false},
 
-		// Same Denom - Same as other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom1, sdk.NewDec(20)}, false, false, "DecCoin amount same as other coin. Should be false."},
+		{"Same Denom - Same as other coin", sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom1, sdk.NewDec(20)}, false, false},
 
-		// Different Denom - Less than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom2, sdk.NewDec(19)}, true, true, "DecCoin denom different than other coin. Should panic."},
+		{"Different Denom - Less than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom2, sdk.NewDec(19)}, true, true},
 
-		// Different Denom - Greater than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom2, sdk.NewDec(14)}, true, true, "DecCoin denom different than other coin. Should panic."},
+		{"Different Denom - Greater than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom2, sdk.NewDec(14)}, true, true},
 
-		// Different Denom - Same as other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom2, sdk.NewDec(20)}, true, true, "DecCoin denom different than other coin. Should panic."},
+		{"Different Denom - Same as other coin", sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom2, sdk.NewDec(20)}, true, true},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedPanic {
-			s.Require().Panics(func() { tc.coin.IsLT(tc.otherCoin) }, "Test case #%d: %s", i, tc.msg)
-		} else {
-			res := tc.coin.IsLT(tc.otherCoin)
-			if tc.expectedResult {
-				s.Require().True(res, "Test case #%d: %s", i, tc.msg)
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedPanic {
+				s.Require().Panics(func() { tc.coin.IsLT(tc.otherCoin) }, "Test case #%d: %s", i, tc.name)
 			} else {
-				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
+				res := tc.coin.IsLT(tc.otherCoin)
+				if tc.expectedResult {
+					s.Require().True(res, "Test case #%d: %s", i, tc.name)
+				} else {
+					s.Require().False(res, "Test case #%d: %s", i, tc.name)
+				}
 			}
-		}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoin_IsGTE() {
 	testCases := []struct {
+		name           string
 		coin           sdk.DecCoin
 		otherCoin      sdk.DecCoin
 		expectedResult bool
 		expectedPanic  bool
-		msg            string
 	}{
 
-		// Same Denom - Less than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom1, sdk.NewDec(19)}, false, false, "DecCoin amount lesser than other coin. Should be false."},
+		{"Same Denom - Less than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom1, sdk.NewDec(19)}, false, false},
 
-		// Same Denom - Greater than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom1, sdk.NewDec(14)}, true, false, "DecCoin amount greater than other coin. Should be true."},
+		{"Same Denom - Greater than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom1, sdk.NewDec(14)}, true, false},
 
-		// Same Denom - Same as other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom1, sdk.NewDec(20)}, true, false, "DecCoin amount equal to other coin. Should be true."},
+		{"Same Denom - Same as other coin", sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom1, sdk.NewDec(20)}, true, false},
 
-		// Different Denom - Less than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom2, sdk.NewDec(19)}, true, true, "DecCoin denom different than other coin. Should panic."},
+		{"Different Denom - Less than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(3)}, sdk.DecCoin{testDenom2, sdk.NewDec(19)}, true, true},
 
-		// Different Denom - Greater than other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom2, sdk.NewDec(14)}, true, true, "DecCoin denom different than other coin. Should panic."},
+		{"Different Denom - Greater than other coin", sdk.DecCoin{testDenom1, sdk.NewDec(343340)}, sdk.DecCoin{testDenom2, sdk.NewDec(14)}, true, true},
 
-		// Different Denom - Same as other coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom2, sdk.NewDec(20)}, true, true, "DecCoin denom different than other coin. Should panic."},
+		{"Different Denom - Same as other coin", sdk.DecCoin{testDenom1, sdk.NewDec(20)}, sdk.DecCoin{testDenom2, sdk.NewDec(20)}, true, true},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedPanic {
-			s.Require().Panics(func() { tc.coin.IsGTE(tc.otherCoin) }, "Test case #%d: %s", i, tc.msg)
-		} else {
-			res := tc.coin.IsGTE(tc.otherCoin)
-			if tc.expectedResult {
-				s.Require().True(res, "Test case #%d: %s", i, tc.msg)
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedPanic {
+				s.Require().Panics(func() { tc.coin.IsGTE(tc.otherCoin) }, "Test case #%d: %s", i, tc.name)
 			} else {
-				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
+				res := tc.coin.IsGTE(tc.otherCoin)
+				if tc.expectedResult {
+					s.Require().True(res, "Test case #%d: %s", i, tc.name)
+				} else {
+					s.Require().False(res, "Test case #%d: %s", i, tc.name)
+				}
 			}
-		}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoins_IsZero() {
 	testCases := []struct {
+		name           string
 		coins          sdk.DecCoins
 		expectedResult bool
-		msg            string
 	}{
-		// No Coins
-		{sdk.DecCoins{}, true, "No coins. Should be true."},
+		{"No Coins", sdk.DecCoins{}, true},
 
-		// One Coin - Zero value
-		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, true, "One coin with zero amount value. Should be true."},
+		{"One Coin - Zero value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(0)}}, true},
 
-		// One Coin - Postive value
-		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, false, "One coin with positive amount. Should be false."},
+		{"One Coin - Postive value", sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, false},
 
-		// Multiple Coins - All zero value
-		{sdk.DecCoins{
+		{"Multiple Coins - All zero value", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
-		}, true, "All zero amount coins. Should be true."},
+		}, true},
 
-		// Multiple Coins - Some positive value
-		{sdk.DecCoins{
+		{"Multiple Coins - Some positive value", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(0)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(92233720)},
-		}, false, "Not all zero amount coins. Should be false."},
+		}, false},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedResult {
-			s.Require().True(tc.coins.IsZero(), "Test case #%d: %s", i, tc.msg)
-		} else {
-			s.Require().False(tc.coins.IsZero(), "Test case #%d: %s", i, tc.msg)
-		}
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedResult {
+				s.Require().True(tc.coins.IsZero(), "Test case #%d: %s", i, tc.name)
+			} else {
+				s.Require().False(tc.coins.IsZero(), "Test case #%d: %s", i, tc.name)
+			}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoins_MulDec() {
 	testCases := []struct {
+		name           string
 		coins          sdk.DecCoins
 		multiplier     sdk.Dec
 		expectedResult sdk.DecCoins
-		msg            string
 	}{
-		// No Coins
-		{sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), "No coins. Should return empty slice."},
+		{"No Coins", sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil)},
 
-		// Multiple coins - zero multiplier
-		{sdk.DecCoins{
+		{"Multiple coins - zero multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(30)},
-		}, sdk.NewDec(0), sdk.DecCoins(nil), "Multipler is zero. Should return empty slice."},
+		}, sdk.NewDec(0), sdk.DecCoins(nil)},
 
-		// Multiple coins - positive multiplier
-		{sdk.DecCoins{
+		{"Multiple coins - positive multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(2)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
 		}, sdk.NewDec(2), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
-		}, "Multipler is positive. Should return multiplied deccoins."},
+		}},
 
-		// Multiple coins - negative multiplier
-		{sdk.DecCoins{
+		{"Multiple coins - negative multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(2)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
 		}, sdk.NewDec(-2), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(-20)},
-		}, "Multipler is negative. Should return multiplied deccoins."},
+		}},
 
-		// Multiple coins - Different denom
-		{sdk.DecCoins{
+		{"Multiple coins - Different denom", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
 			sdk.DecCoin{testDenom2, sdk.NewDec(2)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
@@ -875,52 +858,50 @@ func (s *decCoinTestSuite) TestDecCoins_MulDec() {
 		}, sdk.NewDec(2), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(8)},
 			sdk.DecCoin{testDenom2, sdk.NewDec(12)},
-		}, "Multiple coins with different denoms. Should return multiplied deccoins with appropriate denoms."},
+		}},
 	}
 
 	for i, tc := range testCases {
-		res := tc.coins.MulDec(tc.multiplier)
-		s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s %s", i, tc.msg, res)
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			res := tc.coins.MulDec(tc.multiplier)
+			s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s", i, tc.name)
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 	testCases := []struct {
+		name           string
 		coins          sdk.DecCoins
 		multiplier     sdk.Dec
 		expectedResult sdk.DecCoins
 		expectedPanic  bool
-		msg            string
 	}{
-		// No Coins
-		{sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), false, "No coins. Should return nil."},
+		{"No Coins", sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), false},
 
-		// Multiple coins - zero multiplier
 		// TODO - Fix test - Function comment documentation for MulDecTruncate says if multiplier d is zero, it should panic.
 		// However, that is not the observed behaviour. Currently nil is returned.
-		{sdk.DecCoins{
+		{"Multiple coins - zero multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(10, 3)},
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(30, 2)},
-		}, sdk.NewDec(0), sdk.DecCoins(nil), false, "Multipler is zero. Should return nil."},
+		}, sdk.NewDec(0), sdk.DecCoins(nil), false},
 
-		// Multiple coins - positive multiplier
-		{sdk.DecCoins{
+		{"Multiple coins - positive multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
 		}, sdk.NewDec(1), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(3, 0)},
-		}, false, "Multipler is positive. Should return truncated multiplied deccoins."},
+		}, false},
 
-		// Multiple coins - positive multiplier
-		{sdk.DecCoins{
+		{"Multiple coins - positive multiplier", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
 		}, sdk.NewDec(-2), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(-6, 0)},
-		}, false, "Multipler is positive. Should return truncated multiplied deccoins."},
+		}, false},
 
-		// Multiple coins - Different denom
-		{sdk.DecCoins{
+		{"Multiple coins - Different denom", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
 			sdk.DecCoin{testDenom2, sdk.NewDecWithPrec(3333, 4)},
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(15, 1)},
@@ -928,55 +909,53 @@ func (s *decCoinTestSuite) TestDecCoins_MulDecTruncate() {
 		}, sdk.NewDec(10), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(30, 0)},
 			sdk.DecCoin{testDenom2, sdk.NewDecWithPrec(3666, 3)},
-		}, false, "Multipler is positive. Should return truncated multiplied deccoins with appropriate denoms."},
+		}, false},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedPanic {
-			s.Require().Panics(func() { tc.coins.MulDecTruncate(tc.multiplier) }, "Test case #%d: %s", i, tc.msg)
-		} else {
-			res := tc.coins.MulDecTruncate(tc.multiplier)
-			s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s %s", i, tc.msg, res)
-		}
+		tc := tc
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedPanic {
+				s.Require().Panics(func() { tc.coins.MulDecTruncate(tc.multiplier) }, "Test case #%d: %s", i, tc.name)
+			} else {
+				res := tc.coins.MulDecTruncate(tc.multiplier)
+				s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s", i, tc.name)
+			}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoins_QuoDec() {
 
 	testCases := []struct {
+		name           string
 		coins          sdk.DecCoins
 		input          sdk.Dec
 		expectedResult sdk.DecCoins
 		panics         bool
-		msg            string
 	}{
-		// No Coins
-		{sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), false, "No coins. Should return empty slice."},
+		{"No Coins", sdk.DecCoins{}, sdk.NewDec(1), sdk.DecCoins(nil), false},
 
-		// Multiple coins - zero input
-		{sdk.DecCoins{
+		{"Multiple coins - zero input", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(30)},
-		}, sdk.NewDec(0), sdk.DecCoins(nil), true, "Input is zero. Should panic."},
+		}, sdk.NewDec(0), sdk.DecCoins(nil), true},
 
-		// Multiple coins - positive input
-		{sdk.DecCoins{
+		{"Multiple coins - positive input", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
 		}, sdk.NewDec(2), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(35, 1)},
-		}, false, "Input is positive. Should return divided deccoins."},
+		}, false},
 
-		// Multiple coins - negative input
-		{sdk.DecCoins{
+		{"Multiple coins - negative input", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
 		}, sdk.NewDec(-2), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDecWithPrec(-35, 1)},
-		}, false, "Input is negative. Should return divided deccoins."},
+		}, false},
 
-		// Multiple coins - Different input
-		{sdk.DecCoins{
+		{"Multiple coins - Different input", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(1)},
 			sdk.DecCoin{testDenom2, sdk.NewDec(2)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
@@ -984,189 +963,182 @@ func (s *decCoinTestSuite) TestDecCoins_QuoDec() {
 		}, sdk.NewDec(2), sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(2)},
 			sdk.DecCoin{testDenom2, sdk.NewDec(3)},
-		}, false, "Input coins with different denoms. Should return divided deccoins with appropriate denoms."},
+		}, false},
 	}
 
 	for i, tc := range testCases {
 		tc := tc
-		if tc.panics {
-			s.Require().Panics(func() { tc.coins.QuoDec(tc.input) })
-		} else {
-			res := tc.coins.QuoDec(tc.input)
-			s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s %s", i, tc.msg, res)
-		}
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.panics {
+				s.Require().Panics(func() { tc.coins.QuoDec(tc.input) }, "Test case #%d: %s", i, tc.name)
+			} else {
+				res := tc.coins.QuoDec(tc.input)
+				s.Require().Equal(tc.expectedResult, res, "Test case #%d: %s", i, tc.name)
+			}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoin_IsEqual() {
 	testCases := []struct {
+		name           string
 		coin           sdk.DecCoin
 		otherCoin      sdk.DecCoin
 		expectedResult bool
 		expectedPanic  bool
-		msg            string
 	}{
 
-		// Different Denom Same Amount
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+		{"Different Denom Same Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
 			sdk.DecCoin{testDenom2, sdk.NewDec(20)},
-			false, true, "Different demon for coins. Should panic."},
+			false, true},
 
-		// Different Denom Different Amount
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+		{"Different Denom Different Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
 			sdk.DecCoin{testDenom2, sdk.NewDec(10)},
-			false, true, "Different demon for coins.. Should panic."},
+			false, true},
 
-		// Same Denom Different Amount
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+		{"Same Denom Different Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(10)},
-			false, false, "Same denom but different amount. Should be false."},
+			false, false},
 
-		// Same Denom Same Amount
-		{sdk.DecCoin{testDenom1, sdk.NewDec(20)},
+		{"Same Denom Same Amount", sdk.DecCoin{testDenom1, sdk.NewDec(20)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(20)},
-			true, false, "Same denom and same amount. Should be true."},
+			true, false},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedPanic {
-			s.Require().Panics(func() { tc.coin.IsEqual(tc.otherCoin) }, "Test case #%d: %s", i, tc.msg)
-		} else {
-			res := tc.coin.IsEqual(tc.otherCoin)
-			if tc.expectedResult {
-				s.Require().True(res, "Test case #%d: %s", i, tc.msg)
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedPanic {
+				s.Require().Panics(func() { tc.coin.IsEqual(tc.otherCoin) }, "Test case #%d: %s", i, tc.name)
 			} else {
-				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
+				res := tc.coin.IsEqual(tc.otherCoin)
+				if tc.expectedResult {
+					s.Require().True(res, "Test case #%d: %s", i, tc.name)
+				} else {
+					s.Require().False(res, "Test case #%d: %s", i, tc.name)
+				}
 			}
-		}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoins_IsEqual() {
 	testCases := []struct {
+		name           string
 		coinsA         sdk.DecCoins
 		coinsB         sdk.DecCoins
 		expectedResult bool
 		expectedPanic  bool
-		msg            string
 	}{
-		// Different length sets
-		{sdk.DecCoins{
+		{"Different length sets", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(35)},
-		}, false, false, "Different length coin sets. Should be false."},
+		}, false, false},
 
-		// Same length - different denoms
-		{sdk.DecCoins{
+		{"Same length - different denoms", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom2, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom2, sdk.NewDec(4)},
-		}, false, true, "Same length coin sets with different denoms. Should panic."},
+		}, false, true},
 
-		// Same length - different amounts
-		{sdk.DecCoins{
+		{"Same length - different amounts", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(3)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(4)},
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(41)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(343)},
-		}, false, false, "Same length coin sets with different amounts. Should be false."},
+		}, false, false},
 
-		// Same length - same amounts
-		{sdk.DecCoins{
+		{"Same length - same amounts", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(33)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(344)},
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom1, sdk.NewDec(33)},
 			sdk.DecCoin{testDenom1, sdk.NewDec(344)},
-		}, true, false, "Same length coin sets with same amounts and denoms. Should be true,"},
+		}, true, false},
 	}
 
 	for i, tc := range testCases {
-		if tc.expectedPanic {
-			s.Require().Panics(func() { tc.coinsA.IsEqual(tc.coinsB) }, "Test case #%d: %s", i, tc.msg)
-		} else {
-			res := tc.coinsA.IsEqual(tc.coinsB)
-			if tc.expectedResult {
-				s.Require().True(res, "Test case #%d: %s", i, tc.msg)
+		s.T().Run(tc.name, func(t *testing.T) {
+			if tc.expectedPanic {
+				s.Require().Panics(func() { tc.coinsA.IsEqual(tc.coinsB) }, "Test case #%d: %s", i, tc.name)
 			} else {
-				s.Require().False(res, "Test case #%d: %s", i, tc.msg)
+				res := tc.coinsA.IsEqual(tc.coinsB)
+				if tc.expectedResult {
+					s.Require().True(res, "Test case #%d: %s", i, tc.name)
+				} else {
+					s.Require().False(res, "Test case #%d: %s", i, tc.name)
+				}
 			}
-		}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoin_Validate() {
 	var empty sdk.DecCoin
 	testCases := []struct {
+		name         string
 		input        sdk.DecCoin
 		expectedPass bool
 	}{
-		// uninitalized deccoin
-		{empty, false},
+		{"Uninitalized deccoin", empty, false},
 
-		// invalid denom string
-		{sdk.DecCoin{"(){9**&})", sdk.NewDec(33)}, false},
+		{"Invalid denom string", sdk.DecCoin{"(){9**&})", sdk.NewDec(33)}, false},
 
-		// negative coin amount
-		{sdk.DecCoin{testDenom1, sdk.NewDec(-33)}, false},
+		{"Negative coin amount", sdk.DecCoin{testDenom1, sdk.NewDec(-33)}, false},
 
-		// valid coin
-		{sdk.DecCoin{testDenom1, sdk.NewDec(33)}, true},
+		{"Valid coin", sdk.DecCoin{testDenom1, sdk.NewDec(33)}, true},
 	}
 
 	for i, tc := range testCases {
-		err := tc.input.Validate()
-		if tc.expectedPass {
-			s.Require().NoError(err, "unexpected result for test case #%d, input: %v", i, tc.input)
-		} else {
-			s.Require().Error(err, "unexpected result for test case #%d, input: %v", i, tc.input)
-		}
+		s.T().Run(tc.name, func(t *testing.T) {
+			err := tc.input.Validate()
+			if tc.expectedPass {
+				s.Require().NoError(err, "unexpected result for test case #%d %s, input: %v", i, tc.name, tc.input)
+			} else {
+				s.Require().Error(err, "unexpected result for test case #%d %s, input: %v", i, tc.name, tc.input)
+			}
+		})
 	}
 }
 
 func (s *decCoinTestSuite) TestDecCoin_ParseDecCoin() {
 	var empty sdk.DecCoin
 	testCases := []struct {
+		name           string
 		input          string
 		expectedResult sdk.DecCoin
 		expectedErr    bool
 	}{
-		// empty input
-		{"", empty, true},
+		{"Empty input", "", empty, true},
 
-		// bad input
-		{"✨🌟⭐", empty, true},
+		{"Bad input", "✨🌟⭐", empty, true},
 
-		// invalid decimal coin
-		{"9.3.0stake", empty, true},
+		{"Invalid decimal coin", "9.3.0stake", empty, true},
 
-		// precision over limit
-		{"9.11111111111111111111stake", empty, true},
+		{"Precision over limit", "9.11111111111111111111stake", empty, true},
 
-		// invalid denom
 		// TODO - Clarify - According to error message for ValidateDenom call, supposed to
 		// throw error when upper case characters are used. Currently uppercase denoms are allowed.
-		{"9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
+		{"Invalid denom", "9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
 
-		// valid input - amount and denom seperated by space
-		{"9.3 stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
+		{"Valid input - amount and denom seperated by space", "9.3 stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
 
-		// valid input - amount and denom concatenated
-		{"9.3stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
+		{"Valid input - amount and denom concatenated", "9.3stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
 	}
 
 	for i, tc := range testCases {
-		res, err := sdk.ParseDecCoin(tc.input)
-		if tc.expectedErr {
-			s.Require().Error(err, "expected error for test case #%d, input: %v", i, tc.input)
-		} else {
-			s.Require().NoError(err, "unexpected error for test case #%d, input: %v", i, tc.input)
-			s.Require().Equal(tc.expectedResult, res, "unexpected result for test case #%d, input: %v", i, tc.input)
-		}
+		s.T().Run(tc.name, func(t *testing.T) {
+			res, err := sdk.ParseDecCoin(tc.input)
+			if tc.expectedErr {
+				s.Require().Error(err, "expected error for test case #%d %s, input: %v", i, tc.name, tc.input)
+			} else {
+				s.Require().NoError(err, "unexpected error for test case #%d %s, input: %v", i, tc.name, tc.input)
+				s.Require().Equal(tc.expectedResult, res, "unexpected result for test case #%d %s, input: %v", i, tc.name, tc.input)
+			}
+		})
 	}
 }

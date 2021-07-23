@@ -27,8 +27,6 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/params";
   }
 
-  // define 3 rpc methods
-
   // Bech32 queries bech32Prefix
   rpc Bech32Prefix(Bech32PrefixRequest) returns (Bech32PrefixResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
@@ -84,24 +82,30 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
+// Bech32PrefixRequest is the request type for Bech32Prefix rpc method
 message Bech32PrefixRequest  {}
 
+// Bech32PrefixResponse is the response type for Bech32Prefix rpc method
 message Bech32PrefixResponse  {
   string bech32_prefix = 1;
 }
 
+// Bech32FromAccAddrRequest is the request type for Bech32FromAccAddr rpc method
 message Bech32FromAccAddrRequest {
   bytes account_addr = 1;
 }
 
+// Bech32FromAccAddrResponse is the response type for Bech32FromAccAddr rpc method
 message Bech32FromAccAddrResponse {
   string bech32 = 1;
 }
 
+// AccAddrFromBech32Request is the request type for AccAddrFromBech32 rpc method
 message AccAddrFromBech32Request {
   string bech32 = 1;
 }
 
+// AccAddrFromBech32Response is the response type for AccAddrFromBech32 rpc method
 message AccAddrFromBech32Response {
   bytes account_addr = 1;
 }

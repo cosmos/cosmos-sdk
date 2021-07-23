@@ -225,8 +225,8 @@ func toBytes(i interface{}) []byte {
 var (
 	EventTypeTx = "tx"
 
-	AttributeKeySequence  = "sequence"
-	AttributeKeySignature = "signature"
+	AttributeKeyAccountSequence = "acc_seq"
+	AttributeKeySignature       = "signature"
 
 	EventTypeMessage = "message"
 

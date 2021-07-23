@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -106,9 +105,9 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	var events sdk.Events
-	for _, sig := range sigs {
+	for i, sig := range sigs {
 		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
-			sdk.NewAttribute(sdk.AttributeKeySequence, strconv.FormatUint(sig.Sequence, 10)),
+			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s%d", signers[i], sig.Sequence)),
 		))
 
 		sigBzs, err := signatureDataToBz(sig.Data)

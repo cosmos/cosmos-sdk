@@ -17,13 +17,12 @@ import (
 )
 
 const (
-	flagEvents  = "events"
-	flagType    = "type"
-	flagAddress = "address"
+	flagEvents = "events"
+	flagType   = "type"
 
-	typeHash = "hash"
-	typeSeq  = "sequence"
-	typeSig  = "signature"
+	typeHash   = "hash"
+	typeAccSeq = "acc_seq"
+	typeSig    = "signature"
 
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -216,14 +215,14 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tx [hash|sequence|signature] --type=[hash|sequence|signature]",
-		Short: "Query for a transaction by hash, sequence or signature in a committed block",
+		Use:   "tx [hash|acc_seq|signature] --type=[hash|acc_seq|signature]",
+		Short: "Query for a transaction by hash, addr++seq combination or signature in a committed block",
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:
 $ %s query tx <hash>
-$ %s query tx --%s=%s <sequence> --%s=<addr>
+$ %s query tx --%s=%s <concat(addr,sequence)>
 $ %s query tx --%s=%s <sig1_base64,sig2_base64...>
-`, version.AppName, version.AppName, flagType, typeSeq, flagAddress, version.AppName, flagType, typeSig)),
+`, version.AppName, version.AppName, flagType, typeAccSeq, version.AppName, flagType, typeSig)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -278,19 +277,14 @@ $ %s query tx --%s=%s <sig1_base64,sig2_base64...>
 
 					return clientCtx.PrintProto(txs.Txs[0])
 				}
-			case typeSeq:
+			case typeAccSeq:
 				{
 					if args[0] == "" {
-						return fmt.Errorf("argument should be a sequence")
-					}
-					addr, _ := cmd.Flags().GetString(flagAddress)
-					if addr == "" {
-						return fmt.Errorf("--%s is required when using --%s=%s", flagAddress, flagType, typeSeq)
+						return fmt.Errorf("argument should be a <concat(addr,sequence)> combination")
 					}
 
 					tmEvents := []string{
-						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeMessage, sdk.AttributeKeySender, addr),
-						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySequence, args[0]),
+						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeyAccountSequence, args[0]),
 					}
 					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, query.DefaultPage, query.DefaultLimit, "")
 					if err != nil {
@@ -313,8 +307,7 @@ $ %s query tx --%s=%s <sig1_base64,sig2_base64...>
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagAddress, "", fmt.Sprintf("Query the tx by signer and sequence, required if --%s=%s is set", flagType, typeSeq))
-	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeSeq, typeSig))
+	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeAccSeq, typeSig))
 
 	return cmd
 }

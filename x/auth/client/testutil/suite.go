@@ -354,29 +354,19 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 			true, "unknown --type value foo",
 		},
 		{
-			"--type=sequence with no sequence",
+			"--type=acc_seq with no addr+seq",
 			[]string{
-				"--type=sequence",
+				"--type=acc_seq",
 				"",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			true, "argument should be a sequence",
-		},
-		{
-			"--type=sequence with no address",
-			[]string{
-				"--type=sequence",
-				fmt.Sprintf("%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			},
-			true, "--address is required when using --type=sequence",
+			true, "argument should be a <concat(addr,sequence)> combination",
 		},
 		{
 			"non-existing addr+seq combo",
 			[]string{
-				"--type=sequence",
+				"--type=acc_seq",
 				"42",
-				fmt.Sprintf("--address=%s", val.Address.String()),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true, "found no txs matching given address and sequence combination",
@@ -384,9 +374,8 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 		{
 			"addr+seq happy case",
 			[]string{
-				"--type=sequence",
-				fmt.Sprintf("%d", protoTx.AuthInfo.SignerInfos[0].Sequence),
-				fmt.Sprintf("--address=%s", val.Address.String()),
+				"--type=acc_seq",
+				fmt.Sprintf("%s%d", val.Address, protoTx.AuthInfo.SignerInfos[0].Sequence),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false, "",

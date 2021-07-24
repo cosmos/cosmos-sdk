@@ -22,6 +22,19 @@ type simpleResolver struct {
 	value       reflect.Value
 }
 
+func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) {
+	if !s.called {
+		values, err := ctr.call(s.ctr, s.scope)
+		if err != nil {
+			return nil, err
+		}
+		s.values = values
+		s.called = true
+	}
+
+	return s.values, nil
+}
+
 func (s *simpleResolver) resolve(c *container, _ Scope, caller containerreflect.Location) (reflect.Value, error) {
 	c.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
 	err := c.addGraphEdge(s.node.ctr.Location, caller)
@@ -41,19 +54,6 @@ func (s *simpleResolver) resolve(c *container, _ Scope, caller containerreflect.
 	}
 
 	return s.value, nil
-}
-
-func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) {
-	if !s.called {
-		values, err := ctr.call(s.ctr, s.scope)
-		if err != nil {
-			return nil, err
-		}
-		s.values = values
-		s.called = true
-	}
-
-	return s.values, nil
 }
 
 func (s simpleResolver) addNode(*simpleProvider, int) error {

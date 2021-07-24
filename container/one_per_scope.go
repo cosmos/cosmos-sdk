@@ -8,12 +8,12 @@ import (
 )
 
 type onePerScopeResolver struct {
-	typ      reflect.Type
-	mapType  reflect.Type
-	nodes    map[Scope]*simpleProvider
-	idxMap   map[Scope]int
-	resolved bool
-	values   reflect.Value
+	typ       reflect.Type
+	mapType   reflect.Type
+	providers map[Scope]*simpleProvider
+	idxMap    map[Scope]int
+	resolved  bool
+	values    reflect.Value
 }
 
 type mapOfOnePerScopeResolver struct {
@@ -27,7 +27,7 @@ func (o *onePerScopeResolver) resolve(_ *container, _ Scope, _ containerreflect.
 func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, resolver containerreflect.Location) (reflect.Value, error) {
 	c.logf("Providing %v to %s from:", o.mapType, resolver.Name())
 	c.indentLogger()
-	for scope, node := range o.nodes {
+	for scope, node := range o.providers {
 		c.logf("%s: %s", scope.Name(), node.ctr.Location)
 		err := c.addGraphEdge(node.ctr.Location, resolver)
 		if err != nil {
@@ -37,7 +37,7 @@ func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, resolver conta
 	c.dedentLogger()
 	if !o.resolved {
 		res := reflect.MakeMap(o.mapType)
-		for scope, node := range o.nodes {
+		for scope, node := range o.providers {
 			values, err := node.resolveValues(c)
 			if err != nil {
 				return reflect.Value{}, err
@@ -62,11 +62,11 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int) error {
 		return fmt.Errorf("cannot define a constructor with one-per-scope dependency %v which isn't provided in a scope", o.typ)
 	}
 
-	if _, ok := o.nodes[n.scope]; ok {
+	if _, ok := o.providers[n.scope]; ok {
 		return fmt.Errorf("duplicate constructor for one-per-scope type %v in scope %s", o.typ, n.scope)
 	}
 
-	o.nodes[n.scope] = n
+	o.providers[n.scope] = n
 	o.idxMap[n.scope] = i
 
 	return nil

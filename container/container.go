@@ -49,10 +49,10 @@ func newContainer(cfg *config) *container {
 	for typ := range cfg.onePerScopeTypes {
 		mapType := reflect.MapOf(scopeType, typ)
 		r := &onePerScopeResolver{
-			typ:     typ,
-			mapType: mapType,
-			nodes:   map[Scope]*simpleProvider{},
-			idxMap:  map[Scope]int{},
+			typ:       typ,
+			mapType:   mapType,
+			providers: map[Scope]*simpleProvider{},
+			idxMap:    map[Scope]int{},
 		}
 		ctr.resolvers[typ] = r
 		ctr.resolvers[mapType] = &mapOfOnePerScopeResolver{r}

@@ -65,7 +65,7 @@ type simpleValueResolver struct {
 }
 
 func (c *container) call(constructor *containerreflect.Constructor, scope Scope) ([]reflect.Value, error) {
-	c.logf("Gathering dependencies for %s", constructor.Location)
+	c.logf("Resolving dependencies for %s", constructor.Location)
 	c.indentLogger()
 	inVals := make([]reflect.Value, len(constructor.In))
 	for i, in := range constructor.In {
@@ -307,9 +307,12 @@ func reflectCtr(ctr interface{}) (*containerreflect.Constructor, error) {
 	return &rctr, nil
 }
 
-func (c *container) addNode(constructor *containerreflect.Constructor, scope Scope) (interface{}, error) {
+func (c *container) addNode(constructor *containerreflect.Constructor, scope Scope, noLog bool) (interface{}, error) {
 	hasScopeParam := len(constructor.In) > 0 && constructor.In[0].Type == scopeType
 	if scope != nil || !hasScopeParam {
+		if !noLog {
+			c.logf("Registering provider: %s", constructor.Location.String())
+		}
 		node := &simpleNode{
 			ctr:   constructor,
 			scope: scope,
@@ -338,6 +341,9 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 
 		return node, nil
 	} else {
+		if !noLog {
+			c.logf("Registering scope provider: %s", constructor.Location.String())
+		}
 		node := &scopeProviderNode{
 			ctr:            constructor,
 			calledForScope: map[Scope]bool{},
@@ -390,7 +396,9 @@ func (c *container) run(invoker interface{}) error {
 		return err
 	}
 
-	node, err := c.addNode(rctr, nil)
+	c.logf("Registering invoker %s", rctr.Location)
+
+	node, err := c.addNode(rctr, nil, true)
 	if err != nil {
 		return err
 	}
@@ -400,6 +408,11 @@ func (c *container) run(invoker interface{}) error {
 		return fmt.Errorf("cannot run scoped provider as an invoker")
 	}
 
+	c.logf("Building container")
 	_, err = sn.resolveValues(c)
-	return err
+	if err != nil {
+		return err
+	}
+	c.logf("Done")
+	return nil
 }

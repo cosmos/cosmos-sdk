@@ -1,8 +1,9 @@
 package container
 
 import (
-	"fmt"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // Option is a functional option for a container.
@@ -27,7 +28,7 @@ func Provide(constructors ...interface{}) Option {
 func ProvideWithScope(scope Scope, constructors ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
 		if scope == nil {
-			return fmt.Errorf("expected non-empty scope")
+			return errors.Errorf("expected non-empty scope")
 		}
 
 		return provide(ctr, scope, constructors)
@@ -40,7 +41,7 @@ func provide(ctr *container, scope Scope, constructors []interface{}) error {
 		if err != nil {
 			return err
 		}
-		_, err = ctr.addNode(rc, scope)
+		_, err = ctr.addNode(rc, scope, false)
 		if err != nil {
 			return err
 		}
@@ -57,12 +58,13 @@ func AutoGroupTypes(types ...reflect.Type) Option {
 	return configOption(func(c *config) error {
 		for _, ty := range types {
 			if ty.Kind() == reflect.Slice {
-				return fmt.Errorf("slice type %T cannot be used as an auto-group type", ty)
+				return errors.Errorf("slice type %T cannot be used as an auto-group type", ty)
 			}
 
 			if c.onePerScopeTypes[ty] {
-				return fmt.Errorf("type %v is already registered as a one per scope type, trying to mark as an auto-group type", ty)
+				return errors.Errorf("type %v is already registered as a one per scope type, trying to mark as an auto-group type", ty)
 			}
+			c.logf("Registering auto-group type %v", ty)
 			c.autoGroupTypes[ty] = true
 		}
 		return nil
@@ -76,8 +78,9 @@ func OnePerScopeTypes(types ...reflect.Type) Option {
 	return configOption(func(c *config) error {
 		for _, ty := range types {
 			if c.autoGroupTypes[ty] {
-				return fmt.Errorf("type %v is already registered as an auto-group type, trying to mark as one per scope type", ty)
+				return errors.Errorf("type %v is already registered as an auto-group type, trying to mark as one per scope type", ty)
 			}
+			c.logf("Registering one-per-sope type %v", ty)
 			c.onePerScopeTypes[ty] = true
 		}
 		return nil
@@ -86,6 +89,7 @@ func OnePerScopeTypes(types ...reflect.Type) Option {
 
 func Logger(logger func(string)) Option {
 	return configOption(func(c *config) error {
+		logger("Initializing logger")
 		c.loggers = append(c.loggers, logger)
 		return nil
 	})
@@ -95,7 +99,7 @@ func Logger(logger func(string)) Option {
 // fail immediately.
 func Error(err error) Option {
 	return configOption(func(*config) error {
-		return err
+		return errors.WithStack(err)
 	})
 }
 

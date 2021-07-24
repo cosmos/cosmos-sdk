@@ -16,11 +16,19 @@ func Run(invoker interface{}, opts ...Option) error {
 		return err
 	}
 
+	cfg.logf("Registering providers")
+	cfg.indentLogger()
 	ctr := newContainer(cfg)
 	err = opt.applyContainer(ctr)
 	if err != nil {
 		return err
 	}
+	cfg.dedentLogger()
 
-	return ctr.run(invoker)
+	err = ctr.run(invoker)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

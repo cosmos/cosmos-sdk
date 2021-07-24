@@ -397,7 +397,6 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 	}
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
-	fmt.Println(hdPath.DerivationPath())
 
 	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
 	if err != nil {

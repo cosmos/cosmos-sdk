@@ -1,13 +1,10 @@
 package container
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 
 	"github.com/goccy/go-graphviz/cgraph"
-
-	"github.com/goccy/go-graphviz"
 
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
@@ -28,23 +25,12 @@ type container struct {
 
 	callerStack []containerreflect.Location
 	callerMap   map[containerreflect.Location]bool
-
-	graphviz *graphviz.Graphviz
-	graph    *cgraph.Graph
 }
 
-func newContainer(cfg *config) (*container, error) {
-	g := graphviz.New()
-	graph, err := g.Graph()
-	if err != nil {
-		return nil, err
-	}
-
+func newContainer(cfg *config) *container {
 	ctr := &container{
 		config:      cfg,
 		resolvers:   map[reflect.Type]resolver{},
-		graphviz:    g,
-		graph:       graph,
 		callerStack: nil,
 		callerMap:   map[containerreflect.Location]bool{},
 	}
@@ -71,7 +57,7 @@ func newContainer(cfg *config) (*container, error) {
 		ctr.resolvers[mapType] = &mapOfOnePerScopeResolver{r}
 	}
 
-	return ctr, nil
+	return ctr
 }
 
 func (c *container) call(constructor *containerreflect.Constructor, scope Scope) ([]reflect.Value, error) {
@@ -264,24 +250,9 @@ func (c *container) run(invoker interface{}) error {
 	if err != nil {
 		return err
 	}
-	c.logf("Done")
+	c.logf("Done building container")
 
 	return nil
-}
-
-func (c container) generateGraph() {
-	buf := &bytes.Buffer{}
-	err := c.graphviz.Render(c.graph, graphviz.XDOT, buf)
-	if err != nil {
-		c.logf("Error rendering DOT graph: %+v", err)
-	}
-
-	err = c.graphviz.RenderFilename(c.graph, graphviz.SVG, "graph_dump.svg")
-	if err != nil {
-		c.logf("Error rendering SVG graph: %+v", err)
-	}
-
-	c.logf("Graph: %s", buf)
 }
 
 func (c *container) locationGraphNode(location containerreflect.Location) (*cgraph.Node, error) {

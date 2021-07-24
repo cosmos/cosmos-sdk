@@ -10,16 +10,21 @@ package container
 func Run(invoker interface{}, opts ...Option) error {
 	opt := Options(opts...)
 
-	cfg := newConfig()
-	err := opt.applyConfig(cfg)
+	cfg, err := newConfig()
+	if err != nil {
+		return err
+	}
+
+	defer cfg.generateGraph() // always generate graph on exit
+
+	err = opt.applyConfig(cfg)
 	if err != nil {
 		return err
 	}
 
 	cfg.logf("Registering providers")
 	cfg.indentLogger()
-	ctr, _ := newContainer(cfg)
-	defer ctr.generateGraph() // always generate graph on exit
+	ctr := newContainer(cfg)
 	err = opt.applyContainer(ctr)
 	if err != nil {
 		cfg.logf("Failed registering providers because of: %+v", err)

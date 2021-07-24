@@ -90,12 +90,12 @@ func TestRun(t *testing.T) {
 		container.Run(
 			func(handlers map[container.Scope]Handler, commands []Command, a KeeperA) {
 				// TODO:
-				// require one Handler for module a and a scopes
+				// require one Handler for module a and b scopes
 				// require 3 commands
 				// require KeeperA have store key a
 				// require KeeperB have store key b and MsgClientA
 			},
-			container.Logger(func(o string) { t.Log(o) }),
+			container.Debug(),
 			container.AutoGroupTypes(reflect.TypeOf(Command{})),
 			container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
 			container.Provide(
@@ -140,7 +140,7 @@ func TestError(t *testing.T) {
 func TestCyclic(t *testing.T) {
 	require.Error(t, container.Run(
 		func(x string) {},
-		container.Logger(func(o string) { t.Log(o) }),
+		container.Debug(),
 		container.Provide(
 			func(x int) float64 { return float64(x) },
 			func(x float64) (int, string) { return int(x), "hi" },

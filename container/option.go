@@ -1,6 +1,8 @@
 package container
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -87,12 +89,52 @@ func OnePerScopeTypes(types ...reflect.Type) Option {
 	})
 }
 
+// Logger creates an option which provides a logger function which will
+// receive all log messages from the container.
 func Logger(logger func(string)) Option {
 	return configOption(func(c *config) error {
 		logger("Initializing logger")
 		c.loggers = append(c.loggers, logger)
 		return nil
 	})
+}
+
+func StdoutLogger() Option {
+	return Logger(func(s string) {
+		_, _ = fmt.Fprintln(os.Stdout, s)
+	})
+}
+
+// Visualizer creates an option which provides a visualizer function which
+// will receive a rendering of the container in the Graphiz DOT format
+// whenever the container finishes building or fails due to an error. The
+// graph is color-coded to aid debugging.
+func Visualizer(visualizer func(dotGraph string)) Option {
+	return configOption(func(c *config) error {
+		c.addFuncVisualizer(visualizer)
+		return nil
+	})
+}
+
+func LogVisualizer() Option {
+	return configOption(func(c *config) error {
+		c.enableLogVisualizer()
+		return nil
+	})
+}
+
+func FileVisualizer(filename, format string) Option {
+	return configOption(func(c *config) error {
+		c.addFileVisualizer(filename, format)
+		return nil
+	})
+}
+
+func Debug() Option {
+	return Options(
+		StdoutLogger(),
+		FileVisualizer("container_dump.svg", "svg"),
+	)
 }
 
 // Error creates an option which causes the dependency injection container to

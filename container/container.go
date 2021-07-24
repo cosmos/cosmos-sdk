@@ -4,19 +4,36 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/awalterschulze/gographviz"
+
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
+
+/*
+TODO:
+error traces
+circular dependencies
+StructArgs
+*/
 
 type container struct {
 	*config
 
 	valueResolvers map[reflect.Type]valueResolver
+	graph          *gographviz.Graph
 }
 
 func newContainer(cfg *config) *container {
+	graph := gographviz.NewGraph()
+	err := graph.SetName("G")
+	if err != nil {
+		panic(err)
+	}
+
 	ctr := &container{
 		config:         cfg,
 		valueResolvers: map[reflect.Type]valueResolver{},
+		graph:          graph,
 	}
 
 	for typ := range cfg.autoGroupTypes {
@@ -46,7 +63,7 @@ func newContainer(cfg *config) *container {
 
 type valueResolver interface {
 	addNode(*simpleNode, int) error
-	resolve(*container, Scope) (reflect.Value, error)
+	resolve(*container, Scope, containerreflect.Location) (reflect.Value, error)
 }
 
 type simpleNode struct {
@@ -69,7 +86,7 @@ func (c *container) call(constructor *containerreflect.Constructor, scope Scope)
 	c.indentLogger()
 	inVals := make([]reflect.Value, len(constructor.In))
 	for i, in := range constructor.In {
-		val, err := c.resolve(in, scope)
+		val, err := c.resolve(in, scope, constructor.Location)
 		if err != nil {
 			return nil, err
 		}
@@ -93,21 +110,25 @@ func (s *simpleNode) resolveValues(ctr *container) ([]reflect.Value, error) {
 	return s.values, nil
 }
 
-func (s *simpleValueResolver) resolve(c *container, _ Scope) (reflect.Value, error) {
-	c.logf("Providing %v from %s", s.typ, s.node.ctr.Location)
-	if s.resolved {
-		return s.value, nil
-	}
-
-	values, err := s.node.resolveValues(c)
+func (s *simpleValueResolver) resolve(c *container, _ Scope, resolver containerreflect.Location) (reflect.Value, error) {
+	c.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, resolver.Name())
+	err := c.addGraphEdge(s.node.ctr.Location, resolver)
 	if err != nil {
 		return reflect.Value{}, err
 	}
 
-	value := values[s.idxInValues]
-	s.value = value
-	s.resolved = true
-	return value, nil
+	if !s.resolved {
+		values, err := s.node.resolveValues(c)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+
+		value := values[s.idxInValues]
+		s.value = value
+		s.resolved = true
+	}
+
+	return s.value, nil
 }
 
 func (s simpleValueResolver) addNode(*simpleNode, int) error {
@@ -127,13 +148,18 @@ type sliceGroupValueResolver struct {
 	*groupValueResolver
 }
 
-func (g *sliceGroupValueResolver) resolve(c *container, _ Scope) (reflect.Value, error) {
-	c.logf("Providing %v from:", g.sliceType)
+func (g *sliceGroupValueResolver) resolve(c *container, _ Scope, resolver containerreflect.Location) (reflect.Value, error) {
+	c.logf("Providing %v to %s from:", g.sliceType, resolver.Name())
 	c.indentLogger()
 	for _, node := range g.nodes {
 		c.logf(node.ctr.Location.String())
+		err := c.addGraphEdge(node.ctr.Location, resolver)
+		if err != nil {
+			return reflect.Value{}, err
+		}
 	}
 	c.dedentLogger()
+
 	if !g.resolved {
 		res := reflect.MakeSlice(g.sliceType, 0, 0)
 		for i, node := range g.nodes {
@@ -158,7 +184,7 @@ func (g *sliceGroupValueResolver) resolve(c *container, _ Scope) (reflect.Value,
 	return g.values, nil
 }
 
-func (g *groupValueResolver) resolve(_ *container, _ Scope) (reflect.Value, error) {
+func (g *groupValueResolver) resolve(_ *container, _ Scope, location containerreflect.Location) (reflect.Value, error) {
 	return reflect.Value{}, fmt.Errorf("%v is an auto-group type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 
@@ -181,15 +207,19 @@ type mapOfOnePerScopeValueResolver struct {
 	*onePerScopeValueResolver
 }
 
-func (o *onePerScopeValueResolver) resolve(_ *container, _ Scope) (reflect.Value, error) {
+func (o *onePerScopeValueResolver) resolve(_ *container, _ Scope, _ containerreflect.Location) (reflect.Value, error) {
 	return reflect.Value{}, fmt.Errorf("%v is a one-per-scope type and thus can't be used as an input parameter, instead use %v", o.typ, o.mapType)
 }
 
-func (o *mapOfOnePerScopeValueResolver) resolve(c *container, _ Scope) (reflect.Value, error) {
-	c.logf("Providing %v from:", o.mapType)
+func (o *mapOfOnePerScopeValueResolver) resolve(c *container, _ Scope, resolver containerreflect.Location) (reflect.Value, error) {
+	c.logf("Providing %v to %s from:", o.mapType, resolver.Name())
 	c.indentLogger()
 	for scope, node := range o.nodes {
 		c.logf("%s: %s", scope.Name(), node.ctr.Location)
+		err := c.addGraphEdge(node.ctr.Location, resolver)
+		if err != nil {
+			return reflect.Value{}, err
+		}
 	}
 	c.dedentLogger()
 	if !o.resolved {
@@ -246,8 +276,13 @@ type scopeProviderValueResolver struct {
 	valueMap    map[Scope]reflect.Value
 }
 
-func (s scopeProviderValueResolver) resolve(ctr *container, scope Scope) (reflect.Value, error) {
-	ctr.logf("Providing %v from %s", s.typ, s.node.ctr.Location)
+func (s scopeProviderValueResolver) resolve(ctr *container, scope Scope, resolver containerreflect.Location) (reflect.Value, error) {
+	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, resolver.Name())
+	err := ctr.addGraphEdge(s.node.ctr.Location, resolver)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
 	if val, ok := s.valueMap[scope]; ok {
 		return val, nil
 	}
@@ -368,7 +403,29 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 	}
 }
 
-func (c *container) resolve(in containerreflect.Input, scope Scope) (reflect.Value, error) {
+func (c *container) addGraphNode(loc containerreflect.Location) error {
+	str := loc.String()
+	if !c.graph.IsNode(str) {
+		return c.graph.AddNode("G", str, nil)
+	}
+	return nil
+}
+
+func (c *container) addGraphEdge(from containerreflect.Location, to containerreflect.Location) error {
+	err := c.addGraphNode(from)
+	if err != nil {
+		return err
+	}
+
+	err = c.addGraphNode(to)
+	if err != nil {
+		return err
+	}
+
+	return c.graph.AddEdge(from.String(), to.String(), true, nil)
+}
+
+func (c *container) resolve(in containerreflect.Input, scope Scope, resolver containerreflect.Location) (reflect.Value, error) {
 	if in.Type == scopeType {
 		if scope == nil {
 			return reflect.Value{}, fmt.Errorf("expected scope but got nil")
@@ -387,7 +444,7 @@ func (c *container) resolve(in containerreflect.Input, scope Scope) (reflect.Val
 		return reflect.Value{}, fmt.Errorf("no constructor for type %v", in.Type)
 	}
 
-	return vr.resolve(c, scope)
+	return vr.resolve(c, scope, resolver)
 }
 
 func (c *container) run(invoker interface{}) error {
@@ -414,5 +471,6 @@ func (c *container) run(invoker interface{}) error {
 		return err
 	}
 	c.logf("Done")
+	c.logf("Graph: %s", c.graph.String())
 	return nil
 }

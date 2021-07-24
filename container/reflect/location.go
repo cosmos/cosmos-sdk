@@ -29,6 +29,7 @@ import (
 
 type Location interface {
 	isLocation()
+	Name() string
 	fmt.Stringer
 	fmt.Formatter
 }
@@ -59,6 +60,11 @@ func (f *location) isLocation() {
 // String returns a string representation of the function.
 func (f *location) String() string {
 	return fmt.Sprint(f)
+}
+
+// Name is the fully qualified function name.
+func (f *location) Name() string {
+	return fmt.Sprintf("%q.%v", f.pkg, f.name)
 }
 
 // Format implements fmt.Formatter for Func, printing a single-line

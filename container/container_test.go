@@ -1,6 +1,7 @@
 package container_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -129,4 +130,9 @@ func wrapProvideMethod(module interface{}) reflect2.Constructor {
 		},
 		Location: reflect2.LocationFromPC(method.Func.Pointer()),
 	}
+}
+
+func TestError(t *testing.T) {
+	err := container.Run(func() {}, container.Error(fmt.Errorf("an error")))
+	require.Error(t, err)
 }

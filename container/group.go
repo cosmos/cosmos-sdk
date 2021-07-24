@@ -72,5 +72,6 @@ func (g *groupResolver) addNode(n *simpleProvider, i int, c *container) error {
 		return err
 	}
 
-	return c.addGraphEdge(constructorGraphNode, typeGraphNode, "")
+	c.addGraphEdge(constructorGraphNode, typeGraphNode)
+	return nil
 }

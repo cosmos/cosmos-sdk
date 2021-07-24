@@ -136,3 +136,14 @@ func TestError(t *testing.T) {
 	err := container.Run(func() {}, container.Error(fmt.Errorf("an error")))
 	require.Error(t, err)
 }
+
+func TestCyclic(t *testing.T) {
+	require.Error(t, container.Run(
+		func(x string) {},
+		container.Logger(func(o string) { t.Log(o) }),
+		container.Provide(
+			func(x int) float64 { return float64(x) },
+			func(x float64) (int, string) { return int(x), "hi" },
+		),
+	))
+}

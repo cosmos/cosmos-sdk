@@ -78,7 +78,8 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) er
 		return err
 	}
 
-	return c.addGraphEdge(constructorGraphNode, typeGraphNode, "")
+	c.addGraphEdge(constructorGraphNode, typeGraphNode)
+	return nil
 }
 
 func (o *mapOfOnePerScopeResolver) addNode(*simpleProvider, int, *container) error {

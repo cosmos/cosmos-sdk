@@ -84,7 +84,7 @@ func (c *container) call(constructor *containerreflect.Constructor, scope Scope)
 	markGraphNodeAsFailed(graphNode)
 
 	if c.callerMap[loc] {
-		return nil, fmt.Errorf("cyclic dependency, %s -> %s", loc.Name(), loc.Name())
+		return nil, fmt.Errorf("cyclic dependency: %s -> %s", loc.Name(), loc.Name())
 	}
 
 	c.callerMap[loc] = true
@@ -153,11 +153,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 					return reflect.Value{}, err
 				}
 
-				err = c.addGraphEdge(constructorGraphNode, typeGraphNode, "")
-				if err != nil {
-					return reflect.Value{}, err
-				}
-
+				c.addGraphEdge(constructorGraphNode, typeGraphNode)
 			}
 		}
 
@@ -195,10 +191,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 				return reflect.Value{}, err
 			}
 
-			err = c.addGraphEdge(constructorGraphNode, typeGraphNode, "")
-			if err != nil {
-				return reflect.Value{}, err
-			}
+			c.addGraphEdge(constructorGraphNode, typeGraphNode)
 		}
 
 		return node, nil
@@ -216,10 +209,7 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 		return reflect.Value{}, err
 	}
 
-	err = c.addGraphEdge(typeGraphNode, to, "")
-	if err != nil {
-		return reflect.Value{}, err
-	}
+	c.addGraphEdge(typeGraphNode, to)
 
 	if in.Type == scopeType {
 		if scope == nil {
@@ -337,9 +327,11 @@ func (c *container) findOrCreateGraphNode(name string) (node *cgraph.Node, found
 	return node, false, err
 }
 
-func (c *container) addGraphEdge(from *cgraph.Node, to *cgraph.Node, label string) error {
-	_, err := c.graph.CreateEdge(label, from, to)
-	return err
+func (c *container) addGraphEdge(from *cgraph.Node, to *cgraph.Node) {
+	_, err := c.graph.CreateEdge("", from, to)
+	if err != nil {
+		c.logf("error creating graph edge")
+	}
 }
 
 func markGraphNodeAsUsed(node *cgraph.Node) {

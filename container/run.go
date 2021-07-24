@@ -19,13 +19,17 @@ func Run(invoker interface{}, opts ...Option) error {
 	cfg.logf("Registering providers")
 	cfg.indentLogger()
 	ctr, _ := newContainer(cfg)
+	defer ctr.generateGraph() // always generate graph on exit
 	err = opt.applyContainer(ctr)
 	if err != nil {
+		cfg.logf("Failed registering providers because of: %+v", err)
 		return err
 	}
 	cfg.dedentLogger()
 
 	err = ctr.run(invoker)
-	ctr.generateGraph()
+	if err != nil {
+		cfg.logf("Failed resolving dependencies because of: %+v", err)
+	}
 	return err
 }

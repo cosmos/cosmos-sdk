@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	reflect2 "github.com/cosmos/cosmos-sdk/container/reflect"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/container"
@@ -64,6 +66,8 @@ type BDependencies struct {
 }
 
 type BProvides struct {
+	container.StructArgs
+
 	KeeperB  KeeperB
 	Handler  Handler
 	Commands []Command
@@ -81,48 +85,48 @@ func (ModuleB) Provide(dependencies BDependencies) BProvides {
 }
 
 func TestRun(t *testing.T) {
-	t.Skip("Expecting this test to fail for now")
 	require.NoError(t,
 		container.Run(
-			func(handlers map[container.Scope]Handler, commands []Command, a KeeperA, b KeeperB) {
+			func(handlers map[container.Scope]Handler, commands []Command, a KeeperA) {
 				// TODO:
 				// require one Handler for module a and a scopes
 				// require 3 commands
 				// require KeeperA have store key a
 				// require KeeperB have store key b and MsgClientA
-			}),
-		container.AutoGroupTypes(reflect.TypeOf(Command{})),
-		container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
-		container.Provide(
-			ProvideKVStoreKey,
-			ProvideModuleKey,
-			ProvideMsgClientA,
-		),
-		container.ProvideWithScope(container.NewScope("a"), wrapProvideMethod(ModuleA{})),
-		container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
-	)
+			},
+			container.Logger(func(o string) { t.Log(o) }),
+			container.AutoGroupTypes(reflect.TypeOf(Command{})),
+			container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
+			container.Provide(
+				ProvideKVStoreKey,
+				ProvideModuleKey,
+				ProvideMsgClientA,
+			),
+			container.ProvideWithScope(container.NewScope("a"), wrapProvideMethod(ModuleA{})),
+			//container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
+		))
 }
 
-func wrapProvideMethod(module interface{}) container.ReflectConstructor {
+func wrapProvideMethod(module interface{}) reflect2.Constructor {
 	method := reflect.TypeOf(module).Method(0)
 	methodTy := method.Type
-	var in []reflect.Type
-	var out []reflect.Type
+	var in []reflect2.Input
+	var out []reflect2.Output
 
 	for i := 1; i < methodTy.NumIn(); i++ {
-		in = append(in, methodTy.In(i))
+		in = append(in, reflect2.Input{Type: methodTy.In(i)})
 	}
 	for i := 0; i < methodTy.NumOut(); i++ {
-		out = append(out, methodTy.Out(i))
+		out = append(out, reflect2.Output{Type: methodTy.Out(i)})
 	}
 
-	return container.ReflectConstructor{
+	return reflect2.Constructor{
 		In:  in,
 		Out: out,
 		Fn: func(values []reflect.Value) []reflect.Value {
 			values = append([]reflect.Value{reflect.ValueOf(module)}, values...)
 			return method.Func.Call(values)
 		},
-		Location: container.LocationFromPC(method.Func.Pointer()),
+		Location: reflect2.LocationFromPC(method.Func.Pointer()),
 	}
 }

@@ -1,6 +1,8 @@
 package container
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Scope is a special type used to define a provider scope.
 //
@@ -28,10 +30,10 @@ type scope struct {
 	name string
 }
 
-func (s *scope) isScope() {}
-
 func (s *scope) Name() string {
 	return s.name
 }
 
-var scopeTyp = reflect.TypeOf((*Scope)(nil))
+func (s *scope) isScope() {}
+
+var scopeType = reflect.TypeOf((*Scope)(nil)).Elem()

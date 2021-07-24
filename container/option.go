@@ -16,14 +16,36 @@ type Option interface {
 // exception of scoped constructors which are called at most once per scope
 // (see Scope).
 func Provide(constructors ...interface{}) Option {
-	panic("TODO")
+	return containerOption(func(ctr *container) error {
+		return provide(ctr, nil, constructors)
+	})
 }
 
 // ProvideWithScope creates a container option which registers the provided dependency
 // injection constructors that are to be run in the provided scope. Each constructor
 // will be called at most once.
 func ProvideWithScope(scope Scope, constructors ...interface{}) Option {
-	panic("TODO")
+	return containerOption(func(ctr *container) error {
+		if scope == nil {
+			return fmt.Errorf("expected non-empty scope")
+		}
+
+		return provide(ctr, scope, constructors)
+	})
+}
+
+func provide(ctr *container, scope Scope, constructors []interface{}) error {
+	for _, c := range constructors {
+		rc, err := reflectCtr(c)
+		if err != nil {
+			return err
+		}
+		_, err = ctr.addNode(rc, scope)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // AutoGroupTypes creates an option which registers the provided types as types which
@@ -58,6 +80,13 @@ func OnePerScopeTypes(types ...reflect.Type) Option {
 			}
 			c.onePerScopeTypes[ty] = true
 		}
+		return nil
+	})
+}
+
+func Logger(logger func(string)) Option {
+	return configOption(func(c *config) error {
+		c.loggers = append(c.loggers, logger)
 		return nil
 	})
 }

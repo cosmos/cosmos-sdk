@@ -1,7 +1,5 @@
 package container
 
-import "fmt"
-
 // Run runs the provided invoker function with values provided by the provided
 // options. It is the single entry point for building and running a dependency
 // injection container. Invoker should be a function taking one or more
@@ -12,17 +10,17 @@ import "fmt"
 func Run(invoker interface{}, opts ...Option) error {
 	opt := Options(opts...)
 
-	cfg := &config{}
+	cfg := newConfig()
 	err := opt.applyConfig(cfg)
-	if cfg.err != nil {
+	if err != nil {
 		return err
 	}
 
-	ctr := &container{}
+	ctr := newContainer(cfg)
 	err = opt.applyContainer(ctr)
-	if cfg.err != nil {
+	if err != nil {
 		return err
 	}
 
-	return fmt.Errorf("TODO call invoker")
+	return ctr.run(invoker)
 }

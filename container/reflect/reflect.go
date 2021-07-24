@@ -1,17 +1,19 @@
-package container
+package reflect
 
-import "reflect"
+import (
+	"reflect"
+)
 
-// ReflectConstructor defines a special constructor type that is defined by
+// Constructor defines a special constructor type that is defined by
 // reflection. It should be passed as a value to the Provide function.
 // Ex:
-//   option.Provide(ReflectConstructor{ ... })
-type ReflectConstructor struct {
+//   option.Provide(Constructor{ ... })
+type Constructor struct {
 	// In defines the in parameter types to Fn.
-	In []reflect.Type
+	In []Input
 
 	// Out defines the out parameter types to Fn.
-	Out []reflect.Type
+	Out []Output
 
 	// Fn defines the constructor function.
 	Fn func([]reflect.Value) []reflect.Value
@@ -19,4 +21,13 @@ type ReflectConstructor struct {
 	// Location defines the source code location to be used for this constructor
 	// in error messages.
 	Location Location
+}
+
+type Input struct {
+	Type     reflect.Type
+	Optional bool
+}
+
+type Output struct {
+	Type reflect.Type
 }

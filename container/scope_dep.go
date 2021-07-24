@@ -24,23 +24,6 @@ func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller containerr
 	// Log
 	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
 
-	// Graph
-	typeGraphNode, err := ctr.typeGraphNode(s.typ)
-	markGraphNodeAsUsed(typeGraphNode)
-	if err != nil {
-		return reflect.Value{}, err
-	}
-
-	to, err := ctr.locationGraphNode(caller)
-	if err != nil {
-		return reflect.Value{}, err
-	}
-
-	err = ctr.addGraphEdge(typeGraphNode, to, s.typ.Name())
-	if err != nil {
-		return reflect.Value{}, err
-	}
-
 	// Resolve
 	if val, ok := s.valueMap[scope]; ok {
 		return val, nil

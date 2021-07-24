@@ -29,23 +29,6 @@ func (g *sliceGroupValueResolver) resolve(c *container, _ Scope, caller containe
 	}
 	c.dedentLogger()
 
-	// Graph
-	typeGraphNode, err := c.typeGraphNode(g.sliceType)
-	markGraphNodeAsUsed(typeGraphNode)
-	if err != nil {
-		return reflect.Value{}, err
-	}
-
-	callerNode, err := c.locationGraphNode(caller)
-	if err != nil {
-		return reflect.Value{}, err
-	}
-
-	err = c.addGraphEdge(typeGraphNode, callerNode, "")
-	if err != nil {
-		return reflect.Value{}, err
-	}
-
 	// Resolve
 	if !g.resolved {
 		res := reflect.MakeSlice(g.sliceType, 0, 0)

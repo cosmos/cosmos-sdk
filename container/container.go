@@ -76,6 +76,13 @@ func newContainer(cfg *config) (*container, error) {
 
 func (c *container) call(constructor *containerreflect.Constructor, scope Scope) ([]reflect.Value, error) {
 	loc := constructor.Location
+	graphNode, err := c.locationGraphNode(loc)
+	if err != nil {
+		return nil, err
+	}
+	c.logf("Marking %s as failed", loc.Name())
+	markGraphNodeAsFailed(graphNode)
+
 	if c.callerMap[loc] {
 		return nil, fmt.Errorf("cyclic dependency, %s -> %s", loc.Name(), loc.Name())
 	}
@@ -100,11 +107,7 @@ func (c *container) call(constructor *containerreflect.Constructor, scope Scope)
 	c.callerStack = c.callerStack[0 : len(c.callerStack)-1]
 
 	out := constructor.Fn(inVals)
-
-	graphNode, err := c.locationGraphNode(loc)
-	if err != nil {
-		return nil, err
-	}
+	c.logf("Marking %s as used", loc.Name())
 	markGraphNodeAsUsed(graphNode)
 
 	return out, nil
@@ -202,48 +205,8 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 	}
 }
 
-func (c *container) locationGraphNode(location containerreflect.Location) (*cgraph.Node, error) {
-	node, err := c.graphNode(location.Name())
-	if err != nil {
-		return nil, err
-	}
-
-	node = node.SetShape(cgraph.BoxShape)
-	node.SetColor("lightgrey")
-	return node, nil
-}
-
-func (c *container) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
-	node, err := c.graphNode(typ.String())
-	if err != nil {
-		return nil, err
-	}
-
-	node.SetColor("lightgrey")
-	return node, err
-}
-
-func (c *container) graphNode(name string) (*cgraph.Node, error) {
-	node, err := c.graph.Node(name)
-	if err != nil {
-		return nil, err
-	}
-
-	if node != nil {
-		return node, nil
-	}
-
-	return c.graph.CreateNode(name)
-}
-
-func (c *container) addGraphEdge(from *cgraph.Node, to *cgraph.Node, label string) error {
-	_, err := c.graph.CreateEdge(label, from, to)
-	return err
-}
-
 func (c *container) resolve(in containerreflect.Input, scope Scope, caller containerreflect.Location) (reflect.Value, error) {
 	typeGraphNode, err := c.typeGraphNode(in.Type)
-	markGraphNodeAsUsed(typeGraphNode)
 	if err != nil {
 		return reflect.Value{}, err
 	}
@@ -263,6 +226,7 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 			return reflect.Value{}, fmt.Errorf("expected scope but got nil")
 		}
 		c.logf("Providing Scope %s", scope.Name())
+		markGraphNodeAsUsed(typeGraphNode)
 		return reflect.ValueOf(scope), nil
 	}
 
@@ -273,10 +237,18 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 			return reflect.Zero(in.Type), nil
 		}
 
+		markGraphNodeAsFailed(typeGraphNode)
 		return reflect.Value{}, fmt.Errorf("no constructor for type %v", in.Type)
 	}
 
-	return vr.resolve(c, scope, caller)
+	res, err := vr.resolve(c, scope, caller)
+	if err != nil {
+		markGraphNodeAsFailed(typeGraphNode)
+		return reflect.Value{}, err
+	}
+
+	markGraphNodeAsUsed(typeGraphNode)
+	return res, nil
 }
 
 func (c *container) run(invoker interface{}) error {
@@ -304,21 +276,76 @@ func (c *container) run(invoker interface{}) error {
 	}
 	c.logf("Done")
 
+	return nil
+}
+
+func (c container) generateGraph() {
 	buf := &bytes.Buffer{}
-	err = c.graphviz.Render(c.graph, graphviz.XDOT, buf)
+	err := c.graphviz.Render(c.graph, graphviz.XDOT, buf)
 	if err != nil {
-		return err
+		c.logf("Error rendering DOT graph: %+v", err)
 	}
 
 	err = c.graphviz.RenderFilename(c.graph, graphviz.SVG, "graph_dump.svg")
 	if err != nil {
-		return err
+		c.logf("Error rendering SVG graph: %+v", err)
 	}
 
 	c.logf("Graph: %s", buf)
-	return nil
+}
+
+func (c *container) locationGraphNode(location containerreflect.Location) (*cgraph.Node, error) {
+	node, found, err := c.findOrCreateGraphNode(location.Name())
+	if err != nil {
+		return nil, err
+	}
+
+	if found {
+		return node, nil
+	}
+
+	node = node.SetShape(cgraph.BoxShape)
+	node.SetColor("lightgrey")
+	return node, nil
+}
+
+func (c *container) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
+	node, found, err := c.findOrCreateGraphNode(typ.String())
+	if err != nil {
+		return nil, err
+	}
+
+	if found {
+		return node, nil
+	}
+
+	node.SetColor("lightgrey")
+	return node, err
+}
+
+func (c *container) findOrCreateGraphNode(name string) (node *cgraph.Node, found bool, err error) {
+	node, err = c.graph.Node(name)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if node != nil {
+		return node, true, nil
+	}
+
+	node, err = c.graph.CreateNode(name)
+	return node, false, err
+}
+
+func (c *container) addGraphEdge(from *cgraph.Node, to *cgraph.Node, label string) error {
+	_, err := c.graph.CreateEdge(label, from, to)
+	return err
 }
 
 func markGraphNodeAsUsed(node *cgraph.Node) {
 	node.SetColor("black")
+}
+
+func markGraphNodeAsFailed(node *cgraph.Node) {
+	node.SetColor("red")
 }

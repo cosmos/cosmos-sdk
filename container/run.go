@@ -26,9 +26,6 @@ func Run(invoker interface{}, opts ...Option) error {
 	cfg.dedentLogger()
 
 	err = ctr.run(invoker)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	ctr.generateGraph()
+	return err
 }

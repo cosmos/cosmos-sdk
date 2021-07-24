@@ -24,17 +24,16 @@ func (o *onePerScopeResolver) resolve(_ *container, _ Scope, _ containerreflect.
 	return reflect.Value{}, fmt.Errorf("%v is a one-per-scope type and thus can't be used as an input parameter, instead use %v", o.typ, o.mapType)
 }
 
-func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, resolver containerreflect.Location) (reflect.Value, error) {
-	c.logf("Providing %v to %s from:", o.mapType, resolver.Name())
+func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, caller containerreflect.Location) (reflect.Value, error) {
+	// Log
+	c.logf("Providing %v to %s from:", o.mapType, caller.Name())
 	c.indentLogger()
 	for scope, node := range o.providers {
 		c.logf("%s: %s", scope.Name(), node.ctr.Location)
-		err := c.addGraphEdge(node.ctr.Location, resolver)
-		if err != nil {
-			return reflect.Value{}, err
-		}
 	}
 	c.dedentLogger()
+
+	// Resolve
 	if !o.resolved {
 		res := reflect.MakeMap(o.mapType)
 		for scope, node := range o.providers {
@@ -57,7 +56,7 @@ func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, resolver conta
 	return o.values, nil
 }
 
-func (o *onePerScopeResolver) addNode(n *simpleProvider, i int) error {
+func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) error {
 	if n.scope == nil {
 		return fmt.Errorf("cannot define a constructor with one-per-scope dependency %v which isn't provided in a scope", o.typ)
 	}
@@ -69,9 +68,19 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int) error {
 	o.providers[n.scope] = n
 	o.idxMap[n.scope] = i
 
-	return nil
+	constructorGraphNode, err := c.locationGraphNode(n.ctr.Location)
+	if err != nil {
+		return err
+	}
+
+	typeGraphNode, err := c.typeGraphNode(o.mapType)
+	if err != nil {
+		return err
+	}
+
+	return c.addGraphEdge(constructorGraphNode, typeGraphNode, "")
 }
 
-func (o *mapOfOnePerScopeResolver) addNode(*simpleProvider, int) error {
+func (o *mapOfOnePerScopeResolver) addNode(*simpleProvider, int, *container) error {
 	return fmt.Errorf("%v is a one-per-scope type and thus %v can't be used as an output parameter", o.typ, o.mapType)
 }

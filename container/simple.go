@@ -36,12 +36,10 @@ func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) 
 }
 
 func (s *simpleResolver) resolve(c *container, _ Scope, caller containerreflect.Location) (reflect.Value, error) {
+	// Log
 	c.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
-	err := c.addGraphEdge(s.node.ctr.Location, caller)
-	if err != nil {
-		return reflect.Value{}, err
-	}
 
+	// Resolve
 	if !s.resolved {
 		values, err := s.node.resolveValues(c)
 		if err != nil {
@@ -56,6 +54,6 @@ func (s *simpleResolver) resolve(c *container, _ Scope, caller containerreflect.
 	return s.value, nil
 }
 
-func (s simpleResolver) addNode(*simpleProvider, int) error {
+func (s simpleResolver) addNode(*simpleProvider, int, *container) error {
 	return fmt.Errorf("duplicate constructor for type %v", s.typ)
 }

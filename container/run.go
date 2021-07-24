@@ -18,7 +18,7 @@ func Run(invoker interface{}, opts ...Option) error {
 
 	cfg.logf("Registering providers")
 	cfg.indentLogger()
-	ctr := newContainer(cfg)
+	ctr, _ := newContainer(cfg)
 	err = opt.applyContainer(ctr)
 	if err != nil {
 		return err

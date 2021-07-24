@@ -7,6 +7,6 @@ import (
 )
 
 type resolver interface {
-	addNode(*simpleProvider, int) error
+	addNode(*simpleProvider, int, *container) error
 	resolve(*container, Scope, reflect.Location) (reflect2.Value, error)
 }

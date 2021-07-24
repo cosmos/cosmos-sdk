@@ -20,13 +20,28 @@ type scopeDepResolver struct {
 	valueMap    map[Scope]reflect.Value
 }
 
-func (s scopeDepResolver) resolve(ctr *container, scope Scope, resolver containerreflect.Location) (reflect.Value, error) {
-	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, resolver.Name())
-	err := ctr.addGraphEdge(s.node.ctr.Location, resolver)
+func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller containerreflect.Location) (reflect.Value, error) {
+	// Log
+	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
+
+	// Graph
+	typeGraphNode, err := ctr.typeGraphNode(s.typ)
+	markGraphNodeAsUsed(typeGraphNode)
 	if err != nil {
 		return reflect.Value{}, err
 	}
 
+	to, err := ctr.locationGraphNode(caller)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
+	err = ctr.addGraphEdge(typeGraphNode, to, s.typ.Name())
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
+	// Resolve
 	if val, ok := s.valueMap[scope]; ok {
 		return val, nil
 	}
@@ -46,6 +61,6 @@ func (s scopeDepResolver) resolve(ctr *container, scope Scope, resolver containe
 	return value, nil
 }
 
-func (s scopeDepResolver) addNode(*simpleProvider, int) error {
+func (s scopeDepResolver) addNode(*simpleProvider, int, *container) error {
 	return fmt.Errorf("duplicate constructor for type %v", s.typ)
 }

@@ -1,39 +1,52 @@
 package container
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 
-	"github.com/awalterschulze/gographviz"
+	"github.com/goccy/go-graphviz/cgraph"
+
+	"github.com/goccy/go-graphviz"
 
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
 /*
 TODO:
-error traces
 circular dependencies
+error resolve traces
 StructArgs
+check all errors
+show errors on graph - call, resolve
 */
 
 type container struct {
 	*config
 
 	resolvers map[reflect.Type]resolver
-	graph     *gographviz.Graph
+
+	callerStack []containerreflect.Location
+	callerMap   map[containerreflect.Location]bool
+
+	graphviz *graphviz.Graphviz
+	graph    *cgraph.Graph
 }
 
-func newContainer(cfg *config) *container {
-	graph := gographviz.NewGraph()
-	err := graph.SetName("G")
+func newContainer(cfg *config) (*container, error) {
+	g := graphviz.New()
+	graph, err := g.Graph()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	ctr := &container{
-		config:    cfg,
-		resolvers: map[reflect.Type]resolver{},
-		graph:     graph,
+		config:      cfg,
+		resolvers:   map[reflect.Type]resolver{},
+		graphviz:    g,
+		graph:       graph,
+		callerStack: nil,
+		callerMap:   map[containerreflect.Location]bool{},
 	}
 
 	for typ := range cfg.autoGroupTypes {
@@ -58,23 +71,43 @@ func newContainer(cfg *config) *container {
 		ctr.resolvers[mapType] = &mapOfOnePerScopeResolver{r}
 	}
 
-	return ctr
+	return ctr, nil
 }
 
 func (c *container) call(constructor *containerreflect.Constructor, scope Scope) ([]reflect.Value, error) {
-	c.logf("Resolving dependencies for %s", constructor.Location)
+	loc := constructor.Location
+	if c.callerMap[loc] {
+		return nil, fmt.Errorf("cyclic dependency, %s -> %s", loc.Name(), loc.Name())
+	}
+
+	c.callerMap[loc] = true
+	c.callerStack = append(c.callerStack, loc)
+
+	c.logf("Resolving dependencies for %s", loc)
 	c.indentLogger()
 	inVals := make([]reflect.Value, len(constructor.In))
 	for i, in := range constructor.In {
-		val, err := c.resolve(in, scope, constructor.Location)
+		val, err := c.resolve(in, scope, loc)
 		if err != nil {
 			return nil, err
 		}
 		inVals[i] = val
 	}
 	c.dedentLogger()
-	c.logf("Calling %s", constructor.Location)
-	return constructor.Fn(inVals), nil
+	c.logf("Calling %s", loc)
+
+	delete(c.callerMap, loc)
+	c.callerStack = c.callerStack[0 : len(c.callerStack)-1]
+
+	out := constructor.Fn(inVals)
+
+	graphNode, err := c.locationGraphNode(loc)
+	if err != nil {
+		return nil, err
+	}
+	markGraphNodeAsUsed(graphNode)
+
+	return out, nil
 }
 
 func (c *container) addNode(constructor *containerreflect.Constructor, scope Scope, noLog bool) (interface{}, error) {
@@ -88,6 +121,11 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 			scope: scope,
 		}
 
+		constructorGraphNode, err := c.locationGraphNode(constructor.Location)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+
 		for i, out := range constructor.Out {
 			typ := out.Type
 			// auto-group slices of auto-group types
@@ -97,7 +135,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 
 			vr, ok := c.resolvers[typ]
 			if ok {
-				err := vr.addNode(node, i)
+				err := vr.addNode(node, i, c)
 				if err != nil {
 					return nil, err
 				}
@@ -106,6 +144,17 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 					node: node,
 					typ:  typ,
 				}
+
+				typeGraphNode, err := c.typeGraphNode(typ)
+				if err != nil {
+					return reflect.Value{}, err
+				}
+
+				err = c.addGraphEdge(constructorGraphNode, typeGraphNode, "")
+				if err != nil {
+					return reflect.Value{}, err
+				}
+
 			}
 		}
 
@@ -120,6 +169,11 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 			valueMap:       map[Scope][]reflect.Value{},
 		}
 
+		constructorGraphNode, err := c.locationGraphNode(constructor.Location)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+
 		for i, out := range constructor.Out {
 			typ := out.Type
 			_, ok := c.resolvers[typ]
@@ -132,35 +186,78 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 				node:        node,
 				valueMap:    map[Scope]reflect.Value{},
 			}
+
+			typeGraphNode, err := c.typeGraphNode(typ)
+			if err != nil {
+				return reflect.Value{}, err
+			}
+
+			err = c.addGraphEdge(constructorGraphNode, typeGraphNode, "")
+			if err != nil {
+				return reflect.Value{}, err
+			}
 		}
 
 		return node, nil
 	}
 }
 
-func (c *container) addGraphNode(loc containerreflect.Location) error {
-	str := loc.String()
-	if !c.graph.IsNode(str) {
-		return c.graph.AddNode("G", str, nil)
+func (c *container) locationGraphNode(location containerreflect.Location) (*cgraph.Node, error) {
+	node, err := c.graphNode(location.Name())
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	node = node.SetShape(cgraph.BoxShape)
+	node.SetColor("lightgrey")
+	return node, nil
 }
 
-func (c *container) addGraphEdge(from containerreflect.Location, to containerreflect.Location) error {
-	err := c.addGraphNode(from)
+func (c *container) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
+	node, err := c.graphNode(typ.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = c.addGraphNode(to)
+	node.SetColor("lightgrey")
+	return node, err
+}
+
+func (c *container) graphNode(name string) (*cgraph.Node, error) {
+	node, err := c.graph.Node(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return c.graph.AddEdge(from.String(), to.String(), true, nil)
+	if node != nil {
+		return node, nil
+	}
+
+	return c.graph.CreateNode(name)
+}
+
+func (c *container) addGraphEdge(from *cgraph.Node, to *cgraph.Node, label string) error {
+	_, err := c.graph.CreateEdge(label, from, to)
+	return err
 }
 
 func (c *container) resolve(in containerreflect.Input, scope Scope, caller containerreflect.Location) (reflect.Value, error) {
+	typeGraphNode, err := c.typeGraphNode(in.Type)
+	markGraphNodeAsUsed(typeGraphNode)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
+	to, err := c.locationGraphNode(caller)
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
+	err = c.addGraphEdge(typeGraphNode, to, "")
+	if err != nil {
+		return reflect.Value{}, err
+	}
+
 	if in.Type == scopeType {
 		if scope == nil {
 			return reflect.Value{}, fmt.Errorf("expected scope but got nil")
@@ -206,6 +303,22 @@ func (c *container) run(invoker interface{}) error {
 		return err
 	}
 	c.logf("Done")
-	c.logf("Graph: %s", c.graph.String())
+
+	buf := &bytes.Buffer{}
+	err = c.graphviz.Render(c.graph, graphviz.XDOT, buf)
+	if err != nil {
+		return err
+	}
+
+	err = c.graphviz.RenderFilename(c.graph, graphviz.SVG, "graph_dump.svg")
+	if err != nil {
+		return err
+	}
+
+	c.logf("Graph: %s", buf)
 	return nil
+}
+
+func markGraphNodeAsUsed(node *cgraph.Node) {
+	node.SetColor("black")
 }

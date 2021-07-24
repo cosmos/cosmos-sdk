@@ -114,7 +114,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 		if !noLog {
 			c.logf("Registering scope provider: %s", constructor.Location.String())
 		}
-		node := &scopeProvider{
+		node := &scopeDepProvider{
 			ctr:            constructor,
 			calledForScope: map[Scope]bool{},
 			valueMap:       map[Scope][]reflect.Value{},
@@ -126,7 +126,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 			if ok {
 				return nil, fmt.Errorf("duplicate constructor for type %v", typ)
 			}
-			c.resolvers[typ] = &scopeProviderResolver{
+			c.resolvers[typ] = &scopeDepResolver{
 				typ:         typ,
 				idxInValues: i,
 				node:        node,

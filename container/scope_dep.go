@@ -7,20 +7,20 @@ import (
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
-type scopeProvider struct {
+type scopeDepProvider struct {
 	ctr            *containerreflect.Constructor
 	calledForScope map[Scope]bool
 	valueMap       map[Scope][]reflect.Value
 }
 
-type scopeProviderResolver struct {
+type scopeDepResolver struct {
 	typ         reflect.Type
 	idxInValues int
-	node        *scopeProvider
+	node        *scopeDepProvider
 	valueMap    map[Scope]reflect.Value
 }
 
-func (s scopeProviderResolver) resolve(ctr *container, scope Scope, resolver containerreflect.Location) (reflect.Value, error) {
+func (s scopeDepResolver) resolve(ctr *container, scope Scope, resolver containerreflect.Location) (reflect.Value, error) {
 	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, resolver.Name())
 	err := ctr.addGraphEdge(s.node.ctr.Location, resolver)
 	if err != nil {
@@ -46,6 +46,6 @@ func (s scopeProviderResolver) resolve(ctr *container, scope Scope, resolver con
 	return value, nil
 }
 
-func (s scopeProviderResolver) addNode(*simpleProvider, int) error {
+func (s scopeDepResolver) addNode(*simpleProvider, int) error {
 	return fmt.Errorf("duplicate constructor for type %v", s.typ)
 }

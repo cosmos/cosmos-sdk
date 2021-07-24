@@ -390,14 +390,18 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error) {
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
-		return nil, ErrUnsupportedSigningAlgo
+		return nil, fmt.Errorf(
+			"signature algo %s is not defined in the keyring options: %w",
+			algo.Name(), ErrUnsupportedSigningAlgo,
+		)
 	}
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
+	fmt.Println(hdPath.DerivationPath())
 
 	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate ledger key: %w", err)
 	}
 
 	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
@@ -623,6 +627,10 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err er
 	path, err := info.GetPath()
 	if err != nil {
 		return
+	}
+
+	if info.GetAlgo() != hd.Secp256k1Type {
+		return nil, nil, fmt.Errorf("signing with ledger is only allowed for %s keys", hd.Secp256k1Type)
 	}
 
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)

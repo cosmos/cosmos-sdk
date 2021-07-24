@@ -629,10 +629,6 @@ func SignWithLedger(info Info, msg []byte) (sig []byte, pub types.PubKey, err er
 		return
 	}
 
-	if info.GetAlgo() != hd.Secp256k1Type {
-		return nil, nil, fmt.Errorf("signing with ledger is only allowed for %s keys", hd.Secp256k1Type)
-	}
-
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
 		return

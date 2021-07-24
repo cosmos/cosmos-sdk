@@ -11,6 +11,7 @@ func makeReflectConstructor(ctr interface{}) (*containerreflect.Constructor, err
 	rctr, ok := ctr.(containerreflect.Constructor)
 	if !ok {
 		val := reflect.ValueOf(ctr)
+		loc := containerreflect.LocationFromPC(val.Pointer())
 		typ := val.Type()
 		if typ.Kind() != reflect.Func {
 			return nil, fmt.Errorf("expected a Func type, got %T", ctr)
@@ -24,21 +25,40 @@ func makeReflectConstructor(ctr interface{}) (*containerreflect.Constructor, err
 			}
 		}
 
+		errIdx := -1
 		numOut := typ.NumOut()
-		out := make([]containerreflect.Output, numOut)
+		var out []containerreflect.Output
 		for i := 0; i < numOut; i++ {
-			out[i] = containerreflect.Output{Type: typ.Out(i)}
+			t := typ.Out(i)
+			if t == errType {
+				if i != numOut-1 {
+					return nil, fmt.Errorf("output error parameter is not last parameter in function %s", loc)
+				}
+				errIdx = i
+			} else {
+				out = append(out, containerreflect.Output{Type: t})
+			}
 		}
 
 		rctr = containerreflect.Constructor{
 			In:  in,
 			Out: out,
-			Fn: func(values []reflect.Value) []reflect.Value {
-				return val.Call(values)
+			Fn: func(values []reflect.Value) ([]reflect.Value, error) {
+				res := val.Call(values)
+				if errIdx > 0 {
+					err := res[errIdx]
+					if !err.IsZero() {
+						return nil, err.Interface().(error)
+					}
+					return res[0:errIdx], nil
+				}
+				return res, nil
 			},
-			Location: containerreflect.LocationFromPC(val.Pointer()),
+			Location: loc,
 		}
 	}
 
-	return &rctr, nil
+	return extractStructArgs(&rctr)
 }
+
+var errType = reflect.TypeOf((*error)(nil)).Elem()

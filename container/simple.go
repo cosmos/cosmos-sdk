@@ -1,7 +1,6 @@
 package container
 
 import (
-	"fmt"
 	"reflect"
 
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
@@ -54,6 +53,9 @@ func (s *simpleResolver) resolve(c *container, _ Scope, caller containerreflect.
 	return s.value, nil
 }
 
-func (s simpleResolver) addNode(*simpleProvider, int, *container) error {
-	return fmt.Errorf("duplicate constructor for type %v", s.typ)
+func (s simpleResolver) addNode(p *simpleProvider, _ int, _ *container) error {
+	return duplicateConstructorError{
+		loc: p.ctr.Location,
+		typ: s.typ,
+	}
 }

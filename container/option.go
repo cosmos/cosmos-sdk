@@ -41,11 +41,11 @@ func provide(ctr *container, scope Scope, constructors []interface{}) error {
 	for _, c := range constructors {
 		rc, err := makeReflectConstructor(c)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		_, err = ctr.addNode(rc, scope, false)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	return nil
@@ -68,6 +68,11 @@ func AutoGroupTypes(types ...reflect.Type) Option {
 			}
 			c.logf("Registering auto-group type %v", ty)
 			c.autoGroupTypes[ty] = true
+			node, err := c.typeGraphNode(reflect.SliceOf(ty))
+			if err != nil {
+				return err
+			}
+			node.SetComment("auto-group")
 		}
 		return nil
 	})
@@ -84,6 +89,11 @@ func OnePerScopeTypes(types ...reflect.Type) Option {
 			}
 			c.logf("Registering one-per-sope type %v", ty)
 			c.onePerScopeTypes[ty] = true
+			node, err := c.typeGraphNode(reflect.MapOf(scopeType, ty))
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			node.SetComment("one-per-scope")
 		}
 		return nil
 	})
@@ -133,6 +143,7 @@ func FileVisualizer(filename, format string) Option {
 func Debug() Option {
 	return Options(
 		StdoutLogger(),
+		LogVisualizer(),
 		FileVisualizer("container_dump.svg", "svg"),
 	)
 }

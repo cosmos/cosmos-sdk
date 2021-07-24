@@ -16,7 +16,7 @@ type Constructor struct {
 	Out []Output
 
 	// Fn defines the constructor function.
-	Fn func([]reflect.Value) []reflect.Value
+	Fn func([]reflect.Value) ([]reflect.Value, error)
 
 	// Location defines the source code location to be used for this constructor
 	// in error messages.

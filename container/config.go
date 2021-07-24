@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"reflect"
 
+	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
+
 	"github.com/goccy/go-graphviz"
 	"github.com/goccy/go-graphviz/cgraph"
 )
@@ -108,4 +110,54 @@ func (c *config) addFileVisualizer(filename string, format string) {
 			}
 		}
 	})
+}
+
+func (c *config) locationGraphNode(location containerreflect.Location) (*cgraph.Node, error) {
+	node, found, err := c.findOrCreateGraphNode(location.Name())
+	if err != nil {
+		return nil, err
+	}
+
+	if found {
+		return node, nil
+	}
+
+	node = node.SetShape(cgraph.BoxShape)
+	node.SetColor("lightgrey")
+	return node, nil
+}
+
+func (c *config) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
+	node, found, err := c.findOrCreateGraphNode(typ.String())
+	if err != nil {
+		return nil, err
+	}
+
+	if found {
+		return node, nil
+	}
+
+	node.SetColor("lightgrey")
+	return node, err
+}
+
+func (c *config) findOrCreateGraphNode(name string) (node *cgraph.Node, found bool, err error) {
+	node, err = c.graph.Node(name)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if node != nil {
+		return node, true, nil
+	}
+
+	node, err = c.graph.CreateNode(name)
+	return node, false, err
+}
+
+func (c *config) addGraphEdge(from *cgraph.Node, to *cgraph.Node) {
+	_, err := c.graph.CreateEdge("", from, to)
+	if err != nil {
+		c.logf("error creating graph edge")
+	}
 }

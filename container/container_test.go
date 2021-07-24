@@ -43,8 +43,8 @@ func ProvideKVStoreKey(scope container.Scope) KVStoreKey {
 	return KVStoreKey{name: scope.Name()}
 }
 
-func ProvideModuleKey(scope container.Scope) ModuleKey {
-	return ModuleKey(scope.Name())
+func ProvideModuleKey(scope container.Scope) (ModuleKey, error) {
+	return ModuleKey(scope.Name()), nil
 }
 
 func ProvideMsgClientA(_ container.Scope, key ModuleKey) MsgClientA {
@@ -104,7 +104,7 @@ func TestRun(t *testing.T) {
 				ProvideMsgClientA,
 			),
 			container.ProvideWithScope(container.NewScope("a"), wrapProvideMethod(ModuleA{})),
-			//container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
+			container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
 		))
 }
 
@@ -124,9 +124,9 @@ func wrapProvideMethod(module interface{}) reflect2.Constructor {
 	return reflect2.Constructor{
 		In:  in,
 		Out: out,
-		Fn: func(values []reflect.Value) []reflect.Value {
+		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
 			values = append([]reflect.Value{reflect.ValueOf(module)}, values...)
-			return method.Func.Call(values)
+			return method.Func.Call(values), nil
 		},
 		Location: reflect2.LocationFromPC(method.Func.Pointer()),
 	}

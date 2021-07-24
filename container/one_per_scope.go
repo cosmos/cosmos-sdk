@@ -62,7 +62,11 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) er
 	}
 
 	if _, ok := o.providers[n.scope]; ok {
-		return fmt.Errorf("duplicate constructor for one-per-scope type %v in scope %s", o.typ, n.scope)
+		return &duplicateConstructorInScopeError{
+			loc:   n.ctr.Location,
+			typ:   o.typ,
+			scope: n.scope,
+		}
 	}
 
 	o.providers[n.scope] = n

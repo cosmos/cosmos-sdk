@@ -109,10 +109,7 @@ func TestRun(t *testing.T) {
 				ProvideModuleKey,
 				ProvideMsgClientA,
 			),
-			container.Supply(
-				ModuleA{},
-				ModuleB{},
-			),
+			container.Supply(ModuleA{}, ModuleB{}),
 			container.ProvideWithScope("a", wrapMethod0(ModuleA{})),
 			container.ProvideWithScope("b", wrapMethod0(ModuleB{})),
 		))

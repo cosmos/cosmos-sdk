@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"runtime"
 
 	reflect2 "github.com/cosmos/cosmos-sdk/container/reflect"
 
@@ -55,10 +54,10 @@ func provide(ctr *container, scope Scope, constructors []interface{}) error {
 }
 
 func Supply(values ...interface{}) Option {
-	pc, _, _, _ := runtime.Caller(1)
+	loc := reflect2.LocationFromCaller(1)
 	return containerOption(func(ctr *container) error {
 		for _, v := range values {
-			err := ctr.supply(reflect.ValueOf(v), reflect2.LocationFromPC(pc))
+			err := ctr.supply(reflect.ValueOf(v), loc)
 			if err != nil {
 				return err
 			}

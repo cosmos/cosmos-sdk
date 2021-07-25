@@ -17,6 +17,6 @@ func (s supplyResolver) addNode(provider *simpleProvider, _ int, _ *container) e
 }
 
 func (s supplyResolver) resolve(c *container, s2 Scope, caller reflect2.Location) (reflect.Value, error) {
-	c.logf("Providing %v from %s to %s", s.typ, s.loc, caller.Name())
+	c.logf("Supplying %v from %s to %s", s.typ, s.loc, caller.Name())
 	return s.value, nil
 }

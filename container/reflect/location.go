@@ -53,6 +53,11 @@ func LocationFromPC(pc uintptr) Location {
 	}
 }
 
+func LocationFromCaller(skip int) Location {
+	pc, _, _, _ := runtime.Caller(skip + 1)
+	return LocationFromPC(pc)
+}
+
 func (f *location) isLocation() {
 	panic("implement me")
 }

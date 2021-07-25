@@ -62,17 +62,6 @@ func (k Record) GetAddress() (types.AccAddress, error) {
 	return pk.Address().Bytes(), nil
 }
 
-// TODO fix that GetAlgo() corresponds to pubKey type
-func (k Record) GetAlgo() string {
-
-	if l := k.GetLocal(); l != nil {
-		return l.PrivKeyType
-	}
-
-	// TODO  doublecheck there is no field pubKeyType for multi,offline,ledger
-	return ""
-}
-
 // TODO consider to remove it
 func (k Record) GetType() KeyType {
 	return 0

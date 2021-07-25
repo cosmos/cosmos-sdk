@@ -276,8 +276,6 @@ func TestExportImportKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, addr, addr2)
 
-	require.Equal(t, john.GetAlgo(), john2.GetAlgo())
-
 	key, err = john.GetPubKey()
 	require.NoError(t, err)
 	key2, err := john2.GetPubKey()
@@ -546,7 +544,6 @@ func TestInMemoryKeyManagement(t *testing.T) {
 
 	require.Equal(t, o1, k.Name)
 	require.NotNil(t, k.GetEmpty())
-	//	require.Equal(t, hd.Ed25519Type, k.GetAlgo())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
@@ -1316,7 +1313,6 @@ func requireEqualRecord(t *testing.T, key *keyring.Record, mnemonic *keyring.Rec
 	key2, err := mnemonic.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key1, key2)
-	require.Equal(t, key.GetAlgo(), mnemonic.GetAlgo())
 	//	require.Equal(t, key.GetType(), mnemonic.GetType())
 }
 

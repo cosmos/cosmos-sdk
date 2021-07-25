@@ -250,7 +250,7 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", err
 	}
 
-	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(key), string(k.GetAlgo())), nil
+	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(key), key.Type()), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {
@@ -262,17 +262,17 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 	return ks.ExportPubKeyArmor(k.Name)
 }
 
-// TODO iam  not sure if this func is useful
+
 // we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
 	fmt.Println("ExportPrivKeyArmor start")
-	k, priv, err := ks.ExportPrivateKeyObject(uid)
+	_, priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}
 	fmt.Println("ExportPrivKeyArmor done")
 
-	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, string(k.GetAlgo())), nil
+	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, priv.Type()), nil
 }
 
 // ExportPrivateKeyObject exports an armored private key object.

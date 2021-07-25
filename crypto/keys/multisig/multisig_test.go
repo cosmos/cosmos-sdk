@@ -448,7 +448,7 @@ func TestProtoMarshalJSON(t *testing.T) {
 	require.True(pk2.Equals(msig))
 
 	// Test that we can correctly unmarshal key from keyring output
-	emptyRecordItem := keyring.NewEmptyRecordItem(keyring.NewEmptyRecord())
+	emptyRecordItem := keyring.NewMultiRecordItem(keyring.NewMultiRecord())
 	k, err := keyring.NewRecord("my multisig", msig, emptyRecordItem)
 	require.NoError(err)
 	ko, err := keyring.MkAccKeyOutput(k)

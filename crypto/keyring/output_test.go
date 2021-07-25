@@ -18,7 +18,7 @@ func TestBech32KeysOutput(t *testing.T) {
 	tmpKey := sk.PubKey()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
 
-	k, err := keyring.NewRecord("multisig", multisigPk, keyring.NewEmptyRecordItem(keyring.NewEmptyRecord()))
+	k, err := keyring.NewRecord("multisig", multisigPk, keyring.NewMultiRecordItem(keyring.NewMultiRecord()))
 	require.NotNil(t, k)
 	require.NoError(t, err)
 	pubKey, err := k.GetPubKey()
@@ -30,5 +30,5 @@ func TestBech32KeysOutput(t *testing.T) {
 	out, err := keyring.MkAccKeyOutput(k)
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, out)
-	require.Equal(t, "{Name:multisig Type:local Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":1,\"public_keys\":[{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ\"}]} Mnemonic:}", fmt.Sprintf("%+v", out))
+	require.Equal(t, "{Name:multisig Type:multi Address:cosmos1nf8lf6n4wa43rzmdzwe6hkrnw5guekhqt595cw PubKey:{\"@type\":\"/cosmos.crypto.multisig.LegacyAminoPubKey\",\"threshold\":1,\"public_keys\":[{\"@type\":\"/cosmos.crypto.secp256k1.PubKey\",\"key\":\"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ\"}]} Mnemonic:}", fmt.Sprintf("%+v", out))
 }

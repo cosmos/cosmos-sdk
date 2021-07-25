@@ -2,7 +2,6 @@ package keyring
 
 import (
 	"errors"
-	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -17,7 +16,17 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	if err != nil {
 		return nil, err
 	}
+
 	return &Record{name, any, item}, nil
+}
+
+func NewLocalRecord(priv cryptotypes.PrivKey) (*Record_Local, error) {
+	any, err := codectypes.NewAnyWithValue(priv)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Record_Local{any, priv.Type()}, nil
 }
 
 func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
@@ -36,20 +45,28 @@ func (rl *Record_Ledger) GetPath() *hd.BIP44Params {
 	return rl.Path
 }
 
-func NewEmptyRecord() *Record_Empty {
-	return &Record_Empty{}
+func NewOfflineRecord() *Record_Offline {
+	return &Record_Offline{}
 }
 
-func NewEmptyRecordItem(re *Record_Empty) *Record_Empty_ {
-	return &Record_Empty_{re}
+func NewOfflineRecordItem(re *Record_Offline) *Record_Offline_ {
+	return &Record_Offline_{re}
 }
 
-func (k Record) GetPubKey() (cryptotypes.PubKey, error) {
+func NewMultiRecord() *Record_Multi {
+	return &Record_Multi{}
+}
+
+func NewMultiRecordItem(re *Record_Multi) *Record_Multi_ {
+	return &Record_Multi_{re}
+}
+
+func (k *Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		// TODO - don't use fmt.Errorf
-		return nil, fmt.Errorf("Unable to cast any to cryptotypes.PubKey")
+		return nil, errors.New("Unable to cast any to cryptotypes.PubKey")
 	}
+	
 	return pk, nil
 }
 
@@ -62,9 +79,19 @@ func (k Record) GetAddress() (types.AccAddress, error) {
 	return pk.Address().Bytes(), nil
 }
 
-// TODO consider to remove it
 func (k Record) GetType() KeyType {
-	return 0
+	switch {
+	case k.GetLocal() != nil:
+		return TypeLocal
+	case k.GetLedger() != nil:
+		return TypeLedger
+	
+	case k.GetMulti() != nil:
+		return TypeMulti
+    // k.Getoffline()
+	default:
+		return TypeOffline
+	}
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -91,14 +118,6 @@ func ExtractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	return extractPrivKeyFromLocal(rl)
 }
 
-func NewLocalRecord(priv cryptotypes.PrivKey) (*Record_Local, error) {
-	any, err := codectypes.NewAnyWithValue(priv)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Record_Local{any, priv.Type()}, nil
-}
 
 func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
 	if rl.PrivKey == nil {

@@ -217,14 +217,15 @@
     - [PrivKey](#cosmos.crypto.ed25519.PrivKey)
     - [PubKey](#cosmos.crypto.ed25519.PubKey)
   
-- [cosmos/crypto/hd/hd.proto](#cosmos/crypto/hd/hd.proto)
-    - [BIP44Params](#cosmos.crypto.hd.BIP44Params)
+- [cosmos/crypto/hd/v1/hd.proto](#cosmos/crypto/hd/v1/hd.proto)
+    - [BIP44Params](#cosmos.crypto.hd.v1.BIP44Params)
   
-- [cosmos/crypto/keyring/types.proto](#cosmos/crypto/keyring/types.proto)
+- [cosmos/crypto/keyring/v1/types.proto](#cosmos/crypto/keyring/v1/types.proto)
     - [Record](#cosmos.crypto.keyring.v1.Record)
-    - [Record.Empty](#cosmos.crypto.keyring.v1.Record.Empty)
     - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
     - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
+    - [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi)
+    - [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline)
   
 - [cosmos/crypto/multisig/keys.proto](#cosmos/crypto/multisig/keys.proto)
     - [LegacyAminoPubKey](#cosmos.crypto.multisig.LegacyAminoPubKey)
@@ -3431,14 +3432,14 @@ then you must create a new proto message and follow ADR-28 for Address construct
 
 
 
-<a name="cosmos/crypto/hd/hd.proto"></a>
+<a name="cosmos/crypto/hd/v1/hd.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/crypto/hd/hd.proto
+## cosmos/crypto/hd/v1/hd.proto
 
 
 
-<a name="cosmos.crypto.hd.BIP44Params"></a>
+<a name="cosmos.crypto.hd.v1.BIP44Params"></a>
 
 ### BIP44Params
 BIP44Params is used as path field in ledger item in Record.
@@ -3446,11 +3447,11 @@ BIP44Params is used as path field in ledger item in Record.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `purpose` | [uint32](#uint32) |  |  |
-| `coin_type` | [uint32](#uint32) |  |  |
-| `account` | [uint32](#uint32) |  |  |
-| `change` | [bool](#bool) |  |  |
-| `address_index` | [uint32](#uint32) |  |  |
+| `purpose` | [uint32](#uint32) |  | purpose is a constant set to 44' (or 0x8000002C) following the BIP43 recommendation |
+| `coin_type` | [uint32](#uint32) |  | coin_type is a constant that improves privacy |
+| `account` | [uint32](#uint32) |  | account splits the key space into independent user identities |
+| `change` | [bool](#bool) |  | change is a constant used for public derivation. Constant 0 is used for external chain and constant 1 for internal chain. |
+| `address_index` | [uint32](#uint32) |  | address_index is used as child index in BIP32 derivation |
 
 
 
@@ -3466,10 +3467,10 @@ BIP44Params is used as path field in ledger item in Record.
 
 
 
-<a name="cosmos/crypto/keyring/types.proto"></a>
+<a name="cosmos/crypto/keyring/v1/types.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/crypto/keyring/types.proto
+## cosmos/crypto/keyring/v1/types.proto
 
 
 
@@ -3483,19 +3484,10 @@ Record is used for keyring migration from legacyInfo to proto.
 | ----- | ---- | ----- | ----------- |
 | `name` | [string](#string) |  |  |
 | `pub_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
-| `local` | [Record.Local](#cosmos.crypto.keyring.v1.Record.Local) |  |  |
-| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  |  |
-| `empty` | [Record.Empty](#cosmos.crypto.keyring.v1.Record.Empty) |  |  |
-
-
-
-
-
-
-<a name="cosmos.crypto.keyring.v1.Record.Empty"></a>
-
-### Record.Empty
-Empty item
+| `local` | [Record.Local](#cosmos.crypto.keyring.v1.Record.Local) |  | local stores the public information about a locally stored key |
+| `ledger` | [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger) |  | ledger stores the public information about a Ledger key |
+| `multi` | [Record.Multi](#cosmos.crypto.keyring.v1.Record.Multi) |  | Multi does not store any information. |
+| `offline` | [Record.Offline](#cosmos.crypto.keyring.v1.Record.Offline) |  | Offline does not store any information. |
 
 
 
@@ -3510,7 +3502,7 @@ Ledger item
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `path` | [cosmos.crypto.hd.BIP44Params](#cosmos.crypto.hd.BIP44Params) |  |  |
+| `path` | [cosmos.crypto.hd.v1.BIP44Params](#cosmos.crypto.hd.v1.BIP44Params) |  |  |
 
 
 
@@ -3521,12 +3513,33 @@ Ledger item
 
 ### Record.Local
 Item is a keyring item stored in a keyring backend.
+Local item
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `priv_key` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 | `priv_key_type` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Multi"></a>
+
+### Record.Multi
+Multi item
+
+
+
+
+
+
+<a name="cosmos.crypto.keyring.v1.Record.Offline"></a>
+
+### Record.Offline
+Offline item
 
 
 

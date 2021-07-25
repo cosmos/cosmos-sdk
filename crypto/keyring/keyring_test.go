@@ -543,7 +543,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.Equal(t, pub1, key)
 
 	require.Equal(t, o1, k.Name)
-	require.NotNil(t, k.GetEmpty())
+	require.NotNil(t, k.GetOffline())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))

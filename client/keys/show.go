@@ -84,8 +84,8 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 
 		multikey := multisig.NewLegacyAminoPubKey(multisigThreshold, pks)
-		emptyRecord := keyring.NewEmptyRecord()
-		emptyRecordItem := keyring.NewEmptyRecordItem(emptyRecord)
+		emptyRecord := keyring.NewMultiRecord()
+		emptyRecordItem := keyring.NewMultiRecordItem(emptyRecord)
 
 		k, err = keyring.NewRecord(k.Name, multikey, emptyRecordItem)
 		if err != nil {

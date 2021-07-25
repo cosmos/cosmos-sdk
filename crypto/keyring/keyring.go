@@ -839,15 +839,15 @@ func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 }
 
 func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error) {
-	emptyRecord := NewEmptyRecord()
-	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
+	emptyRecord := NewOfflineRecord()
+	emptyRecordItem := NewOfflineRecordItem(emptyRecord)
 	return ks.newRecord(name, pk, emptyRecordItem)
 }
 
 // writeMultisigKey investigate where thisf function is called maybe remove it
 func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, error) {
-	emptyRecord := NewEmptyRecord()
-	emptyRecordItem := NewEmptyRecordItem(emptyRecord)
+	emptyRecord := NewMultiRecord()
+	emptyRecordItem := NewMultiRecordItem(emptyRecord)
 	return ks.newRecord(name, pk, emptyRecordItem)
 }
 
@@ -968,9 +968,12 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		}
 		item = NewLocalRecordItem(localRecord)
 
-	case TypeOffline, TypeMulti:
-		emptyRecord := NewEmptyRecord()
-		item = NewEmptyRecordItem(emptyRecord)
+	case TypeOffline:
+		offlineRecord := NewOfflineRecord()
+		item = NewOfflineRecordItem(offlineRecord)
+	case TypeMulti:
+		multiRecord := NewMultiRecord()
+		item = NewMultiRecordItem(multiRecord)
 	case TypeLedger:
 		path, err := info.GetPath()
 		if err != nil {

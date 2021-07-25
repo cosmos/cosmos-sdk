@@ -15,13 +15,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-func TestEmptyRecordMarshaling(t *testing.T) {
+func TestOfflineRecordMarshaling(t *testing.T) {
 	require := require.New(t)
 
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
-	emptyRecord := keyring.NewEmptyRecord()
-	emptyRecordItem := keyring.NewEmptyRecordItem(emptyRecord)
+	emptyRecord := keyring.NewOfflineRecord()
+	emptyRecordItem := keyring.NewOfflineRecordItem(emptyRecord)
 
 	r, err := keyring.NewRecord("testrecord", pk, emptyRecordItem)
 	require.NoError(err)
@@ -148,14 +148,14 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	require.True(privKey2.Equals(privKey))
 }
 
-func TestExtractPrivKeyFromEmptyRecord(t *testing.T) {
+func TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
 	require := require.New(t)
 
 	priv := secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	emptyRecord := keyring.NewEmptyRecord()
-	emptyRecordItem := keyring.NewEmptyRecordItem(emptyRecord)
+	offlineRecord := keyring.NewOfflineRecord()
+	emptyRecordItem := keyring.NewOfflineRecordItem(offlineRecord)
 
 	k, err := keyring.NewRecord("testrecord", pub, emptyRecordItem)
 	require.NoError(err)

@@ -3,7 +3,7 @@ package cosmos.crypto.keyring.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
-import "cosmos/crypto/hd/hd.proto";
+import "cosmos/crypto/hd/v1/hd.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
@@ -27,8 +27,10 @@ message Record {
     Local local = 3;
     // ledger stores the public information about a Ledger key
     Ledger ledger  = 4;
-    // Empty does not store any information.
-    Empty empty  = 5;
+    // Multi does not store any information.
+    Multi multi  = 5;
+     // Offline does not store any information.
+    Offline offline  = 6;
   }
 
   // Item is a keyring item stored in a keyring backend.
@@ -40,9 +42,12 @@ message Record {
 
   // Ledger item 
   message Ledger {
-    hd.BIP44Params path = 1;
+    hd.v1.BIP44Params path = 1;
   }
 
-  // Empty item
-  message Empty {}
+  // Multi item
+  message Multi {}
+
+  // Offline item
+  message Offline {}
 }

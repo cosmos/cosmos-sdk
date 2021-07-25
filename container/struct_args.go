@@ -26,20 +26,20 @@ var isStructArgsType = reflect.TypeOf((*isStructArgs)(nil)).Elem()
 func extractStructArgs(constructor *containerreflect.Constructor) (*containerreflect.Constructor, error) {
 	var foundStructArgs bool
 	var newIn []containerreflect.Input
-	//var inSplicers []func([]reflect.Value) []reflect.Value
+	var inSplicers []func([]reflect.Value) ([]reflect.Value, error)
 
-	for _, in := range constructor.In {
+	for i, in := range constructor.In {
 		if in.Type.AssignableTo(isStructArgsType) {
 			foundStructArgs = true
-			newIn = append(newIn, structArgsInTypes(in.Type)...)
+			inTypes := structArgsInTypes(in.Type)
+			newIn = append(newIn, inTypes...)
+			inSplicers = append(inSplicers, makeInSplicer(in.Type, i, len(inTypes)))
 		} else {
 			newIn = append(newIn, in)
 		}
 	}
 
 	var newOut []containerreflect.Output
-	//var outSplicers []func([]reflect.Value) []reflect.Value
-
 	for _, out := range constructor.Out {
 		if out.Type.AssignableTo(isStructArgsType) {
 			foundStructArgs = true
@@ -54,7 +54,20 @@ func extractStructArgs(constructor *containerreflect.Constructor) (*containerref
 			In:  newIn,
 			Out: newOut,
 			Fn: func(values []reflect.Value) ([]reflect.Value, error) {
-				return nil, fmt.Errorf("TODO")
+				j := 0
+				values1 := make([]reflect.Value, len(constructor.In))
+				for i, in := range constructor.In {
+					if in.Type.AssignableTo(isStructArgsType) {
+						v, n := makeStructArgs(in.Type, values1[j:])
+						values[i] = v
+						j += n
+					} else {
+						values1 = append(values1, values[j])
+						values1[i] = values[j]
+						j++
+					}
+				}
+				return nil, fmt.Errorf("TODO: %+v", values1)
 			},
 			Location: constructor.Location,
 		}, nil
@@ -98,7 +111,7 @@ func structArgsOutTypes(typ reflect.Type) []containerreflect.Output {
 	return res
 }
 
-func makeStructArgsInputFn(typ reflect.Type, expectNumValues int) func([]reflect.Value) (reflect.Value, error) {
+func structArgsInputFn(typ reflect.Type, expectNumValues int) func([]reflect.Value) (reflect.Value, error) {
 	numFields := typ.NumField()
 	return func(values []reflect.Value) (reflect.Value, error) {
 		if len(values) != expectNumValues {
@@ -106,7 +119,7 @@ func makeStructArgsInputFn(typ reflect.Type, expectNumValues int) func([]reflect
 		}
 
 		j := 0
-		res := reflect.Zero(typ)
+		res := reflect.New(typ)
 		for i := 0; i < numFields; i++ {
 			f := typ.Field(i)
 			if f.Type.AssignableTo(isStructArgsType) {
@@ -116,10 +129,27 @@ func makeStructArgsInputFn(typ reflect.Type, expectNumValues int) func([]reflect
 			res.Field(i).Set(values[j])
 			j++
 		}
-		return res, nil
+		return res.Elem(), nil
 	}
 }
-func makeStructArgsOutputFn(typ reflect.Type, expectNumValues int) func(reflect.Value) ([]reflect.Value, error) {
+
+func makeStructArgs(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
+	numFields := typ.NumField()
+	j := 0
+	res := reflect.Zero(typ)
+	for i := 0; i < numFields; i++ {
+		f := typ.Field(i)
+		if f.Type.AssignableTo(isStructArgsType) {
+			continue
+		}
+
+		res.Field(i).Set(values[j])
+		j++
+	}
+	return res, j
+}
+
+func structArgsOutputFn(typ reflect.Type, expectNumValues int) func(reflect.Value) ([]reflect.Value, error) {
 	numFields := typ.NumField()
 	return func(value reflect.Value) ([]reflect.Value, error) {
 		j := 0
@@ -136,6 +166,42 @@ func makeStructArgsOutputFn(typ reflect.Type, expectNumValues int) func(reflect.
 			res[j] = value.Field(i)
 			j++
 		}
+		return res, nil
+	}
+}
+
+func makeInSplicer(typ reflect.Type, i int, n int) func([]reflect.Value) ([]reflect.Value, error) {
+	inFunc := structArgsInputFn(typ, n)
+
+	return func(values []reflect.Value) ([]reflect.Value, error) {
+		before := values[:i]
+		splice := values[i : i+n]
+		after := values[i+n:]
+		replace, err := inFunc(splice)
+		if err != nil {
+			return nil, err
+		}
+
+		res := append(before, replace)
+		res = append(res, after...)
+		return res, nil
+	}
+}
+
+func makeOutSplicer(typ reflect.Type, i int, n int) func([]reflect.Value) ([]reflect.Value, error) {
+	inFunc := structArgsInputFn(typ, n)
+
+	return func(values []reflect.Value) ([]reflect.Value, error) {
+		before := values[:i]
+		splice := values[i : i+n]
+		after := values[i+n:]
+		replace, err := inFunc(splice)
+		if err != nil {
+			return nil, err
+		}
+
+		res := append(before, replace)
+		res = append(res, after...)
 		return res, nil
 	}
 }

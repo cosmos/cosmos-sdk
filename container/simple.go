@@ -54,8 +54,5 @@ func (s *simpleResolver) resolve(c *container, _ Scope, caller containerreflect.
 }
 
 func (s simpleResolver) addNode(p *simpleProvider, _ int, _ *container) error {
-	return duplicateConstructorError{
-		loc: p.ctr.Location,
-		typ: s.typ,
-	}
+	return duplicateConstructorError(p.ctr.Location, s.typ)
 }

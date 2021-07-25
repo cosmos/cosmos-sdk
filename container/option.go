@@ -27,13 +27,13 @@ func Provide(constructors ...interface{}) Option {
 // ProvideWithScope creates a container option which registers the provided dependency
 // injection constructors that are to be run in the provided scope. Each constructor
 // will be called at most once.
-func ProvideWithScope(scope Scope, constructors ...interface{}) Option {
+func ProvideWithScope(scopeName string, constructors ...interface{}) Option {
 	return containerOption(func(ctr *container) error {
-		if scope == nil {
-			return errors.Errorf("expected non-empty scope")
+		if scopeName == "" {
+			return errors.Errorf("expected non-empty scope name")
 		}
 
-		return provide(ctr, scope, constructors)
+		return provide(ctr, ctr.createOrGetScope(scopeName), constructors)
 	})
 }
 
@@ -80,7 +80,7 @@ func AutoGroupTypes(types ...reflect.Type) Option {
 
 // OnePerScopeTypes creates an option which registers the provided types as types which
 // can have up to one value per scope. All of the values for a one-per-scope type T
-// and their respective scopes, can be retrieved by declaring an input parameter map[Scope]T.
+// and their respective scopes, can be retrieved by declaring an input parameter map[string]T.
 func OnePerScopeTypes(types ...reflect.Type) Option {
 	return configOption(func(c *config) error {
 		for _, ty := range types {
@@ -89,7 +89,7 @@ func OnePerScopeTypes(types ...reflect.Type) Option {
 			}
 			c.logf("Registering one-per-sope type %v", ty)
 			c.onePerScopeTypes[ty] = true
-			node, err := c.typeGraphNode(reflect.MapOf(scopeType, ty))
+			node, err := c.typeGraphNode(reflect.MapOf(stringType, ty))
 			if err != nil {
 				return errors.WithStack(err)
 			}

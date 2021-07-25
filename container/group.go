@@ -1,8 +1,9 @@
 package container
 
 import (
-	"fmt"
 	"reflect"
+
+	"github.com/pkg/errors"
 
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
@@ -55,14 +56,14 @@ func (g *sliceGroupValueResolver) resolve(c *container, _ Scope, caller containe
 }
 
 func (g *groupResolver) resolve(_ *container, _ Scope, _ containerreflect.Location) (reflect.Value, error) {
-	return reflect.Value{}, fmt.Errorf("%v is an auto-group type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
+	return reflect.Value{}, errors.Errorf("%v is an auto-group type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 
 func (g *groupResolver) addNode(n *simpleProvider, i int, c *container) error {
 	g.providers = append(g.providers, n)
 	g.idxsInValues = append(g.idxsInValues, i)
 
-	constructorGraphNode, err := c.locationGraphNode(n.ctr.Location)
+	constructorGraphNode, err := c.locationGraphNode(n.ctr.Location, n.scope)
 	if err != nil {
 		return err
 	}

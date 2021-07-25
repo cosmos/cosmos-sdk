@@ -1,6 +1,7 @@
 package container
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 
@@ -13,10 +14,7 @@ import (
 /*
 TODO:
 error resolve traces
-StructArgs
 review all errors return
-error return args
-scope in wrong position
 */
 
 type container struct {
@@ -24,14 +22,23 @@ type container struct {
 
 	resolvers map[reflect.Type]resolver
 
-	callerStack []containerreflect.Location
-	callerMap   map[containerreflect.Location]bool
+	scopes map[string]Scope
+
+	resolveStack []resolveKey
+	callerStack  []containerreflect.Location
+	callerMap    map[containerreflect.Location]bool
+}
+
+type resolveKey struct {
+	loc containerreflect.Location
+	typ reflect.Type
 }
 
 func newContainer(cfg *config) *container {
 	ctr := &container{
 		config:      cfg,
 		resolvers:   map[reflect.Type]resolver{},
+		scopes:      map[string]Scope{},
 		callerStack: nil,
 		callerMap:   map[containerreflect.Location]bool{},
 	}
@@ -47,7 +54,7 @@ func newContainer(cfg *config) *container {
 	}
 
 	for typ := range cfg.onePerScopeTypes {
-		mapType := reflect.MapOf(scopeType, typ)
+		mapType := reflect.MapOf(stringType, typ)
 		r := &onePerScopeResolver{
 			typ:       typ,
 			mapType:   mapType,
@@ -63,14 +70,14 @@ func newContainer(cfg *config) *container {
 
 func (c *container) call(constructor *containerreflect.Constructor, scope Scope) ([]reflect.Value, error) {
 	loc := constructor.Location
-	graphNode, err := c.locationGraphNode(loc)
+	graphNode, err := c.locationGraphNode(loc, scope)
 	if err != nil {
 		return nil, err
 	}
 	markGraphNodeAsFailed(graphNode)
 
 	if c.callerMap[loc] {
-		return nil, fmt.Errorf("cyclic dependency: %s -> %s", loc.Name(), loc.Name())
+		return nil, errors.Errorf("cyclic dependency: %s -> %s", loc.Name(), loc.Name())
 	}
 
 	c.callerMap[loc] = true
@@ -96,18 +103,24 @@ func (c *container) call(constructor *containerreflect.Constructor, scope Scope)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error calling constructor %s", loc)
 	}
+
 	markGraphNodeAsUsed(graphNode)
 
 	return out, nil
 }
 
 func (c *container) addNode(constructor *containerreflect.Constructor, scope Scope, noLog bool) (interface{}, error) {
-	constructorGraphNode, err := c.locationGraphNode(constructor.Location)
+	constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
 	if err != nil {
 		return reflect.Value{}, err
 	}
 
+	hasScopeParam := false
 	for _, in := range constructor.In {
+		if in.Type == scopeType {
+			hasScopeParam = true
+		}
+
 		typeGraphNode, err := c.typeGraphNode(in.Type)
 		if err != nil {
 			return reflect.Value{}, err
@@ -116,7 +129,6 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 		c.addGraphEdge(typeGraphNode, constructorGraphNode)
 	}
 
-	hasScopeParam := len(constructor.In) > 0 && constructor.In[0].Type == scopeType
 	if scope != nil || !hasScopeParam {
 		if !noLog {
 			c.logf("Registering provider: %s", constructor.Location.String())
@@ -126,7 +138,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 			scope: scope,
 		}
 
-		constructorGraphNode, err := c.locationGraphNode(constructor.Location)
+		constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
 		if err != nil {
 			return reflect.Value{}, err
 		}
@@ -174,10 +186,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 			typ := out.Type
 			_, ok := c.resolvers[typ]
 			if ok {
-				return nil, &duplicateConstructorError{
-					loc: constructor.Location,
-					typ: typ,
-				}
+				return nil, duplicateConstructorError(constructor.Location, typ)
 			}
 			c.resolvers[typ] = &scopeDepResolver{
 				typ:         typ,
@@ -199,6 +208,8 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 }
 
 func (c *container) resolve(in containerreflect.Input, scope Scope, caller containerreflect.Location) (reflect.Value, error) {
+	c.resolveStack = append(c.resolveStack, resolveKey{loc: caller, typ: in.Type})
+
 	typeGraphNode, err := c.typeGraphNode(in.Type)
 	if err != nil {
 		return reflect.Value{}, err
@@ -206,7 +217,7 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 
 	if in.Type == scopeType {
 		if scope == nil {
-			return reflect.Value{}, fmt.Errorf("expected scope but got nil")
+			return reflect.Value{}, errors.Errorf("trying to resolve %T for %s but not inside of any scope", scope, caller)
 		}
 		c.logf("Providing Scope %s", scope.Name())
 		markGraphNodeAsUsed(typeGraphNode)
@@ -221,7 +232,8 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 		}
 
 		markGraphNodeAsFailed(typeGraphNode)
-		return reflect.Value{}, fmt.Errorf("no constructor for type %v", in.Type)
+		return reflect.Value{}, errors.Errorf("can't resolve type %v for %s:\n%s",
+			in.Type, caller, c.formatResolveStack())
 	}
 
 	res, err := vr.resolve(c, scope, caller)
@@ -231,6 +243,9 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 	}
 
 	markGraphNodeAsUsed(typeGraphNode)
+
+	c.resolveStack = c.resolveStack[:len(c.resolveStack)-1]
+
 	return res, nil
 }
 
@@ -249,7 +264,7 @@ func (c *container) run(invoker interface{}) error {
 
 	sn, ok := node.(*simpleProvider)
 	if !ok {
-		return fmt.Errorf("cannot run scoped provider as an invoker")
+		return errors.Errorf("cannot run scoped provider as an invoker")
 	}
 
 	c.logf("Building container")
@@ -260,6 +275,25 @@ func (c *container) run(invoker interface{}) error {
 	c.logf("Done building container")
 
 	return nil
+}
+
+func (c container) createOrGetScope(name string) Scope {
+	if s, ok := c.scopes[name]; ok {
+		return s
+	}
+	s := newScope(name)
+	c.scopes[name] = s
+	return s
+}
+
+func (c container) formatResolveStack() string {
+	buf := &bytes.Buffer{}
+	n := len(c.resolveStack)
+	for i := n - 1; i >= 0; i-- {
+		rk := c.resolveStack[i]
+		_, _ = fmt.Fprintf(buf, "\t%v for %s\n", rk.typ, rk.loc)
+	}
+	return buf.String()
 }
 
 func markGraphNodeAsUsed(node *cgraph.Node) {

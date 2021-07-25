@@ -22,7 +22,7 @@ type isStructArgs interface {
 
 var isStructArgsType = reflect.TypeOf((*isStructArgs)(nil)).Elem()
 
-func expandStructArgs(constructor *containerreflect.Constructor) (*containerreflect.Constructor, error) {
+func expandStructArgsConstructor(constructor *containerreflect.Constructor) (*containerreflect.Constructor, error) {
 	var foundStructArgs bool
 	var newIn []containerreflect.Input
 
@@ -47,46 +47,52 @@ func expandStructArgs(constructor *containerreflect.Constructor) (*containerrefl
 	}
 
 	if foundStructArgs {
-		fn := constructor.Fn
 		return &containerreflect.Constructor{
-			In:  newIn,
-			Out: newOut,
-			Fn: func(inputs []reflect.Value) ([]reflect.Value, error) {
-				j := 0
-				inputs1 := make([]reflect.Value, len(constructor.In))
-				for i, in := range constructor.In {
-					if in.Type.AssignableTo(isStructArgsType) {
-						v, n := makeStructArgs(in.Type, inputs[j:])
-						inputs1[i] = v
-						j += n
-					} else {
-						inputs1 = append(inputs1, inputs[j])
-						inputs1[i] = inputs[j]
-						j++
-					}
-				}
-
-				outputs, err := fn(inputs1)
-				if err != nil {
-					return nil, err
-				}
-
-				var outputs1 []reflect.Value
-				for i, out := range constructor.Out {
-					if out.Type.AssignableTo(isStructArgsType) {
-						outputs1 = append(outputs1, extractStructArgs(out.Type, outputs[i])...)
-					} else {
-						outputs1 = append(outputs1, outputs[i])
-					}
-				}
-
-				return outputs1, nil
-			},
+			In:       newIn,
+			Out:      newOut,
+			Fn:       expandStructArgsFn(constructor),
 			Location: constructor.Location,
 		}, nil
 	}
 
 	return constructor, nil
+}
+
+func expandStructArgsFn(constructor *containerreflect.Constructor) func(inputs []reflect.Value) ([]reflect.Value, error) {
+	fn := constructor.Fn
+	inParams := constructor.In
+	outParams := constructor.Out
+	return func(inputs []reflect.Value) ([]reflect.Value, error) {
+		j := 0
+		inputs1 := make([]reflect.Value, len(constructor.In))
+		for i, in := range inParams {
+			if in.Type.AssignableTo(isStructArgsType) {
+				v, n := makeStructArgs(in.Type, inputs[j:])
+				inputs1[i] = v
+				j += n
+			} else {
+				inputs1 = append(inputs1, inputs[j])
+				inputs1[i] = inputs[j]
+				j++
+			}
+		}
+
+		outputs, err := fn(inputs1)
+		if err != nil {
+			return nil, err
+		}
+
+		var outputs1 []reflect.Value
+		for i, out := range outParams {
+			if out.Type.AssignableTo(isStructArgsType) {
+				outputs1 = append(outputs1, extractStructArgs(out.Type, outputs[i])...)
+			} else {
+				outputs1 = append(outputs1, outputs[i])
+			}
+		}
+
+		return outputs1, nil
+	}
 }
 
 func structArgsInTypes(typ reflect.Type) []containerreflect.Input {

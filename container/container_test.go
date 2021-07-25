@@ -88,12 +88,20 @@ func (ModuleB) Provide(dependencies BDependencies) BProvides {
 func TestRun(t *testing.T) {
 	require.NoError(t,
 		container.Run(
-			func(handlers map[container.Scope]Handler, commands []Command, a KeeperA) {
-				// TODO:
-				// require one Handler for module a and b scopes
-				// require 3 commands
-				// require KeeperA have store key a
-				// require KeeperB have store key b and MsgClientA
+			func(handlers map[string]Handler, commands []Command, a KeeperA, b KeeperB) {
+				require.Len(t, handlers, 2)
+				require.Equal(t, Handler{}, handlers["a"])
+				require.Equal(t, Handler{}, handlers["b"])
+				require.Len(t, commands, 3)
+				require.Equal(t, KeeperA{
+					key: KVStoreKey{name: "a"},
+				}, a)
+				require.Equal(t, KeeperB{
+					key: KVStoreKey{name: "b"},
+					msgClientA: MsgClientA{
+						key: "b",
+					},
+				}, b)
 			},
 			container.Debug(),
 			container.AutoGroupTypes(reflect.TypeOf(Command{})),
@@ -103,8 +111,8 @@ func TestRun(t *testing.T) {
 				ProvideModuleKey,
 				ProvideMsgClientA,
 			),
-			container.ProvideWithScope(container.NewScope("a"), wrapProvideMethod(ModuleA{})),
-			container.ProvideWithScope(container.NewScope("b"), wrapProvideMethod(ModuleB{})),
+			container.ProvideWithScope("a", wrapProvideMethod(ModuleA{})),
+			container.ProvideWithScope("b", wrapProvideMethod(ModuleB{})),
 		))
 }
 
@@ -132,18 +140,29 @@ func wrapProvideMethod(module interface{}) reflect2.Constructor {
 	}
 }
 
-func TestError(t *testing.T) {
-	err := container.Run(func() {}, container.Error(fmt.Errorf("an error")))
-	require.Error(t, err)
+func TestResolveError(t *testing.T) {
+	require.Error(t, container.Run(
+		func(x string) {},
+		container.Debug(),
+		container.Provide(
+			func(x float64) string { return fmt.Sprintf("%f", x) },
+			func(x int) float64 { return float64(x) },
+			func(x float32) int { return int(x) },
+		),
+	))
 }
 
 func TestCyclic(t *testing.T) {
 	require.Error(t, container.Run(
 		func(x string) {},
-		container.Debug(),
 		container.Provide(
 			func(x int) float64 { return float64(x) },
 			func(x float64) (int, string) { return int(x), "hi" },
 		),
 	))
+}
+
+func TestErrorOption(t *testing.T) {
+	err := container.Run(func() {}, container.Error(fmt.Errorf("an error")))
+	require.Error(t, err)
 }

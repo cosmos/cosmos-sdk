@@ -34,7 +34,7 @@ func Run(invoker interface{}, opts ...Option) error {
 
 	err = ctr.run(invoker)
 	if err != nil {
-		cfg.logf("Failed resolving dependencies because of: %+v", err)
+		cfg.logf("Failed resolving dependencies because of:\n %+v", err)
 	}
 	return err
 }

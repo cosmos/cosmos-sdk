@@ -1,8 +1,9 @@
 package container
 
 import (
-	"fmt"
 	"reflect"
+
+	"github.com/pkg/errors"
 
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
@@ -11,10 +12,13 @@ func makeReflectConstructor(ctr interface{}) (*containerreflect.Constructor, err
 	rctr, ok := ctr.(containerreflect.Constructor)
 	if !ok {
 		val := reflect.ValueOf(ctr)
+		if val.Type().Kind() != reflect.Func {
+			return nil, errors.Errorf("expected constructor function, got %T", ctr)
+		}
 		loc := containerreflect.LocationFromPC(val.Pointer())
 		typ := val.Type()
 		if typ.Kind() != reflect.Func {
-			return nil, fmt.Errorf("expected a Func type, got %T", ctr)
+			return nil, errors.Errorf("expected a Func type, got %T", ctr)
 		}
 
 		numIn := typ.NumIn()
@@ -32,7 +36,7 @@ func makeReflectConstructor(ctr interface{}) (*containerreflect.Constructor, err
 			t := typ.Out(i)
 			if t == errType {
 				if i != numOut-1 {
-					return nil, fmt.Errorf("output error parameter is not last parameter in function %s", loc)
+					return nil, errors.Errorf("output error parameter is not last parameter in function %s", loc)
 				}
 				errIdx = i
 			} else {
@@ -58,7 +62,7 @@ func makeReflectConstructor(ctr interface{}) (*containerreflect.Constructor, err
 		}
 	}
 
-	return expandStructArgs(&rctr)
+	return expandStructArgsConstructor(&rctr)
 }
 
 var errType = reflect.TypeOf((*error)(nil)).Elem()

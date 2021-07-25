@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"github.com/pkg/errors"
+
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 
 	"github.com/goccy/go-graphviz"
@@ -31,7 +33,7 @@ func newConfig() (*config, error) {
 	g := graphviz.New()
 	graph, err := g.Graph()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error initializing graph")
 	}
 
 	return &config{
@@ -112,8 +114,9 @@ func (c *config) addFileVisualizer(filename string, format string) {
 	})
 }
 
-func (c *config) locationGraphNode(location containerreflect.Location) (*cgraph.Node, error) {
-	node, found, err := c.findOrCreateGraphNode(location.Name())
+func (c *config) locationGraphNode(location containerreflect.Location, scope Scope) (*cgraph.Node, error) {
+	graph := c.scopeSubGraph(scope)
+	node, found, err := c.findOrCreateGraphNode(graph, location.Name())
 	if err != nil {
 		return nil, err
 	}
@@ -122,13 +125,13 @@ func (c *config) locationGraphNode(location containerreflect.Location) (*cgraph.
 		return node, nil
 	}
 
-	node = node.SetShape(cgraph.BoxShape)
+	node.SetShape(cgraph.BoxShape)
 	node.SetColor("lightgrey")
 	return node, nil
 }
 
 func (c *config) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
-	node, found, err := c.findOrCreateGraphNode(typ.String())
+	node, found, err := c.findOrCreateGraphNode(c.graph, typ.String())
 	if err != nil {
 		return nil, err
 	}
@@ -141,18 +144,32 @@ func (c *config) typeGraphNode(typ reflect.Type) (*cgraph.Node, error) {
 	return node, err
 }
 
-func (c *config) findOrCreateGraphNode(name string) (node *cgraph.Node, found bool, err error) {
+func (c *config) findOrCreateGraphNode(subGraph *cgraph.Graph, name string) (node *cgraph.Node, found bool, err error) {
 	node, err = c.graph.Node(name)
 	if err != nil {
-		return nil, false, err
+		return nil, false, errors.Wrapf(err, "error finding graph node %s", name)
 	}
 
 	if node != nil {
 		return node, true, nil
 	}
 
-	node, err = c.graph.CreateNode(name)
-	return node, false, err
+	node, err = subGraph.CreateNode(name)
+	if err != nil {
+		return nil, false, errors.Wrapf(err, "error creating graph node %s", name)
+	}
+
+	return node, false, nil
+}
+
+func (c *config) scopeSubGraph(scope Scope) *cgraph.Graph {
+	graph := c.graph
+	if scope != nil {
+		gname := fmt.Sprintf("cluster_%s", scope.Name())
+		graph = c.graph.SubGraph(gname, 1)
+		graph.SetLabel(fmt.Sprintf("Scope: %s", scope.Name()))
+	}
+	return graph
 }
 
 func (c *config) addGraphEdge(from *cgraph.Node, to *cgraph.Node) {

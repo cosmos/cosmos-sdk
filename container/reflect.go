@@ -58,7 +58,7 @@ func makeReflectConstructor(ctr interface{}) (*containerreflect.Constructor, err
 		}
 	}
 
-	return extractStructArgs(&rctr)
+	return expandStructArgs(&rctr)
 }
 
 var errType = reflect.TypeOf((*error)(nil)).Elem()

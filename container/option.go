@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"runtime"
+
+	reflect2 "github.com/cosmos/cosmos-sdk/container/reflect"
 
 	"github.com/pkg/errors"
 )
@@ -43,12 +46,25 @@ func provide(ctr *container, scope Scope, constructors []interface{}) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		_, err = ctr.addNode(rc, scope, false)
+		_, err = ctr.addNode(&rc, scope, false)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 	}
 	return nil
+}
+
+func Supply(values ...interface{}) Option {
+	pc, _, _, _ := runtime.Caller(1)
+	return containerOption(func(ctr *container) error {
+		for _, v := range values {
+			err := ctr.supply(reflect.ValueOf(v), reflect2.LocationFromPC(pc))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // AutoGroupTypes creates an option which registers the provided types as types which

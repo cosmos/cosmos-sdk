@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	reflect2 "github.com/cosmos/cosmos-sdk/container/reflect"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/container"
@@ -111,16 +109,21 @@ func TestRun(t *testing.T) {
 				ProvideModuleKey,
 				ProvideMsgClientA,
 			),
+			container.Supply(
+				ModuleA{},
+				ModuleB{},
+			),
 			container.ProvideWithScope("a", wrapMethod0(ModuleA{})),
 			container.ProvideWithScope("b", wrapMethod0(ModuleB{})),
 		))
 }
 
 func wrapMethod0(module interface{}) interface{} {
-	return reflect2.MethodConstructor{
-		Method:   reflect.TypeOf(module).Method(0),
-		Instance: module,
-	}
+	return reflect.TypeOf(module).Method(0).Func.Interface()
+	//return reflect2.MethodConstructor{
+	//	Method:   reflect.TypeOf(module).Method(0),
+	//	Instance: module,
+	//}
 }
 
 func TestResolveError(t *testing.T) {

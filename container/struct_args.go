@@ -22,7 +22,7 @@ type isStructArgs interface {
 
 var isStructArgsType = reflect.TypeOf((*isStructArgs)(nil)).Elem()
 
-func expandStructArgsConstructor(constructor *containerreflect.Constructor) (*containerreflect.Constructor, error) {
+func expandStructArgsConstructor(constructor containerreflect.Constructor) (containerreflect.Constructor, error) {
 	var foundStructArgs bool
 	var newIn []containerreflect.Input
 
@@ -47,7 +47,7 @@ func expandStructArgsConstructor(constructor *containerreflect.Constructor) (*co
 	}
 
 	if foundStructArgs {
-		return &containerreflect.Constructor{
+		return containerreflect.Constructor{
 			In:       newIn,
 			Out:      newOut,
 			Fn:       expandStructArgsFn(constructor),
@@ -58,20 +58,19 @@ func expandStructArgsConstructor(constructor *containerreflect.Constructor) (*co
 	return constructor, nil
 }
 
-func expandStructArgsFn(constructor *containerreflect.Constructor) func(inputs []reflect.Value) ([]reflect.Value, error) {
+func expandStructArgsFn(constructor containerreflect.Constructor) func(inputs []reflect.Value) ([]reflect.Value, error) {
 	fn := constructor.Fn
 	inParams := constructor.In
 	outParams := constructor.Out
 	return func(inputs []reflect.Value) ([]reflect.Value, error) {
 		j := 0
-		inputs1 := make([]reflect.Value, len(constructor.In))
+		inputs1 := make([]reflect.Value, len(inParams))
 		for i, in := range inParams {
 			if in.Type.AssignableTo(isStructArgsType) {
 				v, n := buildStructArgs(in.Type, inputs[j:])
 				inputs1[i] = v
 				j += n
 			} else {
-				inputs1 = append(inputs1, inputs[j])
 				inputs1[i] = inputs[j]
 				j++
 			}

@@ -207,6 +207,30 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 	}
 }
 
+func (c *container) supply(value reflect.Value, location containerreflect.Location) error {
+	typ := value.Type()
+	locGrapNode, err := c.locationGraphNode(location, nil)
+	if err != nil {
+		return err
+	}
+	markGraphNodeAsUsed(locGrapNode)
+
+	typeGraphNode, err := c.typeGraphNode(typ)
+	if err != nil {
+		return err
+	}
+
+	c.addGraphEdge(locGrapNode, typeGraphNode)
+
+	c.resolvers[typ] = &supplyResolver{
+		typ:   typ,
+		value: value,
+		loc:   location,
+	}
+
+	return nil
+}
+
 func (c *container) resolve(in containerreflect.Input, scope Scope, caller containerreflect.Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveKey{loc: caller, typ: in.Type})
 
@@ -257,7 +281,7 @@ func (c *container) run(invoker interface{}) error {
 
 	c.logf("Registering invoker %s", rctr.Location)
 
-	node, err := c.addNode(rctr, nil, true)
+	node, err := c.addNode(&rctr, nil, true)
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,7 @@ import (
 	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
-func reflectConstructor(ctr interface{}) (*containerreflect.Constructor, error) {
+func reflectConstructor(ctr interface{}) (containerreflect.Constructor, error) {
 	rctr, ok := ctr.(containerreflect.Constructor)
 	if !ok {
 		val := reflect.ValueOf(ctr)
@@ -22,7 +22,7 @@ func reflectConstructor(ctr interface{}) (*containerreflect.Constructor, error) 
 		var err error
 		rctr, err = makeReflectConstructor(val)
 		if err != nil {
-			return nil, err
+			return containerreflect.Constructor{}, err
 		}
 
 		if haveMethodCtr {
@@ -30,7 +30,7 @@ func reflectConstructor(ctr interface{}) (*containerreflect.Constructor, error) 
 		}
 	}
 
-	return expandStructArgsConstructor(&rctr)
+	return expandStructArgsConstructor(rctr)
 }
 
 func makeReflectConstructor(val reflect.Value) (containerreflect.Constructor, error) {

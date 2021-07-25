@@ -39,7 +39,7 @@ func ProvideWithScope(scopeName string, constructors ...interface{}) Option {
 
 func provide(ctr *container, scope Scope, constructors []interface{}) error {
 	for _, c := range constructors {
-		rc, err := makeReflectConstructor(c)
+		rc, err := reflectConstructor(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}

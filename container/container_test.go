@@ -111,32 +111,15 @@ func TestRun(t *testing.T) {
 				ProvideModuleKey,
 				ProvideMsgClientA,
 			),
-			container.ProvideWithScope("a", wrapProvideMethod(ModuleA{})),
-			container.ProvideWithScope("b", wrapProvideMethod(ModuleB{})),
+			container.ProvideWithScope("a", wrapMethod0(ModuleA{})),
+			container.ProvideWithScope("b", wrapMethod0(ModuleB{})),
 		))
 }
 
-func wrapProvideMethod(module interface{}) reflect2.Constructor {
-	method := reflect.TypeOf(module).Method(0)
-	methodTy := method.Type
-	var in []reflect2.Input
-	var out []reflect2.Output
-
-	for i := 1; i < methodTy.NumIn(); i++ {
-		in = append(in, reflect2.Input{Type: methodTy.In(i)})
-	}
-	for i := 0; i < methodTy.NumOut(); i++ {
-		out = append(out, reflect2.Output{Type: methodTy.Out(i)})
-	}
-
-	return reflect2.Constructor{
-		In:  in,
-		Out: out,
-		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
-			values = append([]reflect.Value{reflect.ValueOf(module)}, values...)
-			return method.Func.Call(values), nil
-		},
-		Location: reflect2.LocationFromPC(method.Func.Pointer()),
+func wrapMethod0(module interface{}) interface{} {
+	return reflect2.MethodConstructor{
+		Method:   reflect.TypeOf(module).Method(0),
+		Instance: module,
 	}
 }
 

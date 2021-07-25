@@ -67,7 +67,7 @@ func expandStructArgsFn(constructor *containerreflect.Constructor) func(inputs [
 		inputs1 := make([]reflect.Value, len(constructor.In))
 		for i, in := range inParams {
 			if in.Type.AssignableTo(isStructArgsType) {
-				v, n := makeStructArgs(in.Type, inputs[j:])
+				v, n := buildStructArgs(in.Type, inputs[j:])
 				inputs1[i] = v
 				j += n
 			} else {
@@ -85,7 +85,7 @@ func expandStructArgsFn(constructor *containerreflect.Constructor) func(inputs [
 		var outputs1 []reflect.Value
 		for i, out := range outParams {
 			if out.Type.AssignableTo(isStructArgsType) {
-				outputs1 = append(outputs1, extractStructArgs(out.Type, outputs[i])...)
+				outputs1 = append(outputs1, extractFromStructArgs(out.Type, outputs[i])...)
 			} else {
 				outputs1 = append(outputs1, outputs[i])
 			}
@@ -130,7 +130,7 @@ func structArgsOutTypes(typ reflect.Type) []containerreflect.Output {
 	return res
 }
 
-func makeStructArgs(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
+func buildStructArgs(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
 	numFields := typ.NumField()
 	j := 0
 	res := reflect.New(typ)
@@ -146,7 +146,7 @@ func makeStructArgs(typ reflect.Type, values []reflect.Value) (reflect.Value, in
 	return res.Elem(), j
 }
 
-func extractStructArgs(typ reflect.Type, value reflect.Value) []reflect.Value {
+func extractFromStructArgs(typ reflect.Type, value reflect.Value) []reflect.Value {
 	numFields := typ.NumField()
 	var res []reflect.Value
 	for i := 0; i < numFields; i++ {

@@ -250,7 +250,7 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 }
 
 func (c *container) run(invoker interface{}) error {
-	rctr, err := makeReflectConstructor(invoker)
+	rctr, err := reflectConstructor(invoker)
 	if err != nil {
 		return err
 	}

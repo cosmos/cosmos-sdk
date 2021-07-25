@@ -23,6 +23,12 @@ type Constructor struct {
 	Location Location
 }
 
+// MethodConstructor
+type MethodConstructor struct {
+	Instance interface{}
+	Method   reflect.Method
+}
+
 type Input struct {
 	Type     reflect.Type
 	Optional bool

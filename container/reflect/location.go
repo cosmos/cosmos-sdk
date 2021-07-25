@@ -64,7 +64,7 @@ func (f *location) String() string {
 
 // Name is the fully qualified function name.
 func (f *location) Name() string {
-	return fmt.Sprintf("%q.%v", f.pkg, f.name)
+	return fmt.Sprintf("%v.%v", f.pkg, f.name)
 }
 
 // Format implements fmt.Formatter for Func, printing a single-line
@@ -73,11 +73,11 @@ func (f *location) Format(w fmt.State, c rune) {
 	if w.Flag('+') && c == 'v' {
 		// "path/to/package".MyFunction
 		// 	path/to/file.go:42
-		fmt.Fprintf(w, "%q.%v", f.pkg, f.name)
-		fmt.Fprintf(w, "\n\t%v:%v", f.file, f.line)
+		_, _ = fmt.Fprintf(w, "%v.%v", f.pkg, f.name)
+		_, _ = fmt.Fprintf(w, "\n\t%v:%v", f.file, f.line)
 	} else {
 		// "path/to/package".MyFunction (path/to/file.go:42)
-		fmt.Fprintf(w, "%q.%v (%v:%v)", f.pkg, f.name, f.file, f.line)
+		_, _ = fmt.Fprintf(w, "%v.%v (%v:%v)", f.pkg, f.name, f.file, f.line)
 	}
 }
 

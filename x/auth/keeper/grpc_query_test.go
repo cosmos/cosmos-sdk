@@ -219,8 +219,6 @@ func (suite *KeeperTestSuite) TestBech32FromAccAddr(){
 		{
 			"success",
 			func() {
-				suite.app.AccountKeeper.SetAccount(suite.ctx,
-					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr))
 				addrBytes := []byte(addr)
 				req = &types.Bech32FromAccAddrRequest{AccountAddr: addrBytes}
 			},
@@ -243,8 +241,6 @@ func (suite *KeeperTestSuite) TestBech32FromAccAddr(){
 		{
 			"empty account address in request",
 			func() {
-				suite.app.AccountKeeper.SetAccount(suite.ctx,
-					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr))
 				emptyAddrBytes := []byte{}
 				req = &types.Bech32FromAccAddrRequest{AccountAddr: emptyAddrBytes}
 			},
@@ -288,8 +284,6 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 		{
 			"success",
 			func() {
-				suite.app.AccountKeeper.SetAccount(suite.ctx,
-					suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr))
 				bech32, _ := bech32.ConvertAndEncode(suite.app.AccountKeeper.GetBech32Prefix(), []byte(addr))
 				req = &types.AccAddrFromBech32Request{Bech32: bech32}
 			},

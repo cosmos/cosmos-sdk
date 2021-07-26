@@ -34,11 +34,11 @@ type Output struct {
 	Type reflect.Type
 }
 
-func getConstructorInfo(ctr interface{}) (ConstructorInfo, error) {
+func ExtractConstructorInfo(ctr interface{}) (ConstructorInfo, error) {
 	rctr, ok := ctr.(ConstructorInfo)
 	if !ok {
 		var err error
-		rctr, err = ConstructorInfoFor(ctr)
+		rctr, err = doExtractConstructorInfo(ctr)
 		if err != nil {
 			return ConstructorInfo{}, err
 		}
@@ -47,7 +47,7 @@ func getConstructorInfo(ctr interface{}) (ConstructorInfo, error) {
 	return expandStructArgsConstructor(rctr)
 }
 
-func ConstructorInfoFor(ctr interface{}) (ConstructorInfo, error) {
+func doExtractConstructorInfo(ctr interface{}) (ConstructorInfo, error) {
 	val := reflect.ValueOf(ctr)
 	typ := val.Type()
 	if typ.Kind() != reflect.Func {

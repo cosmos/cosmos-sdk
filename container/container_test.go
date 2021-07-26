@@ -115,7 +115,7 @@ func TestRun(t *testing.T) {
 
 func wrapMethod0(module interface{}) interface{} {
 	methodFn := reflect.TypeOf(module).Method(0).Func.Interface()
-	ctrInfo, err := container.ConstructorInfoFor(methodFn)
+	ctrInfo, err := container.ExtractConstructorInfo(methodFn)
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +155,7 @@ func TestErrorOption(t *testing.T) {
 }
 
 func TestBadCtr(t *testing.T) {
-	_, err := container.ConstructorInfoFor(KeeperA{})
+	_, err := container.ExtractConstructorInfo(KeeperA{})
 	require.Error(t, err)
 }
 
@@ -167,12 +167,12 @@ func TestInvoker(t *testing.T) {
 }
 
 func TestErrorFunc(t *testing.T) {
-	_, err := container.ConstructorInfoFor(
+	_, err := container.ExtractConstructorInfo(
 		func() (error, int) { return nil, 0 },
 	)
 	require.Error(t, err)
 
-	_, err = container.ConstructorInfoFor(
+	_, err = container.ExtractConstructorInfo(
 		func() (int, error) { return 0, nil },
 	)
 	require.NoError(t, err)

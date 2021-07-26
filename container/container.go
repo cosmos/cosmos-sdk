@@ -272,7 +272,7 @@ func (c *container) resolve(in Input, scope Scope, caller Location) (reflect.Val
 }
 
 func (c *container) run(invoker interface{}) error {
-	rctr, err := getConstructorInfo(invoker)
+	rctr, err := ExtractConstructorInfo(invoker)
 	if err != nil {
 		return err
 	}

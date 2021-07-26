@@ -72,58 +72,57 @@ of how these are written refer to the current [ADRs](https://github.com/cosmos/c
 
 ## Pull Requests
 
-PRs should be categorically broken up based on the type of changes being made (i.e. `fix`, `feat`,
-`refactor`, `docs`, etc.). The *type* must be included in the PR title as a prefix (e.g.
-`fix: <description>`). This ensures that all changes committed to the base branch follow the
+PRs should be categorically broken up based on the type of changes being made (for example, `fix`, `feat`,
+`refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example, 
+`fix: <description>`). This convention ensures that all changes that are committed to the base branch follow the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.
 
 ### Pull Request Templates
 
-There are currently three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes and an [other template](./.github/PULL_REQUEST_TEMPLATE/other.md) for changes that do not affect production code. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
+There are three PR templates. The [default template](./.github/PULL_REQUEST_TEMPLATE.md) is for types `fix`, `feat`, and `refactor`. We also have a [docs template](./.github/PULL_REQUEST_TEMPLATE/docs.md) for documentation changes and an [other template](./.github/PULL_REQUEST_TEMPLATE/other.md) for changes that do not affect production code. When previewing a PR before it has been opened, you can change the template by adding one of the following parameters to the url:
 
 - `template=docs.md`
 - `template=other.md`
 
 ### Requesting Reviews
 
-In order to accomodate the review process, the author of the PR must complete the author checklist
+In order to accommodate the review process, the author of the PR must complete the author checklist
 to the best of their abilities before marking the PR as "Ready for Review". If you would like to
 receive early feedback on the PR, open the PR as a "Draft" and leave a comment in the PR indicating
 that you would like early feedback and tagging whoever you would like to receive feedback from.
 
 ### Reviewing Pull Requests
 
-All PRs require at least two reviews before they can be merged (one review might be acceptable in
-the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or [other](./.github/PULL_REQUEST_TEMPLATE/other.md) changes that do not affect production code). Each PR template has a
-reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
+All PRs require at least two review approvals before they can be merged (one review might be acceptable in
+the case of minor changes to [docs](./.github/PULL_REQUEST_TEMPLATE/docs.md) or [other](./.github/PULL_REQUEST_TEMPLATE/other.md) changes that do not affect production code). Each PR template has a reviewers checklist that must be completed before the PR can be merged. Each reviewer is responsible
 for all checked items unless they have indicated otherwise by leaving their handle next to specific
-items. In addition, please use the following review explanations:
+items. In addition, use the following review explanations:
 
 - `LGTM` without an explicit approval means that the changes look good, but you haven't thoroughly reviewed the reviewer checklist items.
-- `Approval` means that you have completed some or all of the reviewer checklist items. If you only reviewed selected items, you have added your handle next to the items that you have reviewed. In addition, please follow these guidelines:
+- `Approval` means that you have completed some or all of the reviewer checklist items. If you only reviewed selected items, you must add your handle next to the items that you have reviewed. In addition, follow these guidelines:
     - You must also think through anything which ought to be included but is not
     - You must think through whether any added code could be partially combined (DRYed) with existing code
     - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
     - Naming must be consistent with conventions and the rest of the codebase
-    - Code must live in a reasonable location, considering dependency structures (e.g. not importing testing modules in production code, or including example code modules in production code).
-    - If you approve of the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
-- If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
+    - Code must live in a reasonable location, considering dependency structures (for example, not importing testing modules in production code, or including example code modules in production code).
+    - If you approve the PR, you are responsible for any issues mentioned here and any issues that should have been addressed after thoroughly reviewing the reviewer checklist items in the pull request template.
+- If you sat down with the PR submitter and did a pairing review, add this information in the `Approval` or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
 
 ### Updating Documentation
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in `/docs`.
 
-- If your change relates to the core SDK (baseapp, store, ...), please update the `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
-- If your changes relate to the core of the CLI (not specifically to module's CLI/Rest), please modify the `docs/run-node/` folder.
-- If your changes relate to a module, please update the module's spec in `x/moduleName/docs/spec/`.
+- If your change relates to the core SDK (baseapp, store, ...), be sure to update the content in `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
+- If your changes relate to the core of the CLI (not specifically to module's CLI/Rest), then modify the content in the `docs/run-node/` folder.
+- If your changes relate to a module, then be sure to update the module's spec in `x/moduleName/docs/spec/`.
 
 When writing documentation, follow the [Documentation Writing Guidelines](./docs/DOC_WRITING_GUIDELINES.md).
 
 ## Forking
 
-Please note that Go requires code to live under absolute paths, which complicates forking.
+Go requires code to live under absolute paths, and this requirement complicates forking.
 While my fork lives at `https://github.com/rigeyrigerige/cosmos-sdk`,
 the code should never exist at `$GOPATH/src/github.com/rigeyrigerige/cosmos-sdk`.
 Instead, we use `git remote` to add the fork as a new remote for the original repo,

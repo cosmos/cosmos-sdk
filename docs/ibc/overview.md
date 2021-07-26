@@ -1,4 +1,6 @@
-<!-- order: 1 -->
+<!-- 
+order: 1 
+-->
 
 # IBC Overview
 

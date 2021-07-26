@@ -1045,12 +1045,11 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	s.Require().NotEqual(0, res.Code)
 }
 
+// TestSignWithMultiSignersAminoJSON tests the case where a transaction with 2
+// messages which has to be signed with 2 different keys. Sign and append the
+// signatures using the CLI with Amino signing mode. Finally, send the
+// transaction to the blockchain.
 func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
-	// test case:
-	// Create a transaction with 2 messages which has to be signed with 2 different keys
-	// Sign and append the signatures using the CLI with Amino signing mode.
-	// Finally send the transaction to the blockchain. It should work.
-
 	require := s.Require()
 	val0, val1 := s.network.Validators[0], s.network.Validators[1]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
@@ -1067,7 +1066,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit()) // min required is 101892
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	require.Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
@@ -1083,14 +1082,19 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	// Then let val1 sign the file with signedByVal0.
 	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
 	require.NoError(err)
+
 	signedTx, err := TxSignExec(
-		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
-		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq), "--sign-mode=amino-json",
+		val1.ClientCtx,
+		val1.Address,
+		signedByVal0File.Name(),
+		"--offline",
+		fmt.Sprintf("--account-number=%d", val1AccNum),
+		fmt.Sprintf("--sequence=%d", val1Seq),
+		"--sign-mode=amino-json",
 	)
 	require.NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
-	// Now let's try to send this tx.
 	res, err := TxBroadcastExec(
 		val0.ClientCtx,
 		signedTxFile.Name(),
@@ -1100,7 +1104,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.NoError(err)
 	var txRes sdk.TxResponse
 	require.NoError(val0.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
-	require.Equal(uint32(0), txRes.Code)
+	require.Equal(uint32(0), txRes.Code, txRes.RawLog)
 
 	// Make sure the addr1's balance got funded.
 	queryResJSON, err := bankcli.QueryBalancesExec(val0.ClientCtx, addr1)

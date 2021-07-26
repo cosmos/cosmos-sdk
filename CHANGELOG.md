@@ -68,6 +68,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* [\#9776](https://github.com/cosmos/cosmos-sdk/pull/9776) Add flag `stakingBondDenom` to specify the staking bond_denom value when initializing a new chain.
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
 * [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml
 

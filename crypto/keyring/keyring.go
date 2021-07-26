@@ -287,13 +287,11 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (*Record, types.PrivKey, e
 	if err != nil {
 		return nil, nil, err
 	}
-	fmt.Println("ExportPrivateKeyObject ks.Key done")
+	
 	priv, err := ExtractPrivKeyFromRecord(k)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	fmt.Println("priv", priv)
 
 	return k, priv, err
 }
@@ -307,6 +305,7 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 	return ks.ExportPrivKeyArmor(k.Name, encryptPassphrase)
 }
 
+// TODO do we require this method Record?
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	if k, err := ks.Key(uid); err == nil {
 		if uid == k.Name {
@@ -463,13 +462,11 @@ func (ks keystore) Rename(oldName, newName string) error {
 		return err
 	}
 
-	err = ks.ImportPrivKey(newName, armor, passPhrase)
-	if err != nil {
+	if err := ks.Delete(oldName); err != nil {
 		return err
 	}
 
-	err = ks.Delete(oldName)
-	if err != nil {
+	if err := ks.ImportPrivKey(newName, armor, passPhrase); err != nil {
 		return err
 	}
 
@@ -816,12 +813,12 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	key := k.Name
 
-	exists, err := ks.existsInDb(addr, string(key))
+	exists, err := ks.existsInDb(addr, key)
 	if err != nil {
 		return err
 	}
 	if exists {
-		return errors.New("public key already exists in keybase")
+		return fmt.Errorf("public key %s already exists in keybase", key)
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)

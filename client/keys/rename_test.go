@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -30,7 +31,9 @@ func Test_runRenameCmd(t *testing.T) {
 
 	path := sdk.GetConfig().GetFullBIP44Path()
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
+	cdc := simapp.MakeTestEncodingConfig().Codec
+
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome,  mockIn, cdc)
 	require.NoError(t, err)
 
 	// put fakeKeyName1 in keyring
@@ -47,14 +50,13 @@ func Test_runRenameCmd(t *testing.T) {
 	cmd.SetArgs([]string{"blah", "blaah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
 	err = cmd.ExecuteContext(ctx)
 	require.Error(t, err)
-	require.EqualError(t, err, "blah.info: key not found")
+	require.EqualError(t, err, "blah: key not found")
 
 	// User confirmation missing
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		"nokey",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	err = cmd.Execute()
 	require.Error(t, err)
@@ -69,7 +71,6 @@ func Test_runRenameCmd(t *testing.T) {
 		fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.Execute())
 
@@ -81,10 +82,22 @@ func Test_runRenameCmd(t *testing.T) {
 	renamedKey, err := kb.Key(fakeKeyName2)
 	require.NoError(t, err)
 
-	require.Equal(t, oldKey.GetPubKey(), renamedKey.GetPubKey())
+	oldPk, err := oldKey.GetPubKey()
+	require.NoError(t, err)
+
+	renamedPk, err := renamedKey.GetPubKey()
+	require.NoError(t, err)
+	
+	require.Equal(t, oldPk, renamedPk)
 	require.Equal(t, oldKey.GetType(), renamedKey.GetType())
-	require.Equal(t, oldKey.GetAddress(), renamedKey.GetAddress())
-	require.Equal(t, oldKey.GetAlgo(), renamedKey.GetAlgo())
+
+	oldAddr, err := oldKey.GetAddress()
+	require.NoError(t, err)
+
+	renamedAddr, err := renamedKey.GetAddress()
+	require.NoError(t, err)
+
+	require.Equal(t, oldAddr, renamedAddr)
 
 	// try to rename key1 but it doesnt exist anymore so error
 	cmd.SetArgs([]string{
@@ -92,7 +105,6 @@ func Test_runRenameCmd(t *testing.T) {
 		fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.Error(t, cmd.Execute())
 }

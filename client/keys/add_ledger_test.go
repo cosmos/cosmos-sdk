@@ -76,6 +76,7 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	require.NotNil(t, key1)
 
 	require.Equal(t, "keyname1", key1.Name)
+	require.Equal(t, keyring.TypeLedger, key1.GetType())
 	pub, err := key1.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t,

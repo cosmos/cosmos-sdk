@@ -80,12 +80,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
-			if chainID == "" {
-				if clientCtx.ChainID == "" {
-					chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
-				} else {
-					chainID = clientCtx.ChainID
-				}
+			switch {
+			case chainID != "":
+			case clientCtx.ChainID != "":
+				chainID = clientCtx.ChainID
+			default:
+				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
 			}
 
 			// Get bip39 mnemonic

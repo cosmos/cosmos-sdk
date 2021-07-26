@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBech32Prefix(){
+func (suite *KeeperTestSuite) TestBech32Prefix() {
 	suite.Run("TestBech32Prefix", func() {
 		suite.SetupTest() // reset
 		ctx := sdk.WrapSDKContext(suite.ctx)
@@ -206,14 +206,14 @@ func (suite *KeeperTestSuite) TestBech32Prefix(){
 	})
 }
 
-func (suite *KeeperTestSuite) TestBech32FromAccAddr(){
+func (suite *KeeperTestSuite) TestBech32FromAccAddr() {
 	var req *types.Bech32FromAccAddrRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
 		posttests func(res *types.Bech32FromAccAddrResponse)
 	}{
 		{
@@ -272,13 +272,13 @@ func (suite *KeeperTestSuite) TestBech32FromAccAddr(){
 }
 
 func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
-	var req  *types.AccAddrFromBech32Request
+	var req *types.AccAddrFromBech32Request
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
 		posttests func(res *types.AccAddrFromBech32Response)
 	}{
 		{
@@ -289,7 +289,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 			},
 			true,
 			func(res *types.AccAddrFromBech32Response) {
-				suite.Require().True(bytes.Equal(res.AccountAddr,[]byte(addr)))
+				suite.Require().True(bytes.Equal(res.AccountAddr, []byte(addr)))
 			},
 		},
 		{
@@ -300,7 +300,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 			false,
 			func(res *types.AccAddrFromBech32Response) {},
 		},
-		{ 
+		{
 			"Bech32 field in request is empty",
 			func() {
 				req = &types.AccAddrFromBech32Request{Bech32: ""}
@@ -331,8 +331,3 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 		})
 	}
 }
-
-
-
-
-

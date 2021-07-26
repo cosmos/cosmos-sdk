@@ -52,7 +52,7 @@ type AccountKeeper struct {
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
-	bech32Prefix  string
+	bech32Prefix string
 	// The prototypical AccountI constructor.
 	proto func() types.AccountI
 }
@@ -66,7 +66,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramstore paramtypes.Subspace, bech32Prefix  string, proto func() types.AccountI,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramstore paramtypes.Subspace, bech32Prefix string, proto func() types.AccountI,
 	maccPerms map[string][]string,
 ) AccountKeeper {
 

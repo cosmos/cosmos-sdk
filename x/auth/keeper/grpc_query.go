@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -101,12 +101,12 @@ func (ak AccountKeeper) Bech32FromAccAddr(ctx context.Context, req *types.Bech32
 		return nil, errors.New("empty bech32 string is not allowed")
 	}
 
-	bech32,err := bech32.ConvertAndEncode(ak.bech32Prefix, req.AccountAddr)
+	bech32, err := bech32.ConvertAndEncode(ak.bech32Prefix, req.AccountAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.Bech32FromAccAddrResponse{Bech32: bech32},nil
+	return &types.Bech32FromAccAddrResponse{Bech32: bech32}, nil
 }
 
 func (ak AccountKeeper) AccAddrFromBech32(ctx context.Context, req *types.AccAddrFromBech32Request) (*types.AccAddrFromBech32Response, error) {
@@ -127,5 +127,5 @@ func (ak AccountKeeper) AccAddrFromBech32(ctx context.Context, req *types.AccAdd
 		return nil, err
 	}
 
-	return &types.AccAddrFromBech32Response{AccountAddr: bz},nil
+	return &types.AccAddrFromBech32Response{AccountAddr: bz}, nil
 }

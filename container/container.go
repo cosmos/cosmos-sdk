@@ -22,12 +22,12 @@ type container struct {
 
 	scopes map[string]Scope
 
-	resolveStack []resolveKey
+	resolveStack []resolveFrame
 	callerStack  []Location
 	callerMap    map[Location]bool
 }
 
-type resolveKey struct {
+type resolveFrame struct {
 	loc Location
 	typ reflect.Type
 }
@@ -48,7 +48,7 @@ func newContainer(cfg *config) *container {
 			sliceType: sliceType,
 		}
 		ctr.resolvers[typ] = r
-		ctr.resolvers[sliceType] = &sliceGroupValueResolver{r}
+		ctr.resolvers[sliceType] = &sliceGroupResolver{r}
 	}
 
 	for typ := range cfg.onePerScopeTypes {
@@ -182,9 +182,9 @@ func (c *container) addNode(constructor *ConstructorInfo, scope Scope, noLog boo
 
 		for i, out := range constructor.Out {
 			typ := out.Type
-			_, ok := c.resolvers[typ]
+			existing, ok := c.resolvers[typ]
 			if ok {
-				return nil, duplicateConstructorError(constructor.Location, typ)
+				return nil, duplicateConstructorError(typ, constructor.Location, existing.describeLocation())
 			}
 			c.resolvers[typ] = &scopeDepResolver{
 				typ:         typ,
@@ -230,7 +230,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 }
 
 func (c *container) resolve(in Input, scope Scope, caller Location) (reflect.Value, error) {
-	c.resolveStack = append(c.resolveStack, resolveKey{loc: caller, typ: in.Type})
+	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
 	typeGraphNode, err := c.typeGraphNode(in.Type)
 	if err != nil {

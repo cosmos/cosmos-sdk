@@ -2,6 +2,8 @@ package container
 
 import (
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 // StructArgs is a type which can be embedded in another struct to alert the
@@ -27,7 +29,10 @@ func expandStructArgsConstructor(constructor ConstructorInfo) (ConstructorInfo, 
 	for _, in := range constructor.In {
 		if in.Type.AssignableTo(isStructArgsType) {
 			foundStructArgs = true
-			inTypes := structArgsInTypes(in.Type)
+			inTypes, err := structArgsInTypes(in.Type)
+			if err != nil {
+				return ConstructorInfo{}, err
+			}
 			newIn = append(newIn, inTypes...)
 		} else {
 			newIn = append(newIn, in)
@@ -92,7 +97,7 @@ func expandStructArgsFn(constructor ConstructorInfo) func(inputs []reflect.Value
 	}
 }
 
-func structArgsInTypes(typ reflect.Type) []Input {
+func structArgsInTypes(typ reflect.Type) ([]Input, error) {
 	n := typ.NumField()
 	var res []Input
 	for i := 0; i < n; i++ {
@@ -101,14 +106,22 @@ func structArgsInTypes(typ reflect.Type) []Input {
 			continue
 		}
 
-		optional := f.Tag.Get("optional") == "true"
+		var optional bool
+		optTag, found := f.Tag.Lookup("optional")
+		if found {
+			if optTag == "true" {
+				optional = true
+			} else {
+				return nil, errors.Errorf("bad optional tag %q (should be \"true\") in %v", optTag, typ)
+			}
+		}
 
 		res = append(res, Input{
 			Type:     f.Type,
 			Optional: optional,
 		})
 	}
-	return res
+	return res, nil
 }
 
 func structArgsOutTypes(typ reflect.Type) []Output {

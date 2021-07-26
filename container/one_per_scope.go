@@ -1,6 +1,7 @@
 package container
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -21,6 +22,10 @@ type mapOfOnePerScopeResolver struct {
 
 func (o *onePerScopeResolver) resolve(_ *container, _ Scope, _ Location) (reflect.Value, error) {
 	return reflect.Value{}, errors.Errorf("%v is a one-per-scope type and thus can't be used as an input parameter, instead use %v", o.typ, o.mapType)
+}
+
+func (o *onePerScopeResolver) describeLocation() string {
+	return fmt.Sprintf("one-per-scope type %v", o.typ)
 }
 
 func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {

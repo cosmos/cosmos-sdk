@@ -19,6 +19,10 @@ type simpleResolver struct {
 	value       reflect.Value
 }
 
+func (s *simpleResolver) describeLocation() string {
+	return s.node.ctr.Location.String()
+}
+
 func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) {
 	if !s.called {
 		values, err := ctr.call(s.ctr, s.scope)
@@ -52,5 +56,5 @@ func (s *simpleResolver) resolve(c *container, _ Scope, caller Location) (reflec
 }
 
 func (s simpleResolver) addNode(p *simpleProvider, _ int, _ *container) error {
-	return duplicateConstructorError(p.ctr.Location, s.typ)
+	return duplicateConstructorError(s.typ, p.ctr.Location, s.node.ctr.Location.String())
 }

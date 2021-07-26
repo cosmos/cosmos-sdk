@@ -10,8 +10,12 @@ type supplyResolver struct {
 	loc   Location
 }
 
+func (s supplyResolver) describeLocation() string {
+	return s.loc.String()
+}
+
 func (s supplyResolver) addNode(provider *simpleProvider, _ int, _ *container) error {
-	return duplicateConstructorError(provider.ctr.Location, s.typ)
+	return duplicateConstructorError(s.typ, provider.ctr.Location, s.loc.String())
 }
 
 func (s supplyResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {

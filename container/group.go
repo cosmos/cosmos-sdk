@@ -1,6 +1,7 @@
 package container
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -15,11 +16,15 @@ type groupResolver struct {
 	values       reflect.Value
 }
 
-type sliceGroupValueResolver struct {
+type sliceGroupResolver struct {
 	*groupResolver
 }
 
-func (g *sliceGroupValueResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
+func (g *groupResolver) describeLocation() string {
+	return fmt.Sprintf("group type %v", g.typ)
+}
+
+func (g *sliceGroupResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
 	// Log
 	c.logf("Providing %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()

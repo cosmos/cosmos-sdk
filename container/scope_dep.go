@@ -17,6 +17,10 @@ type scopeDepResolver struct {
 	valueMap    map[Scope]reflect.Value
 }
 
+func (s scopeDepResolver) describeLocation() string {
+	return s.node.ctr.Location.String()
+}
+
 func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) (reflect.Value, error) {
 	// Log
 	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
@@ -42,5 +46,5 @@ func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) 
 }
 
 func (s scopeDepResolver) addNode(p *simpleProvider, _ int, _ *container) error {
-	return duplicateConstructorError(p.ctr.Location, s.typ)
+	return duplicateConstructorError(s.typ, p.ctr.Location, s.node.ctr.Location.String())
 }

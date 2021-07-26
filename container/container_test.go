@@ -447,6 +447,22 @@ func TestSupply(t *testing.T) {
 			container.Supply(3),
 			container.Provide(func() int { return 4 }),
 		),
+		"can't supply then provide",
+	)
+
+	require.Error(t,
+		container.Run(func(x int) {},
+			container.Supply(3),
+			container.Provide(func() int { return 4 }),
+		),
+		"can't provide then supply",
+	)
+
+	require.Error(t,
+		container.Run(func(x int) {},
+			container.Supply(3, 4),
+		),
+		"can't supply twice",
 	)
 }
 

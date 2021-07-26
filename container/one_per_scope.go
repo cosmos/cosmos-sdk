@@ -65,9 +65,9 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) er
 		return errors.Errorf("cannot define a constructor with one-per-scope dependency %v which isn't provided in a scope", o.typ)
 	}
 
-	if _, ok := o.providers[n.scope]; ok {
-		return errors.Errorf("Duplicate constructor for one-per-scope type %v in scope %s: %s",
-			o.typ, n.scope.Name(), n.ctr.Location)
+	if existing, ok := o.providers[n.scope]; ok {
+		return errors.Errorf("duplicate provision for one-per-scope type %v in scope %s: %s\n\talready provided by %s",
+			o.typ, n.scope.Name(), n.ctr.Location, existing.ctr.Location)
 	}
 
 	o.providers[n.scope] = n
@@ -87,6 +87,6 @@ func (o *onePerScopeResolver) addNode(n *simpleProvider, i int, c *container) er
 	return nil
 }
 
-func (o *mapOfOnePerScopeResolver) addNode(*simpleProvider, int, *container) error {
-	return errors.Errorf("%v is a one-per-scope type and thus %v can't be used as an output parameter", o.typ, o.mapType)
+func (o *mapOfOnePerScopeResolver) addNode(s *simpleProvider, _ int, _ *container) error {
+	return errors.Errorf("%v is a one-per-scope type and thus %v can't be used as an output parameter in %s", o.typ, o.mapType, s.ctr.Location)
 }

@@ -15,7 +15,7 @@ func (s supplyResolver) describeLocation() string {
 }
 
 func (s supplyResolver) addNode(provider *simpleProvider, _ int, _ *container) error {
-	return duplicateConstructorError(s.typ, provider.ctr.Location, s.loc.String())
+	return duplicateDefinitionError(s.typ, provider.ctr.Location, s.loc.String())
 }
 
 func (s supplyResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {

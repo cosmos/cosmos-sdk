@@ -21,7 +21,7 @@ type sliceGroupResolver struct {
 }
 
 func (g *groupResolver) describeLocation() string {
-	return fmt.Sprintf("group type %v", g.typ)
+	return fmt.Sprintf("auto-group type %v", g.typ)
 }
 
 func (g *sliceGroupResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {

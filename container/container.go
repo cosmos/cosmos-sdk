@@ -184,7 +184,8 @@ func (c *container) addNode(constructor *ConstructorInfo, scope Scope, noLog boo
 			typ := out.Type
 			existing, ok := c.resolvers[typ]
 			if ok {
-				return nil, duplicateConstructorError(typ, constructor.Location, existing.describeLocation())
+				return nil, errors.Errorf("duplicate provision of type %v by scoped provider %s\n\talready provided by %s",
+					typ, constructor.Location, existing.describeLocation())
 			}
 			c.resolvers[typ] = &scopeDepResolver{
 				typ:         typ,
@@ -219,6 +220,10 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	}
 
 	c.addGraphEdge(locGrapNode, typeGraphNode)
+
+	if existing, ok := c.resolvers[typ]; ok {
+		return duplicateDefinitionError(typ, location, existing.describeLocation())
+	}
 
 	c.resolvers[typ] = &supplyResolver{
 		typ:   typ,

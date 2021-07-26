@@ -71,6 +71,10 @@ var (
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
+func contextAt(t time.Time) sdk.Context {
+	return sdk.Context{}.WithBlockTime(t)
+}
+
 func newFooCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(fooDenom, amt)
 }
@@ -1642,12 +1646,13 @@ func (suite *KeeperTestSuite) TestVestingAccountReceive() {
 	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[1], accAddrs[0], sendCoins))
 
 	// require the coins are spendable
-	balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
-	require.Equal(origCoins.Add(sendCoins...), balances)
-	require.Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
+	balances := app.BankKeeper.GetAllBalances(ctx, addr1)
+	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(contextAt(now))), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	require.Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(contextAt(now.Add(12*time.Hour)))), origCoins)
 }
 
 func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
@@ -1680,12 +1685,13 @@ func (suite *KeeperTestSuite) TestPeriodicVestingAccountReceive() {
 	require.NoError(suite.bankKeeper.SendCoins(ctx, accAddrs[1], accAddrs[0], sendCoins))
 
 	// require the coins are spendable
-	balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
-	require.Equal(origCoins.Add(sendCoins...), balances)
-	require.Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
+	vacc = app.AccountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
+	balances := app.BankKeeper.GetAllBalances(ctx, addr1)
+	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(contextAt(now))), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	require.Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
+	suite.Require().Equal(balances.Sub(vacc.LockedCoins(contextAt(now.Add(12*time.Hour)))), origCoins)
 }
 
 func (suite *KeeperTestSuite) TestDelegateCoins() {

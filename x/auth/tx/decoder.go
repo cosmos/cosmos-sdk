@@ -119,6 +119,7 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 		// All 3 fields of TxRaw have wireType == 2, so their next component
 		// is a varint, so we can safely call ConsumeVarint here.
 		// Byte structure: <varint of bytes length><bytes sequence>
+		// Inner  fields are verified in `DefaultTxDecoder`
 		lengthPrefix, m := protowire.ConsumeVarint(txBytes[m:])
 		if m < 0 {
 			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))

@@ -16,7 +16,7 @@ import (
 func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.
-		err := rejectNonADR027Tx(txBytes)
+		err := rejectNonADR027TxRaw(txBytes)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -90,13 +90,14 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	}
 }
 
-// rejectNonADR027Tx rejects txBytes that do not follow ADR-027. This function
+// rejectNonADR027TxRaw rejects txBytes that do not follow ADR-027. This is NOT
+// a generic ADR-027 checker, it only applies decoding TxRaw. Specifically, it
 // only checks that:
 // - field numbers are in ascending order (1, 2, and potentially multiple 3s),
 // - and varints are as short as possible.
-// All other ADR-027 edge cases (e.g. TxRaw fields having default values) are
-// not applicable with TxRaw.
-func rejectNonADR027Tx(txBytes []byte) error {
+// All other ADR-027 edge cases (e.g. default values) are not applicable with
+// TxRaw.
+func rejectNonADR027TxRaw(txBytes []byte) error {
 	// Make sure all fields are ordered in ascending order with this variable.
 	prevTagNum := protowire.Number(0)
 

@@ -10,7 +10,6 @@ account types for an application, as well as AnteHandler and authentication logi
    ```go
    import (
        "github.com/cosmos/cosmos-sdk/x/auth"
-       sdk "github.com/cosmos/cosmos-sdk/types"
    )
    ```
 
@@ -41,7 +40,7 @@ account types for an application, as well as AnteHandler and authentication logi
       // ...
       app.AccountKeeper = auth.NewAccountKeeper(
        app.cdc, keys[auth.StoreKey], app.subspaces[auth.ModuleName], 
-       sdk.Bech32MainPrefix, auth.ProtoBaseAccount,
+       auth.ProtoBaseAccount,
       )
    }
    ```

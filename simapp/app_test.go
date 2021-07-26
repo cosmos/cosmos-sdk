@@ -265,20 +265,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
-	db := dbm.NewMemDB()
-	app := NewSimApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	genesisState := NewDefaultGenesisState(encCfg.Codec)
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
-	require.NoError(t, err)
-
-	// Initialize the chain
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
-		},
-	)
+	app := Setup(t, false)
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false, tmproto.Header{})

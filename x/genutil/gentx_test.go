@@ -240,7 +240,7 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 					sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)},
 					helpers.DefaultGenTxGas,
 					suite.ctx.ChainID(),
-					[]uint64{0},
+					[]uint64{7},
 					[]uint64{0},
 					priv1,
 				)

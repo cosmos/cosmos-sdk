@@ -353,7 +353,7 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 			expPass:  true,
 			numAddrs: 6,
 			hasNext:  true,
-			total:    10,
+			total:    13,
 		},
 		"valid request - page 2": {
 			req: &types.QueryDenomOwnersRequest{
@@ -365,9 +365,9 @@ func (suite *IntegrationTestSuite) TestGRPCDenomOwners() {
 				},
 			},
 			expPass:  true,
-			numAddrs: 4,
+			numAddrs: 7,
 			hasNext:  false,
-			total:    10,
+			total:    13,
 		},
 	}
 

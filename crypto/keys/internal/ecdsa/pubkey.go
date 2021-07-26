@@ -13,10 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// function roughly copied from secp256k1_nocgo.go
-// Read Signature struct from R || S. Caller needs to ensure
-// that len(sigStr) == 64.
-
+// signatureFromBytes function roughly copied from secp256k1_nocgo.go
+// Read Signature struct from R || S. Caller needs to ensure that
+// len(sigStr) == 64.
 func signatureFromBytes(sigStr []byte) *signature {
 	return &signature{
 		R: new(big.Int).SetBytes(sigStr[:32]),
@@ -60,7 +59,6 @@ func (pk *PubKey) Bytes() []byte {
 // where the s integer component of the signature is in the
 // lower half of the curve order
 // 7/21/21 - expects raw encoded signature (fixed-width 64-bytes, R || S)
-
 func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 
 	// check length for raw signature

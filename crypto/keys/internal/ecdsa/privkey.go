@@ -19,28 +19,24 @@ import (
 // func (sk PrivKey) pCurveOrder() *.big.Int {
 //     return sk.Curve.Params().N
 // }
-
 func p256Order() *big.Int {
 	return elliptic.P256().Params().N
 }
 
-// returns half the curve order to restrict
+// Returns half the curve order to restrict
 // signatures to low s
-
 func p256OrderDiv2() *big.Int {
 	return new(big.Int).Div(p256Order(), new(big.Int).SetUint64(2))
 }
 
-// A signature is s-normalized if s
-// falls in lower half of curve order
-
+// IsSNormalized returns true for the integer sigS if sigS falls in
+// lower half of the curve order
 func IsSNormalized(sigS *big.Int) bool {
 	return sigS.Cmp(p256OrderDiv2()) != 1
 }
 
-// normalize the s value if not already in the
-// lower half of curve order
-
+// NormalizeS will invert the s value if not already in the lower half
+// of curve order value
 func NormalizeS(sigS *big.Int) *big.Int {
 
 	if IsSNormalized(sigS) {
@@ -50,10 +46,9 @@ func NormalizeS(sigS *big.Int) *big.Int {
 	return new(big.Int).Sub(p256Order(), sigS)
 }
 
-// Serialize signature to R || S.
+// signatureRaw will serialize signature to R || S.
 // R, S are padded to 32 bytes respectively.
 // code roughly copied from secp256k1_nocgo.go
-
 func signatureRaw(r *big.Int, s *big.Int) []byte {
 
 	rBytes := r.Bytes()

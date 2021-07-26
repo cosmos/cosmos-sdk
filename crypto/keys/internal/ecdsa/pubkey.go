@@ -71,8 +71,6 @@ func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
 	}
 
 	s := signatureFromBytes(sig)
-
-	// if not low-s, then fail validation
 	if !IsSNormalized(s.S) {
 		return false
 	}

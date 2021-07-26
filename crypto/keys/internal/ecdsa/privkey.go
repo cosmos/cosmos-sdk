@@ -104,9 +104,7 @@ func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 	r, s, err := ecdsa.Sign(rand.Reader, &sk.PrivateKey, digest[:])
 
 	if err != nil {
-
 		return nil, err
-
 	}
 
 	normS := NormalizeS(s)

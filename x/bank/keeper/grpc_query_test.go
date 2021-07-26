@@ -81,6 +81,7 @@ func (suite *IntegrationTestSuite) TestQueryAllBalances() {
 	}
 	req = types.NewQueryAllBalancesRequest(addr, pageReq)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
 	suite.Nil(res.Pagination.NextKey)
 }
@@ -96,7 +97,8 @@ func (suite *IntegrationTestSuite) TestQueryTotalSupply() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	suite.Require().Equal(expectedTotalSupply, res.Supply)
+	suite.Require().Equal(2, len(res.Supply))
+	suite.Require().Contains(res.Supply.String(), expectedTotalSupply.String())
 }
 
 func (suite *IntegrationTestSuite) TestQueryTotalSupplyOf() {

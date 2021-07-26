@@ -51,6 +51,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
 }
 func TestParams(t *testing.T) {
+	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

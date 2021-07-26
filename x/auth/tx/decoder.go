@@ -108,7 +108,7 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 		}
 		// TxRaw only has bytes fields.
 		if wireType != protowire.BytesType {
-			return fmt.Errorf("expected %d wire type, got %d", protowire.VarintType, wireType)
+			return fmt.Errorf("expected %d wire type, got %d", protowire.BytesType, wireType)
 		}
 		// Make sure fields are ordered in ascending order.
 		if tagNum < prevTagNum {

@@ -2,6 +2,8 @@ package container_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 
@@ -268,6 +270,17 @@ func TestScoped(t *testing.T) {
 		),
 	)
 
+	require.Error(t,
+		container.Run(func(float64) {},
+			container.Provide(
+				func(container.Scope) int { return 0 },
+			),
+			container.ProvideWithScope("",
+				func(x int) float64 { return float64(x) },
+			),
+		),
+	)
+
 	require.NoError(t,
 		container.Run(func(float64, float32) {},
 			container.Provide(
@@ -363,6 +376,20 @@ func TestOnePerScope(t *testing.T) {
 }
 
 func TestAutoGroup(t *testing.T) {
+	require.NoError(t,
+		container.Run(
+			func() {},
+			container.AutoGroupTypes(intType),
+		),
+	)
+
+	require.Error(t,
+		container.Run(
+			func() {},
+			container.AutoGroupTypes(reflect.SliceOf(intType)),
+		),
+	)
+
 	require.Error(t,
 		container.Run(
 			func() {},
@@ -472,4 +499,44 @@ func TestStructArgs(t *testing.T) {
 			return TestOutput{}, fmt.Errorf("error")
 		}),
 	))
+}
+
+func TestLogging(t *testing.T) {
+	var logOut string
+	var dotGraph string
+
+	outfile, err := ioutil.TempFile("", "out")
+	require.NoError(t, err)
+	stdout := os.Stdout
+	os.Stdout = outfile
+	defer func() { os.Stdout = stdout }()
+	defer os.Remove(outfile.Name())
+
+	graphfile, err := ioutil.TempFile("", "graph")
+	require.NoError(t, err)
+	defer os.Remove(graphfile.Name())
+
+	require.NoError(t, container.Run(
+		func() {},
+		container.Logger(func(s string) {
+			logOut += s
+		}),
+		container.Visualizer(func(g string) {
+			dotGraph = g
+		}),
+		container.LogVisualizer(),
+		container.FileVisualizer(graphfile.Name(), "svg"),
+		container.StdoutLogger(),
+	))
+
+	require.Contains(t, logOut, "digraph")
+	require.Contains(t, dotGraph, "digraph")
+
+	outfileContents, err := ioutil.ReadFile(outfile.Name())
+	require.NoError(t, err)
+	require.Contains(t, string(outfileContents), "digraph")
+
+	graphfileContents, err := ioutil.ReadFile(graphfile.Name())
+	require.NoError(t, err)
+	require.Contains(t, string(graphfileContents), "<svg")
 }

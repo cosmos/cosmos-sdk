@@ -57,7 +57,7 @@ func Supply(values ...interface{}) Option {
 		for _, v := range values {
 			err := ctr.supply(reflect.ValueOf(v), loc)
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 		}
 		return nil
@@ -83,7 +83,7 @@ func AutoGroupTypes(types ...reflect.Type) Option {
 			c.autoGroupTypes[ty] = true
 			node, err := c.typeGraphNode(reflect.SliceOf(ty))
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 			node.SetComment("auto-group")
 		}
@@ -176,7 +176,7 @@ func Options(opts ...Option) Option {
 			for _, opt := range opts {
 				err := opt.applyConfig(cfg)
 				if err != nil {
-					return err
+					return errors.WithStack(err)
 				}
 			}
 			return nil
@@ -185,7 +185,7 @@ func Options(opts ...Option) Option {
 			for _, opt := range opts {
 				err := opt.applyContainer(ctr)
 				if err != nil {
-					return err
+					return errors.WithStack(err)
 				}
 			}
 			return nil

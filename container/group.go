@@ -4,8 +4,6 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-
-	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
 type groupResolver struct {
@@ -21,7 +19,7 @@ type sliceGroupValueResolver struct {
 	*groupResolver
 }
 
-func (g *sliceGroupValueResolver) resolve(c *container, _ Scope, caller containerreflect.Location) (reflect.Value, error) {
+func (g *sliceGroupValueResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
 	// Log
 	c.logf("Providing %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()
@@ -55,7 +53,7 @@ func (g *sliceGroupValueResolver) resolve(c *container, _ Scope, caller containe
 	return g.values, nil
 }
 
-func (g *groupResolver) resolve(_ *container, _ Scope, _ containerreflect.Location) (reflect.Value, error) {
+func (g *groupResolver) resolve(_ *container, _ Scope, _ Location) (reflect.Value, error) {
 	return reflect.Value{}, errors.Errorf("%v is an auto-group type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 

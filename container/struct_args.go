@@ -2,8 +2,6 @@ package container
 
 import (
 	"reflect"
-
-	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
 // StructArgs is a type which can be embedded in another struct to alert the
@@ -22,9 +20,9 @@ type isStructArgs interface {
 
 var isStructArgsType = reflect.TypeOf((*isStructArgs)(nil)).Elem()
 
-func expandStructArgsConstructor(constructor containerreflect.Constructor) (containerreflect.Constructor, error) {
+func expandStructArgsConstructor(constructor ConstructorInfo) (ConstructorInfo, error) {
 	var foundStructArgs bool
-	var newIn []containerreflect.Input
+	var newIn []Input
 
 	for _, in := range constructor.In {
 		if in.Type.AssignableTo(isStructArgsType) {
@@ -36,7 +34,7 @@ func expandStructArgsConstructor(constructor containerreflect.Constructor) (cont
 		}
 	}
 
-	var newOut []containerreflect.Output
+	var newOut []Output
 	for _, out := range constructor.Out {
 		if out.Type.AssignableTo(isStructArgsType) {
 			foundStructArgs = true
@@ -47,7 +45,7 @@ func expandStructArgsConstructor(constructor containerreflect.Constructor) (cont
 	}
 
 	if foundStructArgs {
-		return containerreflect.Constructor{
+		return ConstructorInfo{
 			In:       newIn,
 			Out:      newOut,
 			Fn:       expandStructArgsFn(constructor),
@@ -58,7 +56,7 @@ func expandStructArgsConstructor(constructor containerreflect.Constructor) (cont
 	return constructor, nil
 }
 
-func expandStructArgsFn(constructor containerreflect.Constructor) func(inputs []reflect.Value) ([]reflect.Value, error) {
+func expandStructArgsFn(constructor ConstructorInfo) func(inputs []reflect.Value) ([]reflect.Value, error) {
 	fn := constructor.Fn
 	inParams := constructor.In
 	outParams := constructor.Out
@@ -94,9 +92,9 @@ func expandStructArgsFn(constructor containerreflect.Constructor) func(inputs []
 	}
 }
 
-func structArgsInTypes(typ reflect.Type) []containerreflect.Input {
+func structArgsInTypes(typ reflect.Type) []Input {
 	n := typ.NumField()
-	var res []containerreflect.Input
+	var res []Input
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 		if f.Type.AssignableTo(isStructArgsType) {
@@ -105,7 +103,7 @@ func structArgsInTypes(typ reflect.Type) []containerreflect.Input {
 
 		optional := f.Tag.Get("optional") == "true"
 
-		res = append(res, containerreflect.Input{
+		res = append(res, Input{
 			Type:     f.Type,
 			Optional: optional,
 		})
@@ -113,16 +111,16 @@ func structArgsInTypes(typ reflect.Type) []containerreflect.Input {
 	return res
 }
 
-func structArgsOutTypes(typ reflect.Type) []containerreflect.Output {
+func structArgsOutTypes(typ reflect.Type) []Output {
 	n := typ.NumField()
-	var res []containerreflect.Output
+	var res []Output
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 		if f.Type.AssignableTo(isStructArgsType) {
 			continue
 		}
 
-		res = append(res, containerreflect.Output{
+		res = append(res, Output{
 			Type: f.Type,
 		})
 	}

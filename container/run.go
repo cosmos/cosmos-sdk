@@ -32,9 +32,5 @@ func Run(invoker interface{}, opts ...Option) error {
 	}
 	cfg.dedentLogger()
 
-	err = ctr.run(invoker)
-	if err != nil {
-		cfg.logf("Failed resolving dependencies because of:\n %+v", err)
-	}
-	return err
+	return ctr.run(invoker)
 }

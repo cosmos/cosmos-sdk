@@ -8,8 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
-
 	"github.com/goccy/go-graphviz"
 	"github.com/goccy/go-graphviz/cgraph"
 )
@@ -114,7 +112,7 @@ func (c *config) addFileVisualizer(filename string, format string) {
 	})
 }
 
-func (c *config) locationGraphNode(location containerreflect.Location, scope Scope) (*cgraph.Node, error) {
+func (c *config) locationGraphNode(location Location, scope Scope) (*cgraph.Node, error) {
 	graph := c.scopeSubGraph(scope)
 	node, found, err := c.findOrCreateGraphNode(graph, location.Name())
 	if err != nil {

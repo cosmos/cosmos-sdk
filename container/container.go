@@ -7,8 +7,6 @@ import (
 
 	"github.com/goccy/go-graphviz/cgraph"
 	"github.com/pkg/errors"
-
-	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
 /*
@@ -25,12 +23,12 @@ type container struct {
 	scopes map[string]Scope
 
 	resolveStack []resolveKey
-	callerStack  []containerreflect.Location
-	callerMap    map[containerreflect.Location]bool
+	callerStack  []Location
+	callerMap    map[Location]bool
 }
 
 type resolveKey struct {
-	loc containerreflect.Location
+	loc Location
 	typ reflect.Type
 }
 
@@ -40,7 +38,7 @@ func newContainer(cfg *config) *container {
 		resolvers:   map[reflect.Type]resolver{},
 		scopes:      map[string]Scope{},
 		callerStack: nil,
-		callerMap:   map[containerreflect.Location]bool{},
+		callerMap:   map[Location]bool{},
 	}
 
 	for typ := range cfg.autoGroupTypes {
@@ -68,7 +66,7 @@ func newContainer(cfg *config) *container {
 	return ctr
 }
 
-func (c *container) call(constructor *containerreflect.Constructor, scope Scope) ([]reflect.Value, error) {
+func (c *container) call(constructor *ConstructorInfo, scope Scope) ([]reflect.Value, error) {
 	loc := constructor.Location
 	graphNode, err := c.locationGraphNode(loc, scope)
 	if err != nil {
@@ -109,7 +107,7 @@ func (c *container) call(constructor *containerreflect.Constructor, scope Scope)
 	return out, nil
 }
 
-func (c *container) addNode(constructor *containerreflect.Constructor, scope Scope, noLog bool) (interface{}, error) {
+func (c *container) addNode(constructor *ConstructorInfo, scope Scope, noLog bool) (interface{}, error) {
 	constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
 	if err != nil {
 		return reflect.Value{}, err
@@ -207,7 +205,7 @@ func (c *container) addNode(constructor *containerreflect.Constructor, scope Sco
 	}
 }
 
-func (c *container) supply(value reflect.Value, location containerreflect.Location) error {
+func (c *container) supply(value reflect.Value, location Location) error {
 	typ := value.Type()
 	locGrapNode, err := c.locationGraphNode(location, nil)
 	if err != nil {
@@ -231,7 +229,7 @@ func (c *container) supply(value reflect.Value, location containerreflect.Locati
 	return nil
 }
 
-func (c *container) resolve(in containerreflect.Input, scope Scope, caller containerreflect.Location) (reflect.Value, error) {
+func (c *container) resolve(in Input, scope Scope, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveKey{loc: caller, typ: in.Type})
 
 	typeGraphNode, err := c.typeGraphNode(in.Type)
@@ -274,9 +272,13 @@ func (c *container) resolve(in containerreflect.Input, scope Scope, caller conta
 }
 
 func (c *container) run(invoker interface{}) error {
-	rctr, err := reflectConstructor(invoker)
+	rctr, err := getConstructorInfo(invoker)
 	if err != nil {
 		return err
+	}
+
+	if len(rctr.Out) > 0 {
+		return errors.Errorf("invoker function cannot have return values other than error: %s", rctr.Location)
 	}
 
 	c.logf("Registering invoker %s", rctr.Location)

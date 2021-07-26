@@ -2,12 +2,10 @@ package container
 
 import (
 	"reflect"
-
-	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
 type simpleProvider struct {
-	ctr    *containerreflect.Constructor
+	ctr    *ConstructorInfo
 	called bool
 	values []reflect.Value
 	scope  Scope
@@ -34,7 +32,7 @@ func (s *simpleProvider) resolveValues(ctr *container) ([]reflect.Value, error) 
 	return s.values, nil
 }
 
-func (s *simpleResolver) resolve(c *container, _ Scope, caller containerreflect.Location) (reflect.Value, error) {
+func (s *simpleResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
 	// Log
 	c.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
 

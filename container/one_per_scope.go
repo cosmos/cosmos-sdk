@@ -4,8 +4,6 @@ import (
 	"reflect"
 
 	"github.com/pkg/errors"
-
-	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
 type onePerScopeResolver struct {
@@ -21,11 +19,11 @@ type mapOfOnePerScopeResolver struct {
 	*onePerScopeResolver
 }
 
-func (o *onePerScopeResolver) resolve(_ *container, _ Scope, _ containerreflect.Location) (reflect.Value, error) {
+func (o *onePerScopeResolver) resolve(_ *container, _ Scope, _ Location) (reflect.Value, error) {
 	return reflect.Value{}, errors.Errorf("%v is a one-per-scope type and thus can't be used as an input parameter, instead use %v", o.typ, o.mapType)
 }
 
-func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, caller containerreflect.Location) (reflect.Value, error) {
+func (o *mapOfOnePerScopeResolver) resolve(c *container, _ Scope, caller Location) (reflect.Value, error) {
 	// Log
 	c.logf("Providing %v to %s from:", o.mapType, caller.Name())
 	c.indentLogger()

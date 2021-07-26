@@ -5,8 +5,6 @@ import (
 	"os"
 	"reflect"
 
-	reflect2 "github.com/cosmos/cosmos-sdk/container/reflect"
-
 	"github.com/pkg/errors"
 )
 
@@ -41,7 +39,7 @@ func ProvideWithScope(scopeName string, constructors ...interface{}) Option {
 
 func provide(ctr *container, scope Scope, constructors []interface{}) error {
 	for _, c := range constructors {
-		rc, err := reflectConstructor(c)
+		rc, err := getConstructorInfo(c)
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -54,7 +52,7 @@ func provide(ctr *container, scope Scope, constructors []interface{}) error {
 }
 
 func Supply(values ...interface{}) Option {
-	loc := reflect2.LocationFromCaller(1)
+	loc := LocationFromCaller(1)
 	return containerOption(func(ctr *container) error {
 		for _, v := range values {
 			err := ctr.supply(reflect.ValueOf(v), loc)

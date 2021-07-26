@@ -2,12 +2,10 @@ package container
 
 import (
 	"reflect"
-
-	containerreflect "github.com/cosmos/cosmos-sdk/container/reflect"
 )
 
 type scopeDepProvider struct {
-	ctr            *containerreflect.Constructor
+	ctr            *ConstructorInfo
 	calledForScope map[Scope]bool
 	valueMap       map[Scope][]reflect.Value
 }
@@ -19,7 +17,7 @@ type scopeDepResolver struct {
 	valueMap    map[Scope]reflect.Value
 }
 
-func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller containerreflect.Location) (reflect.Value, error) {
+func (s scopeDepResolver) resolve(ctr *container, scope Scope, caller Location) (reflect.Value, error) {
 	// Log
 	ctr.logf("Providing %v from %s to %s", s.typ, s.node.ctr.Location, caller.Name())
 

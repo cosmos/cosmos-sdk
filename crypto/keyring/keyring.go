@@ -42,6 +42,9 @@ const (
 	keyringFileDirName = "keyring-file"
 	keyringTestDirName = "keyring-test"
 	passKeyringPrefix  = "keyring-%s"
+
+	// temporary pass phrase for exporting a key during a key rename
+	passPhrase = "temp"
 )
 
 var (
@@ -64,6 +67,9 @@ type Keyring interface {
 	// Delete and DeleteByAddress remove keys from the keyring.
 	Delete(uid string) error
 	DeleteByAddress(address sdk.Address) error
+
+	// Rename an existing key from the Keyring
+	Rename(from string, to string) error
 
 	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from it, and
 	// persists the key to storage. Returns the generated mnemonic and the key Info.
@@ -302,8 +308,10 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 }
 
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
-	if _, err := ks.Key(uid); err == nil {
-		return fmt.Errorf("cannot overwrite key: %s", uid)
+	if k, err := ks.Key(uid); err == nil {
+		if uid == k.Name {
+			return fmt.Errorf("cannot overwrite key: %s", uid)
+		}
 	}
 
 	privKey, _, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
@@ -437,6 +445,30 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 	}
 
 	err = ks.Delete(k.Name)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ks keystore) Rename(oldName, newName string) error {
+	_, err := ks.Key(newName)
+	if err == nil {
+		return fmt.Errorf("rename failed: %s already exists in the keyring", newName)
+	}
+
+	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
+	if err != nil {
+		return err
+	}
+
+	err = ks.ImportPrivKey(newName, armor, passPhrase)
+	if err != nil {
+		return err
+	}
+
+	err = ks.Delete(oldName)
 	if err != nil {
 		return err
 	}

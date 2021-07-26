@@ -19,8 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// AccountKeeperI is the interface contract that x/auth's keeper implements.
-type AccountKeeperI interface {
+// AccountKeeper is the interface contract that x/auth's keeper implements.
+type AccountKeeper interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
 	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI
 
@@ -33,11 +33,19 @@ type AccountKeeperI interface {
 	// Retrieve an account from the store.
 	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
 
+	// GetAllAccounts returns all accounts in the accountKeeper.
+	GetAllAccounts(sdk.Context) []types.AccountI
+
 	// Set an account in the store.
 	SetAccount(context.Context, sdk.AccountI)
 
 	// Remove an account from the store.
 	RemoveAccount(context.Context, sdk.AccountI)
+
+	types.QueryServer
+
+	// Logger returns a module-specific logger.
+	Logger(ctx sdk.Context) log.Logger
 
 	// Fetch the public key of an account at a specified address
 	GetPubKey(context.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
@@ -46,50 +54,53 @@ type AccountKeeperI interface {
 	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	//
-	// Deprecated: keep this to avoid breaking api
-	NextAccountNumber(context.Context) uint64
+	GetNextAccountNumber(sdk.Context) uint64
 
-	// GetModulePermissions fetches per-module account permissions
-	GetModulePermissions() map[string]types.PermissionsForAddress
+	// ValidatePermissions validates that the module account has been granted
+	// permissions within its set of allowed permissions.
+	ValidatePermissions(types.ModuleAccountI) error
 
-	// AddressCodec returns the account address codec.
-	AddressCodec() address.Codec
+	// GetModuleAddress returns an address based on the module name
+	GetModuleAddress(string) sdk.AccAddress
+
+	// GetModuleAddressAndPermissions returns an address and permissions based on the module name
+	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
+
+	// GetModuleAccountAndPermissions gets the module account from the auth account store and its
+	// registered permissions
+	GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleAccountI, []string)
+
+	// GetModuleAccount gets the module account from the auth account store, if the account does not
+	// exist in the AccountKeeper, then it is created.
+	GetModuleAccount(sdk.Context, string) types.ModuleAccountI
+
+	// SetModuleAccount sets the module account to the auth account store
+	SetModuleAccount(sdk.Context, types.ModuleAccountI)
+
+	// MarshalAccount protobuf serializes an Account interface
+	MarshalAccount(types.AccountI) ([]byte, error)
+
+	// UnmarshalAccount returns an Account interface from raw encoded account
+	// bytes of a Proto-based Account type
+	UnmarshalAccount([]byte) (types.AccountI, error)
+
+	// GetCodec return codec.Codec object used by the keeper
+	GetCodec() codec.BinaryCodec
+
+	// GetParams gets the auth module's parameters.
+	GetParams(sdk.Context) types.Params
+
+	// SetParams sets the auth module's parameters.
+	SetParams(sdk.Context, types.Params)
 }
 
-func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
-	return AccountsIndexes{
-		Number: indexes.NewUnique(
-			sb, types.AccountNumberStoreKeyPrefix, "account_by_number", collections.Uint64Key, sdk.AccAddressKey,
-			func(_ sdk.AccAddress, v sdk.AccountI) (uint64, error) {
-				return v.GetAccountNumber(), nil
-			},
-		),
-	}
-}
-
-type AccountsIndexes struct {
-	// Number is a unique index that indexes accounts by their account number.
-	Number *indexes.Unique[uint64, sdk.AccAddress, sdk.AccountI]
-}
-
-func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, sdk.AccountI] {
-	return []collections.Index[sdk.AccAddress, sdk.AccountI]{
-		a.Number,
-	}
-}
-
-// AccountKeeper encodes/decodes accounts using the go-amino (binary)
+// accountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
-type AccountKeeper struct {
-	appmodule.Environment
-
-	addressCodec      address.Codec
-	AccountsModKeeper types.AccountsModKeeper
-
-	cdc          codec.BinaryCodec
-	permAddrs    map[string]types.PermissionsForAddress
-	bech32Prefix string
+type accountKeeper struct {
+	key           sdk.StoreKey
+	cdc           codec.BinaryCodec
+	paramSubspace paramtypes.Subspace
+	permAddrs     map[string]types.PermissionsForAddress
 
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
@@ -110,7 +121,7 @@ type AccountKeeper struct {
 	Accounts *collections.IndexedMap[sdk.AccAddress, sdk.AccountI, AccountsIndexes]
 }
 
-var _ AccountKeeperI = &AccountKeeper{}
+var _ AccountKeeper = &accountKeeper{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
@@ -127,24 +138,12 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
-	sb := collections.NewSchemaBuilder(env.KVStoreService)
-
-	ak := AccountKeeper{
-		Environment:       env,
-		addressCodec:      ac,
-		bech32Prefix:      bech32Prefix,
-		proto:             proto,
-		cdc:               cdc,
-		AccountsModKeeper: accountsModKeeper,
-		permAddrs:         permAddrs,
-		authority:         authority,
-		Params:            collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		accountNumber:     collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
-		Accounts:          collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
-	}
-	schema, err := sb.Build()
-	if err != nil {
-		panic(err)
+	return accountKeeper{
+		key:           key,
+		proto:         proto,
+		cdc:           cdc,
+		paramSubspace: paramstore,
+		permAddrs:     permAddrs,
 	}
 	ak.Schema = schema
 	return ak
@@ -166,23 +165,13 @@ func (ak AccountKeeper) removeLegacyAccountNumberUnsafe(ctx context.Context) (ui
 	return accNum, err
 }
 
-// GetAuthority returns the x/auth module's authority.
-func (ak AccountKeeper) GetAuthority() string {
-	return ak.authority
-}
-
-func (ak AccountKeeper) GetEnvironment() appmodule.Environment {
-	return ak.Environment
-}
-
-// AddressCodec returns the x/auth account address codec.
-// x/auth is tied to bech32 encoded user accounts
-func (ak AccountKeeper) AddressCodec() address.Codec {
-	return ak.addressCodec
+// Logger returns a module-specific logger.
+func (ak accountKeeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // GetPubKey Returns the PubKey of the account at address
-func (ak AccountKeeper) GetPubKey(ctx context.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
+func (ak accountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (cryptotypes.PubKey, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
@@ -192,7 +181,7 @@ func (ak AccountKeeper) GetPubKey(ctx context.Context, addr sdk.AccAddress) (cry
 }
 
 // GetSequence Returns the Sequence of the account at address
-func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (uint64, error) {
+func (ak accountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return 0, errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "account %s does not exist", addr)
@@ -203,12 +192,23 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
-//
-// Deprecated: NextAccountNumber is deprecated
-func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	n, err := ak.AccountsModKeeper.NextAccountNumber(ctx)
-	if err != nil {
-		panic(err)
+func (ak accountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
+	var accNumber uint64
+	store := ctx.KVStore(ak.key)
+
+	bz := store.Get(types.GlobalAccountNumberKey)
+	if bz == nil {
+		// initialize the account numbers
+		accNumber = 0
+	} else {
+		val := gogotypes.UInt64Value{}
+
+		err := ak.cdc.Unmarshal(bz, &val)
+		if err != nil {
+			panic(err)
+		}
+
+		accNumber = val.GetValue()
 	}
 	return n
 }
@@ -220,7 +220,7 @@ func (ak AccountKeeper) GetModulePermissions() map[string]types.PermissionsForAd
 
 // ValidatePermissions validates that the module account has been granted
 // permissions within its set of allowed permissions.
-func (ak AccountKeeper) ValidatePermissions(macc sdk.ModuleAccountI) error {
+func (ak accountKeeper) ValidatePermissions(macc types.ModuleAccountI) error {
 	permAddr := ak.permAddrs[macc.GetName()]
 	for _, perm := range macc.GetPermissions() {
 		if !permAddr.HasPermission(perm) {
@@ -232,7 +232,7 @@ func (ak AccountKeeper) ValidatePermissions(macc sdk.ModuleAccountI) error {
 }
 
 // GetModuleAddress returns an address based on the module name
-func (ak AccountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
+func (ak accountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	permAddr, ok := ak.permAddrs[moduleName]
 	if !ok {
 		return nil
@@ -242,7 +242,7 @@ func (ak AccountKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 }
 
 // GetModuleAddressAndPermissions returns an address and permissions based on the module name
-func (ak AccountKeeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string) {
+func (ak accountKeeper) GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string) {
 	permAddr, ok := ak.permAddrs[moduleName]
 	if !ok {
 		return addr, permissions
@@ -253,7 +253,7 @@ func (ak AccountKeeper) GetModuleAddressAndPermissions(moduleName string) (addr 
 
 // GetModuleAccountAndPermissions gets the module account from the auth account store and its
 // registered permissions
-func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, moduleName string) (sdk.ModuleAccountI, []string) {
+func (ak accountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleAccountI, []string) {
 	addr, perms := ak.GetModuleAddressAndPermissions(moduleName)
 	if addr == nil {
 		return nil, []string{}
@@ -278,78 +278,35 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx context.Context, modu
 
 // GetModuleAccount gets the module account from the auth account store, if the account does not
 // exist in the AccountKeeper, then it is created.
-func (ak AccountKeeper) GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI {
+func (ak accountKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI {
 	acc, _ := ak.GetModuleAccountAndPermissions(ctx, moduleName)
 	return acc
 }
 
 // SetModuleAccount sets the module account to the auth account store
-func (ak AccountKeeper) SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI) {
+func (ak accountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) {
 	ak.SetAccount(ctx, macc)
 }
 
-// add getter for bech32Prefix
-func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	return ak.bech32Prefix, nil
-}
-
-// GetParams gets the auth module's parameters.
-func (ak AccountKeeper) GetParams(ctx context.Context) (params types.Params) {
-	params, err := ak.Params.Get(ctx)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+func (ak accountKeeper) decodeAccount(bz []byte) types.AccountI {
+	acc, err := ak.UnmarshalAccount(bz)
+	if err != nil {
 		panic(err)
 	}
 	return params
 }
 
-func (ak AccountKeeper) NonAtomicMsgsExec(ctx context.Context, signer sdk.AccAddress, msgs []sdk.Msg) ([]*types.NonAtomicExecResult, error) {
-	msgResponses := make([]*types.NonAtomicExecResult, 0, len(msgs))
-
-	for _, msg := range msgs {
-		if m, ok := msg.(sdk.HasValidateBasic); ok {
-			if err := m.ValidateBasic(); err != nil {
-				value := &types.NonAtomicExecResult{Error: err.Error()}
-				msgResponses = append(msgResponses, value)
-				continue
-			}
-		}
-
-		if err := ak.BranchService.Execute(ctx, func(ctx context.Context) error {
-			result, err := ak.AccountsModKeeper.SendModuleMessage(ctx, signer, msg)
-			if err != nil {
-				// If an error occurs during message execution, append error response
-				response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
-				msgResponses = append(msgResponses, response)
-			} else {
-				resp, err := codectypes.NewAnyWithValue(result)
-				if err != nil {
-					response := &types.NonAtomicExecResult{Resp: nil, Error: err.Error()}
-					msgResponses = append(msgResponses, response)
-				}
-				response := &types.NonAtomicExecResult{Resp: resp, Error: ""}
-				msgResponses = append(msgResponses, response)
-			}
-
-			return nil
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	return msgResponses, nil
+// MarshalAccount protobuf serializes an Account interface
+func (ak accountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) { // nolint:interfacer
+	return ak.cdc.MarshalInterface(accountI)
 }
 
-// MigrateAccountNumberUnsafe migrates auth's account number to accounts's account number
-// and delete store entry for auth legacy GlobalAccountNumberKey.
-//
-// Should only use in an upgrade handler for migrating account number.
-func MigrateAccountNumberUnsafe(ctx context.Context, ak *AccountKeeper) error {
-	currentAccNum, err := ak.removeLegacyAccountNumberUnsafe(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to migrate account number: %w", err)
-	}
-
-	err = ak.AccountsModKeeper.InitAccountNumberSeqUnsafe(ctx, currentAccNum)
-
-	return err
+// UnmarshalAccount returns an Account interface from raw encoded account
+// bytes of a Proto-based Account type
+func (ak accountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
+	var acc types.AccountI
+	return acc, ak.cdc.UnmarshalInterface(bz, &acc)
 }
+
+// GetCodec return codec.Codec object used by the keeper
+func (ak accountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }

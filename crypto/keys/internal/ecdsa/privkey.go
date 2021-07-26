@@ -9,7 +9,7 @@ import (
 	"math/big"
 )
 
-// returns the curve order for the secp256r1 curve
+// p256Order returns the curve order for the secp256r1 curve
 // NOTE: this is specific to the secp256r1/P256 curve,
 // and not taken from the domain params for the key itself
 // (which would be a more generic approach for all EC)
@@ -19,20 +19,15 @@ import (
 // func (sk PrivKey) pCurveOrder() *.big.Int {
 //     return sk.Curve.Params().N
 // }
-func p256Order() *big.Int {
-	return elliptic.P256().Params().N
-}
+var p256Order = elliptic.P256().Params().N
 
-// Returns half the curve order to restrict
-// signatures to low s
-func p256OrderDiv2() *big.Int {
-	return new(big.Int).Div(p256Order(), new(big.Int).SetUint64(2))
-}
+// p256HalfOrder returns half the curve order
+var p256HalfOrder = new(big.Int).Div(p256Order, new(big.Int).SetUint64(2))
 
 // IsSNormalized returns true for the integer sigS if sigS falls in
 // lower half of the curve order
 func IsSNormalized(sigS *big.Int) bool {
-	return sigS.Cmp(p256OrderDiv2()) != 1
+	return sigS.Cmp(p256HalfOrder) != 1
 }
 
 // NormalizeS will invert the s value if not already in the lower half
@@ -43,7 +38,7 @@ func NormalizeS(sigS *big.Int) *big.Int {
 		return sigS
 	}
 
-	return new(big.Int).Sub(p256Order(), sigS)
+	return new(big.Int).Sub(p256Order, sigS)
 }
 
 // signatureRaw will serialize signature to R || S.

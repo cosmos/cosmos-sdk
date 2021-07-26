@@ -2,11 +2,11 @@ package container
 
 import "reflect"
 
-// ReflectConstructor defines a special constructor type that is defined by
+// ConstructorInfo defines a special constructor type that is defined by
 // reflection. It should be passed as a value to the Provide function.
 // Ex:
-//   option.Provide(ReflectConstructor{ ... })
-type ReflectConstructor struct {
+//   option.Provide(ConstructorInfo{ ... })
+type ConstructorInfo struct {
 	// In defines the in parameter types to Fn.
 	In []reflect.Type
 

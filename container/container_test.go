@@ -103,7 +103,7 @@ func TestRun(t *testing.T) {
 	)
 }
 
-func wrapProvideMethod(module interface{}) container.ReflectConstructor {
+func wrapProvideMethod(module interface{}) container.ConstructorInfo {
 	method := reflect.TypeOf(module).Method(0)
 	methodTy := method.Type
 	var in []reflect.Type
@@ -116,7 +116,7 @@ func wrapProvideMethod(module interface{}) container.ReflectConstructor {
 		out = append(out, methodTy.Out(i))
 	}
 
-	return container.ReflectConstructor{
+	return container.ConstructorInfo{
 		In:  in,
 		Out: out,
 		Fn: func(values []reflect.Value) []reflect.Value {

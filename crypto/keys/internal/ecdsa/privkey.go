@@ -22,7 +22,9 @@ import (
 var p256Order = elliptic.P256().Params().N
 
 // p256HalfOrder returns half the curve order
-var p256HalfOrder = new(big.Int).Div(p256Order, new(big.Int).SetUint64(2))
+// a bit shift of 1 to the right (Rsh) is equivalent
+// to division by 2, only faster (I tested).
+var p256HalfOrder = new(big.Int).Rsh(p256Order, 1)
 
 // IsSNormalized returns true for the integer sigS if sigS falls in
 // lower half of the curve order

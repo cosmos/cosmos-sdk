@@ -360,13 +360,13 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 				"",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			true, "argument should be a <concat(addr,sequence)> combination",
+			true, "`acc_seq` type takes an argument '<addr>/<seq>'",
 		},
 		{
 			"non-existing addr+seq combo",
 			[]string{
 				"--type=acc_seq",
-				"42",
+				"foobar",
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			true, "found no txs matching given address and sequence combination",
@@ -375,7 +375,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 			"addr+seq happy case",
 			[]string{
 				"--type=acc_seq",
-				fmt.Sprintf("%s%d", val.Address, protoTx.AuthInfo.SignerInfos[0].Sequence),
+				fmt.Sprintf("%s/%d", val.Address, protoTx.AuthInfo.SignerInfos[0].Sequence),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			false, "",

@@ -220,7 +220,7 @@ func QueryTxCmd() *cobra.Command {
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:
 $ %s query tx <hash>
-$ %s query tx --%s=%s <concat(addr,sequence)>
+$ %s query tx --%s=%s <addr>:<sequence>
 $ %s query tx --%s=%s <sig1_base64,sig2_base64...>
 `, version.AppName, version.AppName, flagType, typeAccSeq, version.AppName, flagType, typeSig)),
 		Args: cobra.ExactArgs(1),
@@ -280,7 +280,7 @@ $ %s query tx --%s=%s <sig1_base64,sig2_base64...>
 			case typeAccSeq:
 				{
 					if args[0] == "" {
-						return fmt.Errorf("argument should be a <concat(addr,sequence)> combination")
+						return fmt.Errorf("`acc_seq` type takes an argument '<addr>/<seq>'")
 					}
 
 					tmEvents := []string{

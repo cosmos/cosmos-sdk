@@ -132,7 +132,7 @@ func TestSupply_ValidatePermissions(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Codec
 	keeper := keeper.NewAccountKeeper(
 		cdc, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		simapp.DefaultBech32Prefix, types.ProtoBaseAccount, maccPerms,
+		sdk.Bech32MainPrefix, types.ProtoBaseAccount, maccPerms,
 	)
 
 	err := keeper.ValidatePermissions(multiPermAcc)

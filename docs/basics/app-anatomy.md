@@ -135,7 +135,7 @@ See an example of a `MakeTestEncodingConfig` from `simapp`:
 
 Modules must implement [interfaces](../building-modules/module-manager.md#application-module-interfaces) defined in the Cosmos SDK, [`AppModuleBasic`](../building-modules/module-manager.md#appmodulebasic) and [`AppModule`](../building-modules/module-manager.md#appmodule). The former implements basic non-dependant elements of the module, such as the `codec`, while the latter handles the bulk of the module methods (including methods that require references to other modules' `keeper`s). Both the `AppModule` and `AppModuleBasic` types are defined in a file called `./module.go`.
 
-`AppModule` exposes a collection of useful methods on the module that facilitates the composition of modules into a coherent application. These methods are are called from the `module manager`(../building-modules/module-manager.md#manager), which manages the application's collection of modules.
+`AppModule` exposes a collection of useful methods on the module that facilitates the composition of modules into a coherent application. These methods are called from the `module manager`(../building-modules/module-manager.md#manager), which manages the application's collection of modules.
 
 ### `Msg` Services
 

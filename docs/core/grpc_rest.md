@@ -34,11 +34,13 @@ Please see [issue #8392](https://github.com/cosmos/cosmos-sdk/issues/8392) for m
 
 Cosmos SDK v0.40 introduced Protobuf as the main [encoding](./encoding) library, and this brings a wide range of Protobuf-based tools that can be plugged into the SDK. One such tool is [gRPC](https://grpc.io), a modern open source high performance RPC framework that has decent client support in several languages.
 
-Each module exposes [`Msg` and `Query` Protobuf services](../building-modules/messages-and-queries.md) to define state transitions and state queries. These services are hooked up to gRPC via the following function inside the application:
+Each module exposes a [Protobuf `Query` service](../building-modules/messages-and-queries.md#queries) that defines state queries. The `Query` services and a transaction service used to broadcast transactions are hooked up to the gRPC server via the following function inside the application:
 
-<https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/server/types/app.go#L39-L41>
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-rc0/server/types/app.go#L39-L41
 
-The `grpc.Server` is a concrete gRPC server, which spawns and serves any gRPC requests. This server can be configured inside `~/.simapp/config/app.toml`:
+Note: It is not possible to expose any [Protobuf `Msg` service](../building-modules/messages-and-queries.md#messages) endpoints via gRPC. Transactions must be generated and signed using the CLI or programatically before they can be broadcasted using gRPC. See [Generating, Signing, and Broadcasting Transactions](../run-node/txs.html) for more information.
+
+The `grpc.Server` is a concrete gRPC server, which spawns and serves all gRPC query requests and a broadcast transaction request. This server can be configured inside `~/.simapp/config/app.toml`:
 
 - `grpc.enable = true|false` field defines if the gRPC server should be enabled. Defaults to `true`.
 - `grpc.address = {string}` field defines the address (really, the port, since the host should be kept at `0.0.0.0`) the server should bind to. Defaults to `0.0.0.0:9090`.
@@ -65,7 +67,7 @@ All routes are configured under the following fields in `~/.simapp/config/app.to
 
 If, for various reasons, you cannot use gRPC (for example, you are building a web application, and browsers don't support HTTP2 on which gRPC is built), then the SDK offers REST routes via gRPC-gateway.
 
-[gRPC-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) is a tool to expose gRPC endpoints as REST endpoints. For each RPC endpoint defined in a Protobuf service, the SDK offers a REST equivalent. For instance, querying a balance could be done via the `/cosmos.bank.v1beta1.QueryAllBalances` gRPC endpoint, or alternatively via the gRPC-gateway `"/cosmos/bank/v1beta1/balances/{address}"` REST endpoint: both will return the same result. For each RPC method defined in a Protobuf service, the corresponding REST endpoint is defined as an option:
+[gRPC-gateway](https://grpc-ecosystem.github.io/grpc-gateway/) is a tool to expose gRPC endpoints as REST endpoints. For each gRPC endpoint defined in a Protobuf `Query` service, the SDK offers a REST equivalent. For instance, querying a balance could be done via the `/cosmos.bank.v1beta1.QueryAllBalances` gRPC endpoint, or alternatively via the gRPC-gateway `"/cosmos/bank/v1beta1/balances/{address}"` REST endpoint: both will return the same result. For each RPC method defined in a Protobuf `Query` service, the corresponding REST endpoint is defined as an option:
 
 +++ https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/proto/cosmos/bank/v1beta1/query.proto#L19-L22
 
@@ -73,7 +75,7 @@ For application developers, gRPC-gateway REST routes needs to be wired up to the
 
 ### Legacy REST API Routes
 
-The REST routes present in Cosmos SDK v0.39 and earlier are marked as deprecated via a [HTTP deprecation header](https://tools.ietf.org/id/draft-dalal-deprecation-header-01.html). They are still maintained to keep backwards compatibility, but will be removed in v0.41. For updating from Legacy REST routes to new gRPC-gateway REST routes, please refer to our [migration guide](../migrations/rest.md).
+The REST routes present in Cosmos SDK v0.39 and earlier are marked as deprecated via a [HTTP deprecation header](https://tools.ietf.org/id/draft-dalal-deprecation-header-01.html). They are still maintained to keep backwards compatibility, but will be removed in v0.44. For updating from Legacy REST routes to new gRPC-gateway REST routes, please refer to our [migration guide](../migrations/rest.md).
 
 For application developers, Legacy REST API routes needs to be wired up to the REST server, this is done by calling the `RegisterRESTRoutes` function on the ModuleManager.
 

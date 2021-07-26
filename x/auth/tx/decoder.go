@@ -118,7 +118,7 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 
 		// All 3 fields of TxRaw have wireType == 2, so their next component
 		// is a varint, so we can safely call ConsumeVarint here.
-		// Byte structure: <varint of bytes lenght><bytes sequence>
+		// Byte structure: <varint of bytes length><bytes sequence>
 		lengthPrefix, m := protowire.ConsumeVarint(txBytes[m:])
 		if m < 0 {
 			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
@@ -145,23 +145,23 @@ func rejectNonADR027TxRaw(txBytes []byte) error {
 func varintMinLength(n uint64) int {
 	switch {
 	// Note: 1<<N == 2**N.
-	case n < 1<<7:
+	case n < 1<<(7):
 		return 1
-	case n < 1<<7*2:
+	case n < 1<<(7*2):
 		return 2
-	case n < 1<<7*3:
+	case n < 1<<(7*3):
 		return 3
-	case n < 1<<7*4:
+	case n < 1<<(7*4):
 		return 4
-	case n < 1<<7*5:
+	case n < 1<<(7*5):
 		return 5
-	case n < 1<<7*6:
+	case n < 1<<(7*6):
 		return 6
-	case n < 1<<7*7:
+	case n < 1<<(7*7):
 		return 7
-	case n < 1<<7*8:
+	case n < 1<<(7*8):
 		return 8
-	case n < 1<<7*9:
+	case n < 1<<(7*9):
 		return 9
 	default:
 		return 10

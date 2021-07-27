@@ -102,7 +102,7 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 
 	period := []types.Period{{Length: 5000, Amount: balances}}
 	suite.app.AccountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(simapp.FundAccount(suite.app, ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, ctx, addr1, balances))
 
 	testCases := []struct {
 		name      string

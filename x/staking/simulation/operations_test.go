@@ -264,7 +264,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 
 // returns context and an app with updated mint keeper
 func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	// sdk.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	app := simapp.Setup(t, isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})

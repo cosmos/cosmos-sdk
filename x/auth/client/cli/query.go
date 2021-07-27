@@ -215,7 +215,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tx [hash|acc_seq|signature] --type=[hash|acc_seq|signature]",
+		Use:   "tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature]",
 		Short: "Query for a transaction by hash, addr++seq combination or signature in a committed block",
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:

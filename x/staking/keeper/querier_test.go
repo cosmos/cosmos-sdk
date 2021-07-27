@@ -135,6 +135,7 @@ func TestQueryParametersPool(t *testing.T) {
 }
 
 func TestQueryValidators(t *testing.T) {
+	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
@@ -143,9 +144,9 @@ func TestQueryValidators(t *testing.T) {
 	addrs := simapp.AddTestAddrs(app, ctx, 500, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 
 	// Create Validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	status := []types.BondStatus{types.Bonded, types.Unbonded, types.Unbonding}
-	var validators [3]types.Validator
+	amts := []sdk.Int{sdk.NewInt(8), sdk.NewInt(7)}
+	status := []types.BondStatus{types.Unbonded, types.Unbonding}
+	var validators [2]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
@@ -154,7 +155,6 @@ func TestQueryValidators(t *testing.T) {
 
 	app.StakingKeeper.SetValidator(ctx, validators[0])
 	app.StakingKeeper.SetValidator(ctx, validators[1])
-	app.StakingKeeper.SetValidator(ctx, validators[2])
 
 	// Query Validators
 	queriedValidators := app.StakingKeeper.GetValidators(ctx, params.MaxValidators)
@@ -203,13 +203,14 @@ func TestQueryValidators(t *testing.T) {
 }
 
 func TestQueryDelegation(t *testing.T) {
+	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
-	addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
-	addrAcc1, addrAcc2 := addrs[0], addrs[1]
+	addrs := simapp.AddTestAddrs(app, ctx, 4, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrAcc1, addrAcc2 := addrs[2], addrs[3]
 	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 	pubKeys := simapp.CreateTestPubKeys(2)
@@ -316,7 +317,7 @@ func TestQueryDelegation(t *testing.T) {
 	var delegatorDelegations types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
 	require.NoError(t, errRes)
-	require.Len(t, delegatorDelegations, 1)
+	require.Len(t, delegatorDelegations, 2)
 	require.Equal(t, delegation.ValidatorAddress, delegatorDelegations[0].Delegation.ValidatorAddress)
 	require.Equal(t, delegation.DelegatorAddress, delegatorDelegations[0].Delegation.DelegatorAddress)
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegations[0].Balance)
@@ -342,7 +343,7 @@ func TestQueryDelegation(t *testing.T) {
 	var delegationsRes types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
 	require.NoError(t, errRes)
-	require.Len(t, delegatorDelegations, 1)
+	require.Len(t, delegatorDelegations, 2)
 	require.Equal(t, delegation.ValidatorAddress, delegationsRes[0].Delegation.ValidatorAddress)
 	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].Delegation.DelegatorAddress)
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes[0].Balance)

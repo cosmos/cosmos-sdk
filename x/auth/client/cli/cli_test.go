@@ -297,11 +297,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 			"happy case (service Msg)",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-<<<<<<< HEAD:x/auth/client/cli/cli_test.go
 			"/cosmos.bank.v1beta1.Msg/Send",
-=======
-			sdk.MsgTypeURL(&banktypes.MsgSend{}),
->>>>>>> 7c1943400 (feat: Query txs by signature and by address+seq (#9750)):x/auth/client/testutil/suite.go
 		},
 	}
 
@@ -854,13 +850,8 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-<<<<<<< HEAD:x/auth/client/cli/cli_test.go
-	// Sign with account1
-	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
-=======
 	// Sign with account2
-	account2Signature, err := TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
->>>>>>> 7c1943400 (feat: Query txs by signature and by address+seq (#9750)):x/auth/client/testutil/suite.go
+	account2Signature, err := authtest.TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())

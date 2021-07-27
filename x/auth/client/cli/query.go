@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -222,9 +223,10 @@ Example:
 $ %s query tx <hash>
 $ %s query tx --%s=%s <addr>:<sequence>
 $ %s query tx --%s=%s <sig1_base64,sig2_base64...>
-`, version.AppName, 
-version.AppName, flagType, typeAccSeq, 
-version.AppName, flagType, typeSig)),
+`,
+			version.AppName,
+			version.AppName, flagType, typeAccSeq,
+			version.AppName, flagType, typeSig)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -255,11 +257,10 @@ version.AppName, flagType, typeSig)),
 				}
 			case typeSig:
 				{
-					if len(args) != 1 || args[0] == "" {
-						return fmt.Errorf("argument should be comma-separated signatures")
+					sigParts, err := parseSigArgs(args)
+					if err != nil {
+						return err
 					}
-
-					sigParts := strings.Split(args[0], ",")
 					tmEvents := make([]string, len(sigParts))
 					for i, sig := range sigParts {
 						tmEvents[i] = fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
@@ -312,4 +313,13 @@ version.AppName, flagType, typeSig)),
 	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeAccSeq, typeSig))
 
 	return cmd
+}
+
+// parseSigArgs parses comma-separated signatures from the CLI arguments.
+func parseSigArgs(args []string) ([]string, error) {
+	if len(args) != 1 || args[0] == "" {
+		return nil, fmt.Errorf("argument should be comma-separated signatures")
+	}
+
+	return strings.Split(args[0], ","), nil
 }

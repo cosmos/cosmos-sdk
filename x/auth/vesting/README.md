@@ -249,8 +249,8 @@ In other words, a vesting account may transfer the minimum of the base account b
 However, given that account balances are tracked via the `x/bank` module and that we want to avoid loading the entire account balance, we can instead determine the locked balance, which can be defined as `max(V - DV, 0)`, and infer the spendable balance from that.
 
 ```go
-func (va VestingAccount) LockedCoins(t Time) Coins {
-   return max(va.GetVestingCoins(t) - va.DelegatedVesting, 0)
+func (va VestingAccount) LockedCoins(ctx sdk.Context) Coins {
+   return max(va.GetVestingCoins(ctx.BlockTime()) - va.DelegatedVesting, 0)
 }
 ```
 
@@ -261,7 +261,7 @@ func (k Keeper) LockedCoins(ctx Context, addr AccAddress) Coins {
     acc := k.GetAccount(ctx, addr)
     if acc != nil {
         if acc.IsVesting() {
-            return acc.LockedCoins(ctx.HeaderInfo().Time)
+            return acc.LockedCoins(ctx)
         }
     }
 

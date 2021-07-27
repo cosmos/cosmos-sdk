@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-var ErrPrivKeyExtr = errors.New("Private key extraction works only for Local")
+var ErrPrivKeyExtr = errors.New("private key extraction works only for Local")
 
 func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(pk)
@@ -64,9 +64,9 @@ func NewMultiRecordItem(re *Record_Multi) *Record_Multi_ {
 func (k *Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, errors.New("Unable to cast any to cryptotypes.PubKey")
+		return nil, errors.New("unable to cast any to cryptotypes.PubKey")
 	}
-	
+
 	return pk, nil
 }
 
@@ -85,10 +85,10 @@ func (k Record) GetType() KeyType {
 		return TypeLocal
 	case k.GetLedger() != nil:
 		return TypeLedger
-	
+
 	case k.GetMulti() != nil:
 		return TypeMulti
-    // k.Getoffline()
+		// k.Getoffline()
 	default:
 		return TypeOffline
 	}
@@ -118,7 +118,6 @@ func ExtractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	return extractPrivKeyFromLocal(rl)
 }
 
-
 func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
 	if rl.PrivKey == nil {
 		return nil, errors.New("private key is not available")
@@ -126,7 +125,7 @@ func extractPrivKeyFromLocal(rl *Record_Local) (cryptotypes.PrivKey, error) {
 
 	priv, ok := rl.PrivKey.GetCachedValue().(cryptotypes.PrivKey)
 	if !ok {
-		return nil, errors.New("Unable to cast any to cryptotypes.PrivKey")
+		return nil, errors.New("unable to cast any to cryptotypes.PrivKey")
 	}
 
 	return priv, nil

@@ -268,7 +268,6 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 	return ks.ExportPubKeyArmor(k.Name)
 }
 
-
 // we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
 	fmt.Println("ExportPrivKeyArmor start")
@@ -287,7 +286,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (*Record, types.PrivKey, e
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	priv, err := ExtractPrivKeyFromRecord(k)
 	if err != nil {
 		return nil, nil, err
@@ -822,7 +821,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return fmt.Errorf("Unable to serialize record, err - %s", err)
+		return fmt.Errorf("unable to serialize record, err - %s", err)
 	}
 
 	item := keyring.Item{

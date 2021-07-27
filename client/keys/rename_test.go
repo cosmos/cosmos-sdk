@@ -33,7 +33,7 @@ func Test_runRenameCmd(t *testing.T) {
 
 	cdc := simapp.MakeTestEncodingConfig().Codec
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome,  mockIn, cdc)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
 	// put fakeKeyName1 in keyring
@@ -87,7 +87,7 @@ func Test_runRenameCmd(t *testing.T) {
 
 	renamedPk, err := renamedKey.GetPubKey()
 	require.NoError(t, err)
-	
+
 	require.Equal(t, oldPk, renamedPk)
 	require.Equal(t, oldKey.GetType(), renamedKey.GetType())
 

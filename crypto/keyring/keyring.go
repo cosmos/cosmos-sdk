@@ -305,7 +305,6 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 	return ks.ExportPrivKeyArmor(k.Name, encryptPassphrase)
 }
 
-// TODO do we require this method Record?
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	if k, err := ks.Key(uid); err == nil {
 		if uid == k.Name {

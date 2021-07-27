@@ -126,11 +126,13 @@ func NewWithdrawAllRewardsCmd() *cobra.Command {
 		Short: "withdraw all delegations rewards for a delegator",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Withdraw all rewards for a single delegator.
+Note that this command will not work if run using --%[2]s=%[3]s or --%[2]s=%[4]s and a chunk size greater than 0.
+To make it work with those broadcast modes, you have to use --%[6]s=0, otherwise the broadcast mode %[5]s will be used instead.
 
 Example:
-$ %s tx distribution withdraw-all-rewards --from mykey
+$ %[1]s tx distribution withdraw-all-rewards --from mykey
 `,
-				version.AppName,
+				version.AppName, flags.FlagBroadcastMode, flags.BroadcastSync, flags.BroadcastAsync, flags.BroadcastBlock, FlagMaxMessagesPerTx,
 			),
 		),
 		Args: cobra.NoArgs,

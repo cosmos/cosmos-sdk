@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/golang-lru/simplelru"
 	yaml "gopkg.in/yaml.v2"
+	sigsyaml "sigs.k8s.io/yaml"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -237,7 +238,7 @@ func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 // UnmarshalYAML unmarshals from JSON assuming Bech32 encoding.
 func (aa *AccAddress) UnmarshalYAML(data []byte) error {
 	var s string
-	err := yaml.Unmarshal(data, &s)
+	err := sigsyaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}
@@ -387,7 +388,7 @@ func (va *ValAddress) UnmarshalJSON(data []byte) error {
 func (va *ValAddress) UnmarshalYAML(data []byte) error {
 	var s string
 
-	err := yaml.Unmarshal(data, &s)
+	err := sigsyaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}
@@ -542,7 +543,7 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
 	var s string
 
-	err := yaml.Unmarshal(data, &s)
+	err := sigsyaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}

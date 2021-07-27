@@ -56,16 +56,16 @@ func BeginBlocker(k keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 		}
 
 		if !k.HasHandler(plan.Name) {
-			upgradeMsg := BuildUpgradeNeededMsg(plan)
-			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
-			ctx.Logger().Error(upgradeMsg)
-
 			// Write the upgrade info to disk. The UpgradeStoreLoader uses this info to perform or skip
 			// store migrations.
 			err := k.DumpUpgradeInfoToDisk(ctx.BlockHeight(), plan.Name)
 			if err != nil {
 				panic(fmt.Errorf("unable to write upgrade info to filesystem: %s", err.Error()))
 			}
+
+			upgradeMsg := BuildUpgradeNeededMsg(plan)
+			// We don't have an upgrade handler for this upgrade name, meaning this software is out of date so shutdown
+			ctx.Logger().Error(upgradeMsg)
 
 			panic(upgradeMsg)
 		}

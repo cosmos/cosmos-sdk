@@ -72,6 +72,10 @@ func (suite *SKSuite) TestSign() {
 	r := new(big.Int).SetBytes(sig[:32])
 	low_s := new(big.Int).SetBytes(sig[32:64])
 
+	// test that NormalizeS simply returns an already
+	// normalized s
+	require.Equal(NormalizeS(low_s), low_s)
+
 	// flip the s value into high order of curve P256
 	// leave r untouched!
 	high_s := new(big.Int).Mod(new(big.Int).Neg(low_s), elliptic.P256().Params().N)
@@ -85,6 +89,13 @@ func (suite *SKSuite) TestSign() {
 	// 0 pad the byte arrays from the left if they aren't big enough.
 	copy(sigBytes[32-len(rBytes):32], rBytes)
 	copy(sigBytes[64-len(sBytes):64], sBytes)
+
+	require.False(suite.pk.VerifySignature(msg, sigBytes))
+
+	// Valid signature using low_s, but too long
+	sigTooManyBytes := make([]byte, 65)
+	copy(sigTooManyBytes[32-len(rBytes):32], rBytes)
+	copy(sigTooManyBytes[64-len(sBytes):64], low_s.Bytes())
 
 	require.False(suite.pk.VerifySignature(msg, sigBytes))
 

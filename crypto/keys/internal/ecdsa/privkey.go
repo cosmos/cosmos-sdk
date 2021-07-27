@@ -13,7 +13,7 @@ import (
 // NOTE: this is specific to the secp256r1/P256 curve,
 // and not taken from the domain params for the key itself
 // (which would be a more generic approach for all EC)
-// In *here* I don't need to do it as a method on the key
+// In *here* we don't need to do it as a method on the key
 // since this code is only called for secp256r1
 // if called on a key:
 // func (sk PrivKey) pCurveOrder() *.big.Int {
@@ -23,7 +23,7 @@ var p256Order = elliptic.P256().Params().N
 
 // p256HalfOrder returns half the curve order
 // a bit shift of 1 to the right (Rsh) is equivalent
-// to division by 2, only faster (I tested).
+// to division by 2, only faster.
 var p256HalfOrder = new(big.Int).Rsh(p256Order, 1)
 
 // IsSNormalized returns true for the integer sigS if sigS falls in
@@ -92,9 +92,9 @@ func (sk *PrivKey) Bytes() []byte {
 // NOTE: this now calls the ecdsa Sign function
 // (not method!) directly as the s value of the signature is needed to
 // low-s normalize the signature value
+// See issue: https://github.com/cosmos/cosmos-sdk/issues/9723
 // It then raw encodes the signature as two fixed width 32-byte values
 // concatenated, reusing the code copied from secp256k1_nocgo.go
-
 func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
 
 	digest := sha256.Sum256(msg)

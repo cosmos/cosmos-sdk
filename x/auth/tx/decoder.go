@@ -1,6 +1,10 @@
 package tx
 
 import (
+	"fmt"
+
+	"google.golang.org/protobuf/encoding/protowire"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/unknownproto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,19 +15,16 @@ import (
 // DefaultTxDecoder returns a default protobuf TxDecoder using the provided Marshaler.
 func DefaultTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
-<<<<<<< HEAD
-=======
 		// Make sure txBytes follow ADR-027.
 		err := rejectNonADR027TxRaw(txBytes)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
 
->>>>>>> 3771ebdf2 (refactor: Improve txRaw decoder code (#9769))
 		var raw tx.TxRaw
 
 		// reject all unknown proto fields in the root TxRaw
-		err := unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, cdc.InterfaceRegistry())
+		err = unknownproto.RejectUnknownFieldsStrict(txBytes, &raw, cdc.InterfaceRegistry())
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
 		}
@@ -88,8 +89,6 @@ func DefaultJSONTxDecoder(cdc codec.ProtoCodecMarshaler) sdk.TxDecoder {
 		}, nil
 	}
 }
-<<<<<<< HEAD
-=======
 
 // rejectNonADR027TxRaw rejects txBytes that do not follow ADR-027. This is NOT
 // a generic ADR-027 checker, it only applies decoding TxRaw. Specifically, it
@@ -169,4 +168,3 @@ func varintMinLength(n uint64) int {
 		return 10
 	}
 }
->>>>>>> 3771ebdf2 (refactor: Improve txRaw decoder code (#9769))

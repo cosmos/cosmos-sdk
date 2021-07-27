@@ -23,6 +23,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 )
 
@@ -34,7 +35,7 @@ const (
 	FlagRecover = "recover"
 
 	// FlagStakingBondDenom defines a flag to specify the staking token in the genesis file.
-	FlagStakingBondDenom = "stakingBondDenom"
+	FlagStakingBondDenom = "staking-bond-denom"
 )
 
 type printInfo struct {
@@ -128,18 +129,22 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			if stakingBondDenom != "" {
 				defaultGenesis = mbm.DefaultGenesis(cdc)
-				stakingRaw := defaultGenesis["staking"]
-				var initialStakingData, finalStakingdata interface{}
-				err = json.Unmarshal(stakingRaw, &initialStakingData)
-				if err != nil {
+				stakingRaw := defaultGenesis[stakingtypes.ModuleName]
+				var (
+					initialStakingData interface{}
+					finalStakingdata   interface{}
+				)
+
+				if err := json.Unmarshal(stakingRaw, &initialStakingData); err != nil {
 					return err
 				}
-				stakingbz, err := json.Marshal(initialStakingData)
+
+				bz, err := json.Marshal(initialStakingData)
 				if err != nil {
 					return err
 				}
 
-				stakingStr := string(stakingbz)
+				stakingStr := string(bz)
 				modifiedStakingStr := strings.Replace(stakingStr, "stake", stakingBondDenom, 1)
 				stakingbytes := []byte(modifiedStakingStr)
 				err = json.Unmarshal(stakingbytes, &finalStakingdata)

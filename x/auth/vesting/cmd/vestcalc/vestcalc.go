@@ -28,7 +28,7 @@ func divide(total sdk.Int, divisor int) ([]sdk.Int, error) {
 	// Fact: remainder < divisions, hence fits in int64
 	truncated := total.QuoRaw(div64)
 	remainder := total.ModRaw(div64)
-	fraction := sdk.NewInt(0) // poirtion of remainder which has been doled out
+	fraction := sdk.NewInt(0) // portion of remainder which has been doled out
 	for i := int64(0); i < div64; i++ {
 		// multiply will not overflow since remainder and i are < 2^63
 		nextFraction := remainder.MulRaw(i + 1).QuoRaw(div64)
@@ -91,7 +91,7 @@ func monthlyVestTimes(startTime time.Time, months int, timeOfDay time.Time) ([]t
 	second := timeOfDay.Second()
 	times := make([]time.Time, months)
 	for i := 1; i <= months; i++ {
-		tm := startTime.AddDate(0, int(i), 0)
+		tm := startTime.AddDate(0, i, 0)
 		if tm.Day() != startTime.Day() {
 			// The starting day-of-month cannot fit in this month,
 			// and we've wrapped to the next month. Back up to the
@@ -147,6 +147,7 @@ func zipEvents(divisions []sdk.Coins, times []time.Time) ([]event, error) {
 }
 
 // marshalEvents returns a printed representation of events.
+// nolint:unparam
 func marshalEvents(events []event) ([]byte, error) {
 	var b strings.Builder
 	b.WriteString("[\n")
@@ -245,6 +246,7 @@ const day = 24 * time.Hour
 // formatDuration returns a duration in a string like "3d4h3m0.5s".
 // It follows time.Duration.String() except that it includes 24-hour days.
 // NOTE: Does not reflect daylight savings changes.
+// nolint:deadcode,unused
 func formatDuration(d time.Duration) string {
 	s := ""
 	if d < 0 {
@@ -257,22 +259,23 @@ func formatDuration(d time.Duration) string {
 	}
 	// Now we know days are the most significant unit,
 	// so all other units should be present
-	days := int64(d / day)
-	r := d % day // remainder
-	s = s + fmt.Sprint(days) + "d"
+	r := d
+	days := int64(r / day)
+	r %= day // remainder
+	s += fmt.Sprint(days) + "d"
 	hours := int64(r / time.Hour)
-	r = r % time.Hour
-	s = s + fmt.Sprint(hours) + "h"
+	r %= time.Hour
+	s += fmt.Sprint(hours) + "h"
 	minutes := int64(r / time.Minute)
-	r = r % time.Minute
-	s = s + fmt.Sprint(minutes) + "m"
+	r %= time.Minute
+	s += fmt.Sprint(minutes) + "m"
 	seconds := int64(r / time.Second)
-	r = r % time.Second
-	s = s + fmt.Sprint(seconds) // no suffix yet
+	r %= time.Second
+	s += fmt.Sprint(seconds) // no suffix yet
 	if r != 0 {
 		// Follow normal Duration formatting, but need to avoid
 		// the special handling of fractional seconds.
-		r = r + time.Second
+		r += time.Second
 		frac := r.String()
 		// append skipping the leading "1"
 		return s + frac[1:] // adds the suffix
@@ -535,11 +538,12 @@ func writeCmd() {
 // main executes either readCmd() or writeCmd() based on flags.
 func main() {
 	flag.Parse()
-	if *flagRead && !*flagWrite {
+	switch {
+	case *flagRead && !*flagWrite:
 		readCmd()
-	} else if *flagWrite && !*flagRead {
+	case *flagWrite && !*flagRead:
 		writeCmd()
-	} else {
+	default:
 		fmt.Fprintln(os.Stderr, "Must specify one of --read or --write")
 		flag.Usage()
 	}

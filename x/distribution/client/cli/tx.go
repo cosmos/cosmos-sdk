@@ -167,6 +167,12 @@ $ %s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
+			if clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
+				cmd.Println("Cannot use broadcast mode %s with chunk size that is not 0. Applying broadcast mode block",
+					clientCtx.BroadcastMode)
+				clientCtx.BroadcastMode = flags.BroadcastBlock
+			}
+
 			return newSplitAndApply(tx.GenerateOrBroadcastTxCLI, clientCtx, cmd.Flags(), msgs, chunkSize)
 		},
 	}

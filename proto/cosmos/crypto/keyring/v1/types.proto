@@ -7,14 +7,6 @@ import "cosmos/crypto/hd/v1/hd.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
-/*
-
-{"path":"proto/cosmos/crypto/keyring/types.proto","start_line":2,"start_column":1,
-"end_line":2,"end_column":34,"type":"PACKAGE_DIRECTORY_MATCH","message":"Files with package 
-\"cosmos.crypto.keyring.v1\" must be within a directory \"cosmos/crypto/keyring/v1\" 
-relative to root but were in directory \"cosmos/crypto/keyring\"."}
-
-*/
 
 // Record is used for keyring migration from legacyInfo to proto.
 message Record {

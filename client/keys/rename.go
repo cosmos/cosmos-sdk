@@ -45,7 +45,7 @@ private keys stored in a ledger device cannot be renamed with the CLI.
 					return nil
 				}
 			}
-			fmt.Printf("Executing Rename with old %s and new %s", oldName, newName)
+
 			if err := clientCtx.Keyring.Rename(oldName, newName); err != nil {
 				return err
 			}

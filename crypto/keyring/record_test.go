@@ -42,7 +42,6 @@ func TestOfflineRecordMarshaling(t *testing.T) {
 }
 
 func TestLocalRecordMarshaling(t *testing.T) {
-
 	const n1 = "cosmos"
 	require := require.New(t)
 	dir := t.TempDir()
@@ -87,7 +86,6 @@ func TestLocalRecordMarshaling(t *testing.T) {
 }
 
 func TestLedgerRecordMarshaling(t *testing.T) {
-
 	const n1 = "cosmos"
 	require := require.New(t)
 	dir := t.TempDir()

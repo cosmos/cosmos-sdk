@@ -81,22 +81,17 @@ func Test_runRenameCmd(t *testing.T) {
 	// key2 exists now
 	renamedKey, err := kb.Key(fakeKeyName2)
 	require.NoError(t, err)
-
 	oldPk, err := oldKey.GetPubKey()
 	require.NoError(t, err)
-
 	renamedPk, err := renamedKey.GetPubKey()
 	require.NoError(t, err)
-
 	require.Equal(t, oldPk, renamedPk)
 	require.Equal(t, oldKey.GetType(), renamedKey.GetType())
 
 	oldAddr, err := oldKey.GetAddress()
 	require.NoError(t, err)
-
 	renamedAddr, err := renamedKey.GetAddress()
 	require.NoError(t, err)
-
 	require.Equal(t, oldAddr, renamedAddr)
 
 	// try to rename key1 but it doesnt exist anymore so error

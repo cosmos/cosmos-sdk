@@ -249,7 +249,6 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 	migrated, err := kb.MigrateAll()
 	require.True(migrated)
 	require.NoError(err)
-
 }
 
 func TestMigrateAllNoItem(t *testing.T) {

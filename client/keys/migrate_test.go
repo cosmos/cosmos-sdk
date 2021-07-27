@@ -86,7 +86,6 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 	serializedRecord, err := encCfg.Codec.Marshal(k)
 	require.NoError(err)
 
-	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{
 		Key:         n1,
 		Data:        serializedRecord,

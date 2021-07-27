@@ -12,7 +12,13 @@ import (
 // p256Order returns the curve order for the secp256r1 curve
 // NOTE: this is specific to the secp256r1/P256 curve,
 // and not taken from the domain params for the key itself
-// (which would be a more generic approach for all EC).
+// (which would be a more generic approach for all EC)
+// In *here* we don't need to do it as a method on the key
+// since this code is only called for secp256r1
+// if called on a key:
+// func (sk PrivKey) pCurveOrder() *.big.Int {
+//     return sk.Curve.Params().N
+// }
 var p256Order = elliptic.P256().Params().N
 
 // p256HalfOrder returns half the curve order
@@ -29,6 +35,7 @@ func IsSNormalized(sigS *big.Int) bool {
 // NormalizeS will invert the s value if not already in the lower half
 // of curve order value
 func NormalizeS(sigS *big.Int) *big.Int {
+
 	if IsSNormalized(sigS) {
 		return sigS
 	}
@@ -39,7 +46,8 @@ func NormalizeS(sigS *big.Int) *big.Int {
 // signatureRaw will serialize signature to R || S.
 // R, S are padded to 32 bytes respectively.
 // code roughly copied from secp256k1_nocgo.go
-func signatureRaw(r, s *big.Int) []byte {
+func signatureRaw(r *big.Int, s *big.Int) []byte {
+
 	rBytes := r.Bytes()
 	sBytes := s.Bytes()
 	sigBytes := make([]byte, 64)
@@ -88,8 +96,10 @@ func (sk *PrivKey) Bytes() []byte {
 // It then raw encodes the signature as two fixed width 32-byte values
 // concatenated, reusing the code copied from secp256k1_nocgo.go
 func (sk *PrivKey) Sign(msg []byte) ([]byte, error) {
+
 	digest := sha256.Sum256(msg)
 	r, s, err := ecdsa.Sign(rand.Reader, &sk.PrivateKey, digest[:])
+
 	if err != nil {
 		return nil, err
 	}

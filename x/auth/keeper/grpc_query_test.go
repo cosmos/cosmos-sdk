@@ -32,14 +32,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 			},
 			true,
 			func(res *types.QueryAccountsResponse) {
-				for _, acc := range res.Accounts {
+				addresses := make([]sdk.AccAddress, len(res.Accounts))
+				for i, acc := range res.Accounts {
 					var account types.AccountI
 					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
 					suite.Require().NoError(err)
-
-					suite.Require().True(
-						first.Equals(account.GetAddress()) || second.Equals(account.GetAddress()))
+					addresses[i] = account.GetAddress()
 				}
+				suite.Subset(addresses, []sdk.AccAddress{first, second})
 			},
 		},
 	}

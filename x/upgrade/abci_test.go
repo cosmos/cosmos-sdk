@@ -13,13 +13,18 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -36,14 +41,30 @@ type TestSuite struct {
 
 var s TestSuite
 
-func setupTest(height int64, skip map[int64]bool) TestSuite {
-	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
-	genesisState := simapp.NewDefaultGenesisState(app.AppCodec())
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
-	if err != nil {
-		panic(err)
+func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	if t != nil {
+		require.NoError(t, err)
 	}
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	}
+
+	db := dbm.NewMemDB()
+	encCdc := simapp.MakeTestEncodingConfig()
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
+	genesisState := simapp.NewDefaultGenesisState(encCdc.Codec)
+	stateBytes := simapp.SetupGenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:    []abci.ValidatorUpdate{},
@@ -61,7 +82,7 @@ func setupTest(height int64, skip map[int64]bool) TestSuite {
 }
 
 func TestRequireName(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{}})
 	require.NotNil(t, err)
@@ -69,14 +90,14 @@ func TestRequireName(t *testing.T) {
 }
 
 func TestRequireFutureBlock(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight()}})
 	require.NotNil(t, err)
 	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
 }
 
 func TestDoHeightUpgrade(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify can schedule an upgrade")
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
 	require.Nil(t, err)
@@ -85,7 +106,7 @@ func TestDoHeightUpgrade(t *testing.T) {
 }
 
 func TestCanOverwriteScheduleUpgrade(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Can overwrite plan")
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "bad_test", Height: s.ctx.BlockHeight() + 10}})
 	require.Nil(t, err)
@@ -134,7 +155,7 @@ func VerifyDoUpgradeWithCtx(t *testing.T, newCtx sdk.Context, proposalName strin
 }
 
 func TestHaltIfTooNew(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that we don't panic with registered plan not in database at all")
 	var called int
 	s.keeper.SetUpgradeHandler("future", func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -177,7 +198,7 @@ func VerifyCleared(t *testing.T, newCtx sdk.Context) {
 }
 
 func TestCanClear(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify upgrade is scheduled")
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 100}})
 	require.Nil(t, err)
@@ -189,7 +210,7 @@ func TestCanClear(t *testing.T) {
 }
 
 func TestCantApplySameUpgradeTwice(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	height := s.ctx.BlockHeader().Height + 1
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: height}})
 	require.Nil(t, err)
@@ -201,7 +222,7 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 }
 
 func TestNoSpuriousUpgrades(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	t.Log("Verify that no upgrade panic is triggered in the BeginBlocker when we haven't scheduled an upgrade")
 	req := abci.RequestBeginBlock{Header: s.ctx.BlockHeader()}
 	require.NotPanics(t, func() {
@@ -245,7 +266,7 @@ func TestContains(t *testing.T) {
 	var (
 		skipOne int64 = 11
 	)
-	s := setupTest(10, map[int64]bool{skipOne: true})
+	s := setupTest(t, 10, map[int64]bool{skipOne: true})
 
 	VerifySet(t, map[int64]bool{skipOne: true})
 	t.Log("case where array contains the element")
@@ -260,7 +281,7 @@ func TestSkipUpgradeSkippingAll(t *testing.T) {
 		skipOne int64 = 11
 		skipTwo int64 = 20
 	)
-	s := setupTest(10, map[int64]bool{skipOne: true, skipTwo: true})
+	s := setupTest(t, 10, map[int64]bool{skipOne: true, skipTwo: true})
 
 	newCtx := s.ctx
 
@@ -297,7 +318,7 @@ func TestUpgradeSkippingOne(t *testing.T) {
 		skipOne int64 = 11
 		skipTwo int64 = 20
 	)
-	s := setupTest(10, map[int64]bool{skipOne: true})
+	s := setupTest(t, 10, map[int64]bool{skipOne: true})
 
 	newCtx := s.ctx
 
@@ -332,7 +353,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 		skipTwo   int64 = 20
 		skipThree int64 = 25
 	)
-	s := setupTest(10, map[int64]bool{skipOne: true, skipTwo: true})
+	s := setupTest(t, 10, map[int64]bool{skipOne: true, skipTwo: true})
 
 	newCtx := s.ctx
 
@@ -371,7 +392,7 @@ func TestUpgradeSkippingOnlyTwo(t *testing.T) {
 }
 
 func TestUpgradeWithoutSkip(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 	newCtx := s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1).WithBlockTime(time.Now())
 	req := abci.RequestBeginBlock{Header: newCtx.BlockHeader()}
 	err := s.handler(s.ctx, &types.SoftwareUpgradeProposal{Title: "prop", Plan: types.Plan{Name: "test", Height: s.ctx.BlockHeight() + 1}})
@@ -386,7 +407,7 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 }
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
-	s := setupTest(10, map[int64]bool{})
+	s := setupTest(t, 10, map[int64]bool{})
 
 	planHeight := s.ctx.BlockHeight() + 1
 	name := "test"

@@ -314,7 +314,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(5 * time.Second): // assume server started successfully
+		case <-time.After(types.ServerStartTime): // assume server started successfully
 		}
 	}
 
@@ -368,7 +368,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		select {
 		case err := <-errCh:
 			return err
-		case <-time.After(5 * time.Second): // assume server started successfully
+		case <-time.After(types.ServerStartTime): // assume server started successfully
 		}
 	}
 

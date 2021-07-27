@@ -330,9 +330,12 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 
+	addr2, err := account2.GetAddress()
+	s.Require().NoError(err)
+
 	// Send coins.
 	out, err := s.createBankMsg(
-		val, account2.GetAddress(),
+		val, addr2,
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)

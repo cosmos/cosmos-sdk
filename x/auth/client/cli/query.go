@@ -255,7 +255,7 @@ version.AppName, flagType, typeSig)),
 				}
 			case typeSig:
 				{
-					if args[0] == "" {
+					if len(args) != 1 || args[0] == "" {
 						return fmt.Errorf("argument should be comma-separated signatures")
 					}
 

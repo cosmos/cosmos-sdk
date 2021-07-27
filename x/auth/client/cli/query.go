@@ -10,16 +10,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	querytypes "github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
 const (
-	FlagQuery   = "query"
-	FlagType    = "type"
-	FlagOrderBy = "order_by"
+	flagEvents = "events"
+	flagType   = "type"
+
+	typeHash   = "hash"
+	typeAccSeq = "acc_seq"
+	typeSig    = "signature"
 
 	TypeHash   = "hash"
 	TypeAccSeq = "acc_seq"
@@ -180,10 +184,112 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 	return cmd
 }
 
-// ParseSigArgs parses comma-separated signatures from the CLI arguments.
-func ParseSigArgs(args []string) ([]string, error) {
+// QueryTxCmd implements the default command for a tx query.
+func QueryTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature]",
+		Short: "Query for a transaction by hash, addr++seq combination or signature in a committed block",
+		Long: strings.TrimSpace(fmt.Sprintf(`
+Example:
+$ %s query tx <hash>
+$ %s query tx --%s=%s <addr>:<sequence>
+$ %s query tx --%s=%s <sig1_base64,sig2_base64...>
+`,
+			version.AppName,
+			version.AppName, flagType, typeAccSeq,
+			version.AppName, flagType, typeSig)),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			typ, _ := cmd.Flags().GetString(flagType)
+
+			switch typ {
+			case typeHash:
+				{
+					if args[0] == "" {
+						return fmt.Errorf("argument should be a tx hash")
+					}
+
+					// If hash is given, then query the tx by hash.
+					output, err := authtx.QueryTx(clientCtx, args[0])
+					if err != nil {
+						return err
+					}
+
+					if output.Empty() {
+						return fmt.Errorf("no transaction found with hash %s", args[0])
+					}
+
+					return clientCtx.PrintProto(output)
+				}
+			case typeSig:
+				{
+					sigParts, err := parseSigArgs(args)
+					if err != nil {
+						return err
+					}
+					tmEvents := make([]string, len(sigParts))
+					for i, sig := range sigParts {
+						tmEvents[i] = fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeySignature, sig)
+					}
+
+					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, rest.DefaultPage, query.DefaultLimit, "")
+					if err != nil {
+						return err
+					}
+					if len(txs.Txs) == 0 {
+						return fmt.Errorf("found no txs matching given signatures")
+					}
+					if len(txs.Txs) > 1 {
+						// This case means there's a bug somewhere else in the code. Should not happen.
+						return errors.ErrLogic.Wrapf("found %d txs matching given signatures", len(txs.Txs))
+					}
+
+					return clientCtx.PrintProto(txs.Txs[0])
+				}
+			case typeAccSeq:
+				{
+					if args[0] == "" {
+						return fmt.Errorf("`acc_seq` type takes an argument '<addr>/<seq>'")
+					}
+
+					tmEvents := []string{
+						fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeyAccountSequence, args[0]),
+					}
+					txs, err := authtx.QueryTxsByEvents(clientCtx, tmEvents, rest.DefaultPage, query.DefaultLimit, "")
+					if err != nil {
+						return err
+					}
+					if len(txs.Txs) == 0 {
+						return fmt.Errorf("found no txs matching given address and sequence combination")
+					}
+					if len(txs.Txs) > 1 {
+						// This case means there's a bug somewhere else in the code. Should not happen.
+						return fmt.Errorf("found %d txs matching given address and sequence combination", len(txs.Txs))
+					}
+
+					return clientCtx.PrintProto(txs.Txs[0])
+				}
+			default:
+				return fmt.Errorf("unknown --%s value %s", flagType, typ)
+			}
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeAccSeq, typeSig))
+
+	return cmd
+}
+
+// parseSigArgs parses comma-separated signatures from the CLI arguments.
+func parseSigArgs(args []string) ([]string, error) {
 	if len(args) != 1 || args[0] == "" {
-		return nil, errors.New("argument should be comma-separated signatures")
+		return nil, fmt.Errorf("argument should be comma-separated signatures")
 	}
 
 	return strings.Split(args[0], ","), nil

@@ -1,7 +1,7 @@
 package ante
 
 import (
-	"context"
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -143,9 +143,36 @@ func verifyIsOnCurve(pubKey cryptotypes.PubKey) (err error) {
 			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "some keys are not on curve")
 		}
 
-	default:
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unsupported key type: %T", typedPubKey)
+	// Also emit the following events, so that txs can be indexed by these
+	// indices:
+	// - signature (via `tx.signature='<sig_as_base64>'`),
+	// - concat(address,"/",sequence) (via `tx.acc_seq='cosmos1abc...def/42'`).
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return ctx, err
 	}
+
+	var events sdk.Events
+	for i, sig := range sigs {
+		events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+			sdk.NewAttribute(sdk.AttributeKeyAccountSequence, fmt.Sprintf("%s/%d", signers[i], sig.Sequence)),
+		))
+
+		sigBzs, err := signatureDataToBz(sig.Data)
+		if err != nil {
+			return ctx, err
+		}
+		for _, sigBz := range sigBzs {
+			events = append(events, sdk.NewEvent(sdk.EventTypeTx,
+				sdk.NewAttribute(sdk.AttributeKeySignature, base64.StdEncoding.EncodeToString(sigBz)),
+			))
+		}
+	}
+
+	ctx.EventManager().EmitEvents(events)
+
+	return next(ctx, tx, simulate)
+}
 
 	return nil
 }
@@ -632,13 +659,12 @@ func CountSubKeys(pub cryptotypes.PubKey) int {
 // as well as the aggregated signature.
 func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 	if data == nil {
-		return nil, errors.New("got empty SignatureData")
+		return nil, fmt.Errorf("got empty SignatureData")
 	}
 
 	switch data := data.(type) {
 	case *signing.SingleSignatureData:
 		return [][]byte{data.Signature}, nil
-
 	case *signing.MultiSignatureData:
 		sigs := [][]byte{}
 		var err error
@@ -648,39 +674,20 @@ func signatureDataToBz(data signing.SignatureData) ([][]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-
 			sigs = append(sigs, nestedSigs...)
 		}
 
-		multiSignature := cryptotypes.MultiSignature{
+		multisig := cryptotypes.MultiSignature{
 			Signatures: sigs,
 		}
-
-		aggregatedSig, err := multiSignature.Marshal()
+		aggregatedSig, err := multisig.Marshal()
 		if err != nil {
 			return nil, err
 		}
-
 		sigs = append(sigs, aggregatedSig)
-		return sigs, nil
 
+		return sigs, nil
 	default:
 		return nil, sdkerrors.ErrInvalidType.Wrapf("unexpected signature data type %T", data)
 	}
-}
-
-// isSigverifyTx will always return true, unless the context is a sdk.Context, in which case we will return the
-// value of IsSigverifyTx.
-func isSigverifyTx(ctx context.Context) bool {
-	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
-		return sdkCtx.IsSigverifyTx()
-	}
-	return true
-}
-
-func isRecheckTx(ctx context.Context, txSvc transaction.Service) bool {
-	if sdkCtx, ok := sdk.TryUnwrapSDKContext(ctx); ok {
-		return sdkCtx.IsReCheckTx()
-	}
-	return txSvc.ExecMode(ctx) == transaction.ExecModeReCheck
 }

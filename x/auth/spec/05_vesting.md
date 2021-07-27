@@ -266,8 +266,8 @@ the locked balance, which can be defined as `max(V - DV, 0)`, and infer the
 spendable balance from that.
 
 ```go
-func (va VestingAccount) LockedCoins(t Time) Coins {
-   return max(va.GetVestingCoins(t) - va.DelegatedVesting, 0)
+func (va VestingAccount) LockedCoins(ctx sdk.Context) Coins {
+   return max(va.GetVestingCoins(ctx.BlockTime()) - va.DelegatedVesting, 0)
 }
 ```
 
@@ -279,7 +279,7 @@ func (k Keeper) LockedCoins(ctx Context, addr AccAddress) Coins {
     acc := k.GetAccount(ctx, addr)
     if acc != nil {
         if acc.IsVesting() {
-            return acc.LockedCoins(ctx.BlockTime())
+            return acc.LockedCoins(ctx)
         }
     }
 

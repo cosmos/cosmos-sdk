@@ -222,7 +222,9 @@ Example:
 $ %s query tx <hash>
 $ %s query tx --%s=%s <addr>:<sequence>
 $ %s query tx --%s=%s <sig1_base64,sig2_base64...>
-`, version.AppName, version.AppName, flagType, typeAccSeq, version.AppName, flagType, typeSig)),
+`, version.AppName, 
+version.AppName, flagType, typeAccSeq, 
+version.AppName, flagType, typeSig)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

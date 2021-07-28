@@ -24,9 +24,6 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*), if set to `true`, will restart the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. By default, `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note that `cosmovisor` will not auto-restart the subprocess if there was an error.
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 
-* `DAEMON_UPGRADE_INFO_FILE` is a full path to the upgrade plan file created by the upgrade module in `BeginBlocker` when a new upgrade plan is detected. On start, `cosmovisor` checks if the path is valid, if the base directory exists, and if a filename is provided. If the file name is wrong, the upgrade request will never be handled. Default: `<DAEMON_HOME>/data/upgrade-info.json`.
-  TODO: remove?
-
 ## Folder Layout
 
 `$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and the subprocesses that are controlled by it. The folder content is organized as follows:
@@ -74,13 +71,14 @@ The `DAEMON` specific code and operations (e.g. tendermint config, the applicati
 
 ### Detecting Upgrades
 
-`cosmovisor` is polling the `$DAEMON_UPGRADE_INFO_FILE` file for new upgrade instructions (defaults to `$DAEMON_HOME/data/upgrade-info.json`). The following heuristic is applied to detect the upgrade:
-+ When starting `cosmovisor`, `cosmovisor` doesn't know much about currently running upgrade, except the binary (which is either in `current/bin/` or `genesis/bin` if the former doesn't exists). It tries to read the `current/update-info.json` file to get information about the current upgrade name.
-+ If `cosmovisor/current/upgrade-info.json` doesn't exist then `cosmovisor` assumes that `data/upgrade-info.json` is an upgrade request. If `data/upgrade-info.json` when starting a cosmovisor but `cosmovisor/current/upgrade-info.json` doesn't exist, then `cosmovisor` tries to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
+`cosmovisor` is polling the `$DAEMON_HOME/data/upgrade-info.json` file for new upgrade instructions. The file is created by the app x/upgrade module in the `BeginBlocker` when an upgrade is detected and the blockchain reached the upgrade height.
+The following heuristic is applied to detect the upgrade:
++ When starting, `cosmovisor` doesn't know much about currently running upgrade, except the binary which is `current/bin/` (when it the `current` directory doesn't exists then it is created by linking to `genesis`). It tries to read the `current/update-info.json` file to get information about the current upgrade name.
++ If neither `cosmovisor/current/upgrade-info.json` nor `data/upgrade-info.json` exist then `cosmovisor` will wait for `data/upgrade-info.json` file to trigger an upgrade.
++ If `cosmovisor/current/upgrade-info.json` doesn't exist but `data/upgrade-info.json` exists then `cosmovisor` assumes that whatever is in `data/upgrade-info.json` is a valid upgrade request. In this case `cosmovisor` tries immediately to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
 + Otherwise, we wait for the changes in `upgrade-info.json` - as soon as a new upgrade name will be recorded in that file, we trigger an upgrade mechanism.
 
-During the upgrade, we auto-download a new binary (if auto-download is enabled), and link a new directory to the `current` symbolic link based on the `upgrade-info.json:name`. At the end we save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
-TODO - update above (auto download only when...) and add info about the upgrade file (copy)
+During the upgrade, we auto-download a new binary (if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled) into `cosmovisor/<name>` (where `<name>` is `upgrade-info.json:name` attribute), and link to the `current`. At the end we save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
 
 ## Auto-Download
 

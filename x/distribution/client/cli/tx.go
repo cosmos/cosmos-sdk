@@ -126,13 +126,12 @@ func NewWithdrawAllRewardsCmd() *cobra.Command {
 		Short: "withdraw all delegations rewards for a delegator",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Withdraw all rewards for a single delegator.
-Note that this command will not work if run using --%[2]s=%[3]s or --%[2]s=%[4]s and a chunk size greater than 0.
-To make it work with those broadcast modes, you have to use --%[6]s=0, otherwise the broadcast mode %[5]s will be used instead.
+Note that if you use this command with --%[2]s=%[3]s or --%[2]s=%[4]s, the %[5]s flag will automatically be set to 0.
 
 Example:
 $ %[1]s tx distribution withdraw-all-rewards --from mykey
 `,
-				version.AppName, flags.FlagBroadcastMode, flags.BroadcastSync, flags.BroadcastAsync, flags.BroadcastBlock, FlagMaxMessagesPerTx,
+				version.AppName, flags.FlagBroadcastMode, flags.BroadcastSync, flags.BroadcastAsync, FlagMaxMessagesPerTx,
 			),
 		),
 		Args: cobra.NoArgs,
@@ -170,9 +169,9 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
 			if clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
-				cmd.Println("Cannot use broadcast mode %s with chunk size that is not 0. Applying broadcast mode block",
-					clientCtx.BroadcastMode)
-				clientCtx.BroadcastMode = flags.BroadcastBlock
+				cmd.Println("Cannot use broadcast mode %[1]s with %[2]s != 0. Forcing %[2]s to 0",
+					clientCtx.BroadcastMode, FlagMaxMessagesPerTx)
+				chunkSize = 0
 			}
 
 			return newSplitAndApply(tx.GenerateOrBroadcastTxCLI, clientCtx, cmd.Flags(), msgs, chunkSize)

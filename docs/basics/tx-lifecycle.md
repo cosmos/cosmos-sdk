@@ -95,7 +95,7 @@ For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/master/x/aut
 
 ### Gas
 
-The [`Context`](../core/context.md), which keeps a `GasMeter` that will track how much gas has been used during the execution of `Tx`, is initialized. The user-provided amount of gas for `Tx` is known as `GasWanted`. If `GasConsumed`, the amount of gas consumed so during execution, ever exceeds `GasWanted`, the execution will stop and the changes made to the cached copy of the state won't be committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is less than their locally defined `min-gas-prices`.
+The [`Context`](../core/context.md), which keeps a `GasMeter` that will track how much gas has been used during the execution of `Tx`, is initialized. The user-provided amount of gas for `Tx` is known as `GasWanted`. If `GasConsumed`, the amount of gas consumed so during execution, ever exceeds `GasWanted`, the execution will stop and the changes made to the cached copy of the state won't be committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is greater than their locally defined `min-gas-prices`.
 
 ### Discard or Addition to Mempool
 

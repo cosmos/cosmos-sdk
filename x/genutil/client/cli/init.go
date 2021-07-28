@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -132,8 +133,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				defaultGenesis = mbm.DefaultGenesis(cdc)
 				stakingRaw := defaultGenesis[stakingtypes.ModuleName]
 				var (
-					initialStakingData interface{}
-					finalStakingdata   interface{}
+					initialStakingData simapp.GenesisState
+					finalStakingdata   simapp.GenesisState
 				)
 
 				if err := tmjson.Unmarshal(stakingRaw, &initialStakingData); err != nil {

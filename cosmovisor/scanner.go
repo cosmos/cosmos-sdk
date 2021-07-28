@@ -132,7 +132,7 @@ func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
 	}
 	// required values must be set
 	if ui.Height == 0 || ui.Name == "" {
-		return ui, fmt.Errorf("invalid upgrade-info.json content. Name and Hight must be not empty. Got: %v", ui)
+		return UpgradeInfo{}, fmt.Errorf("invalid upgrade-info.json content. Name and Hight must be not empty. Got: %v", ui)
 	}
 	return ui, err
 }

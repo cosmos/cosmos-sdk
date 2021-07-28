@@ -14,10 +14,14 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 		expectErr     bool
 	}{{
 		filename:      "f1-good.json",
-		expectUpgrade: UpgradeInfo{Name: "upgrade1", Info: "some info"},
+		expectUpgrade: UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
 		expectErr:     false,
 	}, {
 		filename:      "f2-bad-type.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "f2-bad-type-2.json",
 		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
@@ -25,9 +29,17 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 		expectUpgrade: UpgradeInfo{},
 		expectErr:     true,
 	}, {
-		filename:      "f4-empty-obj.json", // partial or empty objects also work!
+		filename:      "f4-empty-obj.json",
 		expectUpgrade: UpgradeInfo{},
-		expectErr:     false,
+		expectErr:     true,
+	}, {
+		filename:      "f5-partial-obj-1.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
+	}, {
+		filename:      "f5-partial-obj-2.json",
+		expectUpgrade: UpgradeInfo{},
+		expectErr:     true,
 	}, {
 		filename:      "unknown.json",
 		expectUpgrade: UpgradeInfo{},

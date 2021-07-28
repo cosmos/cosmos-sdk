@@ -23,7 +23,7 @@ var (
 )
 
 const (
-	MaxMessagesPerTxDefault = 5
+	MaxMessagesPerTxDefault = 0
 )
 
 // NewTxCmd returns a root CLI command handler for all x/distribution transaction commands.
@@ -169,9 +169,8 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
 			if clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
-				cmd.Println("Cannot use broadcast mode %[1]s with %[2]s != 0. Forcing %[2]s to 0",
+				return fmt.Errorf("cannot use broadcast mode %[1]s with %[2]s != 0",
 					clientCtx.BroadcastMode, FlagMaxMessagesPerTx)
-				chunkSize = 0
 			}
 
 			return newSplitAndApply(tx.GenerateOrBroadcastTxCLI, clientCtx, cmd.Flags(), msgs, chunkSize)

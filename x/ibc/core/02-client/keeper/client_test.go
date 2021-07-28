@@ -3,10 +3,8 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -639,7 +637,4 @@ func (suite *KeeperTestSuite) TestUpdateClientEventEmission() {
 	}
 	suite.Require().True(contains)
 
-}
-func TestKeeperTestSuite2(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

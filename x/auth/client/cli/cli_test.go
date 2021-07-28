@@ -79,11 +79,17 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	val := s.network.Validators[0]
-	res := s.createBankMsg(val, val.Address)
+	sendTokens := sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)))
+
+	res, err := s.createBankMsg(val, val.Address, sendTokens,
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+	s.Require().NoError(err)
 
 	// write  unsigned tx to file
 	unsignedTx := testutil.WriteToNewTempFile(s.T(), res.String())
-	res, err := authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
+	res, err = authtest.TxSignExec(val.ClientCtx, val.Address, unsignedTx.Name())
 	s.Require().NoError(err)
 	signedTx, err := val.ClientCtx.TxConfig.TxJSONDecoder()(res.Bytes())
 	s.Require().NoError(err)
@@ -105,7 +111,15 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
-	generatedStd := s.createBankMsg(val, val.Address)
+	var sendTokens = sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+	)
+
+	generatedStd, err := s.createBankMsg(val, val.Address,
+		sendTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+	s.Require().NoError(err)
+
 	outputFile := testutil.WriteToNewTempFile(s.T(), strings.Repeat(generatedStd.String(), 3))
 	val.ClientCtx.HomeDir = strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)
 
@@ -137,7 +151,13 @@ func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
 	require := s.Require()
 	val1 := s.network.Validators[0]
 	txCfg := val1.ClientCtx.TxConfig
-	txBz := s.createBankMsg(val1, val1.Address)
+	var sendTokens = sdk.NewCoins(
+		sdk.NewCoin(fmt.Sprintf("%stoken", val1.Moniker), sdk.NewInt(10)),
+		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
+	)
+	txBz, err := s.createBankMsg(val1, val1.Address,
+		sendTokens, fmt.Sprintf("--%s=true", flags.FlagGenerateOnly))
+	require.NoError(err)
 	fileUnsigned := testutil.WriteToNewTempFile(s.T(), txBz.String())
 	chainFlag := fmt.Sprintf("--%s=%s", flags.FlagChainID, val1.ClientCtx.ChainID)
 	sigOnlyFlag := "--signature-only"
@@ -328,10 +348,14 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
 	s.Require().NoError(err)
 
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
 	// Send coins.
-	out := s.createBankMsg(
+	out, err := s.createBankMsg(
 		val, account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
 	)
+	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -1250,22 +1274,15 @@ func (s *IntegrationTestSuite) TestSignWithMultiSigners_AminoJSON() {
 	require.Equal(sdk.NewCoins(val0Coin, val1Coin), queryRes.Balances)
 }
 
-func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress) testutil.BufferWriter {
-	res, err := bankcli.MsgSendExec(
-		val.ClientCtx,
-		val.Address,
-		toAddr,
-		sdk.NewCoins(
-			sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
-			sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)),
-		),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.AccAddress, amount sdk.Coins, extraFlags ...string) (testutil.BufferWriter, error) {
+	flags := []string{fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-	)
-	s.Require().NoError(err)
-	return res
+		fmt.Sprintf("--%s=%s", flags.FlagFees,
+			sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	}
+
+	flags = append(flags, extraFlags...)
+	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
 }
 
 func TestIntegrationTestSuite(t *testing.T) {

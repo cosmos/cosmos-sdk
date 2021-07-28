@@ -12,13 +12,7 @@ import (
 // p256Order returns the curve order for the secp256r1 curve
 // NOTE: this is specific to the secp256r1/P256 curve,
 // and not taken from the domain params for the key itself
-// (which would be a more generic approach for all EC)
-// In *here* we don't need to do it as a method on the key
-// since this code is only called for secp256r1
-// if called on a key:
-// func (sk PrivKey) pCurveOrder() *.big.Int {
-//     return sk.Curve.Params().N
-// }
+// (which would be a more generic approach for all EC).
 var p256Order = elliptic.P256().Params().N
 
 // p256HalfOrder returns half the curve order

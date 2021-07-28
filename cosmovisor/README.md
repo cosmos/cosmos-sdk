@@ -20,8 +20,8 @@ All arguments passed to the `cosmovisor` program will be passed to the current d
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*), if set to `true`, will enable auto-downloading of new binaries (for security reasons, this is intended for full nodes rather than validators). By default, `cosmovisor` will not auto-download new binaries.
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*), if set to `true`, will restart the subprocess with the same command line arguments and flags (but with the new binary) after a successful upgrade. By default, `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note that `cosmovisor` will not auto-restart the subprocess if there was an error.
-* `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling upgrade plan file. Default: 300.
-* `DAEMON_UPGRADE_INFO_FILE` is a full path to the upgrade plan file created by an app. On start, it checks if the base directory exists. If the file name is wrong the update request will never be handled. Default: `<DAEMON_HOME>/data/upgrade-info.json`.
+* `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
+* `DAEMON_UPGRADE_INFO_FILE` is a full path to the upgrade plan file created by the upgrade module in `BeginBlocker` when a new upgrade plan is detected. On start, `cosmovisor` checks if the path is valid, if the base directory exists, and if a filename is provided. If the file name is wrong, the upgrade request will never be handled. Default: `<DAEMON_HOME>/data/upgrade-info.json`.
 
 ## Data Folder Layout
 
@@ -37,7 +37,7 @@ All arguments passed to the `cosmovisor` program will be passed to the current d
     └── <name>
         ├── bin
         │   └── $DAEMON_NAME
-        └── upgrade_name.txt
+        └── upgrade-info.json
 ```
 
 Each version of the Cosmos SDK application is stored under either `genesis` or `upgrades/<name>`, which holds `bin/$DAEMON_NAME` along with any other needed files such as auxiliary client programs or libraries. `current` is a symbolic link to the currently active folder and `current/bin/$DAEMON_NAME` is the currently active binary.
@@ -70,14 +70,14 @@ Note that blockchain applications that wish to support upgrades may package up a
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
 
 
-### Detecting Updates
+### Detecting Upgrades
 
-`cosmovisor` is pooling the `$DAEMON_UPDATE_INFO_FILE` (default to `$DAEMON_HOME/data/upgrade-info.json`) file for new update instructions. The following heuristic is applied to detect update:
-+ When, starting `cosmovisor` doesn't know much about currently running upgrade, except the binary (which is either in `current/bin/` or `genesis/bin` if the former doesn't exists). It tries to read the `current/upgrade_name.txt` file to get an information about the current update name.
-+ If `current/upgrade_name.txt` doesn't exist then we assume that `upgrade-info.json` is an upgrade request. So, if the `upgrade-info.json` when starting a cosmovisor but `current/upgrade_name.txt` doesn't exist then we try to make an upgrade according to the `name` attribute in `upgrade-info.json`.
+`cosmovisor` is polling the `$DAEMON_UPGRADE_INFO_FILE` file for new upgrade instructions (defaults to `$DAEMON_HOME/data/upgrade-info.json`). The following heuristic is applied to detect the upgrade:
++ When starting `cosmovisor`, `cosmovisor` doesn't know much about currently running upgrade, except the binary (which is either in `current/bin/` or `genesis/bin` if the former doesn't exists). It tries to read the `current/update-info.json` file to get information about the current upgrade name.
++ If `cosmovisor/current/upgrade-info.json` doesn't exist then `cosmovisor` assumes that `data/upgrade-info.json` is an upgrade request. If `data/upgrade-info.json` when starting a cosmovisor but `cosmovisor/current/upgrade-info.json` doesn't exist, then `cosmovisor` tries to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
 + Otherwise, we wait for the changes in `upgrade-info.json` - as soon as a new upgrade name will be recorded in that file, we trigger an upgrade mechanism.
 
-During the upgrade we auto-download a new binary (if auto-download is enabled), and link a new directory to the `current` based on the `upgrade-info.json:name`. At the end we save `upgrade-info.json:name` to `current/upgrade_name.txt`.
+During the upgrade, we auto-download a new binary (if auto-download is enabled), and link a new directory to the `current` symbolic link based on the `upgrade-info.json:name`. At the end we save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
 
 
 ## Auto-Download

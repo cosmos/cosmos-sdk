@@ -65,7 +65,7 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
 
-// SymLinkToGenesis creates a "./current" symbolic link from to the genesis directory.
+// SymLinkToGenesis creates a symbolic link from "./current" to the genesis directory.
 func (cfg *Config) SymLinkToGenesis() (string, error) {
 	genesis := filepath.Join(cfg.Root(), genesisDir)
 	link := filepath.Join(cfg.Root(), currentLink)
@@ -121,7 +121,7 @@ func GetConfigFromEnv() (*Config, error) {
 		cfg.RestartAfterUpgrade = true
 	}
 
-	cfg.UpgradeInfoFilename = os.Getenv("DAEMON_UPDATE_INFO_FILE")
+	cfg.UpgradeInfoFilename = os.Getenv("DAEMON_UPGRADE_INFO_FILE")
 
 	interval := os.Getenv("DAEMON_POLL_INTERVAL")
 	if interval != "" {

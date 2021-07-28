@@ -1,9 +1,12 @@
 package ecdsa
 
 import (
-	"testing"
-
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/sha256"
 	"github.com/tendermint/tendermint/crypto"
+	"math/big"
+	"testing"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -59,6 +62,37 @@ func (suite *SKSuite) TestSign() {
 		sigCpy[i] ^= byte(i + 1)
 		require.False(suite.pk.VerifySignature(msg, sigCpy))
 	}
+
+	// mutate the signature by scalar neg'ing the s value
+	// to give a high-s signature, valid ECDSA but should
+	// be invalid with Cosmos signatures.
+	// code mostly copied from privkey/pubkey.go
+
+	// extract the r, s values from sig
+	r := new(big.Int).SetBytes(sig[:32])
+	low_s := new(big.Int).SetBytes(sig[32:64])
+
+	// test that NormalizeS simply returns an already
+	// normalized s
+	require.Equal(NormalizeS(low_s), low_s)
+
+	// flip the s value into high order of curve P256
+	// leave r untouched!
+	high_s := new(big.Int).Mod(new(big.Int).Neg(low_s), elliptic.P256().Params().N)
+
+	require.False(suite.pk.VerifySignature(msg, signatureRaw(r,high_s)))
+
+	// Valid signature using low_s, but too long
+	sigCpy = make([]byte, len(sig)+2)
+	copy(sigCpy, sig)
+	sigCpy[65] = byte('A')
+
+	require.False(suite.pk.VerifySignature(msg, sigCpy))
+
+	// check whether msg can be verified with same key, and high_s
+	// value using "regular" ecdsa signature
+	hash := sha256.Sum256([]byte(msg))
+	require.True(ecdsa.Verify(&suite.pk.PublicKey, hash[:], r, high_s))
 
 	// Mutate the message
 	msg[1] ^= byte(2)

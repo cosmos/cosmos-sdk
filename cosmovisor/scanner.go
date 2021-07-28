@@ -119,8 +119,6 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade UpgradeInfo) bool {
 }
 
 func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
-	// f, _ := os.Open(filename)
-	// byteValue, _ := ioutil.ReadAll(f)
 	var ui UpgradeInfo
 	f, err := os.Open(filename)
 	if err != nil {
@@ -129,5 +127,12 @@ func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
 	defer f.Close()
 	d := json.NewDecoder(f)
 	err = d.Decode(&ui)
+	if err != nil {
+		return ui, err
+	}
+	// required values must be set
+	if ui.Height == 0 || ui.Name == "" {
+		return ui, fmt.Errorf("invalid upgrade-info.json content. Name and Hight must be not empty. Got: %v", ui)
+	}
 	return ui, err
 }

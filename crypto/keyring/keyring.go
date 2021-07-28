@@ -420,14 +420,17 @@ func (ks keystore) SignByAddress(address, msg []byte, signMode signing.SignMode)
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
-		return nil, errorsmod.Wrap(ErrUnsupportedSigningAlgo, fmt.Sprintf("signature algo %s is not defined in the keyring options", algo.Name()))
+		return nil, fmt.Errorf(
+			"%w: signature algo %s is not defined in the keyring options",
+			ErrUnsupportedSigningAlgo, algo.Name(),
+		)
 	}
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
 	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
 	if err != nil {
-		return nil, errorsmod.Wrap(ErrLedgerGenerateKey, err.Error())
+		return nil, fmt.Errorf("failed to generate ledger key: %w", err)
 	}
 
 	return ks.writeLedgerKey(uid, priv.PubKey(), hdPath)

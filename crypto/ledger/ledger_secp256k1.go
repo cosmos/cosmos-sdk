@@ -341,7 +341,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types.PubKey, string, error) {
 	publicKey, addr, err := device.GetAddressPubKeySECP256K1(path.DerivationPath(), hrp)
 	if err != nil {
-		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path)
+		return nil, "", fmt.Errorf("%w: address rejected for path %s", err, path.String())
 	}
 
 	// re-serialize in the 33-byte compressed format

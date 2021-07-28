@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -135,11 +136,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 					finalStakingdata   interface{}
 				)
 
-				if err := json.Unmarshal(stakingRaw, &initialStakingData); err != nil {
+				if err := tmjson.Unmarshal(stakingRaw, &initialStakingData); err != nil {
 					return err
 				}
 
-				bz, err := json.Marshal(initialStakingData)
+				bz, err := tmjson.Marshal(initialStakingData)
 				if err != nil {
 					return err
 				}
@@ -147,11 +148,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				stakingStr := string(bz)
 				modifiedStakingStr := strings.Replace(stakingStr, "stake", stakingBondDenom, 1)
 				stakingbytes := []byte(modifiedStakingStr)
-				err = json.Unmarshal(stakingbytes, &finalStakingdata)
+				err = tmjson.Unmarshal(stakingbytes, &finalStakingdata)
 				if err != nil {
 					return err
 				}
-				stakingResult, err := json.Marshal(finalStakingdata)
+				stakingResult, err := tmjson.Marshal(finalStakingdata)
 				if err != nil {
 					return err
 				}

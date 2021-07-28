@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -17,6 +18,8 @@ import (
 func TestCalculateRewardsBasic(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.DistrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
+
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000))
@@ -35,14 +38,14 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 	del := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
-	// historical count should be 2 (once for validator init, once for delegation init)
-	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	// historical count should be 4 (once for genesis validator init, once for genesis delegation init and once for validator init, once for delegation init)
+	require.Equal(t, uint64(4), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// end period
 	endingPeriod := app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
 
-	// historical count should be 2 still
-	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	// historical count should be 4 still
+	require.Equal(t, uint64(4), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// calculate delegation rewards
 	rewards := app.DistrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -311,15 +314,15 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
-	// historical count should be 2 (initial + latest for delegation)
-	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	// historical count should be 4 (2 for genesis state and initial + latest for delegation)
+	require.Equal(t, uint64(4), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// withdraw rewards
 	_, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	require.Nil(t, err)
 
-	// historical count should still be 2 (added one record, cleared one)
-	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	// historical count should still be 4 (added one record, cleared one)
+	require.Equal(t, uint64(4), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// assert correct balance
 	exp := balanceTokens.Sub(valTokens).Add(initial.QuoRaw(2))
@@ -515,14 +518,14 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// allocate some rewards
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
-	// historical count should be 2 (validator init, delegation init)
-	require.Equal(t, uint64(2), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	// historical count should be 4 (validator init, delegation init)
+	require.Equal(t, uint64(4), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// second delegation
 	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewInt(100))
 
-	// historical count should be 3 (second delegation init)
-	require.Equal(t, uint64(3), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	// historical count should be 5 (second delegation init)
+	require.Equal(t, uint64(5), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// fetch updated validator
 	val = app.StakingKeeper.Validator(ctx, valAddrs[0])
@@ -545,8 +548,8 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[1]), valAddrs[0])
 	require.NoError(t, err)
 
-	// historical count should be 3 (validator init + two delegations)
-	require.Equal(t, uint64(3), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	// historical count should be 5 (validator init + two delegations)
+	require.Equal(t, uint64(5), app.DistrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// validator withdraws commission
 	_, err = app.DistrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])

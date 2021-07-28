@@ -111,6 +111,7 @@ func TestGetTotalRewards(t *testing.T) {
 func TestFundCommunityPool(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
 

@@ -57,6 +57,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 func TestProposalHandlerFailed(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
 	recipient := delAddr1
 

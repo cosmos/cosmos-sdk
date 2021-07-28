@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
@@ -47,6 +48,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 func TestAllocateTokensToManyValidators(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.DistrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
 
 	addrs := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)
@@ -118,6 +120,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 func TestAllocateTokensTruncation(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app.DistrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrs)

@@ -25,7 +25,7 @@ func (s *processTestSuite) TestLaunchProcess() {
 	// binaries from testdata/validate directory
 	require := s.Require()
 	home := copyTestData(s.T(), "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PoolInterval: 20}
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20}
 
 	// should run the genesis binary and produce expected output
 	var stdout, stderr = NewBuffer(), NewBuffer()
@@ -74,7 +74,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	// chain3-zip_dir - doesn't upgrade
 	require := s.Require()
 	home := copyTestData(s.T(), "download")
-	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PoolInterval: 100}
+	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, PollInterval: 100}
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output

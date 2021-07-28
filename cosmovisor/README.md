@@ -22,6 +22,7 @@ All arguments passed to the `cosmovisor` program will be passed to the current d
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*), if set to `true`, will restart the subprocess with the same command line arguments and flags (but with the new binary) after a successful upgrade. By default, `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note that `cosmovisor` will not auto-restart the subprocess if there was an error.
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 * `DAEMON_UPGRADE_INFO_FILE` is a full path to the upgrade plan file created by the upgrade module in `BeginBlocker` when a new upgrade plan is detected. On start, `cosmovisor` checks if the path is valid, if the base directory exists, and if a filename is provided. If the file name is wrong, the upgrade request will never be handled. Default: `<DAEMON_HOME>/data/upgrade-info.json`.
+  TODO: remove?
 
 ## Data Folder Layout
 
@@ -78,7 +79,7 @@ The `DAEMON` specific code and operations (e.g. tendermint config, the applicati
 + Otherwise, we wait for the changes in `upgrade-info.json` - as soon as a new upgrade name will be recorded in that file, we trigger an upgrade mechanism.
 
 During the upgrade, we auto-download a new binary (if auto-download is enabled), and link a new directory to the `current` symbolic link based on the `upgrade-info.json:name`. At the end we save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
-
+TODO - update above (auto download only when...) and add info about the upgrade file (copy)
 
 ## Auto-Download
 

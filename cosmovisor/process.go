@@ -17,7 +17,7 @@ type Launcher struct {
 }
 
 func NewLauncher(cfg *Config) (Launcher, error) {
-	fw, err := newUpgradeFileWatcher(cfg.UpgradeInfoFilePath(), cfg.PoolInterval)
+	fw, err := newUpgradeFileWatcher(cfg.UpgradeInfoFilePath(), cfg.PollInterval)
 	return Launcher{cfg, fw}, err
 }
 

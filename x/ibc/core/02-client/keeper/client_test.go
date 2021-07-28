@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/ibc/core/02-client/types"
@@ -615,8 +617,8 @@ func (suite *KeeperTestSuite) TestUpdateClientEventEmission() {
 
 	result, err := suite.chainA.SendMsgs(msg)
 	suite.Require().NoError(err)
-	// first event type is "message"
-	updateEvent := result.Events[1]
+	// first 3 event type are "tx.signature", "tx.acc_seq", and "message"
+	updateEvent := result.Events[3]
 
 	suite.Require().Equal(clienttypes.EventTypeUpdateClient, updateEvent.Type)
 
@@ -637,4 +639,7 @@ func (suite *KeeperTestSuite) TestUpdateClientEventEmission() {
 	}
 	suite.Require().True(contains)
 
+}
+func TestKeeperTestSuite2(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

@@ -20,7 +20,7 @@ const (
 	upgradeFilename = "upgrade-info.json"
 )
 
-// should be the same as x/upgrade/types.UpgradeInfoFilename
+// must be the same as x/upgrade/types.UpgradeInfoFilename
 const defaultFilename = "upgrade-info.json"
 
 // Config is the information passed in to control the daemon
@@ -29,7 +29,6 @@ type Config struct {
 	Name                  string
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
-	UpgradeInfoFilename   string
 	PollInterval          time.Duration
 
 	// currently running upgrade
@@ -59,9 +58,6 @@ func (cfg *Config) UpgradeDir(upgradeName string) string {
 
 // UpgradeInfoFile is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	if cfg.UpgradeInfoFilename != "" {
-		return cfg.UpgradeInfoFilename
-	}
 	return filepath.Join(cfg.Home, "data", defaultFilename)
 }
 
@@ -120,8 +116,6 @@ func GetConfigFromEnv() (*Config, error) {
 	if os.Getenv("DAEMON_RESTART_AFTER_UPGRADE") == "true" {
 		cfg.RestartAfterUpgrade = true
 	}
-
-	cfg.UpgradeInfoFilename = os.Getenv("DAEMON_UPGRADE_INFO_FILE")
 
 	interval := os.Getenv("DAEMON_POLL_INTERVAL")
 	if interval != "" {

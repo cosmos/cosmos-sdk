@@ -16,7 +16,7 @@ service Query {
 
   // GroupAccountInfo queries group account info based on group account address.
   rpc GroupAccountInfo(QueryGroupAccountInfoRequest) returns (QueryGroupAccountInfoResponse);
-  
+
   // GroupMembers queries members of a group
   rpc GroupMembers(QueryGroupMembersRequest) returns (QueryGroupMembersResponse);
 
@@ -25,16 +25,16 @@ service Query {
 
   // GroupAccountsByGroup queries group accounts by group id.
   rpc GroupAccountsByGroup(QueryGroupAccountsByGroupRequest) returns (QueryGroupAccountsByGroupResponse);
-  
+
   // GroupsByAdmin queries group accounts by admin address.
   rpc GroupAccountsByAdmin(QueryGroupAccountsByAdminRequest) returns (QueryGroupAccountsByAdminResponse);
-  
+
   // Proposal queries a proposal based on proposal id.
   rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse);
 
   // ProposalsByGroupAccount queries proposals based on group account address.
   rpc ProposalsByGroupAccount(QueryProposalsByGroupAccountRequest) returns (QueryProposalsByGroupAccountResponse);
-  
+
   // VoteByProposalVoter queries a vote by proposal id and voter.
   rpc VoteByProposalVoter(QueryVoteByProposalVoterRequest) returns (QueryVoteByProposalVoterResponse);
 
@@ -47,7 +47,7 @@ service Query {
 
 // QueryGroupInfoRequest is the Query/GroupInfo request type.
 message QueryGroupInfoRequest {
-  
+
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
 }
@@ -55,8 +55,8 @@ message QueryGroupInfoRequest {
 // QueryGroupInfoResponse is the Query/GroupInfo response type.
 message QueryGroupInfoResponse {
 
-    // info is the GroupInfo for the group.
-    GroupInfo info = 1;
+  // info is the GroupInfo for the group.
+  GroupInfo info = 1;
 }
 
 // QueryGroupAccountInfoRequest is the Query/GroupAccountInfo request type.
@@ -69,8 +69,8 @@ message QueryGroupAccountInfoRequest {
 // QueryGroupAccountInfoResponse is the Query/GroupAccountInfo response type.
 message QueryGroupAccountInfoResponse {
 
-    // info is the GroupAccountInfo for the group account.
-    GroupAccountInfo info = 1;
+  // info is the GroupAccountInfo for the group account.
+  GroupAccountInfo info = 1;
 }
 
 // QueryGroupMembersRequest is the Query/GroupMembersRequest request type.
@@ -115,7 +115,7 @@ message QueryGroupsByAdminResponse {
 
 // QueryGroupAccountsByGroupRequest is the Query/GroupAccountsByGroup request type.
 message QueryGroupAccountsByGroupRequest {
-  
+
   // group_id is the unique ID of the group account's group.
   uint64 group_id = 1;
 
@@ -135,7 +135,7 @@ message QueryGroupAccountsByGroupResponse {
 
 // QueryGroupAccountsByAdminRequest is the Query/GroupAccountsByAdmin request type.
 message QueryGroupAccountsByAdminRequest {
-  
+
   // admin is the admin address of the group account.
   string admin = 1;
 
@@ -192,7 +192,7 @@ message QueryVoteByProposalVoterRequest {
 
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
-  
+
   // voter is a proposal voter account address.
   string voter = 2;
 }
@@ -209,7 +209,7 @@ message QueryVotesByProposalRequest {
 
   // proposal_id is the unique ID of a proposal.
   uint64 proposal_id = 1;
-  
+
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }

@@ -157,7 +157,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				stakingGenState["staking"] = stakingResult
+				stakingGenState[stakingtypes.ModuleName] = stakingResult
 
 			} else {
 				stakingGenState = mbm.DefaultGenesis(cdc)

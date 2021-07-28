@@ -109,12 +109,12 @@ func (a Table) Create(store sdk.KVStore, rowID RowID, obj codec.ProtoMarshaler) 
 	return nil
 }
 
-// Save updates the given object under the rowID key. It expects the key to exist already
+// Update updates the given object under the rowID key. It expects the key to exist already
 // and fails with an `ErrNotFound` otherwise. Any caller must therefore make sure that this contract
 // is fulfilled. Parameters must not be nil.
 //
-// Save iterates though the registered callbacks and may add or remove secondary index keys by them.
-func (a Table) Save(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
+// Update iterates though the registered callbacks and may add or remove secondary index keys by them.
+func (a Table) Update(store sdk.KVStore, rowID RowID, newValue codec.ProtoMarshaler) error {
 	if err := assertCorrectType(a.model, newValue); err != nil {
 		return err
 	}

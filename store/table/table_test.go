@@ -155,7 +155,7 @@ func TestUpdate(t *testing.T) {
 			require.NoError(t, err)
 
 			// when
-			err = myTable.Save(store, EncodeSequence(1), spec.src)
+			err = myTable.Update(store, EncodeSequence(1), spec.src)
 			require.True(t, spec.expErr.Is(err), "got ", err)
 
 			// then

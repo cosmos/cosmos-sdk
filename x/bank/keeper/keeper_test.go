@@ -117,6 +117,9 @@ func (suite *IntegrationTestSuite) TestSupply() {
 	// add module accounts to supply keeper
 	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
 
+	genesisSupply, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
+	require.NoError(err)
+
 	initialPower := int64(100)
 	initTokens := suite.app.StakingKeeper.TokensFromConsensusPower(ctx, initialPower)
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
@@ -128,7 +131,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 
 	total, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
-	require.Equal(totalSupply, total)
+	require.Equal(totalSupply, total.Sub(genesisSupply))
 
 	// burning all supplied tokens
 	err = keeper.BurnCoins(ctx, authtypes.Burner, totalSupply)
@@ -136,7 +139,7 @@ func (suite *IntegrationTestSuite) TestSupply() {
 
 	total, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
 	require.NoError(err)
-	require.Equal(total.String(), "")
+	require.Equal(total, genesisSupply)
 }
 
 func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {

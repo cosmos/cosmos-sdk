@@ -12,6 +12,12 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 
 	expectedMetadata := suite.getTestMetadata()
 	expectedBalances, totalSupply := suite.getTestBalancesAndSupply()
+
+	// Adding genesis supply to the totalSupply
+	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+	suite.Require().NoError(err)
+	totalSupply = totalSupply.Add(genesisSupply...)
+
 	for i := range []int{1, 2} {
 		app.BankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
 		accAddr, err1 := sdk.AccAddressFromBech32(expectedBalances[i].Address)
@@ -33,7 +39,7 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0)
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
 	suite.Require().Equal(totalSupply, exportGenesis.Supply)
-	suite.Require().Equal(expectedBalances, exportGenesis.Balances)
+	suite.Require().Subset(exportGenesis.Balances, expectedBalances)
 	suite.Require().Equal(expectedMetadata, exportGenesis.DenomMetadata)
 }
 
@@ -72,7 +78,12 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 		{Coins: sdk.NewCoins(sdk.NewCoin("barcoin", sdk.NewInt(1))), Address: "cosmos1t5u0jfg3ljsjrh2m9e47d4ny2hea7eehxrzdgd"},
 		{Coins: sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(10)), sdk.NewCoin("barcoin", sdk.NewInt(20))), Address: "cosmos1m3h30wlvsf8llruxtpukdvsy0km2kum8g38c8q"},
 	}
+	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
+	suite.Require().NoError(err)
+
+	// Adding genesis supply to the totalSupply
 	totalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(11)), sdk.NewCoin("barcoin", sdk.NewInt(21)))
+	totalSupply.Add(genesisSupply...)
 
 	testcases := []struct {
 		name        string
@@ -107,7 +118,7 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 				suite.app.BankKeeper.InitGenesis(suite.ctx, tc.genesis)
 				totalSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.expSupply, totalSupply)
+				suite.Require().Equal(tc.expSupply, totalSupply.Sub(genesisSupply))
 			}
 		})
 	}

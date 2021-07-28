@@ -15,8 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestImportExportQueues(t *testing.T) {
@@ -54,6 +57,8 @@ func TestImportExportQueues(t *testing.T) {
 
 	authGenState := auth.ExportGenesis(ctx, app.AccountKeeper)
 	bankGenState := app.BankKeeper.ExportGenesis(ctx)
+	stakingGenState := staking.ExportGenesis(ctx, app.StakingKeeper)
+	distributionGenState := app.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
 	govGenState := gov.ExportGenesis(ctx, app.GovKeeper)
@@ -62,6 +67,8 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenState)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenState)
 	genesisState[types.ModuleName] = app.AppCodec().MustMarshalJSON(govGenState)
+	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenState)
+	genesisState[distributiontypes.ModuleName] = app.AppCodec().MustMarshalJSON(distributionGenState)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	if err != nil {

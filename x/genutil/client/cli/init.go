@@ -147,7 +147,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				}
 
 				stakingStr := string(bz)
-				modifiedStakingStr := strings.Replace(stakingStr, "stake", stakingBondDenom, 1)
+				modifiedStakingStr := strings.Replace(stakingStr, sdk.DefaultBondDenom, stakingBondDenom, 1)
 				stakingbytes := []byte(modifiedStakingStr)
 				err = tmjson.Unmarshal(stakingbytes, &finalStakingdata)
 				if err != nil {

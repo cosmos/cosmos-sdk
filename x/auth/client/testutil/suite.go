@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -245,7 +246,7 @@ func checkSignatures(require *require.Assertions, txCfg client.TxConfig, output 
 	}
 }
 
-func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
+func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 	val := s.network.Validators[0]
 
 	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
@@ -270,22 +271,25 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 		rawLogContains string
 	}{
 		{
+			"not enough args",
+			[]string{},
+			true, "",
+		},
+		{
 			"with invalid hash",
 			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			true,
-			"",
+			true, "",
 		},
 		{
 			"with valid and not existing hash",
 			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			true,
-			"",
+			true, "",
 		},
 		{
 			"happy case",
 			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 			false,
-			"/cosmos.bank.v1beta1.MsgSend",
+			sdk.MsgTypeURL(&banktypes.MsgSend{}),
 		},
 	}
 
@@ -305,6 +309,120 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmd() {
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
 				s.Require().Contains(result.RawLog, tc.rawLogContains)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
+	val := s.network.Validators[0]
+
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
+	// Send coins.
+	out, err := s.createBankMsg(
+		val, account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+	)
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// Query the tx by hash to get the inner tx.
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	protoTx := txRes.GetTx().(*tx.Tx)
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrStr string
+	}{
+		{
+			"invalid --type",
+			[]string{
+				fmt.Sprintf("--type=%s", "foo"),
+				"bar",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "unknown --type value foo",
+		},
+		{
+			"--type=acc_seq with no addr+seq",
+			[]string{
+				"--type=acc_seq",
+				"",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "`acc_seq` type takes an argument '<addr>/<seq>'",
+		},
+		{
+			"non-existing addr+seq combo",
+			[]string{
+				"--type=acc_seq",
+				"foobar",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "found no txs matching given address and sequence combination",
+		},
+		{
+			"addr+seq happy case",
+			[]string{
+				"--type=acc_seq",
+				fmt.Sprintf("%s/%d", val.Address, protoTx.AuthInfo.SignerInfos[0].Sequence),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, "",
+		},
+		{
+			"--type=signature with no signature",
+			[]string{
+				"--type=signature",
+				"",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "argument should be comma-separated signatures",
+		},
+		{
+			"non-existing signatures",
+			[]string{
+				"--type=signature",
+				"foo",
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true, "found no txs matching given signatures",
+		},
+		{
+			"with --signatures happy case",
+			[]string{
+				"--type=signature",
+				base64.StdEncoding.EncodeToString(protoTx.Signatures[0]),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false, "",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryTxCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrStr)
+			} else {
+				var result sdk.TxResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
+				s.Require().NotNil(result.Height)
 			}
 		})
 	}
@@ -681,7 +799,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-	// Sign with account1
+	// Sign with account2
 	account2Signature, err := TxSignExec(val1.ClientCtx, account2.GetAddress(), multiGeneratedTxFile.Name(), "--multisig", multisigInfo.GetAddress().String())
 	s.Require().NoError(err)
 
@@ -1045,12 +1163,11 @@ func (s *IntegrationTestSuite) TestTxWithoutPublicKey() {
 	s.Require().NotEqual(0, res.Code)
 }
 
+// TestSignWithMultiSignersAminoJSON tests the case where a transaction with 2
+// messages which has to be signed with 2 different keys. Sign and append the
+// signatures using the CLI with Amino signing mode. Finally, send the
+// transaction to the blockchain.
 func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
-	// test case:
-	// Create a transaction with 2 messages which has to be signed with 2 different keys
-	// Sign and append the signatures using the CLI with Amino signing mode.
-	// Finally send the transaction to the blockchain. It should work.
-
 	require := s.Require()
 	val0, val1 := s.network.Validators[0], s.network.Validators[1]
 	val0Coin := sdk.NewCoin(fmt.Sprintf("%stoken", val0.Moniker), sdk.NewInt(10))
@@ -1067,7 +1184,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
 	)
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))))
-	txBuilder.SetGasLimit(testdata.NewTestGasLimit()) // min required is 101892
+	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	require.Equal([]sdk.AccAddress{val0.Address, val1.Address}, txBuilder.GetTx().GetSigners())
 
 	// Write the unsigned tx into a file.
@@ -1083,14 +1200,19 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	// Then let val1 sign the file with signedByVal0.
 	val1AccNum, val1Seq, err := val0.ClientCtx.AccountRetriever.GetAccountNumberSequence(val0.ClientCtx, val1.Address)
 	require.NoError(err)
+
 	signedTx, err := TxSignExec(
-		val1.ClientCtx, val1.Address, signedByVal0File.Name(),
-		"--offline", fmt.Sprintf("--account-number=%d", val1AccNum), fmt.Sprintf("--sequence=%d", val1Seq), "--sign-mode=amino-json",
+		val1.ClientCtx,
+		val1.Address,
+		signedByVal0File.Name(),
+		"--offline",
+		fmt.Sprintf("--account-number=%d", val1AccNum),
+		fmt.Sprintf("--sequence=%d", val1Seq),
+		"--sign-mode=amino-json",
 	)
 	require.NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 
-	// Now let's try to send this tx.
 	res, err := TxBroadcastExec(
 		val0.ClientCtx,
 		signedTxFile.Name(),
@@ -1100,7 +1222,7 @@ func (s *IntegrationTestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.NoError(err)
 	var txRes sdk.TxResponse
 	require.NoError(val0.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &txRes))
-	require.Equal(uint32(0), txRes.Code)
+	require.Equal(uint32(0), txRes.Code, txRes.RawLog)
 
 	// Make sure the addr1's balance got funded.
 	queryResJSON, err := bankcli.QueryBalancesExec(val0.ClientCtx, addr1)

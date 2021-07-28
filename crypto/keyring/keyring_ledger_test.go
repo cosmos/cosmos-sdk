@@ -95,7 +95,8 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 
 	// Test unsupported Algo
 	_, err = keyring.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 118, 0, 0)
-	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
+	require.Error(t, err)
+	require.Contains(t, err.Error(), ErrUnsupportedSigningAlgo.Error())
 
 	ledger, err := keyring.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 	if err != nil {
@@ -103,6 +104,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
+
 	// The mock is available, check that the address is correct
 	require.Equal(t, "some_account", ledger.GetName())
 	pubKey := ledger.GetPubKey()

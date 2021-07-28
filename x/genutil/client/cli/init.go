@@ -127,11 +127,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 
-			var defaultGenesis map[string]json.RawMessage
+			var stakingGenState map[string]json.RawMessage
 
 			if stakingBondDenom != "" {
-				defaultGenesis = mbm.DefaultGenesis(cdc)
-				stakingRaw := defaultGenesis[stakingtypes.ModuleName]
+				stakingGenState = mbm.DefaultGenesis(cdc)
+				stakingRaw := stakingGenState[stakingtypes.ModuleName]
 				var (
 					initialStakingData simapp.GenesisState
 					finalStakingdata   simapp.GenesisState
@@ -157,13 +157,13 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				defaultGenesis["staking"] = stakingResult
+				stakingGenState["staking"] = stakingResult
 
 			} else {
-				defaultGenesis = mbm.DefaultGenesis(cdc)
+				stakingGenState = mbm.DefaultGenesis(cdc)
 			}
 
-			appState, err := json.MarshalIndent(defaultGenesis, "", " ")
+			appState, err := json.MarshalIndent(stakingGenState, "", " ")
 			if err != nil {
 				return errors.Wrap(err, "Failed to marshal default genesis state")
 			}
@@ -198,7 +198,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(FlagStakingBondDenom, "", "genesis file staking bond_denom, if left blank default value is stake")
+	cmd.Flags().String(FlagStakingBondDenom, "", "genesis file staking bond denomination, if left blank default value is 'stake'")
 
 	return cmd
 }

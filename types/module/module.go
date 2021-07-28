@@ -447,9 +447,11 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 // child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	if em := ctx.EventManager(); em != nil {
-		ctx = ctx.WithEventManager(sdk.NewEventManagerWithHistory(em.GetABCIEventHistory()))
+	em := ctx.EventManager()
+	if em == nil {
+		em = sdk.NewEventManager()
 	}
+	ctx = ctx.WithEventManager(sdk.NewEventManagerWithHistory(em.GetABCIEventHistory()))
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {

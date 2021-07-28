@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9432](https://github.com/cosmos/cosmos-sdk/pull/9432) `ConsensusParamsKeyTable` moved from `params/keeper` to `params/types`
 * [\#9576](https://github.com/cosmos/cosmos-sdk/pull/9576) Add debug error message to `sdkerrors.QueryResult` when enabled
 * [\#9650](https://github.com/cosmos/cosmos-sdk/pull/9650) Removed deprecated message handler implementation from the SDK modules.
+* [\#9809](https://github.com/cosmos/cosmos-sdk/pull/9650) `x/gov` Proposals use an array of arbitrary messages instead of requiring proposal handlers
 
 ### Client Breaking Changes
 

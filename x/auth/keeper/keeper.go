@@ -12,6 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -52,9 +53,13 @@ type AccountKeeper struct {
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
-	bech32Prefix string
+	bech32Prefix address.AddressCdc  // to import it
 	// The prototypical AccountI constructor.
 	proto func() types.AccountI
+}
+
+type bech32Address struct {
+	prefix string
 }
 
 var _ AccountKeeperI = &AccountKeeper{}

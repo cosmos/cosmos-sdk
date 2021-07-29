@@ -33,12 +33,12 @@ service Query {
   }
 
   // Bech32FromAccAddr converts Bech32 to Account string
-  rpc Bech32FromAccAddr(Bech32FromAccAddrRequest) returns (Bech32FromAccAddrResponse) {
+  rpc AddressStr(AddressStrRequest) returns (AddressStrResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
-  // AccAddrFromBech32 converts Account string to Bech32
-  rpc AccAddrFromBech32(AccAddrFromBech32Request) returns (AccAddrFromBech32Response) {
+  // AddressBytes converts Account string to Bech32
+  rpc AddressBytes(AddressBytesRequest) returns (AddressBytesResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 }
@@ -90,22 +90,22 @@ message Bech32PrefixResponse  {
   string bech32_prefix = 1;
 }
 
-// Bech32FromAccAddrRequest is the request type for Bech32FromAccAddr rpc method
-message Bech32FromAccAddrRequest {
+// AddressStrRequestRequest is the request type for AddressStr rpc method
+message AddressStrRequest {
   bytes account_addr = 1;
 }
 
-// Bech32FromAccAddrResponse is the response type for Bech32FromAccAddr rpc method
-message Bech32FromAccAddrResponse {
-  string bech32 = 1;
+// AddressStrResponse is the response type for AddressStr rpc method
+message AddressStrResponse {
+  string account_addr = 1;
 }
 
-// AccAddrFromBech32Request is the request type for AccAddrFromBech32 rpc method
-message AccAddrFromBech32Request {
-  string bech32 = 1;
+// AddressBytesRequest is the request type for AccountBytes rpc method
+message AddressBytesRequest {
+  string account_addr = 1;
 }
 
-// AccAddrFromBech32Response is the response type for AccAddrFromBech32 rpc method
-message AccAddrFromBech32Response {
+// AddressBytesResponse is the response type for AddressBytes rpc method
+message AddressBytesResponse {
   bytes account_addr = 1;
 }

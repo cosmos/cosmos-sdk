@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -45,6 +46,9 @@ type AccountKeeperI interface {
 	GetNextAccountNumber(sdk.Context) uint64
 }
 
+
+
+
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
@@ -53,7 +57,7 @@ type AccountKeeper struct {
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
-	bech32Prefix address.AddressCdc  // to import it
+	bech32Prefix string
 	// The prototypical AccountI constructor.
 	proto func() types.AccountI
 }
@@ -63,6 +67,7 @@ type bech32Address struct {
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
+var _ address.AddressCdC = &AccountKeeper{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
@@ -243,3 +248,25 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix }
+
+func (ak AccountKeeper) encodeTextToBytes(text string) ([]byte, error) {
+	_, bz, err := bech32.DecodeAndConvert(text)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := sdk.VerifyAddressFormat(bz); err != nil {
+		return nil, err
+	}
+
+	return bz, nil
+}
+
+func (ak AccountKeeper) decodeBytesToText(bytes []byte) (string, error) {
+	bech32, err := bech32.ConvertAndEncode(ak.bech32Prefix, bytes)
+	if err != nil {
+		return "", err
+	}
+
+	return bech32, nil
+}

@@ -975,7 +975,7 @@ func (ks keystore) MarshalPrivKey(privKey types.PrivKey) ([]byte, error) {
 	return ks.cdc.MarshalInterface(privKey)
 }
 
-func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
+func (ks keystore) convertFromLegacyInfo(info legacyInfo) (*Record, error) {
 	if info == nil {
 		return nil, errors.New("unable to convert LegacyInfo to Record cause info is nil")
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 // Info is the publicly exposed information about a keypair
-type LegacyInfo interface {
+type legacyInfo interface {
 	// Human-readable type for key listing
 	GetType() KeyType
 	// Name of the key
@@ -29,10 +29,10 @@ type LegacyInfo interface {
 }
 
 var (
-	_ LegacyInfo = &legacyLocalInfo{}
-	_ LegacyInfo = &legacyLedgerInfo{}
-	_ LegacyInfo = &legacyOfflineInfo{}
-	_ LegacyInfo = &legacyMultiInfo{}
+	_ legacyInfo = &legacyLocalInfo{}
+	_ legacyInfo = &legacyLedgerInfo{}
+	_ legacyInfo = &legacyOfflineInfo{}
+	_ legacyInfo = &legacyMultiInfo{}
 )
 
 // legacyLocalInfo is the public information about a locally stored key
@@ -44,7 +44,7 @@ type legacyLocalInfo struct {
 	Algo         hd.PubKeyType      `json:"algo"`
 }
 
-func NewLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) LegacyInfo {
+func NewLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) legacyInfo {
 	return &legacyLocalInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -97,7 +97,7 @@ type legacyLedgerInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func NewLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) LegacyInfo {
+func NewLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) legacyInfo {
 	return &legacyLedgerInfo{
 		Name:   name,
 		PubKey: pub,
@@ -145,7 +145,7 @@ type legacyOfflineInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func NewLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
+func NewLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) legacyInfo {
 	return &legacyOfflineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -201,7 +201,7 @@ type legacyMultiInfo struct {
 }
 
 // NewMultiInfo creates a new multiInfo instance
-func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
+func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (legacyInfo, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
 		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
@@ -249,12 +249,12 @@ func (i legacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 }
 
 // encoding info
-func MarshalInfo(i LegacyInfo) []byte {
+func MarshalInfo(i legacyInfo) []byte {
 	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }
 
 // decoding info
-func unMarshalLegacyInfo(bz []byte) (info LegacyInfo, err error) {
+func unMarshalLegacyInfo(bz []byte) (info legacyInfo, err error) {
 	err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
@@ -278,8 +278,8 @@ func unMarshalLegacyInfo(bz []byte) (info LegacyInfo, err error) {
 	return
 }
 
-// func (ks keystore) ExportPrivateKeyFromLegacyInfo(uid string) (types.PrivKey, error) {
-func exportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) {
+// func (ks keystore) ExportPrivateKeyFromlegacyInfo(uid string) (types.PrivKey, error) {
+func exportPrivateKeyFromLegacyInfo(info legacyInfo) (cryptotypes.PrivKey, error) {
 
 	switch linfo := info.(type) {
 	case legacyLocalInfo:

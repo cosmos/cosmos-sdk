@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"reflect"
-	// nolint: staticcheck
 
 	_ "github.com/gogo/protobuf/gogoproto" // required so it does register the gogoproto file descriptor
 	gogoproto "github.com/gogo/protobuf/proto"

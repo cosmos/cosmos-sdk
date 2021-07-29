@@ -37,7 +37,7 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 
 	// If not there, then we try to download it... maybe
 	if err := DownloadBinary(cfg, info); err != nil {
-		return fmt.Errorf("cannot download binary: %w", err)
+		return fmt.Errorf("cannot download binary. %w", err)
 	}
 
 	// and then set the binary again

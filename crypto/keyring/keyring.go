@@ -98,7 +98,6 @@ type Keyring interface {
 	Exporter
 
 	Migrator
-	Marshaler
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -131,12 +130,6 @@ type Migrator interface {
 	Migrate(key string) (bool, error)
 }
 
-// TODO if it is onlyfo tests it should not bei n public interface
-// used in migration_test.go
-type Marshaler interface {
-	ProtoMarshalRecord(k *Record) ([]byte, error)
-	ProtoUnmarshalRecord(bz []byte) (*Record, error)
-}
 
 // Exporter is implemented by key stores that support export of public and private keys.
 // TODO decide if need exporter interface as it is used only in keyring_test.go
@@ -231,7 +224,7 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, opts ...Option) keystore {
 	return keystore{kr, cdc, options}
 }
 
-func (ks keystore) fmt.Println("ExportPrivKeyArmor start")(uid string) (string, error) {
+func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
 		return "", err
@@ -274,12 +267,12 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	priv, err := ExtractPrivKeyFromRecord(k)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	return priv, err
@@ -1021,4 +1014,6 @@ func addrHexKeyAsString(address sdk.Address) string {
 	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }
 
-func SetItem()
+func (ks keystore) setItem(item keyring.Item) error {
+	return ks.db.Set(item)
+}

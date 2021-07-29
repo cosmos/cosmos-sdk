@@ -1,19 +1,26 @@
 package keyring_test
 
 import (
-	"strings"
+	//"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	//codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	//"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	//"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	//cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
+
+/*
+type marshaler interface {
+	ProtoMarshalRecord(k *Record) ([]byte, error)
+	ProtoUnmarshalRecord(bz []byte) (*Record, error)
+}
+*/
 
 func TestOfflineRecordMarshaling(t *testing.T) {
 	require := require.New(t)
@@ -41,6 +48,7 @@ func TestOfflineRecordMarshaling(t *testing.T) {
 
 }
 
+/*
 func TestLocalRecordMarshaling(t *testing.T) {
 	const n1 = "cosmos"
 	require := require.New(t)
@@ -162,3 +170,4 @@ func TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
 	require.Error(err)
 	require.Nil(privKey2)
 }
+*/

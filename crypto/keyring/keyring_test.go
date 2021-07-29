@@ -7,10 +7,8 @@ import (
 	"testing"
 
 	keyring99designs "github.com/99designs/keyring"
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
+	"github.com/stretchr/testify/require"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/go-bip39"
 
@@ -36,12 +34,12 @@ func init() {
 func TestNewKeyring(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := simapp.MakeTestEncodingConfig().Codec
 
-	kr, err := keyring.New("cosmos", keyring.BackendFile, dir, mockIn, encCfg.Codec)
+	kr, err := keyring.New("cosmos", keyring.BackendFile, dir, mockIn, cdc)
 	require.NoError(t, err)
 
-	nilKr, err := keyring.New("cosmos", "fuzzy", dir, mockIn, encCfg.Codec)
+	nilKr, err := keyring.New("cosmos", "fuzzy", dir, mockIn, cdc)
 	require.Error(t, err)
 	require.Nil(t, nilKr)
 	require.Equal(t, "unknown keyring backend fuzzy", err.Error())
@@ -152,9 +150,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 
 func TestSignVerifyKeyRing(t *testing.T) {
 	dir := t.TempDir()
-
-	encCfg := simapp.MakeTestEncodingConfig()
-	cdc := encCfg.Codec
+	cdc := simapp.MakeTestEncodingConfig().Codec
 
 	kb, err := keyring.New("keybasename", "test", dir, nil, cdc)
 	require.NoError(t, err)

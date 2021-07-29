@@ -33,10 +33,10 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
 	path := sdk.GetConfig().GetFullBIP44Path()
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := simapp.MakeTestEncodingConfig().Codec
 
 	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
 	_, err = kb.NewAccount(fakeKeyName1, testutil.TestMnemonic, "", path, hd.Secp256k1)
@@ -47,7 +47,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithKeyring(kb)
+		WithCodec(cdc)
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
@@ -59,6 +59,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	cmd.SetArgs([]string{
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	err = cmd.Execute()
 	require.Error(t, err)
@@ -72,6 +73,7 @@ func Test_runDeleteCmd(t *testing.T) {
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.Execute())
 
@@ -85,6 +87,7 @@ func Test_runDeleteCmd(t *testing.T) {
 		fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.Execute())
 

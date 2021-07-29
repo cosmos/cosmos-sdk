@@ -42,6 +42,8 @@ func TestInitGenesis(t *testing.T) {
 	pk1, err := codectypes.NewAnyWithValue(PKs[1])
 	require.NoError(t, err)
 
+	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
+
 	// initialize the validators
 	bondedVal1 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
@@ -70,10 +72,13 @@ func TestInitGenesis(t *testing.T) {
 			ctx,
 			types.BondedPoolName,
 			sdk.NewCoins(
-				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(len(validators)))),
+				sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(len(validators)-len(genesisValidators)))),
 			),
 		),
 	)
+	genesisDelegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations = append(delegations, genesisDelegations...)
+
 	genesisState := types.NewGenesisState(params, validators, delegations)
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
@@ -99,7 +104,7 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
-	for i, val := range validators {
+	for i, val := range validators[1:] {
 		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
@@ -156,6 +161,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	require.True(t, size > 100)
 
 	app, ctx, addrs := bootstrapGenesisTest(t, 200)
+	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}
@@ -179,6 +185,8 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		bondedPoolAmt = bondedPoolAmt.Add(tokens)
 	}
 
+	validators = append(validators, genesisValidators...)
+
 	genesisState := types.NewGenesisState(params, validators, delegations)
 
 	// mint coins in the bonded pool representing the validators coins
@@ -198,7 +206,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
-	require.Equal(t, abcivals, vals)
+	require.Equal(t, abcivals, vals[:100])
 }
 
 func TestValidateGenesis(t *testing.T) {

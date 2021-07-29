@@ -135,7 +135,6 @@ func TestQueryParametersPool(t *testing.T) {
 }
 
 func TestQueryValidators(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
@@ -203,7 +202,6 @@ func TestQueryValidators(t *testing.T) {
 }
 
 func TestQueryDelegation(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	cdc, app, ctx := createTestInput(t)
 	params := app.StakingKeeper.GetParams(ctx)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())

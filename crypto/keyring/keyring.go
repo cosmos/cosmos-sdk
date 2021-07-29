@@ -260,7 +260,7 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 	return ks.ExportPubKeyArmor(k.Name)
 }
 
-// we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
+// ExportPrivKeyArmor exports encrypted privKey
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
 	priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {

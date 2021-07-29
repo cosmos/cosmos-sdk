@@ -77,5 +77,5 @@ message QueryModuleAccountsRequest {}
 
 // QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
 message QueryModuleAccountsResponse {
-  repeated google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
+  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
 }

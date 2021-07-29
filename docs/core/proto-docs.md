@@ -918,7 +918,7 @@ QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RP
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `account` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+| `accounts` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
 
 
 

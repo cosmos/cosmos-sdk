@@ -106,5 +106,5 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 		a = append(a, any)
 	}
 
-	return &types.QueryModuleAccountsResponse{Account: a}, nil
+	return &types.QueryModuleAccountsResponse{Accounts: a}, nil
 }

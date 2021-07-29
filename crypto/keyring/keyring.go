@@ -337,17 +337,6 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	return nil
 }
 
-// ImportInfo implements Importer.MigrateInfo.
-// TODO do i need it or not?
-/*
-func (ks keystore) ImportInfo(oldInfo LegacyInfo) error {
-	if _, err := ks.Key(oldInfo.Name); err == nil {
-		return fmt.Errorf("cannot overwrite key: %s", oldInfo.Name)
-	}
-
-	return ks.writeLegacyInfo(oldInfo)
-}
-*/
 
 func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	k, err := ks.Key(uid)

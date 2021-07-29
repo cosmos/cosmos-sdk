@@ -43,8 +43,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(item)
-	require.NoError(err)
+	err = design99keyring.
 
 	migrated, err := kb.Migrate(n1)
 	require.True(migrated)

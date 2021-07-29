@@ -98,7 +98,6 @@ type Keyring interface {
 	Exporter
 
 	Migrator
-	Setter
 	Marshaler
 }
 
@@ -130,11 +129,6 @@ type Importer interface {
 type Migrator interface {
 	MigrateAll() (bool, error)
 	Migrate(key string) (bool, error)
-}
-
-// used in migration_test.go
-type Setter interface {
-	SetItem(item keyring.Item) error
 }
 
 // TODO if it is onlyfo tests it should not bei n public interface
@@ -1007,10 +1001,6 @@ func (ks keystore) convertFromLegacyInfo(info legacyInfo) (*Record, error) {
 	return NewRecord(name, pk, item)
 }
 
-func (ks keystore) SetItem(item keyring.Item) error {
-	return ks.db.Set(item)
-}
-
 type unsafeKeystore struct {
 	keystore
 }
@@ -1037,3 +1027,5 @@ func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err
 func addrHexKeyAsString(address sdk.Address) string {
 	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }
+
+func SetItem()

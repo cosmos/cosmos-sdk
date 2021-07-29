@@ -133,7 +133,6 @@ func TestDelegation(t *testing.T) {
 
 // tests Get/Set/Remove UnbondingDelegation
 func TestUnbondingDelegation(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	_, app, ctx := createTestInput(t)
 
 	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
@@ -180,7 +179,6 @@ func TestUnbondingDelegation(t *testing.T) {
 }
 
 func TestUnbondDelegation(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	_, app, ctx := createTestInput(t)
 
 	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
@@ -220,7 +218,6 @@ func TestUnbondDelegation(t *testing.T) {
 }
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
@@ -303,7 +300,6 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 //// test undelegating self delegation from a validator pushing it below MinSelfDelegation
 //// shift it from the bonded to unbonding state and jailed
 func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))

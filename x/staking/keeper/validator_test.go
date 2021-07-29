@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -23,9 +22,8 @@ func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotyp
 }
 
 func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
-	_, app, ctx := createTestInput(t.(*testing.T))
+	_, app, ctx := createTestInput(nil)
 
-	staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, types.DefaultGenesisState())
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs)
 
 	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, power)

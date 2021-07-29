@@ -24,7 +24,6 @@ func IsValSetSorted(data []types.Validator, powerReduction sdk.Int) bool {
 }
 
 func TestHistoricalInfo(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
@@ -52,7 +51,6 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
@@ -88,6 +86,10 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, hi5, recv)
 
+	//genesis validator
+	genesisVals := app.StakingKeeper.GetAllValidators(ctx)
+	require.Len(t, genesisVals, 1)
+
 	// Set bonded validators in keeper
 	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2])
 	val1.Status = types.Bonded // when not bonded, consensus power is Zero
@@ -100,7 +102,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
-	vals := []types.Validator{val1, val2}
+	vals := []types.Validator{genesisVals[0], val1, val2}
 	IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx))
 
 	// Set Header for BeginBlock context
@@ -119,9 +121,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	}
 	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 10)
 	require.True(t, found, "GetHistoricalInfo failed after BeginBlock")
-	require.Equal(t, expected.Header, recv.Header, "GetHistoricalInfo.Header returned unexpected result")
-	require.Equal(t, expected.Valset[0], recv.Valset[0], "GetHistoricalInfo.ValSet returned unexpected result")
-	require.Equal(t, expected.Valset[1], recv.Valset[2], "GetHistoricalInfo.ValSet returned unexpected result")
+	require.Equal(t, expected, recv, "GetHistoricalInfo returned unexpected result")
 
 	// Check HistoricalInfo at height 5, 4 is pruned
 	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 4)
@@ -133,7 +133,6 @@ func TestTrackHistoricalInfo(t *testing.T) {
 }
 
 func TestGetAllHistoricalInfo(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))

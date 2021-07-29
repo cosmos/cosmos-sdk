@@ -231,7 +231,7 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, opts ...Option) keystore {
 	return keystore{kr, cdc, options}
 }
 
-func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
+func (ks keystore) fmt.Println("ExportPrivKeyArmor start")(uid string) (string, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
 		return "", err
@@ -262,13 +262,11 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 
 // we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
-	fmt.Println("ExportPrivKeyArmor start")
 	_, priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("ExportPrivKeyArmor done")
-
+	
 	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, priv.Type()), nil
 }
 

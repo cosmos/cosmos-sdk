@@ -162,6 +162,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 			added: false,
 		},
 	}
+	cdc := simapp.MakeTestEncodingConfig().Codec
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -170,7 +171,6 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 
 			kbHome := t.TempDir()
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-			cdc := simapp.MakeTestEncodingConfig().Codec
 			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 			require.NoError(t, err)
 

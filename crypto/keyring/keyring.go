@@ -242,7 +242,13 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", err
 	}
 
-	return crypto.ArmorPubKeyBytes(legacy.Cdc.MustMarshal(key), key.Type()), nil
+
+	bz, err := ks.cdc.MarshalInterface(key)
+	if err != nil {
+		return "", err
+	}
+
+	return crypto.ArmorPubKeyBytes(bz, key.Type()), nil
 }
 
 func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, error) {

@@ -262,7 +262,7 @@ func (ks keystore) ExportPubKeyArmorByAddress(address sdk.Address) (string, erro
 
 // we use ExportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) { for LegacyInfo
 func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error) {
-	_, priv, err := ks.ExportPrivateKeyObject(uid)
+	priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}
@@ -271,7 +271,7 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 }
 
 // ExportPrivateKeyObject exports an armored private key object.
-func (ks keystore) ExportPrivateKeyObject(uid string) (*Record, types.PrivKey, error) {
+func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
@@ -282,7 +282,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (*Record, types.PrivKey, e
 		return nil, nil, err
 	}
 
-	return k, priv, err
+	return priv, err
 }
 
 func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error) {
@@ -1020,7 +1020,7 @@ func NewUnsafe(kr Keyring) UnsafeKeyring {
 
 // UnsafeExportPrivKeyHex exports private keys in unarmored hexadecimal format.
 func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err error) {
-	_, priv, err := ks.ExportPrivateKeyObject(uid)
+	priv, err := ks.ExportPrivateKeyObject(uid)
 	if err != nil {
 		return "", err
 	}

@@ -55,6 +55,11 @@ func doExtractConstructorInfo(ctr interface{}) (ConstructorInfo, error) {
 	}
 
 	loc := LocationFromPC(val.Pointer())
+
+	if typ.IsVariadic() {
+		return ConstructorInfo{}, errors.Errorf("variadic function can't be used as a constructor: %s", loc)
+	}
+
 	numIn := typ.NumIn()
 	in := make([]Input, numIn)
 	for i := 0; i < numIn; i++ {

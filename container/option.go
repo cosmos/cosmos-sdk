@@ -100,7 +100,7 @@ func OnePerScopeTypes(types ...reflect.Type) Option {
 			if c.autoGroupTypes[ty] {
 				return errors.Errorf("type %v is already registered as an auto-group type, trying to mark as one per scope type", ty)
 			}
-			c.logf("Registering one-per-sope type %v", ty)
+			c.logf("Registering one-per-scope type %v", ty)
 			c.onePerScopeTypes[ty] = true
 			node, err := c.typeGraphNode(reflect.MapOf(stringType, ty))
 			if err != nil {

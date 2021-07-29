@@ -11,12 +11,12 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 	app, ctx := suite.app, suite.ctx
 
 	expectedMetadata := suite.getTestMetadata()
-	expectedBalances, totalSupply := suite.getTestBalancesAndSupply()
+	expectedBalances, expTotalSupply := suite.getTestBalancesAndSupply()
 
-	// Adding genesis supply to the totalSupply
+	// Adding genesis supply to the expTotalSupply
 	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 	suite.Require().NoError(err)
-	totalSupply = totalSupply.Add(genesisSupply...)
+	expTotalSupply = expTotalSupply.Add(genesisSupply...)
 
 	for i := range []int{1, 2} {
 		app.BankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
@@ -38,7 +38,7 @@ func (suite *IntegrationTestSuite) TestExportGenesis() {
 
 	suite.Require().Len(exportGenesis.Params.SendEnabled, 0)
 	suite.Require().Equal(types.DefaultParams().DefaultSendEnabled, exportGenesis.Params.DefaultSendEnabled)
-	suite.Require().Equal(totalSupply, exportGenesis.Supply)
+	suite.Require().Equal(expTotalSupply, exportGenesis.Supply)
 	suite.Require().Subset(exportGenesis.Balances, expectedBalances)
 	suite.Require().Equal(expectedMetadata, exportGenesis.DenomMetadata)
 }
@@ -81,9 +81,9 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 	genesisSupply, _, err := suite.app.BankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.MaxLimit})
 	suite.Require().NoError(err)
 
-	// Adding genesis supply to the totalSupply
-	totalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(11)), sdk.NewCoin("barcoin", sdk.NewInt(21)))
-	totalSupply.Add(genesisSupply...)
+	// Adding genesis supply to the expTotalSupply
+	expTotalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdk.NewInt(11)), sdk.NewCoin("barcoin", sdk.NewInt(21)))
+	expTotalSupply.Add(genesisSupply...)
 
 	testcases := []struct {
 		name        string
@@ -99,13 +99,13 @@ func (suite *IntegrationTestSuite) TestTotalSupply() {
 		},
 		{
 			"calculation matches genesis Supply field",
-			types.NewGenesisState(defaultGenesis.Params, balances, totalSupply, defaultGenesis.DenomMetadata),
-			totalSupply, false, "",
+			types.NewGenesisState(defaultGenesis.Params, balances, expTotalSupply, defaultGenesis.DenomMetadata),
+			expTotalSupply, false, "",
 		},
 		{
 			"calculation is correct, empty genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, nil, defaultGenesis.DenomMetadata),
-			totalSupply, false, "",
+			expTotalSupply, false, "",
 		},
 	}
 

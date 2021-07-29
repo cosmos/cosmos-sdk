@@ -1,7 +1,6 @@
 package staking_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -45,8 +44,6 @@ func TestStakingMsgs(t *testing.T) {
 	bondTokens := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
 	genCoin := sdk.NewCoin(sdk.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, bondTokens)
-	fmt.Println(addr1.String(), genCoin.String())
-	fmt.Println(addr2.String(), bondCoin.String())
 
 	acc1 := &authtypes.BaseAccount{Address: addr1.String()}
 	acc2 := &authtypes.BaseAccount{Address: addr2.String()}

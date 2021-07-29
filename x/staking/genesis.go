@@ -115,7 +115,6 @@ func InitGenesis(
 	if bondedBalance.IsZero() {
 		accountKeeper.SetModuleAccount(ctx, bondedPool)
 	}
-
 	// if balance is different from bonded coins panic because genesis is most likely malformed
 	if !bondedBalance.IsEqual(bondedCoins) {
 		panic(fmt.Sprintf("bonded pool balance is different from bonded coins: %s <-> %s", bondedBalance, bondedCoins))

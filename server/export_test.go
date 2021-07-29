@@ -161,7 +161,6 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	serverCtx.Config.RootDir = tempDir
 
 	clientCtx := client.Context{}.WithCodec(app.AppCodec())
-	// genDoc := newDefaultGenesisDoc(encCfg.Codec)
 	genDoc := &tmtypes.GenesisDoc{}
 	genDoc.ChainID = "theChainId"
 	genDoc.Validators = nil

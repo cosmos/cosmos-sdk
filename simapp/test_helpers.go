@@ -93,6 +93,8 @@ func SetupWithGenesisAccounts(t *testing.T, isCheckTx bool, genAccs []authtypes.
 	pubKey, err := privVal.GetPubKey()
 	if t != nil {
 		require.NoError(t, err)
+	} else if t == nil && err != nil {
+		panic(err)
 	}
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -147,10 +149,14 @@ func SetupGenesisStateWithValSet(t *testing.T, app *SimApp, genesisState Genesis
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
 		if t != nil {
 			require.NoError(t, err)
+		} else if t == nil && err != nil {
+			panic(err)
 		}
 		pkAny, err := codectypes.NewAnyWithValue(pk)
 		if t != nil {
 			require.NoError(t, err)
+		} else if t == nil && err != nil {
+			panic(err)
 		}
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
@@ -197,45 +203,13 @@ func SetupGenesisStateWithValSet(t *testing.T, app *SimApp, genesisState Genesis
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	if t != nil {
 		require.NoError(t, err)
+	} else if t == nil && err != nil {
+		panic(err)
 	}
 
 	return stateBytes
 
 }
-
-// SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
-// accounts and possible balances.
-// func SetupWithGenesisAccounts(genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-// 	app, genesisState := setup(true, 0)
-// 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-// 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
-
-// 	totalSupply := sdk.NewCoins()
-// 	for _, b := range balances {
-// 		totalSupply = totalSupply.Add(b.Coins...)
-// 	}
-
-// 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-// 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
-
-// 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	app.InitChain(
-// 		abci.RequestInitChain{
-// 			Validators:      []abci.ValidatorUpdate{},
-// 			ConsensusParams: DefaultConsensusParams,
-// 			AppStateBytes:   stateBytes,
-// 		},
-// 	)
-
-// 	app.Commit()
-// 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1}})
-
-// 	return app
-// }
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress
 

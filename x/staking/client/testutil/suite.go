@@ -212,7 +212,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 
 				events := txResp.Logs[0].GetEvents()
 				for i := 0; i < len(events); i++ {
-					if "create_validator" == events[i].GetType() {
+					if events[i].GetType() == "create_validator" {
 						attributes := events[i].GetAttributes()
 						require.Equal(attributes[1].Value, "100stake")
 						break

@@ -191,3 +191,67 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
+	var (
+		req *types.QueryModuleAccountsRequest
+	)
+	// _, _, first := testdata.KeyTestPubAddr()
+	// _, _, second := testdata.KeyTestPubAddr()
+
+	testCases := []struct {
+		msg       string
+		malleate  func()
+		expPass   bool
+		posttests func(res *types.QueryModuleAccountsResponse)
+	}{
+		{
+			"success",
+			func() {
+				// suite.app.AccountKeeper.SetAccount(suite.ctx,
+				// 	suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, first))
+				// suite.app.AccountKeeper.SetAccount(suite.ctx,
+				// 	suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, second))
+				req = &types.QueryModuleAccountsRequest{}
+			},
+			true,
+			func(res *types.QueryModuleAccountsResponse) {
+				var stakeModuleExists = false
+				for _, acc := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					suite.Require().NoError(err)
+
+					moduleAccount, ok := account.(types.ModuleAccountI)
+
+					suite.Require().True(ok)
+					if moduleAccount.GetName() == "mint" {
+						stakeModuleExists = true
+					}
+				}
+				suite.Require().True(stakeModuleExists)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.ModuleAccounts(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+			tc.posttests(res)
+		})
+	}
+}

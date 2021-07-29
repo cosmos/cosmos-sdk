@@ -4,6 +4,11 @@
 
 ## Table of Contents
 
+- [cosmos/app/v1/config.proto](#cosmos/app/v1/config.proto)
+    - [ABCIHandlers](#cosmos.app.v1.ABCIHandlers)
+    - [Config](#cosmos.app.v1.Config)
+    - [ModuleConfig](#cosmos.app.v1.ModuleConfig)
+  
 - [cosmos/auth/v1beta1/auth.proto](#cosmos/auth/v1beta1/auth.proto)
     - [BaseAccount](#cosmos.auth.v1beta1.BaseAccount)
     - [ModuleAccount](#cosmos.auth.v1beta1.ModuleAccount)
@@ -660,6 +665,71 @@
     - [PermanentLockedAccount](#cosmos.vesting.v1beta1.PermanentLockedAccount)
   
 - [Scalar Value Types](#scalar-value-types)
+
+
+
+<a name="cosmos/app/v1/config.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/app/v1/config.proto
+
+
+
+<a name="cosmos.app.v1.ABCIHandlers"></a>
+
+### ABCIHandlers
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `init_genesis` | [string](#string) | repeated |  |
+| `begin_block` | [string](#string) | repeated |  |
+| `end_block` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.app.v1.Config"></a>
+
+### Config
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `modules` | [ModuleConfig](#cosmos.app.v1.ModuleConfig) | repeated |  |
+| `abci` | [ABCIHandlers](#cosmos.app.v1.ABCIHandlers) |  |  |
+
+
+
+
+
+
+<a name="cosmos.app.v1.ModuleConfig"></a>
+
+### ModuleConfig
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `config` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `name` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
 
 
 

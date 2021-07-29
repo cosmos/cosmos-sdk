@@ -1,0 +1,22 @@
+syntax = "proto3";
+package cosmos.app.v1;
+
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/app";
+
+message Config {
+    repeated ModuleConfig modules = 1;
+    ABCIHandlers abci = 2;
+}
+
+message ModuleConfig {
+    google.protobuf.Any config = 1;
+    string name = 2;
+}
+
+message ABCIHandlers {
+    repeated string init_genesis = 1;
+    repeated string begin_block = 2;
+    repeated string end_block = 3;
+}

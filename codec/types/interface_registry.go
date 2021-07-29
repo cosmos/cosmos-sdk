@@ -22,9 +22,12 @@ type AnyUnpacker interface {
 	UnpackAny(any *Any, iface interface{}) error
 }
 
-// InterfaceRegistry provides a mechanism for registering interfaces and
+// Deprecated: renamed to TypeRegistry
+type InterfaceRegistry = TypeRegistry
+
+// TypeRegistry provides a mechanism for registering interfaces and
 // implementations that can be safely unpacked from Any
-type InterfaceRegistry interface {
+type TypeRegistry interface {
 	AnyUnpacker
 	jsonpb.AnyResolver
 

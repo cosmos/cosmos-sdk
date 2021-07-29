@@ -334,7 +334,7 @@ func (i Int) String() string {
 // MarshalJSON defines custom encoding scheme
 func (i Int) MarshalJSON() ([]byte, error) {
 	if i.i == nil { // Necessary since default Uint initialization has i.i as nil
-		return i.i.MarshalText()
+		return i.i.MarshalJSON()
 	}
 	return marshalJSON(i.i)
 }

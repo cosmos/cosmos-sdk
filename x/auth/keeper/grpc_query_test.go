@@ -196,8 +196,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 	var (
 		req *types.QueryModuleAccountsRequest
 	)
-	// _, _, first := testdata.KeyTestPubAddr()
-	// _, _, second := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		msg       string
@@ -208,10 +206,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 		{
 			"success",
 			func() {
-				// suite.app.AccountKeeper.SetAccount(suite.ctx,
-				// 	suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, first))
-				// suite.app.AccountKeeper.SetAccount(suite.ctx,
-				// 	suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, second))
 				req = &types.QueryModuleAccountsRequest{}
 			},
 			true,

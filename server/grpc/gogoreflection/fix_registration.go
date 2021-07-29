@@ -8,6 +8,8 @@ import (
 
 	_ "github.com/gogo/protobuf/gogoproto" // required so it does register the gogoproto file descriptor
 	gogoproto "github.com/gogo/protobuf/proto"
+
+	// nolint: staticcheck
 	"github.com/golang/protobuf/proto"
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	_ "github.com/regen-network/cosmos-proto" // look above

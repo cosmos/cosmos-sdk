@@ -7,8 +7,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/codec"
-	proto "github.com/gogo/protobuf/proto"
 )
 
 // available output formats.
@@ -39,6 +37,7 @@ func printKeyringRecord(w io.Writer, k *cryptokeyring.Record, bechKeyOut bechKey
 	}
 }
 
+// put first argument cdc
 func printKeyringRecords(w io.Writer, records []*cryptokeyring.Record, output string) {
 	kos, err := cryptokeyring.MkAccKeysOutput(records)
 	if err != nil {
@@ -50,20 +49,13 @@ func printKeyringRecords(w io.Writer, records []*cryptokeyring.Record, output st
 		printTextInfos(w, kos)
 
 	case OutputFormatJSON:
-	
-		for _, ko := range kos {
-			out, _ := codec.ProtoMarshalJSON(ko, nil)
-			fmt.Fprintf(w, "%s", out)
-		}
-
-		/*
+		// TODO https://github.com/cosmos/cosmos-sdk/issues/8046
 		out, err := KeysCdc.MarshalJSON(kos)
 		if err != nil {
 			panic(err)
 		}
 
 		fmt.Fprintf(w, "%s", out)
-		*/
 	}
 }
 

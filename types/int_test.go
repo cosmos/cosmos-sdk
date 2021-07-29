@@ -305,6 +305,30 @@ func (s *intTestSuite) TestEncodingTableInt() {
 		s.Require().Nil(err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		s.Require().Equal(tc.i, i, "Unmarshaled value is different from exported. tc #%d", tcnum)
 	}
+
+	// Test cases testing marshalling
+	cases2 := []struct {
+		i      sdk.Int
+		jsonBz []byte
+		rawBz  []byte
+	}{
+		{
+			sdk.Int{},
+			[]byte("<nil>"),
+			[]byte{0x30},
+		},
+	}
+
+	for tcnum, tc := range cases2 {
+		bz, err := tc.i.MarshalJSON()
+		s.Require().Nil(err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
+		s.Require().Equal(tc.jsonBz, bz, "Marshaled value is different from exported. tc #%d", tcnum+len(cases))
+
+		bz, err = tc.i.Marshal()
+		s.Require().Nil(err, "Error marshaling Int. tc #%d, err %s", tcnum, err)
+		s.Require().Equal(tc.rawBz, bz, "Marshaled value is different from exported. tc #%d", tcnum+len(cases))
+	}
+
 }
 
 func (s *intTestSuite) TestEncodingTableUint() {

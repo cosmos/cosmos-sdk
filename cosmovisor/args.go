@@ -114,9 +114,7 @@ func GetConfigFromEnv() (*Config, error) {
 		cfg.LogBufferSize = bufio.MaxScanTokenSize
 	}
 
-	if os.Getenv("UNSAFE_SKIP_BACKUP") == "true" {
-		cfg.UnsafeSkipBackup = true
-	}
+	cfg.UnsafeSkipBackup = os.Getenv("UNSAFE_SKIP_BACKUP") == "true"
 
 	if err := cfg.validate(); err != nil {
 		return nil, err

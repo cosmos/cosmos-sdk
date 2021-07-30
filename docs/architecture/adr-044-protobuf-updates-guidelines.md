@@ -35,7 +35,7 @@ On top of Buf's recommendations we add the following guidelines that are specifi
 
 ### Updating Protobuf Definition Without Bumping Version
 
-#### 1. `Msg`s SHALL NOT have new fields.
+#### 1. `Msg`s MUST NOT have new fields.
 
 When processing `Msg`s, the SDK's antehandlers are strict and don't allow unknown fields in `Msg`s. This is checked by the unknown field rejection in the [`codec/unknownproto` package](https://github.com/cosmos/cosmos-sdk/blob/master/codec/unknownproto).
 

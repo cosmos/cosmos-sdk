@@ -90,10 +90,14 @@ func doBackup(cfg *Config) error {
 	if !cfg.UnsafeSkipBackup {
 		// check if upgrade-info.json is not empty.
 		var uInfo UpgradeInfo
-		upgradeInfoFile, _ := ioutil.ReadFile(cfg.Home + "/data/upgrade-info.json")
-		err := json.Unmarshal([]byte(upgradeInfoFile), &uInfo)
+		upgradeInfoFile, err := ioutil.ReadFile(cfg.Home + "/data/upgrade-info.json")
 		if err != nil {
 			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
+		}
+
+		err = json.Unmarshal(upgradeInfoFile, &uInfo)
+		if err != nil {
+			return err
 		}
 
 		if uInfo.Name == "" {

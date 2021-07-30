@@ -69,7 +69,6 @@ func SetGenesisStateInAppState(
 //
 // NOTE: The pubkey input is this machines pubkey.
 func GenesisStateFromGenDoc(genDoc tmtypes.GenesisDoc) (genesisState map[string]json.RawMessage, err error) {
-
 	if err = json.Unmarshal(genDoc.AppState, &genesisState); err != nil {
 		return genesisState, err
 	}

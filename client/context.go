@@ -1,13 +1,12 @@
 package client
 
 import (
-	"encoding/json"
 	"io"
 	"os"
 
 	"github.com/spf13/viper"
 
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
@@ -277,15 +276,7 @@ func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 
 func (ctx Context) printOutput(out []byte) error {
 	if ctx.OutputFormat == "text" {
-		// handle text format by decoding and re-encoding JSON as YAML
-		var j interface{}
-
-		err := json.Unmarshal(out, &j)
-		if err != nil {
-			return err
-		}
-
-		out, err = yaml.Marshal(j)
+		out, err := yaml.JSONToYAML(out)
 		if err != nil {
 			return err
 		}

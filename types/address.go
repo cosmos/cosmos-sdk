@@ -10,8 +10,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/golang-lru/simplelru"
-	yaml "gopkg.in/yaml.v2"
-	sigsyaml "sigs.k8s.io/yaml"
+	"sigs.k8s.io/yaml"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -116,10 +115,6 @@ type Address interface {
 var _ Address = AccAddress{}
 var _ Address = ValAddress{}
 var _ Address = ConsAddress{}
-
-var _ yaml.Marshaler = AccAddress{}
-var _ yaml.Marshaler = ValAddress{}
-var _ yaml.Marshaler = ConsAddress{}
 
 // ----------------------------------------------------------------------------
 // account
@@ -238,7 +233,7 @@ func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 // UnmarshalYAML unmarshals from JSON assuming Bech32 encoding.
 func (aa *AccAddress) UnmarshalYAML(data []byte) error {
 	var s string
-	err := sigsyaml.Unmarshal(data, &s)
+	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}
@@ -388,7 +383,7 @@ func (va *ValAddress) UnmarshalJSON(data []byte) error {
 func (va *ValAddress) UnmarshalYAML(data []byte) error {
 	var s string
 
-	err := sigsyaml.Unmarshal(data, &s)
+	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}
@@ -543,7 +538,7 @@ func (ca *ConsAddress) UnmarshalJSON(data []byte) error {
 func (ca *ConsAddress) UnmarshalYAML(data []byte) error {
 	var s string
 
-	err := sigsyaml.Unmarshal(data, &s)
+	err := yaml.Unmarshal(data, &s)
 	if err != nil {
 		return err
 	}

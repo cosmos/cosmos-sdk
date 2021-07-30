@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+	"fmt"
 
 	"github.com/stretchr/testify/require"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 func Test_runImportCmd(t *testing.T) {
@@ -23,12 +25,12 @@ func Test_runImportCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
+	cdc := simapp.MakeTestEncodingConfig().Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithKeyring(kb)
+		WithCodec(cdc)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	require.NoError(t, err)
@@ -51,6 +53,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 	mockIn.Reset("123456789\n")
 	cmd.SetArgs([]string{
 		"keyname1", keyfile,
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }

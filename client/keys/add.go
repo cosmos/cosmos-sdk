@@ -82,12 +82,12 @@ Example:
 }
 
 func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
-	buf := bufio.NewReader(cmd.InOrStdin())
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err
 	}
 
+	buf := bufio.NewReader(clientCtx.Input)
 	return runAddCmd(clientCtx, cmd, args, buf)
 }
 

@@ -31,7 +31,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithInput(mockIn)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	t.Cleanup(func() {

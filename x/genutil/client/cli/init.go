@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -21,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -127,43 +124,21 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				return fmt.Errorf("genesis.json file already exists: %v", genFile)
 			}
 
-			var stakingGenState map[string]json.RawMessage
+			appGenState := mbm.DefaultGenesis(cdc)
 
 			if stakingBondDenom != "" {
-				stakingGenState = mbm.DefaultGenesis(cdc)
-				stakingRaw := stakingGenState[stakingtypes.ModuleName]
-				var (
-					initialStakingData simapp.GenesisState
-					finalStakingdata   simapp.GenesisState
-				)
-
-				if err := tmjson.Unmarshal(stakingRaw, &initialStakingData); err != nil {
-					return err
-				}
-
-				bz, err := tmjson.Marshal(initialStakingData)
+				stakingRaw := appGenState[stakingtypes.ModuleName]
+				var stakingGenesis stakingtypes.GenesisState
+				clientCtx.Codec.UnmarshalJSON(stakingRaw, &stakingGenesis)
+				stakingGenesis.Params.BondDenom = stakingBondDenom
+				modifiedStakingStr, err := clientCtx.Codec.MarshalJSON(&stakingGenesis)
 				if err != nil {
 					return err
 				}
-
-				stakingStr := string(bz)
-				modifiedStakingStr := strings.Replace(stakingStr, sdk.DefaultBondDenom, stakingBondDenom, 1)
-				stakingbytes := []byte(modifiedStakingStr)
-				err = tmjson.Unmarshal(stakingbytes, &finalStakingdata)
-				if err != nil {
-					return err
-				}
-				stakingResult, err := tmjson.Marshal(finalStakingdata)
-				if err != nil {
-					return err
-				}
-				stakingGenState[stakingtypes.ModuleName] = stakingResult
-
-			} else {
-				stakingGenState = mbm.DefaultGenesis(cdc)
+				appGenState[stakingtypes.ModuleName] = modifiedStakingStr
 			}
 
-			appState, err := json.MarshalIndent(stakingGenState, "", " ")
+			appState, err := json.MarshalIndent(appGenState, "", " ")
 			if err != nil {
 				return errors.Wrap(err, "Failed to marshal default genesis state")
 			}

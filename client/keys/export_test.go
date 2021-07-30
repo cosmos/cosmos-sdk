@@ -26,8 +26,8 @@ func Test_runExportCmd(t *testing.T) {
 	kbHome := t.TempDir()
 
 	// create a key
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
+	cdc := simapp.MakeTestEncodingConfig().Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		kb.Delete("keyname1") // nolint:errcheck
@@ -41,6 +41,7 @@ func Test_runExportCmd(t *testing.T) {
 	args := []string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	}
 
 	mockIn.Reset("123456789\n123456789\n")
@@ -48,7 +49,7 @@ func Test_runExportCmd(t *testing.T) {
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithKeyring(kb)
+		WithCodec(cdc)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	require.NoError(t, cmd.ExecuteContext(ctx))

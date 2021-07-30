@@ -86,9 +86,12 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 func doBackup(cfg *Config) error {
 	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
 	if !cfg.UnsafeSkipBackup {
-		// a destination directory, Format MM-DD-YYYY
-		dt := time.Now()
-		dst := fmt.Sprintf(cfg.Home+"/data"+"-backup-%s", dt.Format("01-22-2000"))
+		// a destination directory, Format YYYY-MM-DD
+		st := time.Now()
+		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
+		dst := fmt.Sprintf(cfg.Home+"/data"+"-backup-%s", stStr)
+
+		fmt.Printf("starting to take backup of data directory at time %s", st)
 
 		// copy the $DAEMON_HOME/data to a backup dir
 		err := copy.Copy(cfg.Home+"/data", dst)
@@ -97,7 +100,12 @@ func doBackup(cfg *Config) error {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
 
-		fmt.Println("Backup saved at ", dst)
+		// backup is done, lets check endtime to calculate total time taken for backup process
+		et := time.Now()
+		timeTaken := et.Sub(st)
+
+		fmt.Printf("backup saved at location: %s, completed at time: %s\n"+
+			"time taken to complete the backup: %s", dst, et, timeTaken)
 	}
 
 	return nil

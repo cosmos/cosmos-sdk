@@ -62,8 +62,6 @@ func Test_runAddCmdLedgerWithCustomCoinType(t *testing.T) {
 	mockIn.Reset("test1234\ntest1234\n")
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
-
-
 	// Now check that it has been stored properly
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
@@ -97,13 +95,9 @@ func Test_runAddCmdLedger(t *testing.T) {
 
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 	kbHome := t.TempDir()
-
 	encCfg := simapp.MakeTestEncodingConfig()
 
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
-	require.NoError(t, err)
-
-	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithKeyring(kb).WithCodec(encCfg.Codec)
+	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithCodec(encCfg.Codec)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{
@@ -112,10 +106,15 @@ func Test_runAddCmdLedger(t *testing.T) {
 		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
 		fmt.Sprintf("--%s=%d", flagCoinType, sdk.CoinType),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	mockIn.Reset("test1234\ntest1234\n")
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
+	require.NoError(t, err)
+
 
 	// Now check that it has been stored properly
 
@@ -176,8 +175,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 
 			clientCtx := client.Context{}.
 				WithKeyringDir(kbHome).
-				WithKeyring(kb).
-				WithCodec(cdc)
+				WithKeyring(kb)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 			b := bytes.NewBufferString("")

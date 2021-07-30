@@ -44,7 +44,7 @@ type Iterator interface {
 	// LoadNext loads the next value in the sequence into the pointer passed as dest and returns the key. If there
 	// are no more items the ErrIteratorDone error is returned
 	// The key is the rowID.
-	LoadNext(dest codec.ProtoMarshaler) (RowID, error)
+	LoadNext(store sdk.KVStore, dest codec.ProtoMarshaler) (RowID, error)
 	// Close releases the iterator and should be called at the end of iteration
 	io.Closer
 }

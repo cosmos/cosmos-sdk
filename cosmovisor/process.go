@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -90,7 +91,7 @@ func doBackup(cfg *Config) error {
 	if !cfg.UnsafeSkipBackup {
 		// check if upgrade-info.json is not empty.
 		var uInfo UpgradeInfo
-		upgradeInfoFile, err := ioutil.ReadFile(cfg.Home + "/data/upgrade-info.json")
+		upgradeInfoFile, err := ioutil.ReadFile(filepath.Join(cfg.Home, "data", "upgrade-info.json"))
 		if err != nil {
 			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
 		}
@@ -107,12 +108,12 @@ func doBackup(cfg *Config) error {
 		// a destination directory, Format YYYY-MM-DD
 		st := time.Now()
 		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
-		dst := fmt.Sprintf(cfg.Home+"/data"+"-backup-%s", stStr)
+		dst := filepath.Join(cfg.Home, fmt.Sprintf("data"+"-backup-%s", stStr))
 
 		fmt.Printf("starting to take backup of data directory at time %s", st)
 
 		// copy the $DAEMON_HOME/data to a backup dir
-		err = copy.Copy(cfg.Home+"/data", dst)
+		err = copy.Copy(filepath.Join(cfg.Home, "data"), dst)
 
 		if err != nil {
 			return fmt.Errorf("error while taking data backup: %w", err)

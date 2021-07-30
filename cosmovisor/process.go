@@ -2,8 +2,10 @@ package cosmovisor
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -86,6 +88,18 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 func doBackup(cfg *Config) error {
 	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
 	if !cfg.UnsafeSkipBackup {
+		// check if upgrade-info.json is not empty.
+		var uInfo UpgradeInfo
+		upgradeInfoFile, _ := ioutil.ReadFile(cfg.Home + "/data/upgrade-info.json")
+		err := json.Unmarshal([]byte(upgradeInfoFile), &uInfo)
+		if err != nil {
+			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
+		}
+
+		if uInfo.Name == "" {
+			return fmt.Errorf("upgrade-info.json is empty")
+		}
+
 		// a destination directory, Format YYYY-MM-DD
 		st := time.Now()
 		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
@@ -94,7 +108,7 @@ func doBackup(cfg *Config) error {
 		fmt.Printf("starting to take backup of data directory at time %s", st)
 
 		// copy the $DAEMON_HOME/data to a backup dir
-		err := copy.Copy(cfg.Home+"/data", dst)
+		err = copy.Copy(cfg.Home+"/data", dst)
 
 		if err != nil {
 			return fmt.Errorf("error while taking data backup: %w", err)

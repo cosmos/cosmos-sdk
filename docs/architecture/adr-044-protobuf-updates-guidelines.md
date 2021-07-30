@@ -10,7 +10,7 @@ Draft
 
 ## Abstract
 
-This ADR provides guidelines and recommended practices when updating Protobuf definitions. These guidelines are targeted at module developers.
+This ADR provides guidelines and recommended practices when updating Protobuf definitions. These guidelines are targeting module developers.
 
 ## Context
 

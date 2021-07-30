@@ -144,7 +144,7 @@ func GetAccountsCmd() *cobra.Command {
 	return cmd
 }
 
-// QueryAllModuleAccountCmd returns list of modules and its account address
+// QueryAllModuleAccountsCmd returns a list of all the existing module accounts with their account information and permissions
 func QueryModuleAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "module-accounts",

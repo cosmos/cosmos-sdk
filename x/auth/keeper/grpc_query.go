@@ -92,7 +92,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var a []*codectypes.Any
+	a := make([]*codectypes.Any, 0, len(ak.permAddrs))
 
 	for moduleName := range ak.permAddrs {
 		account := ak.GetModuleAccount(ctx, moduleName)

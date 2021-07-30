@@ -27,7 +27,7 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/params";
   }
 
-  // ModuleAccounts returns all the existing Module Accounts.
+  // ModuleAccounts returns all the existing module accounts.
   rpc ModuleAccounts(QueryModuleAccountsRequest) returns (QueryModuleAccountsResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/module_accounts";
   }

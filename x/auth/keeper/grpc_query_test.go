@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			},
 			true,
 			func(res *types.QueryModuleAccountsResponse) {
-				var stakeModuleExists = false
+				var mintModuleExists = false
 				for _, acc := range res.Accounts {
 					var account types.AccountI
 					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
@@ -220,10 +220,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 
 					suite.Require().True(ok)
 					if moduleAccount.GetName() == "mint" {
-						stakeModuleExists = true
+						mintModuleExists = true
 					}
 				}
-				suite.Require().True(stakeModuleExists)
+				suite.Require().True(mintModuleExists)
 			},
 		},
 	}

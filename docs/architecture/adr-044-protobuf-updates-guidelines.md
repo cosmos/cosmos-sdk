@@ -39,7 +39,7 @@ On top of Buf's recommendations we add the following guidelines that are specifi
 
 When processing `Msg`s, the SDK's antehandlers are strict and don't allow unknown fields in `Msg`s. This is checked by the unknown field rejection in the [`codec/unknownproto` package](https://github.com/cosmos/cosmos-sdk/blob/master/codec/unknownproto).
 
-Now imagine a v0.43 node accepting a `MsgExample` transaction, and in v0.44 the chain developer decides to add a field to `MsgExample`. A client developer, which only manipulates Protobuf definitions, would see that `MsgExample` has a new field, and will populate it. However, sending the new `MsgExample` to an old v0.43 node would cause the v0.43 node to reject the `Msg` because of the unknown field. The expectation that the same Protobuf version can be used across multiple node versions should be guaranteed.
+Now imagine a v0.43 node accepting a `MsgExample` transaction, and in v0.44 the chain developer decides to add a field to `MsgExample`. A client developer, which only manipulates Protobuf definitions, would see that `MsgExample` has a new field, and will populate it. However, sending the new `MsgExample` to an old v0.43 node would cause the v0.43 node to reject the `MsgExample` because of the unknown field. The expectation that the same Protobuf version can be used across multiple node versions MUST be guaranteed.
 
 For this reason, module developers SHALL NOT add new fields to existing `Msg`s.
 

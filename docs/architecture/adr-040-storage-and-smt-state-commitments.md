@@ -40,13 +40,13 @@ Separation of storage and commitment (by the SMT) will allow the optimization of
 
 `SC` (SMT) is used to commit to a data and compute merkle proofs. `SS` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SS` will store each `(key, value)` pair directly (map key -> value).
 
-SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is used as leaf path (we hash a key to uniformly distribute leaves in the tree) and `(hash(key),  hash(value))` as the leaf contents.
+SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is used as leaf path (we hash a key to uniformly distribute leaves in the tree) and `(hash(key),  hash(value))` as the leaf contents. The tree structure is specified in more depth [below](#lazyledger-smt-for-state-commitment).
 
 For data access we propose 2 additional KV buckets (implemented as namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
-2. B2: `hash(key) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(value))`. So, we can get an object value by composing `SMT_path → B2 → B1`.
-3. we could use more buckets to optimize the app usage if needed.
+2. B2: `hash(key) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(value))`. So, we can get an object value by composing `hash(key) → B2 → B1`.
+3. We could use more buckets to optimize the app usage if needed.
 
 Above, we propose to use a KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.
 
@@ -69,6 +69,14 @@ State Commitment requirements:
 ### LazyLedger SMT for State Commitment
 
 A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intractable size. The assumption here is that as the size of the tree is intractable, there would only be a few leaf nodes with valid data blocks relative to the tree size, rendering a sparse tree.
+
+The full specification can be found at [Celestia](https://github.com/celestiaorg/celestia-specs/blob/ec98170398dfc6394423ee79b00b71038879e211/src/specs/data_structures.md#sparse-merkle-tree). In summary:
+
+* The SMT consists of a binary Merkle tree, constructed in the same fashion as described in [Certificate Transparency (RFC-6962)](https://tools.ietf.org/html/rfc6962), but using as the hashing function SHA-2-256 as defined in [FIPS 180-4](https://doi.org/10.6028/NIST.FIPS.180-4).
+* Leaves and internal nodes are hashed differently: the one-byte `0x00` is prepended for leaf nodes while `0x01` is prepended for internal nodes.
+* Default values are given to leaf nodes with empty leaves.
+* While the above rule is sufficient to pre-compute the values of intermediate nodes that are roots of empty subtrees, a further simplification is to extend this default value to all nodes that are roots of empty subtrees. The 32-byte zero is used as the default value. This rule takes precedence over the above one.
+* An internal node that is the root of a subtree that contains exactly one non-empty leaf is replaced by that leaf's leaf node.
 
 ### Snapshots for storage sync and state versioning
 

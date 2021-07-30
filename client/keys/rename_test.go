@@ -42,7 +42,7 @@ func Test_runRenameCmd(t *testing.T) {
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithKeyring(kb)
+		WithCodec(cdc)
 
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
@@ -57,6 +57,7 @@ func Test_runRenameCmd(t *testing.T) {
 		fakeKeyName1,
 		"nokey",
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	err = cmd.Execute()
 	require.Error(t, err)
@@ -71,6 +72,7 @@ func Test_runRenameCmd(t *testing.T) {
 		fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.Execute())
 
@@ -100,6 +102,7 @@ func Test_runRenameCmd(t *testing.T) {
 		fakeKeyName2,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.Error(t, cmd.Execute())
 }

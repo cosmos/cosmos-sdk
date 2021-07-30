@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* [\#9720](https://github.com/cosmos/cosmos-sdk/pull/9720) Feegrant grant cli granter now accepts key name as well as address in general and accepts only address in --generate-only mode
 * [\#9766](https://github.com/cosmos/cosmos-sdk/pull/9766) Fix hardcoded ledger signing algorithm on `keys add` command.
 
 ### Features

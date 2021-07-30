@@ -18,12 +18,12 @@ service Msg {
 message MsgCreateVestingAccount {
   option (gogoproto.equal) = true;
 
-  string   from_address                    = 1 [(gogoproto.moretags) = "yaml:\"from_address\""];
-  string   to_address                      = 2 [(gogoproto.moretags) = "yaml:\"to_address\""];
+  string   from_address                    = 1;
+  string   to_address                      = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
-  int64 end_time = 4 [(gogoproto.moretags) = "yaml:\"end_time\""];
+  int64 end_time = 4;
   bool  delayed  = 5;
 }
 

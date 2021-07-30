@@ -41,11 +41,10 @@ message MsgCreateValidator {
   CommissionRates commission          = 2 [(gogoproto.nullable) = false];
   string          min_self_delegation = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
     (gogoproto.nullable)   = false
   ];
-  string                   delegator_address = 4 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string                   validator_address = 5 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string                   delegator_address = 4;
+  string                   validator_address = 5;
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   cosmos.base.v1beta1.Coin value             = 7 [(gogoproto.nullable) = false];
 }
@@ -59,19 +58,17 @@ message MsgEditValidator {
   option (gogoproto.goproto_getters) = false;
 
   Description description       = 1 [(gogoproto.nullable) = false];
-  string      validator_address = 2 [(gogoproto.moretags) = "yaml:\"address\""];
+  string      validator_address = 2;
 
   // We pass a reference to the new commission rate and min self delegation as
   // it's not mandatory to update. If not updated, the deserialized rate will be
   // zero with no way to distinguish if an update was intended.
   // REF: #2373
   string commission_rate = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags)   = "yaml:\"commission_rate\""
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"
   ];
   string min_self_delegation = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags)   = "yaml:\"min_self_delegation\""
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"
   ];
 }
 
@@ -84,8 +81,8 @@ message MsgDelegate {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string                   delegator_address = 1;
+  string                   validator_address = 2;
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
 }
 
@@ -98,9 +95,9 @@ message MsgBeginRedelegate {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string                   delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string                   validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
-  string                   validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
+  string                   delegator_address     = 1;
+  string                   validator_src_address = 2;
+  string                   validator_dst_address = 3;
   cosmos.base.v1beta1.Coin amount                = 4 [(gogoproto.nullable) = false];
 }
 
@@ -115,8 +112,8 @@ message MsgUndelegate {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string                   delegator_address = 1;
+  string                   validator_address = 2;
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
 }
 

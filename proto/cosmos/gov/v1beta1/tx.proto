@@ -35,15 +35,14 @@ message MsgSubmitProposal {
   google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"initial_deposit\""
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   string proposer = 3;
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
 message MsgSubmitProposalResponse {
-  uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
 }
 
 // MsgVote defines a message to cast a vote.
@@ -53,7 +52,7 @@ message MsgVote {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64     proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   string     voter       = 2;
   VoteOption option      = 3;
 }
@@ -68,7 +67,7 @@ message MsgVoteWeighted {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64                      proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64                      proposal_id = 1;
   string                      voter       = 2;
   repeated WeightedVoteOption options     = 3 [(gogoproto.nullable) = false];
 }
@@ -83,7 +82,7 @@ message MsgDeposit {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
   string   depositor   = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

@@ -17,8 +17,8 @@ message MsgVerifyInvariant {
   option (gogoproto.goproto_getters) = false;
 
   string sender                = 1;
-  string invariant_module_name = 2 [(gogoproto.moretags) = "yaml:\"invariant_module_name\""];
-  string invariant_route       = 3 [(gogoproto.moretags) = "yaml:\"invariant_route\""];
+  string invariant_module_name = 2;
+  string invariant_route       = 3;
 }
 
 // MsgVerifyInvariantResponse defines the Msg/VerifyInvariant response type.

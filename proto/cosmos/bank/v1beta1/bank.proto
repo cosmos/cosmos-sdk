@@ -10,8 +10,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 // Params defines the parameters for the bank module.
 message Params {
   option (gogoproto.goproto_stringer)       = false;
-  repeated SendEnabled send_enabled         = 1 [(gogoproto.moretags) = "yaml:\"send_enabled,omitempty\""];
-  bool                 default_send_enabled = 2 [(gogoproto.moretags) = "yaml:\"default_send_enabled,omitempty\""];
+  repeated SendEnabled send_enabled         = 1;
+  bool                 default_send_enabled = 2;
 }
 
 // SendEnabled maps coin denom to a send_enabled status (whether a denom is

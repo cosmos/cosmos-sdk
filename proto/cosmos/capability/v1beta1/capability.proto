@@ -10,7 +10,7 @@ import "gogoproto/gogo.proto";
 message Capability {
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 index = 1 [(gogoproto.moretags) = "yaml:\"index\""];
+  uint64 index = 1;
 }
 
 // Owner defines a single capability owner. An owner is defined by the name of
@@ -19,8 +19,8 @@ message Owner {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string module = 1 [(gogoproto.moretags) = "yaml:\"module\""];
-  string name   = 2 [(gogoproto.moretags) = "yaml:\"name\""];
+  string module = 1;
+  string name   = 2;
 }
 
 // CapabilityOwners defines a set of owners of a single Capability. The set of

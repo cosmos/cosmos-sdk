@@ -32,8 +32,8 @@ message MsgSetWithdrawAddress {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string withdraw_address  = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
+  string delegator_address = 1;
+  string withdraw_address  = 2;
 }
 
 // MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
@@ -45,8 +45,8 @@ message MsgWithdrawDelegatorReward {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string delegator_address = 1;
+  string validator_address = 2;
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.
@@ -58,7 +58,7 @@ message MsgWithdrawValidatorCommission {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string validator_address = 1;
 }
 
 // MsgWithdrawValidatorCommissionResponse defines the Msg/WithdrawValidatorCommission response type.

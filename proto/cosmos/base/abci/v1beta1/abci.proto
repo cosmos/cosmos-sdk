@@ -72,10 +72,10 @@ message Attribute {
 // GasInfo defines tx execution gas context.
 message GasInfo {
   // GasWanted is the maximum units of work we allow this tx to perform.
-  uint64 gas_wanted = 1 [(gogoproto.moretags) = "yaml:\"gas_wanted\""];
+  uint64 gas_wanted = 1;
 
   // GasUsed is the amount of gas actually consumed.
-  uint64 gas_used = 2 [(gogoproto.moretags) = "yaml:\"gas_used\""];
+  uint64 gas_used = 2;
 }
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
@@ -123,13 +123,13 @@ message SearchTxsResult {
   option (gogoproto.stringer) = true;
 
   // Count of all txs
-  uint64 total_count = 1 [(gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
+  uint64 total_count = 1 [(gogoproto.jsontag) = "total_count"];
   // Count of txs in current page
   uint64 count = 2;
   // Index of current page, start from 1
-  uint64 page_number = 3 [(gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
+  uint64 page_number = 3 [(gogoproto.jsontag) = "page_number"];
   // Count of total pages
-  uint64 page_total = 4 [(gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
+  uint64 page_total = 4 [(gogoproto.jsontag) = "page_total"];
   // Max count txs per page
   uint64 limit = 5;
   // List of txs in current page

@@ -17,5 +17,5 @@ message Equivocation {
   int64                     height            = 1;
   google.protobuf.Timestamp time              = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   int64                     power             = 3;
-  string                    consensus_address = 4 [(gogoproto.moretags) = "yaml:\"consensus_address\""];
+  string                    consensus_address = 4;
 }

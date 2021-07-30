@@ -226,6 +226,29 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				suite.Require().True(mintModuleExists)
 			},
 		},
+		{
+			"invalid module name",
+			func() {
+				req = &types.QueryModuleAccountsRequest{}
+			},
+			true,
+			func(res *types.QueryModuleAccountsResponse) {
+				var mintModuleExists = false
+				for _, acc := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					suite.Require().NoError(err)
+
+					moduleAccount, ok := account.(types.ModuleAccountI)
+
+					suite.Require().True(ok)
+					if moduleAccount.GetName() == "falseCase" {
+						mintModuleExists = true
+					}
+				}
+				suite.Require().False(mintModuleExists)
+			},
+		},
 	}
 
 	for _, tc := range testCases {

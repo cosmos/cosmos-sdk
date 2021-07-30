@@ -79,7 +79,9 @@ TODO, needs architecture review. Some topics:
 
 ### Positive
 
-{positive consequences}
++ less pain to tool developers
++ more compatibility in the ecosystem
++ ...
 
 ### Negative
 

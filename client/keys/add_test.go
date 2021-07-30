@@ -221,6 +221,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 
 				out, err := ioutil.ReadAll(b)
 				require.NoError(t, err)
+				t.Logf("out: %s", string(out))
 				require.Contains(t, string(out), "name: testkey")
 
 			} else {

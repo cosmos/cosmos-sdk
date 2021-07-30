@@ -89,7 +89,7 @@ TODO, needs architecture review. Some topics:
 
 ### Neutral
 
-{neutral consequences}
++ more rigor in Protobuf review
 
 ## Further Discussions
 

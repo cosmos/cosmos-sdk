@@ -40,11 +40,12 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 		Data:        serializedLegacyLocalInfo,
 		Description: "SDK kerying version",
 	}
+
 	ks, ok := kb.(keystore)
 	require.True(ok)
 	require.NoError(ks.setItem(item))
 
-	migrated, err := kb.Migrate(n1)
+	migrated, err := ks.migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -79,7 +80,7 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 	require.True(ok)
 	require.NoError(ks.setItem(item))
 
-	migrated, err := kb.Migrate(n1)
+	migrated, err := ks.migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -109,7 +110,7 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 	require.True(ok)
 	require.NoError(ks.setItem(item))
 
-	migrated, err := kb.Migrate(n1)
+	migrated, err := ks.migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -143,7 +144,7 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	require.True(ok)
 	require.NoError(ks.setItem(item))
 
-	migrated, err := kb.Migrate(n1)
+	migrated, err := ks.migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
 }
@@ -180,7 +181,7 @@ func TestMigrateLocalRecord(t *testing.T) {
 
 	require.NoError(ks.setItem(item))
 
-	migrated, err := kb.Migrate(n1)
+	migrated, err := ks.migrate(n1)
 	require.False(migrated)
 	require.NoError(err)
 }
@@ -206,7 +207,7 @@ func TestMigrateOneRandomItemError(t *testing.T) {
 	require.True(ok)
 	require.NoError(ks.setItem(errItem))
 
-	migrated, err := kb.Migrate(n1)
+	migrated, err := ks.migrate(n1)
 	require.False(migrated)
 	require.Error(err)
 }
@@ -299,7 +300,7 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 	require.NoError(ks.setItem(item))
 
 	incorrectItemKey := n1 + "1"
-	migrated, err := kb.Migrate(incorrectItemKey)
+	migrated, err := ks.migrate(incorrectItemKey)
 	require.False(migrated)
 	require.EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, incorrectItemKey).Error())
 }
@@ -323,7 +324,7 @@ func TestMigrateErrEmptyItemData(t *testing.T) {
 	require.True(ok)
 	require.NoError(ks.setItem(item))
 
-	migrated, err := kb.Migrate(n1)
+	migrated, err := ks.migrate(n1)
 	require.False(migrated)
 	require.EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }

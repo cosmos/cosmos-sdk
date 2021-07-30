@@ -19,7 +19,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
@@ -127,7 +126,6 @@ type Importer interface {
 
 type Migrator interface {
 	MigrateAll() (bool, error)
-	Migrate(key string) (bool, error)
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -313,12 +311,12 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	if err != nil {
 		return err
 	}
-
-	pubKey, err := legacy.PubKeyFromBytes(pubBytes)
-	if err != nil {
+	
+	var pubKey types.PubKey
+	if err := ks.cdc.UnmarshalInterface(pubBytes, &pubKey); err != nil {
 		return err
 	}
-
+	
 	_, err = ks.writeOfflineKey(uid, pubKey)
 	if err != nil {
 		return err
@@ -581,7 +579,7 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
-	if _, err := ks.Migrate(uid); err != nil {
+	if _, err := ks.migrate(uid); err != nil {
 		return nil, err
 	}
 
@@ -787,7 +785,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return fmt.Errorf("public key %s already exists in keybase", key)
 	}
 
-	serializedRecord, err := ks.cdc.Marshal(k)
+	serializedRecord, err := ks.protoMarshalRecord(k)
 	if err != nil {
 		return fmt.Errorf("unable to serialize record, err - %s", err)
 	}
@@ -797,7 +795,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		Data: serializedRecord,
 	}
 
-	if err := ks.db.Set(item); err != nil {
+	if err := ks.setItem(item); err != nil {
 		return err
 	}
 
@@ -806,7 +804,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		Data: []byte(key),
 	}
 
-	if err := ks.db.Set(item); err != nil {
+	if err := ks.setItem(item); err != nil {
 		return err
 	}
 
@@ -871,7 +869,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 			continue
 		}
 
-		migrated, err = ks.Migrate(key)
+		migrated, err = ks.migrate(key)
 		if err != nil {
 			fmt.Printf("migrate err: %q", err)
 			continue
@@ -882,7 +880,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 }
 
 // for one key
-func (ks keystore) Migrate(key string) (bool, error) {
+func (ks keystore) migrate(key string) (bool, error) {
 	var migrated bool
 	item, err := ks.db.Get(key)
 	if err != nil {
@@ -909,17 +907,18 @@ func (ks keystore) Migrate(key string) (bool, error) {
 		return migrated, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
 	}
 
-	serializedRecord, err := ks.cdc.Marshal(k)
+	serializedRecord, err := ks.protoMarshalRecord(k)
 	if err != nil {
 		return migrated, fmt.Errorf("unable to serialize record, err - %w", err)
 	}
 
-	// 5.overwrite the keyring entry with
-	if err := ks.db.Set(keyring.Item{
+	item = keyring.Item{
 		Key:         key,
 		Data:        serializedRecord,
 		Description: "SDK kerying version",
-	}); err != nil {
+	}
+	// 5.overwrite the keyring entry with
+	if err := ks.setItem(item); err != nil {
 		return migrated, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}
 
@@ -1009,3 +1008,5 @@ func addrHexKeyAsString(address sdk.Address) string {
 func (ks keystore) setItem(item keyring.Item) error {
 	return ks.db.Set(item)
 }
+
+

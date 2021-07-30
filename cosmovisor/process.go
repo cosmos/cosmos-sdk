@@ -122,7 +122,6 @@ func doBackup(cfg *Config) error {
 		// backup is done, lets check endtime to calculate total time taken for backup process
 		et := time.Now()
 		timeTaken := et.Sub(st)
-
 		fmt.Printf("backup saved at location: %s, completed at time: %s\n"+
 			"time taken to complete the backup: %s", dst, et, timeTaken)
 	}

@@ -93,7 +93,7 @@ TODO, needs architecture review. Some topics:
 
 ## Further Discussions
 
-This ADR is still in the DRAFT stage, and the "Bumping Protobuf Package Version" will be filled in once we make a decision on how to correctly bump Protobuf package versions.
+This ADR is still in the DRAFT stage, and the "Incrementing Protobuf Package Version" will be filled in once we make a decision on how to correctly do it.
 
 ## Test Cases [optional]
 

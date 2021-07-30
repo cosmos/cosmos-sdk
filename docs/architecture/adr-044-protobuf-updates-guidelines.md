@@ -14,7 +14,9 @@ This ADR provides guidelines and recommended practices when updating Protobuf de
 
 ## Context
 
-The SDK maintains a set of [Protobuf definitions](https://github.com/cosmos/cosmos-sdk/tree/master/proto/cosmos). When making changes to these Protobuf definitions, the SDK currently only follows [Buf's](https://docs.buf.build/) recommendations. We noticed however that Buf's recommendations might still result in breaking changes in the SDK in some cases. For example:
+The SDK maintains a set of [Protobuf definitions](https://github.com/cosmos/cosmos-sdk/tree/master/proto/cosmos). It is important to correctly design Protobuf definitions to avoid any breaking changes within the same version. The reasons are to not break tooling (including indexers and explorers), wallets and other third-party integrations.
+
+When making changes to these Protobuf definitions, the SDK currently only follows [Buf's](https://docs.buf.build/) recommendations. We noticed however that Buf's recommendations might still result in breaking changes in the SDK in some cases. For example:
 
 - Adding fields to `Msg`s. Adding fields is a not a Protobuf spec-breaking operation. However, when adding new fields to `Msg`s, the unknown field rejection will throw an error when sending the new `Msg` to an older node.
 - Marking fields as `reserved`. Protobuf proposes the `reserved` keyword for removing fields without the need to bump the package version. However, by doing so, client backwards compatibility is broken as Protobuf doesn't generate anything for `reserved` fields. See [#9446](https://github.com/cosmos/cosmos-sdk/issues/9446) for more details on this issue.
@@ -45,9 +47,11 @@ For this reason, module developers MUST NOT add new fields to existing `Msg`s.
 
 It is worth mentioning that this does not limit adding fields to a `Msg`, but also to all nested structs and `Any`s inside a `Msg`.
 
-On the other hand, module developers MAY add new fields to Protobuf definitions related to the `Query` service, as the unknown field rejection does not apply to queries.
+#### 2. Non-`Msg`-related Protobuf definitions MAY have new fields.
 
-#### 2. Fields MAY be marked as `deprecated`, and nodes MAY implement a protocol-breaking change for handling these fields.
+On the other hand, module developers MAY add new fields to Protobuf definitions related to the `Query` service or to objects which are saved in the store. This recommendation follows the Protobuf specification, but is added in this document for clarity.
+
+#### 3. Fields MAY be marked as `deprecated`, and nodes MAY implement a protocol-breaking change for handling these fields.
 
 Protobuf supports the [`deprecated` field option](https://developers.google.com/protocol-buffers/docs/proto#options), and this option MAY be used on any field, including `Msg` fields. If a node handles a Protobuf message with a non-empty deprecated field, the node MAY change its behavior upon processing it, even in a protocol-breaking way. When possible, the node MUST handle backwards compatibility without breaking the consensus (unless we increment the proto version).
 
@@ -56,11 +60,11 @@ As an example, the SDK v0.42 to v0.43 update contained two Protobuf-breaking cha
 - The SDK recently removed support for [time-based software upgrades](https://github.com/cosmos/cosmos-sdk/pull/8849). As such, the `time` field has been marked as deprecated in `cosmos.upgrade.v1beta1.Plan`. Moreover, the node will reject any proposal containing an upgrade Plan whose `time` field is non-empty.
 - The SDK now supports [governance split votes](./adr-037-gov-split-vote.md). When querying for votes, the returned `cosmos.gov.v1beta1.Vote` message has its `option` field (used for 1 vote option) deprecated in favor of its `options` field (allowing multiple vote options). Whenever possible, the SDK still populates the deprecated `option` field, that is, if and only if the `len(options) == 1` and `options[0].Weight == 1.0`.
 
-#### 3. Fields MUST NOT be renamed.
+#### 4. Fields MUST NOT be renamed.
 
 Whereas the official Protobuf recommendations do not prohibit renaming fields, as it does not break the Protobuf binary representation, the SDK explicitly forbids renaming fields in Protobuf structs. The main reason for this choice is to avoid introducing breaking changes for clients, which often rely on hard-coded fields from generated types. Moreover, renaming fields will lead to client-breaking JSON representations of Protobuf definitions, used in REST endpoints and in the CLI.
 
-### Increment Protobuf Package Version
+### Incrementing Protobuf Package Version
 
 TODO, needs architecture review. Some topics:
 
@@ -79,9 +83,9 @@ TODO, needs architecture review. Some topics:
 
 ### Positive
 
-+ less pain to tool developers
-+ more compatibility in the ecosystem
-+ ...
+- less pain to tool developers
+- more compatibility in the ecosystem
+- ...
 
 ### Negative
 
@@ -89,7 +93,7 @@ TODO, needs architecture review. Some topics:
 
 ### Neutral
 
-+ more rigor in Protobuf review
+- more rigor in Protobuf review
 
 ## Further Discussions
 

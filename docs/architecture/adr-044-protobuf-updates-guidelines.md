@@ -41,7 +41,7 @@ When processing `Msg`s, the SDK's antehandlers are strict and don't allow unknow
 
 Now imagine a v0.43 node accepting a `MsgExample` transaction, and in v0.44 the chain developer decides to add a field to `MsgExample`. A client developer, which only manipulates Protobuf definitions, would see that `MsgExample` has a new field, and will populate it. However, sending the new `MsgExample` to an old v0.43 node would cause the v0.43 node to reject the `MsgExample` because of the unknown field. The expectation that the same Protobuf version can be used across multiple node versions MUST be guaranteed.
 
-For this reason, module developers SHALL NOT add new fields to existing `Msg`s.
+For this reason, module developers MUST NOT add new fields to existing `Msg`s.
 
 It is worth mentioning that this does not limit adding fields to a `Msg`, but also to all nested structs and `Any`s inside a `Msg`.
 

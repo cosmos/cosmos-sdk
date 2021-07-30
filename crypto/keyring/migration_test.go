@@ -33,7 +33,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	pub := priv.PubKey()
 
 	legacyLocalInfo := NewLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
-	serializedLegacyLocalInfo := marshalInfo(legacyLocalInfo)
+	serializedLegacyLocalInfo := MarshalInfo(legacyLocalInfo)
 
 	item := keyring.Item{
 		Key:         n1,
@@ -68,7 +68,7 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 	account, coinType, index := uint32(118), uint32(0), uint32(0)
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	legacyLedgerInfo := NewLegacyLedgerInfo(n1, pub, *hdPath, hd.Secp256k1.Name())
-	serializedLegacyLedgerInfo := marshalInfo(legacyLedgerInfo)
+	serializedLegacyLedgerInfo := MarshalInfo(legacyLedgerInfo)
 
 	item := keyring.Item{
 		Key:         n1,
@@ -98,7 +98,7 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 	pub := priv.PubKey()
 
 	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
-	serializedLegacyOfflineInfo := marshalInfo(legacyOfflineInfo)
+	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
 	item := keyring.Item{
 		Key:         n1,
@@ -132,7 +132,7 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	)
 	legacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := marshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := MarshalInfo(legacyMultiInfo)
 
 	item := keyring.Item{
 		Key:         n1,
@@ -229,7 +229,7 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 	)
 	legacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := marshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := MarshalInfo(legacyMultiInfo)
 
 	item := keyring.Item{
 		Key:         n1,
@@ -245,7 +245,7 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 	pub := priv.PubKey()
 
 	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
-	serializedLegacyOfflineInfo := marshalInfo(legacyOfflineInfo)
+	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
 	item = keyring.Item{
 		Key:         n1,
@@ -287,7 +287,7 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 	pub := priv.PubKey()
 
 	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
-	serializedLegacyOfflineInfo := marshalInfo(legacyOfflineInfo)
+	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
 	item := keyring.Item{
 		Key:         n1,

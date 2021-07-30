@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )

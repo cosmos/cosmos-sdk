@@ -1,4 +1,4 @@
-package keyring_test
+package keyring
 
 import (
 	"encoding/hex"
@@ -8,9 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,9 +21,9 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 
 	pk := &secp256k1.PubKey{Key: tmpKey}
 	path := hd.NewFundraiserParams(5, sdk.CoinType, 1)
-	ledgerRecord := keyring.NewLedgerRecord(path)
-	ledgerRecordItem := keyring.NewLedgerRecordItem(ledgerRecord)
-	k, err := keyring.NewRecord("some_name", pk, ledgerRecordItem)
+	ledgerRecord := NewLedgerRecord(path)
+	ledgerRecordItem := NewLedgerRecordItem(ledgerRecord)
+	k, err := NewRecord("some_name", pk, ledgerRecordItem)
 	require.NoError(t, err)
 
 	l := k.GetLedger()
@@ -39,11 +37,11 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 		pubKey.String())
 
 	// Serialize and restore
-	encCfg := simapp.MakeTestEncodingConfig()
-	serialized, err := encCfg.Codec.Marshal(k)
+	cdc := getCodec()
+	serialized, err := cdc.Marshal(k)
 	require.NoError(t, err)
-	var restoredRecord keyring.Record
-	err = encCfg.Codec.Unmarshal(serialized, &restoredRecord)
+	var restoredRecord Record
+	err = cdc.Unmarshal(serialized, &restoredRecord)
 	require.NoError(t, err)
 	require.NotNil(t, restoredRecord)
 

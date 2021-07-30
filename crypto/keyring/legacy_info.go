@@ -249,7 +249,7 @@ func (i legacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 }
 
 // encoding info
-func MarshalInfo(i legacyInfo) []byte {
+func marshalInfo(i legacyInfo) []byte {
 	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }
 

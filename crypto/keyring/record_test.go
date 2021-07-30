@@ -10,6 +10,7 @@ import (
 	//"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+
 	//"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	//cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -61,8 +62,8 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	var privKey cryptotypes.PrivKey
 	privKey = priv
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	cdc := getCodec()
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	localRecord, err := keyring.NewLocalRecord(privKey)
@@ -102,8 +103,8 @@ func TestLedgerRecordMarshaling(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	pub := priv.PubKey()
 
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	cdc := getCodec()
+	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	path := hd.NewFundraiserParams(4, 12345, 57)

@@ -51,25 +51,25 @@ func TestAltSigningAlgoList_Contains(t *testing.T) {
 	list := SigningAlgoList{hd.Secp256k1}
 
 	require.True(t, list.Contains(hd.Secp256k1))
-	require.False(t, list.Contains(NotSupportedAlgo{}))
+	require.False(t, list.Contains(notSupportedAlgo{}))
 }
 
 func TestAltSigningAlgoList_String(t *testing.T) {
-	list := SigningAlgoList{hd.Secp256k1, NotSupportedAlgo{}}
+	list := SigningAlgoList{hd.Secp256k1, notSupportedAlgo{}}
 	require.Equal(t, fmt.Sprintf("%s,notSupported", string(hd.Secp256k1Type)), list.String())
 }
 
-type NotSupportedAlgo struct {
+type notSupportedAlgo struct {
 }
 
-func (n NotSupportedAlgo) Name() hd.PubKeyType {
+func (n notSupportedAlgo) Name() hd.PubKeyType {
 	return "notSupported"
 }
 
-func (n NotSupportedAlgo) Derive() hd.DeriveFn {
+func (n notSupportedAlgo) Derive() hd.DeriveFn {
 	return hd.Secp256k1.Derive()
 }
 
-func (n NotSupportedAlgo) Generate() hd.GenerateFn {
+func (n notSupportedAlgo) Generate() hd.GenerateFn {
 	return hd.Secp256k1.Generate()
 }

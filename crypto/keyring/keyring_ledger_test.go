@@ -1,6 +1,6 @@
 //+build ledger test_ledger_mock
 
-package keyring_test
+package keyring
 
 import (
 	"bytes"
@@ -10,13 +10,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb := keyring.NewInMemory(encCfg.Codec)
+	cdc := getCodec()
+	kb := keyring.NewInMemory(cdc)
 
 	k, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 
@@ -39,8 +38,7 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, restoredRecord)
 	require.Equal(t, "some_account", restoredRecord.Name)
-	// TODO handle GetType remove it
-	//require.Equal(t, TypeLedger, restoredKey.GetType())
+	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey, err = restoredRecord.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())
@@ -55,9 +53,9 @@ func TestInMemoryCreateLedger(t *testing.T) {
 // signatures
 func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	dir := t.TempDir()
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
-	kb, err := keyring.New("keybasename", "test", dir, nil, encCfg.Codec)
+	kb, err := keyring.New("keybasename", "test", dir, nil, cdc)
 	require.NoError(t, err)
 
 	k, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
@@ -96,14 +94,14 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 
 func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	dir := t.TempDir()
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, nil, encCfg.Codec)
+	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, nil, cdc)
 	require.NoError(t, err)
 
 	// Test unsupported Algo
-	_, err = kr.SaveLedgerKey("key", keyring.NotSupportedAlgo{}, "cosmos", 118, 0, 0)
-	require.EqualError(t, err, keyring.ErrUnsupportedSigningAlgo.Error())
+	_, err = kr.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 118, 0, 0)
+	require.EqualError(t, err, ErrUnsupportedSigningAlgo.Error())
 
 	k, err := kr.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 	if err != nil {

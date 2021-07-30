@@ -1,36 +1,25 @@
-package keyring_test
+package keyring
 
 import (
 	"strings"
 	"testing"
 
-	design99keyring "github.com/99designs/keyring"
+	"github.com/99designs/keyring"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+
 	//"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-//	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	//	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
 
 const n1 = "cosmos"
 
-
-func getCodec() codec.Codec {
-	registry := codectypes.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	return codec.NewProtoCodec(registry)
-}
-	
 type setter interface {
-	setItem(item design99keyring.Item) error
+	setItem(item keyring.Item) error
 }
 
 func TestMigrateLegacyLocalKey(t *testing.T) {
@@ -40,7 +29,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -48,10 +37,10 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	pub := priv.PubKey()
 
 	// TODO serialize using amino or proto? legacy.Cdc.MustMarshal(priv)
-	legacyLocalInfo := keyring.NewLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
-	serializedLegacyLocalInfo := keyring.MarshalInfo(legacyLocalInfo)
+	legacyLocalInfo := NewLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
+	serializedLegacyLocalInfo := marshalInfo(legacyLocalInfo)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyLocalInfo,
 		Description: "SDK kerying version",
@@ -60,8 +49,6 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	s, ok := kb.(setter)
 	require.NoError(s.setItem(item))
 	require.True(ok)
-	
-
 
 	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
@@ -75,10 +62,10 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 func TestMigrateLegacyLedgerKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -86,10 +73,10 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 
 	account, coinType, index := uint32(118), uint32(0), uint32(0)
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
-	legacyLedgerInfo := keyring.NewLegacyLedgerInfo(n1, pub, *hdPath, hd.Secp256k1.Name())
-	serializedLegacyLedgerInfo := keyring.MarshalInfo(legacyLedgerInfo)
+	legacyLedgerInfo := NewLegacyLedgerInfo(n1, pub, *hdPath, hd.Secp256k1.Name())
+	serializedLegacyLedgerInfo := marshalInfo(legacyLedgerInfo)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyLedgerInfo,
 		Description: "SDK kerying version",
@@ -106,19 +93,19 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 func TestMigrateLegacyOfflineKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
-	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
+	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	serializedLegacyOfflineInfo := marshalInfo(legacyOfflineInfo)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
 		Description: "SDK kerying version",
@@ -135,10 +122,10 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 func TestMigrateLegacyMultiKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -147,11 +134,11 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 			priv.PubKey(),
 		},
 	)
-	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
+	legacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := marshalInfo(legacyMultiInfo)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
@@ -171,21 +158,21 @@ func TestMigrateLocalRecord(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Codec
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
 	privKey := cryptotypes.PrivKey(priv)
 	pub := priv.PubKey()
 
-	localRecord, err := keyring.NewLocalRecord(privKey)
+	localRecord, err := NewLocalRecord(privKey)
 	require.NoError(err)
-	localRecordItem := keyring.NewLocalRecordItem(localRecord)
-	k, err := keyring.NewRecord("test record", pub, localRecordItem)
+	localRecordItem := NewLocalRecordItem(localRecord)
+	k, err := NewRecord("test record", pub, localRecordItem)
 	serializedRecord, err := kb.ProtoMarshalRecord(k)
 	require.NoError(err)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedRecord,
 		Description: "SDK kerying version",
@@ -202,15 +189,15 @@ func TestMigrateLocalRecord(t *testing.T) {
 func TestMigrateOneRandomItemError(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	randomBytes := []byte("abckd0s03l")
 
-	errItem := design99keyring.Item{
+	errItem := keyring.Item{
 		Key:         n1,
 		Data:        randomBytes,
 		Description: "SDK kerying version",
@@ -227,10 +214,10 @@ func TestMigrateOneRandomItemError(t *testing.T) {
 func TestMigrateAllMultiOffline(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
@@ -239,11 +226,11 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 			priv.PubKey(),
 		},
 	)
-	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
+	legacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := marshalInfo(legacyMultiInfo)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
@@ -254,10 +241,10 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 	priv = secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
-	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
+	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	serializedLegacyOfflineInfo := marshalInfo(legacyOfflineInfo)
 
-	item = design99keyring.Item{
+	item = keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
 		Description: "SDK kerying version",
@@ -273,10 +260,10 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 func TestMigrateAllNoItem(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	migrated, err := kb.MigrateAll()
@@ -287,19 +274,19 @@ func TestMigrateAllNoItem(t *testing.T) {
 func TestMigrateErrUnknownItemKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	priv := secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	legacyOfflineInfo := keyring.NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
-	serializedLegacyOfflineInfo := keyring.MarshalInfo(legacyOfflineInfo)
+	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	serializedLegacyOfflineInfo := marshalInfo(legacyOfflineInfo)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
 		Description: "SDK kerying version",
@@ -317,13 +304,13 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 func TestMigrateErrEmptyItemData(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
+	cdc := getCodec()
 
 	require := require.New(t)
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
-	item := design99keyring.Item{
+	item := keyring.Item{
 		Key:         n1,
 		Data:        []byte{},
 		Description: "SDK kerying version",

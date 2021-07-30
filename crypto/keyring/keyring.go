@@ -130,7 +130,6 @@ type Migrator interface {
 	Migrate(key string) (bool, error)
 }
 
-
 // Exporter is implemented by key stores that support export of public and private keys.
 // TODO decide if need exporter interface as it is used only in keyring_test.go
 type Exporter interface {
@@ -235,7 +234,6 @@ func (ks keystore) ExportPubKeyArmor(uid string) (string, error) {
 		return "", err
 	}
 
-
 	bz, err := ks.cdc.MarshalInterface(key)
 	if err != nil {
 		return "", err
@@ -259,7 +257,7 @@ func (ks keystore) ExportPrivKeyArmor(uid, encryptPassphrase string) (armor stri
 	if err != nil {
 		return "", err
 	}
-	
+
 	return crypto.EncryptArmorPrivKey(priv, encryptPassphrase, priv.Type()), nil
 }
 
@@ -329,7 +327,6 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 
 	return nil
 }
-
 
 func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	k, err := ks.Key(uid)
@@ -535,7 +532,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 
 	// Default number of words (24): This generates a mnemonic directly from the
 	// number of words by reading system entropy.
-	entropy, err := bip39.NewEntropy(DefaultEntropySize)
+	entropy, err := bip39.NewEntropy(defaultEntropySize)
 	if err != nil {
 		return nil, "", err
 	}

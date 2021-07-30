@@ -39,7 +39,7 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	)
 	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := marshalInfo(legacyMultiInfo)
 
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{

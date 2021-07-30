@@ -118,6 +118,30 @@ func TestInitRecover(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
+func TestInitStakingBondDenom(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithCodec(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithHomeDir(home)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s --%s=testtoken", cli.HomeFlag, home, genutilcli.FlagStakingBondDenom)})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+}
+
 func TestEmptyState(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()

@@ -10,17 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 
-	//"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	//	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const n1 = "cosmos"
-
-type setter interface {
-	setItem(item keyring.Item) error
-}
 
 func TestMigrateLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring
@@ -36,7 +32,6 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	privKey := cryptotypes.PrivKey(priv)
 	pub := priv.PubKey()
 
-	// TODO serialize using amino or proto? legacy.Cdc.MustMarshal(priv)
 	legacyLocalInfo := NewLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
 	serializedLegacyLocalInfo := marshalInfo(legacyLocalInfo)
 
@@ -45,10 +40,9 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 		Data:        serializedLegacyLocalInfo,
 		Description: "SDK kerying version",
 	}
-
-	s, ok := kb.(setter)
-	require.NoError(s.setItem(item))
+	ks, ok := kb.(keystore)
 	require.True(ok)
+	require.NoError(ks.setItem(item))
 
 	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
@@ -58,7 +52,6 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 // test pass!
 // go test -tags='cgo ledger norace' github.com/cosmos-sdk/crypto
 
-/*
 func TestMigrateLegacyLedgerKey(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
@@ -82,8 +75,9 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(item)
-	require.NoError(err)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.setItem(item))
 
 	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
@@ -111,8 +105,9 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(item)
-	require.NoError(err)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.setItem(item))
 
 	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
@@ -144,8 +139,9 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(item)
-	require.NoError(err)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.setItem(item))
 
 	migrated, err := kb.Migrate(n1)
 	require.True(migrated)
@@ -155,7 +151,7 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 func TestMigrateLocalRecord(t *testing.T) {
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := getCodec()
 
 	require := require.New(t)
 	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
@@ -169,7 +165,11 @@ func TestMigrateLocalRecord(t *testing.T) {
 	require.NoError(err)
 	localRecordItem := NewLocalRecordItem(localRecord)
 	k, err := NewRecord("test record", pub, localRecordItem)
-	serializedRecord, err := kb.ProtoMarshalRecord(k)
+
+	ks, ok := kb.(keystore)
+	require.True(ok)
+
+	serializedRecord, err := ks.protoMarshalRecord(k)
 	require.NoError(err)
 
 	item := keyring.Item{
@@ -178,8 +178,7 @@ func TestMigrateLocalRecord(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(item)
-	require.NoError(err)
+	require.NoError(ks.setItem(item))
 
 	migrated, err := kb.Migrate(n1)
 	require.False(migrated)
@@ -203,8 +202,9 @@ func TestMigrateOneRandomItemError(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(errItem)
-	require.NoError(err)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.setItem(errItem))
 
 	migrated, err := kb.Migrate(n1)
 	require.False(migrated)
@@ -236,7 +236,9 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.setItem(item))
 
 	priv = secp256k1.GenPrivKey()
 	pub := priv.PubKey()
@@ -250,7 +252,7 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
+	require.NoError(ks.setItem(item))
 
 	migrated, err := kb.MigrateAll()
 	require.True(migrated)
@@ -292,8 +294,9 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(item)
-	require.NoError(err)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.setItem(item))
 
 	incorrectItemKey := n1 + "1"
 	migrated, err := kb.Migrate(incorrectItemKey)
@@ -316,11 +319,11 @@ func TestMigrateErrEmptyItemData(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	err = kb.SetItem(item)
-	require.NoError(err)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.setItem(item))
 
 	migrated, err := kb.Migrate(n1)
 	require.False(migrated)
 	require.EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }
-*/

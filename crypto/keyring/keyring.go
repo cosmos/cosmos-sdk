@@ -131,7 +131,6 @@ type Migrator interface {
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
-// TODO decide if need exporter interface as it is used only in keyring_test.go
 type Exporter interface {
 	// Export public key
 	ExportPubKeyArmor(uid string) (string, error)
@@ -510,7 +509,7 @@ func (ks keystore) List() ([]*Record, error) {
 			return nil, sdkerrors.ErrKeyNotFound.Wrap(key)
 		}
 
-		k, err := ks.ProtoUnmarshalRecord(item.Data)
+		k, err := ks.protoUnmarshalRecord(item.Data)
 		if err != nil {
 			return nil, err
 		}
@@ -595,7 +594,7 @@ func (ks keystore) Key(uid string) (*Record, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, uid)
 	}
 
-	return ks.ProtoUnmarshalRecord(item.Data)
+	return ks.protoUnmarshalRecord(item.Data)
 }
 
 // SupportedAlgorithms returns the keystore Options' supported signing algorithm.
@@ -895,7 +894,7 @@ func (ks keystore) Migrate(key string) (bool, error) {
 	}
 
 	// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
-	if _, err := ks.ProtoUnmarshalRecord(item.Data); err == nil {
+	if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
 		return migrated, nil
 	}
 
@@ -927,7 +926,7 @@ func (ks keystore) Migrate(key string) (bool, error) {
 	return !migrated, nil
 }
 
-func (ks keystore) ProtoUnmarshalRecord(bz []byte) (*Record, error) {
+func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 	k := new(Record)
 	if err := ks.cdc.Unmarshal(bz, k); err != nil {
 		return nil, err
@@ -936,12 +935,8 @@ func (ks keystore) ProtoUnmarshalRecord(bz []byte) (*Record, error) {
 	return k, nil
 }
 
-func (ks keystore) ProtoMarshalRecord(k *Record) ([]byte, error) {
+func (ks keystore) protoMarshalRecord(k *Record) ([]byte, error) {
 	return ks.cdc.Marshal(k)
-}
-
-func (ks keystore) MarshalPrivKey(privKey types.PrivKey) ([]byte, error) {
-	return ks.cdc.MarshalInterface(privKey)
 }
 
 func (ks keystore) convertFromLegacyInfo(info legacyInfo) (*Record, error) {

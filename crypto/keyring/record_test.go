@@ -18,8 +18,8 @@ import (
 
 /*
 type marshaler interface {
-	ProtoMarshalRecord(k *Record) ([]byte, error)
-	ProtoUnmarshalRecord(bz []byte) (*Record, error)
+	protoMarshalRecord(k *Record) ([]byte, error)
+	protoUnmarshalRecord(bz []byte) (*Record, error)
 }
 */
 
@@ -73,10 +73,10 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	r, err := keyring.NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
 
-	bz, err := kb.ProtoMarshalRecord(r)
+	bz, err := kb.protoMarshalRecord(r)
 	require.NoError(err)
 
-	r2, err := kb.ProtoUnmarshalRecord(bz)
+	r2, err := kb.protoUnmarshalRecord(bz)
 	require.NoError(err)
 	require.Equal(r.Name, r2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.
@@ -115,10 +115,10 @@ func TestLedgerRecordMarshaling(t *testing.T) {
 	r, err := keyring.NewRecord("testrecord", pub, ledgerRecordItem)
 	require.NoError(err)
 
-	bz, err := kb.ProtoMarshalRecord(r)
+	bz, err := kb.protoMarshalRecord(r)
 	require.NoError(err)
 
-	r2, err := kb.ProtoUnmarshalRecord(bz)
+	r2, err := kb.protoUnmarshalRecord(bz)
 	require.NoError(err)
 	require.Equal(r.Name, r2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.

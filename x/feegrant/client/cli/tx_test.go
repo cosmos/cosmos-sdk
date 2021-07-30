@@ -10,17 +10,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	v1 "cosmossdk.io/api/cosmos/gov/v1"
-	v1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
-	"cosmossdk.io/core/address"
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/feegrant/client/cli"
-	"cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/gov"
-	govcli "cosmossdk.io/x/gov/client/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -151,6 +140,10 @@ func (s *CLITestSuite) TestNewCmdFeeGrant() {
 	alreadyExistedGranteeAddr, err := s.baseCtx.AddressCodec.BytesToString(s.addedGrantee)
 	s.Require().NoError(err)
 	fromAddr, fromName, _, err := client.GetFromFields(s.baseCtx, s.kr, granterAddr)
+	s.Require().Equal(fromAddr, granter)
+	s.Require().NoError(err)
+
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
 	s.Require().Equal(fromAddr, granter)
 	s.Require().NoError(err)
 

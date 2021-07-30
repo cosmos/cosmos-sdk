@@ -48,9 +48,8 @@ func GetTxCmd() *cobra.Command {
 // This command is more powerful than AutoCLI generated command as it allows a better input validation.
 func NewCmdFeeGrant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "grant <granter_key_or_address> <grantee>",
-		Aliases: []string{"grant-allowance"},
-		Short:   "Grant Fee allowance to an address",
+		Use:   "grant [granter_key_or_address] [grantee]",
+		Short: "Grant Fee allowance to an address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(
 				`Grant authorization to pay fees from your address. Note, the '--from' flag is
@@ -66,9 +65,6 @@ Examples:
 		),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.Flags().Set(flags.FlagFrom, args[0]); err != nil {
-				return err
-			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

@@ -129,7 +129,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			if stakingBondDenom != "" {
 				stakingRaw := appGenState[stakingtypes.ModuleName]
 				var stakingGenesis stakingtypes.GenesisState
-				clientCtx.Codec.UnmarshalJSON(stakingRaw, &stakingGenesis)
+				err := clientCtx.Codec.UnmarshalJSON(stakingRaw, &stakingGenesis)
+				if err != nil {
+					return err
+				}
 				stakingGenesis.Params.BondDenom = stakingBondDenom
 				modifiedStakingStr, err := clientCtx.Codec.MarshalJSON(&stakingGenesis)
 				if err != nil {

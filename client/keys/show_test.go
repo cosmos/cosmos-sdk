@@ -46,13 +46,13 @@ func Test_runShowCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	kbHome := t.TempDir()
-	encCfg := simapp.MakeTestEncodingConfig()
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
+	cdc:= simapp.MakeTestEncodingConfig().Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
 	clientCtx := client.Context{}.
 		WithKeyringDir(kbHome).
-		WithKeyring(kb)
+		WithCodec(cdc)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd.SetArgs([]string{"invalid"})
@@ -82,6 +82,7 @@ func Test_runShowCmd(t *testing.T) {
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=", FlagBechPrefix),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "invalid Bech32 prefix encoding provided: ")
 
@@ -89,6 +90,7 @@ func Test_runShowCmd(t *testing.T) {
 		fakeKeyName1,
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
 	// try fetch by name
@@ -103,6 +105,7 @@ func Test_runShowCmd(t *testing.T) {
 		addr.String(),
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 
 	require.NoError(t, cmd.ExecuteContext(ctx))
@@ -113,6 +116,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=0", flagMultiSigThreshold),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "threshold must be a positive integer")
 
@@ -121,6 +125,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 		fmt.Sprintf("--%s=%s", FlagBechPrefix, sdk.PrefixAccount),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 
@@ -131,6 +136,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=acc", FlagBechPrefix),
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts stored in devices")
 
@@ -140,6 +146,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=val", FlagBechPrefix),
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for accounts")
 
@@ -150,6 +157,7 @@ func Test_runShowCmd(t *testing.T) {
 		fmt.Sprintf("--%s=true", FlagDevice),
 		fmt.Sprintf("--%s=2", flagMultiSigThreshold),
 		fmt.Sprintf("--%s=true", FlagPublicKey),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	require.EqualError(t, cmd.ExecuteContext(ctx), "the device flag (-d) can only be used for addresses not pubkeys")
 }

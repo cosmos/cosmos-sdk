@@ -10,7 +10,7 @@ DRAFT Not Implemented
 
 ## Abstract
 
-Sparse Merke Tree ([SMT](https://osf.io/8mcnh/)) is a version of a Merkle Tree with various storage and performance optimizations. This ADR defines a separation of state commitments from data storage and the SDK transition from IAVL to SMT.
+Sparse Merkle Tree ([SMT](https://osf.io/8mcnh/)) is a version of a Merkle Tree with various storage and performance optimizations. This ADR defines a separation of state commitments from data storage and the SDK transition from IAVL to SMT.
 
 ## Context
 
@@ -30,7 +30,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 ## Decision
 
-We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [LazyLedgers' SMT](https://github.com/lazyledger/smt). LazyLedger SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
+We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [Celestia's SMT](https://github.com/lazyledger/smt). Celestia SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
 
 The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible for data serialization.
 
@@ -40,7 +40,7 @@ Separation of storage and commitment (by the SMT) will allow the optimization of
 
 `SC` (SMT) is used to commit to a data and compute merkle proofs. `SS` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SS` will store each `(key, value)` pair directly (map key -> value).
 
-SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is used as leaf path (we hash a key to uniformly distribute leaves in the tree) and `(hash(key),  hash(value))` as the leaf contents. The tree structure is specified in more depth [below](#lazyledger-smt-for-state-commitment).
+SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is used as leaf path (we hash a key to uniformly distribute leaves in the tree) and `(hash(key),  hash(value))` as the leaf contents. The tree structure is specified in more depth [below](#celestia-smt-for-state-commitment).
 
 For data access we propose 2 additional KV buckets (implemented as namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 
@@ -66,7 +66,7 @@ State Commitment requirements:
 + tree path should be short
 + pruning (garbage collection)
 
-### LazyLedger SMT for State Commitment
+### Celestia SMT for State Commitment
 
 A Sparse Merkle tree is based on the idea of a complete Merkle tree of an intractable size. The assumption here is that as the size of the tree is intractable, there would only be a few leaf nodes with valid data blocks relative to the tree size, rendering a sparse tree.
 
@@ -130,7 +130,7 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 
 + Decoupling state from state commitment introduce better engineering opportunities for further optimizations and better storage patterns.
 + Performance improvements.
-+ Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, LazyLedger.
++ Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, Celestia.
 
 ### Negative
 
@@ -166,7 +166,7 @@ We were discussing use case where modules can use a support database, which is n
 + [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
 + [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
 + [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
-+ [LazyLedger SMT](https://github.com/lazyledger/smt)
++ [Celestia SMT](https://github.com/lazyledger/smt)
 + Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 + [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
 + Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).

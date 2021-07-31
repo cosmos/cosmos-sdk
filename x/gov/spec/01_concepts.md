@@ -67,10 +67,12 @@ The deposit is kept in escrow and held by the governance `ModuleAccount` until t
 
 ### Deposit refund and burn
 
-When a the a proposal finalized, the coins from the deposit are either refunded or burned, according to the final tally of the proposal:
+When a proposal is finalized, the coins from the deposit are either refunded or burned, according to the final tally of the proposal:
 
-- If the proposal is approved or if it's rejected but _not_ vetoed, deposits will automatically be refunded to their respective depositor (transferred from the governance `ModuleAccount`).
-- When the proposal is vetoed with a supermajority, deposits be burned from the governance `ModuleAccount`.
+- If the proposal is approved or rejected but _not_ vetoed, each deposit will be automatically refunded to its respective depositor (transferred from the governance `ModuleAccount`). 
+- When the proposal is vetoed with a supermajority, deposits will be burned from the governance `ModuleAccount` and the proposal information along with its deposit information will be removed from state.
+- All refunded or burned deposits are removed from the state. Events are issued when burning or refunding a deposit.
+- NOTE: The proposals which completed the voting period, cannot return the deposits when queried.
 
 ## Vote
 

@@ -63,7 +63,9 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 	encCdc := simapp.MakeTestEncodingConfig()
 	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, skip, simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
 	genesisState := simapp.NewDefaultGenesisState(encCdc.Codec)
-	stateBytes := simapp.SetupGenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState = simapp.SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	require.NoError(t, err)
 
 	app.InitChain(
 		abci.RequestInitChain{

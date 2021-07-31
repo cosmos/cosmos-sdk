@@ -18,6 +18,7 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -112,7 +113,13 @@ func SetupWithGenesisAccounts(t *testing.T, isCheckTx bool, genAccs []authtypes.
 func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	app, genesisState := setup(true, 5)
 
-	stateBytes := SetupGenesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+	genesisState = SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, genAccs, balances...)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	if t != nil {
+		require.NoError(t, err)
+	} else if t == nil && err != nil {
+		panic(err)
+	}
 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
@@ -135,10 +142,11 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
-func SetupGenesisStateWithValSet(t *testing.T, app *SimApp, genesisState GenesisState, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) []byte {
+func SetupGenesisStateWithValSet(t *testing.T, cdc codec.Codec, genesisState GenesisState, valSet *tmtypes.ValidatorSet,
+	genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) GenesisState {
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
+	genesisState[authtypes.ModuleName] = cdc.MustMarshalJSON(authGenesis)
 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
@@ -177,7 +185,7 @@ func SetupGenesisStateWithValSet(t *testing.T, app *SimApp, genesisState Genesis
 	}
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
+	genesisState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingGenesis)
 
 	totalSupply := sdk.NewCoins()
 	for _, b := range balances {
@@ -198,16 +206,9 @@ func SetupGenesisStateWithValSet(t *testing.T, app *SimApp, genesisState Genesis
 
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
+	genesisState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if t != nil {
-		require.NoError(t, err)
-	} else if t == nil && err != nil {
-		panic(err)
-	}
-
-	return stateBytes
+	return genesisState
 
 }
 

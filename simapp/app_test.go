@@ -65,8 +65,9 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	genesisState := NewDefaultGenesisState(encCfg.Codec)
 	genAccs := []authtypes.GenesisAccount{acc}
 
-	stateBytes := SetupGenesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
-
+	genesisState = SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, genAccs, balances...)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	require.NoError(t, err)
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
 		abci.RequestInitChain{

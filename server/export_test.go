@@ -3,6 +3,7 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -155,7 +156,9 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	genesisState := simapp.NewDefaultGenesisState(encCfg.Codec)
 	genAccs := []authtypes.GenesisAccount{acc}
 
-	stateBytes := simapp.SetupGenesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+	genesisState = simapp.SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, genAccs, balances...)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	require.NoError(t, err)
 
 	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir

@@ -275,8 +275,9 @@ func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 }
 
 func (ctx Context) printOutput(out []byte) error {
+	var err error
 	if ctx.OutputFormat == "text" {
-		out, err := yaml.JSONToYAML(out)
+		out, err = yaml.JSONToYAML(out)
 		if err != nil {
 			return err
 		}
@@ -287,7 +288,7 @@ func (ctx Context) printOutput(out []byte) error {
 		writer = os.Stdout
 	}
 
-	_, err := writer.Write(out)
+	_, err = writer.Write(out)
 	if err != nil {
 		return err
 	}

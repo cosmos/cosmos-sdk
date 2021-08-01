@@ -1,8 +1,8 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Cosmos SDK - Legacy REST and gRPC Gateway docs
   description: 'A REST interface for state queries, legacy transactions'
-  version: 1.0.0
+  version: 1.1.0
 paths:
   /node_info:
     get:
@@ -4620,6 +4620,248 @@ paths:
             type: string
         '500':
           description: Internal Server Error
+  /wasm/code:
+    post:
+      summary: Generate wasm store code message
+      tags:
+        - Wasm
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: store code request body
+          schema:
+            $ref: "#/definitions/StoreCodeReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Bad request
+        500:
+          description: Internal Server Error
+    get:
+      summary: List code info
+      tags:
+        - Wasm
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+              result:
+                $ref: "#/definitions/ListCodeReponse"
+  /wasm/code/{codeID}:
+    post:
+      summary: Instantiate wasm contract message
+      tags:
+        - Wasm
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: codeID
+          description: code ID you want to instantiate
+          required: true
+          type: number
+        - in: body
+          name: instantiate contract request body
+          schema:
+            $ref: "#/definitions/InstantiateContractReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Bad request
+        500:
+          description: Internal Server Error
+    get:
+      summary: Get code info of the code ID
+      tags:
+        - Wasm
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: codeID
+          description: code ID you want to query
+          required: true
+          type: number
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+              result:
+                $ref: "#/definitions/CodeInfo"
+  /wasm/code/{codeID}/contracts:
+    get:
+      summary: Get info about all contracts deployed with a code ID
+      tags:
+        - Wasm
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: codeID
+          description: code ID you want to query
+          required: true
+          type: number
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+              result:
+                $ref: "#/definitions/CodeIdContracts"
+  /wasm/contract/{contractAddress}:
+    post:
+      summary: Execute wasm contract message
+      tags:
+        - Wasm
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: contractAddress
+          description: contract address you want to execute
+          required: true
+          type: string
+        - in: body
+          name: execute contract request body
+          schema:
+            $ref: "#/definitions/ExecuteContractReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/StdTx"
+        400:
+          description: Bad request
+        500:
+          description: Internal Server Error
+  /wasm/contract/{contractAddress}/code-hash:
+    get:
+      summary: Get stored contract-hash information
+      tags:
+        - Wasm
+      parameters:
+        - in: path
+          name: contractAddress
+          description: contract address you want to lookup
+          required: true
+          type: string
+        - in: query
+          name: query_msg
+          description: json formatted query msg
+          required: true
+          type: string
+          x-example: "{}"
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+              result:
+                type: string
+  /wasm/contract/{contractAddress}/query/{query}:
+    get:
+      summary: Get stored information with store key
+      tags:
+        - Wasm
+      parameters:
+        - in: path
+          name: contractAddress
+          description: contract address you want to lookup
+          required: true
+          type: string
+        - in: path
+          name: query
+          description: hex encoded data for the query
+          required: true
+          type: string
+        - in: query
+          name: encoding
+          description: encoding of the query data (only hex supported)
+          required: false
+          type: string
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+              result:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+  /wasm/code/{codeID}/hash:
+    get:
+      summary: Get code ID data hash
+      tags:
+        - Wasm
+      parameters:
+        - in: path
+          name: codeID
+          description: code ID you want to query
+          required: true
+          type: number
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+              result:
+                $ref: "#/definitions/CodeHash"
+        404:
+          description: Not Found
+  /reg/consensus-io-exch-pubkey:
+    get:
+      tags:
+        - Reg
+      summary: Get chain public key
+      description: Get chain public key
+      operationId: consensus-io-exch-pubkey
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              $ref: '#/definitons/IoExchPubkeyResponse'
+        '404':
+          description: Not Found
   /cosmos/auth/v1beta1/accounts:
     get:
       summary: Accounts returns all the existing accounts
@@ -23420,6 +23662,105 @@ securityDefinitions:
   kms:
     type: basic
 definitions:
+  CodeIdContracts:
+    type: object
+    properties:
+      height:
+        type: string
+      result:
+        type: array
+        items:
+          $ref: "#/definitions/ListContractSingle"
+  IoExchPubkeyResponse:
+    type: object
+    properties:
+      height:
+        type: string
+      result:
+        type: object
+        properties:
+          ioExchPubkey:
+            type: string
+  ListContractSingle:
+    type: object
+    properties:
+      code-id:
+        type: number
+      creator:
+        type: string
+      label:
+        type: string
+      address:
+        type: string
+  ListCodeReponse:
+    type: object
+    properties:
+      height:
+        type: string
+      result:
+        type: array
+        items:
+          $ref: "#/definitions/ListCodeSingle"
+  ListCodeSingle:
+    type: object
+    properties:
+      id:
+        type: number
+      creator:
+        type: string
+      data_hash:
+        type: string
+      source:
+        type: string
+      builder:
+        type: string
+  CodeHash:
+    type: object
+    properties:
+      height:
+        type: string
+      result:
+        type: string
+  CodeInfo:
+    type: object
+    properties:
+      code_hash:
+        type: string
+      creator:
+        type: string
+  StoreCodeReq:
+    type: object
+    properties:
+      base_req:
+        $ref: "#/definitions/BaseReq"
+      wasm_bytes:
+        type: string
+        example: "Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH"
+  InstantiateContractReq:
+    type: object
+    properties:
+      base_req:
+        $ref: "#/definitions/BaseReq"
+      init_coins:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+      init_msg:
+        type: string
+        description: json formatted string
+        example: "{}"
+  ExecuteContractReq:
+    type: object
+    properties:
+      base_req:
+        $ref: "#/definitions/BaseReq"
+      coins:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+      exec_msg:
+        type: string
+        example: "{}"
   CheckTxResult:
     type: object
     properties:

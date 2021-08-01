@@ -29,7 +29,7 @@ func DefaultParams() Params {
 	return Params{
 		CommunityTax:            sdk.NewDecWithPrec(2, 2), // 2%
 		SecretFoundationTax:     sdk.ZeroDec(),            // 0%
-		SecretFoundationAddress: "",
+		SecretFoundationAddress: sdk.AccAddress{}.String(),
 		BaseProposerReward:      sdk.NewDecWithPrec(1, 2), // 1%
 		BonusProposerReward:     sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled:     true,
@@ -154,7 +154,7 @@ func validateWithdrawAddrEnabled(i interface{}) error {
 func validateSecretFoundationTax(i interface{}) error {
 	v, ok := i.(sdk.Dec)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+		return fmt.Errorf("invalid foundation tax parameter type: %T", i)
 	}
 
 	if v.IsNil() {
@@ -171,13 +171,17 @@ func validateSecretFoundationTax(i interface{}) error {
 }
 
 func validateSecretFoundationAddress(i interface{}) error {
-	v, ok := i.(sdk.AccAddress)
+	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if !v.Empty() {
-		return sdk.VerifyAddressFormat(v)
+	if len(v) > 0 {
+		addr, err := sdk.AccAddressFromBech32(v)
+		if err != nil {
+			return fmt.Errorf("invalid parameter for foundation address: %s", err.Error())
+		}
+		return sdk.VerifyAddressFormat(addr)
 	}
 
 	return nil

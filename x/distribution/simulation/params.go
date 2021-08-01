@@ -16,6 +16,7 @@ const (
 	keyCommunityTax        = "communitytax"
 	keyBaseProposerReward  = "baseproposerreward"
 	keyBonusProposerReward = "bonusproposerreward"
+	keySecretFoundationTax = "secretfoundationtax"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
@@ -25,6 +26,11 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 		simulation.NewSimParamChange(types.ModuleName, keyCommunityTax,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenCommunityTax(r))
+			},
+		),
+		simulation.NewSimParamChange(types.ModuleName, keySecretFoundationTax,
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%s\"", GenSecretFoundationTax(r))
 			},
 		),
 		simulation.NewSimParamChange(types.ModuleName, keyBaseProposerReward,

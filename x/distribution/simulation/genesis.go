@@ -5,6 +5,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +19,13 @@ const (
 	BaseProposerReward  = "base_proposer_reward"
 	BonusProposerReward = "bonus_proposer_reward"
 	WithdrawEnabled     = "withdraw_enabled"
+	FoundationTax       = "foundation_tax"
 )
+
+// GenSecretFoundationTax returns a randomized secret foundation tax parameter.
+func GenSecretFoundationTax(r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
+}
 
 // GenCommunityTax randomized CommunityTax
 func GenCommunityTax(r *rand.Rand) sdk.Dec {
@@ -65,14 +72,23 @@ func RandomizedGenState(simState *module.SimulationState) {
 		simState.Cdc, WithdrawEnabled, &withdrawEnabled, simState.Rand,
 		func(r *rand.Rand) { withdrawEnabled = GenWithdrawEnabled(r) },
 	)
+	var foundationTax sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, FoundationTax, &foundationTax, simState.Rand,
+		func(r *rand.Rand) { foundationTax = GenSecretFoundationTax(r) },
+	)
+
+	foundationTaxAcc, _ := simulation.RandomAcc(simState.Rand, simState.Accounts)
 
 	distrGenesis := types.GenesisState{
 		FeePool: types.InitialFeePool(),
 		Params: types.Params{
-			CommunityTax:        communityTax,
-			BaseProposerReward:  baseProposerReward,
-			BonusProposerReward: bonusProposerReward,
-			WithdrawAddrEnabled: withdrawEnabled,
+			CommunityTax:            communityTax,
+			SecretFoundationTax:     foundationTax,
+			SecretFoundationAddress: foundationTaxAcc.Address,
+			BaseProposerReward:      baseProposerReward,
+			BonusProposerReward:     bonusProposerReward,
+			WithdrawAddrEnabled:     withdrawEnabled,
 		},
 	}
 

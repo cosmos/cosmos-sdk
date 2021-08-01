@@ -15,6 +15,8 @@ var (
 	ParamStoreKeyBaseProposerReward  = []byte("baseproposerreward")
 	ParamStoreKeyBonusProposerReward = []byte("bonusproposerreward")
 	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
+	ParamSecretFoundationTax         = []byte("secretfoundationtax")
+	ParamSecretFoundationAddress     = []byte("secretfoundationaddress")
 )
 
 // ParamKeyTable returns the parameter key table.
@@ -25,10 +27,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 // DefaultParams returns default distribution parameters
 func DefaultParams() Params {
 	return Params{
-		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
-		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
-		WithdrawAddrEnabled: true,
+		CommunityTax:            sdk.NewDecWithPrec(2, 2), // 2%
+		SecretFoundationTax:     sdk.ZeroDec(),            // 0%
+		SecretFoundationAddress: sdk.AccAddress{},
+		BaseProposerReward:      sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward:     sdk.NewDecWithPrec(4, 2), // 4%
+		WithdrawAddrEnabled:     true,
 	}
 }
 
@@ -44,6 +48,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamStoreKeyBaseProposerReward, &p.BaseProposerReward, validateBaseProposerReward),
 		paramtypes.NewParamSetPair(ParamStoreKeyBonusProposerReward, &p.BonusProposerReward, validateBonusProposerReward),
 		paramtypes.NewParamSetPair(ParamStoreKeyWithdrawAddrEnabled, &p.WithdrawAddrEnabled, validateWithdrawAddrEnabled),
+		paramtypes.NewParamSetPair(ParamSecretFoundationTax, &p.SecretFoundationTax, validateSecretFoundationTax),
+		paramtypes.NewParamSetPair(ParamSecretFoundationAddress, &p.SecretFoundationAddress, validateSecretFoundationAddress),
 	}
 }
 
@@ -67,6 +73,12 @@ func (p Params) ValidateBasic() error {
 	if v := p.BaseProposerReward.Add(p.BonusProposerReward).Add(p.CommunityTax); v.GT(sdk.OneDec()) {
 		return fmt.Errorf(
 			"sum of base, bonus proposer rewards, and community tax cannot be greater than one: %s", v,
+		)
+	}
+
+	if p.SecretFoundationTax.IsNegative() || p.SecretFoundationTax.GT(sdk.OneDec()) {
+		return fmt.Errorf(
+			"secret foundation tax should non-negative and less than one: %s", p.SecretFoundationTax,
 		)
 	}
 
@@ -134,6 +146,38 @@ func validateWithdrawAddrEnabled(i interface{}) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateSecretFoundationTax(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNil() {
+		return fmt.Errorf("secret foundation tax must be not nil")
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("secret foundation tax must be positive: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("secret foundation tax too large: %s", v)
+	}
+
+	return nil
+}
+
+func validateSecretFoundationAddress(i interface{}) error {
+	v, ok := i.(sdk.AccAddress)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if !v.Empty() {
+		return sdk.VerifyAddressFormat(v)
 	}
 
 	return nil

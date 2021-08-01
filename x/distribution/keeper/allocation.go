@@ -83,8 +83,20 @@ func (k Keeper) AllocateTokens(
 	communityTax := k.GetCommunityTax(ctx)
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 
-	// allocate tokens proportionally to voting power
-	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	foundationTax := k.GetSecretFoundationTax(ctx)
+	foundationTaxAddr := k.GetSecretFoundationAddr(ctx)
+
+	// only apply the secret foundation tax when the tax and address is non-zero
+	var foundationTaxSum sdk.DecCoins
+	if !foundationTax.IsZero() && !foundationTaxAddr.Empty() {
+		voteMultiplier = voteMultiplier.Sub(foundationTax)
+
+		foundationTaxSum = feesCollected.MulDecTruncate(foundationTax)
+		remaining = remaining.Sub(foundationTaxSum)
+	}
+
+	// allocate tokens proportionally to voting power minus any taxes
+	// TODO consider parallelizing later, ref https://github.com/enigmampc/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range bondedVotes {
 		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
@@ -94,6 +106,18 @@ func (k Keeper) AllocateTokens(
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
+	}
+
+	// Send the foundation tax sum to the foundation tax address. Note, the taxes
+	// collected are decimals and when coverted to integer coins, we must truncate.
+	// The remainder is given back to the community pool.
+	if !foundationTaxSum.IsZero() {
+		foundationTaxSumTrunc, rem := foundationTaxSum.TruncateDecimal()
+		remaining = remaining.Add(rem...)
+
+		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, foundationTaxAddr, foundationTaxSumTrunc); err != nil {
+			panic(err)
+		}
 	}
 
 	// allocate community funding

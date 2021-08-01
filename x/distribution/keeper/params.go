@@ -41,3 +41,15 @@ func (k Keeper) GetWithdrawAddrEnabled(ctx sdk.Context) (enabled bool) {
 	k.paramSpace.Get(ctx, types.ParamStoreKeyWithdrawAddrEnabled, &enabled)
 	return enabled
 }
+
+// GetSecretFoundationTax returns the current secret foundation tax.
+func (k Keeper) GetSecretFoundationTax(ctx sdk.Context) (tax sdk.Dec) {
+	k.paramSpace.Get(ctx, types.ParamSecretFoundationTax, &tax)
+	return tax
+}
+
+// GetSecretFoundationAddr returns the current secret foundation address.
+func (k Keeper) GetSecretFoundationAddr(ctx sdk.Context) (addr sdk.AccAddress) {
+	k.paramSpace.Get(ctx, types.ParamSecretFoundationAddress, &addr)
+	return addr
+}

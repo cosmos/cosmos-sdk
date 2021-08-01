@@ -85,7 +85,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Params: types.Params{
 			CommunityTax:            communityTax,
 			SecretFoundationTax:     foundationTax,
-			SecretFoundationAddress: foundationTaxAcc.Address,
+			SecretFoundationAddress: foundationTaxAcc.Address.String(),
 			BaseProposerReward:      baseProposerReward,
 			BonusProposerReward:     bonusProposerReward,
 			WithdrawAddrEnabled:     withdrawEnabled,

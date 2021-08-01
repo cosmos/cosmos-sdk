@@ -264,6 +264,8 @@
     - [QueryDelegatorValidatorsResponse](#cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse)
     - [QueryDelegatorWithdrawAddressRequest](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressRequest)
     - [QueryDelegatorWithdrawAddressResponse](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse)
+    - [QueryFoundationTaxRequest](#cosmos.distribution.v1beta1.QueryFoundationTaxRequest)
+    - [QueryFoundationTaxResponse](#cosmos.distribution.v1beta1.QueryFoundationTaxResponse)
     - [QueryParamsRequest](#cosmos.distribution.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.distribution.v1beta1.QueryParamsResponse)
     - [QueryValidatorCommissionRequest](#cosmos.distribution.v1beta1.QueryValidatorCommissionRequest)
@@ -3609,6 +3611,8 @@ Params defines the set of params for the distribution module.
 | `base_proposer_reward` | [string](#string) |  |  |
 | `bonus_proposer_reward` | [string](#string) |  |  |
 | `withdraw_addr_enabled` | [bool](#bool) |  |  |
+| `secret_foundation_tax` | [string](#string) |  |  |
+| `secret_foundation_address` | [string](#string) |  |  |
 
 
 
@@ -4059,6 +4063,34 @@ Query/DelegatorWithdrawAddress RPC method.
 
 
 
+<a name="cosmos.distribution.v1beta1.QueryFoundationTaxRequest"></a>
+
+### QueryFoundationTaxRequest
+QueryFoundationTaxRequest is the request type for the
+Query/FoundationTax RPC method.
+
+
+
+
+
+
+<a name="cosmos.distribution.v1beta1.QueryFoundationTaxResponse"></a>
+
+### QueryFoundationTaxResponse
+QueryDelegatorWithdrawAddressResponse is the response type for the
+Query/DelegatorWithdrawAddress RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `tax` | [string](#string) |  | withdraw_address defines the delegator address to query for. |
+| `foundation_address` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="cosmos.distribution.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -4206,6 +4238,7 @@ Query defines the gRPC querier service for distribution module.
 | `DelegatorValidators` | [QueryDelegatorValidatorsRequest](#cosmos.distribution.v1beta1.QueryDelegatorValidatorsRequest) | [QueryDelegatorValidatorsResponse](#cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse) | DelegatorValidators queries the validators of a delegator. | GET|/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators|
 | `DelegatorWithdrawAddress` | [QueryDelegatorWithdrawAddressRequest](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressRequest) | [QueryDelegatorWithdrawAddressResponse](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse) | DelegatorWithdrawAddress queries withdraw address of a delegator. | GET|/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address|
 | `CommunityPool` | [QueryCommunityPoolRequest](#cosmos.distribution.v1beta1.QueryCommunityPoolRequest) | [QueryCommunityPoolResponse](#cosmos.distribution.v1beta1.QueryCommunityPoolResponse) | CommunityPool queries the community pool coins. | GET|/cosmos/distribution/v1beta1/community_pool|
+| `FoundationTax` | [QueryFoundationTaxRequest](#cosmos.distribution.v1beta1.QueryFoundationTaxRequest) | [QueryFoundationTaxResponse](#cosmos.distribution.v1beta1.QueryFoundationTaxResponse) | DelegatorWithdrawAddress queries withdraw address of a delegator. | GET|/cosmos/distribution/v1beta1/foundation_tax|
 
  <!-- end services -->
 

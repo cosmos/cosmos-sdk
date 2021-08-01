@@ -248,3 +248,12 @@ func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRe
 
 	return &types.QueryCommunityPoolResponse{Pool: pool}, nil
 }
+
+// CommunityPool queries the community pool coins
+func (k Keeper) FoundationTax(c context.Context, req *types.QueryFoundationTaxRequest) (*types.QueryFoundationTaxResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	fee := k.GetSecretFoundationTax(ctx)
+	addr := k.GetSecretFoundationAddr(ctx)
+
+	return &types.QueryFoundationTaxResponse{Tax: fee.String(), FoundationAddress: addr.String()}, nil
+}

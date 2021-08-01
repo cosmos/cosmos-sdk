@@ -42,6 +42,9 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryCommunityPool:
 			return queryCommunityPool(ctx, path[1:], req, k, legacyQuerierCdc)
 
+		case types.QueryFoundationTax:
+			return queryFoundationTax(ctx, path[1:], req, k, legacyQuerierCdc)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
@@ -248,6 +251,26 @@ func queryCommunityPool(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keep
 	}
 
 	bz, err := legacyQuerierCdc.MarshalJSON(pool)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryFoundationTax(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	tax := k.GetSecretFoundationTax(ctx)
+	address := k.GetSecretFoundationAddr(ctx)
+
+	resp := types.FoundationTaxResponseParams{}
+	if address != nil && !tax.IsZero() {
+		resp = types.FoundationTaxResponseParams{
+			Tax:               tax,
+			FoundationAddress: address,
+		}
+	}
+
+	bz, err := legacyQuerierCdc.MarshalJSON(resp)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

@@ -26,6 +26,14 @@ message Params {
     (gogoproto.nullable)   = false
   ];
   bool withdraw_addr_enabled = 4 [(gogoproto.moretags) = "yaml:\"withdraw_addr_enabled\""];
+  string secret_foundation_tax = 5 [
+    (gogoproto.moretags)   = "yaml:\"secret_foundation_tax\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  string secret_foundation_address = 6 [
+    (gogoproto.moretags)   = "yaml:\"secret_foundation_address\""
+  ];
 }
 
 // ValidatorHistoricalRewards represents historical rewards for a validator.

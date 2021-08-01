@@ -62,6 +62,11 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
+
+  // DelegatorWithdrawAddress queries withdraw address of a delegator.
+  rpc FoundationTax(QueryFoundationTaxRequest) returns (QueryFoundationTaxResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/foundation_tax";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -203,6 +208,21 @@ message QueryDelegatorWithdrawAddressResponse {
 
   // withdraw_address defines the delegator address to query for.
   string withdraw_address = 1;
+}
+
+// QueryFoundationTaxRequest is the request type for the
+// Query/FoundationTax RPC method.
+message QueryFoundationTaxRequest {}
+
+// QueryDelegatorWithdrawAddressResponse is the response type for the
+// Query/DelegatorWithdrawAddress RPC method.
+message QueryFoundationTaxResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // withdraw_address defines the delegator address to query for.
+  string tax = 1;
+  string foundation_address = 2;
 }
 
 // QueryCommunityPoolRequest is the request type for the Query/CommunityPool RPC

@@ -117,9 +117,15 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
+  // Fee is the fee and gas limit for the transaction. The first signer is the
+  // primary signer and the one which pays the fee. The fee can be calculated
+  // based on the cost of evaluating the body and doing signature verification
+  // of the signers. This can be estimated via simulation.
+  Fee fee = 6;
+
   // Tip is the optional tip used for meta-transactions. It should be left
   // empty if the signer is not the tipper for this transaction.
-  Tip tip = 6;
+  Tip tip = 7;
 }
 
 // TxBody is the body of a transaction that all signers sign over.
@@ -168,6 +174,7 @@ message AuthInfo {
   // of the signers. This can be estimated via simulation.
   Fee fee = 2;
 
+  // Tip is the optional tip used for meta-transactions.
   Tip tip = 3;
 }
 

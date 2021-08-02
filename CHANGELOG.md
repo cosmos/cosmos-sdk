@@ -56,21 +56,16 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* [\#9827](https://github.com/cosmos/cosmos-sdk/pull/9827) Ensure input parity of validator public key input between `tx staking create-validator` and `gentx`.
 * [\#9781](https://github.com/cosmos/cosmos-sdk/pull/9781) Improve`withdraw-all-rewards` UX when broadcast mode `async` or `async` is used.
 
 ## [v0.43.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc2) - 2021-07-19
 
 ### Bug Fixes
 
-<<<<<<< HEAD
 * (server) [#9704](https://github.com/cosmos/cosmos-sdk/pull/9704) Start GRPCWebServer in goroutine, avoid blocking other services from starting.
 
 ## [v0.43.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc1) - 2021-07-14
-=======
-* [\#9827](https://github.com/cosmos/cosmos-sdk/pull/9827) Ensure input parity of validator public key input between `tx staking create-validator` and `gentx`.
-* [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
-* [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml
->>>>>>> cbac7fc24 (fix!: update gentx val pub key input parsing (#9827))
 
 ### Improvements
 

@@ -32,12 +32,12 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
-  // AddressString converts Bech32 bytes to Account string
+  // AddressString converts Account Address bytes to string
   rpc AddressString(AddressStringRequest) returns (AddressStringResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
-  // AddressBytes converts Account string to Bech32 bytes
+  // AddressBytes converts Account Address string to bytes
   rpc AddressBytes(AddressBytesRequest) returns (AddressBytesResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }

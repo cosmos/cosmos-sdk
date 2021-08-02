@@ -97,7 +97,6 @@ type Keyring interface {
 	Exporter
 
 	Migrator
-	Setter
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -127,11 +126,6 @@ type Importer interface {
 
 type Migrator interface {
 	MigrateAll() (bool, error)
-}
-
-type Setter interface {
-	// saves item in keystore.db
-	SetItem(item keyring.Item) error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.

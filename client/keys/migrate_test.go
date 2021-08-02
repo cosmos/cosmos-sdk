@@ -20,6 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
+type setter interface {
+	SetItem(item design99keyring.Item) error
+}
+
 func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	const n1 = "cosmos"
 
@@ -48,8 +52,10 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
 	}
-
-	require.NoError(kb.SetItem(item))
+	
+	setter, ok := kb.(setter)
+	require.True(ok)
+	require.NoError(setter.SetItem(item))
 
 	clientCtx := client.Context{}.WithKeyringDir(dir).WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
@@ -92,7 +98,9 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
+	setter, ok := kb.(setter)
+	require.True(ok)
+	require.NoError(setter.SetItem(item))
 
 	clientCtx := client.Context{}.WithKeyringDir(dir).WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)

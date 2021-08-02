@@ -18,6 +18,7 @@ import (
 
 const n1 = "cosmos"
 
+
 func TestMigrateLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring
 	dir := t.TempDir()
@@ -41,9 +42,9 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
 	ks, ok := kb.(keystore)
 	require.True(ok)
+	require.NoError(ks.SetItem(item))
 
 	migrated, err := ks.migrate(n1)
 	require.True(migrated)
@@ -76,9 +77,9 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
 	ks, ok := kb.(keystore)
 	require.True(ok)
+	require.NoError(ks.SetItem(item))
 
 	migrated, err := ks.migrate(n1)
 	require.True(migrated)
@@ -106,9 +107,9 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
 	ks, ok := kb.(keystore)
 	require.True(ok)
+	require.NoError(ks.SetItem(item))
 
 	migrated, err := ks.migrate(n1)
 	require.True(migrated)
@@ -140,9 +141,9 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
 	ks, ok := kb.(keystore)
 	require.True(ok)
+	require.NoError(ks.SetItem(item))
 	
 	migrated, err := ks.migrate(n1)
 	require.True(migrated)
@@ -179,7 +180,7 @@ func TestMigrateLocalRecord(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
+	require.NoError(ks.SetItem(item))
 
 	migrated, err := ks.migrate(n1)
 	require.False(migrated)
@@ -203,9 +204,9 @@ func TestMigrateOneRandomItemError(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(errItem))
 	ks, ok := kb.(keystore)
 	require.True(ok)
+	require.NoError(ks.SetItem(errItem))
 	
 	migrated, err := ks.migrate(n1)
 	require.False(migrated)
@@ -237,7 +238,9 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
+	ks, ok := kb.(keystore)
+	require.True(ok)
+	require.NoError(ks.SetItem(item))
 
 	priv = secp256k1.GenPrivKey()
 	pub := priv.PubKey()
@@ -251,7 +254,7 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
+	require.NoError(ks.SetItem(item))
 
 	migrated, err := kb.MigrateAll()
 	require.True(migrated)
@@ -293,9 +296,9 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	require.NoError(kb.SetItem(item))
 	ks, ok := kb.(keystore)
 	require.True(ok)
+	require.NoError(ks.SetItem(item))
 
 	incorrectItemKey := n1 + "1"
 	migrated, err := ks.migrate(incorrectItemKey)
@@ -320,7 +323,7 @@ func TestMigrateErrEmptyItemData(t *testing.T) {
 
 	ks, ok := kb.(keystore)
 	require.True(ok)
-	require.NoError(kb.SetItem(item))
+	require.NoError(ks.SetItem(item))
 
 	migrated, err := ks.migrate(n1)
 	require.False(migrated)

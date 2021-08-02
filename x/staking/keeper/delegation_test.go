@@ -19,6 +19,14 @@ import (
 func TestDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+
+	app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
+		ValidatorAddress: delegations[0].ValidatorAddress,
+		DelegatorAddress: delegations[0].DelegatorAddress,
+	})
+
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
@@ -82,13 +90,13 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, bond2to2, resBonds[1])
 	require.Equal(t, bond2to3, resBonds[2])
 	allBonds := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Equal(t, 6+1, len(allBonds)) // +1 delegation from simapp.Setup
-	require.Equal(t, bond1to1, allBonds[1])
-	require.Equal(t, bond1to2, allBonds[2])
-	require.Equal(t, bond1to3, allBonds[3])
-	require.Equal(t, bond2to1, allBonds[4])
-	require.Equal(t, bond2to2, allBonds[5])
-	require.Equal(t, bond2to3, allBonds[6])
+	require.Equal(t, 6, len(allBonds))
+	require.Equal(t, bond1to1, allBonds[0])
+	require.Equal(t, bond1to2, allBonds[1])
+	require.Equal(t, bond1to3, allBonds[2])
+	require.Equal(t, bond2to1, allBonds[3])
+	require.Equal(t, bond2to2, allBonds[4])
+	require.Equal(t, bond2to3, allBonds[5])
 
 	resVals := app.StakingKeeper.GetDelegatorValidators(ctx, addrDels[0], 3)
 	require.Equal(t, 3, len(resVals))

@@ -93,6 +93,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#9704](https://github.com/cosmos/cosmos-sdk/pull/9704) Start GRPCWebServer in goroutine, avoid blocking other services from starting.
 * [\#9762](https://github.com/cosmos/cosmos-sdk/pull/9762) The init command uses the chain-id from the client config if --chain-id is not provided
 * [\#9793](https://github.com/cosmos/cosmos-sdk/pull/9793) Fixed ECDSA/secp256r1 transaction malleability.
+* [\#9829](https://github.com/cosmos/cosmos-sdk/pull/9829) Fixed Coin denom sorting not being checked during `Balance.Validate` check
 
 ### State Machine Breaking
 

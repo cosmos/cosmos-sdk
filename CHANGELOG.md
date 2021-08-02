@@ -54,6 +54,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#9793](https://github.com/cosmos/cosmos-sdk/pull/9793) Fixed ECDSA/secp256r1 transaction malleability.
 
+### CLI Breaking Changes
+
+* [\#9781](https://github.com/cosmos/cosmos-sdk/pull/9781) Improve`withdraw-all-rewards` UX when broadcast mode `async` or `async` is used.
+
 ## [v0.43.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc2) - 2021-07-19
 
 ### Bug Fixes

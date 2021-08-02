@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
 ### API Breaking Changes
-* [\#9695] (https://github.com/cosmos/cosmos-sdk/pull/9695) Keyring migration
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Add new codec.Codec argument to keyring New() method.
 * [\#9628](https://github.com/cosmos/cosmos-sdk/pull/9628) Rename `x/{mod}/legacy` to `x/{mod}/migrations`.
 * [\#9571](https://github.com/cosmos/cosmos-sdk/pull/9571) Implemented error handling for staking hooks, which now return an error on failure.
 * [\#9427](https://github.com/cosmos/cosmos-sdk/pull/9427) Move simapp `FundAccount` and `FundModuleAccount` to `x/bank/testutil`

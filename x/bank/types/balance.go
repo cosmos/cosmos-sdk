@@ -34,6 +34,11 @@ func (b Balance) Validate() error {
 	if err != nil {
 		return err
 	}
+
+	var prevDenom string
+	if !b.Coins.Empty() {
+		prevDenom = b.Coins[0].Denom
+	}
 	seenDenoms := make(map[string]bool)
 
 	// NOTE: we perform a custom validation since the coins.Validate function
@@ -47,15 +52,17 @@ func (b Balance) Validate() error {
 			return err
 		}
 
+		if coin.Denom < prevDenom {
+			return fmt.Errorf("denomination %s is not sorted", coin.Denom)
+		}
+
 		if coin.IsNegative() {
 			return fmt.Errorf("coin %s amount is cannot be negative", coin.Denom)
 		}
 
 		seenDenoms[coin.Denom] = true
+		prevDenom = coin.Denom
 	}
-
-	// sort the coins post validation
-	b.Coins = b.Coins.Sort()
 
 	return nil
 }

@@ -25,6 +25,9 @@ var (
 	// KeyPrefixIndexCapability defines a key prefix that stores index to capability
 	// name mappings.
 	KeyPrefixIndexCapability = []byte("capability_index")
+
+	// KeyMemInitialized defines the key that stores the initialized flag in the memory store
+	KeyMemInitialized = []byte("mem_initialized")
 )
 
 // RevCapabilityKey returns a reverse lookup key for a given module and capability
@@ -48,4 +51,9 @@ func IndexToKey(index uint64) []byte {
 // index.
 func IndexFromKey(key []byte) uint64 {
 	return sdk.BigEndianToUint64(key)
+}
+
+// MemInitializedKey returns the key to store the initialized flag in memory store
+func MemInitializedKey() []byte {
+	return []byte(KeyMemInitialized)
 }

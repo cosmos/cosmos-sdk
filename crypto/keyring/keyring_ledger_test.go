@@ -9,13 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestInMemoryCreateLedger(t *testing.T) {
 	cdc := getCodec()
-	kb := keyring.NewInMemory(cdc)
+	kb := NewInMemory(cdc)
 
 	k, err := kb.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 
@@ -38,7 +37,6 @@ func TestInMemoryCreateLedger(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, restoredRecord)
 	require.Equal(t, "some_account", restoredRecord.Name)
-	require.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey, err = restoredRecord.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, expectedPkStr, pubKey.String())
@@ -55,7 +53,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	dir := t.TempDir()
 	cdc := getCodec()
 
-	kb, err := keyring.New("keybasename", "test", dir, nil, cdc)
+	kb, err := New("keybasename", "test", dir, nil, cdc)
 	require.NoError(t, err)
 
 	k, err := kb.SaveLedgerKey("key", hd.Secp256k1, "cosmos", 118, 0, 0)
@@ -70,7 +68,7 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	s1, pub1, err := kb.Sign("key", d1)
 	require.NoError(t, err)
 
-	s2, pub2, err := keyring.SignWithLedger(k, d1)
+	s2, pub2, err := SignWithLedger(k, d1)
 	require.NoError(t, err)
 
 	require.True(t, pub1.Equals(pub2))
@@ -85,9 +83,9 @@ func TestSignVerifyKeyRingWithLedger(t *testing.T) {
 	require.True(t, key1.VerifySignature(d1, s1))
 	require.True(t, bytes.Equal(s1, s2))
 
-	k, _, err = kb.NewMnemonic("test", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err = kb.NewMnemonic("test", English, types.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
-	_, _, err = keyring.SignWithLedger(k, d1)
+	_, _, err = SignWithLedger(k, d1)
 	require.Error(t, err)
 	require.Equal(t, "not a ledger object", err.Error())
 }
@@ -96,7 +94,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 	dir := t.TempDir()
 	cdc := getCodec()
 
-	kr, err := keyring.New(t.Name(), keyring.BackendTest, dir, nil, cdc)
+	kr, err := New(t.Name(), BackendTest, dir, nil, cdc)
 	require.NoError(t, err)
 
 	// Test unsupported Algo

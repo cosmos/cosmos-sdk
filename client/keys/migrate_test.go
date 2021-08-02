@@ -1,8 +1,6 @@
-
-
 package keys
 
-/*
+
 import (
 	"context"
 	"fmt"
@@ -21,9 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
-*/
 
-/*
 func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	const n1 = "cosmos"
 
@@ -53,10 +49,7 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	// TODO fix that
-	ks, ok := kb.(keystore)
-	require.True(ok)
-	require.NoError(ks.setItem(item))
+	require.NoError(kb.SetItem(item))
 
 	clientCtx := client.Context{}.WithKeyringDir(dir).WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
@@ -99,10 +92,7 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 		Description: "SDK kerying version",
 	}
 
-	// TODO fix that
-	ks, ok := kb.(keystore)
-	require.True(ok)
-	require.NoError(ks.setItem(item))
+	require.NoError(kb.SetItem(item))
 
 	clientCtx := client.Context{}.WithKeyringDir(dir).WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
@@ -118,7 +108,7 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 	require.NoError(cmd.ExecuteContext(ctx))
 }
 
-func Test_runMigrateCmdErr(t *testing.T) {
+func Test_runMigrateCmdNoKeys(t *testing.T) {
 	require := require.New(t)
 	kbHome := t.TempDir()
 	clientCtx := client.Context{}.WithKeyringDir(kbHome)
@@ -136,4 +126,3 @@ func Test_runMigrateCmdErr(t *testing.T) {
 	err := cmd.ExecuteContext(ctx)
 	require.NoError(err)
 }
-*/

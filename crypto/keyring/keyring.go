@@ -97,6 +97,7 @@ type Keyring interface {
 	Exporter
 
 	Migrator
+	Setter
 }
 
 // UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
@@ -126,6 +127,11 @@ type Importer interface {
 
 type Migrator interface {
 	MigrateAll() (bool, error)
+}
+
+type Setter interface {
+	// Set item in keyring.Item
+	SetItem(item keyring.Item) error
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -311,12 +317,12 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	var pubKey types.PubKey
 	if err := ks.cdc.UnmarshalInterface(pubBytes, &pubKey); err != nil {
 		return err
 	}
-	
+
 	_, err = ks.writeOfflineKey(uid, pubKey)
 	if err != nil {
 		return err
@@ -795,7 +801,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		Data: serializedRecord,
 	}
 
-	if err := ks.setItem(item); err != nil {
+	if err := ks.SetItem(item); err != nil {
 		return err
 	}
 
@@ -804,7 +810,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		Data: []byte(key),
 	}
 
-	if err := ks.setItem(item); err != nil {
+	if err := ks.SetItem(item); err != nil {
 		return err
 	}
 
@@ -918,7 +924,7 @@ func (ks keystore) migrate(key string) (bool, error) {
 		Description: "SDK kerying version",
 	}
 	// 5.overwrite the keyring entry with
-	if err := ks.setItem(item); err != nil {
+	if err := ks.SetItem(item); err != nil {
 		return migrated, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}
 
@@ -1005,8 +1011,6 @@ func addrHexKeyAsString(address sdk.Address) string {
 	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
 }
 
-func (ks keystore) setItem(item keyring.Item) error {
+func (ks keystore) SetItem(item keyring.Item) error {
 	return ks.db.Set(item)
 }
-
-

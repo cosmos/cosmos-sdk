@@ -55,7 +55,7 @@ func ValidateGenesis(data GenesisState) error {
 
 	downtimeJail := data.Params.DowntimeJailDuration
 	if downtimeJail < 1*time.Minute {
-		return fmt.Errorf("downtime unblond duration must be at least 1 minute, is %s", downtimeJail.String())
+		return fmt.Errorf("downtime unjail duration must be at least 1 minute, is %s", downtimeJail.String())
 	}
 
 	signedWindow := data.Params.SignedBlocksWindow

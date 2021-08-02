@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -227,31 +229,35 @@ func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.C
 	return nil
 }
 
-// clearBalances removes all balances for a given account by address.
-func (k BaseSendKeeper) clearBalances(ctx sdk.Context, addr sdk.AccAddress) {
-	keys := [][]byte{}
-	k.IterateAccountBalances(ctx, addr, func(balance sdk.Coin) bool {
-		keys = append(keys, []byte(balance.Denom))
-		return false
-	})
-
+// initBalances sets the balance (multiple coins) for an account by address.
+// An error is returned upon failure.
+func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
 	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStores := make(map[string]prefix.Store) // memoize prefix stores
 
-	for _, key := range keys {
-		accountStore.Delete(key)
-	}
-}
+	for i := range balances {
+		balance := balances[i]
+		if !balance.IsValid() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
+		}
 
-// setBalances sets the balance (multiple coins) for an account by address. It will
-// clear out all balances prior to setting the new coins as to set existing balances
-// to zero if they don't exist in amt. An error is returned upon failure.
-func (k BaseSendKeeper) setBalances(ctx sdk.Context, addr sdk.AccAddress, balances sdk.Coins) error {
-	k.clearBalances(ctx, addr)
+		// x/bank invariants prohibit persistence of zero balances
+		if !balance.IsZero() {
+			bz := k.cdc.MustMarshal(&balance)
+			accountStore.Set([]byte(balance.Denom), bz)
 
-	for _, balance := range balances {
-		err := k.setBalance(ctx, addr, balance)
-		if err != nil {
-			return err
+			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
+			if !ok {
+				denomPrefixStore = k.getDenomAddressPrefixStore(ctx, balance.Denom)
+				denomPrefixStores[balance.Denom] = denomPrefixStore
+			}
+
+			// Store a reverse index from denomination to account address with a
+			// sentinel value.
+			denomAddrKey := address.MustLengthPrefix(addr)
+			if !denomPrefixStore.Has(denomAddrKey) {
+				denomPrefixStore.Set(denomAddrKey, []byte{0})
+			}
 		}
 	}
 
@@ -265,13 +271,22 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	}
 
 	accountStore := k.getAccountStore(ctx, addr)
+	denomPrefixStore := k.getDenomAddressPrefixStore(ctx, balance.Denom)
 
-	// Bank invariants require to not store zero balances.
+	// x/bank invariants prohibit persistence of zero balances
 	if balance.IsZero() {
 		accountStore.Delete([]byte(balance.Denom))
+		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
 	} else {
 		bz := k.cdc.MustMarshal(&balance)
 		accountStore.Set([]byte(balance.Denom), bz)
+
+		// Store a reverse index from denomination to account address with a
+		// sentinel value.
+		denomAddrKey := address.MustLengthPrefix(addr)
+		if !denomPrefixStore.Has(denomAddrKey) {
+			denomPrefixStore.Set(denomAddrKey, []byte{0})
+		}
 	}
 
 	return nil

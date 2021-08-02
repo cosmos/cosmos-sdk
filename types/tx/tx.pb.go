@@ -244,6 +244,7 @@ func (m *SignDoc) GetAccountNumber() uint64 {
 	return 0
 }
 
+<<<<<<< HEAD
 type SignDocAux struct {
 	BodyBytes     []byte     `protobuf:"bytes,1,opt,name=body_bytes,json=bodyBytes,proto3" json:"body_bytes,omitempty"`
 	PublicKey     *types.Any `protobuf:"bytes,2,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
@@ -266,6 +267,49 @@ func (m *SignDocAux) XXX_Unmarshal(b []byte) error {
 func (m *SignDocAux) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_SignDocAux.Marshal(b, m, deterministic)
+=======
+// SignDocJSON is the type used for generating sign bytes for
+// SIGN_MODE_DIRECT_JSON. It is designed to be serialized as proto3 JSON
+// following the rules defined here:
+// https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
+type SignDocJSON struct {
+	// body is the processable content of the transaction
+	Body *TxBody `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
+	// auth_info is the authorization related content of the transaction,
+	// specifically signers, signer modes and fee
+	AuthInfo *AuthInfo `protobuf:"bytes,2,opt,name=auth_info,json=authInfo,proto3" json:"auth_info,omitempty"`
+	// chain_id is the identifier of the chain this transaction targets.
+	// It prevents signed transactions from being used on another chain by an
+	// attacker
+	ChainId string `protobuf:"bytes,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	// account_number is the account number of the signing account in state
+	AccountNumber uint64 `protobuf:"varint,4,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	// sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to
+	// reduce the malleability attack surface of SIGN_MODE_DIRECT_JSON vs
+	// SIGN_MODE_DIRECT to zero. Basically this means that any discrepancy between
+	// protobuf bytes over the wire and protobuf bytes that are signed cannot be
+	// exploited. This information is obviously redundant with information already
+	// in SignDocJSON, but is included as a security check for scenarios where
+	// this information may have inadvertently been excluded. We include the hash
+	// of SignDoc rather than the full SignDoc bytes to reduce the size of
+	// SignDocJSON for scenarios where large payloads could cause problems for
+	// hardware wallets.
+	SignDocSha256Hash []byte `protobuf:"bytes,5,opt,name=sign_doc_sha256_hash,json=signDocSha256Hash,proto3" json:"sign_doc_sha256_hash,omitempty"`
+}
+
+func (m *SignDocJSON) Reset()         { *m = SignDocJSON{} }
+func (m *SignDocJSON) String() string { return proto.CompactTextString(m) }
+func (*SignDocJSON) ProtoMessage()    {}
+func (*SignDocJSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_96d1575ffde80842, []int{3}
+}
+func (m *SignDocJSON) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SignDocJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SignDocJSON.Marshal(b, m, deterministic)
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -275,6 +319,7 @@ func (m *SignDocAux) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+<<<<<<< HEAD
 func (m *SignDocAux) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_SignDocAux.Merge(m, src)
 }
@@ -290,31 +335,63 @@ var xxx_messageInfo_SignDocAux proto.InternalMessageInfo
 func (m *SignDocAux) GetBodyBytes() []byte {
 	if m != nil {
 		return m.BodyBytes
+=======
+func (m *SignDocJSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SignDocJSON.Merge(m, src)
+}
+func (m *SignDocJSON) XXX_Size() int {
+	return m.Size()
+}
+func (m *SignDocJSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_SignDocJSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SignDocJSON proto.InternalMessageInfo
+
+func (m *SignDocJSON) GetBody() *TxBody {
+	if m != nil {
+		return m.Body
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	}
 	return nil
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) GetPublicKey() *types.Any {
 	if m != nil {
 		return m.PublicKey
+=======
+func (m *SignDocJSON) GetAuthInfo() *AuthInfo {
+	if m != nil {
+		return m.AuthInfo
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	}
 	return nil
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) GetChainId() string {
+=======
+func (m *SignDocJSON) GetChainId() string {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	if m != nil {
 		return m.ChainId
 	}
 	return ""
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) GetAccountNumber() uint64 {
+=======
+func (m *SignDocJSON) GetAccountNumber() uint64 {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	if m != nil {
 		return m.AccountNumber
 	}
 	return 0
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) GetSequence() uint64 {
 	if m != nil {
 		return m.Sequence
@@ -325,6 +402,11 @@ func (m *SignDocAux) GetSequence() uint64 {
 func (m *SignDocAux) GetTip() *Tip {
 	if m != nil {
 		return m.Tip
+=======
+func (m *SignDocJSON) GetSignDocSha256Hash() []byte {
+	if m != nil {
+		return m.SignDocSha256Hash
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	}
 	return nil
 }
@@ -893,7 +975,11 @@ func init() {
 	proto.RegisterType((*Tx)(nil), "cosmos.tx.v1beta1.Tx")
 	proto.RegisterType((*TxRaw)(nil), "cosmos.tx.v1beta1.TxRaw")
 	proto.RegisterType((*SignDoc)(nil), "cosmos.tx.v1beta1.SignDoc")
+<<<<<<< HEAD
 	proto.RegisterType((*SignDocAux)(nil), "cosmos.tx.v1beta1.SignDocAux")
+=======
+	proto.RegisterType((*SignDocJSON)(nil), "cosmos.tx.v1beta1.SignDocJSON")
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	proto.RegisterType((*TxBody)(nil), "cosmos.tx.v1beta1.TxBody")
 	proto.RegisterType((*AuthInfo)(nil), "cosmos.tx.v1beta1.AuthInfo")
 	proto.RegisterType((*SignerInfo)(nil), "cosmos.tx.v1beta1.SignerInfo")
@@ -907,6 +993,7 @@ func init() {
 func init() { proto.RegisterFile("cosmos/tx/v1beta1/tx.proto", fileDescriptor_96d1575ffde80842) }
 
 var fileDescriptor_96d1575ffde80842 = []byte{
+<<<<<<< HEAD
 	// 917 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x55, 0x4f, 0x8f, 0xdb, 0x44,
 	0x14, 0x8f, 0xe3, 0x24, 0x9b, 0xbc, 0xee, 0xb6, 0x74, 0xb4, 0xaa, 0xb2, 0x59, 0x35, 0x5d, 0x82,
@@ -966,6 +1053,65 @@ var fileDescriptor_96d1575ffde80842 = []byte{
 	0xec, 0x74, 0xd8, 0x78, 0x71, 0x3a, 0x6c, 0xfc, 0x7a, 0x3a, 0x6c, 0x3c, 0xb9, 0xb9, 0x3e, 0x87,
 	0xaf, 0x96, 0x61, 0xc7, 0xfc, 0x51, 0x77, 0xff, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x59, 0x7b, 0x73,
 	0x91, 0x98, 0x08, 0x00, 0x00,
+=======
+	// 895 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x55, 0xcd, 0x6e, 0xdb, 0x46,
+	0x10, 0x16, 0xf5, 0x67, 0x69, 0x6c, 0x27, 0xf5, 0xc2, 0x28, 0x64, 0x19, 0x61, 0x5c, 0x16, 0x69,
+	0x75, 0x31, 0x99, 0x38, 0xe8, 0x2f, 0x0a, 0xb4, 0x56, 0xda, 0xc0, 0x69, 0x9a, 0x04, 0x58, 0xf9,
+	0x94, 0x0b, 0xb1, 0xa4, 0xd6, 0xe4, 0x22, 0xe2, 0xae, 0xca, 0x5d, 0xa6, 0xd2, 0x43, 0x14, 0x08,
+	0x0a, 0x14, 0x7d, 0x87, 0xbe, 0x40, 0x5f, 0x21, 0xc7, 0x1c, 0x7b, 0x6a, 0x0d, 0xfb, 0xd4, 0xa7,
+	0x68, 0xb1, 0xcb, 0x25, 0x6d, 0xb4, 0x82, 0x7d, 0x68, 0xd1, 0x93, 0x76, 0x66, 0xbe, 0xf9, 0xf6,
+	0xdb, 0x99, 0xd1, 0x10, 0x86, 0xb1, 0x90, 0x99, 0x90, 0x81, 0x5a, 0x04, 0x2f, 0xef, 0x45, 0x54,
+	0x91, 0x7b, 0x81, 0x5a, 0xf8, 0xf3, 0x5c, 0x28, 0x81, 0xb6, 0xca, 0x98, 0xaf, 0x16, 0xbe, 0x8d,
+	0x0d, 0xb7, 0x13, 0x91, 0x08, 0x13, 0x0d, 0xf4, 0xa9, 0x04, 0x0e, 0xf7, 0x2d, 0x49, 0x9c, 0x2f,
+	0xe7, 0x4a, 0x04, 0x59, 0x31, 0x53, 0x4c, 0xb2, 0xa4, 0x66, 0xac, 0x1c, 0x16, 0xee, 0x5a, 0x78,
+	0x44, 0x24, 0xad, 0x31, 0xb1, 0x60, 0xdc, 0xc6, 0xdf, 0xbf, 0xd0, 0x24, 0x59, 0xc2, 0x19, 0xbf,
+	0x60, 0xb2, 0xb6, 0x05, 0xee, 0x24, 0x42, 0x24, 0x33, 0x1a, 0x18, 0x2b, 0x2a, 0x4e, 0x02, 0xc2,
+	0x97, 0x65, 0xc8, 0xfb, 0xde, 0x81, 0xe6, 0xf1, 0x02, 0xed, 0x43, 0x3b, 0x12, 0xd3, 0xe5, 0xc0,
+	0xd9, 0x73, 0x46, 0xeb, 0x07, 0x3b, 0xfe, 0x3f, 0x5e, 0xe4, 0x1f, 0x2f, 0xc6, 0x62, 0xba, 0xc4,
+	0x06, 0x86, 0x3e, 0x86, 0x3e, 0x29, 0x54, 0x1a, 0x32, 0x7e, 0x22, 0x06, 0x4d, 0x93, 0xb3, 0xbb,
+	0x22, 0xe7, 0xb0, 0x50, 0xe9, 0x23, 0x7e, 0x22, 0x70, 0x8f, 0xd8, 0x13, 0x72, 0x01, 0xb4, 0x36,
+	0xa2, 0x8a, 0x9c, 0xca, 0x41, 0x6b, 0xaf, 0x35, 0xda, 0xc0, 0x97, 0x3c, 0x1e, 0x87, 0xce, 0xf1,
+	0x02, 0x93, 0xef, 0xd0, 0x2d, 0x00, 0x7d, 0x55, 0x18, 0x2d, 0x15, 0x95, 0x46, 0xd7, 0x06, 0xee,
+	0x6b, 0xcf, 0x58, 0x3b, 0xd0, 0x7b, 0x70, 0xb3, 0x56, 0x60, 0x31, 0x4d, 0x83, 0xd9, 0xac, 0xae,
+	0x2a, 0x71, 0xd7, 0xdd, 0xf7, 0x83, 0x03, 0x6b, 0x13, 0x96, 0xf0, 0x2f, 0x45, 0xfc, 0x5f, 0x5d,
+	0xb9, 0x03, 0xbd, 0x38, 0x25, 0x8c, 0x87, 0x6c, 0x3a, 0x68, 0xed, 0x39, 0xa3, 0x3e, 0x5e, 0x33,
+	0xf6, 0xa3, 0x29, 0xba, 0x03, 0x37, 0x48, 0x1c, 0x8b, 0x82, 0xab, 0x90, 0x17, 0x59, 0x44, 0xf3,
+	0x41, 0x7b, 0xcf, 0x19, 0xb5, 0xf1, 0xa6, 0xf5, 0x3e, 0x35, 0x4e, 0xef, 0x0f, 0x07, 0xd6, 0xad,
+	0xa8, 0xaf, 0x27, 0xcf, 0x9e, 0xfe, 0x7f, 0xdd, 0xf9, 0xd7, 0xd2, 0x51, 0x00, 0xdb, 0xba, 0xba,
+	0xe1, 0x54, 0xc4, 0xa1, 0x4c, 0xc9, 0xc1, 0x07, 0x1f, 0x86, 0x29, 0x91, 0xe9, 0xa0, 0x63, 0x2a,
+	0xb5, 0x25, 0xcb, 0x57, 0x4d, 0x4c, 0xe4, 0x88, 0xc8, 0xd4, 0xfb, 0xb1, 0x09, 0xdd, 0x52, 0x3d,
+	0xba, 0x0b, 0xbd, 0x8c, 0x4a, 0x49, 0x12, 0x53, 0xfd, 0xd6, 0x68, 0xfd, 0x60, 0xdb, 0x2f, 0x27,
+	0xd7, 0xaf, 0x26, 0xd7, 0x3f, 0xe4, 0x4b, 0x5c, 0xa3, 0x10, 0x82, 0x76, 0x46, 0xb3, 0xf2, 0x91,
+	0x7d, 0x6c, 0xce, 0x5a, 0xa8, 0x62, 0x19, 0x15, 0x85, 0x0a, 0x53, 0xca, 0x92, 0x54, 0x99, 0x97,
+	0xb4, 0xf1, 0xa6, 0xf5, 0x1e, 0x19, 0x27, 0x1a, 0xc3, 0x16, 0x5d, 0x28, 0xca, 0x25, 0x13, 0x3c,
+	0x14, 0x73, 0xc5, 0x04, 0x97, 0x83, 0x3f, 0xd7, 0xae, 0xb8, 0xf6, 0xad, 0x1a, 0xff, 0xac, 0x84,
+	0xa3, 0xe7, 0xe0, 0x72, 0xc1, 0xc3, 0x38, 0x67, 0x8a, 0xc5, 0x64, 0x16, 0xae, 0x20, 0xbc, 0x79,
+	0x05, 0xe1, 0x2e, 0x17, 0xfc, 0x81, 0xcd, 0xfd, 0xea, 0x6f, 0xdc, 0xde, 0x4b, 0xe8, 0x55, 0x0d,
+	0x42, 0x5f, 0xc0, 0x86, 0x2e, 0x1c, 0xcd, 0x4d, 0x4b, 0xab, 0xe2, 0xdc, 0x5a, 0xd1, 0xd3, 0x89,
+	0x81, 0x99, 0xae, 0xae, 0xcb, 0xfa, 0x2c, 0xd1, 0x08, 0x5a, 0x27, 0x94, 0xda, 0x61, 0x78, 0x7b,
+	0x45, 0xe2, 0x43, 0x4a, 0xb1, 0x86, 0x78, 0x3f, 0x39, 0x00, 0x17, 0x2c, 0xe8, 0x3e, 0xc0, 0xbc,
+	0x88, 0x66, 0x2c, 0x0e, 0x5f, 0xd0, 0x6a, 0x00, 0x57, 0xbf, 0xa6, 0x5f, 0xe2, 0x1e, 0x53, 0x33,
+	0x80, 0x99, 0x98, 0xd2, 0xeb, 0x06, 0xf0, 0x89, 0x98, 0xd2, 0x72, 0x00, 0x33, 0x7b, 0x42, 0x43,
+	0xe8, 0x49, 0xfa, 0x6d, 0x41, 0x79, 0x4c, 0x6d, 0xdb, 0x6a, 0xdb, 0x3b, 0x6d, 0x42, 0xaf, 0x4a,
+	0x41, 0x9f, 0x41, 0x57, 0x32, 0x9e, 0xcc, 0xa8, 0xd5, 0xe4, 0x5d, 0xc1, 0xef, 0x4f, 0x0c, 0xf2,
+	0xa8, 0x81, 0x6d, 0x0e, 0xfa, 0x04, 0x3a, 0x66, 0xd7, 0x5a, 0x71, 0xef, 0x5c, 0x95, 0xfc, 0x44,
+	0x03, 0x8f, 0x1a, 0xb8, 0xcc, 0x18, 0x1e, 0x42, 0xb7, 0xa4, 0x43, 0x1f, 0x41, 0x5b, 0xeb, 0x36,
+	0x02, 0x6e, 0x1c, 0xbc, 0x7b, 0x89, 0xa3, 0xda, 0xbe, 0x97, 0xbb, 0xa2, 0xf9, 0xb0, 0x49, 0x18,
+	0xbe, 0x72, 0xa0, 0x63, 0x58, 0xd1, 0x63, 0xe8, 0x45, 0x4c, 0x91, 0x3c, 0x27, 0x55, 0x6d, 0x83,
+	0x8a, 0xa6, 0xfc, 0x46, 0xf8, 0xf5, 0x27, 0xa1, 0xe2, 0x7a, 0x20, 0xb2, 0x39, 0x89, 0xd5, 0x98,
+	0xa9, 0x43, 0x9d, 0x86, 0x6b, 0x02, 0xf4, 0x29, 0x40, 0x5d, 0x75, 0xbd, 0x9a, 0x5a, 0xd7, 0x95,
+	0xbd, 0x5f, 0x95, 0x5d, 0x8e, 0x3b, 0xd0, 0x92, 0x45, 0xe6, 0xfd, 0xe2, 0x40, 0xeb, 0x21, 0xa5,
+	0x28, 0x86, 0x2e, 0xc9, 0xf4, 0xbf, 0xda, 0x8e, 0x5a, 0xbd, 0x72, 0xf4, 0xa7, 0xe8, 0x92, 0x14,
+	0xc6, 0xc7, 0x77, 0x5f, 0xff, 0x76, 0xbb, 0xf1, 0xf3, 0xef, 0xb7, 0x47, 0x09, 0x53, 0x69, 0x11,
+	0xf9, 0xb1, 0xc8, 0x82, 0xea, 0x33, 0x67, 0x7e, 0xf6, 0xe5, 0xf4, 0x45, 0xa0, 0x96, 0x73, 0x2a,
+	0x4d, 0x82, 0xc4, 0x96, 0x1a, 0xed, 0x42, 0x3f, 0x21, 0x32, 0x9c, 0xb1, 0x8c, 0x29, 0xd3, 0x88,
+	0x36, 0xee, 0x25, 0x44, 0x7e, 0xa3, 0x6d, 0xb4, 0x0d, 0x9d, 0x39, 0x59, 0xd2, 0xdc, 0xae, 0xa1,
+	0xd2, 0x40, 0x03, 0x58, 0x4b, 0x72, 0xc2, 0x95, 0xdd, 0x3e, 0x7d, 0x5c, 0x99, 0xe3, 0xcf, 0x5f,
+	0x9f, 0xb9, 0xce, 0x9b, 0x33, 0xd7, 0x39, 0x3d, 0x73, 0x9d, 0x57, 0xe7, 0x6e, 0xe3, 0xcd, 0xb9,
+	0xdb, 0xf8, 0xf5, 0xdc, 0x6d, 0x3c, 0xbf, 0x73, 0xbd, 0xb0, 0x40, 0x2d, 0xa2, 0xae, 0x19, 0xe6,
+	0xfb, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0x34, 0xab, 0x74, 0x31, 0xe9, 0x07, 0x00, 0x00,
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 }
 
 func (m *Tx) Marshal() (dAtA []byte, err error) {
@@ -1119,7 +1265,11 @@ func (m *SignDoc) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) Marshal() (dAtA []byte, err error) {
+=======
+func (m *SignDocJSON) Marshal() (dAtA []byte, err error) {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1129,16 +1279,25 @@ func (m *SignDocAux) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) MarshalTo(dAtA []byte) (int, error) {
+=======
+func (m *SignDocJSON) MarshalTo(dAtA []byte) (int, error) {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+=======
+func (m *SignDocJSON) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+<<<<<<< HEAD
 	if m.Tip != nil {
 		{
 			size, err := m.Tip.MarshalToSizedBuffer(dAtA[:i])
@@ -1155,6 +1314,14 @@ func (m *SignDocAux) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTx(dAtA, i, uint64(m.Sequence))
 		i--
 		dAtA[i] = 0x28
+=======
+	if len(m.SignDocSha256Hash) > 0 {
+		i -= len(m.SignDocSha256Hash)
+		copy(dAtA[i:], m.SignDocSha256Hash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SignDocSha256Hash)))
+		i--
+		dAtA[i] = 0x2a
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	}
 	if m.AccountNumber != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.AccountNumber))
@@ -1168,9 +1335,15 @@ func (m *SignDocAux) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
+<<<<<<< HEAD
 	if m.PublicKey != nil {
 		{
 			size, err := m.PublicKey.MarshalToSizedBuffer(dAtA[:i])
+=======
+	if m.AuthInfo != nil {
+		{
+			size, err := m.AuthInfo.MarshalToSizedBuffer(dAtA[:i])
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			if err != nil {
 				return 0, err
 			}
@@ -1180,10 +1353,22 @@ func (m *SignDocAux) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
+<<<<<<< HEAD
 	if len(m.BodyBytes) > 0 {
 		i -= len(m.BodyBytes)
 		copy(dAtA[i:], m.BodyBytes)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.BodyBytes)))
+=======
+	if m.Body != nil {
+		{
+			size, err := m.Body.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1716,18 +1901,31 @@ func (m *SignDoc) Size() (n int) {
 	return n
 }
 
+<<<<<<< HEAD
 func (m *SignDocAux) Size() (n int) {
+=======
+func (m *SignDocJSON) Size() (n int) {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
+<<<<<<< HEAD
 	l = len(m.BodyBytes)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	if m.PublicKey != nil {
 		l = m.PublicKey.Size()
+=======
+	if m.Body != nil {
+		l = m.Body.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.AuthInfo != nil {
+		l = m.AuthInfo.Size()
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 		n += 1 + l + sovTx(uint64(l))
 	}
 	l = len(m.ChainId)
@@ -1737,11 +1935,16 @@ func (m *SignDocAux) Size() (n int) {
 	if m.AccountNumber != 0 {
 		n += 1 + sovTx(uint64(m.AccountNumber))
 	}
+<<<<<<< HEAD
 	if m.Sequence != 0 {
 		n += 1 + sovTx(uint64(m.Sequence))
 	}
 	if m.Tip != nil {
 		l = m.Tip.Size()
+=======
+	l = len(m.SignDocSha256Hash)
+	if l > 0 {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 		n += 1 + l + sovTx(uint64(l))
 	}
 	return n
@@ -2415,7 +2618,11 @@ func (m *SignDoc) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+<<<<<<< HEAD
 func (m *SignDocAux) Unmarshal(dAtA []byte) error {
+=======
+func (m *SignDocJSON) Unmarshal(dAtA []byte) error {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2438,17 +2645,30 @@ func (m *SignDocAux) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
+<<<<<<< HEAD
 			return fmt.Errorf("proto: SignDocAux: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: SignDocAux: illegal tag %d (wire type %d)", fieldNum, wire)
+=======
+			return fmt.Errorf("proto: SignDocJSON: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SignDocJSON: illegal tag %d (wire type %d)", fieldNum, wire)
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+<<<<<<< HEAD
 				return fmt.Errorf("proto: wrong wireType = %d for field BodyBytes", wireType)
 			}
 			var byteLen int
+=======
+				return fmt.Errorf("proto: wrong wireType = %d for field Body", wireType)
+			}
+			var msglen int
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2458,29 +2678,52 @@ func (m *SignDocAux) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
+<<<<<<< HEAD
 				byteLen |= int(b&0x7F) << shift
+=======
+				msglen |= int(b&0x7F) << shift
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 				if b < 0x80 {
 					break
 				}
 			}
+<<<<<<< HEAD
 			if byteLen < 0 {
 				return ErrInvalidLengthTx
 			}
 			postIndex := iNdEx + byteLen
+=======
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
+<<<<<<< HEAD
 			m.BodyBytes = append(m.BodyBytes[:0], dAtA[iNdEx:postIndex]...)
 			if m.BodyBytes == nil {
 				m.BodyBytes = []byte{}
+=======
+			if m.Body == nil {
+				m.Body = &TxBody{}
+			}
+			if err := m.Body.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
+<<<<<<< HEAD
 				return fmt.Errorf("proto: wrong wireType = %d for field PublicKey", wireType)
+=======
+				return fmt.Errorf("proto: wrong wireType = %d for field AuthInfo", wireType)
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2507,10 +2750,17 @@ func (m *SignDocAux) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
+<<<<<<< HEAD
 			if m.PublicKey == nil {
 				m.PublicKey = &types.Any{}
 			}
 			if err := m.PublicKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+=======
+			if m.AuthInfo == nil {
+				m.AuthInfo = &AuthInfo{}
+			}
+			if err := m.AuthInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 				return err
 			}
 			iNdEx = postIndex
@@ -2566,6 +2816,7 @@ func (m *SignDocAux) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 5:
+<<<<<<< HEAD
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sequence", wireType)
 			}
@@ -2589,6 +2840,12 @@ func (m *SignDocAux) Unmarshal(dAtA []byte) error {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tip", wireType)
 			}
 			var msglen int
+=======
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SignDocSha256Hash", wireType)
+			}
+			var byteLen int
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -2598,26 +2855,43 @@ func (m *SignDocAux) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
+<<<<<<< HEAD
 				msglen |= int(b&0x7F) << shift
+=======
+				byteLen |= int(b&0x7F) << shift
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 				if b < 0x80 {
 					break
 				}
 			}
+<<<<<<< HEAD
 			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
 			postIndex := iNdEx + msglen
+=======
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
+<<<<<<< HEAD
 			if m.Tip == nil {
 				m.Tip = &Tip{}
 			}
 			if err := m.Tip.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
+=======
+			m.SignDocSha256Hash = append(m.SignDocSha256Hash[:0], dAtA[iNdEx:postIndex]...)
+			if m.SignDocSha256Hash == nil {
+				m.SignDocSha256Hash = []byte{}
+>>>>>>> 56589f1cc816d8596c6e5970d6049b136452916a
 			}
 			iNdEx = postIndex
 		default:

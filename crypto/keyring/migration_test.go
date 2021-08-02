@@ -18,7 +18,6 @@ import (
 
 const n1 = "cosmos"
 
-
 func TestMigrateLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring
 	dir := t.TempDir()
@@ -33,7 +32,7 @@ func TestMigrateLegacyLocalKey(t *testing.T) {
 	privKey := cryptotypes.PrivKey(priv)
 	pub := priv.PubKey()
 
-	legacyLocalInfo := NewLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
+	legacyLocalInfo := newLegacyLocalInfo(n1, pub, string(legacy.Cdc.MustMarshal(privKey)), hd.Secp256k1.Name())
 	serializedLegacyLocalInfo := MarshalInfo(legacyLocalInfo)
 
 	item := keyring.Item{
@@ -68,7 +67,7 @@ func TestMigrateLegacyLedgerKey(t *testing.T) {
 
 	account, coinType, index := uint32(118), uint32(0), uint32(0)
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
-	legacyLedgerInfo := NewLegacyLedgerInfo(n1, pub, *hdPath, hd.Secp256k1.Name())
+	legacyLedgerInfo := newLegacyLedgerInfo(n1, pub, *hdPath, hd.Secp256k1.Name())
 	serializedLegacyLedgerInfo := MarshalInfo(legacyLedgerInfo)
 
 	item := keyring.Item{
@@ -98,7 +97,7 @@ func TestMigrateLegacyOfflineKey(t *testing.T) {
 	priv := secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	legacyOfflineInfo := newLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
 	item := keyring.Item{
@@ -131,9 +130,9 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 			priv.PubKey(),
 		},
 	)
-	legacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
+	LegacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := MarshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := MarshalInfo(LegacyMultiInfo)
 
 	item := keyring.Item{
 		Key:         n1,
@@ -144,7 +143,7 @@ func TestMigrateLegacyMultiKey(t *testing.T) {
 	ks, ok := kb.(keystore)
 	require.True(ok)
 	require.NoError(ks.SetItem(item))
-	
+
 	migrated, err := ks.migrate(n1)
 	require.True(migrated)
 	require.NoError(err)
@@ -207,7 +206,7 @@ func TestMigrateOneRandomItemError(t *testing.T) {
 	ks, ok := kb.(keystore)
 	require.True(ok)
 	require.NoError(ks.SetItem(errItem))
-	
+
 	migrated, err := ks.migrate(n1)
 	require.False(migrated)
 	require.Error(err)
@@ -228,9 +227,9 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 			priv.PubKey(),
 		},
 	)
-	legacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
+	LegacyMultiInfo, err := NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := MarshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := MarshalInfo(LegacyMultiInfo)
 
 	item := keyring.Item{
 		Key:         n1,
@@ -245,7 +244,7 @@ func TestMigrateAllMultiOffline(t *testing.T) {
 	priv = secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	legacyOfflineInfo := newLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
 	item = keyring.Item{
@@ -287,7 +286,7 @@ func TestMigrateErrUnknownItemKey(t *testing.T) {
 	priv := secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	legacyOfflineInfo := NewLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
+	legacyOfflineInfo := newLegacyOfflineInfo(n1, pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
 	item := keyring.Item{

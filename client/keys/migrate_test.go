@@ -1,6 +1,5 @@
 package keys
 
-
 import (
 	"context"
 	"fmt"
@@ -42,9 +41,9 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 			priv.PubKey(),
 		},
 	)
-	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
+	LegacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
+	serializedLegacyMultiInfo := keyring.MarshalInfo(LegacyMultiInfo)
 
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{
@@ -52,7 +51,7 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
 	}
-	
+
 	setter, ok := kb.(setter)
 	require.True(ok)
 	require.NoError(setter.SetItem(item))

@@ -17,5 +17,5 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(legacyLocalInfo{}, "crypto/keys/localInfo", nil)
 	cdc.RegisterConcrete(legacyLedgerInfo{}, "crypto/keys/ledgerInfo", nil)
 	cdc.RegisterConcrete(legacyOfflineInfo{}, "crypto/keys/offlineInfo", nil)
-	cdc.RegisterConcrete(legacyMultiInfo{}, "crypto/keys/multiInfo", nil)
+	cdc.RegisterConcrete(LegacyMultiInfo{}, "crypto/keys/multiInfo", nil)
 }

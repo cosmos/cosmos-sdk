@@ -32,7 +32,7 @@ var (
 	_ legacyInfo = &legacyLocalInfo{}
 	_ legacyInfo = &legacyLedgerInfo{}
 	_ legacyInfo = &legacyOfflineInfo{}
-	_ legacyInfo = &legacyMultiInfo{}
+	_ legacyInfo = &LegacyMultiInfo{}
 )
 
 // legacyLocalInfo is the public information about a locally stored key
@@ -44,7 +44,7 @@ type legacyLocalInfo struct {
 	Algo         hd.PubKeyType      `json:"algo"`
 }
 
-func NewLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) legacyInfo {
+func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) legacyInfo {
 	return &legacyLocalInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -97,7 +97,7 @@ type legacyLedgerInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func NewLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) legacyInfo {
+func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) legacyInfo {
 	return &legacyLedgerInfo{
 		Name:   name,
 		PubKey: pub,
@@ -145,7 +145,7 @@ type legacyOfflineInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
-func NewLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) legacyInfo {
+func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) legacyInfo {
 	return &legacyOfflineInfo{
 		Name:   name,
 		PubKey: pub,
@@ -193,7 +193,7 @@ type multisigPubKeyInfo struct {
 }
 
 // multiInfo is the public information about a multisig key
-type legacyMultiInfo struct {
+type LegacyMultiInfo struct {
 	Name      string               `json:"name"`
 	PubKey    cryptotypes.PubKey   `json:"pubkey"`
 	Threshold uint                 `json:"threshold"`
@@ -205,44 +205,44 @@ func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (legacyInfo, error)
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
 		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
-	return &legacyMultiInfo{
+	return &LegacyMultiInfo{
 		Name:   name,
 		PubKey: pub,
 	}, nil
 }
 
 // GetType implements Info interface
-func (i legacyMultiInfo) GetType() KeyType {
+func (i LegacyMultiInfo) GetType() KeyType {
 	return TypeMulti
 }
 
 // GetName implements Info interface
-func (i legacyMultiInfo) GetName() string {
+func (i LegacyMultiInfo) GetName() string {
 	return i.Name
 }
 
 // GetPubKey implements Info interface
-func (i legacyMultiInfo) GetPubKey() cryptotypes.PubKey {
+func (i LegacyMultiInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
 // GetAddress implements Info interface
-func (i legacyMultiInfo) GetAddress() sdk.AccAddress {
+func (i LegacyMultiInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
 // GetPath implements Info interface
-func (i legacyMultiInfo) GetAlgo() hd.PubKeyType {
+func (i LegacyMultiInfo) GetAlgo() hd.PubKeyType {
 	return hd.MultiType
 }
 
 // GetPath implements Info interface
-func (i legacyMultiInfo) GetPath() (*hd.BIP44Params, error) {
+func (i LegacyMultiInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (i legacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (i LegacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	multiPK := i.PubKey.(*multisig.LegacyAminoPubKey)
 
 	return codectypes.UnpackInterfaces(multiPK, unpacker)
@@ -267,9 +267,9 @@ func unMarshalLegacyInfo(bz []byte) (info legacyInfo, err error) {
 	//
 	// This is a workaround, as go cannot check that an interface (Info)
 	// implements another interface (UnpackInterfacesMessage).
-	_, ok := info.(legacyMultiInfo)
+	_, ok := info.(LegacyMultiInfo)
 	if ok {
-		var multi legacyMultiInfo
+		var multi LegacyMultiInfo
 		err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &multi)
 
 		return multi, err
@@ -292,7 +292,7 @@ func exportPrivateKeyFromLegacyInfo(info legacyInfo) (cryptotypes.PrivKey, error
 		}
 
 		return priv, nil
-	// case legacyLedgerInfo, legacyOfflineInfo, legacyMultiInfo:
+	// case legacyLedgerInfo, legacyOfflineInfo, LegacyMultiInfo:
 	default:
 		return nil, errors.New("only works on local private keys")
 	}

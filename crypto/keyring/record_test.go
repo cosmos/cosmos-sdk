@@ -1,44 +1,35 @@
-package keyring_test
+package keyring
 
 import (
-	//"strings"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	//codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	//"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
-	//"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	//cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
-
-/*
-type marshaler interface {
-	protoMarshalRecord(k *Record) ([]byte, error)
-	protoUnmarshalRecord(bz []byte) (*Record, error)
-}
-*/
 
 func TestOfflineRecordMarshaling(t *testing.T) {
 	require := require.New(t)
 
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
-	emptyRecord := keyring.NewOfflineRecord()
-	emptyRecordItem := keyring.NewOfflineRecordItem(emptyRecord)
+	emptyRecord := NewOfflineRecord()
+	emptyRecordItem := NewOfflineRecordItem(emptyRecord)
 
-	r, err := keyring.NewRecord("testrecord", pk, emptyRecordItem)
+	r, err := NewRecord("testrecord", pk, emptyRecordItem)
 	require.NoError(err)
 
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := getCodec()
 	bz, err := cdc.Marshal(r)
 	require.NoError(err)
 
-	var r2 keyring.Record
+	var r2 Record
 	require.NoError(cdc.Unmarshal(bz, &r2))
 	require.Equal(r.Name, r2.Name)
 	require.True(r.PubKey.Equal(r2.PubKey))
@@ -46,10 +37,8 @@ func TestOfflineRecordMarshaling(t *testing.T) {
 	pk2, err := r2.GetPubKey()
 	require.NoError(err)
 	require.True(pk.Equals(pk2))
-
 }
 
-/*
 func TestLocalRecordMarshaling(t *testing.T) {
 	const n1 = "cosmos"
 	require := require.New(t)
@@ -63,20 +52,23 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	privKey = priv
 
 	cdc := getCodec()
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
-	localRecord, err := keyring.NewLocalRecord(privKey)
+	localRecord, err := NewLocalRecord(privKey)
 	require.NoError(err)
-	localRecordItem := keyring.NewLocalRecordItem(localRecord)
+	localRecordItem := NewLocalRecordItem(localRecord)
 
-	r, err := keyring.NewRecord("testrecord", pub, localRecordItem)
-	require.NoError(err)
-
-	bz, err := kb.protoMarshalRecord(r)
+	r, err := NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
 
-	r2, err := kb.protoUnmarshalRecord(bz)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+
+	bz, err := ks.protoMarshalRecord(r)
+	require.NoError(err)
+
+	r2, err := ks.protoUnmarshalRecord(bz)
 	require.NoError(err)
 	require.Equal(r.Name, r2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.
@@ -104,33 +96,36 @@ func TestLedgerRecordMarshaling(t *testing.T) {
 	pub := priv.PubKey()
 
 	cdc := getCodec()
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, cdc)
+	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
 	path := hd.NewFundraiserParams(4, 12345, 57)
-	ledgerRecord := keyring.NewLedgerRecord(path)
+	ledgerRecord := NewLedgerRecord(path)
 	require.NoError(err)
-	ledgerRecordItem := keyring.NewLedgerRecordItem(ledgerRecord)
+	ledgerRecordItem := NewLedgerRecordItem(ledgerRecord)
 
-	r, err := keyring.NewRecord("testrecord", pub, ledgerRecordItem)
-	require.NoError(err)
-
-	bz, err := kb.protoMarshalRecord(r)
+	k, err := NewRecord("testrecord", pub, ledgerRecordItem)
 	require.NoError(err)
 
-	r2, err := kb.protoUnmarshalRecord(bz)
+	ks, ok := kb.(keystore)
+	require.True(ok)
+
+	bz, err := ks.protoMarshalRecord(k)
 	require.NoError(err)
-	require.Equal(r.Name, r2.Name)
+
+	k2, err := ks.protoUnmarshalRecord(bz)
+	require.NoError(err)
+	require.Equal(k.Name, k2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.
-	require.True(r.PubKey.Equal(r2.PubKey))
+	require.True(k.PubKey.Equal(k2.PubKey))
 
-	pub2, err := r2.GetPubKey()
+	pub2, err := k2.GetPubKey()
 	require.NoError(err)
 	require.True(pub.Equals(pub2))
 
-	ledgerRecord2 := r2.GetLedger()
+	ledgerRecord2 := k2.GetLedger()
 	require.NotNil(ledgerRecord2)
-	require.Nil(r2.GetLocal())
+	require.Nil(k2.GetLocal())
 
 	require.Equal(ledgerRecord2.Path.String(), path.String())
 }
@@ -143,14 +138,14 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	privKey := cryptotypes.PrivKey(priv)
 
 	// use proto serialize
-	localRecord, err := keyring.NewLocalRecord(privKey)
+	localRecord, err := NewLocalRecord(privKey)
 	require.NoError(err)
-	localRecordItem := keyring.NewLocalRecordItem(localRecord)
+	localRecordItem := NewLocalRecordItem(localRecord)
 
-	k, err := keyring.NewRecord("testrecord", pub, localRecordItem)
+	k, err := NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
 
-	privKey2, err := keyring.ExtractPrivKeyFromRecord(k)
+	privKey2, err := ExtractPrivKeyFromRecord(k)
 	require.NoError(err)
 	require.True(privKey2.Equals(privKey))
 }
@@ -161,14 +156,13 @@ func TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
 	priv := secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	offlineRecord := keyring.NewOfflineRecord()
-	emptyRecordItem := keyring.NewOfflineRecordItem(offlineRecord)
+	offlineRecord := NewOfflineRecord()
+	emptyRecordItem := NewOfflineRecordItem(offlineRecord)
 
-	k, err := keyring.NewRecord("testrecord", pub, emptyRecordItem)
+	k, err := NewRecord("testrecord", pub, emptyRecordItem)
 	require.NoError(err)
 
-	privKey2, err := keyring.ExtractPrivKeyFromRecord(k)
+	privKey2, err := ExtractPrivKeyFromRecord(k)
 	require.Error(err)
 	require.Nil(privKey2)
 }
-*/

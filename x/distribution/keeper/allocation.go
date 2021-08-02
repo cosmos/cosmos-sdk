@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -84,7 +83,8 @@ func (k Keeper) AllocateTokens(
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 
 	foundationTax := k.GetSecretFoundationTax(ctx)
-	foundationTaxAddr := k.GetSecretFoundationAddr(ctx)
+	address := k.GetSecretFoundationAddr(ctx)
+	foundationTaxAddr, _ := sdk.AccAddressFromBech32(address)
 
 	// only apply the secret foundation tax when the tax and address is non-zero
 	var foundationTaxSum sdk.DecCoins

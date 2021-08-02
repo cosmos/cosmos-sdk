@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -262,11 +261,16 @@ func queryFoundationTax(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keep
 	tax := k.GetSecretFoundationTax(ctx)
 	address := k.GetSecretFoundationAddr(ctx)
 
+	addr, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+	}
+
 	resp := types.FoundationTaxResponseParams{}
-	if address != nil && !tax.IsZero() {
+	if addr != nil && !tax.IsZero() {
 		resp = types.FoundationTaxResponseParams{
 			Tax:               tax,
-			FoundationAddress: address,
+			FoundationAddress: addr,
 		}
 	}
 

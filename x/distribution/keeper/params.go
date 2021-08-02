@@ -49,7 +49,7 @@ func (k Keeper) GetSecretFoundationTax(ctx sdk.Context) (tax sdk.Dec) {
 }
 
 // GetSecretFoundationAddr returns the current secret foundation address.
-func (k Keeper) GetSecretFoundationAddr(ctx sdk.Context) (addr sdk.AccAddress) {
+func (k Keeper) GetSecretFoundationAddr(ctx sdk.Context) (addr string) {
 	k.paramSpace.Get(ctx, types.ParamSecretFoundationAddress, &addr)
 	return addr
 }

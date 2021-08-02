@@ -253,7 +253,11 @@ func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRe
 func (k Keeper) FoundationTax(c context.Context, req *types.QueryFoundationTaxRequest) (*types.QueryFoundationTaxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	fee := k.GetSecretFoundationTax(ctx)
-	addr := k.GetSecretFoundationAddr(ctx)
+	address := k.GetSecretFoundationAddr(ctx)
+	addr, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+	}
 
 	return &types.QueryFoundationTaxResponse{Tax: fee.String(), FoundationAddress: addr.String()}, nil
 }

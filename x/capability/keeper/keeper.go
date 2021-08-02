@@ -89,11 +89,10 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	}
 }
 
-// InitializeAndSeal loads all capabilities from the persistent KVStore into the
-// in-memory store and seals the keeper to prevent further modules from creating
-// a scoped keeper. InitializeAndSeal must be called once after the application
-// state is loaded.
-func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
+// Seal seals the keeper to prevent further modules from creating a scoped keeper.
+// Seal may be called during app initialization for applications that do not wish to create scoped keepers dynamically.
+// Seal also asserts the memory store type is correct, and will panic if it does not have store type of `StoreTypeMemory`.
+func (k *Keeper) Seal(ctx sdk.Context) {
 	if k.sealed {
 		panic("cannot initialize and seal an already sealed capability keeper")
 	}
@@ -125,14 +124,8 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 		// initialize the in-memory store for all persisted capabilities
 		defer iterator.Close()
 
-<<<<<<< HEAD
-		k.cdc.MustUnmarshal(iterator.Value(), &capOwners)
-		k.InitializeCapability(ctx, index, capOwners)
-	}
-=======
 		for ; iterator.Valid(); iterator.Next() {
 			index := types.IndexFromKey(iterator.Key())
->>>>>>> 8570d1bb6a... implement BeginBlock fix
 
 			var capOwners types.CapabilityOwners
 

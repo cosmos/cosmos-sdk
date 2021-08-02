@@ -92,7 +92,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	a := make([]*codectypes.Any, 0, len(ak.permAddrs))
+	modAccounts := make([]*codectypes.Any, 0, len(ak.permAddrs))
 
 	for moduleName := range ak.permAddrs {
 		account := ak.GetModuleAccount(ctx, moduleName)
@@ -103,8 +103,8 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
-		a = append(a, any)
+		modAccounts = append(modAccounts, any)
 	}
 
-	return &types.QueryModuleAccountsResponse{Accounts: a}, nil
+	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
 }

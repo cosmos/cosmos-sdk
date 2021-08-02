@@ -20,7 +20,7 @@ import (
 type CapabilityTestSuite struct {
 	suite.Suite
 
-	cdc    codec.Marshaler
+	cdc    codec.Codec
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	keeper *keeper.Keeper
@@ -57,7 +57,7 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 
 	// Mock App startup
 	ctx := suite.app.BaseApp.NewUncachedContext(false, tmproto.Header{})
-	newKeeper.InitializeAndSeal(ctx)
+	newKeeper.Seal()
 
 	// Mock app beginblock and ensure that no gas has been consumed
 	ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockGasMeter(sdk.NewGasMeter(50))

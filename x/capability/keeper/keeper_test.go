@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -19,7 +18,6 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc    codec.Marshaler
 	ctx    sdk.Context
 	app    *simapp.SimApp
 	keeper *keeper.Keeper
@@ -36,10 +34,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 1})
 	suite.keeper = keeper
-	suite.cdc = cdc
 }
 
-func (suite *KeeperTestSuite) TestInitializeAndSeal() {
+func (suite *KeeperTestSuite) TestSeal() {
 	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
 	suite.Require().Panics(func() {
 		suite.keeper.ScopeToModule("  ")
@@ -59,7 +56,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	}
 
 	suite.Require().NotPanics(func() {
-		suite.keeper.InitializeAndSeal(suite.ctx)
+		suite.keeper.Seal()
 	})
 
 	for i, cap := range caps {
@@ -70,7 +67,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	}
 
 	suite.Require().Panics(func() {
-		suite.keeper.InitializeAndSeal(suite.ctx)
+		suite.keeper.Seal()
 	})
 
 	suite.Require().Panics(func() {

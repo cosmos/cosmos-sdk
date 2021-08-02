@@ -91,17 +91,9 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 
 // Seal seals the keeper to prevent further modules from creating a scoped keeper.
 // Seal may be called during app initialization for applications that do not wish to create scoped keepers dynamically.
-// Seal also asserts the memory store type is correct, and will panic if it does not have store type of `StoreTypeMemory`.
-func (k *Keeper) Seal(ctx sdk.Context) {
+func (k *Keeper) Seal() {
 	if k.sealed {
 		panic("cannot initialize and seal an already sealed capability keeper")
-	}
-
-	memStore := ctx.KVStore(k.memKey)
-	memStoreType := memStore.GetStoreType()
-
-	if memStoreType != sdk.StoreTypeMemory {
-		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
 	}
 
 	k.sealed = true
@@ -110,12 +102,19 @@ func (k *Keeper) Seal(ctx sdk.Context) {
 // InitMemStore will initialize the memory store if the initialized flag is not set.
 // InitMemStore logic should be run in first `BeginBlock` or `InitChain` (whichever is run on app start)
 // so that the memory store is properly initialized before any transactions are run.
+// InitMemStore also asserts the memory store type is correct, and will panic if it does not have store type of `StoreTypeMemory`.
 func (k *Keeper) InitMemStore(ctx sdk.Context) {
+	memStore := ctx.KVStore(k.memKey)
+	memStoreType := memStore.GetStoreType()
+
+	if memStoreType != sdk.StoreTypeMemory {
+		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
+	}
+
 	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
 	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
-	memStore := noGasCtx.KVStore(k.memKey)
 	flag := memStore.Get(types.MemInitializedKey())
 	if flag == nil {
 		prefixStore := prefix.NewStore(noGasCtx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
@@ -129,7 +128,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 
 			var capOwners types.CapabilityOwners
 
-			k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
+			k.cdc.MustUnmarshal(iterator.Value(), &capOwners)
 			k.InitializeCapability(noGasCtx, index, capOwners)
 		}
 

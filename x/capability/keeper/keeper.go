@@ -117,7 +117,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
 	memStore := noGasCtx.KVStore(k.memKey)
-	flag := memStore.Get(types.MemInitializedKey())
+	flag := memStore.Get(types.KeyMemInitialized)
 	if flag == nil {
 		prefixStore := prefix.NewStore(noGasCtx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
 		iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
@@ -135,7 +135,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 		}
 
 		// set the initialized flag so we don't rerun initialization logic
-		memStore.Set(types.MemInitializedKey(), []byte{1})
+		memStore.Set(types.KeyMemInitialized, []byte{1})
 	}
 }
 

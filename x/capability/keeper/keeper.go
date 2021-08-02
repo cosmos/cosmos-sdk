@@ -13,14 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
-// initialized is a global variable used by GetCapability to ensure that the memory store
-// and capability map are correctly populated. A state-synced node may copy over all the persistent
-// state and start running the application without having the in-memory state required for x/capability.
-// Thus, we must initialized the memory stores on-the-fly during tx execution once the first GetCapability
-// is called.
-// This is a temporary fix and should be replaced by a more robust solution in the next breaking release.
-var initialized = false
-
 type (
 	// Keeper defines the capability module's keeper. It is responsible for provisioning,
 	// tracking, and authenticating capabilities at runtime. During application
@@ -113,22 +105,38 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
 	}
 
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
-	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
-
-	// initialize the in-memory store for all persisted capabilities
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		index := types.IndexFromKey(iterator.Key())
-
-		var capOwners types.CapabilityOwners
-
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
-		k.InitializeCapability(ctx, index, capOwners)
-	}
-
 	k.sealed = true
+}
+
+// InitMemStore will initialize the memory store if the initialized flag is not set.
+// InitMemStore logic should be run in first `BeginBlock` or `InitChain` (whichever is run on app start)
+// so that the memory store is properly initialized before any transactions are run.
+func (k *Keeper) InitMemStore(ctx sdk.Context) {
+	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
+	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+
+	// check if memory store has not been initialized yet by checking if initialized flag is nil.
+	memStore := noGasCtx.KVStore(k.memKey)
+	flag := memStore.Get(types.MemInitializedKey())
+	if flag == nil {
+		prefixStore := prefix.NewStore(noGasCtx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
+		iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+
+		// initialize the in-memory store for all persisted capabilities
+		defer iterator.Close()
+
+		for ; iterator.Valid(); iterator.Next() {
+			index := types.IndexFromKey(iterator.Key())
+
+			var capOwners types.CapabilityOwners
+
+			k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &capOwners)
+			k.InitializeCapability(noGasCtx, index, capOwners)
+		}
+
+		// set the initialized flag so we don't rerun initialization logic
+		memStore.Set(types.MemInitializedKey(), []byte{1})
+	}
 }
 
 // InitializeIndex sets the index to one (or greater) in InitChain according
@@ -350,22 +358,6 @@ func (sk ScopedKeeper) ReleaseCapability(ctx sdk.Context, cap *types.Capability)
 // by name. The module is not allowed to retrieve capabilities which it does not
 // own.
 func (sk ScopedKeeper) GetCapability(ctx sdk.Context, name string) (*types.Capability, bool) {
-	// Create a keeper that will set all in-memory mappings correctly into memstore and capmap if scoped keeper is not initialized yet.
-	// This ensures that the in-memory mappings are correctly filled in, in case this is a state-synced node.
-	// This is a temporary non-breaking fix, a future PR should store the reverse mapping in the persistent store and reconstruct forward mapping and capmap on the fly.
-	if !initialized {
-		// create context with infinite gas meter to avoid app state mismatch.
-		initCtx := ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-		k := Keeper{
-			cdc:      sk.cdc,
-			storeKey: sk.storeKey,
-			memKey:   sk.memKey,
-			capMap:   sk.capMap,
-		}
-		k.InitializeAndSeal(initCtx)
-		initialized = true
-	}
-
 	if strings.TrimSpace(name) == "" {
 		return nil, false
 	}

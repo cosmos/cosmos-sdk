@@ -938,6 +938,10 @@ func (ks keystore) protoMarshalRecord(k *Record) ([]byte, error) {
 	return ks.cdc.Marshal(k)
 }
 
+func (ks keystore) SetItem(item keyring.Item) error {
+	return ks.db.Set(item)
+}
+
 func (ks keystore) convertFromLegacyInfo(info legacyInfo) (*Record, error) {
 	if info == nil {
 		return nil, errors.New("unable to convert LegacyInfo to Record cause info is nil")
@@ -1003,8 +1007,4 @@ func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err
 
 func addrHexKeyAsString(address sdk.Address) string {
 	return fmt.Sprintf("%s.%s", hex.EncodeToString(address.Bytes()), addressSuffix)
-}
-
-func (ks keystore) SetItem(item keyring.Item) error {
-	return ks.db.Set(item)
 }

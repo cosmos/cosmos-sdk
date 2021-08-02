@@ -278,7 +278,7 @@ func unMarshalLegacyInfo(bz []byte) (info legacyInfo, err error) {
 	return
 }
 
-// func (ks keystore) ExportPrivateKeyFromlegacyInfo(uid string) (types.PrivKey, error) {
+// exportPrivateKeyFromLegacyInfo exports a private key from legacyInfo
 func exportPrivateKeyFromLegacyInfo(info legacyInfo) (cryptotypes.PrivKey, error) {
 
 	switch linfo := info.(type) {

@@ -200,12 +200,13 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		return errors.New("cannot set custom bip32 path with ledger")
 	}
 
-	if sdk.GetConfig().GetCoinType() != sdk.CoinType {
-		return errors.New("ledger does not currently support new coin type. Use the legacy hd path flag")
-	}
-
 	// If we're using ledger, only thing we need is the path and the bech32 prefix.
 	if useLedger {
+
+		if coinType != sdk.CoinType {
+			return errors.New("ledger does not currently support new coin type. Use the legacy hd path flag")
+		}
+
 		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 		info, err := kb.SaveLedgerKey(name, algo, bech32PrefixAccAddr, coinType, account, index)

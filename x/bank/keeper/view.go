@@ -98,16 +98,17 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-
+	amount := sdk.ZeroInt()
 	bz := accountStore.Get([]byte(denom))
 	if bz == nil {
-		return sdk.NewCoin(denom, sdk.ZeroInt())
+		return sdk.NewCoin(denom, amount)
 	}
 
-	var balance sdk.Coin
-	k.cdc.MustUnmarshal(bz, &balance)
+	if err := amount.Unmarshal(bz); err != nil {
+		panic(err)
+	}
 
-	return balance
+	return sdk.NewCoin(denom, amount)
 }
 
 // IterateAccountBalances iterates over the balances of a single account and
@@ -120,10 +121,12 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var balance sdk.Coin
-		k.cdc.MustUnmarshal(iterator.Value(), &balance)
+		amount := sdk.ZeroInt()
+		if err := amount.Unmarshal(iterator.Value()); err != nil {
+			panic(err)
+		}
 
-		if cb(balance) {
+		if cb(sdk.NewCoin(string(iterator.Key()), amount)) {
 			break
 		}
 	}
@@ -140,7 +143,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		address, err := types.AddressFromBalancesStore(iterator.Key())
+		address, denom, err := types.AddressAndDenomFromBalancesStore(iterator.Key())
 		if err != nil {
 			k.Logger(ctx).With("key", iterator.Key(), "err", err).Error("failed to get address from balances store")
 			// TODO: revisit, for now, panic here to keep same behavior as in 0.42
@@ -148,10 +151,12 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 			panic(err)
 		}
 
-		var balance sdk.Coin
-		k.cdc.MustUnmarshal(iterator.Value(), &balance)
+		amount := sdk.ZeroInt()
+		if err := amount.Unmarshal(iterator.Value()); err != nil {
+			panic(err)
+		}
 
-		if cb(address, balance) {
+		if cb(address, sdk.NewCoin(denom, amount)) {
 			break
 		}
 	}

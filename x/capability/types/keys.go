@@ -52,8 +52,3 @@ func IndexToKey(index uint64) []byte {
 func IndexFromKey(key []byte) uint64 {
 	return sdk.BigEndianToUint64(key)
 }
-
-// MemInitializedKey returns the key to store the initialized flag in memory store
-func MemInitializedKey() []byte {
-	return []byte(KeyMemInitialized)
-}

@@ -832,9 +832,9 @@ func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 }
 
 func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error) {
-	emptyRecord := NewOfflineRecord()
-	emptyRecordItem := NewOfflineRecordItem(emptyRecord)
-	return ks.newRecord(name, pk, emptyRecordItem)
+	offlineRecord := NewOfflineRecord()
+	offlineRecordItem := NewOfflineRecordItem(offlineRecord)
+	return ks.newRecord(name, pk, offlineRecordItem)
 }
 
 // writeMultisigKey investigate where thisf function is called maybe remove it

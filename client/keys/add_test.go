@@ -173,6 +173,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			},
 			added: true,
 		},
+		
 		{
 			name: "pubkey account is not added with dry run",
 			args: []string{
@@ -216,12 +217,11 @@ func Test_runAddCmdDryRun(t *testing.T) {
 			require.NoError(t, cmd.ExecuteContext(ctx))
 
 			if tt.added {
-				_, err = kb.Key("testkey")
+				_, err := kb.Key("testkey")
 				require.NoError(t, err)
 
 				out, err := ioutil.ReadAll(b)
 				require.NoError(t, err)
-				t.Logf("out: %s", string(out))
 				require.Contains(t, string(out), "name: testkey")
 
 			} else {

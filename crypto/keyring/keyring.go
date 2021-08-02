@@ -130,7 +130,7 @@ type Migrator interface {
 }
 
 type Setter interface {
-	// Set item in keyring.Item
+	// saves item in keystore.db
 	SetItem(item keyring.Item) error
 }
 

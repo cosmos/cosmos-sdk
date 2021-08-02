@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
@@ -46,9 +46,6 @@ type AccountKeeperI interface {
 	GetNextAccountNumber(sdk.Context) uint64
 }
 
-
-
-
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
@@ -67,7 +64,7 @@ type bech32Address struct {
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
-var _ address.AddressCdC = &AccountKeeper{}
+var _ address.AddressCodec = &AccountKeeper{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
@@ -249,8 +246,8 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 // add getter for bech32Prefix
 func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix }
 
-// EncodeTextToBytes encodes text to bytes
-func (ak AccountKeeper) EncodeTextToBytes(text string) ([]byte, error) {
+// AddressStringToBytes encodes text to bytes
+func (ak AccountKeeper) AddressStringToBytes(text string) ([]byte, error) {
 	_, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
 		return nil, err
@@ -263,8 +260,8 @@ func (ak AccountKeeper) EncodeTextToBytes(text string) ([]byte, error) {
 	return bz, nil
 }
 
-// DecodeBytesToText decodes bytes to text
-func (ak AccountKeeper) DecodeBytesToText(bytes []byte) (string, error) {
+// AddressBytesToString decodes bytes to text
+func (ak AccountKeeper) AddressBytesToString(bytes []byte) (string, error) {
 	text, err := bech32.ConvertAndEncode(ak.bech32Prefix, bytes)
 	if err != nil {
 		return "", err

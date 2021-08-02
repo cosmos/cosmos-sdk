@@ -206,24 +206,24 @@ func (suite *KeeperTestSuite) TestBech32Prefix() {
 }
 
 func (suite *KeeperTestSuite) TestAddressStr() {
-	var req *types.AddressStrRequest
+	var req *types.AddressStringRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		msg       string
 		malleate  func()
 		expPass   bool
-		posttests func(res *types.AddressStrResponse)
+		posttests func(res *types.AddressStringResponse)
 	}{
 		{
 			"success",
 			func() {
 				addrBytes := []byte(addr)
-				req = &types.AddressStrRequest{AccountAddr: addrBytes}
+				req = &types.AddressStringRequest{AccountAddr: addrBytes}
 			},
 			true,
-			func(res *types.AddressStrResponse) {
-				text, err := suite.app.AccountKeeper.DecodeBytesToText(req.AccountAddr)
+			func(res *types.AddressStringResponse) {
+				text, err := suite.app.AccountKeeper.AddressBytesToString(req.AccountAddr)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(text)
 				suite.Require().Equal(text, res.AccountAddr)
@@ -232,19 +232,19 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 		{
 			"request is empty",
 			func() {
-				req = &types.AddressStrRequest{}
+				req = &types.AddressStringRequest{}
 			},
 			false,
-			func(res *types.AddressStrResponse) {},
+			func(res *types.AddressStringResponse) {},
 		},
 		{
 			"empty account address in request",
 			func() {
 				emptyAddrBytes := []byte{}
-				req = &types.AddressStrRequest{AccountAddr: emptyAddrBytes}
+				req = &types.AddressStringRequest{AccountAddr: emptyAddrBytes}
 			},
 			false,
-			func(res *types.AddressStrResponse) {},
+			func(res *types.AddressStringResponse) {},
 		},
 	}
 
@@ -255,7 +255,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.AddressStr(ctx, req)
+			res, err := suite.queryClient.AddressString(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -283,7 +283,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 		{
 			"success",
 			func() {
-                text, err := suite.app.AccountKeeper.DecodeBytesToText([]byte(addr))
+				text, err := suite.app.AccountKeeper.AddressBytesToString([]byte(addr))
 				suite.Require().NoError(err)
 				req = &types.AddressBytesRequest{AccountAddr: text}
 			},

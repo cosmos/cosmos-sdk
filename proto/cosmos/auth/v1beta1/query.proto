@@ -32,8 +32,8 @@ service Query {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
-  // AddressStr converts Bech32 bytes to Account string
-  rpc AddressStr(AddressStrRequest) returns (AddressStrResponse) {
+  // AddressString converts Bech32 bytes to Account string
+  rpc AddressString(AddressStringRequest) returns (AddressStringResponse) {
     option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
   }
 
@@ -90,13 +90,13 @@ message Bech32PrefixResponse  {
   string bech32_prefix = 1;
 }
 
-// AddressStrRequestRequest is the request type for AddressStr rpc method
-message AddressStrRequest {
+// AddressStringRequest is the request type for AddressString rpc method
+message AddressStringRequest {
   bytes account_addr = 1;
 }
 
-// AddressStrResponse is the response type for AddressStr rpc method
-message AddressStrResponse {
+// AddressStringResponse is the response type for AddressString rpc method
+message AddressStringResponse {
   string account_addr = 1;
 }
 

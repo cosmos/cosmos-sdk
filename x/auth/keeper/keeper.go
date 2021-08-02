@@ -261,8 +261,8 @@ func (ak AccountKeeper) AddressStringToBytes(text string) ([]byte, error) {
 }
 
 // AddressBytesToString decodes bytes to text
-func (ak AccountKeeper) AddressBytesToString(bytes []byte) (string, error) {
-	text, err := bech32.ConvertAndEncode(ak.bech32Prefix, bytes)
+func (ak AccountKeeper) AddressBytesToString(bz []byte) (string, error) {
+	text, err := bech32.ConvertAndEncode(ak.bech32Prefix, bz)
 	if err != nil {
 		return "", err
 	}

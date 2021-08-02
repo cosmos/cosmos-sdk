@@ -93,7 +93,7 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	s.Require().NoError(tx.ValidateBasic())
 }
 
-func (s *IntegrationTestSuite) TestGenTxCmd_Pubkey() {
+func (s *IntegrationTestSuite) TestGenTxCmdPubkey() {
 	val := s.network.Validators[0]
 	dir := s.T().TempDir()
 

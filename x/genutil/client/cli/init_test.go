@@ -46,8 +46,7 @@ func TestInitCmd(t *testing.T) {
 				}
 			},
 			shouldErr: false,
-
-			err: nil,
+			err:       nil,
 		},
 	}
 

@@ -107,6 +107,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
 		return
 	}
+
 	// The mock is available, check that the address is correct
 	require.Equal(t, "some_account", k.Name)
 	pubKey, err := k.GetPubKey()

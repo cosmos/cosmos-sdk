@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -89,6 +90,44 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0]))
 	s.Require().Equal([]string{val.Address.String()}, msgs[0].GetSigners())
 	s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
-	err = tx.ValidateBasic()
-	s.Require().NoError(err)
+	s.Require().NoError(tx.ValidateBasic())
+}
+
+func (s *IntegrationTestSuite) TestGenTxCmd_Pubkey() {
+	val := s.network.Validators[0]
+	dir := s.T().TempDir()
+
+	cmd := cli.GenTxCmd(
+		simapp.ModuleBasics,
+		val.ClientCtx.TxConfig,
+		banktypes.GenesisBalancesIterator{},
+		val.ClientCtx.HomeDir,
+	)
+
+	_, out := testutil.ApplyMockIO(cmd)
+	clientCtx := val.ClientCtx.WithOutput(out)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
+	genTxFile := filepath.Join(dir, "myTx")
+
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
+		fmt.Sprintf("--%s={\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
+		val.Moniker,
+		amount.String(),
+	})
+	s.Require().Error(cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
+		fmt.Sprintf("--%s={\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
+		val.Moniker,
+		amount.String(),
+	})
+	s.Require().NoError(cmd.ExecuteContext(ctx))
 }

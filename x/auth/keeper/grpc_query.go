@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"google.golang.org/grpc/codes"
@@ -101,7 +100,7 @@ func (ak AccountKeeper) AddressStr(ctx context.Context, req *types.AddressStrReq
 		return nil, errors.New("empty bech32 string is not allowed")
 	}
 
-	text, err := ak.decodeBytesToText(req.AccountAddr)
+	text, err := ak.DecodeBytesToText(req.AccountAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -114,11 +113,11 @@ func (ak AccountKeeper) AddressBytes(ctx context.Context, req *types.AddressByte
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if len(strings.TrimSpace(req.AccountAddr) == 0 {
+	if len(strings.TrimSpace(req.AccountAddr)) == 0 {
 		return nil, errors.New("empty bech32 string is not allowed")
 	}
 
-	bz, err := ak.encodeTextToBytes(req.AccountAddr)
+	bz, err := ak.EncodeTextToBytes(req.AccountAddr)
 	if err != nil {
 		return nil, err
 	}

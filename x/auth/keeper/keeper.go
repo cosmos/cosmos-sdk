@@ -249,7 +249,8 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 // add getter for bech32Prefix
 func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix }
 
-func (ak AccountKeeper) encodeTextToBytes(text string) ([]byte, error) {
+// EncodeTextToBytes encodes text to bytes
+func (ak AccountKeeper) EncodeTextToBytes(text string) ([]byte, error) {
 	_, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
 		return nil, err
@@ -262,11 +263,12 @@ func (ak AccountKeeper) encodeTextToBytes(text string) ([]byte, error) {
 	return bz, nil
 }
 
-func (ak AccountKeeper) decodeBytesToText(bytes []byte) (string, error) {
-	bech32, err := bech32.ConvertAndEncode(ak.bech32Prefix, bytes)
+// DecodeBytesToText decodes bytes to text
+func (ak AccountKeeper) DecodeBytesToText(bytes []byte) (string, error) {
+	text, err := bech32.ConvertAndEncode(ak.bech32Prefix, bytes)
 	if err != nil {
 		return "", err
 	}
 
-	return bech32, nil
+	return text, nil
 }

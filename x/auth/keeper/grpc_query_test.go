@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -206,46 +205,46 @@ func (suite *KeeperTestSuite) TestBech32Prefix() {
 	})
 }
 
-func (suite *KeeperTestSuite) TestBech32FromAccAddr() {
-	var req *types.Bech32FromAccAddrRequest
+func (suite *KeeperTestSuite) TestAddressStr() {
+	var req *types.AddressStrRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		msg       string
 		malleate  func()
 		expPass   bool
-		posttests func(res *types.Bech32FromAccAddrResponse)
+		posttests func(res *types.AddressStrResponse)
 	}{
 		{
 			"success",
 			func() {
 				addrBytes := []byte(addr)
-				req = &types.Bech32FromAccAddrRequest{AccountAddr: addrBytes}
+				req = &types.AddressStrRequest{AccountAddr: addrBytes}
 			},
 			true,
-			func(res *types.Bech32FromAccAddrResponse) {
-				bech32, err := bech32.ConvertAndEncode(suite.app.AccountKeeper.GetBech32Prefix(), []byte(addr))
+			func(res *types.AddressStrResponse) {
+				text, err := suite.app.AccountKeeper.DecodeBytesToText(req.AccountAddr)
 				suite.Require().NoError(err)
-				suite.Require().NotNil(bech32)
-				suite.Require().Equal(bech32, res.Bech32)
+				suite.Require().NotNil(text)
+				suite.Require().Equal(text, res.AccountAddr)
 			},
 		},
 		{
-			"req is nil",
+			"request is empty",
 			func() {
-				req = &types.Bech32FromAccAddrRequest{}
+				req = &types.AddressStrRequest{}
 			},
 			false,
-			func(res *types.Bech32FromAccAddrResponse) {},
+			func(res *types.AddressStrResponse) {},
 		},
 		{
 			"empty account address in request",
 			func() {
 				emptyAddrBytes := []byte{}
-				req = &types.Bech32FromAccAddrRequest{AccountAddr: emptyAddrBytes}
+				req = &types.AddressStrRequest{AccountAddr: emptyAddrBytes}
 			},
 			false,
-			func(res *types.Bech32FromAccAddrResponse) {},
+			func(res *types.AddressStrResponse) {},
 		},
 	}
 
@@ -256,7 +255,7 @@ func (suite *KeeperTestSuite) TestBech32FromAccAddr() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.Bech32FromAccAddr(ctx, req)
+			res, err := suite.queryClient.AddressStr(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -272,41 +271,42 @@ func (suite *KeeperTestSuite) TestBech32FromAccAddr() {
 }
 
 func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
-	var req *types.AccAddrFromBech32Request
+	var req *types.AddressBytesRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {
 		msg       string
 		malleate  func()
 		expPass   bool
-		posttests func(res *types.AccAddrFromBech32Response)
+		posttests func(res *types.AddressBytesResponse)
 	}{
 		{
 			"success",
 			func() {
-				bech32, _ := bech32.ConvertAndEncode(suite.app.AccountKeeper.GetBech32Prefix(), []byte(addr))
-				req = &types.AccAddrFromBech32Request{Bech32: bech32}
+                text, err := suite.app.AccountKeeper.DecodeBytesToText([]byte(addr))
+				suite.Require().NoError(err)
+				req = &types.AddressBytesRequest{AccountAddr: text}
 			},
 			true,
-			func(res *types.AccAddrFromBech32Response) {
+			func(res *types.AddressBytesResponse) {
 				suite.Require().True(bytes.Equal(res.AccountAddr, []byte(addr)))
 			},
 		},
 		{
-			"req is nil",
+			"request is empty",
 			func() {
-				req = &types.AccAddrFromBech32Request{}
+				req = &types.AddressBytesRequest{}
 			},
 			false,
-			func(res *types.AccAddrFromBech32Response) {},
+			func(res *types.AddressBytesResponse) {},
 		},
 		{
 			"Bech32 field in request is empty",
 			func() {
-				req = &types.AccAddrFromBech32Request{Bech32: ""}
+				req = &types.AddressBytesRequest{AccountAddr: ""}
 			},
 			false,
-			func(res *types.AccAddrFromBech32Response) {},
+			func(res *types.AddressBytesResponse) {},
 		},
 	}
 
@@ -317,7 +317,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.AccAddrFromBech32(ctx, req)
+			res, err := suite.queryClient.AddressBytes(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

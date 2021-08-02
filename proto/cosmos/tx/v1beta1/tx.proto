@@ -100,16 +100,19 @@ message SignDocDirectAux {
   // body_bytes is protobuf serialization of a TxBody that matches the
   // representation in TxRaw.
   bytes               body_bytes     = 1;
+
+  // public_key is the public key of the signing account.
   google.protobuf.Any public_key     = 2;
 
   // chain_id is the identifier of the chain this transaction targets.
   // It prevents signed transactions from being used on another chain by an
-  // attacker
+  // attacker.
   string chain_id = 3;
 
-  // account_number is the account number of the account in state
+  // account_number is the account number of the account in state.
   uint64 account_number = 4;
 
+  // sequence is the sequence number of the signing account.
   uint64              sequence = 5;
 
   // tip should be left empty if the signer is not the tipper for this transaction
@@ -170,7 +173,7 @@ message AuthInfo {
 message SignerInfo {
   // public_key is the public key of the signer. It is optional for accounts
   // that already exist in state. If unset, the verifier can use the required \
-    // signer address for this position and lookup the public key.
+  // signer address for this position and lookup the public key.
   google.protobuf.Any public_key = 1;
 
   // mode_info describes the signing mode of the signer and is a nested

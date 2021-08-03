@@ -43,7 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (bank) [\#9618](https://github.com/cosmos/cosmos-sdk/pull/9618) Update bank.Metadata: add URI and URIHash attributes.
 
 ### API Breaking Changes
-
+* [\#9759] *https://github.com/cosmos/cosmos-sdk/pull/9759) `authz NewAccountKeeeper` takes an additional `bech32Prefix` argument that represents `sdk.Bech32MainPrefix` 
 * [\#9628](https://github.com/cosmos/cosmos-sdk/pull/9628) Rename `x/{mod}/legacy` to `x/{mod}/migrations`.
 * [\#9571](https://github.com/cosmos/cosmos-sdk/pull/9571) Implemented error handling for staking hooks, which now return an error on failure.
 * [\#9427](https://github.com/cosmos/cosmos-sdk/pull/9427) Move simapp `FundAccount` and `FundModuleAccount` to `x/bank/testutil`

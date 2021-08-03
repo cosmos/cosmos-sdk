@@ -24,7 +24,7 @@ func (s *decCoinTestSuite) TestNewDecCoin() {
 	s.Require().NotPanics(func() {
 		sdk.NewInt64DecCoin(testDenom1, 0)
 	})
-	s.Require().Panics(func() {
+	s.Require().NotPanics(func() {
 		sdk.NewInt64DecCoin(strings.ToUpper(testDenom1), 5)
 	})
 	s.Require().Panics(func() {
@@ -39,7 +39,7 @@ func (s *decCoinTestSuite) TestNewDecCoinFromDec() {
 	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromDec(testDenom1, sdk.ZeroDec())
 	})
-	s.Require().Panics(func() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromDec(strings.ToUpper(testDenom1), sdk.NewDec(5))
 	})
 	s.Require().Panics(func() {
@@ -54,7 +54,7 @@ func (s *decCoinTestSuite) TestNewDecCoinFromCoin() {
 	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(0)})
 	})
-	s.Require().Panics(func() {
+	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{strings.ToUpper(testDenom1), sdk.NewInt(5)})
 	})
 	s.Require().Panics(func() {
@@ -193,13 +193,13 @@ func (s *decCoinTestSuite) TestIsValid() {
 		},
 		{
 			sdk.DecCoin{Denom: "BTC", Amount: sdk.NewDec(10)},
-			false,
-			"invalid uppercase denom",
+			true,
+			"valid uppercase denom",
 		},
 		{
 			sdk.DecCoin{Denom: "Bitcoin", Amount: sdk.NewDec(10)},
-			false,
-			"invalid mixed case denom",
+			true,
+			"valid mixed case denom",
 		},
 		{
 			sdk.DecCoin{Denom: "btc", Amount: sdk.NewDec(-10)},
@@ -348,12 +348,12 @@ func (s *decCoinTestSuite) TestDecCoinsValidate() {
 		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}}, true},
 		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}, sdk.DecCoin{testDenom2, sdk.NewDec(100000)}}, true},
 		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(-5)}}, false},
-		{sdk.DecCoins{sdk.DecCoin{"BTC", sdk.NewDec(5)}}, false},
+		{sdk.DecCoins{sdk.DecCoin{"BTC", sdk.NewDec(5)}}, true},
 		{sdk.DecCoins{sdk.DecCoin{"0BTC", sdk.NewDec(5)}}, false},
 		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}, sdk.DecCoin{"B", sdk.NewDec(100000)}}, false},
 		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(5)}, sdk.DecCoin{testDenom2, sdk.NewDec(-100000)}}, false},
 		{sdk.DecCoins{sdk.DecCoin{testDenom1, sdk.NewDec(-5)}, sdk.DecCoin{testDenom2, sdk.NewDec(100000)}}, false},
-		{sdk.DecCoins{sdk.DecCoin{"BTC", sdk.NewDec(5)}, sdk.DecCoin{testDenom2, sdk.NewDec(100000)}}, false},
+		{sdk.DecCoins{sdk.DecCoin{"BTC", sdk.NewDec(5)}, sdk.DecCoin{testDenom2, sdk.NewDec(100000)}}, true},
 		{sdk.DecCoins{sdk.DecCoin{"0BTC", sdk.NewDec(5)}, sdk.DecCoin{testDenom2, sdk.NewDec(100000)}}, false},
 	}
 
@@ -383,8 +383,8 @@ func (s *decCoinTestSuite) TestParseDecCoins() {
 		{"10.0btc,1.0atom,20.0btc", nil, true},
 		{
 			"0.004STAKE",
-			nil,
-			true,
+			sdk.DecCoins{sdk.NewDecCoinFromDec("STAKE", sdk.NewDecWithPrec(4000000000000000, sdk.Precision))},
+			false,
 		},
 		{
 			"0.004stake",
@@ -1123,7 +1123,7 @@ func (s *decCoinTestSuite) TestDecCoin_ParseDecCoin() {
 
 		// TODO - Clarify - According to error message for ValidateDenom call, supposed to
 		// throw error when upper case characters are used. Currently uppercase denoms are allowed.
-		{"Invalid denom", "9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, true},
+		{"Invalid denom", "9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
 
 		{"Valid input - amount and denom separated by space", "9.3 stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
 

@@ -40,8 +40,8 @@ func (s *coinTestSuite) SetupSuite() {
 func (s *coinTestSuite) TestCoin() {
 	s.Require().Panics(func() { sdk.NewInt64Coin(testDenom1, -1) })
 	s.Require().Panics(func() { sdk.NewCoin(testDenom1, sdk.NewInt(-1)) })
-	s.Require().Panics(func() { sdk.NewInt64Coin(strings.ToUpper(testDenom1), 10) })
-	s.Require().Panics(func() { sdk.NewCoin(strings.ToUpper(testDenom1), sdk.NewInt(10)) })
+	s.Require().Equal(sdk.NewInt(10), sdk.NewInt64Coin(strings.ToUpper(testDenom1), 10).Amount)
+	s.Require().Equal(sdk.NewInt(10), sdk.NewCoin(strings.ToUpper(testDenom1), sdk.NewInt(10)).Amount)
 	s.Require().Equal(sdk.NewInt(5), sdk.NewInt64Coin(testDenom1, 5).Amount)
 	s.Require().Equal(sdk.NewInt(5), sdk.NewCoin(testDenom1, sdk.NewInt(5)).Amount)
 }
@@ -90,12 +90,12 @@ func (s *coinTestSuite) TestCoinIsValid() {
 		{sdk.Coin{testDenom1, sdk.NewInt(-1)}, false},
 		{sdk.Coin{testDenom1, sdk.NewInt(0)}, true},
 		{sdk.Coin{testDenom1, sdk.OneInt()}, true},
-		{sdk.Coin{"Atom", sdk.OneInt()}, false},
-		{sdk.Coin{"ATOM", sdk.OneInt()}, false},
+		{sdk.Coin{"Atom", sdk.OneInt()}, true},
+		{sdk.Coin{"ATOM", sdk.OneInt()}, true},
 		{sdk.Coin{"a", sdk.OneInt()}, false},
 		{sdk.Coin{loremIpsum, sdk.OneInt()}, false},
-		{sdk.Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()}, false},
-		{sdk.Coin{"atOm", sdk.OneInt()}, false},
+		{sdk.Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()}, true},
+		{sdk.Coin{"atOm", sdk.OneInt()}, true},
 		{sdk.Coin{"     ", sdk.OneInt()}, false},
 	}
 
@@ -481,37 +481,37 @@ func (s *coinTestSuite) TestCoins_Validate() {
 			true,
 		},
 		{
-			"invalid uppercase coins",
+			"valid uppercase coins",
 			sdk.Coins{
 				{"GAS", sdk.OneInt()},
 				{"MINERAL", sdk.OneInt()},
 				{"TREE", sdk.OneInt()},
 			},
-			false,
+			true,
 		},
 		{
-			"invalid uppercase coin",
+			"valid uppercase coin",
 			sdk.Coins{
 				{"ATOM", sdk.OneInt()},
 			},
-			false,
+			true,
 		},
 		{
-			"invalid lower and uppercase coins (1)",
+			"valid lower and uppercase coins (1)",
 			sdk.Coins{
 				{"GAS", sdk.OneInt()},
 				{"gAs", sdk.OneInt()},
 			},
-			false,
+			true,
 		},
 		{
-			"invalid lower and uppercase coins (2)",
+			"valid lower and uppercase coins (2)",
 			sdk.Coins{
 				{"ATOM", sdk.OneInt()},
 				{"Atom", sdk.OneInt()},
 				{"atom", sdk.OneInt()},
 			},
-			false,
+			true,
 		},
 		{
 			"mixed case (1)",
@@ -520,7 +520,7 @@ func (s *coinTestSuite) TestCoins_Validate() {
 				{"TREE", sdk.OneInt()},
 				{"gAs", sdk.OneInt()},
 			},
-			false,
+			true,
 		},
 		{
 			"mixed case (2)",
@@ -528,14 +528,14 @@ func (s *coinTestSuite) TestCoins_Validate() {
 				{"gAs", sdk.OneInt()},
 				{"mineral", sdk.OneInt()},
 			},
-			false,
+			true,
 		},
 		{
 			"mixed case (3)",
 			sdk.Coins{
 				{"gAs", sdk.OneInt()},
 			},
-			false,
+			true,
 		},
 		{
 			"unicode letters and numbers",
@@ -557,7 +557,7 @@ func (s *coinTestSuite) TestCoins_Validate() {
 				{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()},
 				{"ibc/876563AAAACF739EB061C67CDB5EDF2B7C9FD4AA9D876450CC21210807C2820A", sdk.NewInt(2)},
 			},
-			false,
+			true,
 		},
 		{
 			"empty (1)",
@@ -708,8 +708,8 @@ func (s *coinTestSuite) TestParseCoins() {
 		{"1.2btc", true, sdk.Coins{{"btc", sdk.NewInt(1)}}}, // amount can be decimal, will get truncated
 		{"5foo:bar", false, nil},                            // invalid separator
 		{"10atom10", true, sdk.Coins{{"atom10", sdk.NewInt(10)}}},
-		{"200transfer/channelToA/uatom", false, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
-		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", false, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},
+		{"200transfer/channelToA/uatom", true, sdk.Coins{{"transfer/channelToA/uatom", sdk.NewInt(200)}}},
+		{"50ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", true, sdk.Coins{{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.NewInt(50)}}},
 	}
 
 	for tcIndex, tc := range cases {

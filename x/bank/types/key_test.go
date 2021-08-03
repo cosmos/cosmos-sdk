@@ -42,7 +42,7 @@ func TestAddressFromBalancesStore(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			denom, addr, err := types.AddressAndDenomFromBalancesStore(tc.key)
+			addr, denom, err := types.AddressAndDenomFromBalancesStore(tc.key)
 			if tc.wantErr {
 				assert.Error(t, err)
 				assert.True(t, errors.Is(types.ErrInvalidKey, err))

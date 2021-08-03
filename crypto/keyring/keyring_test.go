@@ -1320,4 +1320,4 @@ func requireEqualRecord(t *testing.T, key *Record, mnemonic *Record) {
 	require.Equal(t, key.GetType(), mnemonic.GetType())
 }
 
-func accAddr(ke *Record) (sdk.AccAddress, error) { return ke.GetAddress() }
+func accAddr(k *Record) (sdk.AccAddress, error) { return k.GetAddress() }

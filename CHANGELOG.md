@@ -38,19 +38,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
-
 * [\#9776](https://github.com/cosmos/cosmos-sdk/pull/9776) Add flag `staking-bond-denom` to specify the staking bond denomination value when initializing a new chain.
 * [\#9533](https://github.com/cosmos/cosmos-sdk/pull/9533) Added a new gRPC method, `DenomOwners`, in `x/bank` to query for all account holders of a specific denomination.
 * (bank) [\#9618](https://github.com/cosmos/cosmos-sdk/pull/9618) Update bank.Metadata: add URI and URIHash attributes.
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
 ### API Breaking Changes
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Remove `algo` argument from `writeLocalKey`, `writeLedgerKey` and `writeOfflineKey`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `newKeystore` takes `codec.Codec` as the second argument
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `getMultisigInfo` to `getMultisigRecord`  and return `*keyring.Record, error`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `MkAccKeysOutput` take slice of `*keyring.Record` as first argument instead of slice of`Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`MkConsKeyOutput`, ` MkValKeyOutput` and `MkAccKeyOutput` take `*keyring.Record` as first argument instead of `Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`SignWithLedger` takes `*keyring.Record` as first argument instead of `Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`NewMnemonic` now returns `keyring.Record` instead of `Info`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `Key` now returns `keyring.Record, err`
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `Key` and `KeyByAddress` now return`*keyring.Record, err`
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `bechKeyOut` now takes `keyring.Record` as argument.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `newLocalInfo`, `NewMultiInfo`, `NewLedgerInfo`, `NewOfflineInfo` to `newLegacyLocalInfo`, `NewLegacyMultiInfo`, `newLegacyLedgerInfo`, `NewLegacyOfflineInfo`  respectively. Rename `localInfo`, `multiInfo`, `ledgerInfo`, `offlineInfo` structs to `legacyLocalInfo`,`legacyMultiInfo`,`legacyLedgerInfo`, `legacyOfflineInfo`, respectively. Move them from `keyring.go` to `legacy_info.go`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `fetchKey` returns `keyring.Record` instead of `Info`.

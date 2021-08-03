@@ -6,14 +6,12 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"

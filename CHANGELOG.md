@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
 ### API Breaking Changes
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `getMultisigInfo` to `getMultisigRecord`  and return `*keyring.Record, error`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `MkAccKeysOutput` take slice of `*keyring.Record` as first argument instead of slice of`Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`MkConsKeyOutput`, ` MkValKeyOutput` and `MkAccKeyOutput` take `*keyring.Record` as first argument instead of `Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`SignWithLedger` takes `*keyring.Record` as first argument instead of `Info`.

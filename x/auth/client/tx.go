@@ -34,18 +34,18 @@ func (gr GasEstimateResponse) String() string {
 // The new signature is appended to the TxBuilder when overwrite=false or overwritten otherwise.
 // Don't perform online validation or lookups if offline is true.
 func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuilder client.TxBuilder, offline, overwriteSig bool) error {
-	kr, err := txFactory.Keybase().Key(name)
+	k, err := txFactory.Keybase().Key(name)
 	if err != nil {
 		return err
 	}
 
 	// Ledger and Multisigs only support LEGACY_AMINO_JSON signing.
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED &&
-		(kr.GetType() == keyring.TypeLedger || kr.GetType() == keyring.TypeMulti) {
+		(k.GetType() == keyring.TypeLedger || k.GetType() == keyring.TypeMulti) {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	pubKey, err := kr.GetPubKey()
+	pubKey, err := k.GetPubKey()
 	if err != nil {
 		return err
 	}

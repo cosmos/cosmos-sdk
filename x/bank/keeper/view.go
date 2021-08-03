@@ -98,7 +98,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-	amount := sdk.ZeroInt()
+	var amount sdk.Int
 	bz := accountStore.Get([]byte(denom))
 	if bz == nil {
 		return sdk.NewCoin(denom, amount)
@@ -121,7 +121,7 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		amount := sdk.ZeroInt()
+		var amount sdk.Int
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			panic(err)
 		}
@@ -151,7 +151,7 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 			panic(err)
 		}
 
-		amount := sdk.ZeroInt()
+		var amount sdk.Int
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			panic(err)
 		}

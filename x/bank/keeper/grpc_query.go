@@ -60,7 +60,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
-		amount := sdk.ZeroInt()
+		var amount sdk.Int
 		if err := amount.Unmarshal(value); err != nil {
 			return err
 		}

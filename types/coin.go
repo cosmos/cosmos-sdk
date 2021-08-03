@@ -634,7 +634,7 @@ func (coins Coins) Sort() Coins {
 var (
 	// Denominations can be 3 ~ 128 characters long and support letters, followed by either
 	// a letter, a number or a separator ('/').
-	reDnmString = `[a-z][a-z0-9/-]{2,127}`
+	reDnmString = `[a-zA-Z][a-zA-Z0-9/-]{2,127}`
 	reDecAmt    = `[[:digit:]]+(?:\.[[:digit:]]+)?|\.[[:digit:]]+`
 	reSpc       = `[[:space:]]*`
 	reDnm       *regexp.Regexp

@@ -45,11 +45,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
 ### API Breaking Changes
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `MkAccKeysOutput` take slice of `*keyring.Record` as first argument instead of slice of`Info`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`MkConsKeyOutput`, ` MkValKeyOutput` and `MkAccKeyOutput` take `*keyring.Record` as first argument instead of `Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`SignWithLedger` takes `*keyring.Record` as first argument instead of `Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`NewMnemonic` now returns `keyring.Record` instead of `Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `Key` now returns `keyring.Record, err`
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `bechKeyOut` now takes `keyring.Record` as argument.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `newLocalInfo`, `NewMultiInfo`, `NewLedgerInfo`, `NewOfflineInfo` to `newLegacyLocalInfo`, `NewLegacyMultiInfo`, `newLegacyLedgerInfo`, `NewLegacyOfflineInfo`  respectively. Move them from `keyring.go` to `legacy_info.go`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `newLocalInfo`, `NewMultiInfo`, `NewLedgerInfo`, `NewOfflineInfo` to `newLegacyLocalInfo`, `NewLegacyMultiInfo`, `newLegacyLedgerInfo`, `NewLegacyOfflineInfo`  respectively. Rename `localInfo`, `multiInfo`, `ledgerInfo`, `offlineInfo` structs to `legacyLocalInfo`,`legacyMultiInfo`,`legacyLedgerInfo`, `legacyOfflineInfo`, respectively. Move them from `keyring.go` to `legacy_info.go`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `fetchKey` returns `keyring.Record` instead of `Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `printInfos` to `printKeyringRecords` and replace an argument `infos` to `records`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `List` returns slice of `keyring.Record` instead of slice of `Info`

@@ -186,9 +186,9 @@ func New(
 	case BackendOS:
 		db, err = keyring.Open(newOSBackendKeyringConfig(appName, rootDir, userInput))
 	case BackendKWallet:
-		db, err = keyring.Open(NewKWalletBackendKeyringConfig(appName, rootDir, userInput))
+		db, err = keyring.Open(newKWalletBackendKeyringConfig(appName, rootDir, userInput))
 	case BackendPass:
-		db, err = keyring.Open(NewPassBackendKeyringConfig(appName, rootDir, userInput))
+		db, err = keyring.Open(newPassBackendKeyringConfig(appName, rootDir, userInput))
 	default:
 		return nil, fmt.Errorf("unknown keyring backend %v", backend)
 	}

@@ -24,7 +24,7 @@ func (s *decCoinTestSuite) TestNewDecCoin() {
 	s.Require().NotPanics(func() {
 		sdk.NewInt64DecCoin(testDenom1, 0)
 	})
-	s.Require().NotPanics(func() {
+	s.Require().Panics(func() {
 		sdk.NewInt64DecCoin(strings.ToUpper(testDenom1), 5)
 	})
 	s.Require().Panics(func() {
@@ -39,7 +39,7 @@ func (s *decCoinTestSuite) TestNewDecCoinFromDec() {
 	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromDec(testDenom1, sdk.ZeroDec())
 	})
-	s.Require().NotPanics(func() {
+	s.Require().Panics(func() {
 		sdk.NewDecCoinFromDec(strings.ToUpper(testDenom1), sdk.NewDec(5))
 	})
 	s.Require().Panics(func() {
@@ -54,7 +54,7 @@ func (s *decCoinTestSuite) TestNewDecCoinFromCoin() {
 	s.Require().NotPanics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{testDenom1, sdk.NewInt(0)})
 	})
-	s.Require().NotPanics(func() {
+	s.Require().Panics(func() {
 		sdk.NewDecCoinFromCoin(sdk.Coin{strings.ToUpper(testDenom1), sdk.NewInt(5)})
 	})
 	s.Require().Panics(func() {
@@ -193,13 +193,13 @@ func (s *decCoinTestSuite) TestIsValid() {
 		},
 		{
 			sdk.DecCoin{Denom: "BTC", Amount: sdk.NewDec(10)},
-			true,
-			"valid uppercase denom",
+			false,
+			"invalid uppercase denom",
 		},
 		{
 			sdk.DecCoin{Denom: "Bitcoin", Amount: sdk.NewDec(10)},
-			true,
-			"valid mixed case denom",
+			false,
+			"invalid mixed case denom",
 		},
 		{
 			sdk.DecCoin{Denom: "btc", Amount: sdk.NewDec(-10)},

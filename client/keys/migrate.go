@@ -12,13 +12,15 @@ func MigrateCommand() *cobra.Command {
 	// TODO update description
 	cmd := &cobra.Command{
 		Use:   "migrate",
-		Short: "Migrate keys from the legacy (db-based) Keybase",
-		Long: `Migrate key information from the legacy (db-based) Keybase to the new keyring-based Keyring.
-The legacy Keybase used to persist keys in a LevelDB database stored in a 'keys' sub-directory of
-the old client application's home directory, e.g. $HOME/.gaiacli/keys/.
-For each key material entry, the command will prompt if the key should be skipped or not. If the key
-is not to be skipped, the passphrase must be entered. The key will only be migrated if the passphrase
-is correct. Otherwise, the command will exit and migration must be repeated.
+		Short: "Migrate keys from amino to proto serialization format",
+		Long: `Migrate key information from legacyInfo(amino) to record(proto).
+		LegacyInfo is an interface that is used to persist keys in keyring DB using Amino serialization format.
+Record is a struct that is used to persist keys in keyring DB using Proto for serialization and deserialization.
+For each key material entry, the command will check if the key can be deserialized using proto.
+If this is the case, the key is already migrated. Therefore, we skip it and continue with a next one. 
+Otherwise, we try to deserialize it using Amino to legacyInfo. If this attempt is successful, we serialize legacyInfo to proto serialization format. 
+Finally, we overwrite keyring entry with new keyring.Item. 
+If any error occured, it will be outputed in CLI. In this case, migration will be continued until all keys in keyring DB are exhausted.
 
 It is recommended to run in 'dry-run' mode first to verify all key migration material.
 `,

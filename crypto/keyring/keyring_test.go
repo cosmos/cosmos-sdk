@@ -1297,7 +1297,7 @@ func TestBackendConfigConstructors(t *testing.T) {
 	require.Equal(t, "kdewallet", backend.ServiceName)
 	require.Equal(t, "test", backend.KWalletAppID)
 
-	backend = NewPassBackendKeyringConfig("test", "directory", nil)
+	backend = newPassBackendKeyringConfig("test", "directory", nil)
 	require.Equal(t, []keyring.BackendType{keyring.PassBackend}, backend.AllowedBackends)
 	require.Equal(t, "test", backend.ServiceName)
 	require.Equal(t, "keyring-test", backend.PassPrefix)

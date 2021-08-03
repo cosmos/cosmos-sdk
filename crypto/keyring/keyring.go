@@ -657,7 +657,7 @@ func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Conf
 	}
 }
 
-func NewPassBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
+func newPassBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
 	prefix := fmt.Sprintf(passKeyringPrefix, appName)
 
 	return keyring.Config{

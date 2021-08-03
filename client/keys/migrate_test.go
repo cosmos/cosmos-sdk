@@ -8,6 +8,7 @@ import (
 
 	design99keyring "github.com/99designs/keyring"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -67,7 +68,7 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 
 	mockIn2.Reset("\n12345678\n\n\n\n\n")
 	t.Log(mockOut.String())
-	require.NoError(cmd.ExecuteContext(ctx))
+	assert.NoError(t, cmd.ExecuteContext(ctx))
 }
 
 func Test_runMigrateCmdRecord(t *testing.T) {
@@ -112,11 +113,10 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 
 	mockIn2.Reset("\n12345678\n\n\n\n\n")
 	t.Log(mockOut.String())
-	require.NoError(cmd.ExecuteContext(ctx))
+	assert.NoError(t, cmd.ExecuteContext(ctx))
 }
 
 func Test_runMigrateCmdNoKeys(t *testing.T) {
-	require := require.New(t)
 	kbHome := t.TempDir()
 	clientCtx := client.Context{}.WithKeyringDir(kbHome)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
@@ -130,6 +130,5 @@ func Test_runMigrateCmdNoKeys(t *testing.T) {
 
 	mockIn.Reset("\n12345678\n\n\n\n\n")
 	t.Log(mockOut.String())
-	err := cmd.ExecuteContext(ctx)
-	require.NoError(err)
+	assert.NoError(t, cmd.ExecuteContext(ctx))
 }

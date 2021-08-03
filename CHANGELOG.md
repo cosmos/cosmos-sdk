@@ -45,7 +45,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
 ### API Breaking Changes
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Add new codec.Codec argument to keyring New() method.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `Key` now returns `keyring.Record, err`
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `bechKeyOut` now takes `keyring.Record` as argument.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `newLocalInfo`, `NewMultiInfo`, `NewLedgerInfo`, `NewOfflineInfo` to `newLegacyLocalInfo`, `NewLegacyMultiInfo`, `newLegacyLedgerInfo`, `NewLegacyOfflineInfo`  respectively. Move them from `keyring.go` to `legacy_info.go`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `fetchKey` returns `keyring.Record` instead of `Info`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `printInfos` to `printKeyringRecords` and replace an argument `infos` to `records`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `List` returns slice of `keyring.Record` instead of slice of `Info`
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Replace an argument type from `Info` to `keyring.Record` in `MkAccKeyOutput`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `printKeyInfo`to  `printKeyringRecord` and replace an argument type from `Info` to `keyring.Record`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `SaveLedgerKey` now returjs `keyring.Record, error` instead of `Info, error`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `printCreate` now contains `keyring.Record`as argument instead of `Info`.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `SaveMultiSig` now returns `keyring.Record, error`
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `SavePubKey` to `SaveOfflineKey`, remove `algo` argument  and return `keyring.Record, error` instead of `Info, error`
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Add new `codec.Codec` argument to `keyring.NewInMemory` method.
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Add new `codec.Codec` argument to `keyring.New` method.
 * [\#9628](https://github.com/cosmos/cosmos-sdk/pull/9628) Rename `x/{mod}/legacy` to `x/{mod}/migrations`.
 * [\#9571](https://github.com/cosmos/cosmos-sdk/pull/9571) Implemented error handling for staking hooks, which now return an error on failure.
 * [\#9427](https://github.com/cosmos/cosmos-sdk/pull/9427) Move simapp `FundAccount` and `FundModuleAccount` to `x/bank/testutil`
@@ -72,6 +85,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### CLI Breaking Changes
 
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `migrate` CLI command now takes no arguments
 * [\#9827](https://github.com/cosmos/cosmos-sdk/pull/9827) Ensure input parity of validator public key input between `tx staking create-validator` and `gentx`.
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
 * [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml

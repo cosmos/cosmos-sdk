@@ -859,7 +859,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 	var migrated bool
 	keys, err := ks.db.Keys()
 	if err != nil {
-		return migrated, fmt.Errorf("Keys() error, err: %s", err)
+		return migrated, err
 	}
 
 	if len(keys) == 0 {

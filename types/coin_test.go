@@ -90,12 +90,12 @@ func (s *coinTestSuite) TestCoinIsValid() {
 		{sdk.Coin{testDenom1, sdk.NewInt(-1)}, false},
 		{sdk.Coin{testDenom1, sdk.NewInt(0)}, true},
 		{sdk.Coin{testDenom1, sdk.OneInt()}, true},
-		{sdk.Coin{"Atom", sdk.OneInt()}, true},
-		{sdk.Coin{"ATOM", sdk.OneInt()}, true},
+		{sdk.Coin{"Atom", sdk.OneInt()}, false},
+		{sdk.Coin{"ATOM", sdk.OneInt()}, false},
 		{sdk.Coin{"a", sdk.OneInt()}, false},
 		{sdk.Coin{loremIpsum, sdk.OneInt()}, false},
-		{sdk.Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()}, true},
-		{sdk.Coin{"atOm", sdk.OneInt()}, true},
+		{sdk.Coin{"ibc/7F1D3FCF4AE79E1554D670D1AD949A9BA4E4A3C76C63093E17E446A46061A7A2", sdk.OneInt()}, false},
+		{sdk.Coin{"atOm", sdk.OneInt()}, false},
 		{sdk.Coin{"     ", sdk.OneInt()}, false},
 	}
 

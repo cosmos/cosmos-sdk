@@ -98,7 +98,7 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-	var amount sdk.Int
+	amount := sdk.ZeroInt()
 	bz := accountStore.Get([]byte(denom))
 	if bz == nil {
 		return sdk.NewCoin(denom, amount)

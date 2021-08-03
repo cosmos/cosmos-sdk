@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Remove `algo` argument from `writeLocalKey`, `writeLedgerKey` and `writeOfflineKey`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `newKeystore` takes `codec.Codec` as the second argument
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `newKeystore`now takes `codec.Codec` as the second argument
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `getMultisigInfo` to `getMultisigRecord`  and return `*keyring.Record, error`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `MkAccKeysOutput` take slice of `*keyring.Record` as first argument instead of slice of`Info`.
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`MkConsKeyOutput`, ` MkValKeyOutput` and `MkAccKeyOutput` take `*keyring.Record` as first argument instead of `Info`.

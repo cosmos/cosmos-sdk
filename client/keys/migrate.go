@@ -19,7 +19,7 @@ For each key material entry, the command will check if the key can be deserializ
 If this is the case, the key is already migrated. Therefore, we skip it and continue with a next one. 
 Otherwise, we try to deserialize it using Amino to legacyInfo. If this attempt is successful, we serialize legacyInfo to proto serialization format. 
 Finally, we overwrite keyring entry with new keyring.Item. 
-If any error occured, it will be outputed in CLI. In this case, migration will be continued until all keys in keyring DB are exhausted.
+If any error occurred, it will be outputted in CLI. In this case, migration will be continued until all keys in keyring DB are exhausted.
 
 It is recommended to run in 'dry-run' mode first to verify all key migration material.
 `,

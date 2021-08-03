@@ -265,7 +265,7 @@ func (ks keystore) ExportPrivateKeyObject(uid string) (types.PrivKey, error) {
 		return nil, err
 	}
 
-	priv, err := ExtractPrivKeyFromRecord(k)
+	priv, err := extractPrivKeyFromRecord(k)
 	if err != nil {
 		return nil, err
 	}

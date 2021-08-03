@@ -145,7 +145,7 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	k, err := NewRecord("testrecord", pub, localRecordItem)
 	require.NoError(err)
 
-	privKey2, err := ExtractPrivKeyFromRecord(k)
+	privKey2, err := extractPrivKeyFromRecord(k)
 	require.NoError(err)
 	require.True(privKey2.Equals(privKey))
 }
@@ -162,7 +162,7 @@ func TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
 	k, err := NewRecord("testrecord", pub, emptyRecordItem)
 	require.NoError(err)
 
-	privKey2, err := ExtractPrivKeyFromRecord(k)
+	privKey2, err := extractPrivKeyFromRecord(k)
 	require.Error(err)
 	require.Nil(privKey2)
 }

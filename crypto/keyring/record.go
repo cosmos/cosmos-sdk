@@ -109,7 +109,7 @@ func (k *Record) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return nil
 }
 
-func ExtractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
+func extractPrivKeyFromRecord(k *Record) (cryptotypes.PrivKey, error) {
 	rl := k.GetLocal()
 	if rl == nil {
 		return nil, ErrPrivKeyExtr

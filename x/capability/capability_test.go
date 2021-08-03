@@ -58,12 +58,14 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	// Mock App startup
 	ctx := suite.app.BaseApp.NewUncachedContext(false, tmproto.Header{})
 	newKeeper.Seal()
+	suite.Require().False(newKeeper.IsInitialized(ctx), "memstore initialized flag set before BeginBlock")
 
-	// Mock app beginblock and ensure that no gas has been consumed
+	// Mock app beginblock and ensure that no gas has been consumed and memstore is initialized
 	ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockGasMeter(sdk.NewGasMeter(50))
 	prevGas := ctx.BlockGasMeter().GasConsumed()
 	restartedModule := capability.NewAppModule(suite.cdc, *newKeeper)
 	restartedModule.BeginBlock(ctx, abci.RequestBeginBlock{})
+	suite.Require().True(newKeeper.IsInitialized(ctx), "memstore initialized flag not set")
 	gasUsed := ctx.BlockGasMeter().GasConsumed()
 
 	suite.Require().Equal(prevGas, gasUsed, "beginblocker consumed gas during execution")
@@ -72,13 +74,22 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	// by using a cached context and discarding all cached writes.
 	cacheCtx, _ := ctx.CacheContext()
 	_, ok := newSk1.GetCapability(cacheCtx, "transfer")
-	suite.Require().True((ok))
+	suite.Require().True(ok)
 
 	// Ensure that the second transaction can still receive capability even if first tx fails.
 	ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
-	_, ok = newSk1.GetCapability(ctx, "transfer")
+	cap1, ok = newSk1.GetCapability(ctx, "transfer")
 	suite.Require().True(ok)
+
+	// Ensure the capabilities don't get reinitialized on next BeginBlock
+	// by testing to see if capability returns same pointer
+	// also check that initialized flag is still set
+	restartedModule.BeginBlock(ctx, abci.RequestBeginBlock{})
+	recap, ok := newSk1.GetCapability(ctx, "transfer")
+	suite.Require().True(ok)
+	suite.Require().Equal(cap1, recap, "capabilities got reinitialized after second BeginBlock")
+	suite.Require().True(newKeeper.IsInitialized(ctx), "memstore initialized flag not set")
 }
 
 func TestCapabilityTestSuite(t *testing.T) {

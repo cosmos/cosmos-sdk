@@ -1292,7 +1292,7 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 }
 
 func TestBackendConfigConstructors(t *testing.T) {
-	backend := NewKWalletBackendKeyringConfig("test", "", nil)
+	backend := newKWalletBackendKeyringConfig("test", "", nil)
 	require.Equal(t, []keyring.BackendType{keyring.KWalletBackend}, backend.AllowedBackends)
 	require.Equal(t, "kdewallet", backend.ServiceName)
 	require.Equal(t, "test", backend.KWalletAppID)

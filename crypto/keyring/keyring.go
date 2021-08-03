@@ -648,7 +648,7 @@ func newTestBackendKeyringConfig(appName, dir string) keyring.Config {
 	}
 }
 
-func NewKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
+func newKWalletBackendKeyringConfig(appName, _ string, _ io.Reader) keyring.Config {
 	return keyring.Config{
 		AllowedBackends: []keyring.BackendType{keyring.KWalletBackend},
 		ServiceName:     "kdewallet",

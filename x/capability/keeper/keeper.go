@@ -89,10 +89,8 @@ func (k *Keeper) ScopeToModule(moduleName string) ScopedKeeper {
 	}
 }
 
-// InitializeAndSeal loads all capabilities from the persistent KVStore into the
-// in-memory store and seals the keeper to prevent further modules from creating
-// a scoped keeper. InitializeAndSeal must be called once after the application
-// state is loaded.
+// InitializeAndSeal seals the keeper to prevent further modules from creating
+// a scoped keeper. It also panics if the memory store is not of storetype `StoreTypeMemory`.
 func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	if k.sealed {
 		panic("cannot initialize and seal an already sealed capability keeper")
@@ -116,9 +114,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
-	memStore := noGasCtx.KVStore(k.memKey)
-	flag := memStore.Get(types.KeyMemInitialized)
-	if flag == nil {
+	if !k.IsInitialized(noGasCtx) {
 		prefixStore := prefix.NewStore(noGasCtx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
 		iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
 
@@ -135,8 +131,15 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 		}
 
 		// set the initialized flag so we don't rerun initialization logic
+		memStore := noGasCtx.KVStore(k.memKey)
 		memStore.Set(types.KeyMemInitialized, []byte{1})
 	}
+}
+
+// IsInitialized returns true if the initialized flag is set, and false otherwise
+func (k *Keeper) IsInitialized(ctx sdk.Context) bool {
+	memStore := ctx.KVStore(k.memKey)
+	return memStore.Get(types.KeyMemInitialized) != nil
 }
 
 // InitializeIndex sets the index to one (or greater) in InitChain according

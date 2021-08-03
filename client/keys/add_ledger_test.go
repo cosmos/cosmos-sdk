@@ -137,6 +137,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 }
 
 func Test_runAddCmdLedgerDryRun(t *testing.T) {
+	cdc := simapp.MakeTestEncodingConfig().Codec
 	testData := []struct {
 		name  string
 		args  []string
@@ -161,7 +162,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 			added: false,
 		},
 	}
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -175,9 +176,9 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 
 			clientCtx := client.Context{}.
 				WithKeyringDir(kbHome).
-				WithKeyring(kb)
+				WithKeyring(kb).
+				WithCodec(cdc)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
-
 			b := bytes.NewBufferString("")
 			cmd.SetOut(b)
 

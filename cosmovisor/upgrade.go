@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/otiai10/copy"
+	"github.com/hashicorp/go-getter"
 )
 
 // DoUpgrade will be called after the log message has been parsed and the process has terminated.

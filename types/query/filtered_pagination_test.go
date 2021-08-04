@@ -157,6 +157,8 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().NotNil(res.NextKey)
 	s.Require().Equal(string(res.NextKey), "test5denom")
 
+	_ = 1
+
 	s.T().Log("verify last page records, nextKey for query and reverse true")
 	pageReq = &query.PageRequest{Key: res.NextKey, Reverse: true}
 	balns, res, err = execFilterPaginate(store, pageReq, appCodec)

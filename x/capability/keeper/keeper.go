@@ -99,14 +99,14 @@ func (k *Keeper) Seal() {
 	k.sealed = true
 }
 
-// InitMemStore will initialize the memory store if the initialized flag is not set.
-// InitMemStore logic should be run in first `BeginBlock` or `InitChain` (whichever is run on app start)
-// so that the memory store is properly initialized before any transactions are run.
-// InitMemStore also asserts the memory store type is correct, and will panic if it does not have store type of `StoreTypeMemory`.
+// InitMemStore will assure that the module store is a memory store (it will panic if it's not)
+// and willl initialize it. The function is safe to be called multiple times.
+// InitMemStore must be called every time the app starts before the keeper is used (so
+// `BeginBlock` or `InitChain` - whichever is first). We need access to the store so we
+// can't initialize it in a constructor.
 func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	memStore := ctx.KVStore(k.memKey)
 	memStoreType := memStore.GetStoreType()
-
 	if memStoreType != sdk.StoreTypeMemory {
 		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
 	}
@@ -137,7 +137,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	}
 }
 
-// IsInitialized returns true if the initialized flag is set, and false otherwise
+// IsInitialized returns true if the keeper is properly initialized, and false otherwise.
 func (k *Keeper) IsInitialized(ctx sdk.Context) bool {
 	memStore := ctx.KVStore(k.memKey)
 	return memStore.Get(types.KeyMemInitialized) != nil

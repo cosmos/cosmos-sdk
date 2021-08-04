@@ -106,9 +106,11 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 	k.sealed = true
 }
 
-// InitMemStore will initialize the memory store if the initialized flag is not set.
-// InitMemStore logic should be run in first `BeginBlock` or `InitChain` (whichever is run on app start)
-// so that the memory store is properly initialized before any transactions are run.
+// InitMemStore will initialize the memory store if it hasn't been initialized yet.
+// The function is safe to be called multiple times.
+// InitMemStore must be called every time the app starts before the keeper is used (so 
+// `BeginBlock` or `InitChain` - whichever is first). We need access to the store so we 
+// can't initialize it in a constructor.
 func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
 	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
@@ -136,7 +138,7 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	}
 }
 
-// IsInitialized returns true if the initialized flag is set, and false otherwise
+// IsInitialized returns true if the keeper is properly initialized, and false otherwise
 func (k *Keeper) IsInitialized(ctx sdk.Context) bool {
 	memStore := ctx.KVStore(k.memKey)
 	return memStore.Get(types.KeyMemInitialized) != nil

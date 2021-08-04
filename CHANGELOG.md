@@ -46,6 +46,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
+### API Breaking Changes
+
+* (x/capability) [\#9836](https://github.com/cosmos/cosmos-sdk/pull/9836) Removed `InitializeAndSeal(ctx sdk.Context)` and replaced with `Seal()`.
+
 ### Improvements
 
 * (cli) [\#9717](https://github.com/cosmos/cosmos-sdk/pull/9717) Added CLI flag `--output json/text` to `tx` cli commands.
@@ -56,7 +60,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Client-Breaking Changes
 
-* [\#9785](https://github.com/cosmos/cosmos-sdk/issues/9785) Missing coin denomination in logs 
+* [\#9785](https://github.com/cosmos/cosmos-sdk/issues/9785) Missing coin denomination in logs
 
 ### CLI Breaking Changes
 

@@ -8688,7 +8688,6 @@ SIGN_MODE_DIRECT_AUX.
 | `chain_id` | [string](#string) |  | chain_id is the identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker. |
 | `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state. |
 | `sequence` | [uint64](#uint64) |  | sequence is the sequence number of the signing account. |
-| `fee` | [Fee](#cosmos.tx.v1beta1.Fee) |  | Fee is the fee and gas limit for the transaction. The first signer is the primary signer and the one which pays the fee. The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation. |
 | `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions. It should be left empty if the signer is not the tipper for this transaction. |
 
 

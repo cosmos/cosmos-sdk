@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.keeper = keeper
 }
 
-func (suite *KeeperTestSuite) TestInitializeAndSeal() {
+func (suite *KeeperTestSuite) TestSeal() {
 	sk := suite.keeper.ScopeToModule(banktypes.ModuleName)
 	suite.Require().Panics(func() {
 		suite.keeper.ScopeToModule("  ")
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	}
 
 	suite.Require().NotPanics(func() {
-		suite.keeper.InitializeAndSeal(suite.ctx)
+		suite.keeper.Seal()
 	})
 
 	for i, cap := range caps {
@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestInitializeAndSeal() {
 	}
 
 	suite.Require().Panics(func() {
-		suite.keeper.InitializeAndSeal(suite.ctx)
+		suite.keeper.Seal()
 	})
 
 	suite.Require().Panics(func() {

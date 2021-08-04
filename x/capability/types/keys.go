@@ -25,6 +25,9 @@ var (
 	// KeyPrefixIndexCapability defines a key prefix that stores index to capability
 	// name mappings.
 	KeyPrefixIndexCapability = []byte("capability_index")
+
+	// KeyMemInitialized defines the key that stores the initialized flag in the memory store
+	KeyMemInitialized = []byte("mem_initialized")
 )
 
 // RevCapabilityKey returns a reverse lookup key for a given module and capability

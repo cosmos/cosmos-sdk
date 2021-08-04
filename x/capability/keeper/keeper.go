@@ -101,8 +101,8 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 
 // InitMemStore will initialize the memory store if it hasn't been initialized yet.
 // The function is safe to be called multiple times.
-// InitMemStore must be called every time the app starts before the keeper is used (so 
-// `BeginBlock` or `InitChain` - whichever is first). We need access to the store so we 
+// InitMemStore must be called every time the app starts before the keeper is used (so
+// `BeginBlock` or `InitChain` - whichever is first). We need access to the store so we
 // can't initialize it in a constructor.
 func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.

@@ -69,9 +69,11 @@ message QueryUpgradedConsensusStateRequest {
 // QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
 // RPC method.
 message QueryUpgradedConsensusStateResponse {
-  reserved 1;
+  // Deprecated: Please use the bytes field instead. This field will always be
+  // empty in v0.43+.
+  google.protobuf.Any upgraded_consensus_state = 1 [deprecated = true];
 
-  bytes upgraded_consensus_state = 2;
+  bytes upgraded_consensus_state_bytes = 2;
 }
 
 // QueryModuleVersionsRequest is the request type for the Query/ModuleVersions

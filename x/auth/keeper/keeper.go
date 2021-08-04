@@ -59,12 +59,8 @@ type AccountKeeper struct {
 	proto func() types.AccountI
 }
 
-type bech32Address struct {
-	prefix string
-}
-
 var _ AccountKeeperI = &AccountKeeper{}
-var _ address.AddressCodec = &AccountKeeper{}
+var _ address.Codec = &AccountKeeper{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
@@ -247,7 +243,7 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix }
 
 // AddressStringToBytes encodes text to bytes
-func (ak AccountKeeper) AddressStringToBytes(text string) ([]byte, error) {
+func (ak *AccountKeeper) ConvertAddressStringToBytes(text string) ([]byte, error) {
 	_, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
 		return nil, err
@@ -261,7 +257,7 @@ func (ak AccountKeeper) AddressStringToBytes(text string) ([]byte, error) {
 }
 
 // AddressBytesToString decodes bytes to text
-func (ak AccountKeeper) AddressBytesToString(bz []byte) (string, error) {
+func (ak *AccountKeeper) ConvertAddressBytesToString(bz []byte) (string, error) {
 	text, err := bech32.ConvertAndEncode(ak.bech32Prefix, bz)
 	if err != nil {
 		return "", err

@@ -91,7 +91,7 @@ func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32Prefi
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
 }
 
-func (ak AccountKeeper) AddressString(ctx context.Context, req *types.AddressStringRequest) (*types.AddressStringResponse, error) {
+func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressStringRequest) (*types.AddressStringResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -100,7 +100,7 @@ func (ak AccountKeeper) AddressString(ctx context.Context, req *types.AddressStr
 		return nil, errors.New("empty bech32 string is not allowed")
 	}
 
-	text, err := ak.AddressBytesToString(req.AccountAddr)
+	text, err := ak.ConvertAddressBytesToString(req.AccountAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (ak AccountKeeper) AddressString(ctx context.Context, req *types.AddressStr
 	return &types.AddressStringResponse{AccountAddr: text}, nil
 }
 
-func (ak AccountKeeper) AddressBytes(ctx context.Context, req *types.AddressBytesRequest) (*types.AddressBytesResponse, error) {
+func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressBytesRequest) (*types.AddressBytesResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -117,7 +117,7 @@ func (ak AccountKeeper) AddressBytes(ctx context.Context, req *types.AddressByte
 		return nil, errors.New("empty bech32 string is not allowed")
 	}
 
-	bz, err := ak.AddressStringToBytes(req.AccountAddr)
+	bz, err := ak.ConvertAddressStringToBytes(req.AccountAddr)
 	if err != nil {
 		return nil, err
 	}

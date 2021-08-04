@@ -1031,8 +1031,8 @@ Query defines the gRPC querier service.
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
 | `Bech32Prefix` | [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest) | [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse) | Bech32 queries bech32Prefix | GET|/cosmos/auth/v1beta1/bech32|
-| `AddressString` | [AddressStringRequest](#cosmos.auth.v1beta1.AddressStringRequest) | [AddressStringResponse](#cosmos.auth.v1beta1.AddressStringResponse) | AddressStr converts Bech32 bytes to Account string | GET|/cosmos/auth/v1beta1/bech32|
-| `AddressBytes` | [AddressBytesRequest](#cosmos.auth.v1beta1.AddressBytesRequest) | [AddressBytesResponse](#cosmos.auth.v1beta1.AddressBytesResponse) | AddressBytes converts Account string to Bech32 bytes | GET|/cosmos/auth/v1beta1/bech32|
+| `AddressBytesToString` | [AddressStringRequest](#cosmos.auth.v1beta1.AddressStringRequest) | [AddressStringResponse](#cosmos.auth.v1beta1.AddressStringResponse) | AddressBytesToString converts Account Address bytes to string | GET|/cosmos/auth/v1beta1/bech32|
+| `AddressStringToBytes` | [AddressBytesRequest](#cosmos.auth.v1beta1.AddressBytesRequest) | [AddressBytesResponse](#cosmos.auth.v1beta1.AddressBytesResponse) | AddressStringToBytes converts Address string to bytes | GET|/cosmos/auth/v1beta1/bech32|
 
  <!-- end services -->
 

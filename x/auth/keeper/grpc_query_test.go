@@ -223,7 +223,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 			},
 			true,
 			func(res *types.AddressStringResponse) {
-				text, err := suite.app.AccountKeeper.AddressBytesToString(req.AccountAddr)
+				text, err := suite.app.AccountKeeper.ConvertAddressBytesToString(req.AccountAddr)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(text)
 				suite.Require().Equal(text, res.AccountAddr)
@@ -255,7 +255,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.AddressString(ctx, req)
+			res, err := suite.queryClient.AddressBytesToString(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -283,7 +283,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 		{
 			"success",
 			func() {
-				text, err := suite.app.AccountKeeper.AddressBytesToString([]byte(addr))
+				text, err := suite.app.AccountKeeper.ConvertAddressBytesToString([]byte(addr))
 				suite.Require().NoError(err)
 				req = &types.AddressBytesRequest{AccountAddr: text}
 			},
@@ -317,7 +317,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 			tc.malleate()
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.AddressBytes(ctx, req)
+			res, err := suite.queryClient.AddressStringToBytes(ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

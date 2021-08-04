@@ -9,6 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
+	var (
+		req *types.QueryModuleAccountsRequest
+	)
+
 func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 	var (
 		req *types.QueryAccountsRequest

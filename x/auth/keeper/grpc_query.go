@@ -86,6 +86,31 @@ func (ak AccountKeeper) Params(c context.Context, req *types.QueryParamsRequest)
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
+// ModuleAccounts returns all the existing Module Accounts
+func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModuleAccountsRequest) (*types.QueryModuleAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	modAccounts := make([]*codectypes.Any, 0, len(ak.permAddrs))
+
+	for moduleName := range ak.permAddrs {
+		account := ak.GetModuleAccount(ctx, moduleName)
+		if account == nil {
+			return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
+		}
+		any, err := codectypes.NewAnyWithValue(account)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+		modAccounts = append(modAccounts, any)
+	}
+
+	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
+}
+
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	bech32Prefix := ak.GetBech32Prefix()
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
@@ -93,7 +118,7 @@ func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32Prefi
 
 func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressStringRequest) (*types.AddressStringResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if len(req.AccountAddr) == 0 {
@@ -110,7 +135,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 
 func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressBytesRequest) (*types.AddressBytesResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if len(strings.TrimSpace(req.AccountAddr)) == 0 {

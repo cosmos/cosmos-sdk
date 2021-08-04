@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/sha256"
-	"encoding/asn1"
 	"fmt"
 	"math/big"
 
@@ -13,6 +12,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// signatureFromBytes function roughly copied from secp256k1_nocgo.go
+// Read Signature struct from R || S. Caller needs to ensure that
+// len(sigStr) == 64.
+func signatureFromBytes(sigStr []byte) *signature {
+	return &signature{
+		R: new(big.Int).SetBytes(sigStr[:32]),
+		S: new(big.Int).SetBytes(sigStr[32:64]),
+	}
+}
 
 // signature holds the r and s values of an ECDSA signature.
 type signature struct {
@@ -46,9 +55,23 @@ func (pk *PubKey) Bytes() []byte {
 }
 
 // VerifySignature checks if sig is a valid ECDSA signature for msg.
+// This includes checking for low-s normalized signatures
+// where the s integer component of the signature is in the
+// lower half of the curve order
+// 7/21/21 - expects raw encoded signature (fixed-width 64-bytes, R || S)
 func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
-	s := new(signature)
-	if _, err := asn1.Unmarshal(sig, s); err != nil || s == nil {
+
+	// check length for raw signature
+	// which is two 32-byte padded big.Ints
+	// concatenated
+	// NOT DER!
+
+	if len(sig) != 64 {
+		return false
+	}
+
+	s := signatureFromBytes(sig)
+	if !IsSNormalized(s.S) {
 		return false
 	}
 

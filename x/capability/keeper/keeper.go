@@ -96,13 +96,6 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 		panic("cannot initialize and seal an already sealed capability keeper")
 	}
 
-	memStore := ctx.KVStore(k.memKey)
-	memStoreType := memStore.GetStoreType()
-
-	if memStoreType != sdk.StoreTypeMemory {
-		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
-	}
-
 	k.sealed = true
 }
 
@@ -112,6 +105,13 @@ func (k *Keeper) InitializeAndSeal(ctx sdk.Context) {
 func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
 	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+
+	memStore := noGasCtx.KVStore(k.memKey)
+	memStoreType := memStore.GetStoreType()
+
+	if memStoreType != sdk.StoreTypeMemory {
+		panic(fmt.Sprintf("invalid memory store type; got %s, expected: %s", memStoreType, sdk.StoreTypeMemory))
+	}
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
 	if !k.IsInitialized(noGasCtx) {
@@ -131,7 +131,6 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 		}
 
 		// set the initialized flag so we don't rerun initialization logic
-		memStore := noGasCtx.KVStore(k.memKey)
 		memStore.Set(types.KeyMemInitialized, []byte{1})
 	}
 }

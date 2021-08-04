@@ -1121,9 +1121,7 @@ func (s *decCoinTestSuite) TestDecCoin_ParseDecCoin() {
 
 		{"Precision over limit", "9.11111111111111111111stake", empty, true},
 
-		// TODO - Clarify - According to error message for ValidateDenom call, supposed to
-		// throw error when upper case characters are used. Currently uppercase denoms are allowed.
-		{"Invalid denom", "9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
+		{"Valid upper case denom", "9.3STAKE", sdk.DecCoin{"STAKE", sdk.NewDecWithPrec(93, 1)}, false},
 
 		{"Valid input - amount and denom separated by space", "9.3 stake", sdk.DecCoin{"stake", sdk.NewDecWithPrec(93, 1)}, false},
 

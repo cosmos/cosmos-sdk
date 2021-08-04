@@ -36,6 +36,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+## [v0.42.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.42.9) - 2021-08-04
+
 ### Bug Fixes
 
 * [\#9835](https://github.com/cosmos/cosmos-sdk/pull/9835) Moved capability initialization logic to BeginBlocker to fix nondeterminsim issue mentioned in [\#9800](https://github.com/cosmos/cosmos-sdk/issues/9800). Applications must now include the capability module in their BeginBlocker order before any module that uses capabilities gets run.

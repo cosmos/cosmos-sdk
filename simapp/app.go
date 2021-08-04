@@ -15,72 +15,10 @@ import (
 	cmted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
-
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/client/v2/autocli"
-	clienthelpers "cosmossdk.io/client/v2/helpers"
-	coreaddress "cosmossdk.io/core/address"
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/accounts"
-	"cosmossdk.io/x/accounts/accountstd"
-	baseaccount "cosmossdk.io/x/accounts/defaults/base"
-	lockup "cosmossdk.io/x/accounts/defaults/lockup"
-	"cosmossdk.io/x/accounts/testing/account_abstraction"
-	"cosmossdk.io/x/accounts/testing/counter"
-	"cosmossdk.io/x/authz"
-	authzkeeper "cosmossdk.io/x/authz/keeper"
-	authzmodule "cosmossdk.io/x/authz/module"
-	"cosmossdk.io/x/bank"
-	bankkeeper "cosmossdk.io/x/bank/keeper"
-	banktypes "cosmossdk.io/x/bank/types"
-	"cosmossdk.io/x/circuit"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	circuittypes "cosmossdk.io/x/circuit/types"
-	"cosmossdk.io/x/consensus"
-	consensusparamkeeper "cosmossdk.io/x/consensus/keeper"
-	consensustypes "cosmossdk.io/x/consensus/types"
-	distr "cosmossdk.io/x/distribution"
-	distrkeeper "cosmossdk.io/x/distribution/keeper"
-	distrtypes "cosmossdk.io/x/distribution/types"
-	"cosmossdk.io/x/epochs"
-	epochskeeper "cosmossdk.io/x/epochs/keeper"
-	epochstypes "cosmossdk.io/x/epochs/types"
-	"cosmossdk.io/x/evidence"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	evidencetypes "cosmossdk.io/x/evidence/types"
-	"cosmossdk.io/x/feegrant"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/gov"
-	govkeeper "cosmossdk.io/x/gov/keeper"
-	govtypes "cosmossdk.io/x/gov/types"
-	govv1 "cosmossdk.io/x/gov/types/v1"
-	govv1beta1 "cosmossdk.io/x/gov/types/v1beta1"
-	"cosmossdk.io/x/group"
-	groupkeeper "cosmossdk.io/x/group/keeper"
-	groupmodule "cosmossdk.io/x/group/module"
-	"cosmossdk.io/x/mint"
-	mintkeeper "cosmossdk.io/x/mint/keeper"
-	minttypes "cosmossdk.io/x/mint/types"
-	"cosmossdk.io/x/nft"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	nftmodule "cosmossdk.io/x/nft/module"
-	"cosmossdk.io/x/protocolpool"
-	poolkeeper "cosmossdk.io/x/protocolpool/keeper"
-	pooltypes "cosmossdk.io/x/protocolpool/types"
-	"cosmossdk.io/x/slashing"
-	slashingkeeper "cosmossdk.io/x/slashing/keeper"
-	slashingtypes "cosmossdk.io/x/slashing/types"
-	"cosmossdk.io/x/staking"
-	stakingkeeper "cosmossdk.io/x/staking/keeper"
-	stakingtypes "cosmossdk.io/x/staking/types"
-	"cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/upgrade"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -277,11 +215,10 @@ func NewSimApp(
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey, pooltypes.StoreKey,
 		accounts.StoreKey, epochstypes.StoreKey,
 	)
-
-	// register streaming services
-	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
-		panic(err)
-	}
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	// NOTE: The testingkey is just mounted for testing purposes. Actual applications should
+	// not include this key.
+	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
 	app := &SimApp{
 		BaseApp:           bApp,
@@ -298,8 +235,10 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, runtime.NewEnvironment(runtime.NewKVStoreService(keys[consensustypes.StoreKey]), logger.With(log.ModuleKey, "x/consensus")), govModuleAddr)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
-	// set the version modifier
-	bApp.SetVersionModifier(consensus.ProvideAppVersionModifier(app.ConsensusParamsKeeper))
+	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
+	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
+	// their scoped modules in `NewApp` with `ScopeToModule`
+	app.CapabilityKeeper.Seal()
 
 	// add keepers
 	accountsKeeper, err := accounts.NewKeeper(
@@ -493,24 +432,10 @@ func NewSimApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.ModuleManager.SetOrderBeginBlockers(
-		minttypes.ModuleName,
-		distrtypes.ModuleName,
-		pooltypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		genutiltypes.ModuleName,
-		authz.ModuleName,
-		epochstypes.ModuleName,
-	)
-	app.ModuleManager.SetOrderEndBlockers(
-		govtypes.ModuleName,
-		stakingtypes.ModuleName,
-		genutiltypes.ModuleName,
-		feegrant.ModuleName,
-		group.ModuleName,
-		pooltypes.ModuleName,
+	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
+	app.mm.SetOrderBeginBlockers(
+		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		evidencetypes.ModuleName, stakingtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -667,22 +592,10 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	app.SetAnteHandler(anteHandler)
 }
 
-func (app *SimApp) setPostHandler() {
-	postHandler, err := posthandler.NewPostHandler(
-		posthandler.HandlerOptions{},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	app.SetPostHandler(postHandler)
-}
-
-// Close closes all necessary application resources.
-// It implements servertypes.Application.
-func (app *SimApp) Close() error {
-	if err := app.BaseApp.Close(); err != nil {
-		return err
+	if loadLatest {
+		if err := app.LoadLatestVersion(); err != nil {
+			tmos.Exit(err.Error())
+		}
 	}
 
 	return app.UnorderedTxManager.Close()

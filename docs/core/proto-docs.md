@@ -27,6 +27,8 @@
     - [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse)
     - [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest)
     - [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse)
+    - [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest)
+    - [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse)
     - [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse)
   
@@ -989,6 +991,31 @@ QueryAccountsResponse is the response type for the Query/Accounts RPC method.
 
 
 
+<a name="cosmos.auth.v1beta1.QueryModuleAccountsRequest"></a>
+
+### QueryModuleAccountsRequest
+QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.QueryModuleAccountsResponse"></a>
+
+### QueryModuleAccountsResponse
+QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+
+
+
+
+
+
 <a name="cosmos.auth.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -1030,9 +1057,13 @@ Query defines the gRPC querier service.
 | `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
+<<<<<<< HEAD
 | `Bech32Prefix` | [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest) | [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse) | Bech32 queries bech32Prefix | GET|/cosmos/auth/v1beta1/bech32|
 | `AddressBytesToString` | [AddressStringRequest](#cosmos.auth.v1beta1.AddressStringRequest) | [AddressStringResponse](#cosmos.auth.v1beta1.AddressStringResponse) | AddressBytesToString converts Account Address bytes to string | GET|/cosmos/auth/v1beta1/bech32|
 | `AddressStringToBytes` | [AddressBytesRequest](#cosmos.auth.v1beta1.AddressBytesRequest) | [AddressBytesResponse](#cosmos.auth.v1beta1.AddressBytesResponse) | AddressStringToBytes converts Address string to bytes | GET|/cosmos/auth/v1beta1/bech32|
+=======
+| `ModuleAccounts` | [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest) | [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse) | ModuleAccounts returns all the existing Module Accounts. | GET|/cosmos/auth/v1beta1/module_accounts|
+>>>>>>> f27c7ceef9eb6d0986db3a364140b4e75f1c45d5
 
  <!-- end services -->
 

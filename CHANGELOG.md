@@ -39,8 +39,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* [\#9776](https://github.com/cosmos/cosmos-sdk/pull/9776) Add flag `staking-bond-denom` to specify the staking bond denomination value when initializing a new chain.
 * [\#9533](https://github.com/cosmos/cosmos-sdk/pull/9533) Added a new gRPC method, `DenomOwners`, in `x/bank` to query for all account holders of a specific denomination.
 * (bank) [\#9618](https://github.com/cosmos/cosmos-sdk/pull/9618) Update bank.Metadata: add URI and URIHash attributes.
+* [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
 ### API Breaking Changes
 * [\#9759] *https://github.com/cosmos/cosmos-sdk/pull/9759) `authz NewAccountKeeeper` takes an additional `bech32Prefix` argument that represents `sdk.Bech32MainPrefix` 
@@ -52,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client/keys) [\#9407](https://github.com/cosmos/cosmos-sdk/pull/9601) Added `keys rename` CLI command and `Keyring.Rename` interface method to rename a key in the keyring.
 * (x/slashing) [\#9458](https://github.com/cosmos/cosmos-sdk/pull/9458) Coins burned from slashing is now returned from Slash function and included in Slash event.
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) The `New` method for the network package now returns an error.
+* [\#9519](https://github.com/cosmos/cosmos-sdk/pull/9519) `DeleteDeposits` renamed to `DeleteAndBurnDeposits`, `RefundDeposits` renamed to `RefundAndDeleteDeposits` 
 * (codec) [\#9521](https://github.com/cosmos/cosmos-sdk/pull/9521) Removed deprecated `clientCtx.JSONCodec` from `client.Context`.
 * (codec) [\#9521](https://github.com/cosmos/cosmos-sdk/pull/9521) Rename `EncodingConfig.Marshaler` to `Codec`.
 * [\#9418](https://github.com/cosmos/cosmos-sdk/pull/9418) `sdk.Msg`'s  `GetSigners()` method updated to return `[]string`.
@@ -60,14 +63,17 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9432](https://github.com/cosmos/cosmos-sdk/pull/9432) `ConsensusParamsKeyTable` moved from `params/keeper` to `params/types`
 * [\#9576](https://github.com/cosmos/cosmos-sdk/pull/9576) Add debug error message to `sdkerrors.QueryResult` when enabled
 * [\#9650](https://github.com/cosmos/cosmos-sdk/pull/9650) Removed deprecated message handler implementation from the SDK modules.
+* (x/capability) [\#9836](https://github.com/cosmos/cosmos-sdk/pull/9836) Removed `InitializeAndSeal(ctx sdk.Context)` and replaced with `Seal()`.
 
 ### Client Breaking Changes
 
 * [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) Remove legacy REST API. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
-
+* [\#9781](https://github.com/cosmos/cosmos-sdk/pull/9781) Improve`withdraw-all-rewards` UX when broadcast mode `async` or `async` is used.
+* [\#9785](https://github.com/cosmos/cosmos-sdk/issues/9785) Missing coin denomination in logs 
 
 ### CLI Breaking Changes
 
+* [\#9827](https://github.com/cosmos/cosmos-sdk/pull/9827) Ensure input parity of validator public key input between `tx staking create-validator` and `gentx`.
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
 * [\#9371](https://github.com/cosmos/cosmos-sdk/pull/9371) Non-zero default fees/Server will error if there's an empty value for min-gas-price in app.toml
 
@@ -78,6 +84,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* [\#9766](https://github.com/cosmos/cosmos-sdk/pull/9766) Fix hardcoded ledger signing algorithm on `keys add` command.
 * [\#9720](https://github.com/cosmos/cosmos-sdk/pull/9720) Feegrant grant cli granter now accepts key name as well as address in general and accepts only address in --generate-only mode
 * [\#9651](https://github.com/cosmos/cosmos-sdk/pull/9651) Change inconsistent limit of `0` to `MaxUint64` on InfiniteGasMeter and add GasRemaining func to GasMeter.
 * [\#9639](https://github.com/cosmos/cosmos-sdk/pull/9639) Check store keys length before accessing them by making sure that `key` is of length `m+1` (for `key[n:m]`)
@@ -86,6 +93,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/distribution) [\#9599](https://github.com/cosmos/cosmos-sdk/pull/9599) Withdraw rewards event now includes a value attribute even if there are 0 rewards (due to situations like 100% commission).
 * (x/genutil) [\#9638](https://github.com/cosmos/cosmos-sdk/pull/9638) Added missing validator key save when recovering from mnemonic
 * (server) [#9704](https://github.com/cosmos/cosmos-sdk/pull/9704) Start GRPCWebServer in goroutine, avoid blocking other services from starting.
+* [\#9762](https://github.com/cosmos/cosmos-sdk/pull/9762) The init command uses the chain-id from the client config if --chain-id is not provided
+* [\#9793](https://github.com/cosmos/cosmos-sdk/pull/9793) Fixed ECDSA/secp256r1 transaction malleability.
+* [\#9836](https://github.com/cosmos/cosmos-sdk/pull/9836) Fixes capability initialization issue on tx revert by moving initialization logic to `InitChain` and `BeginBlock`.
+
+### State Machine Breaking
+
+* (x/bank) [\#9611](https://github.com/cosmos/cosmos-sdk/pull/9611) Introduce a new index to act as a reverse index between a denomination and address allowing to query for
+  token holders of a specific denomination. `DenomOwners` is updated to use the new reverse index.
 
 ## [v0.43.0-rc0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc0) - 2021-06-25
 

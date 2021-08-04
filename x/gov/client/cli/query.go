@@ -366,29 +366,12 @@ $ %s query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			// check to see if the proposal is in the store
 			ctx := cmd.Context()
-			proposalRes, err := queryClient.Proposal(
+			_, err = queryClient.Proposal(
 				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
-			}
-
-			depositorAddr, err := sdk.AccAddressFromBech32(args[1])
-			if err != nil {
-				return err
-			}
-
-			var deposit types.Deposit
-			propStatus := proposalRes.Proposal.Status
-			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
-				params := types.NewQueryDepositParams(proposalID, depositorAddr)
-				resByTxQuery, err := gcutils.QueryDepositByTxQuery(clientCtx, params)
-				if err != nil {
-					return err
-				}
-				clientCtx.Codec.MustUnmarshalJSON(resByTxQuery, &deposit)
-				return clientCtx.PrintProto(&deposit)
 			}
 
 			res, err := queryClient.Deposit(
@@ -439,28 +422,12 @@ $ %s query gov deposits 1
 
 			// check to see if the proposal is in the store
 			ctx := cmd.Context()
-			proposalRes, err := queryClient.Proposal(
+			_, err = queryClient.Proposal(
 				ctx,
 				&types.QueryProposalRequest{ProposalId: proposalID},
 			)
 			if err != nil {
 				return fmt.Errorf("failed to fetch proposal-id %d: %s", proposalID, err)
-			}
-
-			propStatus := proposalRes.GetProposal().Status
-			if !(propStatus == types.StatusVotingPeriod || propStatus == types.StatusDepositPeriod) {
-				params := types.NewQueryProposalParams(proposalID)
-				resByTxQuery, err := gcutils.QueryDepositsByTxQuery(clientCtx, params)
-				if err != nil {
-					return err
-				}
-
-				var dep types.Deposits
-				// TODO migrate to use JSONCodec (implement MarshalJSONArray
-				// or wrap lists of proto.Message in some other message)
-				clientCtx.LegacyAmino.MustUnmarshalJSON(resByTxQuery, &dep)
-
-				return clientCtx.PrintObjectLegacy(dep)
 			}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())

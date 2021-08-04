@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestBech32Prefix() {
 	})
 }
 
-func (suite *KeeperTestSuite) TestAddressStr() {
+func (suite *KeeperTestSuite) TestAddressBytesToString() {
 	var req *types.AddressStringRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 		msg       string
 		malleate  func()
 		expPass   bool
-		posttests func(res *types.AddressStringResponse)
+		posttests func(res *types.AddressBytesToStringResponse)
 	}{
 		{
 			"success",
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 				req = &types.AddressStringRequest{AccountAddr: addrBytes}
 			},
 			true,
-			func(res *types.AddressStringResponse) {
+			func(res *types.AddressBytesToStringResponse) {
 				text, err := suite.app.AccountKeeper.ConvertAddressBytesToString(req.AccountAddr)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(text)
@@ -235,7 +235,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 				req = &types.AddressStringRequest{}
 			},
 			false,
-			func(res *types.AddressStringResponse) {},
+			func(res *types.AddressBytesToStringResponse) {},
 		},
 		{
 			"empty account address in request",
@@ -244,7 +244,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 				req = &types.AddressStringRequest{AccountAddr: emptyAddrBytes}
 			},
 			false,
-			func(res *types.AddressStringResponse) {},
+			func(res *types.AddressBytesToStringResponse) {},
 		},
 	}
 
@@ -270,7 +270,7 @@ func (suite *KeeperTestSuite) TestAddressStr() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
+func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 	var req *types.AddressBytesRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
@@ -278,7 +278,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 		msg       string
 		malleate  func()
 		expPass   bool
-		posttests func(res *types.AddressBytesResponse)
+		posttests func(res *types.AddressStringToBytesResponse)
 	}{
 		{
 			"success",
@@ -288,7 +288,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 				req = &types.AddressBytesRequest{AccountAddr: text}
 			},
 			true,
-			func(res *types.AddressBytesResponse) {
+			func(res *types.AddressStringToBytesResponse) {
 				suite.Require().True(bytes.Equal(res.AccountAddr, []byte(addr)))
 			},
 		},
@@ -298,7 +298,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 				req = &types.AddressBytesRequest{}
 			},
 			false,
-			func(res *types.AddressBytesResponse) {},
+			func(res *types.AddressStringToBytesResponse) {},
 		},
 		{
 			"Bech32 field in request is empty",
@@ -306,7 +306,7 @@ func (suite *KeeperTestSuite) TestAccAddrFromBech32() {
 				req = &types.AddressBytesRequest{AccountAddr: ""}
 			},
 			false,
-			func(res *types.AddressBytesResponse) {},
+			func(res *types.AddressStringToBytesResponse) {},
 		},
 	}
 

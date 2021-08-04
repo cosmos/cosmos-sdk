@@ -44,7 +44,8 @@ type legacyLocalInfo struct {
 	Algo         hd.PubKeyType      `json:"algo"`
 }
 
-func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) legacyInfo {
+//nolint
+func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) legacyInfo { 
 	return &legacyLocalInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -97,6 +98,7 @@ type legacyLedgerInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
+//nolint
 func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) legacyInfo {
 	return &legacyLedgerInfo{
 		Name:   name,
@@ -145,6 +147,7 @@ type legacyOfflineInfo struct {
 	Algo   hd.PubKeyType      `json:"algo"`
 }
 
+//nolint
 func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) legacyInfo {
 	return &legacyOfflineInfo{
 		Name:   name,
@@ -200,6 +203,7 @@ type LegacyMultiInfo struct {
 	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
 }
 
+//nolint
 // NewMultiInfo creates a new multiInfo instance
 func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (legacyInfo, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {

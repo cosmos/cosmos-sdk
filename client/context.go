@@ -329,7 +329,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		return addr, "", 0, nil
 	}
 
-	k := new(keyring.Record)
+	k := new(keyring.Record) //nolint
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		k, err = kr.KeyByAddress(addr)
 		if err != nil {

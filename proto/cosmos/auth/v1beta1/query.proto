@@ -110,7 +110,7 @@ message AddressStringRequest {
 
 // AddressBytesToStringResponse is the response type for AddressString rpc method
 message AddressBytesToStringResponse {
-  string account_addr = 1;
+  string address_string = 1;
 }
 
 // AddressBytesRequest is the request type for AccountBytes rpc method

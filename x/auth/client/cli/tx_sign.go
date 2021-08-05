@@ -65,7 +65,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		var seq_value uint64
+		var seqValue uint64
 		txFactory := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 		txCfg := clientCtx.TxConfig
 		printSignatureOnly, _ := cmd.Flags().GetBool(flagSigOnly)
@@ -92,14 +92,14 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
-		if clientCtx.Offline != true {
-			seq_value = 0
+		if !clientCtx.Offline {
+			seqValue = 0
 			txFactory = txFactory.WithAccountNumber(0)
 		} else {
-			seq_value = txFactory.Sequence()
+			seqValue = txFactory.Sequence()
 		}
 
-		for sequence := seq_value; scanner.Scan(); sequence++ {
+		for sequence := seqValue; scanner.Scan(); sequence++ {
 			unsignedStdTx := scanner.Tx()
 			txFactory = txFactory.WithSequence(sequence)
 			txBuilder, err := txCfg.WrapTxBuilder(unsignedStdTx)

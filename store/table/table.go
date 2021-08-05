@@ -210,9 +210,10 @@ func (a Table) PrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error)
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
 		return NewInvalidIterator(), errors.Wrap(ErrArgument, "start must be before end")
 	}
+	pStore := prefix.NewStore(store, []byte{a.prefix})
 	return &typeSafeIterator{
 		rowGetter: NewTypeSafeRowGetter(a.prefix, a.model, a.cdc),
-		it:        store.Iterator(start, end),
+		it:        pStore.Iterator(start, end),
 	}, nil
 }
 
@@ -229,9 +230,10 @@ func (a Table) ReversePrefixScan(store sdk.KVStore, start, end RowID) (Iterator,
 	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
 		return NewInvalidIterator(), errors.Wrap(ErrArgument, "start must be before end")
 	}
+	pStore := prefix.NewStore(store, []byte{a.prefix})
 	return &typeSafeIterator{
 		rowGetter: NewTypeSafeRowGetter(a.prefix, a.model, a.cdc),
-		it:        store.ReverseIterator(start, end),
+		it:        pStore.ReverseIterator(start, end),
 	}, nil
 }
 

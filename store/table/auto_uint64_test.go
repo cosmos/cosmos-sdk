@@ -43,10 +43,6 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		_, err := tb.Create(store, &m)
 		require.NoError(t, err)
 	}
-	var load testdata.TableModel
-	id, err := tb.GetOne(store, 1, &load)
-	assert.Equal(t, id, 1)
-	require.NoError(t, err)
 
 	specs := map[string]struct {
 		start, end uint64

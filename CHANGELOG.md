@@ -96,6 +96,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9762](https://github.com/cosmos/cosmos-sdk/pull/9762) The init command uses the chain-id from the client config if --chain-id is not provided
 * [\#9793](https://github.com/cosmos/cosmos-sdk/pull/9793) Fixed ECDSA/secp256r1 transaction malleability.
 * [\#9836](https://github.com/cosmos/cosmos-sdk/pull/9836) Fixes capability initialization issue on tx revert by moving initialization logic to `InitChain` and `BeginBlock`.
+* [\#9854](https://github.com/cosmos/cosmos-sdk/pull/9854) Fixes the `make proto-gen` issue
 
 ### State Machine Breaking
 

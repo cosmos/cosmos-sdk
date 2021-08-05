@@ -105,7 +105,7 @@ message Bech32PrefixResponse  {
 
 // AddressStringRequest is the request type for AddressString rpc method
 message AddressStringRequest {
-  bytes account_addr = 1;
+  bytes address_bytes = 1;
 }
 
 // AddressBytesToStringResponse is the response type for AddressString rpc method

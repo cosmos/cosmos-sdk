@@ -6,3 +6,5 @@ type Codec interface {
 	// ConvertAddressBytesToString encodes bytes to text
 	ConvertAddressBytesToString(bz []byte) (string, error)
 }
+
+func Ver

@@ -254,6 +254,7 @@ func (ak *AccountKeeper) ConvertAddressStringToBytes(text string) ([]byte, error
 		return nil, errors.New("hrp does not match bech32Prefix")
 	}
 	// TODO deprecate sdk.VerifyAddressFormat(bz) and declare a new pure one in address.VerifyFormat()
+	// address.VerifyFormat() put inside address.Codec interface?
 
 	return bz, nil
 }

@@ -122,7 +122,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 	}
 
 	if len(req.AddressBytes) == 0 {
-		return nil, errors.New("empty bech32 string is not allowed")
+		return nil, errors.New("empty address bytes is not allowed")
 	}
 
 	text, err := ak.ConvertAddressBytesToString(req.AddressBytes)
@@ -139,7 +139,7 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	}
 
 	if len(strings.TrimSpace(req.AddressString)) == 0 {
-		return nil, errors.New("empty bech32 string is not allowed")
+		return nil, errors.New("empty address string is not allowed")
 	}
 
 	bz, err := ak.ConvertAddressStringToBytes(req.AddressString)

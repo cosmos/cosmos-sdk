@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -106,6 +107,104 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 
 	_, err = TxValidateSignaturesExec(val.ClientCtx, modifiedTxFile.Name())
 	s.Require().EqualError(err, "signatures validation failed")
+}
+
+func (s *IntegrationTestSuite) TestCLISignGenOnlyWithKeyName() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	info, err := val.ClientCtx.Keyring.KeyByAddress(val.Address)
+	s.Require().NoError(err)
+	keyName := info.GetName()
+
+	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, info.GetAddress())
+	s.Require().NoError(err)
+
+	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
+	args := []string{
+		keyName, // from
+		val2.Address.String(),
+		sendTokens.String(),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break the if keyname with --generate-only
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+	}
+	generatedStd, err := clitestutil.ExecTestCLICmd(val.ClientCtx, bank.NewSendTxCmd(), args)
+	s.Require().NoError(err)
+	opFile := testutil.WriteToNewTempFile(s.T(), generatedStd.String())
+
+	commonArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)),
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID),
+	}
+
+	cases := []struct {
+		name   string
+		args   []string
+		expErr bool
+		errMsg string
+	}{
+		{
+			"offline mode with account-number, sequence and keyname (valid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, account.GetAccountNumber()),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, account.GetSequence()),
+			},
+			false,
+			"",
+		},
+		{
+			"offline mode without account-number and keyname (invalid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, account.GetSequence()),
+			},
+			true,
+			`required flag(s) "account-number" not set`,
+		},
+		{
+			"offline mode without sequence and keyname (invalid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, account.GetAccountNumber()),
+			},
+			true,
+			`required flag(s) "sequence" not set`,
+		},
+		{
+			"offline mode without account-number, sequence and keyname (invalid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+			},
+			true,
+			`required flag(s) "account-number", "sequence" not set`,
+		},
+	}
+
+	for _, tc := range cases {
+		cmd := authcli.GetSignCommand()
+		tmcli.PrepareBaseCmd(cmd, "", "")
+		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
+		if tc.expErr {
+			s.Require().Error(err)
+			s.Require().Contains(err.Error(), tc.errMsg)
+		} else {
+			s.Require().NoError(err)
+			signedTx := testutil.WriteToNewTempFile(s.T(), out.String())
+			_, err := TxBroadcastExec(val.ClientCtx, signedTx.Name())
+			s.Require().NoError(err)
+		}
+	}
 }
 
 func (s *IntegrationTestSuite) TestCLISignBatch() {

@@ -126,8 +126,21 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	_, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
+	// sign-batch file - offline and sequence is set but account-number is not set
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s --%s=%s", flags.FlagChainID, val.ClientCtx.ChainID, flags.FlagSequence, "1"), "--offline")
+	s.Require().EqualError(err, "required flag(s) \"account-number\" not set")
+
+	// sign-batch file - offline and account-number is set but sequence is not set
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s --%s=%s", flags.FlagChainID, val.ClientCtx.ChainID, flags.FlagAccountNumber, "1"), "--offline")
+	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
+
+	// sign-batch file - sequence and account-number are set when offline is false
+	res, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s --%s=%s --%s=%s", flags.FlagChainID, val.ClientCtx.ChainID, flags.FlagSequence, "1", flags.FlagAccountNumber, "1"))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+
 	// sign-batch file
-	res, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	res, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 

@@ -102,8 +102,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
 
-	vals := []types.Validator{genesisVals[0], val1, val2}
-	IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx))
+	vals := []types.Validator{val1, genesisVals[0], val2}
+	require.True(t, IsValSetSorted(vals, app.StakingKeeper.PowerReduction(ctx)))
 
 	// Set Header for BeginBlock context
 	header := tmproto.Header{
@@ -121,7 +121,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	}
 	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 10)
 	require.True(t, found, "GetHistoricalInfo failed after BeginBlock")
-	require.Equal(t, expected, recv, "GetHistoricalInfo returned unexpected result")
+	require.Equal(t, expected.Valset, recv.Valset, "GetHistoricalInfo returned unexpected result")
 
 	// Check HistoricalInfo at height 5, 4 is pruned
 	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 4)

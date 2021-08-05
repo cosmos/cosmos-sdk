@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -16,9 +17,9 @@ var (
 	PKs = simapp.CreateTestPubKeys(500)
 )
 
-// func init() {
-// 	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
-// }
+func init() {
+	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
+}
 
 // createTestInput Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.

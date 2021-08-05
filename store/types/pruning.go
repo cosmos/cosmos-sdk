@@ -14,7 +14,7 @@ var (
 	// PruneDefault defines a pruning strategy where the last 100 heights are kept
 	// in addition to every 100th and where to-be pruned heights are pruned at
 	// every 10th height.
-	PruneDefault = NewPruningOptions(100, 100, 10)
+	PruneDefault = NewPruningOptions(9072000, 100, 10)
 
 	// PruneEverything defines a pruning strategy where all committed heights are
 	// deleted, storing only the current height and where to-be pruned heights are

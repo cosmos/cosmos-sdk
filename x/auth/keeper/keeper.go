@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 
 	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -250,11 +250,13 @@ func (ak *AccountKeeper) ConvertAddressStringToBytes(text string) ([]byte, error
 		return nil, err
 	}
 
-	if hrp != ak.GetBech32Prefix(){
+	if hrp != ak.GetBech32Prefix() {
 		return nil, errors.New("hrp does not match bech32Prefix")
 	}
-	// TODO deprecate sdk.VerifyAddressFormat(bz) and declare a new pure one in address.VerifyFormat()
-	// address.VerifyFormat() put inside address.Codec interface?
+
+	if err := address.VerifyFormat(bz); err != nil {
+		return nil, err
+	}
 
 	return bz, nil
 }

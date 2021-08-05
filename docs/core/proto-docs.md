@@ -17,9 +17,9 @@
     - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
   
 - [cosmos/auth/v1beta1/query.proto](#cosmos/auth/v1beta1/query.proto)
-    - [AddressBytesRequest](#cosmos.auth.v1beta1.AddressBytesRequest)
+    - [AddressBytesToStringRequest](#cosmos.auth.v1beta1.AddressBytesToStringRequest)
     - [AddressBytesToStringResponse](#cosmos.auth.v1beta1.AddressBytesToStringResponse)
-    - [AddressStringRequest](#cosmos.auth.v1beta1.AddressStringRequest)
+    - [AddressStringToBytesRequest](#cosmos.auth.v1beta1.AddressStringToBytesRequest)
     - [AddressStringToBytesResponse](#cosmos.auth.v1beta1.AddressStringToBytesResponse)
     - [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest)
     - [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse)
@@ -845,15 +845,15 @@ corresponding request message has used PageRequest.
 
 
 
-<a name="cosmos.auth.v1beta1.AddressBytesRequest"></a>
+<a name="cosmos.auth.v1beta1.AddressBytesToStringRequest"></a>
 
-### AddressBytesRequest
-AddressBytesRequest is the request type for AccountBytes rpc method
+### AddressBytesToStringRequest
+AddressBytesToStringRequest is the request type for AddressString rpc method
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `account_addr` | [string](#string) |  |  |
+| `address_bytes` | [bytes](#bytes) |  |  |
 
 
 
@@ -868,22 +868,22 @@ AddressBytesToStringResponse is the response type for AddressString rpc method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `account_addr` | [string](#string) |  |  |
+| `address_string` | [string](#string) |  |  |
 
 
 
 
 
 
-<a name="cosmos.auth.v1beta1.AddressStringRequest"></a>
+<a name="cosmos.auth.v1beta1.AddressStringToBytesRequest"></a>
 
-### AddressStringRequest
-AddressStringRequest is the request type for AddressString rpc method
+### AddressStringToBytesRequest
+AddressStringToBytesRequest is the request type for AccountBytes rpc method
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `account_addr` | [bytes](#bytes) |  |  |
+| `address_string` | [string](#string) |  |  |
 
 
 
@@ -898,7 +898,7 @@ AddressStringToBytesResponse is the response type for AddressBytes rpc method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `account_addr` | [bytes](#bytes) |  |  |
+| `address_bytes` | [bytes](#bytes) |  |  |
 
 
 
@@ -1059,8 +1059,8 @@ Query defines the gRPC querier service.
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
 | `ModuleAccounts` | [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest) | [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse) | ModuleAccounts returns all the existing module accounts. | GET|/cosmos/auth/v1beta1/module_accounts|
 | `Bech32Prefix` | [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest) | [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse) | Bech32 queries bech32Prefix | GET|/cosmos/auth/v1beta1/bech32|
-| `AddressBytesToString` | [AddressStringRequest](#cosmos.auth.v1beta1.AddressStringRequest) | [AddressBytesToStringResponse](#cosmos.auth.v1beta1.AddressBytesToStringResponse) | AddressBytesToString converts Account Address bytes to string | GET|/cosmos/auth/v1beta1/bech32|
-| `AddressStringToBytes` | [AddressBytesRequest](#cosmos.auth.v1beta1.AddressBytesRequest) | [AddressStringToBytesResponse](#cosmos.auth.v1beta1.AddressStringToBytesResponse) | AddressStringToBytes converts Address string to bytes | GET|/cosmos/auth/v1beta1/bech32|
+| `AddressBytesToString` | [AddressBytesToStringRequest](#cosmos.auth.v1beta1.AddressBytesToStringRequest) | [AddressBytesToStringResponse](#cosmos.auth.v1beta1.AddressBytesToStringResponse) | AddressBytesToString converts Account Address bytes to string | GET|/cosmos/auth/v1beta1/bech32/{address_bytes}|
+| `AddressStringToBytes` | [AddressStringToBytesRequest](#cosmos.auth.v1beta1.AddressStringToBytesRequest) | [AddressStringToBytesResponse](#cosmos.auth.v1beta1.AddressStringToBytesResponse) | AddressStringToBytes converts Address string to bytes | GET|/cosmos/auth/v1beta1/bech32/{address_string}|
 
  <!-- end services -->
 

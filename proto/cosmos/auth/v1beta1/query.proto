@@ -39,7 +39,7 @@ service Query {
 
   // AddressBytesToString converts Account Address bytes to string
   rpc AddressBytesToString(AddressBytesToStringRequest) returns (AddressBytesToStringResponse) {
-    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32";
+    option (google.api.http).get = "/cosmos/auth/v1beta1/bech32/{address_bytes}";
   }
 
   // AddressStringToBytes converts Address string to bytes

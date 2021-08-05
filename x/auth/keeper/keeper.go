@@ -244,7 +244,7 @@ func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix }
 
 // ConvertAddressStringToBytes encodes text to bytes
 func (ak *AccountKeeper) ConvertAddressStringToBytes(text string) ([]byte, error) {
-	_, bz, err := bech32.DecodeAndConvert(text)
+	hrp, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
 		return nil, err
 	}

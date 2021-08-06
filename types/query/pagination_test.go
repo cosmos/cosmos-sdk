@@ -319,12 +319,12 @@ func ExamplePaginate(t *testing.T) {
 	balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 	pageRes, err := query.Paginate(accountStore, request.Pagination, func(key []byte, value []byte) error {
-		var tempRes sdk.Coin
-		err := app.AppCodec().Unmarshal(value, &tempRes)
+		var amount sdk.Int
+		err := amount.Unmarshal(value)
 		if err != nil {
 			return err
 		}
-		balResult = append(balResult, tempRes)
+		balResult = append(balResult, sdk.NewCoin(string(key), amount))
 		return nil
 	})
 	if err != nil { // should return no error

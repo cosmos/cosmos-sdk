@@ -230,8 +230,24 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	app, ctx := createTestApp(t, false)
-	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
-	require.Len(t, genesisValidators, 1)
+
+	// withdraw all validator commission
+	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val types.ValidatorI) (stop bool) {
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
+		return false
+	})
+
+	// withdraw all delegator rewards
+	dels := app.StakingKeeper.GetAllDelegations(ctx)
+	for _, delegation := range dels {
+		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		require.NoError(t, err)
+
+		delAddr, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		require.NoError(t, err)
+
+		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
+	}
 
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
@@ -265,7 +281,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	if !operationMsg.OK {
 		// expect error validator key is nil for genesis validator
-		require.Equal(t, operationMsg.Comment, "account private key is nil")
+		require.Contains(t, []string{"account private key is nil", "keeper does have any delegation entries"}, operationMsg.Comment)
 	} else {
 		require.NoError(t, err)
 

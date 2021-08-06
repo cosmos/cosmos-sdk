@@ -1,14 +1,20 @@
 package cosmovisor
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
+
+	"github.com/otiai10/copy"
 )
 
 type Launcher struct {
@@ -21,8 +27,9 @@ func NewLauncher(cfg *Config) (Launcher, error) {
 	return Launcher{cfg, fw}, err
 }
 
-// Run a subprocess and returns when the subprocess exits,
-// either when it dies, or *after* a successful upgrade.
+// Run lunches the app in a subprocess and returns when the subprocess (app)
+// exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
+// Returns true if the upgrade request was detected and the upgrade process started.
 func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	bin, err := l.cfg.CurrentBin()
 	if err != nil {
@@ -53,7 +60,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err != nil || !needsUpdate {
 		return false, err
 	}
-	if err := doBackup(cfg); err != nil {
+	if err := doBackup(l.cfg); err != nil {
 		return false, err
 	}
 
@@ -91,4 +98,47 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func doBackup(cfg *Config) error {
+	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
+	if !cfg.UnsafeSkipBackup {
+		// check if upgrade-info.json is not empty.
+		var uInfo UpgradeInfo
+		upgradeInfoFile, err := ioutil.ReadFile(filepath.Join(cfg.Home, "data", "upgrade-info.json"))
+		if err != nil {
+			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
+		}
+
+		err = json.Unmarshal(upgradeInfoFile, &uInfo)
+		if err != nil {
+			return err
+		}
+
+		if uInfo.Name == "" {
+			return fmt.Errorf("upgrade-info.json is empty")
+		}
+
+		// a destination directory, Format YYYY-MM-DD
+		st := time.Now()
+		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
+		dst := filepath.Join(cfg.Home, fmt.Sprintf("data"+"-backup-%s", stStr))
+
+		fmt.Printf("starting to take backup of data directory at time %s", st)
+
+		// copy the $DAEMON_HOME/data to a backup dir
+		err = copy.Copy(filepath.Join(cfg.Home, "data"), dst)
+
+		if err != nil {
+			return fmt.Errorf("error while taking data backup: %w", err)
+		}
+
+		// backup is done, lets check endtime to calculate total time taken for backup process
+		et := time.Now()
+		timeTaken := et.Sub(st)
+		fmt.Printf("backup saved at location: %s, completed at time: %s\n"+
+			"time taken to complete the backup: %s", dst, et, timeTaken)
+	}
+
+	return nil
 }

@@ -115,9 +115,7 @@ func Test_runAddCmdLedger(t *testing.T) {
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, encCfg.Codec)
 	require.NoError(t, err)
 
-
 	// Now check that it has been stored properly
-
 	require.NotNil(t, kb)
 	t.Cleanup(func() {
 		_ = kb.Delete("keyname1")

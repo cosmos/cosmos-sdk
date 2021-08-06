@@ -58,6 +58,35 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "foo", k.Name)
 }
 
+func requireEqualNames(records []*Record, n1, n2 string) bool {
+	for _, k := range records {
+		if k == nil {
+			continue
+		}
+
+		if k.Name != n2 && k.Name != n1 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func getN2Index(records []*Record, n2 string) (j int) {
+	for i, k := range records {
+		if k == nil {
+			continue
+		}
+
+		if k.Name == n2 {
+			j = i
+			break
+		}
+	}
+
+	return j
+}
+
 func TestKeyManagementKeyRing(t *testing.T) {
 	cdc := getCodec()
 	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
@@ -70,7 +99,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	// Check empty state
 	records, err := kb.List()
 	require.NoError(t, err)
-	require.Nil(t, records)
+	require.Len(t, records, 0)
 
 	_, _, err = kb.NewMnemonic(n1, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, notSupportedAlgo{})
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
@@ -104,15 +133,15 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	// list shows them in order
 	keyS, err := kb.List()
 	require.NoError(t, err)
-	require.Equal(t, 2, len(keyS))
+	require.Equal(t, 4, len(keyS))
 	// note these are in alphabetical order
-	require.Equal(t, n2, keyS[0].Name)
-	require.Equal(t, n1, keyS[1].Name)
+	require.True(t, requireEqualNames(keyS, n1, n2))
 
 	key1, err := k2.GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key1)
-	key2, err := keyS[0].GetPubKey()
+	i := getN2Index(keyS, n2)
+	key2, err := keyS[i].GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key2)
 	require.Equal(t, key1, key2)
@@ -124,7 +153,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	keyS, err = kb.List()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(keyS))
+	require.Equal(t, 2, len(keyS))
 	_, err = kb.Key(n1)
 	require.Error(t, err)
 
@@ -143,14 +172,14 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.Equal(t, o1, k3.Name)
 	keyS, err = kb.List()
 	require.NoError(t, err)
-	require.Equal(t, 2, len(keyS))
+	require.Equal(t, 4, len(keyS))
 
 	// delete the offline key
 	err = kb.Delete(o1)
 	require.NoError(t, err)
 	keyS, err = kb.List()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(keyS))
+	require.Equal(t, 2, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
 	require.NoError(t, kb.Delete(n2))
@@ -468,6 +497,22 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 	require.Equal(t, "Invalid mnemonic", err.Error())
 }
 
+func getTwoIndices(records []*Record, n1, n2 string) (i, j int) {
+	for x, k := range records {
+		if k == nil {
+			continue
+		}
+		if k.Name == n1 {
+			i = x
+		}
+		if k.Name == n2 {
+			j = x
+		}
+	}
+
+	return
+}
+
 // TestInMemoryKeyManagement makes sure we can manipulate these keys well
 func TestInMemoryKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -512,14 +557,15 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	// list shows them in order
 	keyS, err := cstore.List()
 	require.NoError(t, err)
-	require.Equal(t, 2, len(keyS))
+	require.Equal(t, 4, len(keyS))
 	// note these are in alphabetical order
-	require.Equal(t, n2, keyS[0].Name)
-	require.Equal(t, n1, keyS[1].Name)
+	i, j := getTwoIndices(keyS, n1, n2)
+	require.Equal(t, n1, keyS[i].Name)
+	require.Equal(t, n2, keyS[j].Name)
 
 	key1, err := k2.GetPubKey()
 	require.NoError(t, err)
-	key2, err := keyS[0].GetPubKey()
+	key2, err := keyS[j].GetPubKey()
 	require.NoError(t, err)
 
 	require.True(t, key1.Equals(key2))
@@ -531,7 +577,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(keyS))
+	require.Equal(t, 2, len(keyS))
 	_, err = cstore.Key(n1)
 	require.Error(t, err)
 
@@ -550,14 +596,14 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.NotNil(t, k.GetOffline())
 	keyS, err = cstore.List()
 	require.NoError(t, err)
-	require.Equal(t, 2, len(keyS))
+	require.Equal(t, 4, len(keyS))
 
 	// delete the offline key
 	err = cstore.Delete(o1)
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(keyS))
+	require.Equal(t, 2, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
 	err = cstore.Delete(n2)
@@ -872,6 +918,9 @@ func ExampleNew() {
 	_, _, _ = cstore.NewMnemonic("Carl", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, sec)
 	records, _ := cstore.List()
 	for _, r := range records {
+		if r == nil {
+			continue
+		}
 		fmt.Println(r.Name)
 	}
 
@@ -905,6 +954,25 @@ func ExampleNew() {
 	// signed by Bob
 }
 
+func getIndices(list []*Record, uid1, uid2, uid3 string) (i, j, k int) {
+	for x, l := range list {
+		if l == nil {
+			continue
+		}
+
+		switch l.Name {
+		case uid1:
+			i = x
+		case uid2:
+			j = x
+		case uid3:
+			k = x
+		}
+	}
+
+	return
+}
+
 func TestAltKeyring_List(t *testing.T) {
 	dir := t.TempDir()
 	cdc := getCodec()
@@ -914,7 +982,7 @@ func TestAltKeyring_List(t *testing.T) {
 
 	list, err := kr.List()
 	require.NoError(t, err)
-	require.Empty(t, list)
+	require.Len(t, list, 0)
 
 	// Fails on creating unsupported pubKeyType
 	_, _, err = kr.NewMnemonic("failing", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, notSupportedAlgo{})
@@ -931,12 +999,15 @@ func TestAltKeyring_List(t *testing.T) {
 
 	list, err = kr.List()
 	require.NoError(t, err)
-	require.Len(t, list, 3)
+	require.Len(t, list, 6)
+
+	i, j, k := getIndices(list, uid1, uid2, uid3)
 
 	// Check they are in alphabetical order
-	require.Equal(t, uid2, list[0].Name)
-	require.Equal(t, uid3, list[1].Name)
-	require.Equal(t, uid1, list[2].Name)
+	require.Equal(t, uid1, list[i].Name)
+	require.Equal(t, uid2, list[j].Name)
+	require.Equal(t, uid3, list[k].Name)
+
 }
 
 func TestAltKeyring_NewAccount(t *testing.T) {
@@ -963,7 +1034,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 
 	list, err := kr.List()
 	require.NoError(t, err)
-	require.Len(t, list, 1)
+	require.Len(t, list, 2)
 }
 
 func TestAltKeyring_Get(t *testing.T) {
@@ -1007,7 +1078,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 
 	list, err := kr.List()
 	require.NoError(t, err)
-	require.Len(t, list, 1)
+	require.Len(t, list, 2)
 
 	err = kr.Delete(uid)
 	require.NoError(t, err)
@@ -1028,7 +1099,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 
 	list, err := kr.List()
 	require.NoError(t, err)
-	require.Len(t, list, 1)
+	require.Len(t, list, 2)
 
 	addr, err := mnemonic.GetAddress()
 	require.NoError(t, err)
@@ -1062,7 +1133,7 @@ func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 
 	list, err = kr.List()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(list))
+	require.Len(t, list, 2)
 }
 
 func TestAltKeyring_SaveMultisig(t *testing.T) {
@@ -1097,7 +1168,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 
 	list, err := kr.List()
 	require.NoError(t, err)
-	require.Len(t, list, 3)
+	require.Len(t, list, 6)
 }
 
 func TestAltKeyring_Sign(t *testing.T) {

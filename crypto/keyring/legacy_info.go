@@ -174,6 +174,17 @@ type LegacyMultiInfo struct {
 	PubKeys   []multisigPubKeyInfo `json:"pubkeys"`
 }
 
+// NewLegacyMultiInfo creates a new legacyMultiInfo instance
+func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (legacyInfo, error) {
+	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
+		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
+	}
+	return &LegacyMultiInfo{
+		Name:   name,
+		PubKey: pub,
+	}, nil
+}
+
 // GetType implements Info interface
 func (i LegacyMultiInfo) GetType() KeyType {
 	return TypeMulti

@@ -1,7 +1,6 @@
 package keyring
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -46,17 +45,6 @@ func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyTyp
 		PubKey: pub,
 		Algo:   algo,
 	}
-}
-
-// NewLegacyMultiInfo creates a new legacyMultiInfo instance
-func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (legacyInfo, error) {
-	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
-		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
-	}
-	return &LegacyMultiInfo{
-		Name:   name,
-		PubKey: pub,
-	}, nil
 }
 
 func TestMigrateLegacyLocalKey(t *testing.T) {

@@ -207,8 +207,8 @@ func TestQueryDelegation(t *testing.T) {
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
 	querier := keeper.NewQuerier(app.StakingKeeper, legacyQuerierCdc.LegacyAmino)
 
-	addrs := simapp.AddTestAddrs(app, ctx, 4, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
-	addrAcc1, addrAcc2 := addrs[2], addrs[3]
+	addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrAcc1, addrAcc2 := addrs[0], addrs[1]
 	addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 	pubKeys := simapp.CreateTestPubKeys(2)
@@ -304,6 +304,9 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationRes.Balance)
 
 	// Query Delegator Delegations
+	bz, errRes = cdc.MarshalJSON(queryParams)
+	require.NoError(t, errRes)
+
 	query = abci.RequestQuery{
 		Path: "/custom/staking/delegatorDelegations",
 		Data: bz,
@@ -315,7 +318,7 @@ func TestQueryDelegation(t *testing.T) {
 	var delegatorDelegations types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
 	require.NoError(t, errRes)
-	require.Len(t, delegatorDelegations, 2)
+	require.Len(t, delegatorDelegations, 1)
 	require.Equal(t, delegation.ValidatorAddress, delegatorDelegations[0].Delegation.ValidatorAddress)
 	require.Equal(t, delegation.DelegatorAddress, delegatorDelegations[0].Delegation.DelegatorAddress)
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegatorDelegations[0].Balance)
@@ -341,7 +344,7 @@ func TestQueryDelegation(t *testing.T) {
 	var delegationsRes types.DelegationResponses
 	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
 	require.NoError(t, errRes)
-	require.Len(t, delegatorDelegations, 2)
+	require.Len(t, delegatorDelegations, 1)
 	require.Equal(t, delegation.ValidatorAddress, delegationsRes[0].Delegation.ValidatorAddress)
 	require.Equal(t, delegation.DelegatorAddress, delegationsRes[0].Delegation.DelegatorAddress)
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), delegationsRes[0].Balance)

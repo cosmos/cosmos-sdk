@@ -452,10 +452,9 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 
 	testCases := []struct {
-		name         string
-		args         []string
-		expectErr    bool
-		expectErrStr string
+		name        string
+		args        []string
+		expectEmpty bool
 	}{
 		{
 			"fee event happy case",
@@ -464,7 +463,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, "",
+			false,
 		},
 		{
 			"no matching fee event",
@@ -473,7 +472,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String()),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
-			false, "",
+			true,
 		},
 	}
 
@@ -484,15 +483,16 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expectErrStr)
+			s.Require().NoError(err)
+
+			var result sdk.SearchTxsResult
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
+
+			if tc.expectEmpty {
+				s.Require().Equal(0, len(result.Txs))
 			} else {
-				var result sdk.SearchTxsResult
-				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
-				if len(result.Txs) != 0 {
-					s.Require().NotNil(result.Txs[0])
-				}
+				s.Require().NotEqual(0, len(result.Txs))
+				s.Require().NotNil(result.Txs[0])
 			}
 		})
 	}

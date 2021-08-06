@@ -94,8 +94,6 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 
 		if !clientCtx.Offline {
 			txFactory = txFactory.WithAccountNumber(0).WithSequence(0)
-		} else {
-			txFactory = txFactory.WithAccountNumber(txFactory.AccountNumber()).WithSequence(txFactory.Sequence())
 		}
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {

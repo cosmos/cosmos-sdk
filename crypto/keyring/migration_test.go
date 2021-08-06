@@ -1,6 +1,7 @@
 package keyring
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -17,6 +18,46 @@ import (
 )
 
 const n1 = "cosmos"
+
+// newLegacyLocalInfo creates a new legacyLocalInfo instance
+func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) legacyInfo {
+	return &legacyLocalInfo{
+		Name:         name,
+		PubKey:       pub,
+		PrivKeyArmor: privArmor,
+		Algo:         algo,
+	}
+}
+
+// newLegacyOfflineInfo creates a new legacyLedgerInfo instance
+func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) legacyInfo {
+	return &legacyLedgerInfo{
+		Name:   name,
+		PubKey: pub,
+		Path:   path,
+		Algo:   algo,
+	}
+}
+
+// newLegacyOfflineInfo creates a new legacyOfflineInfo instance
+func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) legacyInfo {
+	return &legacyOfflineInfo{
+		Name:   name,
+		PubKey: pub,
+		Algo:   algo,
+	}
+}
+
+// NewLegacyMultiInfo creates a new legacyMultiInfo instance
+func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (legacyInfo, error) {
+	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
+		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
+	}
+	return &LegacyMultiInfo{
+		Name:   name,
+		PubKey: pub,
+	}, nil
+}
 
 func TestMigrateLegacyLocalKey(t *testing.T) {
 	//saves legacyLocalInfo to keyring

@@ -4,8 +4,8 @@ package keyring
 
 import (
 	"bytes"
-	"testing"
 	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 

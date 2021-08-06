@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v0.1 2021-08-06
 
+This is the first release and we started this changelog on 2021-07-01.
+
 ## Features
 
 * [\#9652](https://github.com/cosmos/cosmos-sdk/pull/9652) Add backup option for cosmovisor.

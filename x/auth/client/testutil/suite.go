@@ -122,10 +122,10 @@ func (s *IntegrationTestSuite) TestCLISignGenOnlyWithKeyName() {
 
 	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
 	args := []string{
-		keyName, // from
+		keyName, // from keyname
 		val2.Address.String(),
 		sendTokens.String(),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break the if keyname with --generate-only
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break if we use keyname with --generate-only flag
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 	}
@@ -151,6 +151,18 @@ func (s *IntegrationTestSuite) TestCLISignGenOnlyWithKeyName() {
 				opFile.Name(),
 				fmt.Sprintf("--%s=true", flags.FlagOffline),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, account.GetAccountNumber()),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, account.GetSequence()),
+			},
+			false,
+			"",
+		},
+		{
+			"offline mode with account-number, sequence and address key (valid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, account.GetAccountNumber()),
 				fmt.Sprintf("--%s=%d", flags.FlagSequence, account.GetSequence()),
 			},

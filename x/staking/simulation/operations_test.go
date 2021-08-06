@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -174,7 +173,6 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	app, ctx := createTestApp(t, false)
 	genesisDelegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, genesisDelegations, 1)
-	fmt.Println(genesisDelegations[0].ValidatorAddress)
 
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
@@ -208,7 +206,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	op := simulation.SimulateMsgUndelegate(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	if !operationMsg.OK {
-		// expect error validator key is nil for genesis validator
+		// expect error genesis validator private key is nil
 		require.Equal(t, operationMsg.Comment, "account private key is nil")
 	} else {
 		require.NoError(t, err)
@@ -238,16 +236,16 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	})
 
 	// withdraw all delegator rewards
-	dels := app.StakingKeeper.GetAllDelegations(ctx)
-	for _, delegation := range dels {
-		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
-		require.NoError(t, err)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Equal(t, len(delegations), 1)
+	delegation := delegations[0]
+	valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+	require.NoError(t, err)
 
-		delAddr, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-		require.NoError(t, err)
+	delAddr, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+	require.NoError(t, err)
 
-		_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
-	}
+	_, _ = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
 
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
@@ -266,7 +264,7 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 
 	// setup accounts[2] as delegator
 	delegator := accounts[2]
-	delegation := types.NewDelegation(delegator.Address, validator1.GetOperator(), issuedShares)
+	delegation = types.NewDelegation(delegator.Address, validator1.GetOperator(), issuedShares)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator1.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 

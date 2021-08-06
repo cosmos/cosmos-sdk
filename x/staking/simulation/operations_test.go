@@ -1,6 +1,7 @@
 package simulation_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -114,26 +115,34 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 	// execute operation
 	op := simulation.SimulateMsgEditValidator(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.NoError(t, err)
+	if !operationMsg.OK {
+		// expect error validator address not a simulation account
+		require.Equal(t, operationMsg.Comment, "unable to find account")
+	} else {
+		require.NoError(t, err)
 
-	var msg types.MsgEditValidator
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		var msg types.MsgEditValidator
+		types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	require.True(t, operationMsg.OK)
-	require.Equal(t, "0.280623462081924936", msg.CommissionRate.String())
-	require.Equal(t, "xKGLwQvuyN", msg.Description.Moniker)
-	require.Equal(t, "SlcxgdXhhu", msg.Description.Identity)
-	require.Equal(t, "WeLrQKjLxz", msg.Description.Website)
-	require.Equal(t, "rBqDOTtGTO", msg.Description.SecurityContact)
-	require.Equal(t, types.TypeMsgEditValidator, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
-	require.Len(t, futureOperations, 0)
+		require.True(t, operationMsg.OK)
+		require.Equal(t, "0.280623462081924936", msg.CommissionRate.String())
+		require.Equal(t, "xKGLwQvuyN", msg.Description.Moniker)
+		require.Equal(t, "SlcxgdXhhu", msg.Description.Identity)
+		require.Equal(t, "WeLrQKjLxz", msg.Description.Website)
+		require.Equal(t, "rBqDOTtGTO", msg.Description.SecurityContact)
+		require.Equal(t, types.TypeMsgEditValidator, msg.Type())
+		require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+		require.Len(t, futureOperations, 0)
+	}
 }
 
 // TestSimulateMsgDelegate tests the normal scenario of a valid message of type TypeMsgDelegate.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgDelegate(t *testing.T) {
 	app, ctx := createTestApp(t, false)
+	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
+	require.Len(t, genesisValidators, 1)
+
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -141,13 +150,6 @@ func TestSimulateMsgDelegate(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
-
-	// setup accounts[0] as validator
-	validator0 := getTestingValidator0(t, app, ctx, accounts)
-	setupValidatorRewards(app, ctx, validator0.GetOperator())
-
-	// begin a new block
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
 	op := simulation.SimulateMsgDelegate(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
@@ -162,7 +164,7 @@ func TestSimulateMsgDelegate(t *testing.T) {
 	require.Equal(t, "98100858108421259236", msg.Amount.Amount.String())
 	require.Equal(t, "stake", msg.Amount.Denom)
 	require.Equal(t, types.TypeMsgDelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+	require.Equal(t, genesisValidators[0].OperatorAddress, msg.ValidatorAddress)
 	require.Len(t, futureOperations, 0)
 }
 
@@ -170,6 +172,10 @@ func TestSimulateMsgDelegate(t *testing.T) {
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgUndelegate(t *testing.T) {
 	app, ctx := createTestApp(t, false)
+	genesisDelegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, genesisDelegations, 1)
+	fmt.Println(genesisDelegations[0].ValidatorAddress)
+
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -189,6 +195,10 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
+	delegation = types.NewDelegation(genesisDelegations[0].GetDelegatorAddr(), validator0.GetOperator(), issuedShares)
+	app.StakingKeeper.SetDelegation(ctx, delegation)
+	app.DistrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+
 	setupValidatorRewards(app, ctx, validator0.GetOperator())
 
 	// begin a new block
@@ -197,25 +207,32 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 	// execute operation
 	op := simulation.SimulateMsgUndelegate(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.NoError(t, err)
+	if !operationMsg.OK {
+		// expect error validator key is nil for genesis validator
+		require.Equal(t, operationMsg.Comment, "account private key is nil")
+	} else {
+		require.NoError(t, err)
 
-	var msg types.MsgUndelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		var msg types.MsgUndelegate
+		types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	require.True(t, operationMsg.OK)
-	require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
-	require.Equal(t, "280623462081924937", msg.Amount.Amount.String())
-	require.Equal(t, "stake", msg.Amount.Denom)
-	require.Equal(t, types.TypeMsgUndelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
-	require.Len(t, futureOperations, 0)
-
+		require.True(t, operationMsg.OK)
+		require.Equal(t, "cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
+		require.Equal(t, "280623462081924937", msg.Amount.Amount.String())
+		require.Equal(t, "stake", msg.Amount.Denom)
+		require.Equal(t, types.TypeMsgUndelegate, msg.Type())
+		require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
+		require.Len(t, futureOperations, 0)
+	}
 }
 
 // TestSimulateMsgBeginRedelegate tests the normal scenario of a valid message of type TypeMsgBeginRedelegate.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	app, ctx := createTestApp(t, false)
+	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
+	require.Len(t, genesisValidators, 1)
+
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -246,19 +263,24 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	// execute operation
 	op := simulation.SimulateMsgBeginRedelegate(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.NoError(t, err)
+	if !operationMsg.OK {
+		// expect error validator key is nil for genesis validator
+		require.Equal(t, operationMsg.Comment, "account private key is nil")
+	} else {
+		require.NoError(t, err)
 
-	var msg types.MsgBeginRedelegate
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		var msg types.MsgBeginRedelegate
+		types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	require.True(t, operationMsg.OK)
-	require.Equal(t, "cosmos12gwd9jchc69wck8dhstxgwz3z8qs8yv67ps8mu", msg.DelegatorAddress)
-	require.Equal(t, "489348507626016866", msg.Amount.Amount.String())
-	require.Equal(t, "stake", msg.Amount.Denom)
-	require.Equal(t, types.TypeMsgBeginRedelegate, msg.Type())
-	require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.ValidatorDstAddress)
-	require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorSrcAddress)
-	require.Len(t, futureOperations, 0)
+		require.True(t, operationMsg.OK)
+		require.Equal(t, "cosmos12gwd9jchc69wck8dhstxgwz3z8qs8yv67ps8mu", msg.DelegatorAddress)
+		require.Equal(t, "489348507626016866", msg.Amount.Amount.String())
+		require.Equal(t, "stake", msg.Amount.Denom)
+		require.Equal(t, types.TypeMsgBeginRedelegate, msg.Type())
+		require.Equal(t, "cosmosvaloper1h6a7shta7jyc72hyznkys683z98z36e0zdk8g9", msg.ValidatorDstAddress)
+		require.Equal(t, "cosmosvaloper17s94pzwhsn4ah25tec27w70n65h5t2scgxzkv2", msg.ValidatorSrcAddress)
+		require.Len(t, futureOperations, 0)
+	}
 
 }
 

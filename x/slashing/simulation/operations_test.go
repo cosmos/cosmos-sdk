@@ -92,15 +92,20 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	// execute operation
 	op := simulation.SimulateMsgUnjail(app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-	require.NoError(t, err)
+	if !operationMsg.OK {
+		// expect error validator address not a simulation account
+		require.Equal(t, operationMsg.Comment, "unable to find account")
+	} else {
+		require.NoError(t, err)
 
-	var msg types.MsgUnjail
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		var msg types.MsgUnjail
+		types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
-	require.True(t, operationMsg.OK)
-	require.Equal(t, types.TypeMsgUnjail, msg.Type())
-	require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddr)
-	require.Len(t, futureOperations, 0)
+		require.True(t, operationMsg.OK)
+		require.Equal(t, types.TypeMsgUnjail, msg.Type())
+		require.Equal(t, "cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddr)
+		require.Len(t, futureOperations, 0)
+	}
 }
 
 // returns context and an app with updated mint keeper

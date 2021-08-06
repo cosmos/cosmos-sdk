@@ -53,6 +53,9 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err != nil || !needsUpdate {
 		return false, err
 	}
+	if err := doBackup(cfg); err != nil {
+		return false, err
+	}
 
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
 }

@@ -30,6 +30,7 @@ type Config struct {
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
 	PollInterval          time.Duration
+	UnsafeSkipBackup      bool
 
 	// currently running upgrade
 	currentUpgrade UpgradeInfo
@@ -127,6 +128,8 @@ func GetConfigFromEnv() (*Config, error) {
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond
 	}
+
+	cfg.UnsafeSkipBackup = os.Getenv("UNSAFE_SKIP_BACKUP") == "true"
 
 	if err := cfg.validate(); err != nil {
 		return nil, err

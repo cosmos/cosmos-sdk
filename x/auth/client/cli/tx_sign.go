@@ -92,6 +92,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
+
 		if !clientCtx.Offline {
 			seqValue = 0
 			txFactory = txFactory.WithAccountNumber(0)

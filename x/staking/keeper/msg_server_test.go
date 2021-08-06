@@ -48,6 +48,6 @@ func TestCreateValidatorWithLessThanMinCommission(t *testing.T) {
 	sh := staking.NewHandler(app.StakingKeeper)
 	_, err = sh(ctx, msg1)
 	require.NoError(t, err)
-	_, err = sh(ctx.WithBlockHeight(700000), msg2)
+	_, err = sh(ctx.WithBlockHeight(712001), msg2)
 	require.Error(t, err)
 }

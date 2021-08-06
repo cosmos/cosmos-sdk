@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Client-Breaking Changes
+
+* [\#9859](https://github.com/cosmos/cosmos-sdk/pull/9859) The `default` pruning strategy now keeps the last 362880 blocks instead of 100. 362880 equates to roughly enough blocks to cover the entire unbonding period assuming a 21 day unbonding period and 5s block time.
+
 ## [v0.43.0-rc3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc3) - 2021-08-05
 
 ### Bug Fixes
@@ -55,18 +59,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-<<<<<<< HEAD
 * (cli) [\#9717](https://github.com/cosmos/cosmos-sdk/pull/9717) Added CLI flag `--output json/text` to `tx` cli commands.
 
 ### Client-Breaking Changes
 
 * [\#9785](https://github.com/cosmos/cosmos-sdk/issues/9785) Missing coin denomination in logs
-=======
-* [\#9859](https://github.com/cosmos/cosmos-sdk/pull/9859) The `default` pruning strategy now keeps the last 362880 blocks instead of 100. 362880 equates to roughly enough blocks to cover the entire unbonding period assuming a 21 day unbonding period and 5s block time.
-* [\#9594](https://github.com/cosmos/cosmos-sdk/pull/9594) Remove legacy REST API. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
-* [\#9781](https://github.com/cosmos/cosmos-sdk/pull/9781) Improve`withdraw-all-rewards` UX when broadcast mode `async` or `async` is used.
-* [\#9785](https://github.com/cosmos/cosmos-sdk/issues/9785) Missing coin denomination in logs 
->>>>>>> 703158955 (chore: add missing changelog entry from #9859 (#9867))
 
 ### CLI Breaking Changes
 

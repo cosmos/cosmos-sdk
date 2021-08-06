@@ -109,7 +109,7 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	s.Require().EqualError(err, "signatures validation failed")
 }
 
-func (s *IntegrationTestSuite) TestCLISignGenOnlyWithKeyName() {
+func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 

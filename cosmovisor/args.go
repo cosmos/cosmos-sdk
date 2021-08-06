@@ -24,6 +24,7 @@ type Config struct {
 	AllowDownloadBinaries bool
 	RestartAfterUpgrade   bool
 	LogBufferSize         int
+	UnsafeSkipBackup      bool
 }
 
 // Root returns the root directory where all info lives
@@ -112,6 +113,8 @@ func GetConfigFromEnv() (*Config, error) {
 	} else {
 		cfg.LogBufferSize = bufio.MaxScanTokenSize
 	}
+
+	cfg.UnsafeSkipBackup = os.Getenv("UNSAFE_SKIP_BACKUP") == "true"
 
 	if err := cfg.validate(); err != nil {
 		return nil, err

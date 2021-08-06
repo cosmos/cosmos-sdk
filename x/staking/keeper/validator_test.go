@@ -39,6 +39,14 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
 
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	for _, d := range delegations {
+		_, err := app.StakingKeeper.Undelegate(ctx, d.GetDelegatorAddr(), d.GetValidatorAddr(), d.Shares)
+		require.NoError(t, err)
+		app.StakingKeeper.CompleteUnbonding(ctx, d.GetDelegatorAddr(), d.GetValidatorAddr())
+	}
+	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+
 	return app, ctx, addrDels, addrVals
 }
 
@@ -88,11 +96,11 @@ func TestSetValidator(t *testing.T) {
 	require.True(t, found)
 
 	resVals := app.StakingKeeper.GetLastValidators(ctx)
-	require.Equal(t, 2, len(resVals))
-	assert.True(ValEq(t, validator, resVals[1]))
+	require.Equal(t, 1, len(resVals))
+	assert.True(ValEq(t, validator, resVals[0]))
 
 	resVals = app.StakingKeeper.GetBondedValidatorsByPower(ctx)
-	require.Equal(t, 2, len(resVals))
+	require.Equal(t, 1, len(resVals))
 	require.True(ValEq(t, validator, resVals[0]))
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 2)
@@ -264,7 +272,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.Zero(t, len(resVals))
 
 	resVals = app.StakingKeeper.GetValidators(ctx, 2)
-	require.Zero(t, len(resVals))
+	require.Len(t, resVals, 1)
 
 	// set and retrieve a record
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
@@ -339,7 +347,6 @@ func TestValidatorBasics(t *testing.T) {
 
 // test how the validators are sorted, tests GetBondedValidatorsByPower
 func TestGetValidatorSortingUnmixed(t *testing.T) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromUint64(1000000)
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// initialize some validators into the state

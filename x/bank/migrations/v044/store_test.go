@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v043 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v043"
 	v044 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v044"
+	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -36,6 +37,14 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	require.NoError(t, v044.MigrateStore(ctx, bankKey, encCfg.Codec))
+
+	for _, b := range balances {
+		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+		bz := addrPrefixStore.Get([]byte(b.Denom))
+		var expected sdk.Int
+		require.NoError(t, expected.Unmarshal(bz))
+		require.Equal(t, expected, b.Amount)
+	}
 
 	for _, b := range balances {
 		denomPrefixStore := prefix.NewStore(store, v044.CreateAddressDenomPrefix(b.Denom))

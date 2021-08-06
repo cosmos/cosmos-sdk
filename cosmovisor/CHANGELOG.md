@@ -37,7 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## v0.1 2021-08-06
 
-This is the first release and we started this changelog on 2021-07-01.
+This is the first release and we started this changelog on 2021-07-01. See the (README)[https://github.com/cosmos/cosmos-sdk/blob/release/cosmovisor/v0.1.x/cosmovisor/CHANGELOG.md] file for the full list of features.
 
 ## Features
 

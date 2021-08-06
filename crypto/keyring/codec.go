@@ -12,7 +12,7 @@ func init() {
 
 // RegisterLegacyAminoCodec registers concrete types and interfaces on the given codec.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*legacyInfo)(nil), nil)
+	cdc.RegisterInterface((*LegacyInfo)(nil), nil)
 	cdc.RegisterConcrete(hd.BIP44Params{}, "crypto/keys/hd/BIP44Params", nil)
 	cdc.RegisterConcrete(legacyLocalInfo{}, "crypto/keys/localInfo", nil)
 	cdc.RegisterConcrete(legacyLedgerInfo{}, "crypto/keys/ledgerInfo", nil)

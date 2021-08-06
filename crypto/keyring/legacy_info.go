@@ -12,8 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Info is the publicly exposed information about a keypair
-type legacyInfo interface {
+// LegacyInfo is the publicly exposed information about a keypair
+type LegacyInfo interface {
 	// Human-readable type for key listing
 	GetType() KeyType
 	// Name of the key
@@ -29,10 +29,10 @@ type legacyInfo interface {
 }
 
 var (
-	_ legacyInfo = &legacyLocalInfo{}
-	_ legacyInfo = &legacyLedgerInfo{}
-	_ legacyInfo = &legacyOfflineInfo{}
-	_ legacyInfo = &LegacyMultiInfo{}
+	_ LegacyInfo = &legacyLocalInfo{}
+	_ LegacyInfo = &legacyLedgerInfo{}
+	_ LegacyInfo = &legacyOfflineInfo{}
+	_ LegacyInfo = &LegacyMultiInfo{}
 )
 
 // legacyLocalInfo is the public information about a locally stored key
@@ -175,7 +175,7 @@ type LegacyMultiInfo struct {
 }
 
 // NewLegacyMultiInfo creates a new legacyMultiInfo instance
-func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (legacyInfo, error) {
+func NewLegacyMultiInfo(name string, pub cryptotypes.PubKey) (LegacyInfo, error) {
 	if _, ok := pub.(*multisig.LegacyAminoPubKey); !ok {
 		return nil, fmt.Errorf("MultiInfo supports only multisig.LegacyAminoPubKey, got  %T", pub)
 	}
@@ -223,12 +223,12 @@ func (i LegacyMultiInfo) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error
 }
 
 // encoding info
-func MarshalInfo(i legacyInfo) []byte {
+func MarshalInfo(i LegacyInfo) []byte {
 	return legacy.Cdc.MustMarshalLengthPrefixed(i)
 }
 
 // decoding info
-func unMarshalLegacyInfo(bz []byte) (info legacyInfo, err error) {
+func unMarshalLegacyInfo(bz []byte) (info LegacyInfo, err error) {
 	err = legacy.Cdc.UnmarshalLengthPrefixed(bz, &info)
 	if err != nil {
 		return nil, err
@@ -252,8 +252,8 @@ func unMarshalLegacyInfo(bz []byte) (info legacyInfo, err error) {
 	return
 }
 
-// exportPrivateKeyFromLegacyInfo exports a private key from legacyInfo
-func exportPrivateKeyFromLegacyInfo(info legacyInfo) (cryptotypes.PrivKey, error) {
+// exportPrivateKeyFromLegacyInfo exports a private key from LegacyInfo
+func exportPrivateKeyFromLegacyInfo(info LegacyInfo) (cryptotypes.PrivKey, error) {
 
 	switch linfo := info.(type) {
 	case legacyLocalInfo:

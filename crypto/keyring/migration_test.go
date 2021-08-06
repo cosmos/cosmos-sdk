@@ -19,7 +19,7 @@ import (
 const n1 = "cosmos"
 
 // newLegacyLocalInfo creates a new legacyLocalInfo instance
-func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) legacyInfo {
+func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) LegacyInfo {
 	return &legacyLocalInfo{
 		Name:         name,
 		PubKey:       pub,
@@ -29,7 +29,7 @@ func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, a
 }
 
 // newLegacyOfflineInfo creates a new legacyLedgerInfo instance
-func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) legacyInfo {
+func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Params, algo hd.PubKeyType) LegacyInfo {
 	return &legacyLedgerInfo{
 		Name:   name,
 		PubKey: pub,
@@ -39,7 +39,7 @@ func newLegacyLedgerInfo(name string, pub cryptotypes.PubKey, path hd.BIP44Param
 }
 
 // newLegacyOfflineInfo creates a new legacyOfflineInfo instance
-func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) legacyInfo {
+func newLegacyOfflineInfo(name string, pub cryptotypes.PubKey, algo hd.PubKeyType) LegacyInfo {
 	return &legacyOfflineInfo{
 		Name:   name,
 		PubKey: pub,

@@ -899,13 +899,13 @@ func (ks keystore) migrate(key string) (bool, error) {
 		return migrated, nil
 	}
 
-	legacyInfo, err := unMarshalLegacyInfo(item.Data)
+	LegacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
 		return migrated, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 	}
 
 	// 4.serialize info using proto
-	k, err := ks.convertFromLegacyInfo(legacyInfo)
+	k, err := ks.convertFromLegacyInfo(LegacyInfo)
 	if err != nil {
 		return migrated, fmt.Errorf("convertFromLegacyInfo, err - %s", err)
 	}
@@ -945,7 +945,7 @@ func (ks keystore) SetItem(item keyring.Item) error {
 	return ks.db.Set(item)
 }
 
-func (ks keystore) convertFromLegacyInfo(info legacyInfo) (*Record, error) {
+func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	if info == nil {
 		return nil, errors.New("unable to convert LegacyInfo to Record cause info is nil")
 	}

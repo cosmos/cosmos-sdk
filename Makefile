@@ -329,8 +329,8 @@ benchmark:
 ###############################################################################
 
 markdownLintImage=tmknom/markdownlint
-containerMarkdownLint=$(PROJECT_NAME)-sdk-markdownlint
-containerMarkdownLintFix=$(PROJECT_NAME)-sdk-markdownlint-fix
+containerMarkdownLint=$(PROJECT_NAME)-markdownlint
+containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
 
 lint:
 	golangci-lint run --out-format=tab
@@ -380,10 +380,10 @@ devdoc-update:
 
 protoVer=v0.2
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
-containerProtoGen=$(PROJECT_NAME)-sdk-proto-gen-$(protoVer)
-containerProtoGenAny=$(PROJECT_NAME)-sdk-proto-gen-any-$(protoVer)
-containerProtoGenSwagger=$(PROJECT_NAME)-sdk-proto-gen-swagger-$(protoVer)
-containerProtoFmt=$(PROJECT_NAME)-sdk-proto-fmt-$(protoVer)
+containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
+containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
+containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
+containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
 
 proto-all: proto-format proto-lint proto-gen
 

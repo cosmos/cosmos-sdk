@@ -2,15 +2,21 @@ package cosmovisor
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
+	"time"
+
+	"github.com/otiai10/copy"
 )
 
 // LaunchProcess runs a subprocess and returns when the subprocess exits,
@@ -70,10 +76,57 @@ func LaunchProcess(cfg *Config, args []string, stdout, stderr io.Writer) (bool, 
 	}
 
 	if upgradeInfo != nil {
+		if err := doBackup(cfg); err != nil {
+			return false, err
+		}
+
 		return true, DoUpgrade(cfg, upgradeInfo)
 	}
 
 	return false, nil
+}
+
+func doBackup(cfg *Config) error {
+	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
+	if !cfg.UnsafeSkipBackup {
+		// check if upgrade-info.json is not empty.
+		var uInfo UpgradeInfo
+		upgradeInfoFile, err := ioutil.ReadFile(filepath.Join(cfg.Home, "data", "upgrade-info.json"))
+		if err != nil {
+			return fmt.Errorf("error while reading upgrade-info.json: %w", err)
+		}
+
+		err = json.Unmarshal(upgradeInfoFile, &uInfo)
+		if err != nil {
+			return err
+		}
+
+		if uInfo.Name == "" {
+			return fmt.Errorf("upgrade-info.json is empty")
+		}
+
+		// a destination directory, Format YYYY-MM-DD
+		st := time.Now()
+		stStr := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
+		dst := filepath.Join(cfg.Home, fmt.Sprintf("data"+"-backup-%s", stStr))
+
+		fmt.Printf("starting to take backup of data directory at time %s", st)
+
+		// copy the $DAEMON_HOME/data to a backup dir
+		err = copy.Copy(filepath.Join(cfg.Home, "data"), dst)
+
+		if err != nil {
+			return fmt.Errorf("error while taking data backup: %w", err)
+		}
+
+		// backup is done, lets check endtime to calculate total time taken for backup process
+		et := time.Now()
+		timeTaken := et.Sub(st)
+		fmt.Printf("backup saved at location: %s, completed at time: %s\n"+
+			"time taken to complete the backup: %s", dst, et, timeTaken)
+	}
+
+	return nil
 }
 
 // WaitResult is used to wrap feedback on cmd state with some mutex logic.

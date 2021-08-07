@@ -246,6 +246,8 @@ message Fee {
 
 // Tip is the tip used for meta-transactions.
 message Tip {
-  string coins  = 1;
+  // amount is the amount of the tip
+  repeated cosmos.base.v1beta1.Coin amount  = 1;
+  // tipper is the address of the account paying for the tip
   string tipper = 2;
 }

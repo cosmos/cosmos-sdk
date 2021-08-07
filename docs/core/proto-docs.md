@@ -8743,8 +8743,8 @@ Tip is the tip used for meta-transactions.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `coins` | [string](#string) |  |  |
-| `tipper` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the amount of the tip |
+| `tipper` | [string](#string) |  | tipper is the address of the account paying for the tip |
 
 
 

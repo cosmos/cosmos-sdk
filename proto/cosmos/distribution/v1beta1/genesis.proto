@@ -33,7 +33,7 @@ message ValidatorOutstandingRewardsRecord {
   // outstanding_rewards represents the oustanding rewards of a validator.
   repeated cosmos.base.v1beta1.DecCoin outstanding_rewards = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false,
+    (gogoproto.nullable)     = false
   ];
 }
 
@@ -47,8 +47,7 @@ message ValidatorAccumulatedCommissionRecord {
   string validator_address = 1;
 
   // accumulated is the accumulated commission of a validator.
-  ValidatorAccumulatedCommission accumulated = 2
-      [(gogoproto.nullable) = false];
+  ValidatorAccumulatedCommission accumulated = 2 [(gogoproto.nullable) = false];
 }
 
 // ValidatorHistoricalRewardsRecord is used for import / export via genesis
@@ -91,8 +90,7 @@ message DelegatorStartingInfoRecord {
   string validator_address = 2;
 
   // starting_info defines the starting info of a delegator.
-  DelegatorStartingInfo starting_info = 3
-      [(gogoproto.nullable) = false];
+  DelegatorStartingInfo starting_info = 3 [(gogoproto.nullable) = false];
 }
 
 // ValidatorSlashEventRecord is used for import / export via genesis json.
@@ -122,33 +120,26 @@ message GenesisState {
   FeePool fee_pool = 2 [(gogoproto.nullable) = false];
 
   // fee_pool defines the delegator withdraw infos at genesis.
-  repeated DelegatorWithdrawInfo delegator_withdraw_infos = 3
-      [(gogoproto.nullable) = false];
+  repeated DelegatorWithdrawInfo delegator_withdraw_infos = 3 [(gogoproto.nullable) = false];
 
   // fee_pool defines the previous proposer at genesis.
   string previous_proposer = 4;
 
   // fee_pool defines the outstanding rewards of all validators at genesis.
-  repeated ValidatorOutstandingRewardsRecord outstanding_rewards = 5
-      [(gogoproto.nullable) = false];
+  repeated ValidatorOutstandingRewardsRecord outstanding_rewards = 5 [(gogoproto.nullable) = false];
 
   // fee_pool defines the accumulated commisions of all validators at genesis.
-  repeated ValidatorAccumulatedCommissionRecord validator_accumulated_commissions = 6
-      [(gogoproto.nullable) = false];
+  repeated ValidatorAccumulatedCommissionRecord validator_accumulated_commissions = 6 [(gogoproto.nullable) = false];
 
   // fee_pool defines the historical rewards of all validators at genesis.
-  repeated ValidatorHistoricalRewardsRecord validator_historical_rewards = 7
-      [(gogoproto.nullable) = false];
+  repeated ValidatorHistoricalRewardsRecord validator_historical_rewards = 7 [(gogoproto.nullable) = false];
 
   // fee_pool defines the current rewards of all validators at genesis.
-  repeated ValidatorCurrentRewardsRecord validator_current_rewards = 8
-      [(gogoproto.nullable) = false];
+  repeated ValidatorCurrentRewardsRecord validator_current_rewards = 8 [(gogoproto.nullable) = false];
 
   // fee_pool defines the delegator starting infos at genesis.
-  repeated DelegatorStartingInfoRecord delegator_starting_infos = 9
-      [(gogoproto.nullable) = false];
+  repeated DelegatorStartingInfoRecord delegator_starting_infos = 9 [(gogoproto.nullable) = false];
 
   // fee_pool defines the validator slash events at genesis.
-  repeated ValidatorSlashEventRecord validator_slash_events = 10
-      [(gogoproto.nullable) = false];
+  repeated ValidatorSlashEventRecord validator_slash_events = 10 [(gogoproto.nullable) = false];
 }

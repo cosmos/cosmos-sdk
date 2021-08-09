@@ -33,10 +33,8 @@ message MsgSubmitProposal {
   option (gogoproto.goproto_getters)  = false;
 
   google.protobuf.Any content                       = 1 [(cosmos_proto.accepts_interface) = "Content"];
-  repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated cosmos.base.v1beta1.Coin initial_deposit = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   string proposer = 3;
 }
 
@@ -82,8 +80,8 @@ message MsgDeposit {
   option (gogoproto.stringer)         = false;
   option (gogoproto.goproto_getters)  = false;
 
-  uint64   proposal_id = 1 [(gogoproto.jsontag) = "proposal_id"];
-  string   depositor   = 2;
+  uint64   proposal_id                     = 1 [(gogoproto.jsontag) = "proposal_id"];
+  string   depositor                       = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

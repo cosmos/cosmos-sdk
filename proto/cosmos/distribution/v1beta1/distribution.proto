@@ -10,18 +10,12 @@ import "cosmos/base/v1beta1/coin.proto";
 // Params defines the set of params for the distribution module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  string community_tax                = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  string base_proposer_reward = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  string bonus_proposer_reward = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
+  string community_tax                = 1
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string base_proposer_reward = 2
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string bonus_proposer_reward = 3
+      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   bool withdraw_addr_enabled = 4;
 }
 
@@ -38,10 +32,8 @@ message Params {
 //  read that record)
 //  + one per validator for the zeroeth period, set on initialization
 message ValidatorHistoricalRewards {
-  repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
-  ];
+  repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
   uint32 reference_count = 2;
 }
 
@@ -64,10 +56,8 @@ message ValidatorAccumulatedCommission {
 // ValidatorOutstandingRewards represents outstanding (un-withdrawn) rewards
 // for a validator inexpensive to track, allows simple sanity checks.
 message ValidatorOutstandingRewards {
-  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false
-  ];
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1
+      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
 }
 
 // ValidatorSlashEvent represents a validator slash event.
@@ -82,15 +72,14 @@ message ValidatorSlashEvent {
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 message ValidatorSlashEvents {
   option (gogoproto.goproto_stringer)                 = false;
-  repeated ValidatorSlashEvent validator_slash_events = 1
-      [(gogoproto.nullable) = false];
+  repeated ValidatorSlashEvent validator_slash_events = 1 [(gogoproto.nullable) = false];
 }
 
 // FeePool is the global fee pool for distribution.
 message FeePool {
   repeated cosmos.base.v1beta1.DecCoin community_pool = 1 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
 }
 
@@ -117,10 +106,7 @@ message CommunityPoolSpendProposal {
 // thus sdk.Dec is used.
 message DelegatorStartingInfo {
   uint64 previous_period = 1;
-  string stake           = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
+  string stake  = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   uint64 height = 3 [(gogoproto.jsontag) = "creation_height"];
 }
 

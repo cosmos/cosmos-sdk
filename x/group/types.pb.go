@@ -567,9 +567,9 @@ type Proposal struct {
 	Result Proposal_Result `protobuf:"varint,9,opt,name=result,proto3,enum=cosmos.group.v1beta1.Proposal_Result" json:"result,omitempty"`
 	// vote_state contains the sums of all weighted votes for this proposal.
 	VoteState Tally `protobuf:"bytes,10,opt,name=vote_state,json=voteState,proto3" json:"vote_state"`
-	// timeout is the timestamp of the block where the proposal execution times out. Header times of the votes and execution messages
-	// must be before this end time to be included in the election. After the timeout timestamp the proposal can not be
-	// executed anymore and should be considered pending delete.
+	// timeout is the timestamp of the block where the proposal execution times out. Header times of the votes and
+	// execution messages must be before this end time to be included in the election. After the timeout timestamp the
+	// proposal can not be executed anymore and should be considered pending delete.
 	Timeout time.Time `protobuf:"bytes,11,opt,name=timeout,proto3,stdtime" json:"timeout"`
 	// executor_result is the final result based on the votes and election rule. Initial value is NotRun.
 	ExecutorResult Proposal_ExecutorResult `protobuf:"varint,12,opt,name=executor_result,json=executorResult,proto3,enum=cosmos.group.v1beta1.Proposal_ExecutorResult" json:"executor_result,omitempty"`

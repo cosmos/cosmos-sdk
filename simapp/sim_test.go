@@ -153,7 +153,6 @@ func TestAppImportExport(t *testing.T) {
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
 
-	// Skipping simulation as all validators have been unbonded
 	defer func() {
 		if r := recover(); r != nil {
 			err := fmt.Sprintf("%v", r)

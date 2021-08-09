@@ -88,12 +88,8 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-<<<<<<< HEAD
-	return RunAddCmd(clientCtx, cmd, args, buf)
-=======
 	buf := bufio.NewReader(clientCtx.Input)
-	return runAddCmd(clientCtx, cmd, args, buf)
->>>>>>> f479b515a (fix: file keyring fails to add/import/export keys when input is not stdin (fix #9566) (#9821))
+	return RunAddCmd(clientCtx, cmd, args, buf)
 }
 
 /*

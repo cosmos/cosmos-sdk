@@ -18,31 +18,6 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
-<<<<<<< HEAD
-	cmd := ExportKeyCommand()
-	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
-	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-
-	// Now add a temporary keybase
-	kbHome := t.TempDir()
-
-	// create a key
-	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		kb.Delete("keyname1") // nolint:errcheck
-	})
-
-	path := sdk.GetConfig().GetFullFundraiserPath()
-	_, err = kb.NewAccount("keyname1", testutil.TestMnemonic, "", path, hd.Secp256k1)
-	require.NoError(t, err)
-
-	// Now enter password
-	args := []string{
-		"keyname1",
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
-		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
-=======
 	testCases := []struct {
 		name           string
 		keyringBackend string
@@ -88,7 +63,6 @@ func Test_runExportCmd(t *testing.T) {
 			mustFail:       false,
 			expectedOutput: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
 		},
->>>>>>> f479b515a (fix: file keyring fails to add/import/export keys when input is not stdin (fix #9566) (#9821))
 	}
 
 	for _, tc := range testCases {
@@ -116,7 +90,7 @@ func Test_runExportCmd(t *testing.T) {
 				kb.Delete("keyname1") // nolint:errcheck
 			})
 
-			path := sdk.GetConfig().GetFullBIP44Path()
+			path := sdk.GetConfig().GetFullFundraiserPath()
 			_, err = kb.NewAccount("keyname1", testutil.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 

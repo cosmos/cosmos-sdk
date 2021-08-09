@@ -9,7 +9,6 @@ type Codec interface {
 	ConvertAddressStringToBytes(text string) ([]byte, error)
 	// ConvertAddressBytesToString encodes bytes to text
 	ConvertAddressBytesToString(bz []byte) (string, error)
-
 }
 
 // VerifyFormat checks validity of address format

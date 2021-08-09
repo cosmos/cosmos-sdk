@@ -17,10 +17,11 @@ message BaseAccount {
 
   option (cosmos_proto.implements_interface) = "AccountI";
 
-  string              address        = 1;
-  google.protobuf.Any pub_key        = 2 [(gogoproto.jsontag) = "public_key,omitempty"];
-  uint64              account_number = 3;
-  uint64              sequence       = 4;
+  string              address = 1;
+  google.protobuf.Any pub_key = 2
+      [(gogoproto.jsontag) = "public_key,omitempty"];
+  uint64 account_number = 3;
+  uint64 sequence       = 4;
 }
 
 // ModuleAccount defines an account for modules that holds coins on a pool.
@@ -39,9 +40,11 @@ message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 max_memo_characters       = 1;
-  uint64 tx_sig_limit              = 2;
-  uint64 tx_size_cost_per_byte     = 3;
-  uint64 sig_verify_cost_ed25519   = 4 [(gogoproto.customname) = "SigVerifyCostED25519"];
-  uint64 sig_verify_cost_secp256k1 = 5 [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
+  uint64 max_memo_characters     = 1;
+  uint64 tx_sig_limit            = 2;
+  uint64 tx_size_cost_per_byte   = 3;
+  uint64 sig_verify_cost_ed25519 = 4
+      [(gogoproto.customname) = "SigVerifyCostED25519"];
+  uint64 sig_verify_cost_secp256k1 = 5
+      [(gogoproto.customname) = "SigVerifyCostSecp256k1"];
 }

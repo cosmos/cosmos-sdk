@@ -13,12 +13,15 @@ message GenesisState {
 
   // last_total_power tracks the total amounts of bonded tokens recorded during
   // the previous end block.
-  bytes last_total_power = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  bytes last_total_power = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 
   // last_validator_powers is a special index that provides a historical list
   // of the last-block's bonded validators.
-  repeated LastValidatorPower last_validator_powers = 3 [(gogoproto.nullable) = false];
+  repeated LastValidatorPower last_validator_powers = 3
+      [(gogoproto.nullable) = false];
 
   // delegations defines the validator set at genesis.
   repeated Validator validators = 4 [(gogoproto.nullable) = false];
@@ -27,7 +30,8 @@ message GenesisState {
   repeated Delegation delegations = 5 [(gogoproto.nullable) = false];
 
   // unbonding_delegations defines the unbonding delegations active at genesis.
-  repeated UnbondingDelegation unbonding_delegations = 6 [(gogoproto.nullable) = false];
+  repeated UnbondingDelegation unbonding_delegations = 6
+      [(gogoproto.nullable) = false];
 
   // redelegations defines the redelegations active at genesis.
   repeated Redelegation redelegations = 7 [(gogoproto.nullable) = false];

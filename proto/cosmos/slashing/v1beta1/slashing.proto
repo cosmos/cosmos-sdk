@@ -22,7 +22,8 @@ message ValidatorSigningInfo {
   // `SignedBlocksWindow` param determines the index in the `MissedBlocksBitArray`.
   int64 index_offset = 3;
   // Timestamp until which the validator is jailed due to liveness downtime.
-  google.protobuf.Timestamp jailed_until = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp jailed_until = 4
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   // Whether or not a validator has been tombstoned (killed out of validator set). It is set
   // once the validator commits an equivocation or for any other configured misbehiavor.
   bool tombstoned = 5;
@@ -34,11 +35,20 @@ message ValidatorSigningInfo {
 // Params represents the parameters used for by the slashing module.
 message Params {
   int64 signed_blocks_window  = 1;
-  bytes min_signed_per_window = 2
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  google.protobuf.Duration downtime_jail_duration = 3 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
-  bytes                    slash_fraction_double_sign = 4
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  bytes slash_fraction_downtime = 5
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  bytes min_signed_per_window = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  google.protobuf.Duration downtime_jail_duration = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true
+  ];
+  bytes slash_fraction_double_sign = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  bytes slash_fraction_downtime = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }

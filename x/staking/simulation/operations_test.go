@@ -113,7 +113,6 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 	// execute operation
 	op := simulation.SimulateMsgEditValidator(app.AccountKeeper, app.BankKeeper, app.StakingKeeper)
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
-
 	require.NoError(t, err)
 
 	var msg types.MsgEditValidator

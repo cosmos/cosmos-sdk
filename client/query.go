@@ -77,7 +77,7 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 	}
 
 	opts := rpcclient.ABCIQueryOptions{
-		Height: ctx.Height,
+		Height: req.Height,
 		Prove:  req.Prove,
 	}
 

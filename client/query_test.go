@@ -31,5 +31,4 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 	s.Require().NoError(err)
 
 	s.Require().Equal(reqHeight, res.Height)
-
 }

@@ -4,6 +4,10 @@
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
+## Contributing
+
+Release branches has the following format `release/cosmovisor/vA.B.x`, where A and B are a number (eg: `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
+
 ## Installation
 
 To install `cosmovisor`, run the following command:

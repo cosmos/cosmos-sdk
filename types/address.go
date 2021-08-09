@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -135,23 +134,9 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 }
 
 // VerifyAddressFormat verifies that the provided bytes form a valid address
-// according to the default address rules or a custom address verifier set by
-// GetConfig().SetAddressVerifier()
+// according to the default address rules
 func VerifyAddressFormat(bz []byte) error {
-	verifier := GetConfig().GetAddressVerifier()
-	if verifier != nil {
-		return verifier(bz)
-	}
-
-	if len(bz) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
-	}
-
-	if len(bz) > address.MaxAddrLen {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bz))
-	}
-
-	return nil
+	return address.VerifyFormat(bz)
 }
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.

@@ -65,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9650](https://github.com/cosmos/cosmos-sdk/pull/9650) Removed deprecated message handler implementation from the SDK modules.
 * (x/capability) [\#9836](https://github.com/cosmos/cosmos-sdk/pull/9836) Removed `InitializeAndSeal(ctx sdk.Context)` and replaced with `Seal()`. App must add x/capability to begin blockers which will assure that the x/capability keeper is properly initialized. The x/capability begin blocker must be run before any other module which uses x/capability.
 * (x/bank) [\#9832] (https://github.com/cosmos/cosmos-sdk/pull/9832) `AddressFromBalancesStore` renamed to `AddressAndDenomFromBalancesStore`.
+* (tests) [\#9697] (https://github.com/cosmos/cosmos-sdk/pull/9697) `simapp.Setup` accepts additional `testing.T` argument.
 
 ### Client Breaking Changes
 
@@ -82,6 +83,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (cli) [\#9593](https://github.com/cosmos/cosmos-sdk/pull/9593) Check if chain-id is blank before verifying signatures in multisign and error.
 * (cli) [\#9717](https://github.com/cosmos/cosmos-sdk/pull/9717) Added CLI flag `--output json/text` to `tx` cli commands.
+* (genesis) [\#9697] (https://github.com/cosmos/cosmos-sdk/pull/9697) Ensure `InitGenesis` returns with non-empty validator set.
 
 ### Bug Fixes
 

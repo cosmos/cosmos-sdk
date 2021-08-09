@@ -71,7 +71,7 @@ func (ctx Context) WithKeyringOptions(opts ...keyring.Option) Context {
 func (ctx Context) WithInput(r io.Reader) Context {
 	// convert to a bufio.Reader to have a shared buffer between the keyring and the
 	// the Commands, ensuring a read from one advance the read pointer for the other.
-	// see #9566.
+	// see https://github.com/cosmos/cosmos-sdk/issues/9566.
 	ctx.Input = bufio.NewReader(r)
 	return ctx
 }

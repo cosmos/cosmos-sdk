@@ -13,10 +13,12 @@ import (
 func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 	// test ABCI query uses request height argument
 	// instead of client context height
-	contextHeight := 1 // query at height 1 or 2 would cause an error
-	reqHeight := int64(10)
+	contextHeight := int64(1) // query at height 1 or 2 would cause an error
+	reqHeight := int64(3)
+	s.network.WaitForHeight(reqHeight)
 
 	val := s.network.Validators[0]
+
 	clientCtx := val.ClientCtx
 	clientCtx = clientCtx.WithHeight(contextHeight)
 

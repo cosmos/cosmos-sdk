@@ -33,7 +33,7 @@ message ValidatorOutstandingRewardsRecord {
   // outstanding_rewards represents the oustanding rewards of a validator.
   repeated cosmos.base.v1beta1.DecCoin outstanding_rewards = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false,
+    (gogoproto.nullable)     = false
   ];
 }
 

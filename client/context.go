@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bufio"
 	"encoding/json"
 	"io"
 	"os"
@@ -67,7 +68,10 @@ func (ctx Context) WithKeyringOptions(opts ...keyring.Option) Context {
 
 // WithInput returns a copy of the context with an updated input.
 func (ctx Context) WithInput(r io.Reader) Context {
-	ctx.Input = r
+	// convert to a bufio.Reader to have a shared buffer between the keyring and the
+	// the Commands, ensuring a read from one advance the read pointer for the other.
+	// see https://github.com/cosmos/cosmos-sdk/issues/9566.
+	ctx.Input = bufio.NewReader(r)
 	return ctx
 }
 

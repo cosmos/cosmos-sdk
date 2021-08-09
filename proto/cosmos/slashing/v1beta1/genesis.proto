@@ -13,13 +13,11 @@ message GenesisState {
 
   // signing_infos represents a map between validator addresses and their
   // signing infos.
-  repeated SigningInfo signing_infos = 2
-      [(gogoproto.nullable) = false];
+  repeated SigningInfo signing_infos = 2 [(gogoproto.nullable) = false];
 
   // missed_blocks represents a map between validator addresses and their
   // missed blocks.
-  repeated ValidatorMissedBlocks missed_blocks = 3
-      [(gogoproto.nullable) = false];
+  repeated ValidatorMissedBlocks missed_blocks = 3 [(gogoproto.nullable) = false];
 }
 
 // SigningInfo stores validator signing info of corresponding address.
@@ -27,8 +25,7 @@ message SigningInfo {
   // address is the validator address.
   string address = 1;
   // validator_signing_info represents the signing info of this validator.
-  ValidatorSigningInfo validator_signing_info = 2
-      [(gogoproto.nullable) = false];
+  ValidatorSigningInfo validator_signing_info = 2 [(gogoproto.nullable) = false];
 }
 
 // ValidatorMissedBlocks contains array of missed blocks of corresponding
@@ -37,8 +34,7 @@ message ValidatorMissedBlocks {
   // address is the validator address.
   string address = 1;
   // missed_blocks is an array of missed blocks by the validator.
-  repeated MissedBlock missed_blocks = 2
-      [(gogoproto.nullable) = false];
+  repeated MissedBlock missed_blocks = 2 [(gogoproto.nullable) = false];
 }
 
 // MissedBlock contains height and missed status as boolean.

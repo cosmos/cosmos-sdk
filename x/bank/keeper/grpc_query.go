@@ -59,13 +59,12 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	balances := sdk.NewCoins()
 	accountStore := k.getAccountStore(sdkCtx, addr)
 
-	pageRes, err := query.Paginate(accountStore, req.Pagination, func(_, value []byte) error {
-		var result sdk.Coin
-		err := k.cdc.Unmarshal(value, &result)
-		if err != nil {
+	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
+		var amount sdk.Int
+		if err := amount.Unmarshal(value); err != nil {
 			return err
 		}
-		balances = append(balances, result)
+		balances = append(balances, sdk.NewCoin(string(key), amount))
 		return nil
 	})
 
@@ -187,7 +186,7 @@ func (k BaseKeeper) DenomOwners(
 		req.Pagination,
 		func(key []byte, value []byte, accumulate bool) (bool, error) {
 			if accumulate {
-				address, err := types.AddressFromBalancesStore(key)
+				address, _, err := types.AddressAndDenomFromBalancesStore(key)
 				if err != nil {
 					return false, err
 				}

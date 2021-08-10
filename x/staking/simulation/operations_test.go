@@ -1,7 +1,6 @@
 package simulation_test
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -234,8 +233,6 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	operationMsg, futureOperations, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
-	fmt.Println(operationMsg)
-
 	var msg types.MsgBeginRedelegate
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
@@ -247,7 +244,6 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 	require.Equal(t, "cosmosvaloper1gnkw3uqzflagcqn6ekjwpjanlne928qhruemah", msg.ValidatorDstAddress)
 	require.Equal(t, "cosmosvaloper1kk653svg7ksj9fmu85x9ygj4jzwlyrgs89nnn2", msg.ValidatorSrcAddress)
 	require.Len(t, futureOperations, 0)
-
 }
 
 // returns context and an app with updated mint keeper

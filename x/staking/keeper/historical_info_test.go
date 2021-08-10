@@ -121,7 +121,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	}
 	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 10)
 	require.True(t, found, "GetHistoricalInfo failed after BeginBlock")
-	require.Equal(t, expected.Valset, recv.Valset, "GetHistoricalInfo returned unexpected result")
+	require.Equal(t, expected, recv, "GetHistoricalInfo returned unexpected result")
 
 	// Check HistoricalInfo at height 5, 4 is pruned
 	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 4)
@@ -147,6 +147,7 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	header2 := tmproto.Header{ChainID: "HelloChain", Height: 11}
 	header3 := tmproto.Header{ChainID: "HelloChain", Height: 12}
 
+	app.StakingKeeper.DeleteHistoricalInfo(ctx, 2)
 	hist1 := types.HistoricalInfo{Header: header1, Valset: valSet}
 	hist2 := types.HistoricalInfo{Header: header2, Valset: valSet}
 	hist3 := types.HistoricalInfo{Header: header3, Valset: valSet}
@@ -158,6 +159,6 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	}
 
 	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
-	require.Equal(t, len(expHistInfos), len(infos)-1)
-	require.Equal(t, expHistInfos, infos[:len(infos)-1])
+	require.Equal(t, len(expHistInfos), len(infos))
+	require.Equal(t, expHistInfos, infos)
 }

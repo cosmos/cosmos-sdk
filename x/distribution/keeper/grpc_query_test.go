@@ -601,6 +601,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 
 func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 	app, ctx, queryClient, addrs := suite.app, suite.ctx, suite.queryClient, suite.addrs
+	// reset fee pool
 	app.DistrKeeper.SetFeePool(ctx, types.InitialFeePool())
 
 	var (

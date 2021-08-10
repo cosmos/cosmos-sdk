@@ -119,7 +119,6 @@ func TestHandleNewValidator(t *testing.T) {
 	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, stakingtypes.Bonded, validator.GetStatus())
-	bondPool = app.StakingKeeper.GetBondedPool(ctx)
 	expTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
 	require.True(t, expTokens.Equal(app.BankKeeper.GetBalance(ctx, bondPool.GetAddress(), app.StakingKeeper.BondDenom(ctx)).Amount.Sub(oldBalance)))
 }

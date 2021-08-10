@@ -108,7 +108,7 @@ func SetupWithGenesisAccounts(t *testing.T, isCheckTx bool, genAccs []authtypes.
 
 // SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
-// of one consensus engine unit (10^6) in the default token of the simapp from first genesis
+// of one consensus engine unit in the default token of the simapp from first genesis
 // account. A Nop logger is set in SimApp.
 func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	app, genesisState := setup(true, 5)
@@ -142,6 +142,8 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
+// SetupGenesisStateWithValSet returns genesis state with a given validator set and genesis accounts
+// that also act as delegators.
 func SetupGenesisStateWithValSet(t *testing.T, cdc codec.Codec, genesisState GenesisState, valSet *tmtypes.ValidatorSet,
 	genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) GenesisState {
 	// set genesis accounts
@@ -209,7 +211,6 @@ func SetupGenesisStateWithValSet(t *testing.T, cdc codec.Codec, genesisState Gen
 	genesisState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankGenesis)
 
 	return genesisState
-
 }
 
 type GenerateAccountStrategy func(int) []sdk.AccAddress

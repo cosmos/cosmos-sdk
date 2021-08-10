@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -18,7 +17,6 @@ import (
 func TestCalculateRewardsBasic(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	app.DistrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 

@@ -40,15 +40,16 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
 
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
-	for _, d := range delegations {
-		completionTime, err := app.StakingKeeper.Undelegate(ctx, d.GetDelegatorAddr(), d.GetValidatorAddr(), d.Shares)
-		require.NoError(t, err)
-		// mature unbonding delegations
-		ctx = ctx.WithBlockTime(completionTime)
+	require.Len(t, delegations, 1)
+	delegator := delegations[0]
 
-		_, err = app.StakingKeeper.CompleteUnbonding(ctx, d.GetDelegatorAddr(), d.GetValidatorAddr())
-		require.NoError(t, err)
-	}
+	completionTime, err := app.StakingKeeper.Undelegate(ctx, delegator.GetDelegatorAddr(), delegator.GetValidatorAddr(), delegator.Shares)
+	require.NoError(t, err)
+	// mature unbonding delegation
+	ctx = ctx.WithBlockTime(completionTime)
+	_, err = app.StakingKeeper.CompleteUnbonding(ctx, delegator.GetDelegatorAddr(), delegator.GetValidatorAddr())
+	require.NoError(t, err)
+	// endblock
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	return app, ctx, addrDels, addrVals
@@ -107,11 +108,7 @@ func TestSetValidator(t *testing.T) {
 	require.Equal(t, 1, len(resVals))
 	require.True(ValEq(t, validator, resVals[0]))
 
-	resVals = app.StakingKeeper.GetValidators(ctx, 2)
-	require.Equal(t, 2, len(resVals))
-	require.True(ValEq(t, validator, resVals[1]))
-
-	resVals = app.StakingKeeper.GetValidators(ctx, 10)
+	resVals = app.StakingKeeper.GetValidators(ctx, 5)
 	require.Equal(t, 2, len(resVals))
 	require.True(ValEq(t, validator, resVals[1]))
 

@@ -2,13 +2,22 @@ package teststaking
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -141,4 +150,35 @@ func (sh *Helper) TurnBlockTimeDiff(diff time.Duration) sdk.Context {
 // ZeroCommission constructs a commission rates with all zeros.
 func ZeroCommission() stakingtypes.CommissionRates {
 	return stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+}
+
+// SetupApp creates a new Simapp and genesis state single validator and genesis accounts.
+func SetupApp(t *testing.T) (*simapp.SimApp, []byte) {
+	db := dbm.NewMemDB()
+	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{},
+		simapp.DefaultNodeHome, 0, simapp.MakeTestEncodingConfig(), simapp.EmptyAppOptions{})
+	cdc := app.AppCodec()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balance := banktypes.Balance{
+		Address: acc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+	}
+
+	genesisState := simapp.NewDefaultGenesisState(cdc)
+	genesisState = simapp.SetupGenesisStateWithValSet(t, cdc, genesisState, valSet,
+		[]authtypes.GenesisAccount{acc}, balance)
+	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	require.NoError(t, err)
+
+	return app, stateBytes
 }

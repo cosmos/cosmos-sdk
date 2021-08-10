@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bip39 "github.com/cosmos/go-bip39"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
@@ -27,7 +28,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn)
 	require.NoError(t, err)
 
-	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithInput(mockIn)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	t.Cleanup(func() {
@@ -113,4 +114,48 @@ func Test_runAddCmdBasic(t *testing.T) {
 	// passwords don't match and fail interactive key generation
 	mockIn.Reset("\n" + password + "\n" + "fail" + "\n")
 	require.Error(t, cmd.ExecuteContext(ctx))
+}
+
+func TestAddRecoverFileBackend(t *testing.T) {
+	cmd := AddKeyCommand()
+	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
+
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	kbHome := t.TempDir()
+
+	clientCtx := client.Context{}.WithKeyringDir(kbHome).WithInput(mockIn)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", cli.OutputFlag, OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyAlgorithm, string(hd.Secp256k1Type)),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendFile),
+		fmt.Sprintf("--%s", flagRecover),
+	})
+
+	keyringPassword := "12345678"
+
+	entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
+	require.NoError(t, err)
+
+	mnemonic, err := bip39.NewMnemonic(entropySeed)
+	require.NoError(t, err)
+
+	mockIn.Reset(fmt.Sprintf("%s\n%s\n%s\n", mnemonic, keyringPassword, keyringPassword))
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendFile, kbHome, mockIn)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		mockIn.Reset(fmt.Sprintf("%s\n%s\n", keyringPassword, keyringPassword))
+		_ = kb.Delete("keyname1")
+	})
+
+	mockIn.Reset(fmt.Sprintf("%s\n%s\n", keyringPassword, keyringPassword))
+	info, err := kb.Key("keyname1")
+	require.NoError(t, err)
+	require.Equal(t, "keyname1", info.GetName())
 }

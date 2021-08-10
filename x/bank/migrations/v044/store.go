@@ -22,7 +22,7 @@ func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec)
 		return err
 	}
 
-	return migrateDenomMetadata(store, cdc)
+	return migrateDenomMetadata(store)
 }
 
 func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
@@ -71,7 +71,7 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	return nil
 }
 
-func migrateDenomMetadata(store sdk.KVStore, cdc codec.BinaryCodec) error {
+func migrateDenomMetadata(store sdk.KVStore) error {
 	oldDenomMetaDataStore := prefix.NewStore(store, v043.DenomMetadataPrefix)
 
 	oldDenomMetaDataIter := oldDenomMetaDataStore.Iterator(nil, nil)

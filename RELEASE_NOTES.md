@@ -35,7 +35,7 @@ ADR-028 introduces a new specification for deriving addresses for all kinds of a
 
 Chain upgrades were historically done with the Cosmos SDK by creating an upgrade proposal, halting the chain at the given height, exporting state to a JSON file, making the necessary JSON file changes, and creating a new chain with the modified JSON file as genesis. This procedure is tedious, and could take up to several hours.
 
-Cosmos SDK v0.43 introduces a new way of handling upgrades. Whan an upgrade happens, instead of starting a new chain, the new binary will read the existing database, and perform in-place modifications of the store. We expect this method to significantly reduce the migration time.
+Cosmos SDK v0.43 introduces a new way of handling upgrades. When an upgrade happens, instead of starting a new chain, the new binary will read the existing database, and perform in-place modifications of the store. We expect this method to significantly reduce the migration time.
 
 For more information:
 

@@ -27,7 +27,7 @@ func NewLauncher(cfg *Config) (Launcher, error) {
 	return Launcher{cfg, fw}, err
 }
 
-// Run lunches the app in a subprocess and returns when the subprocess (app)
+// Run launches the app in a subprocess and returns when the subprocess (app)
 // exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
 // Returns true if the upgrade request was detected and the upgrade process started.
 func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {

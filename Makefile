@@ -13,6 +13,7 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
+PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
 export GO111MODULE = on
 
@@ -327,17 +328,17 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-containerMarkdownLintImage=tmknom/markdownlint
-containerMarkdownLint=cosmos-sdk-markdownlint
-containerMarkdownLintFix=cosmos-sdk-markdownlint-fix
+markdownLintImage=tmknom/markdownlint
+containerMarkdownLint=$(PROJECT_NAME)-markdownlint
+containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
 
 lint:
 	golangci-lint run --out-format=tab
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(containerMarkdownLintImage); fi
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
 
 lint-fix:
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(containerMarkdownLintImage) . --fix; fi
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
 
 .PHONY: lint lint-fix
 
@@ -377,11 +378,12 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=v0.2
-containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
-containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
+protoVer=v0.2
+protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
+containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
+containerProtoGenAny=$(PROJECT_NAME)-proto-gen-any-$(protoVer)
+containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
+containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
 
 proto-all: proto-format proto-lint proto-gen
 
@@ -393,7 +395,8 @@ proto-gen:
 # This generates the SDK's custom wrapper for google.protobuf.Any. It should only be run manually when needed
 proto-gen-any:
 	@echo "Generating Protobuf Any"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) sh ./scripts/protocgen-any.sh
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenAny}$$"; then docker start -a $(containerProtoGenAny); else docker run --name $(containerProtoGenAny) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		sh ./scripts/protocgen-any.sh; fi
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"

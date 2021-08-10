@@ -117,6 +117,11 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		}
 	}
 
+	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
+		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
+	)}
+	ctx.EventManager().EmitEvents(events)
+
 	return next(ctx, tx, simulate)
 }
 

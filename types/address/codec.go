@@ -5,10 +5,10 @@ import (
 )
 
 type Codec interface {
-	// ConvertAddressStringToBytes decodes text to bytes
-	ConvertAddressStringToBytes(text string) ([]byte, error)
-	// ConvertAddressBytesToString encodes bytes to text
-	ConvertAddressBytesToString(bz []byte) (string, error)
+	// AddressStringToBytes decodes text to bytes
+	AddressStringToBytes(text string) ([]byte, error)
+	// AddressBytesToString encodes bytes to text
+	AddressBytesToString(bz []byte) (string, error)
 }
 
 // VerifyFormat checks validity of address format

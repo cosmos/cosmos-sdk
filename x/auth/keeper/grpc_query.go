@@ -112,7 +112,11 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 }
 
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
-	bech32Prefix := ak.GetBech32Prefix()
+	bech32Prefix, err := ak.GetBech32Prefix()
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
 }
 
@@ -125,7 +129,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address bytes is not allowed")
 	}
 
-	text, err := ak.ConvertAddressBytesToString(req.AddressBytes)
+	text, err := ak.addressCdC.AddressBytesToString(req.AddressBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +146,7 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address string is not allowed")
 	}
 
-	bz, err := ak.ConvertAddressStringToBytes(req.AddressString)
+	bz, err := ak.addressCdC.AddressStringToBytes(req.AddressString)
 	if err != nil {
 		return nil, err
 	}

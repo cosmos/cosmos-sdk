@@ -47,6 +47,10 @@ type AccountKeeperI interface {
 	GetNextAccountNumber(sdk.Context) uint64
 }
 
+type bech32Codec struct {
+	bech32Prefix string
+}
+
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
 type AccountKeeper struct {
@@ -55,13 +59,13 @@ type AccountKeeper struct {
 	paramSubspace paramtypes.Subspace
 	permAddrs     map[string]types.PermissionsForAddress
 
-	bech32Prefix string
 	// The prototypical AccountI constructor.
-	proto func() types.AccountI
+	proto      func() types.AccountI
+	addressCdC address.Codec
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
-var _ address.Codec = &AccountKeeper{}
+var _ address.Codec = &bech32Codec{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
@@ -70,8 +74,8 @@ var _ address.Codec = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramstore paramtypes.Subspace, bech32Prefix string, proto func() types.AccountI,
-	maccPerms map[string][]string,
+	cdc codec.BinaryCodec, key sdk.StoreKey, paramstore paramtypes.Subspace, proto func() types.AccountI,
+	maccPerms map[string][]string, bech32Prefix string,
 ) AccountKeeper {
 
 	// set KeyTable if it has not already been set
@@ -84,13 +88,15 @@ func NewAccountKeeper(
 		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
 	}
 
+	bech32Codec := newBech32Codec(bech32Prefix)
+
 	return AccountKeeper{
 		key:           key,
 		proto:         proto,
 		cdc:           cdc,
 		paramSubspace: paramstore,
 		permAddrs:     permAddrs,
-		bech32Prefix:  bech32Prefix,
+		addressCdC:    bech32Codec,
 	}
 }
 
@@ -240,17 +246,31 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 // GetCodec return codec.Codec object used by the keeper
 func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
-// add getter for bech32Prefix
-func (ak AccountKeeper) GetBech32Prefix() string { return ak.bech32Prefix }
+// GetAddressCdc returns address.Codec object used by the keeper
+func (ak AccountKeeper) GetAddressCdC() address.Codec { return ak.addressCdC }
 
-// ConvertAddressStringToBytes encodes text to bytes
-func (ak *AccountKeeper) ConvertAddressStringToBytes(text string) ([]byte, error) {
+// add getter for bech32Prefix
+func (ak AccountKeeper) GetBech32Prefix() (string, error) {
+	bech32Codec, ok := ak.addressCdC.(bech32Codec)
+	if !ok {
+		return "", errors.New("unable cast addressCdC to bech32Codec")
+	}
+
+	return bech32Codec.bech32Prefix, nil
+}
+
+func newBech32Codec(prefix string) bech32Codec {
+	return bech32Codec{prefix}
+}
+
+// AddressStringToBytes encodes text to bytes
+func (bc bech32Codec) AddressStringToBytes(text string) ([]byte, error) {
 	hrp, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
 		return nil, err
 	}
 
-	if hrp != ak.GetBech32Prefix() {
+	if hrp != bc.bech32Prefix {
 		return nil, errors.New("hrp does not match bech32Prefix")
 	}
 
@@ -261,9 +281,9 @@ func (ak *AccountKeeper) ConvertAddressStringToBytes(text string) ([]byte, error
 	return bz, nil
 }
 
-// ConvertAddressBytesToString decodes bytes to text
-func (ak *AccountKeeper) ConvertAddressBytesToString(bz []byte) (string, error) {
-	text, err := bech32.ConvertAndEncode(ak.bech32Prefix, bz)
+// AddressBytesToString decodes bytes to text
+func (bc bech32Codec) AddressBytesToString(bz []byte) (string, error) {
+	text, err := bech32.ConvertAndEncode(bc.bech32Prefix, bz)
 	if err != nil {
 		return "", err
 	}

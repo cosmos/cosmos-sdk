@@ -211,8 +211,8 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 	addrBytes := []byte(addr)
 
 	testCases := []struct {
-		msg	string
-		req	*types.AddressBytesToStringRequest
+		msg       string
+		req       *types.AddressBytesToStringRequest
 		expPass   bool
 		posttests func(res *types.AddressBytesToStringResponse)
 	}{
@@ -221,7 +221,7 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 			&types.AddressBytesToStringRequest{AddressBytes: addrBytes},
 			true,
 			func(res *types.AddressBytesToStringResponse) {
-				text, err := suite.app.AccountKeeper.ConvertAddressBytesToString(addrBytes)
+				text, err := suite.app.AccountKeeper.GetAddressCdC().AddressBytesToString(addrBytes)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(text)
 				suite.Require().Equal(text, res.AddressString)
@@ -265,12 +265,12 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 	_, _, addr := testdata.KeyTestPubAddr()
 	addrBytes := []byte(addr)
-	text, err := suite.app.AccountKeeper.ConvertAddressBytesToString([]byte(addr))
+	text, err := suite.app.AccountKeeper.GetAddressCdC().AddressBytesToString(addrBytes)
 	suite.Require().NoError(err)
 
 	testCases := []struct {
 		msg       string
-		req  	 *types.AddressStringToBytesRequest
+		req       *types.AddressStringToBytesRequest
 		expPass   bool
 		posttests func(res *types.AddressStringToBytesResponse)
 	}{

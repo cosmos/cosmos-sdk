@@ -125,7 +125,7 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 	var totalCoins sdk.Coins
 
 	for _, period := range msg.VestingPeriods {
-		totalCoins.Add(period.Amount...)
+		totalCoins = totalCoins.Add(period.Amount...)
 	}
 
 	baseAccount := ak.NewAccountWithAddress(ctx, to)

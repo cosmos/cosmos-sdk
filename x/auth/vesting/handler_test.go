@@ -135,8 +135,10 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 
 				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
 				suite.Require().NotNil(accI)
-				balance := suite.app.BankKeeper.GetBalance(ctx, fromAddr, "test")
-				suite.Require().Equal(balance, sdk.NewInt64Coin("test", 0))
+				balanceSource := suite.app.BankKeeper.GetBalance(ctx, fromAddr, "test")
+				suite.Require().Equal(balanceSource, sdk.NewInt64Coin("test", 0))
+				balanceDest := suite.app.BankKeeper.GetBalance(ctx, toAddr, "test")
+				suite.Require().Equal(balanceDest, sdk.NewInt64Coin("test", 1000))
 
 			}
 		})

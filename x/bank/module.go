@@ -103,7 +103,13 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(am.keeper.(keeper.BaseKeeper))
-	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/bank from version 1 to 2: %v", err))
+	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/bank from version 2 to 3: %v", err))
+	}
 }
 
 // NewAppModule creates a new AppModule object
@@ -123,9 +129,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Route returns the message routing key for the bank module.
+// Deprecated: Route returns the message routing key for the bank module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the bank module's querier route name.
@@ -156,7 +162,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}

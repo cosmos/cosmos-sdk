@@ -34,3 +34,36 @@ func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*pr
 
 	return &proposal.QueryParamsResponse{Param: param}, nil
 }
+
+// Subspaces implements the gRPC query handler for fetching all registered
+// subspaces and all the keys for each subspace.
+func (k Keeper) Subspaces(
+	goCtx context.Context,
+	req *proposal.QuerySubspacesRequest,
+) (*proposal.QuerySubspacesResponse, error) {
+
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	spaces := k.GetSubspaces()
+	resp := &proposal.QuerySubspacesResponse{
+		Subspaces: make([]*proposal.Subspace, len(spaces)),
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	for i, ss := range spaces {
+		var keys []string
+		ss.IterateKeys(ctx, func(key []byte) bool {
+			keys = append(keys, string(key))
+			return false
+		})
+
+		resp.Subspaces[i] = &proposal.Subspace{
+			Subspace: ss.Name(),
+			Keys:     keys,
+		}
+	}
+
+	return resp, nil
+}

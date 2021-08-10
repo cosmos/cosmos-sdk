@@ -426,6 +426,76 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
+	val := s.network.Validators[0]
+
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
+	// Send coins.
+	out, err := s.createBankMsg(
+		val, account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+	)
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// Query the tx by hash to get the inner tx.
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+
+	testCases := []struct {
+		name        string
+		args        []string
+		expectEmpty bool
+	}{
+		{
+			"fee event happy case",
+			[]string{
+				fmt.Sprintf("--events=tx.fee=%s",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+		{
+			"no matching fee event",
+			[]string{
+				fmt.Sprintf("--events=tx.fee=%s",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String()),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryTxsByEventsCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result sdk.SearchTxsResult
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
+
+			if tc.expectEmpty {
+				s.Require().Equal(0, len(result.Txs))
+			} else {
+				s.Require().NotEqual(0, len(result.Txs))
+				s.Require().NotNil(result.Txs[0])
+			}
+		})
+	}
+}
+
 func (s *IntegrationTestSuite) TestCLISendGenerateSignAndBroadcast() {
 	val1 := s.network.Validators[0]
 

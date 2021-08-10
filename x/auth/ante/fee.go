@@ -137,15 +137,12 @@ func (dfd *DeductFeeDecorator) checkDeductFee(ctx context.Context, feeTx sdk.Fee
 		}
 	}
 
-	if err := dfd.accountKeeper.GetEnvironment().EventService.EventManager(ctx).EmitKV(
-		sdk.EventTypeTx,
-		event.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-		event.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(deductFeesFrom).String()),
-	); err != nil {
-		return err
-	}
+	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
+		sdk.NewAttribute(sdk.AttributeKeyFee, feeTx.GetFee().String()),
+	)}
+	ctx.EventManager().EmitEvents(events)
 
-	return nil
+	return next(ctx, tx, simulate)
 }
 
 // DeductFees deducts fees from the given account.

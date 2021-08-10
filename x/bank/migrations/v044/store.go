@@ -14,9 +14,15 @@ import (
 //
 // - Migrate coin storage to save only amount.
 // - Add an additional reverse index from denomination to address.
+// - Remove redundant denom from denom metadata store key.
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
-	return addDenomReverseIndex(store, cdc)
+	err := addDenomReverseIndex(store, cdc)
+	if err != nil {
+		return err
+	}
+
+	return migrateDenomMetadata(store, cdc)
 }
 
 func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
@@ -60,6 +66,24 @@ func addDenomReverseIndex(store sdk.KVStore, cdc codec.BinaryCodec) error {
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.
 		denomPrefixStore.Set(address.MustLengthPrefix(addr), []byte{0})
+	}
+
+	return nil
+}
+
+func migrateDenomMetadata(store sdk.KVStore, cdc codec.BinaryCodec) error {
+	oldDenomMetaDataStore := prefix.NewStore(store, v043.DenomMetadataPrefix)
+
+	oldDenomMetaDataIter := oldDenomMetaDataStore.Iterator(nil, nil)
+	defer oldDenomMetaDataIter.Close()
+
+	for ; oldDenomMetaDataIter.Valid(); oldDenomMetaDataIter.Next() {
+		oldKey := oldDenomMetaDataIter.Key()
+		// old key: prefix_bytes | denom_bytes | denom_bytes
+		newKey := append(types.DenomMetadataPrefix, oldKey[:len(oldKey)/2+1]...)
+
+		store.Set(newKey, oldDenomMetaDataIter.Value())
+		oldDenomMetaDataStore.Delete(oldDenomMetaDataIter.Key())
 	}
 
 	return nil

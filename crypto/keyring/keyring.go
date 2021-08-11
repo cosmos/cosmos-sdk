@@ -391,9 +391,12 @@ func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coi
 }
 
 func (ks keystore) writeLedgerKey(name string, pk types.PubKey, path *hd.BIP44Params) (*Record, error) {
-	ledgerRecord := NewLedgerRecord(path)
-	ledgerRecordItem := NewLedgerRecordItem(ledgerRecord)
-	return ks.newRecord(name, pk, ledgerRecordItem)
+	k, err := NewLedgerRecord(name, pk, path)
+	if err != nil {
+		return nil, err
+	}
+
+	return k, ks.writeRecord(k)
 }
 
 func (ks keystore) SaveMultisig(uid string, pubkey types.PubKey) (*Record, error) {
@@ -763,13 +766,12 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 }
 
 func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, error) {
-	localRecord, err := NewLocalRecord(privKey)
+	k, err := NewLocalRecord(name, privKey, privKey.PubKey())
 	if err != nil {
 		return nil, err
 	}
 
-	localRecordItem := NewLocalRecordItem(localRecord)
-	return ks.newRecord(name, privKey.PubKey(), localRecordItem)
+	return k, ks.writeRecord(k)
 }
 
 func (ks keystore) writeRecord(k *Record) error {
@@ -835,23 +837,21 @@ func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 }
 
 func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error) {
-	offlineRecord := NewOfflineRecord()
-	offlineRecordItem := NewOfflineRecordItem(offlineRecord)
-	return ks.newRecord(name, pk, offlineRecordItem)
+	k, err := NewOfflineRecord(name, pk)
+	if err != nil {
+		return nil, err
+	}
+
+	return k, ks.writeRecord(k)
 }
 
 // writeMultisigKey investigate where thisf function is called maybe remove it
 func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, error) {
-	emptyRecord := NewMultiRecord()
-	emptyRecordItem := NewMultiRecordItem(emptyRecord)
-	return ks.newRecord(name, pk, emptyRecordItem)
-}
-
-func (ks keystore) newRecord(name string, pk types.PubKey, item isRecord_Item) (*Record, error) {
-	k, err := NewRecord(name, pk, item)
+	k, err := NewMultiRecord(name, pk)
 	if err != nil {
 		return nil, err
 	}
+
 	return k, ks.writeRecord(k)
 }
 
@@ -950,7 +950,8 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		return nil, errors.New("unable to convert LegacyInfo to Record cause info is nil")
 	}
 
-	var item isRecord_Item
+	name := info.GetName()
+	pk := info.GetPubKey()
 
 	switch info.GetType() {
 	case TypeLocal:
@@ -959,30 +960,42 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 			return nil, err
 		}
 
-		localRecord, err := NewLocalRecord(priv)
+		k, err := NewLocalRecord(name, priv, pk)
 		if err != nil {
 			return nil, err
 		}
-		item = NewLocalRecordItem(localRecord)
 
+		return k, nil
 	case TypeOffline:
-		offlineRecord := NewOfflineRecord()
-		item = NewOfflineRecordItem(offlineRecord)
+		k, err := NewOfflineRecord(name, pk)
+		if err != nil {
+			return nil, err
+		}
+
+		return k, nil
 	case TypeMulti:
-		multiRecord := NewMultiRecord()
-		item = NewMultiRecordItem(multiRecord)
+		k, err := NewMultiRecord(name, pk)
+		if err != nil {
+			return nil, err
+		}
+
+		return k, nil
 	case TypeLedger:
 		path, err := info.GetPath()
 		if err != nil {
 			return nil, err
 		}
-		ledgerRecord := NewLedgerRecord(path)
-		item = NewLedgerRecordItem(ledgerRecord)
-	}
 
-	name := info.GetName()
-	pk := info.GetPubKey()
-	return NewRecord(name, pk, item)
+		k, err := NewLedgerRecord(name, pk, path)
+		if err != nil {
+			return nil, err
+		}
+
+		return k, nil
+	default:
+		return nil, errors.New("unknown LegacyInfo type")
+
+	}
 }
 
 type unsafeKeystore struct {

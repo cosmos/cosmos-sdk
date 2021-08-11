@@ -451,7 +451,7 @@ func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
 	s.Require().NoError(err)
 	// Send coins.
 	out, err := s.createBankMsg(
-		val, 
+		val,
 		addr2,
 		sdk.NewCoins(sendTokens),
 	)

@@ -21,9 +21,7 @@ func Test_writeReadLedgerInfo(t *testing.T) {
 
 	pk := &secp256k1.PubKey{Key: tmpKey}
 	path := hd.NewFundraiserParams(5, sdk.CoinType, 1)
-	ledgerRecord := NewLedgerRecord(path)
-	ledgerRecordItem := NewLedgerRecordItem(ledgerRecord)
-	k, err := NewRecord("some_name", pk, ledgerRecordItem)
+	k, err := NewLedgerRecord("some_name", pk, path)
 	require.NoError(t, err)
 
 	l := k.GetLedger()

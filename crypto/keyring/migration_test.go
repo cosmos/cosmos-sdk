@@ -191,10 +191,8 @@ func TestMigrateLocalRecord(t *testing.T) {
 	privKey := cryptotypes.PrivKey(priv)
 	pub := priv.PubKey()
 
-	localRecord, err := NewLocalRecord(privKey)
+	k, err := NewLocalRecord("test record", privKey, pub)
 	require.NoError(err)
-	localRecordItem := NewLocalRecordItem(localRecord)
-	k, err := NewRecord("test record", pub, localRecordItem)
 
 	ks, ok := kb.(keystore)
 	require.True(ok)

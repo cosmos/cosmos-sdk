@@ -17,7 +17,7 @@ func TestBech32KeysOutput(t *testing.T) {
 	tmpKey := sk.PubKey()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
 
-	k, err := NewRecord("multisig", multisigPk, NewMultiRecordItem(NewMultiRecord()))
+	k, err := NewMultiRecord("multisig", multisigPk)
 	require.NotNil(t, k)
 	require.NoError(t, err)
 	pubKey, err := k.GetPubKey()

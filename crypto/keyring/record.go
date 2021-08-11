@@ -11,7 +11,11 @@ import (
 
 var ErrPrivKeyExtr = errors.New("private key extraction works only for Local")
 
-func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
+func newLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
+	return &Record_Local_{localRecord}
+}
+
+func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
 		return nil, err
@@ -20,45 +24,50 @@ func NewRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	return &Record{name, any, item}, nil
 }
 
-func NewLocalRecord(priv cryptotypes.PrivKey) (*Record_Local, error) {
+func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(priv)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Record_Local{any, priv.Type()}, nil
+	recordLocal := &Record_Local{any, priv.Type()}
+	recordLocalItem := newLocalRecordItem(recordLocal)
+
+	return newRecord(name, pk, recordLocalItem)
 }
 
-func NewLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
-	return &Record_Local_{localRecord}
-}
-
-func NewLedgerRecord(path *hd.BIP44Params) *Record_Ledger {
-	return &Record_Ledger{path}
-}
-
-func NewLedgerRecordItem(ledgerRecord *Record_Ledger) *Record_Ledger_ {
+func newLedgerRecordItem(ledgerRecord *Record_Ledger) *Record_Ledger_ {
 	return &Record_Ledger_{ledgerRecord}
+}
+
+func NewLedgerRecord(name string, pk cryptotypes.PubKey, path *hd.BIP44Params) (*Record, error) {
+	recordLedger := &Record_Ledger{path}
+	recordLedgerItem := newLedgerRecordItem(recordLedger)
+	return newRecord(name, pk, recordLedgerItem)
 }
 
 func (rl *Record_Ledger) GetPath() *hd.BIP44Params {
 	return rl.Path
 }
 
-func NewOfflineRecord() *Record_Offline {
-	return &Record_Offline{}
-}
-
-func NewOfflineRecordItem(re *Record_Offline) *Record_Offline_ {
+func newOfflineRecordItem(re *Record_Offline) *Record_Offline_ {
 	return &Record_Offline_{re}
 }
 
-func NewMultiRecord() *Record_Multi {
-	return &Record_Multi{}
+func NewOfflineRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
+	recordOffline := &Record_Offline{}
+	recordOfflineItem := newOfflineRecordItem(recordOffline)
+	return newRecord(name, pk, recordOfflineItem)
 }
 
-func NewMultiRecordItem(re *Record_Multi) *Record_Multi_ {
+func newMultiRecordItem(re *Record_Multi) *Record_Multi_ {
 	return &Record_Multi_{re}
+}
+
+func NewMultiRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
+	recordMulti := &Record_Multi{}
+	recordMultiItem := newMultiRecordItem(recordMulti)
+	return newRecord(name, pk, recordMultiItem)
 }
 
 func (k *Record) GetPubKey() (cryptotypes.PubKey, error) {

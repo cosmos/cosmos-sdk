@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	design99keyring "github.com/99designs/keyring"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -85,10 +85,8 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 
 	priv := secp256k1.GenPrivKey()
 	privKey := cryptotypes.PrivKey(priv)
-	localRecord, err := keyring.NewLocalRecord(privKey)
+	k, err := keyring.NewLocalRecord("test record", privKey, privKey.PubKey())
 	require.NoError(err)
-	localRecordItem := keyring.NewLocalRecordItem(localRecord)
-	k, err := keyring.NewRecord("test record", priv.PubKey(), localRecordItem)
 	serializedRecord, err := encCfg.Codec.Marshal(k)
 	require.NoError(err)
 

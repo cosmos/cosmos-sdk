@@ -19,10 +19,7 @@ func TestOfflineRecordMarshaling(t *testing.T) {
 
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
-	emptyRecord := NewOfflineRecord()
-	emptyRecordItem := NewOfflineRecordItem(emptyRecord)
-
-	r, err := NewRecord("testrecord", pk, emptyRecordItem)
+	r, err := NewOfflineRecord("testrecord", pk)
 	require.NoError(err)
 
 	cdc := getCodec()
@@ -55,11 +52,7 @@ func TestLocalRecordMarshaling(t *testing.T) {
 	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
 	require.NoError(err)
 
-	localRecord, err := NewLocalRecord(privKey)
-	require.NoError(err)
-	localRecordItem := NewLocalRecordItem(localRecord)
-
-	r, err := NewRecord("testrecord", pub, localRecordItem)
+	r, err := NewLocalRecord("testrecord", privKey, pub)
 	require.NoError(err)
 
 	ks, ok := kb.(keystore)
@@ -100,11 +93,7 @@ func TestLedgerRecordMarshaling(t *testing.T) {
 	require.NoError(err)
 
 	path := hd.NewFundraiserParams(4, 12345, 57)
-	ledgerRecord := NewLedgerRecord(path)
-	require.NoError(err)
-	ledgerRecordItem := NewLedgerRecordItem(ledgerRecord)
-
-	k, err := NewRecord("testrecord", pub, ledgerRecordItem)
+	k, err := NewLedgerRecord("testrecord", pub, path)
 	require.NoError(err)
 
 	ks, ok := kb.(keystore)
@@ -138,11 +127,7 @@ func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
 	privKey := cryptotypes.PrivKey(priv)
 
 	// use proto serialize
-	localRecord, err := NewLocalRecord(privKey)
-	require.NoError(err)
-	localRecordItem := NewLocalRecordItem(localRecord)
-
-	k, err := NewRecord("testrecord", pub, localRecordItem)
+	k, err := NewLocalRecord("testrecord", privKey, pub)
 	require.NoError(err)
 
 	privKey2, err := extractPrivKeyFromRecord(k)
@@ -156,10 +141,7 @@ func TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
 	priv := secp256k1.GenPrivKey()
 	pub := priv.PubKey()
 
-	offlineRecord := NewOfflineRecord()
-	emptyRecordItem := NewOfflineRecordItem(offlineRecord)
-
-	k, err := NewRecord("testrecord", pub, emptyRecordItem)
+	k, err := NewOfflineRecord("testrecord", pub)
 	require.NoError(err)
 
 	privKey2, err := extractPrivKeyFromRecord(k)

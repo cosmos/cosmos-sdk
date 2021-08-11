@@ -9188,7 +9188,7 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `last_height` | [int64](#int64) |  | **Deprecated.** last height of the current chain must be sent in request as this is the height under which next consensus state is stored |
+| `last_height` | [int64](#int64) |  | last height of the current chain must be sent in request as this is the height under which next consensus state is stored |
 
 
 
@@ -9204,7 +9204,7 @@ RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `upgraded_consensus_state` | [bytes](#bytes) |  | **Deprecated.**  |
+| `upgraded_consensus_state` | [bytes](#bytes) |  |  |
 
 
 

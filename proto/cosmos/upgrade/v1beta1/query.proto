@@ -24,7 +24,7 @@ service Query {
   // stored at the last height of this chain.
   // UpgradedConsensusState RPC not supported with legacy querier
   rpc UpgradedConsensusState(QueryUpgradedConsensusStateRequest) returns (QueryUpgradedConsensusStateResponse) {
-    option deprecated=true;
+    option deprecated            = true;
     option (google.api.http).get = "/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}";
   }
 
@@ -62,17 +62,20 @@ message QueryAppliedPlanResponse {
 // QueryUpgradedConsensusStateRequest is the request type for the Query/UpgradedConsensusState
 // RPC method.
 message QueryUpgradedConsensusStateRequest {
+  option deprecated = true;
+
   // last height of the current chain must be sent in request
   // as this is the height under which next consensus state is stored
-  int64 last_height = 1 [deprecated=true];
+  int64 last_height = 1;
 }
 
 // QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState
 // RPC method.
 message QueryUpgradedConsensusStateResponse {
+  option deprecated = true;
   reserved 1;
 
-  bytes upgraded_consensus_state = 2 [deprecated=true];
+  bytes upgraded_consensus_state = 2;
 }
 
 // QueryModuleVersionsRequest is the request type for the Query/ModuleVersions

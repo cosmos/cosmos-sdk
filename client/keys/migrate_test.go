@@ -42,9 +42,9 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 			priv.PubKey(),
 		},
 	)
-	LegacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
+	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
 	require.NoError(err)
-	serializedLegacyMultiInfo := keyring.MarshalInfo(LegacyMultiInfo)
+	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
 
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{

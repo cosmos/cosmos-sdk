@@ -12,7 +12,7 @@ func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate keys from amino to proto serialization format",
-		Long: `Migrate key information from LegacyInfo(amino) to record(proto).
+		Long: `Migrate key information from LegacyInfo(amino) to Record(proto).
 		LegacyInfo is an interface that is used to persist keys in keyring DB using Amino serialization format.
 Record is a struct that is used to persist keys in keyring DB using Proto for serialization and deserialization.
 For each key material entry, the command will check if the key can be deserialized using proto.

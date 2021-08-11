@@ -162,7 +162,7 @@ Each module should also implement the `RegisterServices` method as part of the [
 
 ### gRPC `Query` Services
 
-gRPC `Query` services are introduced in the v0.40 Stargate release. They allow users to query the state using [gRPC](https://grpc.io). They are enabled by default, and can be configued under the `grpc.enable` and `grpc.address` fields inside [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
+gRPC `Query` services are introduced in the v0.40 Stargate release. They allow users to query the state using [gRPC](https://grpc.io). They are enabled by default, and can be configured under the `grpc.enable` and `grpc.address` fields inside [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
 
 gRPC `Query` services are defined in the module's Protobuf definition files, specifically inside `query.proto`. The `query.proto` definition file exposes a single `Query` [Protobuf service](https://developers.google.com/protocol-buffers/docs/proto#services). Each gRPC query endpoint corresponds to a service method, starting with the `rpc` keyword, inside the `Query` service.
 
@@ -211,17 +211,6 @@ Some external clients may not wish to use gRPC. The SDK provides in this case a 
 The REST endpoints are defined in the Protobuf files, along with the gRPC services, using Protobuf annotations. Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods. By default, all REST endpoints defined in the SDK have an URL starting with the `/cosmos/` prefix.
 
 The SDK also provides a development endpoint to generate [Swagger](https://swagger.io/) definition files for these REST endpoints. This endpoint can be enabled inside the [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml) config file, under the `api.swagger` key.
-
-#### Legacy API REST Endpoints
-
-The [module's Legacy REST interface](../building-modules/module-interfaces.md#legacy-rest) lets users generate transactions and query the state through REST calls to the application's Legacy API Service. REST routes are defined in a file `client/rest/rest.go`, which is composed of:
-
-- A `RegisterRoutes` function, which registers each route defined in the file. This function is called from the [main application's interface](#application-interfaces) for each module used within the application. The router used in the SDK is [Gorilla's mux](https://github.com/gorilla/mux).
-- Custom request type definitions for each query or transaction creation function that needs to be exposed. These custom request types build on the base `request` type of the Cosmos SDK:
-  +++ https://github.com/cosmos/cosmos-sdk/blob/v0.40.0-rc3/types/rest/rest.go#L62-L76
-- One handler function for each request that can be routed to the given module. These functions implement the core logic necessary to serve the request.
-
-These Legacy API endpoints are present in the SDK for backward compatibility purposes and will be removed in the next release.
 
 ## Application Interface
 

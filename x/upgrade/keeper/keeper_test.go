@@ -9,7 +9,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -44,16 +43,17 @@ func (s *KeeperTestSuite) TestReadUpgradeInfoFromDisk() {
 	_, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	s.Require().NoError(err)
 
-	expected := store.UpgradeInfo{
+	expected := types.Plan{
 		Name:   "test_upgrade",
 		Height: 100,
 	}
 
 	// create an upgrade info file
-	s.Require().NoError(s.app.UpgradeKeeper.DumpUpgradeInfoToDisk(expected.Height, expected.Name))
+	s.Require().NoError(s.app.UpgradeKeeper.DumpUpgradeInfoToDisk(101, expected))
 
 	ui, err := s.app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	s.Require().NoError(err)
+	expected.Height = 101
 	s.Require().Equal(expected, ui)
 }
 

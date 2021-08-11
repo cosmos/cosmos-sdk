@@ -264,7 +264,6 @@ func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, e
 	return ops, nil
 }
 
-//nolint
 // Tx converts a tendermint raw transaction and its result (if provided) to a rosetta transaction
 func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error) {
 	// decode tx

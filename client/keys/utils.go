@@ -37,7 +37,6 @@ func printKeyringRecord(w io.Writer, k *cryptokeyring.Record, bechKeyOut bechKey
 	}
 }
 
-// put first argument cdc
 func printKeyringRecords(w io.Writer, records []*cryptokeyring.Record, output string) {
 	kos, err := cryptokeyring.MkAccKeysOutput(records)
 	if err != nil {

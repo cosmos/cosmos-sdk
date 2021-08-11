@@ -8,9 +8,11 @@ import "cosmos/crypto/hd/v1/hd.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keyring";
 option (gogoproto.goproto_getters_all) = false;
 
-// Record is used for keyring migration from LegacyInfo to proto.
+// Record is used for representing a key in the keyring.
 message Record {
+  // name represents a name of Record
   string name = 1;
+  // pub_key represents a public key in any format 
   google.protobuf.Any pub_key = 2;
 
   // Record contains one of the following items

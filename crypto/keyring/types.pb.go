@@ -25,9 +25,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Record is used for keyring migration from LegacyInfo to proto.
+// Record is used for representing a key in the keyring.
 type Record struct {
-	Name   string     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// name represents a name of Record
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// pub_key represents a public key in any format
 	PubKey *types.Any `protobuf:"bytes,2,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
 	// Record contains one of the following items
 	//

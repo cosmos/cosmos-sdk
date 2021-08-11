@@ -110,9 +110,9 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 		expectErr bool
 	}{
 		{
-			name:      "continuous vesting account already exists",
+			name:      "create periodic vesting account",
 			msg:       types.NewMsgCreatePeriodicVestingAccount(addr1, addr3, 0, period),
-			expectErr: true,
+			expectErr: false,
 		},
 	}
 
@@ -128,9 +128,17 @@ func (suite *HandlerTestSuite) TestMsgCreatePeriodicVestingAccount() {
 				suite.Require().NotNil(res)
 
 				toAddr, err := sdk.AccAddressFromBech32(tc.msg.ToAddress)
+
 				suite.Require().NoError(err)
+				fromAddr, err := sdk.AccAddressFromBech32(tc.msg.FromAddress)
+				suite.Require().NoError(err)
+
 				accI := suite.app.AccountKeeper.GetAccount(ctx, toAddr)
 				suite.Require().NotNil(accI)
+				balanceSource := suite.app.BankKeeper.GetBalance(ctx, fromAddr, "test")
+				suite.Require().Equal(balanceSource, sdk.NewInt64Coin("test", 0))
+				balanceDest := suite.app.BankKeeper.GetBalance(ctx, toAddr, "test")
+				suite.Require().Equal(balanceDest, sdk.NewInt64Coin("test", 1000))
 
 			}
 		})

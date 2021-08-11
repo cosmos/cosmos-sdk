@@ -19,7 +19,7 @@ service Query {
     option (google.api.http).get = "/cosmos/nft/v1beta1/owner/{class_id}/{id}";
   }
 
-  // Supply queries the number of nft based on the class, same as totalSupply of ERC721
+  // Supply queries the number of NFTs from the given class, same as totalSupply of ERC721.
   rpc Supply(QuerySupplyRequest) returns (QuerySupplyResponse) {
     option (google.api.http).get = "/cosmos/nft/v1beta1/supply/{class_id}";
   }

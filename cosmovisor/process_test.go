@@ -23,7 +23,7 @@ func TestProcessTestSuite(t *testing.T) {
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcess() {
 	home := copyTestData(s.T(), "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd"}
+	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", UnsafeSkipBackup: true}
 
 	// should run the genesis binary and produce expected output
 	var stdout, stderr bytes.Buffer
@@ -65,7 +65,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	// zip_binary -> "chain3" = ref_zipped -> zip_directory
 	// zip_directory no upgrade
 	home := copyTestData(s.T(), "download")
-	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true}
+	cfg := &cosmovisor.Config{Home: home, Name: "autod", AllowDownloadBinaries: true, UnsafeSkipBackup: true}
 
 	// should run the genesis binary and produce expected output
 	var stdout, stderr bytes.Buffer

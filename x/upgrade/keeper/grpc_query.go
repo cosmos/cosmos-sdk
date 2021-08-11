@@ -35,6 +35,7 @@ func (k Keeper) AppliedPlan(c context.Context, req *types.QueryAppliedPlanReques
 }
 
 // UpgradedConsensusState implements the Query/UpgradedConsensusState gRPC method
+// nolint: staticcheck
 func (k Keeper) UpgradedConsensusState(c context.Context, req *types.QueryUpgradedConsensusStateRequest) (*types.QueryUpgradedConsensusStateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 

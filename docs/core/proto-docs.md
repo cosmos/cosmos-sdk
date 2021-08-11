@@ -483,6 +483,9 @@
 - [cosmos/params/v1beta1/query.proto](#cosmos/params/v1beta1/query.proto)
     - [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse)
+    - [QuerySubspacesRequest](#cosmos.params.v1beta1.QuerySubspacesRequest)
+    - [QuerySubspacesResponse](#cosmos.params.v1beta1.QuerySubspacesResponse)
+    - [Subspace](#cosmos.params.v1beta1.Subspace)
   
     - [Query](#cosmos.params.v1beta1.Query)
   
@@ -6957,6 +6960,50 @@ QueryParamsResponse is response type for the Query/Params RPC method.
 
 
 
+
+<a name="cosmos.params.v1beta1.QuerySubspacesRequest"></a>
+
+### QuerySubspacesRequest
+QuerySubspacesRequest defines a request type for querying for all registered
+subspaces and all keys for a subspace.
+
+
+
+
+
+
+<a name="cosmos.params.v1beta1.QuerySubspacesResponse"></a>
+
+### QuerySubspacesResponse
+QuerySubspacesResponse defines the response types for querying for all
+registered subspaces and all keys for a subspace.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `subspaces` | [Subspace](#cosmos.params.v1beta1.Subspace) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.params.v1beta1.Subspace"></a>
+
+### Subspace
+Subspace defines a parameter subspace name and all the keys that exist for
+the subspace.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `subspace` | [string](#string) |  |  |
+| `keys` | [string](#string) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6972,6 +7019,7 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse) | Params queries a specific parameter of a module, given its subspace and key. | GET|/cosmos/params/v1beta1/params|
+| `Subspaces` | [QuerySubspacesRequest](#cosmos.params.v1beta1.QuerySubspacesRequest) | [QuerySubspacesResponse](#cosmos.params.v1beta1.QuerySubspacesResponse) | Subspaces queries for all registered subspaces and all keys for a subspace. | GET|/cosmos/params/v1beta1/subspaces|
 
  <!-- end services -->
 

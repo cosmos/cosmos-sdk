@@ -21,6 +21,8 @@
     - [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse)
     - [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest)
     - [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse)
+    - [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest)
+    - [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse)
     - [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse)
   
@@ -481,6 +483,9 @@
 - [cosmos/params/v1beta1/query.proto](#cosmos/params/v1beta1/query.proto)
     - [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse)
+    - [QuerySubspacesRequest](#cosmos.params.v1beta1.QuerySubspacesRequest)
+    - [QuerySubspacesResponse](#cosmos.params.v1beta1.QuerySubspacesResponse)
+    - [Subspace](#cosmos.params.v1beta1.Subspace)
   
     - [Query](#cosmos.params.v1beta1.Query)
   
@@ -898,6 +903,31 @@ QueryAccountsResponse is the response type for the Query/Accounts RPC method.
 
 
 
+<a name="cosmos.auth.v1beta1.QueryModuleAccountsRequest"></a>
+
+### QueryModuleAccountsRequest
+QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.QueryModuleAccountsResponse"></a>
+
+### QueryModuleAccountsResponse
+QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+
+
+
+
+
+
 <a name="cosmos.auth.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -939,6 +969,7 @@ Query defines the gRPC querier service.
 | `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
+| `ModuleAccounts` | [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest) | [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse) | ModuleAccounts returns all the existing module accounts. | GET|/cosmos/auth/v1beta1/module_accounts|
 
  <!-- end services -->
 
@@ -6929,6 +6960,50 @@ QueryParamsResponse is response type for the Query/Params RPC method.
 
 
 
+
+<a name="cosmos.params.v1beta1.QuerySubspacesRequest"></a>
+
+### QuerySubspacesRequest
+QuerySubspacesRequest defines a request type for querying for all registered
+subspaces and all keys for a subspace.
+
+
+
+
+
+
+<a name="cosmos.params.v1beta1.QuerySubspacesResponse"></a>
+
+### QuerySubspacesResponse
+QuerySubspacesResponse defines the response types for querying for all
+registered subspaces and all keys for a subspace.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `subspaces` | [Subspace](#cosmos.params.v1beta1.Subspace) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.params.v1beta1.Subspace"></a>
+
+### Subspace
+Subspace defines a parameter subspace name and all the keys that exist for
+the subspace.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `subspace` | [string](#string) |  |  |
+| `keys` | [string](#string) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6944,6 +7019,7 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse) | Params queries a specific parameter of a module, given its subspace and key. | GET|/cosmos/params/v1beta1/params|
+| `Subspaces` | [QuerySubspacesRequest](#cosmos.params.v1beta1.QuerySubspacesRequest) | [QuerySubspacesResponse](#cosmos.params.v1beta1.QuerySubspacesResponse) | Subspaces queries for all registered subspaces and all keys for a subspace. | GET|/cosmos/params/v1beta1/subspaces|
 
  <!-- end services -->
 

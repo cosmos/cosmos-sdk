@@ -12,7 +12,7 @@
 # TODO: demo connecting rest-server (or is this in server now?)
 FROM golang:alpine AS build-env
 
-# Install minimum necessary dependencies,
+# Install minimum necessary dependencies
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
 RUN apk add --no-cache $PACKAGES
 

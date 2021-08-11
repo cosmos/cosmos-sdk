@@ -162,7 +162,7 @@ Each module should also implement the `RegisterServices` method as part of the [
 
 ### gRPC `Query` Services
 
-gRPC `Query` services are introduced in the v0.40 Stargate release. They allow users to query the state using [gRPC](https://grpc.io). They are enabled by default, and can be configued under the `grpc.enable` and `grpc.address` fields inside [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
+gRPC `Query` services are introduced in the v0.40 Stargate release. They allow users to query the state using [gRPC](https://grpc.io). They are enabled by default, and can be configured under the `grpc.enable` and `grpc.address` fields inside [`app.toml`](../run-node/run-node.md#configuring-the-node-using-apptoml).
 
 gRPC `Query` services are defined in the module's Protobuf definition files, specifically inside `query.proto`. The `query.proto` definition file exposes a single `Query` [Protobuf service](https://developers.google.com/protocol-buffers/docs/proto#services). Each gRPC query endpoint corresponds to a service method, starting with the `rpc` keyword, inside the `Query` service.
 

@@ -14,7 +14,7 @@ import (
 //
 // - Migrate coin storage to save only amount.
 // - Add an additional reverse index from denomination to address.
-// - Remove redundant denom from denom metadata store key.
+// - Remove duplicate denom from denom metadata store key.
 func MigrateStore(ctx sdk.Context, storeKey sdk.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	err := addDenomReverseIndex(store, cdc)

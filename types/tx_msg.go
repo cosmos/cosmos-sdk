@@ -18,7 +18,7 @@ type (
 		// Signers returns the bech32-encoded addrs of signers that must sign.
 		// CONTRACT: All signatures must be present to be valid.
 		// CONTRACT: Returns addrs in some deterministic order.
-		GetSigners() []string
+		GetSigners() []AccAddress
 	}
 
 	// Fee defines an interface for an application application-defined concrete

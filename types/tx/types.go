@@ -97,14 +97,9 @@ func (t *Tx) GetSigners() []sdk.AccAddress {
 
 	for _, msg := range t.GetMsgs() {
 		for _, addr := range msg.GetSigners() {
-			if !seen[addr] {
-				signer, err := sdk.AccAddressFromBech32(addr)
-				if err != nil {
-					panic(err)
-				}
-
-				signers = append(signers, signer)
-				seen[addr] = true
+			if !seen[addr.String()] {
+				signers = append(signers, addr)
+				seen[addr.String()] = true
 			}
 		}
 	}
@@ -202,14 +197,6 @@ func ValidateMsg(msg sdk.Msg) error {
 	err := msg.ValidateBasic()
 	if err != nil {
 		return err
-	}
-
-	signers := msg.GetSigners()
-	for _, signer := range signers {
-		_, err = sdk.AccAddressFromBech32(signer)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil

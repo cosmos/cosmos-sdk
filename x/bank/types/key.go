@@ -31,12 +31,6 @@ var (
 	BalancesPrefix = []byte{0x02}
 )
 
-// DenomMetadataKey returns the denomination metadata key.
-func DenomMetadataKey(denom string) []byte {
-	d := []byte(denom)
-	return append(DenomMetadataPrefix, d...)
-}
-
 // AddressAndDenomFromBalancesStore returns an account address and denom from a balances prefix
 // store. The key must not contain the prefix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.

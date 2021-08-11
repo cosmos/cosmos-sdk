@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -256,6 +257,10 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	alreadyExistedGrantee := s.addedGrantee
 	clientCtx := val.ClientCtx
 
+	fromAddr, fromName, _, err := client.GetFromFields(clientCtx.Keyring, granter.String(), clientCtx.GenerateOnly)
+	s.Require().Equal(fromAddr, granter)
+	s.Require().NoError(err)
+
 	commonFlags := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -296,6 +301,19 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 			true, 0, nil,
 		},
 		{
+			"wrong granter key name",
+			append(
+				[]string{
+					"invalid_granter",
+					"cosmos16dun6ehcc86e03wreqqww89ey569wuj4em572w",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			true, 0, nil,
+		},
+		{
 			"valid basic fee grant",
 			append(
 				[]string{
@@ -303,6 +321,19 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 					"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, granter),
+				},
+				commonFlags...,
+			),
+			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"valid basic fee grant with granter key name",
+			append(
+				[]string{
+					fromName,
+					"cosmos16dun6ehcc86e03wreqqww89ey569wuj4em572w",
+					fmt.Sprintf("--%s=%s", cli.FlagSpendLimit, "100stake"),
+					fmt.Sprintf("--%s=%s", flags.FlagFrom, fromName),
 				},
 				commonFlags...,
 			),

@@ -14,12 +14,12 @@ import (
 
 func TestGenerateCoinKey(t *testing.T) {
 	t.Parallel()
-	addr, mnemonic, err := server.GenerateCoinKey(hd.Secp256k1)
+	cdc := simapp.MakeTestEncodingConfig().Codec
+	addr, mnemonic, err := server.GenerateCoinKey(hd.Secp256k1, cdc)
 	require.NoError(t, err)
 
 	// Test creation
-	encCfg := simapp.MakeTestEncodingConfig()
-	k, err := keyring.NewInMemory(encCfg.Codec).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
+	k, err := keyring.NewInMemory(cdc).NewAccount("xxx", mnemonic, "", hd.NewFundraiserParams(0, types.GetConfig().GetCoinType(), 0).String(), hd.Secp256k1)
 	require.NoError(t, err)
 	addr1, err := k.GetAddress()
 	require.NoError(t, err)

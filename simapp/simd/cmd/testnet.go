@@ -25,7 +25,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -223,6 +222,7 @@ func initTestnetFiles(
 	)
 
 	inBuf := bufio.NewReader(cmd.InOrStdin())
+	cdc := clientCtx.Codec
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < args.numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
@@ -253,8 +253,6 @@ func initTestnetFiles(
 
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 		genFiles = append(genFiles, nodeConfig.GenesisFile())
-
-		cdc := simapp.MakeTestEncodingConfig().Codec
 
 		kb, err := keyring.New(sdk.KeyringServiceName(), args.keyringBackend, nodeDir, inBuf, cdc)
 		if err != nil {

@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -53,8 +52,6 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			if err != nil {
 				inBuf := bufio.NewReader(cmd.InOrStdin())
 				keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
-
-				cdc := simapp.MakeTestEncodingConfig().Codec
 
 				// attempt to lookup address from Keybase if no address was provided
 				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, cdc)

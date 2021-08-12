@@ -72,21 +72,27 @@ func requireEqualNames(records []*Record, n1, n2 string) bool {
 	return true
 }
 
-func getN2Index(records []*Record, n2 string) (j int) {
-	for i, k := range records {
-		if k == nil {
+// getIndices is used in TestInMemoryKeyManagement, TestAltKeyring_List and TestKeyManagementKeyRing
+func getIndices(list []*Record, uids ...string) map[string]int {
+	hmap := make(map[string]int)
+	for i, l := range list {
+		if l == nil {
 			continue
 		}
-
-		if k.Name == n2 {
-			j = i
+	
+		for _, uid := range uids {
+			if l.Name != uid {
+				continue
+			}
+	
+			hmap[uid] = i 
 			break
 		}
 	}
-
-	return j
+	
+	return hmap
 }
-
+	
 func TestKeyManagementKeyRing(t *testing.T) {
 	cdc := getCodec()
 	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
@@ -140,8 +146,9 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	key1, err := k2.GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key1)
-	i := getN2Index(keyS, n2)
-	key2, err := keyS[i].GetPubKey()
+	uids := []string{n2}
+	hmap := getIndices(keyS, uids...)
+	key2, err := keyS[hmap[n2]].GetPubKey()
 	require.NoError(t, err)
 	require.NotNil(t, key2)
 	require.Equal(t, key1, key2)
@@ -497,22 +504,6 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 	require.Equal(t, "Invalid mnemonic", err.Error())
 }
 
-func getTwoIndices(records []*Record, n1, n2 string) (i, j int) {
-	for x, k := range records {
-		if k == nil {
-			continue
-		}
-		if k.Name == n1 {
-			i = x
-		}
-		if k.Name == n2 {
-			j = x
-		}
-	}
-
-	return
-}
-
 // TestInMemoryKeyManagement makes sure we can manipulate these keys well
 func TestInMemoryKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
@@ -559,13 +550,14 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 4, len(keyS))
 	// note these are in alphabetical order
-	i, j := getTwoIndices(keyS, n1, n2)
-	require.Equal(t, n1, keyS[i].Name)
-	require.Equal(t, n2, keyS[j].Name)
+	uids := []string{n1,n2}
+	hmap := getIndices(keyS, uids...)
+	require.Equal(t, n1, keyS[hmap[n1]].Name)
+	require.Equal(t, n2, keyS[hmap[n2]].Name)
 
 	key1, err := k2.GetPubKey()
 	require.NoError(t, err)
-	key2, err := keyS[j].GetPubKey()
+	key2, err := keyS[hmap[n2]].GetPubKey()
 	require.NoError(t, err)
 
 	require.True(t, key1.Equals(key2))
@@ -953,26 +945,7 @@ func ExampleNew() {
 	// Carl
 	// signed by Bob
 }
-
-func getIndices(list []*Record, uid1, uid2, uid3 string) (i, j, k int) {
-	for x, l := range list {
-		if l == nil {
-			continue
-		}
-
-		switch l.Name {
-		case uid1:
-			i = x
-		case uid2:
-			j = x
-		case uid3:
-			k = x
-		}
-	}
-
-	return
-}
-
+                       
 func TestAltKeyring_List(t *testing.T) {
 	dir := t.TempDir()
 	cdc := getCodec()
@@ -1001,12 +974,13 @@ func TestAltKeyring_List(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, list, 6)
 
-	i, j, k := getIndices(list, uid1, uid2, uid3)
+	uids := []string{uid1, uid2, uid3}
+	hmap := getIndices(list, uids...)
 
 	// Check they are in alphabetical order
-	require.Equal(t, uid1, list[i].Name)
-	require.Equal(t, uid2, list[j].Name)
-	require.Equal(t, uid3, list[k].Name)
+	require.Equal(t, uid1, list[hmap[uid1]].Name)
+	require.Equal(t, uid2, list[hmap[uid2]].Name)
+	require.Equal(t, uid3, list[hmap[uid3]].Name)
 
 }
 

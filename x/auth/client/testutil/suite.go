@@ -121,7 +121,7 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 	s.Require().NoError(err)
 	keyName := k.Name
 
-	addr,err := k.GetAddress()
+	addr, err := k.GetAddress()
 	s.Require().NoError(err)
 
 	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, addr)

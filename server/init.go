@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenerateCoinKey returns the address of a public key, along with the secret

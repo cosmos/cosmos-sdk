@@ -40,7 +40,6 @@ import (
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)

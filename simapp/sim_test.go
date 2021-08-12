@@ -160,7 +160,7 @@ func TestAppImportExport(t *testing.T) {
 				panic(r)
 			}
 			logger.Info("Skipping simulation as all validators have been unbonded")
-			logger.Info(fmt.Sprintf("%s \n", err))
+			logger.Info("err", e, "stacktrace", string(debug.Stack()))
 		}
 	}()
 

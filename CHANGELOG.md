@@ -38,33 +38,37 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
+
+* [\#9860](https://github.com/cosmos/cosmos-sdk/pull/9860) Emit transaction fee in ante handler fee decorator. The event type is `tx` and the attribute is `fee`.
 * [\#9776](https://github.com/cosmos/cosmos-sdk/pull/9776) Add flag `staking-bond-denom` to specify the staking bond denomination value when initializing a new chain.
 * [\#9533](https://github.com/cosmos/cosmos-sdk/pull/9533) Added a new gRPC method, `DenomOwners`, in `x/bank` to query for all account holders of a specific denomination.
 * (bank) [\#9618](https://github.com/cosmos/cosmos-sdk/pull/9618) Update bank.Metadata: add URI and URIHash attributes.
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
 ### API Breaking Changes
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Remove `algo` argument from `writeLocalKey`, `writeLedgerKey` and `writeOfflineKey`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `newKeystore`now takes `codec.Codec` as the second argument
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `getMultisigInfo` to `getMultisigRecord`  and return `*keyring.Record, error`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `MkAccKeysOutput` take slice of `*keyring.Record` as first argument instead of slice of`Info`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`MkConsKeyOutput`, ` MkValKeyOutput` and `MkAccKeyOutput` take `*keyring.Record` as first argument instead of `Info`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`SignWithLedger` takes `*keyring.Record` as first argument instead of `Info`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695)`NewMnemonic` now returns `keyring.Record` instead of `Info`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `Key` and `KeyByAddress` now return`*keyring.Record, err`
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `bechKeyOut` now takes `keyring.Record` as argument.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `newLocalInfo`, `NewMultiInfo`, `NewLedgerInfo`, `NewOfflineInfo` to `newLegacyLocalInfo`, `NewLegacyMultiInfo`, `newLegacyLedgerInfo`, `NewLegacyOfflineInfo`  respectively. Rename `localInfo`, `multiInfo`, `ledgerInfo`, `offlineInfo` structs to `legacyLocalInfo`,`legacyMultiInfo`,`legacyLedgerInfo`, `legacyOfflineInfo`, respectively. Move them from `keyring.go` to `legacy_info.go`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `fetchKey` returns `keyring.Record` instead of `Info`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `printInfos` to `printKeyringRecords` and replace an argument `infos` to `records`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `List` returns slice of `keyring.Record` instead of slice of `Info`
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Replace an argument type from `Info` to `keyring.Record` in `MkAccKeyOutput`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `printKeyInfo`to  `printKeyringRecord` and replace an argument type from `Info` to `keyring.Record`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `SaveLedgerKey` now returjs `keyring.Record, error` instead of `Info, error`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `printCreate` now contains `keyring.Record`as argument instead of `Info`.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `SaveMultiSig` now returns `keyring.Record, error`
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Rename `SavePubKey` to `SaveOfflineKey`, remove `algo` argument  and return `keyring.Record, error` instead of `Info, error`
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Add new `codec.Codec` argument to `keyring.NewInMemory` method.
-* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Add new `codec.Codec` argument to `keyring.New` method.
+
+* [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) Migrate keys from `Info` -> `Record`
+  * Remove `algo` argument from `writeLocalKey`, `writeLedgerKey` and `writeOfflineKey`.
+  * `newKeystore`now takes `codec.Codec` as the second argument
+  * Rename `getMultisigInfo` to `getMultisigRecord`  and return `*keyring.Record, error`.
+  * `MkAccKeysOutput` takes slice of `*keyring.Record` as first argument instead of slice of`Info`.
+  * `MkConsKeyOutput`, ` MkValKeyOutput` and `MkAccKeyOutput` take `*keyring.Record` as first argument instead of `Info`.
+  * `SignWithLedger` takes `*keyring.Record` as first argument instead of `Info`.
+  * `NewMnemonic` now returns `keyring.Record` instead of `Info`.
+  * `Key` and `KeyByAddress` now return`*keyring.Record, err`
+  * `bechKeyOut` now takes `keyring.Record` as argument.
+  * Rename `newLocalInfo`, `NewMultiInfo`, `NewLedgerInfo`, `NewOfflineInfo` to `newLegacyLocalInfo`, `NewLegacyMultiInfo`, `newLegacyLedgerInfo`, `NewLegacyOfflineInfo`,  respectively. Rename `localInfo`, `multiInfo`, `ledgerInfo`, `offlineInfo` structs to `legacyLocalInfo`,`legacyMultiInfo`,`legacyLedgerInfo`, `legacyOfflineInfo`, respectively. Move them from `keyring.go` to `legacy_info.go`.
+  * `fetchKey` returns `keyring.Record` instead of `Info`.
+  * Rename `printInfos` to `printKeyringRecords` and replace an argument `infos` to `records`.
+  * `List` returns slice of `keyring.Record` instead of slice of `Info`
+  * Replace an argument type from `Info` to `keyring.Record` in `MkAccKeyOutput`.
+  * Rename `printKeyInfo`to  `printKeyringRecord` and replace an argument type from `Info` to `keyring.Record`.
+  * `SaveLedgerKey` now returjs `keyring.Record, error` instead of `Info, error`.
+  * `printCreate` now contains `keyring.Record`as argument instead of `Info`.
+  * `SaveMultiSig` now returns `keyring.Record, error`
+  *  Rename `SavePubKey` to `SaveOfflineKey`, remove `algo` argument  and return `keyring.Record, error` instead of `Info, error`
+  * Add new `codec.Codec` argument to `keyring.NewInMemory` method.
+  * Add new `codec.Codec` argument to `keyring.New` method.
 * [\#9628](https://github.com/cosmos/cosmos-sdk/pull/9628) Rename `x/{mod}/legacy` to `x/{mod}/migrations`.
 * [\#9571](https://github.com/cosmos/cosmos-sdk/pull/9571) Implemented error handling for staking hooks, which now return an error on failure.
 * [\#9427](https://github.com/cosmos/cosmos-sdk/pull/9427) Move simapp `FundAccount` and `FundModuleAccount` to `x/bank/testutil`

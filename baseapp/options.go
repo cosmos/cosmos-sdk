@@ -148,14 +148,6 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 
-func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
-	if app.sealed {
-		panic("SetAnteHandler() on sealed BaseApp")
-	}
-
-	app.anteHandler = ah
-}
-
 func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
 	if app.sealed {
 		panic("SetAddrPeerFilter() on sealed BaseApp")

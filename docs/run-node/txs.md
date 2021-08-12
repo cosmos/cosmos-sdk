@@ -324,6 +324,21 @@ func simulateTx() error {
 }
 ```
 
+## Using gRPC
+
+It is not possible to generate or sign a transaction using gRPC, only to broadcast one.
+
+### Broadcasting a Transaction
+
+Broadcasting a transaction using the gRPC endpoint can be done by sending a `BroadcastTx` request as follows, where the `txBytes` are the protobuf-encoded bytes of a signed transaction:
+
+```bash
+grpcurl -plaintext \
+    -d '{"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
+    localhost:9090 \
+    cosmos.tx.v1beta1.Service/BroadcastTx
+```
+
 ## Using REST
 
 It is not possible to generate or sign a transaction using REST, only to broadcast one.
@@ -334,8 +349,8 @@ Broadcasting a transaction using the REST endpoint (served by `gRPC-gateway`) ca
 
 ```bash
 curl -X POST \
-    -H "Content-Type: application/json"
-    -d'{"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}'
+    -H "Content-Type: application/json" \
+    -d'{"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
     localhost:1317/cosmos/tx/v1beta1/txs
 ```
 

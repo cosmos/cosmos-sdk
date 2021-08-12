@@ -57,15 +57,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = MsgRedelegateExec(
+	out, err := MsgRedelegateExec(
 		val.ClientCtx,
 		val.Address,
 		val.ValAddress,
 		val2.ValAddress,
 		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 202954), //  202954 is the required
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 	// unbonding
@@ -209,6 +212,15 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				txResp := tc.respType.(*sdk.TxResponse)
 				require.Equal(tc.expectedCode, txResp.Code,
 					"test: %s, output\n:", tc.name, out.String())
+
+				events := txResp.Logs[0].GetEvents()
+				for i := 0; i < len(events); i++ {
+					if events[i].GetType() == "create_validator" {
+						attributes := events[i].GetAttributes()
+						require.Equal(attributes[1].Value, "100stake")
+						break
+					}
+				}
 			}
 		})
 	}
@@ -1181,7 +1193,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				val2.ValAddress.String(),                               // dst-validator-addr
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, "auto"),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),

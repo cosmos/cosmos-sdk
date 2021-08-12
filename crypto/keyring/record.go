@@ -24,6 +24,7 @@ func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record,
 	return &Record{name, any, item}, nil
 }
 
+// NewLocalRecord creates a new Record with local key item
 func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(priv)
 	if err != nil {
@@ -40,6 +41,7 @@ func newLedgerRecordItem(ledgerRecord *Record_Ledger) *Record_Ledger_ {
 	return &Record_Ledger_{ledgerRecord}
 }
 
+// NewLedgerRecord creates a new Record with ledger item
 func NewLedgerRecord(name string, pk cryptotypes.PubKey, path *hd.BIP44Params) (*Record, error) {
 	recordLedger := &Record_Ledger{path}
 	recordLedgerItem := newLedgerRecordItem(recordLedger)
@@ -54,6 +56,7 @@ func newOfflineRecordItem(re *Record_Offline) *Record_Offline_ {
 	return &Record_Offline_{re}
 }
 
+// NewOfflineRecord creates a new Record with offline item
 func NewOfflineRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
 	recordOffline := &Record_Offline{}
 	recordOfflineItem := newOfflineRecordItem(recordOffline)
@@ -64,12 +67,14 @@ func newMultiRecordItem(re *Record_Multi) *Record_Multi_ {
 	return &Record_Multi_{re}
 }
 
+// NewMultiRecord creates a new Record with multi item
 func NewMultiRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
 	recordMulti := &Record_Multi{}
 	recordMultiItem := newMultiRecordItem(recordMulti)
 	return newRecord(name, pk, recordMultiItem)
 }
 
+// GetPubKey fetches a public key of the record
 func (k *Record) GetPubKey() (cryptotypes.PubKey, error) {
 	pk, ok := k.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
@@ -79,7 +84,7 @@ func (k *Record) GetPubKey() (cryptotypes.PubKey, error) {
 	return pk, nil
 }
 
-// GetType implements Info interface
+// GetAddress fetches an address of the record
 func (k Record) GetAddress() (types.AccAddress, error) {
 	pk, err := k.GetPubKey()
 	if err != nil {
@@ -88,6 +93,7 @@ func (k Record) GetAddress() (types.AccAddress, error) {
 	return pk.Address().Bytes(), nil
 }
 
+// GetType fetches type of the record
 func (k Record) GetType() KeyType {
 	switch {
 	case k.GetLocal() != nil:
@@ -97,7 +103,7 @@ func (k Record) GetType() KeyType {
 
 	case k.GetMulti() != nil:
 		return TypeMulti
-		// k.Getoffline()
+	// k.GetOffline()
 	default:
 		return TypeOffline
 	}

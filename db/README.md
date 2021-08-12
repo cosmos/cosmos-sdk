@@ -30,3 +30,10 @@ These types represent transactions on the database contents. Their methods provi
 ### `VersionSet` ###
 
 This represents a self-contained and immutable view of a database's version history state. It is therefore safe to retain and conccurently access any instance of this object.
+
+## Implementations ##
+
+### In-memory DB ###
+
+The in-memory DB in the `db/memdb` package cannot be persisted to disk. It is implemented using the Google [btree](https://pkg.go.dev/github.com/google/btree) library. 
+  * This currently does not perform write conflict detection, so it only supports a single write-transaction at a time (multiple concurrent read-transactions are supported).

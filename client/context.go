@@ -11,7 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -324,16 +323,7 @@ func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddres
 		return nil, "", 0, nil
 	}
 
-	if genOnly {
-		addr, err := sdk.AccAddressFromBech32(from)
-		if err != nil {
-			return nil, "", 0, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
-		}
-
-		return addr, "", 0, nil
-	}
-
-	k := new(keyring.Record) //nolint
+	k := new(keyring.Record)
 	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
 		k, err = kr.KeyByAddress(addr)
 		if err != nil {

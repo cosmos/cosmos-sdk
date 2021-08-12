@@ -28,7 +28,7 @@ func GetSignBatchCommand() *cobra.Command {
 		Long: `Sign batch files of transactions generated with --generate-only.
 The command processes list of transactions from file (one StdTx each line), generate
 signed transactions or signatures and print their JSON encoding, delimited by '\n'.
-As the signatures are generated, the command updates the account sequence number accordingly.
+As the signatures are generated, the command updates the account and sequence number accordingly.
 
 If the --signature-only flag is set, it will output the signature parts only.
 
@@ -37,6 +37,9 @@ As a result, the account and the sequence number queries will not be performed a
 it is required to set such parameters manually. Note, invalid values will cause
 the transaction to fail. The sequence will be incremented automatically for each
 transaction that is signed.
+
+If --account-number or --sequence flag is used when offline=false, they are ignored and 
+overwritten by the default flag values.
 
 The --multisig=<multisig_key> flag generates a signature on behalf of a multisig
 account key. It implies --signature-only.
@@ -88,6 +91,10 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 			}
 		}
 		scanner := authclient.NewBatchScanner(txCfg, infile)
+
+		if !clientCtx.Offline {
+			txFactory = txFactory.WithAccountNumber(0).WithSequence(0)
+		}
 
 		for sequence := txFactory.Sequence(); scanner.Scan(); sequence++ {
 			unsignedStdTx := scanner.Tx()

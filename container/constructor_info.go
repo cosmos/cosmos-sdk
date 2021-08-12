@@ -6,16 +6,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ConstructorInfo defines a special constructor type that is defined by
+// ProviderDescriptor defines a special constructor type that is defined by
 // reflection. It should be passed as a value to the Provide function.
 // Ex:
-//   option.Provide(ConstructorInfo{ ... })
-type ConstructorInfo struct {
+//   option.Provide(ProviderDescriptor{ ... })
+type ProviderDescriptor struct {
 	// In defines the in parameter types to Fn.
-	In []Input
+	In []ProviderInput
 
 	// Out defines the out parameter types to Fn.
-	Out []Output
+	Out []ProviderOutput
 
 	// Fn defines the constructor function.
 	Fn func([]reflect.Value) ([]reflect.Value, error)
@@ -25,65 +25,65 @@ type ConstructorInfo struct {
 	Location Location
 }
 
-type Input struct {
+type ProviderInput struct {
 	Type     reflect.Type
 	Optional bool
 }
 
-type Output struct {
+type ProviderOutput struct {
 	Type reflect.Type
 }
 
-func ExtractConstructorInfo(ctr interface{}) (ConstructorInfo, error) {
-	rctr, ok := ctr.(ConstructorInfo)
+func ExtractConstructorInfo(ctr interface{}) (ProviderDescriptor, error) {
+	rctr, ok := ctr.(ProviderDescriptor)
 	if !ok {
 		var err error
 		rctr, err = doExtractConstructorInfo(ctr)
 		if err != nil {
-			return ConstructorInfo{}, err
+			return ProviderDescriptor{}, err
 		}
 	}
 
 	return expandStructArgsConstructor(rctr)
 }
 
-func doExtractConstructorInfo(ctr interface{}) (ConstructorInfo, error) {
+func doExtractConstructorInfo(ctr interface{}) (ProviderDescriptor, error) {
 	val := reflect.ValueOf(ctr)
 	typ := val.Type()
 	if typ.Kind() != reflect.Func {
-		return ConstructorInfo{}, errors.Errorf("expected a Func type, got %v", typ)
+		return ProviderDescriptor{}, errors.Errorf("expected a Func type, got %v", typ)
 	}
 
 	loc := LocationFromPC(val.Pointer())
 
 	if typ.IsVariadic() {
-		return ConstructorInfo{}, errors.Errorf("variadic function can't be used as a constructor: %s", loc)
+		return ProviderDescriptor{}, errors.Errorf("variadic function can't be used as a constructor: %s", loc)
 	}
 
 	numIn := typ.NumIn()
-	in := make([]Input, numIn)
+	in := make([]ProviderInput, numIn)
 	for i := 0; i < numIn; i++ {
-		in[i] = Input{
+		in[i] = ProviderInput{
 			Type: typ.In(i),
 		}
 	}
 
 	errIdx := -1
 	numOut := typ.NumOut()
-	var out []Output
+	var out []ProviderOutput
 	for i := 0; i < numOut; i++ {
 		t := typ.Out(i)
 		if t == errType {
 			if i != numOut-1 {
-				return ConstructorInfo{}, errors.Errorf("output error parameter is not last parameter in function %s", loc)
+				return ProviderDescriptor{}, errors.Errorf("output error parameter is not last parameter in function %s", loc)
 			}
 			errIdx = i
 		} else {
-			out = append(out, Output{Type: t})
+			out = append(out, ProviderOutput{Type: t})
 		}
 	}
 
-	return ConstructorInfo{
+	return ProviderDescriptor{
 		In:  in,
 		Out: out,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {

@@ -22,16 +22,16 @@ type isStructArgs interface {
 
 var isStructArgsType = reflect.TypeOf((*isStructArgs)(nil)).Elem()
 
-func expandStructArgsConstructor(constructor ConstructorInfo) (ConstructorInfo, error) {
+func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescriptor, error) {
 	var foundStructArgs bool
-	var newIn []Input
+	var newIn []ProviderInput
 
 	for _, in := range constructor.In {
 		if in.Type.AssignableTo(isStructArgsType) {
 			foundStructArgs = true
 			inTypes, err := structArgsInTypes(in.Type)
 			if err != nil {
-				return ConstructorInfo{}, err
+				return ProviderDescriptor{}, err
 			}
 			newIn = append(newIn, inTypes...)
 		} else {
@@ -39,7 +39,7 @@ func expandStructArgsConstructor(constructor ConstructorInfo) (ConstructorInfo, 
 		}
 	}
 
-	var newOut []Output
+	var newOut []ProviderOutput
 	for _, out := range constructor.Out {
 		if out.Type.AssignableTo(isStructArgsType) {
 			foundStructArgs = true
@@ -50,7 +50,7 @@ func expandStructArgsConstructor(constructor ConstructorInfo) (ConstructorInfo, 
 	}
 
 	if foundStructArgs {
-		return ConstructorInfo{
+		return ProviderDescriptor{
 			In:       newIn,
 			Out:      newOut,
 			Fn:       expandStructArgsFn(constructor),
@@ -61,7 +61,7 @@ func expandStructArgsConstructor(constructor ConstructorInfo) (ConstructorInfo, 
 	return constructor, nil
 }
 
-func expandStructArgsFn(constructor ConstructorInfo) func(inputs []reflect.Value) ([]reflect.Value, error) {
+func expandStructArgsFn(constructor ProviderDescriptor) func(inputs []reflect.Value) ([]reflect.Value, error) {
 	fn := constructor.Fn
 	inParams := constructor.In
 	outParams := constructor.Out
@@ -97,9 +97,9 @@ func expandStructArgsFn(constructor ConstructorInfo) func(inputs []reflect.Value
 	}
 }
 
-func structArgsInTypes(typ reflect.Type) ([]Input, error) {
+func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 	n := typ.NumField()
-	var res []Input
+	var res []ProviderInput
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 		if f.Type.AssignableTo(isStructArgsType) {
@@ -116,7 +116,7 @@ func structArgsInTypes(typ reflect.Type) ([]Input, error) {
 			}
 		}
 
-		res = append(res, Input{
+		res = append(res, ProviderInput{
 			Type:     f.Type,
 			Optional: optional,
 		})
@@ -124,16 +124,16 @@ func structArgsInTypes(typ reflect.Type) ([]Input, error) {
 	return res, nil
 }
 
-func structArgsOutTypes(typ reflect.Type) []Output {
+func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
 	n := typ.NumField()
-	var res []Output
+	var res []ProviderOutput
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
 		if f.Type.AssignableTo(isStructArgsType) {
 			continue
 		}
 
-		res = append(res, Output{
+		res = append(res, ProviderOutput{
 			Type: f.Type,
 		})
 	}

@@ -66,7 +66,7 @@ func newContainer(cfg *config) *container {
 	return ctr
 }
 
-func (c *container) call(constructor *ConstructorInfo, scope Scope) ([]reflect.Value, error) {
+func (c *container) call(constructor *ProviderDescriptor, scope Scope) ([]reflect.Value, error) {
 	loc := constructor.Location
 	graphNode, err := c.locationGraphNode(loc, scope)
 	if err != nil {
@@ -107,7 +107,7 @@ func (c *container) call(constructor *ConstructorInfo, scope Scope) ([]reflect.V
 	return out, nil
 }
 
-func (c *container) addNode(constructor *ConstructorInfo, scope Scope, noLog bool) (interface{}, error) {
+func (c *container) addNode(constructor *ProviderDescriptor, scope Scope, noLog bool) (interface{}, error) {
 	constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
 	if err != nil {
 		return reflect.Value{}, err
@@ -234,7 +234,7 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	return nil
 }
 
-func (c *container) resolve(in Input, scope Scope, caller Location) (reflect.Value, error) {
+func (c *container) resolve(in ProviderInput, scope Scope, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
 	typeGraphNode, err := c.typeGraphNode(in.Type)

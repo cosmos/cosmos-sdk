@@ -39,22 +39,22 @@ func TestExtractConstructorInfo(t *testing.T) {
 	tests := []struct {
 		name    string
 		ctr     interface{}
-		wantIn  []container.Input
-		wantOut []container.Output
+		wantIn  []container.ProviderInput
+		wantOut []container.ProviderOutput
 		wantErr bool
 	}{
 		{
 			"simple args",
 			func(x int, y float64) (string, []byte) { return "", nil },
-			[]container.Input{{Type: intType}, {Type: float64Type}},
-			[]container.Output{{Type: stringType}, {Type: bytesTyp}},
+			[]container.ProviderInput{{Type: intType}, {Type: float64Type}},
+			[]container.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
 			false,
 		},
 		{
 			"simple args with error",
 			func(x int, y float64) (string, []byte, error) { return "", nil, nil },
-			[]container.Input{{Type: intType}, {Type: float64Type}},
-			[]container.Output{{Type: stringType}, {Type: bytesTyp}},
+			[]container.ProviderInput{{Type: intType}, {Type: float64Type}},
+			[]container.ProviderOutput{{Type: stringType}, {Type: bytesTyp}},
 			false,
 		},
 		{
@@ -62,8 +62,8 @@ func TestExtractConstructorInfo(t *testing.T) {
 			func(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, error) {
 				return int16(0), StructOut{}, int32(0), nil
 			},
-			[]container.Input{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
-			[]container.Output{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
+			[]container.ProviderInput{{Type: float32Type}, {Type: intType}, {Type: float64Type, Optional: true}, {Type: byteTyp}},
+			[]container.ProviderOutput{{Type: int16Type}, {Type: stringType}, {Type: bytesTyp}, {Type: int32Type}},
 			false,
 		},
 		{

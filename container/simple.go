@@ -5,7 +5,7 @@ import (
 )
 
 type simpleProvider struct {
-	ctr    *ConstructorInfo
+	ctr    *ProviderDescriptor
 	called bool
 	values []reflect.Value
 	scope  Scope

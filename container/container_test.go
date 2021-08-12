@@ -101,6 +101,7 @@ func TestScenario(t *testing.T) {
 					},
 				}, b)
 			},
+			container.Debug(),
 			container.AutoGroupTypes(reflect.TypeOf(Command{})),
 			container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
 			container.Provide(

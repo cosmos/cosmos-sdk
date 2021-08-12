@@ -80,6 +80,13 @@ func TestExtractConstructorInfo(t *testing.T) {
 			nil,
 			true,
 		},
+		{
+			"variadic",
+			func(...float64) int { return 0 },
+			nil,
+			nil,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

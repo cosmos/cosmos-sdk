@@ -83,7 +83,7 @@ func (ModuleB) Provide(dependencies BDependencies, _ container.Scope) (BProvides
 	}, Handler{}, nil
 }
 
-func TestRun(t *testing.T) {
+func TestScenario(t *testing.T) {
 	require.NoError(t,
 		container.Run(
 			func(handlers map[string]Handler, commands []Command, a KeeperA, b KeeperB) {

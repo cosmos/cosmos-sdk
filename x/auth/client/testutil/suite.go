@@ -117,11 +117,14 @@ func (s *IntegrationTestSuite) TestCLISignGenOnly() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
-	info, err := val.ClientCtx.Keyring.KeyByAddress(val.Address)
+	k, err := val.ClientCtx.Keyring.KeyByAddress(val.Address)
 	s.Require().NoError(err)
-	keyName := info.GetName()
+	keyName := k.Name
 
-	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, info.GetAddress())
+	addr,err := k.GetAddress()
+	s.Require().NoError(err)
+
+	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, addr)
 	s.Require().NoError(err)
 
 	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))

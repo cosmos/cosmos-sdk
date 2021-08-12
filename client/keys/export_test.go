@@ -20,15 +20,13 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(codectestutil.CodecOptions{}).Codec
 	testCases := []struct {
-		name                  string
-		keyringBackend        string
-		extraArgs             []string
-		userInput             string
-		mustFail              bool
-		expectedOutput        string
-		expectedOutputContain string // only valid when expectedOutput is empty
+		name           string
+		keyringBackend string
+		extraArgs      []string
+		userInput      string
+		mustFail       bool
+		expectedOutput string
 	}{
 		{
 			name:           "--unsafe only must fail",
@@ -51,25 +49,9 @@ func Test_runExportCmd(t *testing.T) {
 			expectedOutput: "",
 		},
 		{
-			name:                  "--unsafe --unarmored-hex --yes success",
-			keyringBackend:        keyring.BackendTest,
-			extraArgs:             []string{"--unsafe", "--unarmored-hex", "--yes"},
-			userInput:             "",
-			mustFail:              false,
-			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
-		},
-		{
-			name:                  "--unsafe --unarmored-hex success",
-			keyringBackend:        keyring.BackendTest,
-			extraArgs:             []string{"--unsafe", "--unarmored-hex"},
-			userInput:             "y\n",
-			mustFail:              false,
-			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
-		},
-		{
-			name:           "--unsafe --unarmored-hex --indiscreet success",
+			name:           "--unsafe --unarmored-hex succeed",
 			keyringBackend: keyring.BackendTest,
-			extraArgs:      []string{"--unsafe", "--unarmored-hex", "--indiscreet"},
+			extraArgs:      []string{"--unsafe", "--unarmored-hex"},
 			userInput:      "y\n",
 			mustFail:       false,
 			expectedOutput: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
@@ -77,7 +59,7 @@ func Test_runExportCmd(t *testing.T) {
 		{
 			name:           "file keyring backend properly read password and user confirmation",
 			keyringBackend: keyring.BackendFile,
-			extraArgs:      []string{"--unsafe", "--unarmored-hex", "--indiscreet"},
+			extraArgs:      []string{"--unsafe", "--unarmored-hex"},
 			// first 2 pass for creating the key, then unsafe export confirmation, then unlock keyring pass
 			userInput:      "12345678\n12345678\ny\n12345678\n",
 			mustFail:       false,
@@ -90,12 +72,12 @@ func Test_runExportCmd(t *testing.T) {
 			kbHome := t.TempDir()
 			defaultArgs := []string{
 				"keyname1",
-				fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+				fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, tc.keyringBackend),
 			}
 
 			cmd := ExportKeyCommand()
-			cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
 			cmd.SetArgs(append(defaultArgs, tc.extraArgs...))
 			mockIn, mockOut := testutil.ApplyMockIO(cmd)
@@ -104,19 +86,20 @@ func Test_runExportCmd(t *testing.T) {
 			mockInBuf := bufio.NewReader(mockIn)
 
 			// create a key
-			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, bufio.NewReader(mockInBuf), cdc)
+			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, bufio.NewReader(mockInBuf))
 			require.NoError(t, err)
-			t.Cleanup(cleanupKeys(t, kb, "keyname1"))
+			t.Cleanup(func() {
+				kb.Delete("keyname1") // nolint:errcheck
+			})
 
-			path := sdk.GetFullBIP44Path()
-			_, err = kb.NewAccount("keyname1", testdata.TestMnemonic, "", path, hd.Secp256k1)
+			path := sdk.GetConfig().GetFullBIP44Path()
+			_, err = kb.NewAccount("keyname1", testutil.TestMnemonic, "", path, hd.Secp256k1)
 			require.NoError(t, err)
 
 			clientCtx := client.Context{}.
 				WithKeyringDir(kbHome).
 				WithKeyring(kb).
-				WithInput(mockInBuf).
-				WithCodec(cdc)
+				WithInput(mockInBuf)
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 			err = cmd.ExecuteContext(ctx)
@@ -124,11 +107,7 @@ func Test_runExportCmd(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				if tc.expectedOutput != "" {
-					require.Equal(t, tc.expectedOutput, mockOut.String())
-				} else if tc.expectedOutputContain != "" {
-					require.Contains(t, mockOut.String(), tc.expectedOutputContain)
-				}
+				require.Equal(t, tc.expectedOutput, mockOut.String())
 			}
 		})
 	}

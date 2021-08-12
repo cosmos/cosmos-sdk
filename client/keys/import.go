@@ -28,10 +28,6 @@ func ImportKeyCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			name := args[0]
-			if strings.TrimSpace(name) == "" {
-				return errors.New("the provided name is invalid or empty after trimming whitespace")
-			}
 			buf := bufio.NewReader(clientCtx.Input)
 
 			armor, err := os.ReadFile(args[1])

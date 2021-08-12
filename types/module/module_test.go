@@ -6,20 +6,20 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
 
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var errFoo = errors.New("dummy")

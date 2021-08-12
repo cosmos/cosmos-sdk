@@ -124,6 +124,7 @@ type Importer interface {
 	ImportPubKey(uid string, armor string) error
 }
 
+// Migrator is implemented by key stores and enables migration of  keys from amino to proto
 type Migrator interface {
 	MigrateAll() (bool, error)
 }

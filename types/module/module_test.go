@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
 
 	"github.com/golang/mock/gomock"
@@ -18,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var errFoo = errors.New("dummy")
@@ -200,7 +202,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
-	ctx := sdk.Context{}
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}

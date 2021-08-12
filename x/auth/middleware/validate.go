@@ -13,14 +13,14 @@ import (
 )
 
 type validateTxHandler struct {
-	next tx.TxHandler
+	inner tx.TxHandler
 
 	debug bool
 }
 
 func validateMiddleware(txHandler tx.TxHandler) tx.TxHandler {
 	return validateTxHandler{
-		next: txHandler,
+		inner: txHandler,
 	}
 }
 
@@ -55,7 +55,7 @@ func (txh validateTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.Reques
 
 	msCache.Write()
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.inner.CheckTx(ctx, tx, req)
 }
 
 func (txh validateTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {

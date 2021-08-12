@@ -12,13 +12,13 @@ import (
 )
 
 type panicTxHandler struct {
-	next  tx.TxHandler
+	inner tx.TxHandler
 	debug bool
 }
 
 func NewPanicTxMiddleware(debug bool) tx.TxMiddleware {
 	return func(txh tx.TxHandler) tx.TxHandler {
-		return panicTxHandler{next: txh, debug: debug}
+		return panicTxHandler{inner: txh, debug: debug}
 	}
 
 }
@@ -40,7 +40,7 @@ func (txh panicTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCh
 		res, err = sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
 	}()
 
-	return txh.next.CheckTx(ctx, tx, req)
+	return txh.inner.CheckTx(ctx, tx, req)
 }
 
 func (txh panicTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
@@ -81,7 +81,7 @@ func (txh panicTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Request
 		}
 	}()
 
-	return txh.next.DeliverTx(ctx, tx, req)
+	return txh.inner.DeliverTx(ctx, tx, req)
 }
 
 // RecoveryHandler handles recovery() object.

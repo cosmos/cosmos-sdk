@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -196,7 +194,7 @@ func VerifyCleared(t *testing.T, newCtx sdk.Context) {
 	t.Log("Verify that the upgrade plan has been cleared")
 	bz, err := s.querier(newCtx, []string{types.QueryCurrent}, abci.RequestQuery{})
 	require.NoError(t, err)
-	require.Nil(t, bz)
+	require.Nil(t, bz, string(bz))
 }
 
 func TestCanClear(t *testing.T) {
@@ -410,27 +408,31 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
+	require := require.New(t)
+
+	// require no error when the upgrade info file does not exist
+	_, err := s.keeper.ReadUpgradeInfoFromDisk()
+	require.NoError(err)
 
 	planHeight := s.ctx.BlockHeight() + 1
-	name := "test"
+	plan := types.Plan{
+		Name:   "test",
+		Height: 0, // this should be overwritten by DumpUpgradeInfoToFile
+	}
 	t.Log("verify if upgrade height is dumped to file")
-	err := s.keeper.DumpUpgradeInfoToDisk(planHeight, name)
-	require.Nil(t, err)
+	err = s.keeper.DumpUpgradeInfoToDisk(planHeight, plan)
+	require.Nil(err)
 
-	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
-	require.Nil(t, err)
-
-	data, err := ioutil.ReadFile(upgradeInfoFilePath)
-	require.NoError(t, err)
-
-	var upgradeInfo storetypes.UpgradeInfo
-	err = json.Unmarshal(data, &upgradeInfo)
-	require.Nil(t, err)
+	upgradeInfo, err := s.keeper.ReadUpgradeInfoFromDisk()
+	require.NoError(err)
 
 	t.Log("Verify upgrade height from file matches ")
-	require.Equal(t, upgradeInfo.Height, planHeight)
+	require.Equal(upgradeInfo.Height, planHeight)
+	require.Equal(upgradeInfo.Name, plan.Name)
 
 	// clear the test file
+	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
+	require.Nil(err)
 	err = os.Remove(upgradeInfoFilePath)
-	require.Nil(t, err)
+	require.Nil(err)
 }

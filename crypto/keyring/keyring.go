@@ -41,6 +41,9 @@ const (
 	keyringFileDirName = "keyring-file"
 	keyringTestDirName = "keyring-test"
 	passKeyringPrefix  = "keyring-%s"
+
+	// temporary pass phrase for exporting a key during a key rename
+	passPhrase = "temp"
 )
 
 var (
@@ -63,6 +66,9 @@ type Keyring interface {
 	// Delete and DeleteByAddress remove keys from the keyring.
 	Delete(uid string) error
 	DeleteByAddress(address sdk.Address) error
+
+	// Rename an existing key from the Keyring
+	Rename(from string, to string) error
 
 	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from it, and
 	// persists the key to storage. Returns the generated mnemonic and the key Info.
@@ -288,8 +294,10 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 }
 
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
-	if _, err := ks.Key(uid); err == nil {
-		return fmt.Errorf("cannot overwrite key: %s", uid)
+	if k, err := ks.Key(uid); err == nil {
+		if uid == k.GetName() {
+			return fmt.Errorf("cannot overwrite key: %s", uid)
+		}
 	}
 
 	privKey, algo, err := crypto.UnarmorDecryptPrivKey(armor, passphrase)
@@ -382,14 +390,17 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (Info, error) {
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
-		return nil, ErrUnsupportedSigningAlgo
+		return nil, fmt.Errorf(
+			"%w: signature algo %s is not defined in the keyring options",
+			ErrUnsupportedSigningAlgo, algo.Name(),
+		)
 	}
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
 	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate ledger key: %w", err)
 	}
 
 	return ks.writeLedgerKey(uid, priv.PubKey(), *hdPath, algo.Name())
@@ -419,6 +430,30 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 	}
 
 	err = ks.Delete(info.GetName())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ks keystore) Rename(oldName, newName string) error {
+	_, err := ks.Key(newName)
+	if err == nil {
+		return fmt.Errorf("rename failed: %s already exists in the keyring", newName)
+	}
+
+	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
+	if err != nil {
+		return err
+	}
+
+	err = ks.ImportPrivKey(newName, armor, passPhrase)
+	if err != nil {
+		return err
+	}
+
+	err = ks.Delete(oldName)
 	if err != nil {
 		return err
 	}
@@ -760,7 +795,7 @@ func (ks keystore) writeInfo(info Info) error {
 		return err
 	}
 	if exists {
-		return errors.New("public key already exist in keybase")
+		return errors.New("public key already exists in keybase")
 	}
 
 	err = ks.db.Set(keyring.Item{
@@ -783,16 +818,22 @@ func (ks keystore) writeInfo(info Info) error {
 }
 
 // existsInDb returns true if key is in DB. Error is returned only when we have error
-// different thant ErrKeyNotFound
+// different than ErrKeyNotFound
 func (ks keystore) existsInDb(info Info) (bool, error) {
-	if _, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
-		return true, nil // address lookup succeeds - info exists
+	if item, err := ks.db.Get(addrHexKeyAsString(info.GetAddress())); err == nil {
+		if item.Key == info.GetName() {
+			return true, nil // address lookup succeeds - info exists
+		}
+		return false, nil
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns error
 	}
 
-	if _, err := ks.db.Get(infoKey(info.GetName())); err == nil {
-		return true, nil // uid lookup succeeds - info exists
+	if item, err := ks.db.Get(infoKey(info.GetName())); err == nil {
+		if item.Key == info.GetName() {
+			return true, nil // uid lookup succeeds - info exists
+		}
+		return false, nil
 	} else if err != keyring.ErrKeyNotFound {
 		return false, err // received unexpected error - returns
 	}

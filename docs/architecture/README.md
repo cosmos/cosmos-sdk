@@ -36,6 +36,10 @@ If recorded decisions turned out to be lacking, convene a discussion, record the
 
 Read about the [PROCESS](./PROCESS.md).
 
+#### Use RFC 2119 Keywords
+
+When writing ADRs, follow the same best practices for writing RFCs. When writing RFCs, key words are used to signify the requirements in the specification. These words are often capitalized: "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL. They are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
+
 ## ADR Table of Contents
 
 ### Accepted
@@ -50,7 +54,7 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 021: Protocol Buffer Query Encoding](./adr-021-protobuf-query-encoding.md)
 - [ADR 023: Protocol Buffer Naming and Versioning](./adr-023-protobuf-naming.md)
 - [ADR 029: Fee Grant Module](./adr-029-fee-grant-module.md)
-- [ADR 030: Message Authorization Module](architecture/adr-030-authz-module.md)
+- [ADR 030: Message Authorization Module](./adr-030-authz-module.md)
 - [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 
 ### Proposed
@@ -73,3 +77,7 @@ Read about the [PROCESS](./PROCESS.md).
 - [ADR 038: State Listening](./adr-038-state-listening.md)
 - [ADR 039: Epoched Staking](./adr-039-epoched-staking.md)
 - [ADR 040: Storage and SMT State Commitments](./adr-040-storage-and-smt-state-commitments.md)
+
+### Draft
+
+- [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)

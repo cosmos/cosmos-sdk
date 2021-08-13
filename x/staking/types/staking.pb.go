@@ -845,8 +845,6 @@ type Params struct {
 	// bond_denom defines the bondable coin denomination.
 	BondDenom string `protobuf:"bytes,5,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty" yaml:"bond_denom"`
 	// epoch_interval defines the length of a staking epoch in blocks
-	// power_reduction is the amount of staking tokens required for 1 unit of consensus-engine power
-	PowerReduction github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=power_reduction,json=powerReduction,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"power_reduction" yaml:"power_reduction"`
 	EpochInterval  int64                                  `protobuf:"varint,7,opt,name=epoch_interval,json=epochInterval,proto3" json:"epoch_interval,omitempty" yaml:"epoch_interval"`
 }
 
@@ -2137,12 +2135,6 @@ func (this *Params) Equal(that interface{}) bool {
 	if this.BondDenom != that1.BondDenom {
 		return false
 	}
-	if !this.PowerReduction.Equal(that1.PowerReduction) {
-		return false
-	}
-	if this.EpochInterval != that1.EpochInterval {
-		return false
-	}
 	return true
 }
 func (this *RedelegationEntryResponse) Equal(that interface{}) bool {
@@ -2998,14 +2990,6 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x38
 	}
-	{
-		size := m.PowerReduction.Size()
-		i -= size
-		if _, err := m.PowerReduction.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintStaking(dAtA, i, uint64(size))
-	}
 	i--
 	dAtA[i] = 0x32
 	if len(m.BondDenom) > 0 {
@@ -3549,11 +3533,14 @@ func (m *Params) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovStaking(uint64(l))
 	}
+<<<<<<< HEAD
 	l = m.PowerReduction.Size()
 	n += 1 + l + sovStaking(uint64(l))
 	if m.EpochInterval != 0 {
 		n += 1 + sovStaking(uint64(m.EpochInterval))
 	}
+=======
+>>>>>>> master
 	return n
 }
 

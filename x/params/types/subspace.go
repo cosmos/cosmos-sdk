@@ -127,6 +127,22 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 	}
 }
 
+// IterateKeys iterates over all the keys in the subspace and executes the
+// provided callback. If the callback returns true for a given key, iteration
+// will halt.
+func (s Subspace) IterateKeys(ctx sdk.Context, cb func(key []byte) bool) {
+	store := s.kvStore(ctx)
+
+	iter := sdk.KVStorePrefixIterator(store, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		if cb(iter.Key()) {
+			break
+		}
+	}
+}
+
 // GetRaw queries for the raw values bytes for a parameter by key.
 func (s Subspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	store := s.kvStore(ctx)

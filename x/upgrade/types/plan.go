@@ -7,6 +7,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// UpgradeInfoFileName file to store upgrade information
+const UpgradeInfoFilename = "upgrade-info.json"
+
 func (p Plan) String() string {
 	due := p.DueAt()
 	return fmt.Sprintf(`Upgrade Plan
@@ -17,6 +20,12 @@ func (p Plan) String() string {
 
 // ValidateBasic does basic validation of a Plan
 func (p Plan) ValidateBasic() error {
+	if !p.Time.IsZero() {
+		return sdkerrors.ErrInvalidRequest.Wrap("time-based upgrades have been deprecated in the SDK")
+	}
+	if p.UpgradedClientState != nil {
+		return sdkerrors.ErrInvalidRequest.Wrap("upgrade logic for IBC has been moved to the IBC module")
+	}
 	if len(p.Name) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be empty")
 	}

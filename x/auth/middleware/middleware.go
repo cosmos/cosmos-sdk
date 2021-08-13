@@ -15,8 +15,11 @@ func ComposeTxMiddleware(txHandler tx.TxHandler, middlewares ...tx.TxMiddleware)
 	return txHandler
 }
 
-type DefaultTxHandlerOptions struct {
+type TxHandlerOptions struct {
 	Debug bool
+	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
+	// which informs Tendermint what to index. If empty, all events will be indexed.
+	IndexEvents map[string]struct{}
 
 	LegacyRouter     sdk.Router
 	MsgServiceRouter *MsgServiceRouter
@@ -24,10 +27,12 @@ type DefaultTxHandlerOptions struct {
 	LegacyAnteHandler sdk.AnteHandler
 }
 
-func NewDefaultTxHandler(options DefaultTxHandlerOptions) tx.TxHandler {
+func NewDefaultTxHandler(options TxHandlerOptions) tx.TxHandler {
 	return ComposeTxMiddleware(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),
+		// Make sure no events are emitted outside this middleware.
+		NewEventsTxMiddleware(options.IndexEvents),
 		NewPanicTxMiddleware(),
 		NewErrorTxMiddleware(options.Debug),
 	)

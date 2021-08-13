@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 type legacyAnteTxHandler struct {
@@ -15,7 +14,7 @@ type legacyAnteTxHandler struct {
 }
 
 func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.TxMiddleware {
-	return func(txHandler sdktx.TxHandler) sdktx.TxHandler {
+	return func(txHandler tx.TxHandler) tx.TxHandler {
 		return legacyAnteTxHandler{
 			anteHandler: anteHandler,
 			inner:       txHandler,
@@ -26,7 +25,8 @@ func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.TxMiddleware {
 var _ tx.TxHandler = legacyAnteTxHandler{}
 
 func (txh legacyAnteTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	if err := txh.runAnte(ctx, tx, req.Tx); err != nil {
+	ctx, err := txh.runAnte(ctx, tx, req.Tx)
+	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
@@ -34,17 +34,18 @@ func (txh legacyAnteTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.Requ
 }
 
 func (txh legacyAnteTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	if err := txh.runAnte(ctx, tx, req.Tx); err != nil {
+	ctx, err := txh.runAnte(ctx, tx, req.Tx)
+	if err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
 	return txh.inner.DeliverTx(ctx, tx, req)
 }
 
-func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byte) error {
+func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byte) (sdk.Context, error) {
 	err := validateBasicTxMsgs(tx.GetMsgs())
 	if err != nil {
-		return err
+		return sdk.Context{}, err
 	}
 
 	ms := ctx.MultiStore()
@@ -59,7 +60,7 @@ func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byt
 	anteCtx, msCache := cacheTxContext(ctx, txBytes)
 	newCtx, err := txh.anteHandler(anteCtx, tx, false)
 	if err != nil {
-		return err
+		return sdk.Context{}, err
 	}
 
 	if !newCtx.IsZero() {
@@ -74,7 +75,7 @@ func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byt
 
 	msCache.Write()
 
-	return nil
+	return ctx, nil
 }
 
 // validateBasicTxMsgs executes basic validator calls for messages.
@@ -84,7 +85,7 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	}
 
 	for _, msg := range msgs {
-		err := sdktx.ValidateMsg(msg)
+		err := msg.ValidateBasic()
 		if err != nil {
 			return err
 		}

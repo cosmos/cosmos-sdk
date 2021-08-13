@@ -42,7 +42,7 @@ func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Reque
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(tx.GetMsgs()))
-	events := sdk.EmptyEvents()
+	events := ctx.EventManager().Events()
 	txMsgData := &sdk.TxMsgData{
 		Data: make([]*sdk.MsgData, 0, len(tx.GetMsgs())),
 	}

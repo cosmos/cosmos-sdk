@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -402,8 +403,13 @@ func NewSimApp(
 		panic(err)
 	}
 
-	app.SetTxHandler(authmiddleware.NewDefaultTxHandler(authmiddleware.DefaultTxHandlerOptions{
+	indexEvents := map[string]struct{}{}
+	for _, e := range cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)) {
+		indexEvents[e] = struct{}{}
+	}
+	app.SetTxHandler(authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
 		Debug:             app.Trace(),
+		IndexEvents:       indexEvents,
 		LegacyRouter:      app.legacyRouter,
 		MsgServiceRouter:  app.msgSvcRouter,
 		LegacyAnteHandler: anteHandler,

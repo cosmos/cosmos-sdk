@@ -132,7 +132,7 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 			bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{LegacyRouter: legacyRouter}))
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{LegacyRouter: legacyRouter}))
 	}
 
 	snapshotInterval := uint64(2)
@@ -922,7 +922,7 @@ func TestCheckTx(t *testing.T) {
 		legacyRouter.AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			return &sdk.Result{}, nil
 		}))
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, counterKey),
 		}))
@@ -979,7 +979,7 @@ func TestDeliverTx(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
 			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
@@ -1038,7 +1038,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		r2 := sdk.NewRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
 		legacyRouter.AddRoute(r1)
 		legacyRouter.AddRoute(r2)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
 		}))
@@ -1114,7 +1114,7 @@ func TestSimulateTx(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter: legacyRouter,
 			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
@@ -1180,7 +1180,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter: legacyRouter,
 			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return
@@ -1311,7 +1311,7 @@ func TestTxGasLimits(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: ante,
 		}))
@@ -1397,7 +1397,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: ante,
 		}))
@@ -1480,7 +1480,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter: legacyRouter,
 			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				panic(sdkerrors.Wrap(anteErr, "anteHandler"))
@@ -1522,7 +1522,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
 		}))
@@ -1626,7 +1626,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: ante,
 		}))
@@ -1675,7 +1675,7 @@ func TestQuery(t *testing.T) {
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter: legacyRouter,
 			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				store := ctx.KVStore(capKey1)
@@ -1996,7 +1996,7 @@ func TestWithRouter(t *testing.T) {
 		customRouter := &testCustomRouter{routes: sync.Map{}}
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		customRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      customRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
 		}))

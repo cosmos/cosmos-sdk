@@ -112,8 +112,9 @@ func RunGRPCQuery(ctx Context, grpcCtx gocontext.Context, method string, req int
 	}
 
 	abciReq := abci.RequestQuery{
-		Path: method,
-		Data: reqBz,
+		Path:   method,
+		Data:   reqBz,
+		Height: ctx.Height,
 	}
 
 	abciRes, err := ctx.QueryABCI(abciReq)

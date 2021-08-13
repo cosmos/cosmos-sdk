@@ -190,14 +190,3 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.tx.v1beta1.Tx", (*sdk.Tx)(nil))
 	registry.RegisterImplementations((*sdk.Tx)(nil), &Tx{})
 }
-
-// ValidateMsg calls the `sdk.Msg.ValidateBasic()`
-// also validates all the signers are valid bech32 addresses.
-func ValidateMsg(msg sdk.Msg) error {
-	err := msg.ValidateBasic()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

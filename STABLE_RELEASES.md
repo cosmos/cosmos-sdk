@@ -4,16 +4,16 @@
 
 Only the following release series are currently supported and receive bug fixes:
 
-* **0.39 «Launchpad»** will be supported until 6 months after **0.42.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
-* **0.42 «Stargate»** is the latest stable release.
+* **0.42 «Stargate»** will be supported until 6 months after **0.43.0** is published. A fairly strict **bugfix-only** rule applies to pull requests that are requested to be included into a stable point-release.
+* **0.43 «Stargate»** is the latest stable release.
 
-The **0.42 «Stargate»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
+The **0.43 «Stargate»** release series is maintained in compliance with the **Stable Release Policy** as described in this document.
 
 ## Stable Release Policy
 
 This policy presently applies *only* to the following release series:
 
-* **0.42 «Stargate»**
+* **0.43 «Stargate»**
 
 ### Point Releases
 
@@ -47,7 +47,7 @@ ways in stable releases and `master` branch.
 
 ### Migrations
 
-To smoothen the update to the latest stable release, the SDK includes a set of CLI commands for managing migrations between SDK versions, under the `migrate` subcommand. Only migration scripts between stable releases are included. For the current release, **0.39 «Launchpad»** and later migrations are supported.
+To smoothen the update to the latest stable release, the SDK includes a set of CLI commands for managing migrations between SDK versions, under the `migrate` subcommand. Only migration scripts between stable releases are included. For the current release, **0.42 «Stargate»** and later migrations are supported.
 
 ### What qualifies as a Stable Release Update (SRU)
 
@@ -87,14 +87,14 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 
 ## Stable Release Exception - Procedure
 
-1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [0.42 «Stargate»](https://github.com/cosmos/cosmos-sdk/labels/0.42%20LTS%20%28Stargate%29) to the issue.
+1. Check that the bug is either fixed or not reproducible in `master`. It is, in general, not appropriate to release bug fixes for stable releases without first testing them in `master`. Please apply the label [v0.43](https://github.com/cosmos/cosmos-sdk/milestone/26) to the issue.
 2. Add a comment to the issue and ensure it contains the following information (see the bug template below):
 
 * **[Impact]** An explanation of the bug on users and justification for backporting the fix to the stable release.
 * A **[Test Case]** section containing detailed instructions on how to reproduce the bug.
 * A **[Regression Potential]** section with a clear assessment on how regressions are most likely to manifest as a result of the pull request that aims to fix the bug in the target stable release.
 
-3. **Stable Release Managers** will review and discuss the PR. Once *consensus* surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective point-release target branch (e.g. `release/v0.42.x`) and the PR included in the point-release's respective milestone (e.g. `0.42.5`).
+3. **Stable Release Managers** will review and discuss the PR. Once *consensus* surrounding the rationale has been reached and the technical review has successfully concluded, the pull request will be merged in the respective point-release target branch (e.g. `release/v0.43.x`) and the PR included in the point-release's respective milestone (e.g. `v0.43.5`).
 
 ### Stable Release Exception - Bug template
 
@@ -129,5 +129,5 @@ Their responsibilites include:
 The Stable Release Managers are appointed by the Interchain Foundation. Currently residing Stable Release Managers:
 
 * @clevinson - Cory Levinson
-* @amaurym - Amaruy Martiny
+* @amaurym - Amaury Martiny
 * @robert-zaremba - Robert Zaremba

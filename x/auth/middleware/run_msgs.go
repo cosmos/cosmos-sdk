@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	"google.golang.org/protobuf/proto"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -16,13 +15,15 @@ import (
 )
 
 type runMsgsTxHandler struct {
-	router            sdk.Router        // handle any kind of message
-	msgServiceRouter  *MsgServiceRouter // router for redirecting Msg service messages
-	interfaceRegistry types.InterfaceRegistry
+	legacyRouter     sdk.Router        // router for redirecting legacy Msgs
+	MsgServiceRouter *MsgServiceRouter // router for redirecting Msg service messages
 }
 
-func NewRunMsgsTxHandler() tx.TxHandler {
-	return runMsgsTxHandler{}
+func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.TxHandler {
+	return runMsgsTxHandler{
+		legacyRouter:     legacyRouter,
+		MsgServiceRouter: msr,
+	}
 }
 
 var _ tx.TxHandler = runMsgsTxHandler{}
@@ -40,7 +41,7 @@ func (txh runMsgsTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.Request
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
-	runMsgCtx, _ := txh.cacheTxContext(ctx, req.Tx)
+	runMsgCtx, _ := cacheTxContext(ctx, req.Tx)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
@@ -48,20 +49,17 @@ func (txh runMsgsTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.Request
 	result, err := txh.runMsgs(runMsgCtx, tx.GetMsgs(), mode)
 
 	return abci.ResponseCheckTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+		Log:    result.Log,
+		Data:   result.Data,
+		Events: result.Events,
 	}, nil
-
 }
 
 func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
-	runMsgCtx, msCache := txh.cacheTxContext(ctx, req.Tx)
+	runMsgCtx, msCache := cacheTxContext(ctx, req.Tx)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
@@ -69,19 +67,12 @@ func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Reque
 	result, err := txh.runMsgs(runMsgCtx, tx.GetMsgs(), runTxModeDeliver)
 	if err == nil {
 		msCache.Write()
-
-		if len(events) > 0 {
-			// append the events in the order of occurrence
-			result.Events = append(events.ToABCIEvents(), result.Events...)
-		}
 	}
 
-	return abci.ResponseCheckTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	return abci.ResponseDeliverTx{
+		Log:    result.Log,
+		Data:   result.Data,
+		Events: result.Events,
 	}, nil
 }
 
@@ -110,7 +101,7 @@ func (txh runMsgsTxHandler) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxM
 			err          error
 		)
 
-		if handler := app.msgServiceRouter.Handler(msg); handler != nil {
+		if handler := txh.MsgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
 			msgResult, err = handler(ctx, msg)
 			eventMsgName = sdk.MsgTypeURL(msg)
@@ -119,10 +110,10 @@ func (txh runMsgsTxHandler) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxM
 			// Assuming that the app developer has migrated all their Msgs to
 			// proto messages and has registered all `Msg services`, then this
 			// path should never be called, because all those Msgs should be
-			// registered within the `msgServiceRouter` already.
+			// registered within the `MsgServiceRouter` already.
 			msgRoute := legacyMsg.Route()
 			eventMsgName = legacyMsg.Type()
-			handler := app.router.Route(ctx, msgRoute)
+			handler := txh.legacyRouter.Route(ctx, msgRoute)
 			if handler == nil {
 				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 			}
@@ -165,7 +156,7 @@ func (txh runMsgsTxHandler) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxM
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func (txh runMsgsTxHandler) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+func cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()

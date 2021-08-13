@@ -8,22 +8,22 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 type Keeper struct {
 	storeKey sdk.StoreKey
 	cdc      codec.BinaryCodec
-	router   *baseapp.MsgServiceRouter
+	router   *middleware.MsgServiceRouter
 }
 
 // NewKeeper constructs a message authorization Keeper
-func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryCodec, router *baseapp.MsgServiceRouter) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryCodec, router *middleware.MsgServiceRouter) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,

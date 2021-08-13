@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,18 +9,24 @@ import (
 )
 
 func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	// runTx expects tx bytes as argument, so we encode the tx argument into
-	// bytes. Note that runTx will actually decode those bytes again. But since
+	// CheckTx expects tx bytes as argument, so we encode the tx argument into
+	// bytes. Note that CheckTx will actually decode those bytes again. But since
 	// this helper is only used in tests/simulation, it's fine.
 	bz, err := txEncoder(tx)
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	return app.runTx(runTxModeCheck, bz)
+	res := app.CheckTx(abci.RequestCheckTx{Tx: bz, Type: abci.CheckTxType_New})
+	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
+		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
+		nil
 }
 
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeSimulate, txBytes)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: bz})
+	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
+		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
+		nil
 }
 
 func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -28,7 +35,10 @@ func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *s
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	return app.runTx(runTxModeDeliver, bz)
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: bz})
+	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
+		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
+		nil
 }
 
 // Context with current {check, deliver}State of the app used by tests.

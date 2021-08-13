@@ -10,6 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -42,14 +43,15 @@ type (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { // nolint: maligned
 	// initialized on creation
-	logger          log.Logger
-	name            string               // application name from abci.Info
-	db              dbm.DB               // common DB backend
-	cms             sdk.CommitMultiStore // Main (uncached) state
-	storeLoader     StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	queryRouter     sdk.QueryRouter      // router for redirecting query calls
-	grpcQueryRouter *GRPCQueryRouter     // router for redirecting gRPC query calls
-	txDecoder       sdk.TxDecoder        // unmarshal []byte into sdk.Tx
+	logger            log.Logger
+	name              string               // application name from abci.Info
+	db                dbm.DB               // common DB backend
+	cms               sdk.CommitMultiStore // Main (uncached) state
+	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
+	queryRouter       sdk.QueryRouter      // router for redirecting query calls
+	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
+	interfaceRegistry types.InterfaceRegistry
+	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
 	txHandler      tx.TxHandler     // ante handler for fee and auth
 	initChainer    sdk.InitChainer  // initialize state with validators and state blob
@@ -136,17 +138,15 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger,
-		name:             name,
-		db:               db,
-		cms:              store.NewCommitMultiStore(db),
-		storeLoader:      DefaultStoreLoader,
-		router:           NewRouter(),
-		queryRouter:      NewQueryRouter(),
-		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(),
-		txDecoder:        txDecoder,
-		fauxMerkleMode:   false,
+		logger:          logger,
+		name:            name,
+		db:              db,
+		cms:             store.NewCommitMultiStore(db),
+		storeLoader:     DefaultStoreLoader,
+		queryRouter:     NewQueryRouter(),
+		grpcQueryRouter: NewGRPCQueryRouter(),
+		txDecoder:       txDecoder,
+		fauxMerkleMode:  false,
 	}
 
 	for _, option := range options {
@@ -186,9 +186,6 @@ func (app *BaseApp) Logger() log.Logger {
 func (app *BaseApp) Trace() bool {
 	return app.trace
 }
-
-// MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
-func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
@@ -342,17 +339,6 @@ func (app *BaseApp) setIndexEvents(ie []string) {
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
 	}
-}
-
-// Router returns the router of the BaseApp.
-func (app *BaseApp) Router() sdk.Router {
-	if app.sealed {
-		// We cannot return a Router when the app is sealed because we can't have
-		// any routes modified which would cause unexpected routing behavior.
-		panic("Router() on sealed BaseApp")
-	}
-
-	return app.router
 }
 
 // QueryRouter returns the QueryRouter of a BaseApp.

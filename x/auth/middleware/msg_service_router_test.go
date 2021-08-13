@@ -1,4 +1,4 @@
-package baseapp_test
+package middleware_test
 
 import (
 	"os"
@@ -15,19 +15,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func TestRegisterMsgService(t *testing.T) {
-	db := dbm.NewMemDB()
-
 	// Create an encoding config that doesn't register testdata Msg services.
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
-	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
-			app.MsgServiceRouter(),
+			msr,
 			testdata.MsgServerImpl{},
 		)
 	})
@@ -36,7 +34,7 @@ func TestRegisterMsgService(t *testing.T) {
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 	require.NotPanics(t, func() {
 		testdata.RegisterMsgServer(
-			app.MsgServiceRouter(),
+			msr,
 			testdata.MsgServerImpl{},
 		)
 	})
@@ -44,16 +42,14 @@ func TestRegisterMsgService(t *testing.T) {
 
 func TestRegisterMsgServiceTwice(t *testing.T) {
 	// Setup baseapp.
-	db := dbm.NewMemDB()
 	encCfg := simapp.MakeTestEncodingConfig()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
-	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {
 		testdata.RegisterMsgServer(
-			app.MsgServiceRouter(),
+			msr,
 			testdata.MsgServerImpl{},
 		)
 	})
@@ -61,7 +57,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 	// Second time should panic.
 	require.Panics(t, func() {
 		testdata.RegisterMsgServer(
-			app.MsgServiceRouter(),
+			msr,
 			testdata.MsgServerImpl{},
 		)
 	})
@@ -74,8 +70,9 @@ func TestMsgService(t *testing.T) {
 	db := dbm.NewMemDB()
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
 	testdata.RegisterMsgServer(
-		app.MsgServiceRouter(),
+		msr,
 		testdata.MsgServerImpl{},
 	)
 	_ = app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})

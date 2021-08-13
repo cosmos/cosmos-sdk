@@ -42,6 +42,7 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
+	authmiddleware "github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -140,6 +141,8 @@ type SimApp struct {
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
+	msgSvcRouter      *authmiddleware.MsgServiceRouter
+	legacyRouter      sdk.Router
 
 	invCheckPeriod uint
 
@@ -216,6 +219,8 @@ func NewSimApp(
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
+		legacyRouter:      authmiddleware.NewLegacyRouter(),
+		msgSvcRouter:      authmiddleware.NewMsgServiceRouter(interfaceRegistry),
 		invCheckPeriod:    invCheckPeriod,
 		keys:              keys,
 		tkeys:             tkeys,
@@ -266,7 +271,7 @@ func NewSimApp(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
 	)
 
-	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.BaseApp.MsgServiceRouter())
+	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.msgSvcRouter)
 
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
@@ -346,8 +351,8 @@ func NewSimApp(
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
-	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterRoutes(app.legacyRouter, app.QueryRouter(), encodingConfig.Amino)
+	app.configurator = module.NewConfigurator(app.appCodec, app.msgSvcRouter, app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
 	// add test gRPC service for testing gRPC queries in isolation
@@ -397,7 +402,12 @@ func NewSimApp(
 		panic(err)
 	}
 
-	app.SetAnteHandler(anteHandler)
+	app.SetTxHandler(authmiddleware.NewDefaultTxHandler(authmiddleware.DefaultTxHandlerOptions{
+		Debug:             app.Trace(),
+		LegacyRouter:      app.legacyRouter,
+		MsgServiceRouter:  app.msgSvcRouter,
+		LegacyAnteHandler: anteHandler,
+	}))
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {

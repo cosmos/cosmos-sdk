@@ -1,6 +1,9 @@
 package middleware
 
-import "github.com/cosmos/cosmos-sdk/types/tx"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+)
 
 // Enum mode for CheckTx and DeliverTx
 type runTxMode uint8
@@ -12,8 +15,8 @@ const (
 	runTxModeDeliver                   // Deliver a transaction
 )
 
-// ComposeTxMiddleware compose multiple middlewares on top of a TxHandler. Last
-// middleware is the outermost middleware.
+// ComposeTxMiddleware compose multiple middlewares on top of a TxHandler. First
+// middleware is the outermost middleware (i.e. gets run first).
 func ComposeTxMiddleware(txHandler tx.TxHandler, middlewares ...tx.TxMiddleware) tx.TxHandler {
 	for _, m := range middlewares {
 		txHandler = m(txHandler)
@@ -22,11 +25,20 @@ func ComposeTxMiddleware(txHandler tx.TxHandler, middlewares ...tx.TxMiddleware)
 	return txHandler
 }
 
-func NewDefaultTxHandler(debug bool) tx.TxHandler {
+type DefaultTxHandlerOptions struct {
+	Debug bool
+
+	LegacyRouter     sdk.Router
+	MsgServiceRouter *MsgServiceRouter
+
+	LegacyAnteHandler sdk.AnteHandler
+}
+
+func NewDefaultTxHandler(options DefaultTxHandlerOptions) tx.TxHandler {
 	return ComposeTxMiddleware(
-		NewRunMsgsTxHandler(),
-		// add antehandlers here
-		validateMiddleware,
-		NewPanicTxMiddleware(debug),
+		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
+		newLegacyAnteMiddleware(options.LegacyAnteHandler),
+		NewPanicTxMiddleware(),
+		NewErrorTxMiddleware(options.Debug),
 	)
 }

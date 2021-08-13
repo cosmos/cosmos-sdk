@@ -13,12 +13,11 @@ import (
 
 type panicTxHandler struct {
 	inner tx.TxHandler
-	debug bool
 }
 
-func NewPanicTxMiddleware(debug bool) tx.TxMiddleware {
+func NewPanicTxMiddleware() tx.TxMiddleware {
 	return func(txh tx.TxHandler) tx.TxHandler {
-		return panicTxHandler{inner: txh, debug: debug}
+		return panicTxHandler{inner: txh}
 	}
 
 }
@@ -35,9 +34,6 @@ func (txh panicTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCh
 			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, newDefaultRecoveryMiddleware())
 			err = processRecovery(r, recoveryMW)
 		}
-
-		gInfo := sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
-		res, err = sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
 	}()
 
 	return txh.inner.CheckTx(ctx, tx, req)
@@ -46,8 +42,8 @@ func (txh panicTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCh
 func (txh panicTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
 	// only run the tx if there is block gas remaining
 	if ctx.BlockGasMeter().IsOutOfGas() {
-		gInfo := sdk.GasInfo{GasUsed: ctx.BlockGasMeter().GasConsumed()}
-		return sdkerrors.ResponseDeliverTx(sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx"), gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
+		err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+		return
 	}
 
 	startingGas := ctx.BlockGasMeter().GasConsumed()
@@ -61,9 +57,6 @@ func (txh panicTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Request
 			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, newDefaultRecoveryMiddleware())
 			err = processRecovery(r, recoveryMW)
 		}
-
-		gInfo := sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
-		res, err = sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
 	}()
 
 	// If BlockGasMeter() panics it will be caught by the above recover and will

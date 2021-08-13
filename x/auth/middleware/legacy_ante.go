@@ -1,10 +1,7 @@
 package middleware
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,25 +9,45 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-type validateTxHandler struct {
-	inner tx.TxHandler
-
-	debug bool
+type legacyAnteTxHandler struct {
+	anteHandler sdk.AnteHandler
+	inner       tx.TxHandler
 }
 
-func validateMiddleware(txHandler tx.TxHandler) tx.TxHandler {
-	return validateTxHandler{
-		inner: txHandler,
+func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.TxMiddleware {
+	return func(txHandler sdktx.TxHandler) sdktx.TxHandler {
+		return legacyAnteTxHandler{
+			anteHandler: anteHandler,
+			inner:       txHandler,
+		}
 	}
 }
 
-var _ tx.TxHandler = validateTxHandler{}
+var _ tx.TxHandler = legacyAnteTxHandler{}
 
-func (txh validateTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh legacyAnteTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	if err := txh.runAnte(ctx, tx, req.Tx); err != nil {
+		return abci.ResponseCheckTx{}, err
+	}
+
+	return txh.inner.CheckTx(ctx, tx, req)
+}
+
+func (txh legacyAnteTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	if err := txh.runAnte(ctx, tx, req.Tx); err != nil {
+		return abci.ResponseDeliverTx{}, err
+	}
+
+	return txh.inner.DeliverTx(ctx, tx, req)
+}
+
+func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byte) error {
 	err := validateBasicTxMsgs(tx.GetMsgs())
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(nil, 0, 0, txh.debug), err
+		return err
 	}
+
+	ms := ctx.MultiStore()
 
 	// Branch context before AnteHandler call in case it aborts.
 	// This is required for both CheckTx and DeliverTx.
@@ -39,9 +56,11 @@ func (txh validateTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.Reques
 	// NOTE: Alternatively, we could require that AnteHandler ensures that
 	// writes do not happen if aborted/failed.  This may have some
 	// performance benefits, but it'll be more difficult to get right.
-	anteCtx, msCache := txh.cacheTxContext(ctx, req.Tx)
-	anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
-	newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
+	anteCtx, msCache := cacheTxContext(ctx, txBytes)
+	newCtx, err := txh.anteHandler(anteCtx, tx, false)
+	if err != nil {
+		return err
+	}
 
 	if !newCtx.IsZero() {
 		// At this point, newCtx.MultiStore() is a store branch, or something else
@@ -55,11 +74,7 @@ func (txh validateTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.Reques
 
 	msCache.Write()
 
-	return txh.inner.CheckTx(ctx, tx, req)
-}
-
-func (txh validateTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-
+	return nil
 }
 
 // validateBasicTxMsgs executes basic validator calls for messages.
@@ -76,23 +91,4 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	}
 
 	return nil
-}
-
-// cacheTxContext returns a new context based off of the provided context with
-// a branched multi-store.
-func (txh validateTxHandler) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
-	ms := ctx.MultiStore()
-	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
-	msCache := ms.CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.SetTracingContext(
-			sdk.TraceContext(
-				map[string]interface{}{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-				},
-			),
-		).(sdk.CacheMultiStore)
-	}
-
-	return ctx.WithMultiStore(msCache), msCache
 }

@@ -58,30 +58,38 @@ To smoothen the update to the latest stable release, the SDK includes a set of C
     * Bugs that may cause **loss of user's data**.
 * Other safe cases:
     * Bugs which don't fit in the aforementioned categories for which an obvious safe patch is known.
+    * Relatively small yet strictly non-breaking features with strong support from the community.
     * Relatively small yet strictly non-breaking changes that introduce forward-compatible client
     features to smoothen the migration to successive releases.
+    * Relatively small CLI improvements, which may contain CLI-breaking changes. 
 
 ### What does not qualify as SRU
 
 * State machine changes.
-* New features that introduces API breakages (e.g. public functions removal/renaming).
+* Breaking changes in Protobuf definitions, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-guidelines.md).
+* Changes that introduces API breakages (e.g. public functions and interfaces removal/renaming).
+* Client-breaking changes in gRPC and HTTP request and response types.
 * Cosmetic fixes, such as formatting or linter warning fixes.
 
 ## What pull requests will be included in stable point-releases
 
-Pull requests that fix bugs that fall in the following categories do not require a **Stable Release Exception** to be granted to be included in a stable point-release:
+Pull requests that fix bugs and add features that fall in the following categories do not require a **Stable Release Exception** to be granted to be included in a stable point-release:
 
 * **Severe regressions**.
 * Bugs that may cause **client applications** to be **largely unusable**.
 * Bugs that may cause **state corruption or data loss**.
 * Bugs that may directly or indirectly cause a **security vulnerability**.
+* Non-breaking features that are strongly requested by the community.
+* CLI improvements that are strongly requested by the community.
 
 ## What pull requests will NOT be automatically included in stable point-releases
 
 As rule of thumb, the following changes will **NOT** be automatically accepted into stable point-releases:
 
 * **State machine changes**.
-* **Client application's code-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
+* **Protobug-breaking changes**, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-       guidelines.md).
+* **Client-breaking changes**, i.e. changes that prevent gRPC, HTTP and RPC clients to continue interacting with the node without any change.
+* **API-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
 
  In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
 

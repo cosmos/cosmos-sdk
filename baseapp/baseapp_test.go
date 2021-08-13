@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -125,11 +126,13 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 	codec := codec.NewLegacyAmino()
 	registerTestCodec(codec)
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		legacyRouter := middleware.NewLegacyRouter()
+		legacyRouter.AddRoute(sdk.NewRoute(routeMsgKeyValue, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			kv := msg.(*msgKeyValue)
 			bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{LegacyRouter: legacyRouter}))
 	}
 
 	snapshotInterval := uint64(2)
@@ -528,7 +531,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		app.SetEndBlocker(nil)
 	})
 	require.Panics(t, func() {
-		app.SetAnteHandler(nil)
+		app.SetTxHandler(nil)
 	})
 	require.Panics(t, func() {
 		app.SetAddrPeerFilter(nil)
@@ -538,9 +541,6 @@ func TestBaseAppOptionSeal(t *testing.T) {
 	})
 	require.Panics(t, func() {
 		app.SetFauxMerkleMode()
-	})
-	require.Panics(t, func() {
-		app.SetRouter(NewRouter())
 	})
 }
 
@@ -916,15 +916,19 @@ func TestCheckTx(t *testing.T) {
 	// This ensures changes to the kvstore persist across successive CheckTx.
 	counterKey := []byte("counter-key")
 
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		// TODO: can remove this once CheckTx doesnt process msgs.
-		bapp.Router().AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		legacyRouter.AddRoute(sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			return &sdk.Result{}, nil
+		}))
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, counterKey),
 		}))
 	}
 
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 
 	nTxs := int64(5)
 	app.InitChain(abci.RequestInitChain{})
@@ -968,16 +972,18 @@ func TestCheckTx(t *testing.T) {
 func TestDeliverTx(t *testing.T) {
 	// test increments in the ante
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
-
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		bapp.Router().AddRoute(r)
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+		}))
 	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
@@ -1021,19 +1027,21 @@ func TestMultiMsgCheckTx(t *testing.T) {
 func TestMultiMsgDeliverTx(t *testing.T) {
 	// increment the tx counter
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
-
 	// increment the msg counter
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r1 := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
 		r2 := sdk.NewRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
-		bapp.Router().AddRoute(r1)
-		bapp.Router().AddRoute(r2)
+		legacyRouter.AddRoute(r1)
+		legacyRouter.AddRoute(r2)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+		}))
 	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 
 	// Create same codec used in txDecoder
 	codec := codec.NewLegacyAmino()
@@ -1097,22 +1105,22 @@ func TestConcurrentCheckDeliver(t *testing.T) {
 func TestSimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
-			return
-		})
-	}
-
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
 			return &sdk.Result{}, nil
 		})
-		bapp.Router().AddRoute(r)
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter: legacyRouter,
+			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
+				return
+			},
+		}))
 	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{})
 
@@ -1164,19 +1172,20 @@ func TestSimulateTx(t *testing.T) {
 }
 
 func TestRunInvalidTransaction(t *testing.T) {
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			return
-		})
-	}
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			return &sdk.Result{}, nil
 		})
-		bapp.Router().AddRoute(r)
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter: legacyRouter,
+			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				return
+			},
+		}))
 	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -1268,43 +1277,44 @@ func TestRunInvalidTransaction(t *testing.T) {
 // Test that transactions exceeding gas limits fail
 func TestTxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
-			// AnteHandlers must have their own defer/recover in order for the BaseApp
-			// to know how much gas was used! This is because the GasMeter is created in
-			// the AnteHandler, but if it panics the context won't be set properly in
-			// runTx's recover call.
-			defer func() {
-				if r := recover(); r != nil {
-					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
-					default:
-						panic(r)
-					}
+		// AnteHandlers must have their own defer/recover in order for the BaseApp
+		// to know how much gas was used! This is because the GasMeter is created in
+		// the AnteHandler, but if it panics the context won't be set properly in
+		// runTx's recover call.
+		defer func() {
+			if r := recover(); r != nil {
+				switch rType := r.(type) {
+				case sdk.ErrorOutOfGas:
+					err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+				default:
+					panic(r)
 				}
-			}()
+			}
+		}()
 
-			count := tx.(txTest).Counter
-			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+		count := tx.(txTest).Counter
+		newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-			return newCtx, nil
-		})
-
+		return newCtx, nil
 	}
 
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
-		bapp.Router().AddRoute(r)
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: ante,
+		}))
 	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -1357,38 +1367,41 @@ func TestTxGasLimits(t *testing.T) {
 // Test that transactions exceeding gas limits fail
 func TestMaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
-			defer func() {
-				if r := recover(); r != nil {
-					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
-						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
-					default:
-						panic(r)
-					}
+		defer func() {
+			if r := recover(); r != nil {
+				switch rType := r.(type) {
+				case sdk.ErrorOutOfGas:
+					err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+				default:
+					panic(r)
 				}
-			}()
+			}
+		}()
 
-			count := tx.(txTest).Counter
-			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+		count := tx.(txTest).Counter
+		newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-			return
-		})
+		return
 	}
 
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			count := msg.(*msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
-		bapp.Router().AddRoute(r)
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: ante,
+		}))
 	}
+	app := setupBaseApp(t, txHandlerOpt)
 
-	app := setupBaseApp(t, anteOpt, routerOpt)
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &abci.ConsensusParams{
 			Block: &abci.BlockParams{
@@ -1459,19 +1472,20 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	const customPanicMsg = "test panic"
 	anteErr := sdkerrors.Register("fakeModule", 100500, "fakeError")
 
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
-		})
-	}
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			return &sdk.Result{}, nil
 		})
-		bapp.Router().AddRoute(r)
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter: legacyRouter,
+			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				panic(sdkerrors.Wrap(anteErr, "anteHandler"))
+			},
+		}))
 	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 
 	header := tmproto.Header{Height: 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -1499,18 +1513,19 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 
 func TestBaseAppAnteHandler(t *testing.T) {
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
-	}
-
 	deliverKey := []byte("deliver-key")
-	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		bapp.Router().AddRoute(r)
-	}
-
 	cdc := codec.NewLegacyAmino()
-	app := setupBaseApp(t, anteOpt, routerOpt)
+
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
+		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+		}))
+	}
+	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{})
 	registerTestCodec(cdc)
@@ -1574,45 +1589,48 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 func TestGasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
+	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
 
-			defer func() {
-				if r := recover(); r != nil {
-					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
-						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
-					default:
-						panic(r)
-					}
+		defer func() {
+			if r := recover(); r != nil {
+				switch rType := r.(type) {
+				case sdk.ErrorOutOfGas:
+					log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+					err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+				default:
+					panic(r)
 				}
-			}()
-
-			txTest := tx.(txTest)
-			newCtx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
-			if txTest.FailOnAnte {
-				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
+		}()
 
-			return
-		})
-	}
+		txTest := tx.(txTest)
+		newCtx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
+		if txTest.FailOnAnte {
+			return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+		}
 
-	routerOpt := func(bapp *BaseApp) {
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(*msgCounter).Counter
-			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
-			return &sdk.Result{}, nil
-		})
-		bapp.Router().AddRoute(r)
+		return
 	}
 
 	cdc := codec.NewLegacyAmino()
 	registerTestCodec(cdc)
 
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
+		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			count := msg.(*msgCounter).Counter
+			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
+			return &sdk.Result{}, nil
+		})
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: ante,
+		}))
+	}
+	app := setupBaseApp(t, txHandlerOpt)
+
 	app.InitChain(abci.RequestInitChain{
 		ConsensusParams: &abci.ConsensusParams{
 			Block: &abci.BlockParams{
@@ -1646,24 +1664,25 @@ func TestGasConsumptionBadTx(t *testing.T) {
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			store := ctx.KVStore(capKey1)
-			store.Set(key, value)
-			return
-		})
-	}
 
-	routerOpt := func(bapp *BaseApp) {
+	txHandlerOpt := func(bapp *BaseApp) {
+		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
 			return &sdk.Result{}, nil
 		})
-		bapp.Router().AddRoute(r)
+		legacyRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter: legacyRouter,
+			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				store := ctx.KVStore(capKey1)
+				store.Set(key, value)
+				return
+			},
+		}))
 	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	app := setupBaseApp(t, txHandlerOpt)
 
 	app.InitChain(abci.RequestInitChain{})
 
@@ -1968,17 +1987,19 @@ func (rtr *testCustomRouter) Route(ctx sdk.Context, path string) sdk.Handler {
 func TestWithRouter(t *testing.T) {
 	// test increments in the ante
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
-
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
-	routerOpt := func(bapp *BaseApp) {
-		bapp.SetRouter(&testCustomRouter{routes: sync.Map{}})
-		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		bapp.Router().AddRoute(r)
-	}
 
-	app := setupBaseApp(t, anteOpt, routerOpt)
+	txHandlerOpt := func(bapp *BaseApp) {
+		customRouter := &testCustomRouter{routes: sync.Map{}}
+		r := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		customRouter.AddRoute(r)
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
+			LegacyRouter:      customRouter,
+			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+		}))
+	}
+	app := setupBaseApp(t, txHandlerOpt)
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder

@@ -23,10 +23,7 @@ func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk
 }
 
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: bz})
-	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
-		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
-		nil
+	panic("TODO handle Simulate with TxHandler")
 }
 
 func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {

@@ -112,7 +112,6 @@ type DBWriter interface {
 	Delete([]byte) error
 
 	// Flushes pending writes and discards the transaction.
-	// TODO: maybe change to Flush() and follow WriteBatch semantics (ie. don't discard)
 	Commit() error
 
 	// Discards the transaction, invalidating any future operations on it.

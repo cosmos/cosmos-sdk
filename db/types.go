@@ -57,6 +57,9 @@ type DBConnection interface {
 	// Returns an error if any open DBWriter transactions exist.
 	SaveVersion(uint64) error
 
+	// Deletes a saved version. Returns ErrVersionDoesNotExist for invalid versions.
+	DeleteVersion(uint64) error
+
 	// Close closes the database connection.
 	Close() error
 }

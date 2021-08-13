@@ -970,6 +970,7 @@ func TestCheckTx(t *testing.T) {
 // Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
+	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	// test increments in the ante
 	anteKey := []byte("ante-key")
 	// test increments in the handler
@@ -981,6 +982,7 @@ func TestDeliverTx(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.DefaultTxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)

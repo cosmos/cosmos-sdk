@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -16,43 +15,21 @@ import (
 
 type runMsgsTxHandler struct {
 	legacyRouter     sdk.Router        // router for redirecting legacy Msgs
-	MsgServiceRouter *MsgServiceRouter // router for redirecting Msg service messages
+	msgServiceRouter *MsgServiceRouter // router for redirecting Msg service messages
 }
 
 func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.TxHandler {
 	return runMsgsTxHandler{
 		legacyRouter:     legacyRouter,
-		MsgServiceRouter: msr,
+		msgServiceRouter: msr,
 	}
 }
 
 var _ tx.TxHandler = runMsgsTxHandler{}
 
 func (txh runMsgsTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
-	var mode runTxMode
-	switch {
-	case req.Type == abci.CheckTxType_New:
-		mode = runTxModeCheck
-
-	case req.Type == abci.CheckTxType_Recheck:
-		mode = runTxModeReCheck
-	}
-
-	// Create a new Context based off of the existing Context with a MultiStore branch
-	// in case message processing fails. At this point, the MultiStore
-	// is a branch of a branch.
-	runMsgCtx, _ := cacheTxContext(ctx, req.Tx)
-
-	// Attempt to execute all messages and only update state if all messages pass
-	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
-	// Result if any single message fails or does not have a registered Handler.
-	result, err := txh.runMsgs(runMsgCtx, tx.GetMsgs(), mode)
-
-	return abci.ResponseCheckTx{
-		Log:    result.Log,
-		Data:   result.Data,
-		Events: result.Events,
-	}, nil
+	// Don't run Msgs during CheckTx.
+	return abci.ResponseCheckTx{}, nil
 }
 
 func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
@@ -64,46 +41,23 @@ func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Reque
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	result, err := txh.runMsgs(runMsgCtx, tx.GetMsgs(), runTxModeDeliver)
-	if err == nil {
-		msCache.Write()
-	}
-
-	return abci.ResponseDeliverTx{
-		Log:    result.Log,
-		Data:   result.Data,
-		Events: result.Events,
-	}, nil
-}
-
-// runMsgs iterates through a list of messages and executes them with the provided
-// Context and execution mode. Messages will only be executed during simulation
-// and DeliverTx. An error is returned if any single message fails or if a
-// Handler does not exist for a given message route. Otherwise, a reference to a
-// Result is returned. The caller must not commit state if an error is returned.
-func (txh runMsgsTxHandler) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*sdk.Result, error) {
-	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
+	msgLogs := make(sdk.ABCIMessageLogs, 0, len(tx.GetMsgs()))
 	events := sdk.EmptyEvents()
 	txMsgData := &sdk.TxMsgData{
-		Data: make([]*sdk.MsgData, 0, len(msgs)),
+		Data: make([]*sdk.MsgData, 0, len(tx.GetMsgs())),
 	}
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
-	for i, msg := range msgs {
-		// skip actual execution for (Re)CheckTx mode
-		if mode == runTxModeCheck || mode == runTxModeReCheck {
-			break
-		}
-
+	for i, msg := range tx.GetMsgs() {
 		var (
 			msgResult    *sdk.Result
 			eventMsgName string // name to use as value in event `message.action`
 			err          error
 		)
 
-		if handler := txh.MsgServiceRouter.Handler(msg); handler != nil {
+		if handler := txh.msgServiceRouter.Handler(msg); handler != nil {
 			// ADR 031 request type routing
-			msgResult, err = handler(ctx, msg)
+			msgResult, err = handler(runMsgCtx, msg)
 			eventMsgName = sdk.MsgTypeURL(msg)
 		} else if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 			// legacy sdk.Msg routing
@@ -115,16 +69,16 @@ func (txh runMsgsTxHandler) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxM
 			eventMsgName = legacyMsg.Type()
 			handler := txh.legacyRouter.Route(ctx, msgRoute)
 			if handler == nil {
-				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+				return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 			}
 
 			msgResult, err = handler(ctx, msg)
 		} else {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
 
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
+			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
 		msgEvents := sdk.Events{
@@ -142,14 +96,15 @@ func (txh runMsgsTxHandler) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxM
 		msgLogs = append(msgLogs, sdk.NewABCIMessageLog(uint32(i), msgResult.Log, msgEvents))
 	}
 
+	msCache.Write()
 	data, err := proto.Marshal(txMsgData)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
+		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(err, "failed to marshal tx data")
 	}
 
-	return &sdk.Result{
+	return abci.ResponseDeliverTx{
+		Log:    msgLogs.String(),
 		Data:   data,
-		Log:    strings.TrimSpace(msgLogs.String()),
 		Events: events.ToABCIEvents(),
 	}, nil
 }

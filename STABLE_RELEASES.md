@@ -61,7 +61,7 @@ To smoothen the update to the latest stable release, the SDK includes a set of C
     * Relatively small yet strictly non-breaking features with strong support from the community.
     * Relatively small yet strictly non-breaking changes that introduce forward-compatible client
     features to smoothen the migration to successive releases.
-    * Relatively small CLI improvements, which may contain CLI-breaking changes. 
+    * Relatively small yet strictly non-breaking CLI improvements.
 
 ### What does not qualify as SRU
 
@@ -69,6 +69,7 @@ To smoothen the update to the latest stable release, the SDK includes a set of C
 * Breaking changes in Protobuf definitions, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-guidelines.md).
 * Changes that introduces API breakages (e.g. public functions and interfaces removal/renaming).
 * Client-breaking changes in gRPC and HTTP request and response types.
+* CLI-breaking changes.
 * Cosmetic fixes, such as formatting or linter warning fixes.
 
 ## What pull requests will be included in stable point-releases
@@ -80,7 +81,7 @@ Pull requests that fix bugs and add features that fall in the following categori
 * Bugs that may cause **state corruption or data loss**.
 * Bugs that may directly or indirectly cause a **security vulnerability**.
 * Non-breaking features that are strongly requested by the community.
-* CLI improvements that are strongly requested by the community.
+* Non-breaking CLI improvements that are strongly requested by the community.
 
 ## What pull requests will NOT be automatically included in stable point-releases
 
@@ -90,6 +91,7 @@ As rule of thumb, the following changes will **NOT** be automatically accepted i
 * **Protobug-breaking changes**, as specified in [ADR-044](./docs/architecture/adr-044-protobuf-updates-       guidelines.md).
 * **Client-breaking changes**, i.e. changes that prevent gRPC, HTTP and RPC clients to continue interacting with the node without any change.
 * **API-breaking changes**, i.e. changes that prevent client applications to *build without modifications* to the client application's source code.
+* **CLI-breaking changes**, i.e. changes that require usage changes for CLI users.
 
  In some circumstances, PRs that don't meet the aforementioned criteria might be raised and asked to be granted a *Stable Release Exception*.
 

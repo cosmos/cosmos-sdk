@@ -38,7 +38,7 @@ The `~/.simapp` folder has the following structure:
       |- node_key.json              # Private key to use for node authentication in the p2p protocol.
       |- priv_validator_key.json    # Private key to use as a validator in the consensus protocol.
 ```
-If you want change any field values in the json files(ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) command to do that (for ex: ```jq '.chain_id = "testing1"' genesis.json > temp.json && mv temp.json genesis.json```)
+If you want to change any field values in the json files (ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) command to do that (for ex: ```jq '.chain_id = "testing1"' genesis.json > temp.json && mv temp.json genesis.json```)
 
 Before starting the chain, you need to populate the state with at least one account. To do so, first [create a new account in the keyring](./keyring.md#adding-keys-to-the-keyring) named `my_validator` under the `test` keyring backend (feel free to choose another name and another backend).
 

@@ -88,7 +88,7 @@ SDK modules are defined in the `x/` folder of the SDK. Some core modules include
 - `x/bank`: Used to enable tokens and token transfers.
 - `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
 
-In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html).
+In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://tutorials.cosmos.network/).
 
 ## Next {hide}
 

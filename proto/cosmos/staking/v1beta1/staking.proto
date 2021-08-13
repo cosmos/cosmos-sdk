@@ -138,7 +138,6 @@ message ValAddresses {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = true;
 
-  // TODO should I add AddressString annotation for repeated string?
   repeated string addresses = 1;
 }
 

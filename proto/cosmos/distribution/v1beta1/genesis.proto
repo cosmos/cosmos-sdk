@@ -128,7 +128,6 @@ message GenesisState {
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"delegator_withdraw_infos\""];
 
   // fee_pool defines the previous proposer at genesis.
-  // TODO to make sure it's indeed address
   string previous_proposer = 4 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"previous_proposer\""];
 
   // fee_pool defines the outstanding rewards of all validators at genesis.

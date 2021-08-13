@@ -2,14 +2,15 @@ syntax = "proto3";
 package cosmos.base.snapshots.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
 
 // Snapshot contains Tendermint state sync snapshot info.
 message Snapshot {
-  uint64   height   = 1;
-  uint32   format   = 2;
-  uint32   chunks   = 3;
+  uint64   height   = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint32   format   = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint32   chunks   = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
   bytes    hash     = 4;
   Metadata metadata = 5 [(gogoproto.nullable) = false];
 }

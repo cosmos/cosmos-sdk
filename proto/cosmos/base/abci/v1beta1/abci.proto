@@ -4,6 +4,7 @@ package cosmos.base.abci.v1beta1;
 import "gogoproto/gogo.proto";
 import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -13,13 +14,13 @@ option (gogoproto.goproto_stringer_all) = false;
 message TxResponse {
   option (gogoproto.goproto_getters) = false;
   // The block height
-  int64 height = 1;
+  int64 height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
   // The transaction hash.
   string txhash = 2 [(gogoproto.customname) = "TxHash"];
   // Namespace for the Code
   string codespace = 3;
   // Response code.
-  uint32 code = 4;
+  uint32 code = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
   // Result bytes, if any.
   string data = 5;
   // The output of the application's logger (raw string). May be
@@ -30,9 +31,9 @@ message TxResponse {
   // Additional information. May be non-deterministic.
   string info = 8;
   // Amount of gas requested for transaction.
-  int64 gas_wanted = 9;
+  int64 gas_wanted = 9 [(cosmos_proto.scalar) = "cosmos.Int"];
   // Amount of gas consumed by transaction.
-  int64 gas_used = 10;
+  int64 gas_used = 10 [(cosmos_proto.scalar) = "cosmos.Int"];
   // The request transaction bytes.
   google.protobuf.Any tx = 11;
   // Time of the previous block. For heights > 1, it's the weighted median of
@@ -45,7 +46,7 @@ message TxResponse {
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1;
+  uint32 msg_index = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
@@ -72,10 +73,10 @@ message Attribute {
 // GasInfo defines tx execution gas context.
 message GasInfo {
   // GasWanted is the maximum units of work we allow this tx to perform.
-  uint64 gas_wanted = 1 [(gogoproto.moretags) = "yaml:\"gas_wanted\""];
+  uint64 gas_wanted = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"gas_wanted\""];
 
   // GasUsed is the amount of gas actually consumed.
-  uint64 gas_used = 2 [(gogoproto.moretags) = "yaml:\"gas_used\""];
+  uint64 gas_used = 2 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"gas_used\""];
 }
 
 // Result is the union of ResponseFormat and ResponseCheckTx.
@@ -123,15 +124,15 @@ message SearchTxsResult {
   option (gogoproto.stringer) = true;
 
   // Count of all txs
-  uint64 total_count = 1 [(gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
+  uint64 total_count = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
   // Count of txs in current page
-  uint64 count = 2;
+  uint64 count = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
   // Index of current page, start from 1
-  uint64 page_number = 3 [(gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
+  uint64 page_number = 3 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
   // Count of total pages
-  uint64 page_total = 4 [(gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
+  uint64 page_total = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
   // Max count txs per page
-  uint64 limit = 5;
+  uint64 limit = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
   // List of txs in current page
   repeated TxResponse txs = 6;
 }

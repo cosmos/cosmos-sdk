@@ -47,7 +47,7 @@ message SigningModeDescriptor {
   // name defines the unique name of the signing mode
   string name = 1;
   // number is the unique int32 identifier for the sign_mode enum
-  int32 number = 2;
+  int32 number = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
   // authn_info_provider_method_fullname defines the fullname of the method to call to get
   // the metadata required to authenticate using the provided sign_modes
   string authn_info_provider_method_fullname = 3;

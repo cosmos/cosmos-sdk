@@ -36,5 +36,6 @@ message IntProto {
 
 // DecProto defines a Protobuf wrapper around a Dec object.
 message DecProto {
+  // TODO should I put [(cosmos_proto.scalar) = "cosmos.Dec"] here?
   string dec = 1 [(gogoproto.customtype) = "Dec", (gogoproto.nullable) = false];
 }

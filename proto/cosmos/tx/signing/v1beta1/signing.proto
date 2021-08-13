@@ -3,6 +3,8 @@ package cosmos.tx.signing.v1beta1;
 
 import "cosmos/crypto/multisig/v1beta1/multisig.proto";
 import "google/protobuf/any.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/types/tx/signing";
 
@@ -56,7 +58,7 @@ message SignatureDescriptor {
   // sequence is the sequence of the account, which describes the
   // number of committed transactions signed by a given address. It is used to prevent
   // replay attacks.
-  uint64 sequence = 3;
+  uint64 sequence = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // Data represents signature data
   message Data {

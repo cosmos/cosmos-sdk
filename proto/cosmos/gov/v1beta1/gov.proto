@@ -7,6 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/x/gov/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -56,8 +57,8 @@ message Deposit {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.equal)           = false;
 
-  uint64   proposal_id                     = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string   depositor                       = 2;
+  uint64   proposal_id                     = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string   depositor                       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
@@ -66,7 +67,7 @@ message Deposit {
 message Proposal {
   option (gogoproto.equal) = true;
 
-  uint64              proposal_id        = 1 [(gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+  uint64              proposal_id        = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
   google.protobuf.Any content            = 2 [(cosmos_proto.accepts_interface) = "Content"];
   ProposalStatus      status             = 3 [(gogoproto.moretags) = "yaml:\"proposal_status\""];
   TallyResult         final_tally_result = 4
@@ -129,8 +130,8 @@ message Vote {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.equal)            = false;
 
-  uint64 proposal_id = 1 [(gogoproto.moretags) = "yaml:\"proposal_id\""];
-  string voter       = 2;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"proposal_id\""];
+  string voter       = 2 (cosmos_proto.scalar) = "cosmos.AddressString"];
   // Deprecated: Prefer to use `options` instead. This field is set in queries
   // if and only if `len(options) == 1` and that option has weight 1. In all
   // other cases, this field will default to VOTE_OPTION_UNSPECIFIED.

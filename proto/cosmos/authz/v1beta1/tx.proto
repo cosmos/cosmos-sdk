@@ -32,8 +32,8 @@ service Msg {
 // MsgGrant is a request type for Grant method. It declares authorization to the grantee
 // on behalf of the granter with the provided expiration time.
 message MsgGrant {
-  string granter = 1;
-  string grantee = 2;
+  string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   cosmos.authz.v1beta1.Grant grant = 3 [(gogoproto.nullable) = false];
 }
@@ -47,7 +47,7 @@ message MsgExecResponse {
 // authorizations granted to the grantee. Each message should have only
 // one signer corresponding to the granter of the authorization.
 message MsgExec {
-  string grantee = 1;
+  string grantee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
   // The x/authz will try to find a grant matching (msg.signers[0], grantee, MsgTypeURL(msg))
   // triple and validate it.

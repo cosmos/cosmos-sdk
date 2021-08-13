@@ -4,6 +4,7 @@ package cosmos.mint.v1beta1;
 option go_package = "github.com/cosmos/cosmos-sdk/x/mint/types";
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 // Minter represents the minting state.
 message Minter {
@@ -49,5 +50,5 @@ message Params {
     (gogoproto.nullable)   = false
   ];
   // expected blocks per year
-  uint64 blocks_per_year = 6 [(gogoproto.moretags) = "yaml:\"blocks_per_year\""];
+  uint64 blocks_per_year = 6 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"blocks_per_year\""];
 }

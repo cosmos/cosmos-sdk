@@ -15,7 +15,7 @@ import "google/protobuf/any.proto";
 message Member {
 
   // address is the member's account address.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // weight is the member's voting weight that should be greater than 0.
   string weight = 2;
@@ -70,10 +70,10 @@ enum Choice {
 message GroupInfo {
 
   // group_id is the unique ID of the group.
-  uint64 group_id = 1;
+  uint64 group_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // admin is the account address of the group's admin.
-  string admin = 2;
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the group.
   bytes metadata = 3;
@@ -82,7 +82,7 @@ message GroupInfo {
   // would break existing proposals. Whenever any members weight is changed,
   // or any member is added or removed this version is incremented and will
   // cause proposals based on older versions of this group to fail
-  uint64 version = 4;
+  uint64 version = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // total_weight is the sum of the group members' weights.
   string total_weight = 5;
@@ -92,7 +92,7 @@ message GroupInfo {
 message GroupMember {
 
   // group_id is the unique ID of the group.
-  uint64 group_id = 1;
+  uint64 group_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // member is the member data.
   Member member = 2;
@@ -104,20 +104,20 @@ message GroupAccountInfo {
   option (gogoproto.goproto_getters) = false;
 
   // address is the group account address.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // group_id is the unique ID of the group.
-  uint64 group_id = 2;
+  uint64 group_id = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // admin is the account address of the group admin.
-  string admin = 3;
+  string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the group account.
   bytes metadata = 4;
 
   // version is used to track changes to a group's GroupAccountInfo structure that
   // would create a different result on a running proposal.
-  uint64 version = 5;
+  uint64 version = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // decision_policy specifies the group account's decision policy.
   google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "DecisionPolicy"];
@@ -135,10 +135,10 @@ message Proposal {
   option (gogoproto.goproto_getters) = false;
 
   // proposal_id is the unique id of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // address is the group account address.
-  string address = 2;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // metadata is any arbitrary metadata to attached to the proposal.
   bytes metadata = 3;
@@ -151,11 +151,11 @@ message Proposal {
 
   // group_version tracks the version of the group that this proposal corresponds to.
   // When group membership is changed, existing proposals from previous group versions will become invalid.
-  uint64 group_version = 6;
+  uint64 group_version = 6 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // group_account_version tracks the version of the group account that this proposal corresponds to.
   // When a decision policy is changed, existing proposals from previous policy versions will become invalid.
-  uint64 group_account_version = 7;
+  uint64 group_account_version = 7 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // Status defines proposal statuses.
   enum Status {
@@ -256,10 +256,10 @@ message Tally {
 message Vote {
 
   // proposal is the unique ID of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];;
 
   // voter is the account address of the voter.
-  string voter = 2;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // choice is the voter's choice on the proposal.
   Choice choice = 3;

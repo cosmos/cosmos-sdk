@@ -2,6 +2,7 @@ syntax = "proto3";
 package cosmos.base.store.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/store/types";
 
@@ -23,6 +24,6 @@ message SnapshotStoreItem {
 message SnapshotIAVLItem {
   bytes key     = 1;
   bytes value   = 2;
-  int64 version = 3;
-  int32 height  = 4;
+  int64 version = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int32 height  = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
 }

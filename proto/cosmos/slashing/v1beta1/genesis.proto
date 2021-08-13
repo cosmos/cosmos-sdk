@@ -5,6 +5,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/slashing/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/slashing/v1beta1/slashing.proto";
+import "cosmos_proto/cosmos.proto";
 
 // GenesisState defines the slashing module's genesis state.
 message GenesisState {
@@ -25,7 +26,7 @@ message GenesisState {
 // SigningInfo stores validator signing info of corresponding address.
 message SigningInfo {
   // address is the validator address.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // validator_signing_info represents the signing info of this validator.
   ValidatorSigningInfo validator_signing_info = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"validator_signing_info\""];
@@ -35,7 +36,7 @@ message SigningInfo {
 // address.
 message ValidatorMissedBlocks {
   // address is the validator address.
-  string address = 1;
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // missed_blocks is an array of missed blocks by the validator.
   repeated MissedBlock missed_blocks = 2
       [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"missed_blocks\""];
@@ -44,7 +45,7 @@ message ValidatorMissedBlocks {
 // MissedBlock contains height and missed status as boolean.
 message MissedBlock {
   // index is the height at which the block was missed.
-  int64 index = 1;
+  int64 index = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
   // missed is the missed status.
   bool missed = 2;
 }

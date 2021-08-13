@@ -4,6 +4,7 @@ package cosmos.upgrade.v1beta1;
 import "google/protobuf/any.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -29,7 +30,7 @@ message Plan {
 
   // The height at which the upgrade must be performed.
   // Only used if Time is not set.
-  int64 height = 3;
+  int64 height = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // Any application specific upgrade info to be included on-chain
   // such as a git commit that validators could automatically upgrade to
@@ -72,5 +73,5 @@ message ModuleVersion {
   string name = 1;
 
   // consensus version of the app module
-  uint64 version = 2;
+  uint64 version = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
 }

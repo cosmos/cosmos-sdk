@@ -86,7 +86,7 @@ message Validator {
   option (gogoproto.goproto_getters)  = false;
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
-  string operator_address = 1 [(gogoproto.moretags) = "yaml:\"operator_address\""];
+  string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"operator_address\""];
   // consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
   google.protobuf.Any consensus_pubkey = 2
       [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey", (gogoproto.moretags) = "yaml:\"consensus_pubkey\""];
@@ -105,7 +105,7 @@ message Validator {
   // description defines the description terms for the validator.
   Description description = 7 [(gogoproto.nullable) = false];
   // unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
-  int64 unbonding_height = 8 [(gogoproto.moretags) = "yaml:\"unbonding_height\""];
+  int64 unbonding_height = 8 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"unbonding_height\""];
   // unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
   google.protobuf.Timestamp unbonding_time = 9
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
@@ -138,6 +138,7 @@ message ValAddresses {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = true;
 
+  // TODO should I add AddressString annotation for repeated string?
   repeated string addresses = 1;
 }
 
@@ -149,8 +150,8 @@ message DVPair {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_address\""];
 }
 
 // DVPairs defines an array of DVPair objects.
@@ -167,9 +168,9 @@ message DVVTriplet {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string delegator_address     = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
-  string validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
+  string delegator_address     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_src_address\""];
+  string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_dst_address\""];
 }
 
 // DVVTriplets defines an array of DVVTriplet objects.
@@ -186,9 +187,9 @@ message Delegation {
   option (gogoproto.goproto_stringer) = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"delegator_address\""];
   // validator_address is the bech32-encoded address of the validator.
-  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_address\""];
   // shares define the delegation shares received.
   string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
@@ -201,9 +202,9 @@ message UnbondingDelegation {
   option (gogoproto.goproto_stringer) = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"delegator_address\""];
   // validator_address is the bech32-encoded address of the validator.
-  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_address\""];
   // entries are the unbonding delegation entries.
   repeated UnbondingDelegationEntry entries = 3 [(gogoproto.nullable) = false]; // unbonding delegation entries
 }
@@ -214,7 +215,7 @@ message UnbondingDelegationEntry {
   option (gogoproto.goproto_stringer) = false;
 
   // creation_height is the height which the unbonding took place.
-  int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
+  int64 creation_height = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"creation_height\""];
   // completion_time is the unix time for unbonding completion.
   google.protobuf.Timestamp completion_time = 2
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
@@ -234,7 +235,7 @@ message RedelegationEntry {
   option (gogoproto.goproto_stringer) = false;
 
   // creation_height  defines the height which the redelegation took place.
-  int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
+  int64 creation_height = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"creation_height\""];
   // completion_time defines the unix time for redelegation completion.
   google.protobuf.Timestamp completion_time = 2
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
@@ -257,11 +258,11 @@ message Redelegation {
   option (gogoproto.goproto_stringer) = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
-  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"delegator_address\""];
   // validator_src_address is the validator redelegation source operator address.
-  string validator_src_address = 2 [(gogoproto.moretags) = "yaml:\"validator_src_address\""];
+  string validator_src_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_src_address\""];
   // validator_dst_address is the validator redelegation destination operator address.
-  string validator_dst_address = 3 [(gogoproto.moretags) = "yaml:\"validator_dst_address\""];
+  string validator_dst_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_dst_address\""];
   // entries are the redelegation entries.
   repeated RedelegationEntry entries = 4 [(gogoproto.nullable) = false]; // redelegation entries
 }
@@ -275,11 +276,11 @@ message Params {
   google.protobuf.Duration unbonding_time = 1
       [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // max_validators is the maximum number of validators.
-  uint32 max_validators = 2 [(gogoproto.moretags) = "yaml:\"max_validators\""];
+  uint32 max_validators = 2 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"max_validators\""];
   // max_entries is the max entries for either unbonding delegation or redelegation (per pair/trio).
-  uint32 max_entries = 3 [(gogoproto.moretags) = "yaml:\"max_entries\""];
+  uint32 max_entries = 3 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"max_entries\""];
   // historical_entries is the number of historical entries to persist.
-  uint32 historical_entries = 4 [(gogoproto.moretags) = "yaml:\"historical_entries\""];
+  uint32 historical_entries = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"historical_entries\""];
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5 [(gogoproto.moretags) = "yaml:\"bond_denom\""];
 }

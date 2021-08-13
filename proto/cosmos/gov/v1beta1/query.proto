@@ -5,6 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/gov/v1beta1/gov.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types";
 
@@ -54,7 +55,7 @@ service Query {
 // QueryProposalRequest is the request type for the Query/Proposal RPC method.
 message QueryProposalRequest {
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method.
@@ -71,10 +72,10 @@ message QueryProposalsRequest {
   ProposalStatus proposal_status = 1;
 
   // voter defines the voter address for the proposals.
-  string voter = 2;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // depositor defines the deposit addresses from the proposals.
-  string depositor = 3;
+  string depositor = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
@@ -95,10 +96,10 @@ message QueryVoteRequest {
   option (gogoproto.goproto_getters) = false;
 
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // voter defines the oter address for the proposals.
-  string voter = 2;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
@@ -110,7 +111,7 @@ message QueryVoteResponse {
 // QueryVotesRequest is the request type for the Query/Votes RPC method.
 message QueryVotesRequest {
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -148,10 +149,10 @@ message QueryDepositRequest {
   option (gogoproto.equal)           = false;
 
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // depositor defines the deposit addresses from the proposals.
-  string depositor = 2;
+  string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryDepositResponse is the response type for the Query/Deposit RPC method.
@@ -163,7 +164,7 @@ message QueryDepositResponse {
 // QueryDepositsRequest is the request type for the Query/Deposits RPC method.
 message QueryDepositsRequest {
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -180,7 +181,7 @@ message QueryDepositsResponse {
 // QueryTallyResultRequest is the request type for the Query/Tally RPC method.
 message QueryTallyResultRequest {
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1;
+  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
 
 // QueryTallyResultResponse is the response type for the Query/Tally RPC method.

@@ -3,6 +3,7 @@ package cosmos.crypto.multisig;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/multisig";
 
@@ -12,7 +13,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/multisig";
 message LegacyAminoPubKey {
   option (gogoproto.goproto_getters) = false;
 
-  uint32   threshold                       = 1 [(gogoproto.moretags) = "yaml:\"threshold\""];
+  uint32   threshold                       = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"threshold\""];
   repeated google.protobuf.Any public_keys = 2
       [(gogoproto.customname) = "PubKeys", (gogoproto.moretags) = "yaml:\"pubkeys\""];
 }

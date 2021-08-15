@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -511,7 +510,7 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	}
 
 	for _, msg := range msgs {
-		err := sdktx.ValidateMsg(msg)
+		err := msg.ValidateBasic()
 		if err != nil {
 			return err
 		}

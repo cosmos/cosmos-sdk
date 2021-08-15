@@ -136,6 +136,11 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 // VerifyAddressFormat verifies that the provided bytes form a valid address
 // according to the default address rules
 func VerifyAddressFormat(bz []byte) error {
+	verifier := GetConfig().GetAddressVerifier()
+	if verifier != nil {
+		return verifier(bz)
+	}
+
 	return address.VerifyFormat(bz)
 }
 

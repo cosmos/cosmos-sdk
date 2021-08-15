@@ -3,6 +3,7 @@ package types_test
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"strings"
 	"testing"
@@ -317,6 +318,47 @@ func (s *addressTestSuite) TestVerifyAddressFormat() {
 	s.Require().NoError(err)
 	err = types.VerifyAddressFormat(addr256)
 	s.Require().EqualError(err, "address max length is 255, got 256: unknown address")
+}
+
+func (s *addressTestSuite) TestCustomAddressVerifier() {
+	// Create a 10 byte address
+	addr := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	accBech := types.AccAddress(addr).String()
+	valBech := types.ValAddress(addr).String()
+	consBech := types.ConsAddress(addr).String()
+	// Verify that the default logic doesn't reject this 10 byte address
+	// The default verifier is nil, we're only checking address length is
+	// between 1-255 bytes.
+	err := types.VerifyAddressFormat(addr)
+	s.Require().Nil(err)
+	_, err = types.AccAddressFromBech32(accBech)
+	s.Require().Nil(err)
+	_, err = types.ValAddressFromBech32(valBech)
+	s.Require().Nil(err)
+	_, err = types.ConsAddressFromBech32(consBech)
+	s.Require().Nil(err)
+
+	// Set a custom address verifier only accepts 20 byte addresses
+	types.GetConfig().SetAddressVerifier(func(bz []byte) error {
+		n := len(bz)
+		if n == 20 {
+			return nil
+		}
+		return fmt.Errorf("incorrect address length %d", n)
+	})
+
+	// Verifiy that the custom logic rejects this 10 byte address
+	err = types.VerifyAddressFormat(addr)
+	s.Require().NotNil(err)
+	_, err = types.AccAddressFromBech32(accBech)
+	s.Require().NotNil(err)
+	_, err = types.ValAddressFromBech32(valBech)
+	s.Require().NotNil(err)
+	_, err = types.ConsAddressFromBech32(consBech)
+	s.Require().NotNil(err)
+
+	// Reinitialize the global config to default address verifier (nil)
+	types.GetConfig().SetAddressVerifier(nil)
 }
 
 func (s *addressTestSuite) TestBech32ifyAddressBytes() {

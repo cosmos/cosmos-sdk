@@ -29,7 +29,7 @@ func TestVerifySignature(t *testing.T) {
 		chainId = "test-chain"
 	)
 
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	ctx = ctx.WithBlockHeight(1)
 
 	cdc := codec.NewLegacyAmino()
@@ -97,8 +97,8 @@ func TestVerifySignature(t *testing.T) {
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(t, isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, types.DefaultParams())
 

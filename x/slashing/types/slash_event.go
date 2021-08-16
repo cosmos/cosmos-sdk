@@ -25,8 +25,8 @@ func NewSlashEvent(address sdk.ValAddress, votingPercent sdk.Dec, slashPercent s
 
 func (msg SlashEvent) Route() string { return RouterKey }
 func (msg SlashEvent) Type() string  { return TypeSlashEvent }
-func (msg SlashEvent) GetSigners() []string {
-	return []string{}
+func (msg SlashEvent) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
 }
 
 // GetSignBytes gets the bytes for the message signer to sign on

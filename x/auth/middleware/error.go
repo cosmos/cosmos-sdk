@@ -16,13 +16,11 @@ type errorTxHandler struct {
 }
 
 // NewErrorTxMiddleware is a middleware that converts an error from inner
-// middlewares into a abci.Response{Check,Deliver}Tx. It should generally act
-// as the outermost middleware.
+// middlewares into a abci.Response{Check,Deliver}Tx.
 func NewErrorTxMiddleware(debug bool) tx.TxMiddleware {
 	return func(txh tx.TxHandler) tx.TxHandler {
 		return errorTxHandler{inner: txh, debug: debug}
 	}
-
 }
 
 var _ tx.TxHandler = errorTxHandler{}

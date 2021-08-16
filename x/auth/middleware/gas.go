@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -32,7 +31,7 @@ var _ tx.TxHandler = gasTxHandler{}
 
 // CheckTx implements TxHandler.CheckTx.
 func (txh gasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, true)
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, false)
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -42,11 +41,10 @@ func (txh gasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Request
 
 // DeliverTx implements TxHandler.DeliverTx.
 func (txh gasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, true)
+	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, false)
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
-
 	return txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
@@ -64,7 +62,6 @@ func (txh gasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.Req
 func gasContext(ctx sdk.Context, tx sdk.Tx, isSimulate bool) (sdk.Context, error) {
 	// all transactions must implement GasTx
 	gasTx, ok := tx.(GasTx)
-	fmt.Printf("tx=%T\n", tx)
 	if !ok {
 		// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
 		// during runTx.

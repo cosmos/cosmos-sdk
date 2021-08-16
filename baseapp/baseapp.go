@@ -119,9 +119,6 @@ type BaseApp struct { // nolint: maligned
 	// if BaseApp is passed to the upgrade keeper's NewKeeper method.
 	appVersion uint64
 
-	// recovery handler for app.runTx method
-	runTxRecoveryMiddleware recoveryMiddleware
-
 	// trace set will return full stack traces for errors in ABCI Log field
 	trace bool
 
@@ -157,8 +154,6 @@ func NewBaseApp(
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
-
-	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	return app
 }
@@ -406,13 +401,6 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 	}
 
 	return cp
-}
-
-// AddRunTxRecoveryHandler adds custom app.runTx method panic handlers.
-func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
-	for _, h := range handlers {
-		app.runTxRecoveryMiddleware = newRecoveryMiddleware(h, app.runTxRecoveryMiddleware)
-	}
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.

@@ -33,8 +33,12 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.TxHandler {
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),
 		// Make sure no events are emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
-		NewPanicTxMiddleware(),
-		NewGasTxMiddleware(),
+		// Panics outside of this middleware won't be caught. Be careful!
+		NewRecoveryTxMiddleware(),
 		NewErrorTxMiddleware(options.Debug),
+		// Make sure the Gas middleware is outside of all other middlewares
+		// that reads the GasMeter. In our case, the Error middleware reads
+		// the GasMeter to populate GasInfo.
+		NewGasTxMiddleware(),
 	)
 }

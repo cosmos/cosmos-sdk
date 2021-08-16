@@ -18,10 +18,13 @@ func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 	res := app.CheckTx(abci.RequestCheckTx{Tx: bz, Type: abci.CheckTxType_New})
+	gInfo := sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)}
 
-	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
-		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
-		nil
+	if res.Code != uint32(0) {
+		return gInfo, nil, sdkerrors.New(res.Codespace, res.Code, res.Log)
+	}
+
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
@@ -45,11 +48,15 @@ func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *s
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: bz})
 
-	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
-		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
-		nil
+	res := app.DeliverTx(abci.RequestDeliverTx{Tx: bz})
+	gInfo := sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)}
+
+	if res.Code != uint32(0) {
+		return gInfo, nil, sdkerrors.New(res.Codespace, res.Code, res.Log)
+	}
+
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
 // Context with current {check, deliver}State of the app used by tests.

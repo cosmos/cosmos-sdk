@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"os"
 	"strings"
@@ -134,7 +135,11 @@ func setupBaseAppWithSnapshots(t *testing.T, blocks uint, blockTxs int, options 
 			bapp.cms.GetCommitKVStore(capKey2).Set(kv.Key, kv.Value)
 			return &sdk.Result{}, nil
 		}))
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{LegacyRouter: legacyRouter}))
+		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
+			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
+			LegacyRouter:      legacyRouter,
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
+		}))
 	}
 
 	snapshotInterval := uint64(2)
@@ -684,6 +689,7 @@ type txTest struct {
 	Msgs       []sdk.Msg
 	Counter    int64
 	FailOnAnte bool
+	GasLimit   uint64
 }
 
 func (tx *txTest) setFailOnAnte(fail bool) {
@@ -699,6 +705,9 @@ func (tx *txTest) setFailOnHandler(fail bool) {
 // Implements Tx
 func (tx txTest) GetMsgs() []sdk.Msg   { return tx.Msgs }
 func (tx txTest) ValidateBasic() error { return nil }
+
+// Implements GasTx
+func (tx txTest) GetGas() uint64 { return tx.GasLimit }
 
 const (
 	routeMsgCounter  = "msgCounter"
@@ -736,7 +745,7 @@ func newTxCounter(counter int64, msgCounters ...int64) *txTest {
 		msgs = append(msgs, msgCounter{c, false})
 	}
 
-	return &txTest{msgs, counter, false}
+	return &txTest{msgs, counter, false, math.MaxUint64}
 }
 
 // a msg we dont know how to route
@@ -1113,16 +1122,14 @@ func TestSimulateTx(t *testing.T) {
 	txHandlerOpt := func(bapp *BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter: legacyRouter,
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-				newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
-				return
-			},
-			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
+			LegacyRouter:      legacyRouter,
+			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) { return ctx, nil },
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1140,6 +1147,7 @@ func TestSimulateTx(t *testing.T) {
 		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 		tx := newTxCounter(count, count)
+		tx.GasLimit = gasConsumed
 		txBytes, err := cdc.Marshal(tx)
 		require.Nil(t, err)
 
@@ -1241,7 +1249,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 	// transaction with no known route
 	{
-		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false}
+		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false, math.MaxUint64}
 		_, result, err := app.Deliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
@@ -1250,7 +1258,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
 		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
 
-		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false}
+		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false, math.MaxUint64}
 		_, result, err = app.Deliver(aminoTxEncoder(), unknownRouteTx)
 		require.Error(t, err)
 		require.Nil(t, result)
@@ -1282,28 +1290,11 @@ func TestRunInvalidTransaction(t *testing.T) {
 // Test that transactions exceeding gas limits fail
 func TestTxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
-	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
-		// AnteHandlers must have their own defer/recover in order for the BaseApp
-		// to know how much gas was used! This is because the GasMeter is created in
-		// the AnteHandler, but if it panics the context won't be set properly in
-		// runTx's recover call.
-		defer func() {
-			if r := recover(); r != nil {
-				switch rType := r.(type) {
-				case sdk.ErrorOutOfGas:
-					err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
-				default:
-					panic(r)
-				}
-			}
-		}()
-
+	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		count := tx.(txTest).Counter
-		newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
-
-		return newCtx, nil
+		ctx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+		return ctx, nil
 	}
 
 	txHandlerOpt := func(bapp *BaseApp) {
@@ -1351,6 +1342,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	for i, tc := range testCases {
 		tx := tc.tx
+		tx.GasLimit = gasGranted
 		gInfo, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 		// check gas used and wanted
@@ -1373,24 +1365,11 @@ func TestTxGasLimits(t *testing.T) {
 // Test that transactions exceeding gas limits fail
 func TestMaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
-	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
-
-		defer func() {
-			if r := recover(); r != nil {
-				switch rType := r.(type) {
-				case sdk.ErrorOutOfGas:
-					err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
-				default:
-					panic(r)
-				}
-			}
-		}()
-
+	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		count := tx.(txTest).Counter
-		newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+		ctx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-		return
+		return ctx, nil
 	}
 
 	txHandlerOpt := func(bapp *BaseApp) {
@@ -1438,6 +1417,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 	for i, tc := range testCases {
 		tx := tc.tx
+		tx.GasLimit = gasGranted
 
 		// reset the block gas
 		header := tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -1471,51 +1451,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 				require.False(t, ctx.BlockGasMeter().IsPastLimit())
 			}
 		}
-	}
-}
-
-// Test custom panic handling within app.DeliverTx method
-func TestCustomRunTxPanicHandler(t *testing.T) {
-	const customPanicMsg = "test panic"
-	anteErr := sdkerrors.Register("fakeModule", 100500, "fakeError")
-
-	txHandlerOpt := func(bapp *BaseApp) {
-		legacyRouter := middleware.NewLegacyRouter()
-		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			return &sdk.Result{}, nil
-		})
-		legacyRouter.AddRoute(r)
-		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
-			LegacyRouter: legacyRouter,
-			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-				panic(sdkerrors.Wrap(anteErr, "anteHandler"))
-			},
-			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
-		}))
-	}
-	app := setupBaseApp(t, txHandlerOpt)
-
-	header := tmproto.Header{Height: 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	app.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
-		err, ok := recoveryObj.(error)
-		if !ok {
-			return nil
-		}
-
-		if anteErr.Is(err) {
-			panic(customPanicMsg)
-		} else {
-			return nil
-		}
-	})
-
-	// Transaction should panic with custom handler above
-	{
-		tx := newTxCounter(0, 0)
-
-		require.PanicsWithValue(t, customPanicMsg, func() { app.Deliver(aminoTxEncoder(), tx) })
 	}
 }
 
@@ -1598,28 +1533,14 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 func TestGasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
-	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-		newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
-
-		defer func() {
-			if r := recover(); r != nil {
-				switch rType := r.(type) {
-				case sdk.ErrorOutOfGas:
-					log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
-					err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
-				default:
-					panic(r)
-				}
-			}
-		}()
-
+	ante := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		txTest := tx.(txTest)
-		newCtx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
+		ctx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
 		if txTest.FailOnAnte {
-			return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
-		return
+		return ctx, nil
 	}
 
 	cdc := codec.NewLegacyAmino()
@@ -1655,6 +1576,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	tx := newTxCounter(5, 0)
+	tx.GasLimit = gasWanted
 	tx.setFailOnAnte(true)
 	txBytes, err := cdc.Marshal(tx)
 	require.NoError(t, err)

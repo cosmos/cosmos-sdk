@@ -32,7 +32,7 @@ func (txh errorTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Reque
 	res, err := txh.inner.CheckTx(ctx, tx, req)
 	if err != nil {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		gInfo := sdk.GasInfo{GasUsed: sdkCtx.BlockGasMeter().GasConsumed()}
+		gInfo := sdk.GasInfo{GasUsed: sdkCtx.GasMeter().GasConsumed()}
 
 		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
 	}
@@ -45,7 +45,7 @@ func (txh errorTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Req
 	res, err := txh.inner.DeliverTx(ctx, tx, req)
 	if err != nil {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		gInfo := sdk.GasInfo{GasUsed: sdkCtx.BlockGasMeter().GasConsumed()}
+		gInfo := sdk.GasInfo{GasUsed: sdkCtx.GasMeter().GasConsumed()}
 
 		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
 	}
@@ -58,7 +58,7 @@ func (txh errorTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.R
 	res, err := txh.inner.SimulateTx(ctx, sdkTx, req)
 	if err != nil {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		gInfo := sdk.GasInfo{GasUsed: sdkCtx.BlockGasMeter().GasConsumed()}
+		gInfo := sdk.GasInfo{GasUsed: sdkCtx.GasMeter().GasConsumed()}
 
 		return tx.ResponseSimulateTx{GasInfo: gInfo, Result: res.Result}, nil
 	}

@@ -34,6 +34,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.TxHandler {
 		// Make sure no events are emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
 		NewPanicTxMiddleware(),
+		NewGasTxMiddleware(),
 		NewErrorTxMiddleware(options.Debug),
 	)
 }

@@ -29,11 +29,8 @@ func (txh panicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Reque
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
-		// GasMeter expected to be set in AnteHandler
-		gasWanted := sdkCtx.GasMeter().Limit()
-
 		if r := recover(); r != nil {
-			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, sdkCtx, newDefaultRecoveryMiddleware())
+			recoveryMW := newOutOfGasRecoveryMiddleware(sdkCtx.GasMeter().Limit(), sdkCtx, newDefaultRecoveryMiddleware())
 			err = processRecovery(r, recoveryMW)
 		}
 	}()
@@ -54,11 +51,8 @@ func (txh panicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Req
 
 	// Panic recovery.
 	defer func() {
-		// GasMeter expected to be set in AnteHandler
-		gasWanted := sdkCtx.GasMeter().Limit()
-
 		if r := recover(); r != nil {
-			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, sdkCtx, newDefaultRecoveryMiddleware())
+			recoveryMW := newOutOfGasRecoveryMiddleware(sdkCtx.GasMeter().Limit(), sdkCtx, newDefaultRecoveryMiddleware())
 			err = processRecovery(r, recoveryMW)
 		}
 	}()
@@ -86,11 +80,8 @@ func (txh panicTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.R
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
-		// GasMeter expected to be set in AnteHandler
-		gasWanted := sdkCtx.GasMeter().Limit()
-
 		if r := recover(); r != nil {
-			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, sdkCtx, newDefaultRecoveryMiddleware())
+			recoveryMW := newOutOfGasRecoveryMiddleware(sdkCtx.GasMeter().Limit(), sdkCtx, newDefaultRecoveryMiddleware())
 			err = processRecovery(r, recoveryMW)
 		}
 	}()
@@ -142,6 +133,7 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, sdkCtx sdk.Context, next re
 			return nil
 		}
 
+		fmt.Println("newOutOfGasRecoveryMiddleware sdkCtx.GasMeter().GasConsumed()=", sdkCtx.GasMeter().GasConsumed())
 		return sdkerrors.Wrap(
 			sdkerrors.ErrOutOfGas, fmt.Sprintf(
 				"out of gas in location: %v; gasWanted: %d, gasUsed: %d",

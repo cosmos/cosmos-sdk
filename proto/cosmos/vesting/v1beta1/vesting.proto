@@ -57,7 +57,7 @@ message DelayedVestingAccount {
 message Period {
   option (gogoproto.goproto_stringer) = false;
 
-  int64    length                          = 1,
+  int64    length                          = 1;
   repeated cosmos.base.v1beta1.Coin amount = 2
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }

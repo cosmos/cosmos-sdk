@@ -1113,7 +1113,6 @@ func TestSimulateTx(t *testing.T) {
 	txHandlerOpt := func(bapp *BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
 			return &sdk.Result{}, nil
 		})
 		legacyRouter.AddRoute(r)
@@ -1201,7 +1200,6 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		emptyTx := &txTest{}
 		_, result, err := app.Deliver(aminoTxEncoder(), emptyTx)
-		require.Error(t, err)
 		require.Nil(t, result)
 
 		space, code, _ := sdkerrors.ABCIInfo(err, false)

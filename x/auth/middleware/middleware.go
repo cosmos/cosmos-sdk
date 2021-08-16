@@ -31,8 +31,8 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.TxHandler {
 	return ComposeTxMiddleware(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),
-		// Make sure no events are emitted outside this middleware.
-		NewEventsTxMiddleware(options.IndexEvents),
+		// Make sure no events are emitted outside of this middleware.
+		NewIndexEventsTxMiddleware(options.IndexEvents),
 		NewPanicTxMiddleware(),
 		NewErrorTxMiddleware(options.Debug),
 	)

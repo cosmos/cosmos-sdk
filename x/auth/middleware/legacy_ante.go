@@ -33,7 +33,20 @@ func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 		return abci.ResponseCheckTx{}, err
 	}
 
-	return txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res, err := txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	if err != nil {
+		return abci.ResponseCheckTx{}, err
+	}
+
+	return abci.ResponseCheckTx{
+		// Fields populated by inner runMsgsTxHandler
+		Data:   res.Data,
+		Events: res.Events,
+		Log:    res.Log,
+		// We populate gas info in this middleware
+		GasUsed:   int64(sdkCtx.GasMeter().GasConsumed()),
+		GasWanted: int64(sdkCtx.GasMeter().Limit()),
+	}, nil
 }
 
 // DeliverTx implements TxHandler.DeliverTx method.
@@ -43,7 +56,20 @@ func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abc
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	return txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res, err := txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	if err != nil {
+		return abci.ResponseDeliverTx{}, err
+	}
+
+	return abci.ResponseDeliverTx{
+		// Fields populated by inner runMsgsTxHandler
+		Data:   res.Data,
+		Events: res.Events,
+		Log:    res.Log,
+		// We populate gas info in this middleware
+		GasUsed:   int64(sdkCtx.GasMeter().GasConsumed()),
+		GasWanted: int64(sdkCtx.GasMeter().Limit()),
+	}, nil
 }
 
 // SimulateTx implements TxHandler.SimulateTx method.
@@ -53,7 +79,15 @@ func (txh legacyAnteTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	return txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	res, err := txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	if err != nil {
+		return tx.ResponseSimulateTx{}, err
+	}
+
+	return tx.ResponseSimulateTx{
+		GasInfo: sdk.GasInfo{GasWanted: sdkCtx.GasMeter().Limit(), GasUsed: sdkCtx.GasMeter().GasConsumed()},
+		Result:  res.Result,
+	}, nil
 }
 
 func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {

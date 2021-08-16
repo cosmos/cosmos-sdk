@@ -37,12 +37,13 @@ func (txh runMsgsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Req
 
 // DeliverTx implements TxHandler.DeliverTx method.
 func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	res, err := txh.runMsgs(ctx, tx.GetMsgs(), req.Tx)
+	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), tx.GetMsgs(), req.Tx)
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
 	return abci.ResponseDeliverTx{
+		// GasInfo will be populated by the antehandlers.
 		Log:    res.Log,
 		Data:   res.Data,
 		Events: res.Events,
@@ -51,12 +52,14 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 
 // SimulateTx implements TxHandler.SimulateTx method.
 func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	res, err := txh.runMsgs(ctx, sdkTx.GetMsgs(), req.TxBytes)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	res, err := txh.runMsgs(sdkCtx, sdkTx.GetMsgs(), req.TxBytes)
 	if err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 
 	return tx.ResponseSimulateTx{
+		// GasInfo will be populated by the antehandlers.
 		Result: res,
 	}, nil
 }
@@ -66,9 +69,7 @@ func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (txh runMsgsTxHandler) runMsgs(ctx context.Context, msgs []sdk.Msg, txBytes []byte) (*sdk.Result, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes []byte) (*sdk.Result, error) {
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.

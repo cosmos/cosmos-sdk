@@ -36,6 +36,8 @@ import (
 var (
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
+
+	interfaceRegistry = testdata.NewTestInterfaceRegistry()
 )
 
 type paramStore struct {
@@ -925,6 +927,7 @@ func TestCheckTx(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, counterKey),
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 
@@ -970,7 +973,6 @@ func TestCheckTx(t *testing.T) {
 // Test that successive DeliverTx can see each others' effects
 // on the store, both within and across blocks.
 func TestDeliverTx(t *testing.T) {
-	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	// test increments in the ante
 	anteKey := []byte("ante-key")
 	// test increments in the handler
@@ -1041,6 +1043,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1120,6 +1123,7 @@ func TestSimulateTx(t *testing.T) {
 				newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
 				return
 			},
+			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1185,6 +1189,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return
 			},
+			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1314,6 +1319,7 @@ func TestTxGasLimits(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: ante,
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1400,6 +1406,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: ante,
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1485,6 +1492,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 			LegacyAnteHandler: func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				panic(sdkerrors.Wrap(anteErr, "anteHandler"))
 			},
+			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1525,6 +1533,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1629,6 +1638,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      legacyRouter,
 			LegacyAnteHandler: ante,
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1682,6 +1692,7 @@ func TestQuery(t *testing.T) {
 				store.Set(key, value)
 				return
 			},
+			MsgServiceRouter: middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)
@@ -1999,6 +2010,7 @@ func TestWithRouter(t *testing.T) {
 		bapp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 			LegacyRouter:      customRouter,
 			LegacyAnteHandler: anteHandlerTxTest(t, capKey1, anteKey),
+			MsgServiceRouter:  middleware.NewMsgServiceRouter(interfaceRegistry),
 		}))
 	}
 	app := setupBaseApp(t, txHandlerOpt)

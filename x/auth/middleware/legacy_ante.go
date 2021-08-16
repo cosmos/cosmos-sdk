@@ -61,6 +61,7 @@ func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes [
 	// writes do not happen if aborted/failed.  This may have some
 	// performance benefits, but it'll be more difficult to get right.
 	anteCtx, msCache := cacheTxContext(sdkCtx, txBytes)
+	anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 	newCtx, err := txh.anteHandler(anteCtx, tx, false)
 	if err != nil {
 		return sdk.Context{}, err

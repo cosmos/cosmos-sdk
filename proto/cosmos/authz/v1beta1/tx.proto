@@ -60,8 +60,8 @@ message MsgGrantResponse {}
 // MsgRevoke revokes any authorization with the provided sdk.Msg type on the
 // granter's account with that has been granted to the grantee.
 message MsgRevoke {
-  string granter      = 1;
-  string grantee      = 2;
+  string granter      = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string grantee      = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];;
   string msg_type_url = 3;
 }
 

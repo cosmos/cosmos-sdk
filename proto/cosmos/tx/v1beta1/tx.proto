@@ -61,7 +61,7 @@ message SignDoc {
   string chain_id = 3;
 
   // account_number is the account number of the account in state
-  uint64 account_number = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 account_number = 4;
 }
 
 // SignDocJSON is the type used for generating sign bytes for
@@ -82,7 +82,7 @@ message SignDocJSON {
   string chain_id = 3;
 
   // account_number is the account number of the signing account in state
-  uint64 account_number = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 account_number = 4;
 
   // sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to
   // reduce the malleability attack surface of SIGN_MODE_DIRECT_JSON vs
@@ -113,10 +113,10 @@ message SignDocDirectAux {
   string chain_id = 3;
 
   // account_number is the account number of the account in state.
-  uint64 account_number = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 account_number = 4;
 
   // sequence is the sequence number of the signing account.
-  uint64 sequence = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 sequence = 5;
 
   // Tip is the optional tip used for meta-transactions. It should be left
   // empty if the signer is not the tipper for this transaction.
@@ -188,7 +188,7 @@ message SignerInfo {
   // sequence is the sequence of the account, which describes the
   // number of committed transactions signed by a given address. It is used to
   // prevent replay attacks.
-  uint64 sequence = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 sequence = 3;
 }
 
 // ModeInfo describes the signing mode of a single or nested multisig signer.

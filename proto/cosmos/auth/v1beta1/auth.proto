@@ -20,8 +20,8 @@ message BaseAccount {
   string              address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   google.protobuf.Any pub_key = 2
       [(gogoproto.jsontag) = "public_key,omitempty", (gogoproto.moretags) = "yaml:\"public_key\""];
-  uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""], (cosmos_proto.scalar) = "cosmos.Int"];
-  uint64 sequence       = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 account_number = 3 [(gogoproto.moretags) = "yaml:\"account_number\""];
+  uint64 sequence       = 4;
 }
 
 // ModuleAccount defines an account for modules that holds coins on a pool.
@@ -40,11 +40,11 @@ message Params {
   option (gogoproto.equal)            = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 max_memo_characters     = 1 [(cosmos_proto.scalar) = "cosmos.Int"], (gogoproto.moretags) = "yaml:\"max_memo_characters\""];
-  uint64 tx_sig_limit            = 2 [(cosmos_proto.scalar) = "cosmos.Int"], (gogoproto.moretags) = "yaml:\"tx_sig_limit\""];
-  uint64 tx_size_cost_per_byte   = 3 [(cosmos_proto.scalar) = "cosmos.Int"], (gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""];
+  uint64 max_memo_characters     = 1 [(gogoproto.moretags) = "yaml:\"max_memo_characters\""];
+  uint64 tx_sig_limit            = 2 [(gogoproto.moretags) = "yaml:\"tx_sig_limit\""];
+  uint64 tx_size_cost_per_byte   = 3 [(gogoproto.moretags) = "yaml:\"tx_size_cost_per_byte\""];
   uint64 sig_verify_cost_ed25519 = 4
-      [(cosmos_proto.scalar) = "cosmos.Int"], (gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
+      [(gogoproto.customname) = "SigVerifyCostED25519", (gogoproto.moretags) = "yaml:\"sig_verify_cost_ed25519\""];
   uint64 sig_verify_cost_secp256k1 = 5
-      [(cosmos_proto.scalar) = "cosmos.Int"], (gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
+      [(gogoproto.customname) = "SigVerifyCostSecp256k1", (gogoproto.moretags) = "yaml:\"sig_verify_cost_secp256k1\""];
 }

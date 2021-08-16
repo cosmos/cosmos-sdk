@@ -59,7 +59,7 @@ message QueryAppliedPlanRequest {
 // method.
 message QueryAppliedPlanResponse {
   // height is the block height at which the plan was applied.
-  int64 height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 height = 1;
 }
 
 // QueryUpgradedConsensusStateRequest is the request type for the Query/UpgradedConsensusState
@@ -69,7 +69,7 @@ message QueryUpgradedConsensusStateRequest {
 
   // last height of the current chain must be sent in request
   // as this is the height under which next consensus state is stored
-  int64 last_height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 last_height = 1;
 }
 
 // QueryUpgradedConsensusStateResponse is the response type for the Query/UpgradedConsensusState

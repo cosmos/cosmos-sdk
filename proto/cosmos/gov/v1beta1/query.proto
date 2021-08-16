@@ -55,7 +55,7 @@ service Query {
 // QueryProposalRequest is the request type for the Query/Proposal RPC method.
 message QueryProposalRequest {
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 proposal_id = 1;
 }
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method.
@@ -96,7 +96,7 @@ message QueryVoteRequest {
   option (gogoproto.goproto_getters) = false;
 
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 proposal_id = 1;
 
   // voter defines the oter address for the proposals.
   string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -111,7 +111,7 @@ message QueryVoteResponse {
 // QueryVotesRequest is the request type for the Query/Votes RPC method.
 message QueryVotesRequest {
   // proposal_id defines the unique id of the proposal.
-  uint64 proposal_id = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 proposal_id = 1;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;

@@ -138,7 +138,8 @@ message ValAddresses {
   option (gogoproto.goproto_stringer) = false;
   option (gogoproto.stringer)         = true;
 
-  repeated string addresses = 1;
+  // ?
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // DVPair is struct that just has a delegator-validator pair with no other data.
@@ -214,18 +215,19 @@ message UnbondingDelegationEntry {
   option (gogoproto.goproto_stringer) = false;
 
   // creation_height is the height which the unbonding took place.
-  int64 creation_height = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"creation_height\""];
+  int64 creation_height = 1 [(gogoproto.moretags) = "yaml:\"creation_height\""];
   // completion_time is the unix time for unbonding completion.
   google.protobuf.Timestamp completion_time = 2
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"completion_time\""];
   // initial_balance defines the tokens initially scheduled to receive at completion.
   string initial_balance = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false,
     (gogoproto.moretags)   = "yaml:\"initial_balance\""
   ];
   // balance defines the tokens to receive at completion.
-  string balance = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string balance = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.

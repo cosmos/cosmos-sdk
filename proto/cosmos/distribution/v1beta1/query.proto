@@ -110,9 +110,9 @@ message QueryValidatorSlashesRequest {
   // validator_address defines the validator address to query for.
   string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // starting_height defines the optional starting height to query the slashes.
-  uint64 starting_height = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 starting_height = 2;
   // starting_height defines the optional ending height to query the slashes.
-  uint64 ending_height = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 ending_height = 3;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }

@@ -63,7 +63,7 @@ message ValidatorHistoricalRewardsRecord {
   string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_address\""];
 
   // period defines the period the historical rewards apply to.
-  uint64 period = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 period = 2;
 
   // rewards defines the historical rewards of a validator.
   ValidatorHistoricalRewards rewards = 3 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"rewards\""];
@@ -105,9 +105,9 @@ message ValidatorSlashEventRecord {
   // validator_address is the address of the validator.
   string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_address\""];
   // height defines the block height at which the slash event occured.
-  uint64 height = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 height = 2;
   // period is the period of the slash event.
-  uint64 period = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 period = 3;
   // validator_slash_event describes the slash event.
   ValidatorSlashEvent validator_slash_event = 4 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"event\""];
 }

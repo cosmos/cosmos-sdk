@@ -6,6 +6,7 @@ option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 // Params defines the set of params for the distribution module.
 message Params {
@@ -81,7 +82,7 @@ message ValidatorOutstandingRewards {
 // for delegations which are withdrawn after a slash has occurred.
 message ValidatorSlashEvent {
   uint64 validator_period = 1 [(gogoproto.moretags) = "yaml:\"validator_period\""];
-  string fraction = 2 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string fraction = 2 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
@@ -124,6 +125,7 @@ message CommunityPoolSpendProposal {
 message DelegatorStartingInfo {
   uint64 previous_period = 1 [(gogoproto.moretags) = "yaml:\"previous_period\""];
   string stake           = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"stake\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -137,7 +139,10 @@ message DelegationDelegatorReward {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.goproto_stringer) = true;
 
-  string validator_address = 1 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string validator_address = 1 [
+    (cosmos_proto.scalar) = "cosmos.AddressString", 
+    (gogoproto.moretags) = "yaml:\"validator_address\""
+  ];
 
   repeated cosmos.base.v1beta1.DecCoin reward = 2
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];

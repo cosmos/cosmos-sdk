@@ -9,7 +9,7 @@ import "gogoproto/gogo.proto";
 // provided to a Capability must be globally unique.
 message Capability {
   option (gogoproto.goproto_stringer) = false;
-  uint64 index = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"index\""];
+  uint64 index = 1 [(gogoproto.moretags) = "yaml:\"index\""];
 }
 
 // Owner defines a single capability owner. An owner is defined by the name of

@@ -124,15 +124,15 @@ message SearchTxsResult {
   option (gogoproto.stringer) = true;
 
   // Count of all txs
-  uint64 total_count = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
+  uint64 total_count = 1 [(gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
   // Count of txs in current page
-  uint64 count = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 count = 2 ;
   // Index of current page, start from 1
-  uint64 page_number = 3 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
+  uint64 page_number = 3 [(gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
   // Count of total pages
-  uint64 page_total = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
+  uint64 page_total = 4 [(gogoproto.moretags) = "yaml:\"page_total\"", (gogoproto.jsontag) = "page_total"];
   // Max count txs per page
-  uint64 limit = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 limit = 5;
   // List of txs in current page
   repeated TxResponse txs = 6;
 }

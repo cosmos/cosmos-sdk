@@ -57,7 +57,7 @@ message SignatureDescriptor {
   // sequence is the sequence of the account, which describes the
   // number of committed transactions signed by a given address. It is used to prevent
   // replay attacks.
-  uint64 sequence = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 sequence = 3;
 
   // Data represents signature data
   message Data {

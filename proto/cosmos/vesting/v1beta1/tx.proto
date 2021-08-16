@@ -24,7 +24,7 @@ message MsgCreateVestingAccount {
   repeated cosmos.base.v1beta1.Coin amount = 3
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 
-  int64 end_time = 4 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"end_time\""];
+  int64 end_time = 4 [(gogoproto.moretags) = "yaml:\"end_time\""];
   bool  delayed  = 5;
 }
 

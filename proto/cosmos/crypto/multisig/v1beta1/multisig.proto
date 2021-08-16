@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.crypto.multisig.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/crypto/types";
 
@@ -21,6 +20,6 @@ message MultiSignature {
 message CompactBitArray {
   option (gogoproto.goproto_stringer) = false;
 
-  uint32 extra_bits_stored = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint32 extra_bits_stored = 1;
   bytes  elems             = 2;
 }

@@ -43,14 +43,14 @@ service Service {
 
 // GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
 message GetValidatorSetByHeightRequest {
-  int64 height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 height = 1;
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // GetValidatorSetByHeightResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
 message GetValidatorSetByHeightResponse {
-  int64              block_height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64              block_height = 1;
   repeated Validator validators   = 2;
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
@@ -64,7 +64,7 @@ message GetLatestValidatorSetRequest {
 
 // GetLatestValidatorSetResponse is the response type for the Query/GetValidatorSetByHeight RPC method.
 message GetLatestValidatorSetResponse {
-  int64              block_height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64              block_height = 1;
   repeated Validator validators   = 2;
   // pagination defines an pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
@@ -74,13 +74,13 @@ message GetLatestValidatorSetResponse {
 message Validator {
   string              address           = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   google.protobuf.Any pub_key           = 2;
-  int64               voting_power      = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
-  int64               proposer_priority = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64               voting_power      = 3;
+  int64               proposer_priority = 4;
 }
 
 // GetBlockByHeightRequest is the request type for the Query/GetBlockByHeight RPC method.
 message GetBlockByHeightRequest {
-  int64 height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 height = 1;
 }
 
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.

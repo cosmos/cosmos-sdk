@@ -45,7 +45,7 @@ message ValidatorMissedBlocks {
 // MissedBlock contains height and missed status as boolean.
 message MissedBlock {
   // index is the height at which the block was missed.
-  int64 index = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 index = 1;
   // missed is the missed status.
   bool missed = 2;
 }

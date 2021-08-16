@@ -320,7 +320,7 @@ message QueryDelegatorValidatorResponse {
 // method.
 message QueryHistoricalInfoRequest {
   // height defines at which height to query the historical info.
-  int64 height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 height = 1;
 }
 
 // QueryHistoricalInfoResponse is response type for the Query/HistoricalInfo RPC

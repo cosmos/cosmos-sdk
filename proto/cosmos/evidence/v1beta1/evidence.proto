@@ -15,8 +15,8 @@ message Equivocation {
   option (gogoproto.goproto_getters)  = false;
   option (gogoproto.equal)            = false;
 
-  int64                     height            = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64                     height            = 1 ;
   google.protobuf.Timestamp time              = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  int64                     power             = 3 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64                     power             = 3 ;
   string                    consensus_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"consensus_address\""];
 }

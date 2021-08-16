@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"context"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,10 +28,11 @@ func NewErrorTxMiddleware(debug bool) tx.TxMiddleware {
 var _ tx.TxHandler = errorTxHandler{}
 
 // CheckTx implements TxHandler.CheckTx.
-func (txh errorTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh errorTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	res, err := txh.inner.CheckTx(ctx, tx, req)
 	if err != nil {
-		gInfo := sdk.GasInfo{GasUsed: ctx.BlockGasMeter().GasConsumed()}
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		gInfo := sdk.GasInfo{GasUsed: sdkCtx.BlockGasMeter().GasConsumed()}
 
 		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
 	}
@@ -38,10 +41,11 @@ func (txh errorTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCh
 }
 
 // DeliverTx implements TxHandler.DeliverTx.
-func (txh errorTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh errorTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	res, err := txh.inner.DeliverTx(ctx, tx, req)
 	if err != nil {
-		gInfo := sdk.GasInfo{GasUsed: ctx.BlockGasMeter().GasConsumed()}
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		gInfo := sdk.GasInfo{GasUsed: sdkCtx.BlockGasMeter().GasConsumed()}
 
 		return sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, txh.debug), nil
 	}

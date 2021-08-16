@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"context"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,31 +26,32 @@ func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.TxMiddleware {
 
 var _ tx.TxHandler = legacyAnteTxHandler{}
 
-func (txh legacyAnteTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	ctx, err := txh.runAnte(ctx, tx, req.Tx)
+func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx)
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
 
-	return txh.inner.CheckTx(ctx, tx, req)
+	return txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
-func (txh legacyAnteTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	ctx, err := txh.runAnte(ctx, tx, req.Tx)
+func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx)
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	return txh.inner.DeliverTx(ctx, tx, req)
+	return txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
-func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byte) (sdk.Context, error) {
+func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes []byte) (sdk.Context, error) {
 	err := validateBasicTxMsgs(tx.GetMsgs())
 	if err != nil {
 		return sdk.Context{}, err
 	}
 
-	ms := ctx.MultiStore()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	ms := sdkCtx.MultiStore()
 
 	// Branch context before AnteHandler call in case it aborts.
 	// This is required for both CheckTx and DeliverTx.
@@ -57,7 +60,7 @@ func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byt
 	// NOTE: Alternatively, we could require that AnteHandler ensures that
 	// writes do not happen if aborted/failed.  This may have some
 	// performance benefits, but it'll be more difficult to get right.
-	anteCtx, msCache := cacheTxContext(ctx, txBytes)
+	anteCtx, msCache := cacheTxContext(sdkCtx, txBytes)
 	newCtx, err := txh.anteHandler(anteCtx, tx, false)
 	if err != nil {
 		return sdk.Context{}, err
@@ -70,12 +73,12 @@ func (txh legacyAnteTxHandler) runAnte(ctx sdk.Context, tx sdk.Tx, txBytes []byt
 		// Also, in the case of the tx aborting, we need to track gas consumed via
 		// the instantiated gas meter in the AnteHandler, so we update the context
 		// prior to returning.
-		ctx = newCtx.WithMultiStore(ms)
+		sdkCtx = newCtx.WithMultiStore(ms)
 	}
 
 	msCache.Write()
 
-	return ctx, nil
+	return sdkCtx, nil
 }
 
 // validateBasicTxMsgs executes basic validator calls for messages.

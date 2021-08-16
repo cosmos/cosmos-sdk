@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -27,22 +28,24 @@ func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.TxHa
 
 var _ tx.TxHandler = runMsgsTxHandler{}
 
-func (txh runMsgsTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
+func (txh runMsgsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
 	// Don't run Msgs during CheckTx.
 	return abci.ResponseCheckTx{}, nil
 }
 
-func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
+func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
-	runMsgCtx, msCache := cacheTxContext(ctx, req.Tx)
+	runMsgCtx, msCache := cacheTxContext(sdkCtx, req.Tx)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	msgLogs := make(sdk.ABCIMessageLogs, 0, len(tx.GetMsgs()))
-	events := ctx.EventManager().Events()
+	events := sdkCtx.EventManager().Events()
 	txMsgData := &sdk.TxMsgData{
 		Data: make([]*sdk.MsgData, 0, len(tx.GetMsgs())),
 	}
@@ -67,12 +70,12 @@ func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Reque
 			// registered within the `MsgServiceRouter` already.
 			msgRoute := legacyMsg.Route()
 			eventMsgName = legacyMsg.Type()
-			handler := txh.legacyRouter.Route(ctx, msgRoute)
+			handler := txh.legacyRouter.Route(sdkCtx, msgRoute)
 			if handler == nil {
 				return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 			}
 
-			msgResult, err = handler(ctx, msg)
+			msgResult, err = handler(sdkCtx, msg)
 		} else {
 			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
@@ -111,8 +114,8 @@ func (txh runMsgsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Reque
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
-	ms := ctx.MultiStore()
+func cacheTxContext(sdkCtx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+	ms := sdkCtx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
 	if msCache.TracingEnabled() {
@@ -125,5 +128,5 @@ func cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMult
 		).(sdk.CacheMultiStore)
 	}
 
-	return ctx.WithMultiStore(msCache), msCache
+	return sdkCtx.WithMultiStore(msCache), msCache
 }

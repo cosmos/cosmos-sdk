@@ -245,8 +245,8 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
 	}
 
-	ctx := app.getContextForTx(mode, req.Tx)
-	res, err := app.txHandler.CheckTx(ctx, tx, req)
+	sdkCtx := app.getContextForTx(mode, req.Tx)
+	res, err := app.txHandler.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 	if err != nil {
 		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
 	}
@@ -267,8 +267,8 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
 	}
 
-	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err := app.txHandler.DeliverTx(ctx, tx, req)
+	sdkCtx := app.getContextForTx(runTxModeDeliver, req.Tx)
+	res, err := app.txHandler.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 	if err != nil {
 		return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
 	}

@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"context"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +27,7 @@ func NewEventsTxMiddleware(indexEvents map[string]struct{}) tx.TxMiddleware {
 
 var _ tx.TxHandler = eventsTxHandler{}
 
-func (txh eventsTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+func (txh eventsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	res, err := txh.inner.CheckTx(ctx, tx, req)
 	if err != nil {
 		return res, err
@@ -35,7 +37,7 @@ func (txh eventsTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestC
 	return res, nil
 }
 
-func (txh eventsTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+func (txh eventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	res, err := txh.inner.DeliverTx(ctx, tx, req)
 	if err != nil {
 		return res, err

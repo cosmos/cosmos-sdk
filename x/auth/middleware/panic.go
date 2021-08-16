@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"runtime/debug"
 
@@ -19,19 +20,19 @@ func NewPanicTxMiddleware() tx.TxMiddleware {
 	return func(txh tx.TxHandler) tx.TxHandler {
 		return panicTxHandler{inner: txh}
 	}
-
 }
 
 var _ tx.TxHandler = panicTxHandler{}
 
-func (txh panicTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
+func (txh panicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
 	defer func() {
 		// GasMeter expected to be set in AnteHandler
-		gasWanted := ctx.GasMeter().Limit()
+		gasWanted := sdkCtx.GasMeter().Limit()
 
 		if r := recover(); r != nil {
-			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, newDefaultRecoveryMiddleware())
+			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, sdkCtx, newDefaultRecoveryMiddleware())
 			err = processRecovery(r, recoveryMW)
 		}
 	}()
@@ -39,22 +40,23 @@ func (txh panicTxHandler) CheckTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestCh
 	return txh.inner.CheckTx(ctx, tx, req)
 }
 
-func (txh panicTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
+func (txh panicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// only run the tx if there is block gas remaining
-	if ctx.BlockGasMeter().IsOutOfGas() {
+	if sdkCtx.BlockGasMeter().IsOutOfGas() {
 		err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 		return
 	}
 
-	startingGas := ctx.BlockGasMeter().GasConsumed()
+	startingGas := sdkCtx.BlockGasMeter().GasConsumed()
 
 	// Panic recovery.
 	defer func() {
 		// GasMeter expected to be set in AnteHandler
-		gasWanted := ctx.GasMeter().Limit()
+		gasWanted := sdkCtx.GasMeter().Limit()
 
 		if r := recover(); r != nil {
-			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, newDefaultRecoveryMiddleware())
+			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, sdkCtx, newDefaultRecoveryMiddleware())
 			err = processRecovery(r, recoveryMW)
 		}
 	}()
@@ -65,11 +67,11 @@ func (txh panicTxHandler) DeliverTx(ctx sdk.Context, tx sdk.Tx, req abci.Request
 	// NOTE: This must exist in a separate defer function for the above recovery
 	// to recover from this one.
 	defer func() {
-		ctx.BlockGasMeter().ConsumeGas(
-			ctx.GasMeter().GasConsumedToLimit(), "block gas meter",
+		sdkCtx.BlockGasMeter().ConsumeGas(
+			sdkCtx.GasMeter().GasConsumedToLimit(), "block gas meter",
 		)
 
-		if ctx.BlockGasMeter().GasConsumed() < startingGas {
+		if sdkCtx.BlockGasMeter().GasConsumed() < startingGas {
 			panic(sdk.ErrorGasOverflow{Descriptor: "tx gas summation"})
 		}
 	}()
@@ -114,7 +116,7 @@ func newRecoveryMiddleware(handler recoveryHandler, next recoveryMiddleware) rec
 }
 
 // newOutOfGasRecoveryMiddleware creates a standard OutOfGas recovery middleware for app.runTx method.
-func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recoveryMiddleware) recoveryMiddleware {
+func newOutOfGasRecoveryMiddleware(gasWanted uint64, sdkCtx sdk.Context, next recoveryMiddleware) recoveryMiddleware {
 	handler := func(recoveryObj interface{}) error {
 		err, ok := recoveryObj.(sdk.ErrorOutOfGas)
 		if !ok {
@@ -124,7 +126,7 @@ func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recov
 		return sdkerrors.Wrap(
 			sdkerrors.ErrOutOfGas, fmt.Sprintf(
 				"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
-				err.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
+				err.Descriptor, gasWanted, sdkCtx.GasMeter().GasConsumed(),
 			),
 		)
 	}

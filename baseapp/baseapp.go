@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -492,7 +493,7 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
+func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) context.Context {
 	ctx := app.getState(mode).ctx.
 		WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos)
@@ -507,5 +508,5 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 		ctx, _ = ctx.CacheContext()
 	}
 
-	return ctx
+	return sdk.WrapSDKContext(ctx)
 }

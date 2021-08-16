@@ -27,14 +27,12 @@ func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 	}
 
-	_, err = sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid recipient address (%s)", err)
+	if _, err := sdk.AccAddressFromBech32(msg.ToAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 	}
 
 	if !msg.Amount.IsValid() {
@@ -54,8 +52,9 @@ func (msg MsgSend) GetSignBytes() []byte {
 }
 
 // GetSigners Implements Msg.
-func (msg MsgSend) GetSigners() []string {
-	return []string{msg.FromAddress}
+func (msg MsgSend) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
+	return []sdk.AccAddress{fromAddress}
 }
 
 var _ sdk.Msg = &MsgMultiSend{}
@@ -92,10 +91,11 @@ func (msg MsgMultiSend) GetSignBytes() []byte {
 }
 
 // GetSigners Implements Msg.
-func (msg MsgMultiSend) GetSigners() []string {
-	addrs := make([]string, len(msg.Inputs))
+func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
+	addrs := make([]sdk.AccAddress, len(msg.Inputs))
 	for i, in := range msg.Inputs {
-		addrs[i] = in.Address
+		inAddr, _ := sdk.AccAddressFromBech32(in.Address)
+		addrs[i] = inAddr
 	}
 
 	return addrs
@@ -103,9 +103,8 @@ func (msg MsgMultiSend) GetSigners() []string {
 
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(in.Address)
-	if err != nil {
-		return err
+	if _, err := sdk.AccAddressFromBech32(in.Address); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid input address: %s", err)
 	}
 
 	if !in.Coins.IsValid() {
@@ -130,9 +129,8 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 
 // ValidateBasic - validate transaction output
 func (out Output) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(out.Address)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid output address (%s)", err)
+	if _, err := sdk.AccAddressFromBech32(out.Address); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid output address: %s", err)
 	}
 
 	if !out.Coins.IsValid() {

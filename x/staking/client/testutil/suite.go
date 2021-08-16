@@ -813,8 +813,9 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorRedelegations() {
 			h, err := s.network.LatestHeight()
 			s.Require().NoError(err)
 
-			//Wait for height latestHeight + 11 for the epoch queued messages to be executed
+			// Wait for height latestHeight + 11 for the epoch queued messages to be executed
 			_, err = s.network.WaitForHeightWithTimeout(h+12, 30*time.Second)
+			s.Require().NoError(err)
 
 			cmd := cli.GetCmdQueryValidatorRedelegations()
 			clientCtx := val.ClientCtx

@@ -85,6 +85,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
 			// TODO: we might need to trigger event on epoch execution
+			coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,

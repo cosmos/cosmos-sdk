@@ -39,6 +39,14 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	return
 }
 
+// PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power.
+// Currently, this returns a global variable that the app developer can tweak.
+// TODO: we might turn this into an on-chain param:
+// https://github.com/cosmos/cosmos-sdk/issues/8365
+func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
+	return sdk.DefaultPowerReduction
+}
+
 // EpochInterval - interval in blocks for epochs
 func (k Keeper) EpochInterval(ctx sdk.Context) (res int64) {
 	k.paramstore.Get(ctx, types.KeyEpochInterval, &res)

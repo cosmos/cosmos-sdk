@@ -52,3 +52,16 @@ func (txh errorTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Req
 
 	return res, nil
 }
+
+// SimulateTx implements TxHandler.SimulateTx method.
+func (txh errorTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	res, err := txh.inner.SimulateTx(ctx, sdkTx, req)
+	if err != nil {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		gInfo := sdk.GasInfo{GasUsed: sdkCtx.BlockGasMeter().GasConsumed()}
+
+		return tx.ResponseSimulateTx{GasInfo: gInfo, Result: res.Result}, nil
+	}
+
+	return res, nil
+}

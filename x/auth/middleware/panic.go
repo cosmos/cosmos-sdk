@@ -24,6 +24,7 @@ func NewPanicTxMiddleware() tx.TxMiddleware {
 
 var _ tx.TxHandler = panicTxHandler{}
 
+// CheckTx implements TxHandler.CheckTx method.
 func (txh panicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
@@ -40,6 +41,7 @@ func (txh panicTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Reque
 	return txh.inner.CheckTx(ctx, tx, req)
 }
 
+// DeliverTx implements TxHandler.DeliverTx method.
 func (txh panicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// only run the tx if there is block gas remaining
@@ -77,6 +79,23 @@ func (txh panicTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Req
 	}()
 
 	return txh.inner.DeliverTx(ctx, tx, req)
+}
+
+// SimulateTx implements TxHandler.SimulateTx method.
+func (txh panicTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (res tx.ResponseSimulateTx, err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// Panic recovery.
+	defer func() {
+		// GasMeter expected to be set in AnteHandler
+		gasWanted := sdkCtx.GasMeter().Limit()
+
+		if r := recover(); r != nil {
+			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, sdkCtx, newDefaultRecoveryMiddleware())
+			err = processRecovery(r, recoveryMW)
+		}
+	}()
+
+	return txh.inner.SimulateTx(ctx, sdkTx, req)
 }
 
 // RecoveryHandler handles recovery() object.

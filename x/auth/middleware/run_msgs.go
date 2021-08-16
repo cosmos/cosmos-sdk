@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -28,30 +29,62 @@ func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.TxHa
 
 var _ tx.TxHandler = runMsgsTxHandler{}
 
-func (txh runMsgsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
+// CheckTx implements TxHandler.CheckTx method.
+func (txh runMsgsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	// Don't run Msgs during CheckTx.
 	return abci.ResponseCheckTx{}, nil
 }
 
-func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
+// DeliverTx implements TxHandler.DeliverTx method.
+func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	res, err := txh.runMsgs(ctx, tx.GetMsgs(), req.Tx)
+	if err != nil {
+		return abci.ResponseDeliverTx{}, err
+	}
+
+	return abci.ResponseDeliverTx{
+		Log:    res.Log,
+		Data:   res.Data,
+		Events: res.Events,
+	}, nil
+}
+
+// SimulateTx implements TxHandler.SimulateTx method.
+func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	res, err := txh.runMsgs(ctx, sdkTx.GetMsgs(), req.TxBytes)
+	if err != nil {
+		return tx.ResponseSimulateTx{}, err
+	}
+
+	return tx.ResponseSimulateTx{
+		Result: res,
+	}, nil
+}
+
+// runMsgs iterates through a list of messages and executes them with the provided
+// Context and execution mode. Messages will only be executed during simulation
+// and DeliverTx. An error is returned if any single message fails or if a
+// Handler does not exist for a given message route. Otherwise, a reference to a
+// Result is returned. The caller must not commit state if an error is returned.
+func (txh runMsgsTxHandler) runMsgs(ctx context.Context, msgs []sdk.Msg, txBytes []byte) (*sdk.Result, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
-	runMsgCtx, msCache := cacheTxContext(sdkCtx, req.Tx)
+	runMsgCtx, msCache := cacheTxContext(sdkCtx, txBytes)
 
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	msgLogs := make(sdk.ABCIMessageLogs, 0, len(tx.GetMsgs()))
+	msgLogs := make(sdk.ABCIMessageLogs, 0, len(msgs))
 	events := sdkCtx.EventManager().Events()
 	txMsgData := &sdk.TxMsgData{
-		Data: make([]*sdk.MsgData, 0, len(tx.GetMsgs())),
+		Data: make([]*sdk.MsgData, 0, len(msgs)),
 	}
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
-	for i, msg := range tx.GetMsgs() {
+	for i, msg := range msgs {
 		var (
 			msgResult    *sdk.Result
 			eventMsgName string // name to use as value in event `message.action`
@@ -72,16 +105,16 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 			eventMsgName = legacyMsg.Type()
 			handler := txh.legacyRouter.Route(sdkCtx, msgRoute)
 			if handler == nil {
-				return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s; message index: %d", msgRoute, i)
 			}
 
 			msgResult, err = handler(sdkCtx, msg)
 		} else {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 		}
 
 		if err != nil {
-			return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
+			return nil, sdkerrors.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
 
 		msgEvents := sdk.Events{
@@ -102,12 +135,12 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 	msCache.Write()
 	data, err := proto.Marshal(txMsgData)
 	if err != nil {
-		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(err, "failed to marshal tx data")
+		return nil, sdkerrors.Wrap(err, "failed to marshal tx data")
 	}
 
-	return abci.ResponseDeliverTx{
-		Log:    msgLogs.String(),
+	return &sdk.Result{
 		Data:   data,
+		Log:    strings.TrimSpace(msgLogs.String()),
 		Events: events.ToABCIEvents(),
 	}, nil
 }

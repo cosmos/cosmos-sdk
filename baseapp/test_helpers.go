@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -17,13 +18,25 @@ func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 	res := app.CheckTx(abci.RequestCheckTx{Tx: bz, Type: abci.CheckTxType_New})
+
 	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
 		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
 		nil
 }
 
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	panic("TODO handle Simulate with TxHandler")
+	sdkTx, err := app.txDecoder(txBytes)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+
+	ctx := app.getContextForTx(runTxModeSimulate, txBytes)
+	res, err := app.txHandler.SimulateTx(ctx, sdkTx, tx.RequestSimulateTx{TxBytes: txBytes})
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+
+	return res.GasInfo, res.Result, nil
 }
 
 func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
@@ -33,6 +46,7 @@ func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *s
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: bz})
+
 	return sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)},
 		&sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events},
 		nil

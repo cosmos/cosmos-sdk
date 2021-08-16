@@ -26,8 +26,9 @@ func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.TxMiddleware {
 
 var _ tx.TxHandler = legacyAnteTxHandler{}
 
+// CheckTx implements TxHandler.CheckTx method.
 func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
-	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx)
+	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx, false)
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
@@ -35,8 +36,9 @@ func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 	return txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
+// DeliverTx implements TxHandler.DeliverTx method.
 func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx)
+	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx, false)
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
@@ -44,7 +46,17 @@ func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abc
 	return txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
-func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes []byte) (sdk.Context, error) {
+// SimulateTx implements TxHandler.SimulateTx method.
+func (txh legacyAnteTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
+	sdkCtx, err := txh.runAnte(ctx, sdkTx, req.TxBytes, true)
+	if err != nil {
+		return tx.ResponseSimulateTx{}, err
+	}
+
+	return txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+}
+
+func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {
 	err := validateBasicTxMsgs(tx.GetMsgs())
 	if err != nil {
 		return sdk.Context{}, err
@@ -62,7 +74,7 @@ func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes [
 	// performance benefits, but it'll be more difficult to get right.
 	anteCtx, msCache := cacheTxContext(sdkCtx, txBytes)
 	anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
-	newCtx, err := txh.anteHandler(anteCtx, tx, false)
+	newCtx, err := txh.anteHandler(anteCtx, tx, isSimulate)
 	if err != nil {
 		return sdk.Context{}, err
 	}

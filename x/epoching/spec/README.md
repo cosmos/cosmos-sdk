@@ -9,7 +9,7 @@ parent:
 
 ## Abstract
 
-The epoching module allows modules to queue messages for execution at a certain certain block height. Each module will have its own instance of the epoching module, this allows each module to have its own message queue and own duration for epochs.
+The epoching module allows modules to queue messages for execution at a certain block height. Each module will have its own instance of the epoching module, this allows each module to have its own message queue and own duration for epochs.
 
 ## Example
 

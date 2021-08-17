@@ -947,10 +947,10 @@ func GetCmdQueryMsgUndelegate() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query all queued undelegation messages",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query queued undelegation messages.
+			fmt.Sprintf(`Query queued undelegation messages for a specific delegator address.
 
 Example:
-$ %s query staking buffered-undelegation-messages
+$ %s query staking buffered-undelegation-messages [delegator_addr]
 `,
 				version.AppName,
 			),
@@ -1043,10 +1043,10 @@ func GetCmdQueryMsgBeginRedelegate() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query specific queued begin redelegation messages",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query queued begin redelegation messages.
+			fmt.Sprintf(`Query queued begin redelegation messages for a specific delegator address.
 
 Example:
-$ %s query staking buffered-undelegation-messages
+$ %s query staking buffered-undelegation-messages [delegator_addr]
 `,
 				version.AppName,
 			),

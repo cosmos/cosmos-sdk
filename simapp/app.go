@@ -428,7 +428,8 @@ func (app *SimApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Re
 
 // ExecuteEpoch run epoch execution for testing
 func (app *SimApp) ExecuteEpoch(ctx sdk.Context) {
-	// order should be same as one in SetOrderEndBlockers
+	// NOTE: slashing module endblocker should run before staking module since MsgUnjail epoch action should run before making
+	// validator set update on staking module
 	app.SlashingKeeper.ExecuteEpoch(ctx)
 	app.StakingKeeper.ExecuteEpoch(ctx)
 }

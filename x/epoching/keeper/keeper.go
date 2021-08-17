@@ -32,13 +32,6 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey) Keeper {
 	}
 }
 
-// SetNewActionID save ID to be used for next epoch action
-func (k Keeper) SetNewActionID(ctx sdk.Context, actionID uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	store.Set(NextEpochActionID, sdk.Uint64ToBigEndian(actionID))
-}
-
 // GetNewActionID returns ID to be used for next epoch
 func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
@@ -48,8 +41,12 @@ func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 		// return default action ID to 1
 		return 1
 	}
+	id := sdk.BigEndianToUint64(bz)
 
-	return sdk.BigEndianToUint64(bz)
+	// increment next action ID
+	store.Set(NextEpochActionID, sdk.Uint64ToBigEndian(id+1))
+
+	return id
 }
 
 // ActionStoreKey returns action store key from ID
@@ -69,7 +66,6 @@ func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.
 
 	actionID := k.GetNewActionID(ctx)
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
-	k.SetNewActionID(ctx, actionID+1)
 }
 
 // RestoreEpochAction restore the actions that need to be executed on next epoch
@@ -83,7 +79,6 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 	}
 	actionID := k.GetNewActionID(ctx)
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
-	k.SetNewActionID(ctx, actionID+1)
 }
 
 // GetEpochAction get action by ID

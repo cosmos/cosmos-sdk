@@ -332,12 +332,12 @@ func (k Keeper) executeQueuedUndelegateMsg(ctx sdk.Context, msg *types.MsgUndele
 // otherwise an error log will be produced.
 // Unfortunately, the user will need to check if all there messages were executed.
 func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
-	// execute all epoch actions
+	cacheCtx, writeCache := ctx.CacheContext()
+	logger := k.Logger(ctx)
 
+	// execute all epoch actions
 	for iterator := k.epochKeeper.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
-		cacheCtx, writeCache := ctx.CacheContext()
-		logger := k.Logger(ctx)
 
 		switch msg := msg.(type) {
 		case *types.MsgCreateValidator:

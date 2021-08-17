@@ -173,7 +173,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 // BeginRedelegate defines a method for performing a redelegation of coins from a delegator and source validator to a destination validator
 func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRedelegate) (*types.MsgBeginRedelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// Queue epoch action and move all the execution logic to Epoch execution
+
 	epochInterval := k.EpochInterval(ctx)
 	epochNumber := k.epochKeeper.GetEpochNumber(ctx)
 	k.epochKeeper.QueueMsgForEpoch(ctx, epochNumber, msg)
@@ -194,7 +194,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 // Undelegate defines a method for performing an undelegation from a delegate and a validator
 func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// Queue epoch action and move all the execution logic to Epoch execution
+
 	epochInterval := k.EpochInterval(ctx)
 	k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
 

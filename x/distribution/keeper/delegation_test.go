@@ -15,7 +15,7 @@ import (
 )
 
 func TestCalculateRewardsBasic(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
@@ -69,7 +69,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(100000000))
@@ -132,7 +132,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -207,7 +207,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegator(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -270,7 +270,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 }
 
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	balancePower := int64(1000)
@@ -341,7 +341,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
@@ -409,7 +409,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -483,7 +483,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -628,7 +628,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 }
 
 func Test100PercentCommissionReward(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)

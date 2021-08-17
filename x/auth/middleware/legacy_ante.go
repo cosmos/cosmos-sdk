@@ -97,6 +97,10 @@ func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes [
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if txh.anteHandler == nil {
+		return sdkCtx, nil
+	}
+
 	ms := sdkCtx.MultiStore()
 
 	// Branch context before AnteHandler call in case it aborts.

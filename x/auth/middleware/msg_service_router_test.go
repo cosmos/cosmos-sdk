@@ -71,6 +71,9 @@ func TestMsgService(t *testing.T) {
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
+	app.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
+		MsgServiceRouter: msr,
+	}))
 	testdata.RegisterMsgServer(
 		msr,
 		testdata.MsgServerImpl{},

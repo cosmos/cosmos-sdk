@@ -27,15 +27,22 @@ type TxHandlerOptions struct {
 	LegacyAnteHandler sdk.AnteHandler
 }
 
+// NewDefaultTxHandler defines a TxHandler middleware stacks that should work
+// for most applications.
 func NewDefaultTxHandler(options TxHandlerOptions) tx.TxHandler {
 	return ComposeTxMiddleware(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),
-		// Make sure no events are emitted outside of this middleware.
+		// Choose which events to index in Tendermint. Make sure no events are
+		// emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
-		// Panics outside of this middleware won't be caught. Be careful!
+		// Recover from panics. Panics outside of this middleware won't be
+		// caught, be careful!
 		NewRecoveryTxMiddleware(),
+		// Convert errors into ABCI responses.
 		NewErrorTxMiddleware(options.Debug),
+		// Set a new GasMeter on sdk.Context.
+		//
 		// Make sure the Gas middleware is outside of all other middlewares
 		// that reads the GasMeter. In our case, the Error middleware reads
 		// the GasMeter to populate GasInfo.

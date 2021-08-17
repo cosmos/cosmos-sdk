@@ -232,7 +232,7 @@ message Fee {
 
   // gas_limit is the maximum gas that can be used in transaction processing
   // before an out of gas error occurs
-  uint64 gas_limit = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint64 gas_limit = 2;
 
   // if unset, the first signer is responsible for paying the fees. If set, the specified account must pay the fees.
   // the payer must be a tx signer (and thus have signed this field in AuthInfo).

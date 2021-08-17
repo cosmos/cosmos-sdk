@@ -108,7 +108,7 @@ message GroupAccountInfo {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // group_id is the unique ID of the group.
-  uint64 group_id = 2 ;
+  uint64 group_id = 2;
 
   // admin is the account address of the group admin.
   string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];

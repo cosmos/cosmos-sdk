@@ -24,7 +24,7 @@ type HandlerTestSuite struct {
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
-	suite.app = simapp.Setup(false)
+	suite.app = simapp.Setup(suite.T(), false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 	suite.govHandler = params.NewParamChangeProposalHandler(suite.app.ParamsKeeper)
 }

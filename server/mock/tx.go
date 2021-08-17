@@ -58,7 +58,7 @@ func (tx kvstoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (tx kvstoreTx) GetSigners() []string {
+func (tx kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
 }
 

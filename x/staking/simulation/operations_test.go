@@ -29,7 +29,6 @@ import (
 
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
-
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	app, ctx, accs := createTestApp(t, false, r, 3)

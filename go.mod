@@ -53,15 +53,14 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/tendermint/go-amino v0.16.0
-	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b
-	golang.org/x/crypto v0.27.0
-	golang.org/x/sync v0.8.0
-	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117
-	google.golang.org/grpc v1.66.2
-	google.golang.org/protobuf v1.34.2
-	gotest.tools/v3 v3.5.1
-	pgregory.net/rapid v1.1.0
-	sigs.k8s.io/yaml v1.4.0
+	github.com/tendermint/tendermint v0.34.12
+	github.com/tendermint/tm-db v0.6.4
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
+	google.golang.org/grpc v1.38.0
+	google.golang.org/protobuf v1.26.0
+	gopkg.in/yaml.v2 v2.4.0
+	nhooyr.io/websocket v1.8.6 // indirect
 )
 
 require (

@@ -218,12 +218,12 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx --type=[hash|acc_seq|signature] [hash|acc_seq|signature]",
-		Short: "Query for a transaction by hash, addr++seq combination or signature in a committed block",
+		Short: "Query for a transaction by hash, \"<addr>/<seq>\" combination or comma-separated signatures in a committed block",
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:
 $ %s query tx <hash>
-$ %s query tx --%s=%s <addr>:<sequence>
-$ %s query tx --%s=%s <sig1_base64,sig2_base64...>
+$ %s query tx --%s=%s <addr>/<sequence>
+$ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 `,
 			version.AppName,
 			version.AppName, flagType, typeAccSeq,

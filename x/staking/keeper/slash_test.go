@@ -18,7 +18,7 @@ import (
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.
 func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
-	_, app, ctx := createTestInput()
+	_, app, ctx := createTestInput(t)
 
 	addrDels, addrVals := generateAddresses(app, ctx, 100)
 

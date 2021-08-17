@@ -28,15 +28,17 @@ message CommissionRates {
   option (gogoproto.goproto_stringer) = false;
 
   // rate is the commission rate charged to delegators, as a fraction.
-  string rate = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string rate = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
   // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
   string max_rate = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"max_rate\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
   string max_change_rate = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"max_change_rate\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -95,9 +97,10 @@ message Validator {
   // status is the validator status (bonded/unbonding/unbonded).
   BondStatus status = 4;
   // tokens define the delegated tokens (incl. self-delegation).
-  string tokens = 5 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string tokens = 5 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
   // delegator_shares defines total shares issued to a validator's delegators.
   string delegator_shares = 6 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"delegator_shares\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -191,7 +194,7 @@ message Delegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_address\""];
   // shares define the delegation shares received.
-  string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  string shares = 3 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds

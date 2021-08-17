@@ -12,16 +12,19 @@ import "cosmos_proto/cosmos.proto";
 message Params {
   option (gogoproto.goproto_stringer) = false;
   string community_tax                = 1 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"community_tax\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   string base_proposer_reward = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"base_proposer_reward\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
   string bonus_proposer_reward = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.moretags)   = "yaml:\"bonus_proposer_reward\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false

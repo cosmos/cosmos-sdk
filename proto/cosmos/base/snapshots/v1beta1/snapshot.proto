@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.base.snapshots.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
 

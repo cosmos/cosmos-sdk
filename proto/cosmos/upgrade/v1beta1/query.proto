@@ -4,7 +4,6 @@ package cosmos.upgrade.v1beta1;
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/upgrade/v1beta1/upgrade.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 

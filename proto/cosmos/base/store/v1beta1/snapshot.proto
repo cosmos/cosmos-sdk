@@ -2,7 +2,6 @@ syntax = "proto3";
 package cosmos.base.store.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/store/types";
 

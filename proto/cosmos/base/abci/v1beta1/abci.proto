@@ -4,7 +4,6 @@ package cosmos.base.abci.v1beta1;
 import "gogoproto/gogo.proto";
 import "tendermint/abci/types.proto";
 import "google/protobuf/any.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package                       = "github.com/cosmos/cosmos-sdk/types";
 option (gogoproto.goproto_stringer_all) = false;
@@ -14,13 +13,13 @@ option (gogoproto.goproto_stringer_all) = false;
 message TxResponse {
   option (gogoproto.goproto_getters) = false;
   // The block height
-  int64 height = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 height = 1;
   // The transaction hash.
   string txhash = 2 [(gogoproto.customname) = "TxHash"];
   // Namespace for the Code
   string codespace = 3;
   // Response code.
-  uint32 code = 4 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint32 code = 4;
   // Result bytes, if any.
   string data = 5;
   // The output of the application's logger (raw string). May be
@@ -31,9 +30,9 @@ message TxResponse {
   // Additional information. May be non-deterministic.
   string info = 8;
   // Amount of gas requested for transaction.
-  int64 gas_wanted = 9 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 gas_wanted = 9;
   // Amount of gas consumed by transaction.
-  int64 gas_used = 10 [(cosmos_proto.scalar) = "cosmos.Int"];
+  int64 gas_used = 10;
   // The request transaction bytes.
   google.protobuf.Any tx = 11;
   // Time of the previous block. For heights > 1, it's the weighted median of
@@ -46,7 +45,7 @@ message TxResponse {
 message ABCIMessageLog {
   option (gogoproto.stringer) = true;
 
-  uint32 msg_index = 1 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint32 msg_index = 1;
   string log       = 2;
 
   // Events contains a slice of Event objects that were emitted during some
@@ -73,10 +72,10 @@ message Attribute {
 // GasInfo defines tx execution gas context.
 message GasInfo {
   // GasWanted is the maximum units of work we allow this tx to perform.
-  uint64 gas_wanted = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"gas_wanted\""];
+  uint64 gas_wanted = 1 [(gogoproto.moretags) = "yaml:\"gas_wanted\""];
 
   // GasUsed is the amount of gas actually consumed.
-  uint64 gas_used = 2 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.moretags) = "yaml:\"gas_used\""];
+  uint64 gas_used = 2 [(gogoproto.moretags) = "yaml:\"gas_used\""];
 }
 
 // Result is the union of ResponseFormat and ResponseCheckTx.

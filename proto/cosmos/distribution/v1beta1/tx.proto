@@ -46,8 +46,8 @@ message MsgWithdrawDelegatorReward {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString",(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString",(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"validator_address\""];
 }
 
 // MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward response type.

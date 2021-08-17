@@ -30,7 +30,7 @@ func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint
 }
 
 // GetEpochActions get all actions
-func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
+func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	return k.epochKeeper.GetEpochActions(ctx)
 }
 

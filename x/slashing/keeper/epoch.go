@@ -16,6 +16,6 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 }
 
 // GetEpochActions get all actions
-func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
+func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 	return k.ek.GetEpochActions(ctx)
 }

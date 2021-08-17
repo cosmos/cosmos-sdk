@@ -98,18 +98,19 @@ func (k Keeper) GetEpochAction(ctx sdk.Context, epochNumber int64, actionID uint
 }
 
 // GetEpochActions get all actions
-func (k Keeper) GetEpochActions(ctx sdk.Context) []*codectypes.Any {
-	actions := []*codectypes.Any{}
+func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
+	actions := []sdk.Msg{}
 	iterator := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(EpochActionQueuePrefix))
 
 	for ; iterator.Valid(); iterator.Next() {
-		var action codectypes.Any
+		var action sdk.Msg
 		bz := iterator.Value()
 		// reference from TestMarshalAny(t *testing.T)
 		k.cdc.UnmarshalInterface(bz, &action)
-		actions = append(actions, &action)
+		actions = append(actions, action)
 	}
 
+	fmt.Println(actions, "any")
 	return actions
 }
 

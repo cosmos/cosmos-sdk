@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -71,7 +72,16 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisSt
 
 		return false
 	})
-	epochActions := keeper.GetEpochActions(ctx)
+	msgs := keeper.GetEpochActions(ctx)
 
-	return types.NewGenesisState(params, signingInfos, missedBlocks, epochActions)
+	var anys []*codectypes.Any
+	for _, msg := range msgs {
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+		anys = append(anys, any)
+	}
+
+	return types.NewGenesisState(params, signingInfos, missedBlocks, anys)
 }

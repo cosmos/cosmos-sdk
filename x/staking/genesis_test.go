@@ -77,11 +77,27 @@ func TestInitGenesis(t *testing.T) {
 	genesisState := types.NewGenesisState(params, validators, delegations)
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
+	coin := sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(len(validators))))
+
+	msg := types.NewMsgDelegate(sdk.AccAddress(addrs[0]), sdk.ValAddress(addrs[0]), coin)
+
+	app.StakingKeeper.QueueMsgForEpoch(ctx, app.StakingKeeper.GetEpochNumber(ctx), msg)
+
 	actualGenesis := staking.ExportGenesis(ctx, app.StakingKeeper)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
 	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
-
+	msgs := app.StakingKeeper.GetEpochActions(ctx)
+	var anys []*codectypes.Any
+	for _, msg := range msgs {
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+		anys = append(anys, any)
+	}
+	require.Equal(t, anys, actualGenesis.BufferedMsgs)
+	fmt.Println(app.StakingKeeper.GetEpochActions(ctx), 11, actualGenesis.BufferedMsgs)
 	// Ensure validators have addresses.
 	vals2, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	require.NoError(t, err)

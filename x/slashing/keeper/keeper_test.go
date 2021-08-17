@@ -155,13 +155,13 @@ func TestHandleAlreadyJailed(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	}
+	validator, _ := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 
-	app.ExecuteEpoch(ctx)
 	// end block
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	// validator should have been jailed and slashed
-	validator, _ := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
+	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed

@@ -96,8 +96,6 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 			sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
 		),
 	)
-	// delegate action to staking keeper for Jail
-	k.sk.Jail(ctx, consAddr)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {

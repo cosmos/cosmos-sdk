@@ -271,7 +271,7 @@ func (bc bech32Codec) AddressStringToBytes(text string) ([]byte, error) {
 	}
 
 	if hrp != bc.bech32Prefix {
-		return nil, errors.New("hrp does not match bech32Prefix")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "hrp does not match bech32Prefix")
 	}
 
 	if err := address.VerifyFormat(bz); err != nil {

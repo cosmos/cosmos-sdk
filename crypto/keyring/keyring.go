@@ -353,6 +353,9 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 
 		return nil, pub, errors.New("cannot sign with offline keys")
 	}
+	if err != nil {
+		return nil, nil, err
+	}
 
 	sig, err := priv.Sign(msg)
 	if err != nil {

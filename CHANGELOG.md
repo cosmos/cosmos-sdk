@@ -45,7 +45,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (deps) [\#9956](https://github.com/cosmos/cosmos-sdk/pull/9956) Bump Tendermint to [v0.34.12](https://github.com/tendermint/tendermint/releases/tag/v0.34.12).
 
-
 ### Deprecated
 
 * (x/upgrade) [\#9906](https://github.com/cosmos/cosmos-sdk/pull/9906) Deprecate `UpgradeConsensusState` gRPC query since this functionality is only used for IBC, which now has its own [IBC replacement](https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54)

@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -108,6 +109,116 @@ func (s *IntegrationTestSuite) TestCLIValidateSignatures() {
 	s.Require().EqualError(err, "signatures validation failed")
 }
 
+func (s *IntegrationTestSuite) TestCLISignGenOnly() {
+	val := s.network.Validators[0]
+	val2 := s.network.Validators[1]
+
+	info, err := val.ClientCtx.Keyring.KeyByAddress(val.Address)
+	s.Require().NoError(err)
+	keyName := info.GetName()
+
+	account, err := val.ClientCtx.AccountRetriever.GetAccount(val.ClientCtx, info.GetAddress())
+	s.Require().NoError(err)
+
+	sendTokens := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10)))
+	args := []string{
+		keyName, // from keyname
+		val2.Address.String(),
+		sendTokens.String(),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break if we use keyname with --generate-only flag
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+	}
+	generatedStd, err := clitestutil.ExecTestCLICmd(val.ClientCtx, bank.NewSendTxCmd(), args)
+	s.Require().NoError(err)
+	opFile := testutil.WriteToNewTempFile(s.T(), generatedStd.String())
+
+	commonArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flags.FlagHome, strings.Replace(val.ClientCtx.HomeDir, "simd", "simcli", 1)),
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID),
+	}
+
+	cases := []struct {
+		name   string
+		args   []string
+		expErr bool
+		errMsg string
+	}{
+		{
+			"offline mode with account-number, sequence and keyname (valid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, account.GetAccountNumber()),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, account.GetSequence()),
+			},
+			false,
+			"",
+		},
+		{
+			"offline mode with account-number, sequence and address key (valid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, account.GetAccountNumber()),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, account.GetSequence()),
+			},
+			false,
+			"",
+		},
+		{
+			"offline mode without account-number and keyname (invalid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=%d", flags.FlagSequence, account.GetSequence()),
+			},
+			true,
+			`required flag(s) "account-number" not set`,
+		},
+		{
+			"offline mode without sequence and keyname (invalid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=%d", flags.FlagAccountNumber, account.GetAccountNumber()),
+			},
+			true,
+			`required flag(s) "sequence" not set`,
+		},
+		{
+			"offline mode without account-number, sequence and keyname (invalid)",
+			[]string{
+				opFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, keyName),
+				fmt.Sprintf("--%s=true", flags.FlagOffline),
+			},
+			true,
+			`required flag(s) "account-number", "sequence" not set`,
+		},
+	}
+
+	for _, tc := range cases {
+		cmd := authcli.GetSignCommand()
+		tmcli.PrepareBaseCmd(cmd, "", "")
+		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
+		if tc.expErr {
+			s.Require().Error(err)
+			s.Require().Contains(err.Error(), tc.errMsg)
+		} else {
+			s.Require().NoError(err)
+			signedTx := testutil.WriteToNewTempFile(s.T(), out.String())
+			_, err := TxBroadcastExec(val.ClientCtx, signedTx.Name())
+			s.Require().NoError(err)
+		}
+	}
+}
+
 func (s *IntegrationTestSuite) TestCLISignBatch() {
 	val := s.network.Validators[0]
 	var sendTokens = sdk.NewCoins(
@@ -126,8 +237,21 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	_, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--offline")
 	s.Require().EqualError(err, "required flag(s) \"account-number\", \"sequence\" not set")
 
+	// sign-batch file - offline and sequence is set but account-number is not set
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), "--offline")
+	s.Require().EqualError(err, "required flag(s) \"account-number\" not set")
+
+	// sign-batch file - offline and account-number is set but sequence is not set
+	_, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"), "--offline")
+	s.Require().EqualError(err, "required flag(s) \"sequence\" not set")
+
+	// sign-batch file - sequence and account-number are set when offline is false
+	res, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), fmt.Sprintf("--%s=%s", flags.FlagSequence, "1"), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, "1"))
+	s.Require().NoError(err)
+	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
+
 	// sign-batch file
-	res, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
+	res, err = TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID))
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
@@ -423,6 +547,76 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByEvents() {
 				var result sdk.TxResponse
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
 				s.Require().NotNil(result.Height)
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestCLIQueryTxsCmdByEvents() {
+	val := s.network.Validators[0]
+
+	account2, err := val.ClientCtx.Keyring.Key("newAccount2")
+	s.Require().NoError(err)
+
+	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
+
+	// Send coins.
+	out, err := s.createBankMsg(
+		val, account2.GetAddress(),
+		sdk.NewCoins(sendTokens),
+	)
+	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// Query the tx by hash to get the inner tx.
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+
+	testCases := []struct {
+		name        string
+		args        []string
+		expectEmpty bool
+	}{
+		{
+			"fee event happy case",
+			[]string{
+				fmt.Sprintf("--events=tx.fee=%s",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+		},
+		{
+			"no matching fee event",
+			[]string{
+				fmt.Sprintf("--events=tx.fee=%s",
+					sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0))).String()),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := authcli.QueryTxsByEventsCmd()
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
+
+			var result sdk.SearchTxsResult
+			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &result))
+
+			if tc.expectEmpty {
+				s.Require().Equal(0, len(result.Txs))
+			} else {
+				s.Require().NotEqual(0, len(result.Txs))
+				s.Require().NotNil(result.Txs[0])
 			}
 		})
 	}

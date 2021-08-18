@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bufio"
 	"encoding/json"
 	"io"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -68,7 +68,10 @@ func (ctx Context) WithKeyringOptions(opts ...keyring.Option) Context {
 
 // WithInput returns a copy of the context with an updated input.
 func (ctx Context) WithInput(r io.Reader) Context {
-	ctx.Input = r
+	// convert to a bufio.Reader to have a shared buffer between the keyring and the
+	// the Commands, ensuring a read from one advance the read pointer for the other.
+	// see https://github.com/cosmos/cosmos-sdk/issues/9566.
+	ctx.Input = bufio.NewReader(r)
 	return ctx
 }
 
@@ -318,15 +321,6 @@ func (ctx Context) printOutput(out []byte) error {
 func GetFromFields(kr keyring.Keyring, from string, genOnly bool) (sdk.AccAddress, string, keyring.KeyType, error) {
 	if from == "" {
 		return nil, "", 0, nil
-	}
-
-	if genOnly {
-		addr, err := sdk.AccAddressFromBech32(from)
-		if err != nil {
-			return nil, "", 0, errors.Wrap(err, "must provide a valid Bech32 address in generate-only mode")
-		}
-
-		return addr, "", 0, nil
 	}
 
 	var info keyring.Info

@@ -12,7 +12,8 @@ message Class {
   string symbol      = 3;
   string description = 4;
   string uri         = 5;
-  string uri_hash    = 6;
+  // a hash of the document pointed by uri
+  string uri_hash = 6;
 }
 
 // NFT defines the nft.
@@ -20,6 +21,7 @@ message NFT {
   string class_id = 1;
   string id       = 2;
   string uri      = 3;
+  // a hash of the document pointed by uri
   string uri_hash = 4;
   // Metadata of the nft
   google.protobuf.Any data = 10;

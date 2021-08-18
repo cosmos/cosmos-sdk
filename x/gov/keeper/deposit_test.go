@@ -12,7 +12,7 @@ import (
 )
 
 func TestDeposits(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	TestAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000000))

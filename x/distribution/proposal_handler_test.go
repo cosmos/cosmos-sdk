@@ -26,7 +26,7 @@ func testProposal(recipient sdk.AccAddress, amount sdk.Coins) *types.CommunityPo
 }
 
 func TestProposalHandlerPassed(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	recipient := delAddr1
@@ -55,7 +55,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 }
 
 func TestProposalHandlerFailed(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	recipient := delAddr1

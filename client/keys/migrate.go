@@ -12,14 +12,13 @@ func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate keys from amino to proto serialization format",
-		Long: `Migrate key information from LegacyInfo(amino) to Record(proto).
-		LegacyInfo is an interface that is used to persist keys in keyring DB using Amino serialization format.
-Record is a struct that is used to persist keys in keyring DB using Proto for serialization and deserialization.
+		Long: `Migrate keys from Amino to Protocol Buffers records.
 For each key material entry, the command will check if the key can be deserialized using proto.
 If this is the case, the key is already migrated. Therefore, we skip it and continue with a next one. 
-Otherwise, we try to deserialize it using Amino to LegacyInfo. If this attempt is successful, we serialize LegacyInfo to proto serialization format. 
-Finally, we overwrite keyring entry with new keyring.Item. 
-If any error occurred, it will be outputted in CLI. In this case, migration will be continued until all keys in keyring DB are exhausted.
+Otherwise, we try to deserialize it using Amino into LegacyInfo. If this attempt is successful, we serialize 
+LegacyInfo to Protobuf serialization format and overwrite the keyring entry. If any error occurred, it will be 
+outputted in CLI and migration will be continued until all keys in the keyring DB are exhausted.
+See https://github.com/cosmos/cosmos-sdk/pull/9695 for more details.
 
 It is recommended to run in 'dry-run' mode first to verify all key migration material.
 `,

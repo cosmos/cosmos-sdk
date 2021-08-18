@@ -43,9 +43,6 @@ func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 		Data:   res.Data,
 		Events: res.Events,
 		Log:    res.Log,
-		// We populate gas info in this middleware
-		GasUsed:   int64(sdkCtx.GasMeter().GasConsumed()),
-		GasWanted: int64(sdkCtx.GasMeter().Limit()),
 	}, nil
 }
 
@@ -66,9 +63,6 @@ func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abc
 		Data:   res.Data,
 		Events: res.Events,
 		Log:    res.Log,
-		// We populate gas info in this middleware
-		GasUsed:   int64(sdkCtx.GasMeter().GasConsumed()),
-		GasWanted: int64(sdkCtx.GasMeter().Limit()),
 	}, nil
 }
 
@@ -85,8 +79,7 @@ func (txh legacyAnteTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req
 	}
 
 	return tx.ResponseSimulateTx{
-		GasInfo: sdk.GasInfo{GasWanted: sdkCtx.GasMeter().Limit(), GasUsed: sdkCtx.GasMeter().GasConsumed()},
-		Result:  res.Result,
+		Result: res.Result,
 	}, nil
 }
 

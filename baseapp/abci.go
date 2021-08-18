@@ -248,7 +248,7 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 	ctx := app.getContextForTx(mode, req.Tx)
 	res, err := app.txHandler.CheckTx(ctx, tx, req)
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
+		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}
 
 	return res
@@ -270,7 +270,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
 	res, err := app.txHandler.DeliverTx(ctx, tx, req)
 	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
+		return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}
 
 	return res

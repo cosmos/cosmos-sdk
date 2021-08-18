@@ -13,7 +13,9 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 )
 
 // NewApp creates a simple mock kvstore app for testing. It should work
@@ -35,6 +37,15 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	baseApp.MountStores(capKeyMainStore)
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
+
+	// Set a Route.
+	encCfg := simapp.MakeTestEncodingConfig()
+	legacyRouter := middleware.NewLegacyRouter()
+	legacyRouter.AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
+	baseApp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
+		LegacyRouter:     legacyRouter,
+		MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
+	}))
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(); err != nil {

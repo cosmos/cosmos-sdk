@@ -39,12 +39,10 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.TxHandler {
 		// Recover from panics. Panics outside of this middleware won't be
 		// caught, be careful!
 		NewRecoveryTxMiddleware(),
-		// Convert errors into ABCI responses.
-		NewErrorTxMiddleware(options.Debug),
 		// Set a new GasMeter on sdk.Context.
 		//
 		// Make sure the Gas middleware is outside of all other middlewares
-		// that reads the GasMeter. In our case, the Error middleware reads
+		// that reads the GasMeter. In our case, the Recovery middleware reads
 		// the GasMeter to populate GasInfo.
 		NewGasTxMiddleware(),
 	)

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// GasTx defines a Tx with a GetGas() method which is needed to use SetUpContextDecorator
+// GasTx defines a Tx with a GetGas() method which is needed to use gasTxHandler.
 type GasTx interface {
 	sdk.Tx
 	GetGas() uint64
@@ -21,8 +21,8 @@ type gasTxHandler struct {
 }
 
 // NewGasTxMiddleware defines a simple middleware that sets a new GasMeter on
-// the sdk.Context. It reads the tx.GetGas() by default, or sets to infinity
-// in simulate mode.
+// the sdk.Context, and sets the GasInfo on the result. It reads the tx.GetGas()
+// by default, or sets to infinity in simulate mode.
 func NewGasTxMiddleware() tx.TxMiddleware {
 	return func(txh tx.TxHandler) tx.TxHandler {
 		return gasTxHandler{inner: txh}
@@ -38,7 +38,11 @@ func (txh gasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Request
 		return abci.ResponseCheckTx{}, err
 	}
 
-	return txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res, err := txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res.GasUsed = int64(sdkCtx.GasMeter().GasConsumed())
+	res.GasWanted = int64(sdkCtx.GasMeter().Limit())
+
+	return res, err
 }
 
 // DeliverTx implements TxHandler.DeliverTx.
@@ -47,7 +51,12 @@ func (txh gasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Reque
 	if err != nil {
 		return abci.ResponseDeliverTx{}, err
 	}
-	return txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+
+	res, err := txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res.GasUsed = int64(sdkCtx.GasMeter().GasConsumed())
+	res.GasWanted = int64(sdkCtx.GasMeter().Limit())
+
+	return res, err
 }
 
 // SimulateTx implements TxHandler.SimulateTx method.
@@ -57,7 +66,13 @@ func (txh gasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.Req
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	return txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	res, err := txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	res.GasInfo = sdk.GasInfo{
+		GasWanted: sdkCtx.GasMeter().Limit(),
+		GasUsed:   sdkCtx.GasMeter().GasConsumed(),
+	}
+
+	return res, err
 }
 
 // gasContext returns a new context with a gas meter set from a given context.

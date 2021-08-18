@@ -53,7 +53,7 @@ type DBConnection interface {
 	SaveNextVersion() (uint64, error)
 
 	// Attempts to save database at a specific version ID, which must be greater than or equal to
-	// what would be returned by `SaveVersion`.
+	// what would be returned by `SaveNextVersion`.
 	// Returns an error if any open DBWriter transactions exist.
 	SaveVersion(uint64) error
 

@@ -151,13 +151,9 @@ type Iterator interface {
 	// CONTRACT: start, end readonly []byte
 	Domain() (start []byte, end []byte)
 
-	// Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
-	// invalid forever.
-	Valid() bool
-
-	// Next moves the iterator to the next key in the database, as defined by order of iteration.
-	// If Valid returns false, this method will panic.
-	Next()
+	// Next moves the iterator to the next key in the database, as defined by order of iteration;
+	// returns whether the iterator is valid. Once invalid, it remains invalid forever.
+	Next() bool
 
 	// Key returns the key at the current position. Panics if the iterator is invalid.
 	// CONTRACT: key readonly []byte
@@ -190,9 +186,8 @@ type VersionSet interface {
 
 type VersionIterator interface {
 	// Next advances the iterator to the next element.
-	Next()
+	// Returns whether the iterator is valid; once invalid, it remains invalid forever.
+	Next() bool
 	// Value returns the version ID at the current position.
 	Value() uint64
-	// Valid returns whether the iterator is valid. Once invalid, the iterator remains invalid.
-	Valid() bool
 }

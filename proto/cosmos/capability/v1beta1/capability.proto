@@ -9,6 +9,7 @@ import "gogoproto/gogo.proto";
 // provided to a Capability must be globally unique.
 message Capability {
   option (gogoproto.goproto_stringer) = false;
+  
   uint64 index = 1 [(gogoproto.moretags) = "yaml:\"index\""];
 }
 

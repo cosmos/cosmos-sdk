@@ -50,6 +50,7 @@ type DBConnection interface {
 	// Saves the current contents of the database and returns the next version ID, which will be
 	// `Versions().Last()+1`.
 	// Returns an error if any open DBWriter transactions exist.
+	// TODO: rename to something more descriptive?
 	SaveNextVersion() (uint64, error)
 
 	// Attempts to save database at a specific version ID, which must be greater than or equal to
@@ -92,6 +93,7 @@ type DBReader interface {
 	// Empty keys are not valid.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// CONTRACT: start, end readonly []byte
+	// TODO: replace with an extra argument to Iterator()?
 	ReverseIterator(start, end []byte) (Iterator, error)
 
 	// Discards the transaction, invalidating any future operations on it.

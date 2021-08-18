@@ -125,7 +125,7 @@ message SearchTxsResult {
   // Count of all txs
   uint64 total_count = 1 [(gogoproto.moretags) = "yaml:\"total_count\"", (gogoproto.jsontag) = "total_count"];
   // Count of txs in current page
-  uint64 count = 2 ;
+  uint64 count = 2;
   // Index of current page, start from 1
   uint64 page_number = 3 [(gogoproto.moretags) = "yaml:\"page_number\"", (gogoproto.jsontag) = "page_number"];
   // Count of total pages

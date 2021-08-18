@@ -222,7 +222,7 @@
 - [cosmos/crypto/hd/v1/hd.proto](#cosmos/crypto/hd/v1/hd.proto)
     - [BIP44Params](#cosmos.crypto.hd.v1.BIP44Params)
   
-- [cosmos/crypto/keyring/v1/types.proto](#cosmos/crypto/keyring/v1/types.proto)
+- [cosmos/crypto/keyring/v1/record.proto](#cosmos/crypto/keyring/v1/record.proto)
     - [Record](#cosmos.crypto.keyring.v1.Record)
     - [Record.Ledger](#cosmos.crypto.keyring.v1.Record.Ledger)
     - [Record.Local](#cosmos.crypto.keyring.v1.Record.Local)
@@ -3501,10 +3501,10 @@ BIP44Params is used as path field in ledger item in Record.
 
 
 
-<a name="cosmos/crypto/keyring/v1/types.proto"></a>
+<a name="cosmos/crypto/keyring/v1/record.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## cosmos/crypto/keyring/v1/types.proto
+## cosmos/crypto/keyring/v1/record.proto
 
 
 

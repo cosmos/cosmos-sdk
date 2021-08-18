@@ -145,7 +145,6 @@ message Proposal {
   bytes metadata = 3;
 
   // proposers are the account addresses of the proposers.
-  // ?
   repeated string proposers = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // submitted_at is a timestamp specifying when a proposal was submitted.

@@ -36,10 +36,8 @@ func runMigrateCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := clientCtx.Keyring.MigrateAll(); err != nil {
-		return err
-	}
-
+	_, err := clientCtx.Keyring.MigrateAll()
+	return err
 	return nil
 
 }

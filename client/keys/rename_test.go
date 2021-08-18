@@ -32,7 +32,6 @@ func Test_runRenameCmd(t *testing.T) {
 	path := sdk.GetConfig().GetFullBIP44Path()
 
 	cdc := simapp.MakeTestEncodingConfig().Codec
-
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 

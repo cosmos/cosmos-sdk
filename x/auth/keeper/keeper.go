@@ -11,7 +11,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
+	
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -47,9 +47,6 @@ type AccountKeeperI interface {
 	GetNextAccountNumber(sdk.Context) uint64
 }
 
-type bech32Codec struct {
-	bech32Prefix string
-}
 
 // AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
@@ -65,7 +62,6 @@ type AccountKeeper struct {
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
-var _ address.Codec = &bech32Codec{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
@@ -259,34 +255,4 @@ func (ak AccountKeeper) GetBech32Prefix() (string, error) {
 	return bech32Codec.bech32Prefix, nil
 }
 
-func newBech32Codec(prefix string) bech32Codec {
-	return bech32Codec{prefix}
-}
 
-// AddressStringToBytes encodes text to bytes
-func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
-	hrp, bz, err := bech32.DecodeAndConvert(text)
-	if err != nil {
-		return nil, err
-	}
-
-	if hrp != bc.bech32Prefix {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "hrp does not match bech32Prefix")
-	}
-
-	if err := address.VerifyFormat(bz); err != nil {
-		return nil, err
-	}
-
-	return bz, nil
-}
-
-// AddressBytesToString decodes bytes to text
-func (bc bech32Codec) BytesToString(bz []byte) (string, error) {
-	text, err := bech32.ConvertAndEncode(bc.bech32Prefix, bz)
-	if err != nil {
-		return "", err
-	}
-
-	return text, nil
-}

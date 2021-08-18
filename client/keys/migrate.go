@@ -30,7 +30,7 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 	return cmd
 }
 
-func runMigrateCmd(cmd *cobra.Command, args []string) error {
+func runMigrateCmd(cmd *cobra.Command, _ []string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
 		return err

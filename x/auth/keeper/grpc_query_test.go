@@ -221,7 +221,7 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 			&types.AddressBytesToStringRequest{AddressBytes: addrBytes},
 			true,
 			func(res *types.AddressBytesToStringResponse) {
-				text, err := suite.app.AccountKeeper.GetAddressCdC().AddressBytesToString(addrBytes)
+				text, err := suite.app.AccountKeeper.GetAddressCdC().BytesToString(addrBytes)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(text)
 				suite.Require().Equal(text, res.AddressString)
@@ -265,7 +265,7 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 	_, _, addr := testdata.KeyTestPubAddr()
 	addrBytes := []byte(addr)
-	text, err := suite.app.AccountKeeper.GetAddressCdC().AddressBytesToString(addrBytes)
+	text, err := suite.app.AccountKeeper.GetAddressCdC().BytesToString(addrBytes)
 	suite.Require().NoError(err)
 
 	testCases := []struct {

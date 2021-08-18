@@ -6,9 +6,9 @@ import (
 
 type Codec interface {
 	// AddressStringToBytes decodes text to bytes
-	AddressStringToBytes(text string) ([]byte, error)
+	StringToBytes(text string) ([]byte, error)
 	// AddressBytesToString encodes bytes to text
-	AddressBytesToString(bz []byte) (string, error)
+	BytesToString(bz []byte) (string, error)
 }
 
 // VerifyFormat checks validity of address format

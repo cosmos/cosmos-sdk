@@ -264,7 +264,7 @@ func newBech32Codec(prefix string) bech32Codec {
 }
 
 // AddressStringToBytes encodes text to bytes
-func (bc bech32Codec) AddressStringToBytes(text string) ([]byte, error) {
+func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 	hrp, bz, err := bech32.DecodeAndConvert(text)
 	if err != nil {
 		return nil, err
@@ -282,7 +282,7 @@ func (bc bech32Codec) AddressStringToBytes(text string) ([]byte, error) {
 }
 
 // AddressBytesToString decodes bytes to text
-func (bc bech32Codec) AddressBytesToString(bz []byte) (string, error) {
+func (bc bech32Codec) BytesToString(bz []byte) (string, error) {
 	text, err := bech32.ConvertAndEncode(bc.bech32Prefix, bz)
 	if err != nil {
 		return "", err

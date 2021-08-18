@@ -97,6 +97,9 @@ type AppModule struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, ic types.InflationCalculationFn) AppModule {
+	if ic == nil {
+		ic = types.DefaultInflationCalculationFn
+	}
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{cdc: cdc},
 		keeper:              keeper,

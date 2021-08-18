@@ -11,6 +11,11 @@ import (
 // default logic provided by the sdk.
 type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio sdk.Dec) sdk.Dec
 
+// DefaultInflationCalculationFn is the default function used to calculate inflation.
+func DefaultInflationCalculationFn(ctx sdk.Context, minter Minter, params Params, bondedRatio sdk.Dec) sdk.Dec {
+	return minter.NextInflationRate(params, bondedRatio)
+}
+
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(minter Minter, params Params) *GenesisState {
 	return &GenesisState{

@@ -20,11 +20,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ic types.InflationCalculatio
 	// recalculate inflation rate
 	totalStakingSupply := k.StakingTokenSupply(ctx)
 	bondedRatio := k.BondedRatio(ctx)
-	if ic == nil {
-		minter.Inflation = minter.NextInflationRate(params, bondedRatio)
-	} else {
-		minter.Inflation = ic(ctx, minter, params, bondedRatio)
-	}
+	minter.Inflation = ic(ctx, minter, params, bondedRatio)
 	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
 	k.SetMinter(ctx, minter)
 

@@ -68,7 +68,7 @@ message DenomUnit {
   // 1 denom = 1^exponent base_denom
   // (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom' with
   // exponent = 6, thus: 1 atom = 10^6 uatom).
-  uint32 exponent = 2 [(cosmos_proto.scalar) = "cosmos.Int"];
+  uint32 exponent = 2;
   // aliases is a list of string aliases for the given denom
   repeated string aliases = 3;
 }

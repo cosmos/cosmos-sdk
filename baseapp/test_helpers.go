@@ -36,7 +36,7 @@ func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 	ctx := app.getContextForTx(runTxModeSimulate, txBytes)
 	res, err := app.txHandler.SimulateTx(ctx, sdkTx, tx.RequestSimulateTx{TxBytes: txBytes})
 	if err != nil {
-		return sdk.GasInfo{}, nil, err
+		return res.GasInfo, nil, err
 	}
 
 	return res.GasInfo, res.Result, nil

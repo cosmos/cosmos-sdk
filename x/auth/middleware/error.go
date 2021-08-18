@@ -58,7 +58,9 @@ func (txh errorTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.R
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		gInfo := sdk.GasInfo{GasUsed: sdkCtx.GasMeter().GasConsumed()}
 
-		return tx.ResponseSimulateTx{GasInfo: gInfo, Result: res.Result}, nil
+		// In simulate mode, since the ResponseSimulateTx doesn't have
+		// code/codespace/log, we return the error to baseapp.
+		return tx.ResponseSimulateTx{GasInfo: gInfo, Result: res.Result}, err
 	}
 
 	return res, nil

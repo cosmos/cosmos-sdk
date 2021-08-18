@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 // Minter represents the minting state.
 message Minter {
   // current annual inflation rate
-  string inflation = 1[
+  string inflation = 1 [
       (cosmos_proto.scalar) = "cosmos.Dec",
       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
       (gogoproto.nullable) = false

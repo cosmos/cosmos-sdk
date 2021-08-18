@@ -33,7 +33,7 @@ message MsgSetWithdrawAddress {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString",  (gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"delegator_address\""];
   string withdraw_address  = 2 [(cosmos_proto.scalar) = "cosmos.AddressString", (gogoproto.moretags) = "yaml:\"withdraw_address\""];
 }
 

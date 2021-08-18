@@ -332,19 +332,24 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		return nil, nil, err
 	}
 
-	var priv types.PrivKey
-
 	switch {
 	case k.GetLocal() != nil:
-		priv, err = extractPrivKeyFromLocal(k.GetLocal())
+		priv, err := extractPrivKeyFromLocal(k.GetLocal())
 		if err != nil {
 			return nil, nil, err
 		}
 
+		sig, err := priv.Sign(msg)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return sig, priv.PubKey(), nil
+	
 	case k.GetLedger() != nil:
 		return SignWithLedger(k, msg)
 
-		// empty record
+		// multi or offline record
 	default:
 		pub, err := k.GetPubKey()
 		if err != nil {
@@ -353,17 +358,6 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 
 		return nil, pub, errors.New("cannot sign with offline keys")
 	}
-	if err != nil {
-		return nil, nil, err
-	}
-
-	sig, err := priv.Sign(msg)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return sig, priv.PubKey(), nil
-
 }
 
 func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {

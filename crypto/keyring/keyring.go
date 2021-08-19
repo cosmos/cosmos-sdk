@@ -583,11 +583,12 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
-	item, _, err := ks.migrate(uid)
+	k, _, err := ks.migrate(uid)
 	if err != nil {
 		return nil, err
+	}
 
-	return ks.protoUnmarshalRecord(item.Data)
+	return k,nil
 }
 
 // SupportedAlgorithms returns the keystore Options' supported signing algorithm.
@@ -876,31 +877,36 @@ func (ks keystore) MigrateAll() (bool, error) {
 }
 
 // migrate converts keyring.Item from amino to proto serialization format.
-func (ks keystore) migrate(key string) (keyring.Item, bool, error) {
+func (ks keystore) migrate(key string) (*Record, bool, error) {
 	item, err := ks.db.Get(key)
-	if err != nil || len(item.Data) == 0 {
-		return keyring.Item{}, false, wrapKeyNotFound(err, key)
+	if err != nil {
+		return nil, false, wrapKeyNotFound(err, key)
+	}
+
+	if len(item.Data) == 0 {
+		return nil, false, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
 	// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
-	if _, err := ks.protoUnmarshalRecord(item.Data); err == nil {
-		return item, false, nil
+	k, err := ks.protoUnmarshalRecord(item.Data)
+	if err == nil {
+		return k, false, nil
 	}
 
 	LegacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
-		return keyring.Item{}, false, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
+		return nil, false, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 	}
 
 	// 4.serialize info using proto
-	k, err := ks.convertFromLegacyInfo(LegacyInfo)
+	k, err = ks.convertFromLegacyInfo(LegacyInfo)
 	if err != nil {
-		return keyring.Item{}, false, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
+		return nil, false, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
 	}
 
 	serializedRecord, err := ks.protoMarshalRecord(k)
 	if err != nil {
-		return keyring.Item{}, false, fmt.Errorf("unable to serialize record, err: %w", err)
+		return nil, false, fmt.Errorf("unable to serialize record, err: %w", err)
 	}
 
 	item = keyring.Item{
@@ -910,10 +916,10 @@ func (ks keystore) migrate(key string) (keyring.Item, bool, error) {
 	}
 	// 5.overwrite the keyring entry with
 	if err := ks.SetItem(item); err != nil {
-		return keyring.Item{}, false, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+		return nil, false, fmt.Errorf("unable to set keyring.Item, err: %w", err)
 	}
 
-	return item, true, nil
+	return k, true, nil
 }
 
 func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {

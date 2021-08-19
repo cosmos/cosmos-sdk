@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/bech32"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type bech32Codec struct {
@@ -27,7 +28,7 @@ func (bc bech32Codec) StringToBytes(text string) ([]byte, error) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "hrp does not match bech32Prefix")
 	}
 
-	if err := address.VerifyFormat(bz); err != nil {
+	if err := sdk.VerifyAddressFormat(bz); err != nil {
 		return nil, err
 	}
 
@@ -43,4 +44,3 @@ func (bc bech32Codec) BytesToString(bz []byte) (string, error) {
 
 	return text, nil
 }
-

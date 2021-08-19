@@ -345,7 +345,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		}
 
 		return sig, priv.PubKey(), nil
-	
+
 	case k.GetLedger() != nil:
 		return SignWithLedger(k, msg)
 
@@ -954,7 +954,7 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 
 	switch info.GetType() {
 	case TypeLocal:
-		priv, err := exportPrivateKeyFromLegacyInfo(info)
+		priv, err := privKeyFromLegacyInfo(info)
 		if err != nil {
 			return nil, err
 		}

@@ -42,21 +42,8 @@ func (signModeDirectAuxHandler) GetSignBytes(mode signingtypes.SignMode, data si
 		AccountNumber: data.AccountNumber,
 		Sequence:      data.Sequence,
 		Tip:           protoTx.tx.AuthInfo.Tip,
-		// PublicKey: ,
+		PublicKey:     protoTx.tx.AuthInfo.SignerInfos[data.SignerIndex].PublicKey,
 	}
+
 	return signDocDirectAux.Marshal()
-	// return DirectAuxSignBytes(bodyBz, authInfoBz, data.ChainID, data.AccountNumber, data.Sequence)
 }
-
-// // DirectAuxSignBytes returns the SignMode_SIGN_MODE_DIRECT_AUX sign bytes for the provided TxBody bytes, AuthInfo bytes, chain ID,
-// // account number and sequence.
-// func DirectAuxSignBytes(bodyBytes, authInfoBytes []byte, chainID string, accnum, seq uint64) ([]byte, error) {
-// 	signDocDirectAux := types.SignDocDirectAux{
-// 		BodyBytes:     bodyBytes,
-// 		ChainId:       chainID,
-// 		AccountNumber: accnum,
-// 		Sequence:      seq,
-// 	}
-
-// 	return signDocDirectAux.Marshal()
-// }

@@ -4,147 +4,134 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/stretchr/testify/suite"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-func TestOfflineRecordMarshaling(t *testing.T) {
-	require := require.New(t)
+type RecordTestSuite struct {
+	suite.Suite
 
-	privKey := ed25519.GenPrivKey()
-	pk := privKey.PubKey()
-	r, err := NewOfflineRecord("testrecord", pk)
-	require.NoError(err)
+	cdc codec.Codec
+	priv cryptotypes.PrivKey
+	pub cryptotypes.PubKey
+}
 
-	cdc := getCodec()
-	bz, err := cdc.Marshal(r)
-	require.NoError(err)
+func (s *RecordTestSuite) SetupSuite() {
+	s.cdc = getCodec()
+	s.priv = cryptotypes.PrivKey(ed25519.GenPrivKey())
+	s.pub = s.priv.PubKey()
+}
+
+func (s *RecordTestSuite) TestOfflineRecordMarshaling() {
+
+	r, err := NewOfflineRecord("testrecord", s.pub)
+	s.Require().NoError(err)
+
+	bz, err := s.cdc.Marshal(r)
+	s.Require().NoError(err)
 
 	var r2 Record
-	require.NoError(cdc.Unmarshal(bz, &r2))
-	require.Equal(r.Name, r2.Name)
-	require.True(r.PubKey.Equal(r2.PubKey))
+	s.Require().NoError(s.cdc.Unmarshal(bz, &r2))
+	s.Require().Equal(r.Name, r2.Name)
+	s.Require().True(r.PubKey.Equal(r2.PubKey))
 
 	pk2, err := r2.GetPubKey()
-	require.NoError(err)
-	require.True(pk.Equals(pk2))
+	s.Require().NoError(err)
+	s.Require().True(s.pub.Equals(pk2))
 }
 
-func TestLocalRecordMarshaling(t *testing.T) {
+func (s *RecordTestSuite)  TestLocalRecordMarshaling() {
 	const n1 = "cosmos"
-	require := require.New(t)
-	dir := t.TempDir()
+	dir := s.T().TempDir()
 	mockIn := strings.NewReader("")
 
-	priv := ed25519.GenPrivKey()
-	pub := priv.PubKey()
+	kb, err := New(n1, BackendTest, dir, mockIn, s.cdc)
+	s.Require().NoError(err)
 
-	var privKey cryptotypes.PrivKey
-	privKey = priv
-
-	cdc := getCodec()
-	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
-	require.NoError(err)
-
-	r, err := NewLocalRecord("testrecord", privKey, pub)
-	require.NoError(err)
+	r, err := NewLocalRecord("testrecord", s.priv, s.pub)
+	s.Require().NoError(err)
 
 	ks, ok := kb.(keystore)
-	require.True(ok)
+	s.Require().True(ok)
 
 	bz, err := ks.protoMarshalRecord(r)
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	r2, err := ks.protoUnmarshalRecord(bz)
-	require.NoError(err)
-	require.Equal(r.Name, r2.Name)
+	s.Require().NoError(err)
+	s.Require().Equal(r.Name, r2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.
-	require.True(r.PubKey.Equal(r2.PubKey))
+	s.Require().True(r.PubKey.Equal(r2.PubKey))
 
 	pub2, err := r2.GetPubKey()
-	require.NoError(err)
-	require.True(pub.Equals(pub2))
+	s.Require().NoError(err)
+	s.Require().True(s.pub.Equals(pub2))
 
 	localRecord2 := r2.GetLocal()
-	require.NotNil(localRecord2)
-	anyPrivKey, err := codectypes.NewAnyWithValue(privKey)
-	require.NoError(err)
-	require.Equal(localRecord2.PrivKey, anyPrivKey)
-	require.Equal(localRecord2.PrivKeyType, privKey.Type())
+	s.Require().NotNil(localRecord2)
+	anyPrivKey, err := codectypes.NewAnyWithValue(s.priv)
+	s.Require().NoError(err)
+	s.Require().Equal(localRecord2.PrivKey, anyPrivKey)
+	s.Require().Equal(localRecord2.PrivKeyType, s.priv.Type())
 }
 
-func TestLedgerRecordMarshaling(t *testing.T) {
+func (s *RecordTestSuite) TestLedgerRecordMarshaling() {
 	const n1 = "cosmos"
-	require := require.New(t)
-	dir := t.TempDir()
+	dir := s.T().TempDir()
 	mockIn := strings.NewReader("")
 
-	priv := ed25519.GenPrivKey()
-	pub := priv.PubKey()
-
-	cdc := getCodec()
-	kb, err := New(n1, BackendTest, dir, mockIn, cdc)
-	require.NoError(err)
+	kb, err := New(n1, BackendTest, dir, mockIn, s.cdc)
+	s.Require().NoError(err)
 
 	path := hd.NewFundraiserParams(4, 12345, 57)
-	k, err := NewLedgerRecord("testrecord", pub, path)
-	require.NoError(err)
+	k, err := NewLedgerRecord("testrecord", s.pub, path)
+	s.Require().NoError(err)
 
 	ks, ok := kb.(keystore)
-	require.True(ok)
+	s.Require().True(ok)
 
 	bz, err := ks.protoMarshalRecord(k)
-	require.NoError(err)
+	s.Require().NoError(err)
 
 	k2, err := ks.protoUnmarshalRecord(bz)
-	require.NoError(err)
-	require.Equal(k.Name, k2.Name)
+	s.Require().NoError(err)
+	s.Require().Equal(k.Name, k2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.
-	require.True(k.PubKey.Equal(k2.PubKey))
+	s.Require().True(k.PubKey.Equal(k2.PubKey))
 
 	pub2, err := k2.GetPubKey()
-	require.NoError(err)
-	require.True(pub.Equals(pub2))
+	s.Require().NoError(err)
+	s.Require().True(s.pub.Equals(pub2))
 
 	ledgerRecord2 := k2.GetLedger()
-	require.NotNil(ledgerRecord2)
-	require.Nil(k2.GetLocal())
+	s.Require().NotNil(ledgerRecord2)
+	s.Require().Nil(k2.GetLocal())
 
-	require.Equal(ledgerRecord2.Path.String(), path.String())
+	s.Require().Equal(ledgerRecord2.Path.String(), path.String())
 }
 
-func TestExtractPrivKeyFromLocalRecord(t *testing.T) {
-	require := require.New(t)
-
-	priv := secp256k1.GenPrivKey()
-	pub := priv.PubKey()
-	privKey := cryptotypes.PrivKey(priv)
+func (s *RecordTestSuite) TestExtractPrivKeyFromLocalRecord() {
 
 	// use proto serialize
-	k, err := NewLocalRecord("testrecord", privKey, pub)
-	require.NoError(err)
+	k, err := NewLocalRecord("testrecord", s.priv, s.pub)
+	s.Require().NoError(err)
 
 	privKey2, err := extractPrivKeyFromRecord(k)
-	require.NoError(err)
-	require.True(privKey2.Equals(privKey))
+	s.Require().NoError(err)
+	s.Require().True(privKey2.Equals(s.priv))
 }
 
-func TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
-	require := require.New(t)
-
-	priv := secp256k1.GenPrivKey()
-	pub := priv.PubKey()
-
-	k, err := NewOfflineRecord("testrecord", pub)
-	require.NoError(err)
+func (s *RecordTestSuite) TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
+	k, err := NewOfflineRecord("testrecord", s.pub)
+	s.Require().NoError(err)
 
 	privKey2, err := extractPrivKeyFromRecord(k)
-	require.Error(err)
-	require.Nil(privKey2)
+	s.Require().Error(err)
+	s.Require().Nil(privKey2)
 }

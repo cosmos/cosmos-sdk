@@ -71,7 +71,7 @@ func requirelNameOneOf(records []*Record, n1, n2 string) bool {
 	return true
 }
 
-// getIndices is used in TestInMemoryKeyManagement, TestAltKeyring_List and TestKeyManagementKeyRing
+// getIndices returns a hashmap which maps an uid to a list index.
 func getIndices(list []*Record, uids ...string) map[string]int {
 	hmap := make(map[string]int)
 	for i, l := range list {

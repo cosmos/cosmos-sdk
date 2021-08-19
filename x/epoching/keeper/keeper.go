@@ -13,8 +13,8 @@ import (
 // keys
 var (
 	NextEpochActionID      = []byte("next_epoch_action_id")
-	EpochNumberID          = []byte("epoch_number_id")
-	EpochActionQueuePrefix = "epoch_action"
+	EpochNumberID          = []byte{0x50}
+	EpochActionQueuePrefix = []byte{0x51} // prefix for the epoch
 )
 
 // Keeper of the store
@@ -77,6 +77,7 @@ func (k Keeper) RestoreEpochAction(ctx sdk.Context, epochNumber int64, action *c
 	if err != nil {
 		panic(err)
 	}
+
 	actionID := k.GetNewActionID(ctx)
 	store.Set(ActionStoreKey(epochNumber, actionID), bz)
 }
@@ -110,7 +111,6 @@ func (k Keeper) GetEpochActions(ctx sdk.Context) []sdk.Msg {
 		actions = append(actions, action)
 	}
 
-	fmt.Println(actions, "any")
 	return actions
 }
 

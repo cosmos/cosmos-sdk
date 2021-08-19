@@ -194,7 +194,6 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		return false
 	})
 
-	fmt.Println(keeper.GetEpochActions(ctx), 11)
 	msgs := keeper.GetEpochActions(ctx)
 
 	var anys []*codectypes.Any

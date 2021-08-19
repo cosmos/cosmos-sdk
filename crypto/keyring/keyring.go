@@ -772,6 +772,7 @@ func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, e
 	return k, ks.writeRecord(k)
 }
 
+// writeRecord persists a keyring item in keystore if it does not exist there
 func (ks keystore) writeRecord(k *Record) error {
 	addr, err := k.GetAddress()
 	if err != nil {

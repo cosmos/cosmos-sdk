@@ -17,21 +17,21 @@ type GasTx interface {
 }
 
 type gasTxHandler struct {
-	inner tx.TxHandler
+	inner tx.Handler
 }
 
 // NewGasTxMiddleware defines a simple middleware that sets a new GasMeter on
 // the sdk.Context, and sets the GasInfo on the result. It reads the tx.GetGas()
 // by default, or sets to infinity in simulate mode.
-func NewGasTxMiddleware() tx.TxMiddleware {
-	return func(txh tx.TxHandler) tx.TxHandler {
+func NewGasTxMiddleware() tx.Middleware {
+	return func(txh tx.Handler) tx.Handler {
 		return gasTxHandler{inner: txh}
 	}
 }
 
-var _ tx.TxHandler = gasTxHandler{}
+var _ tx.Handler = gasTxHandler{}
 
-// CheckTx implements TxHandler.CheckTx.
+// CheckTx implements tx.Handler.CheckTx.
 func (txh gasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, false)
 	if err != nil {
@@ -45,7 +45,7 @@ func (txh gasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Request
 	return res, err
 }
 
-// DeliverTx implements TxHandler.DeliverTx.
+// DeliverTx implements tx.Handler.DeliverTx.
 func (txh gasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), tx, false)
 	if err != nil {
@@ -59,7 +59,7 @@ func (txh gasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Reque
 	return res, err
 }
 
-// SimulateTx implements TxHandler.SimulateTx method.
+// SimulateTx implements tx.Handler.SimulateTx method.
 func (txh gasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx, err := gasContext(sdk.UnwrapSDKContext(ctx), sdkTx, true)
 	if err != nil {

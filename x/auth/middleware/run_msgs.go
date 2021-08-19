@@ -20,22 +20,22 @@ type runMsgsTxHandler struct {
 	msgServiceRouter *MsgServiceRouter // router for redirecting Msg service messages
 }
 
-func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.TxHandler {
+func NewRunMsgsTxHandler(msr *MsgServiceRouter, legacyRouter sdk.Router) tx.Handler {
 	return runMsgsTxHandler{
 		legacyRouter:     legacyRouter,
 		msgServiceRouter: msr,
 	}
 }
 
-var _ tx.TxHandler = runMsgsTxHandler{}
+var _ tx.Handler = runMsgsTxHandler{}
 
-// CheckTx implements TxHandler.CheckTx method.
+// CheckTx implements tx.Handler.CheckTx method.
 func (txh runMsgsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	// Don't run Msgs during CheckTx.
 	return abci.ResponseCheckTx{}, nil
 }
 
-// DeliverTx implements TxHandler.DeliverTx method.
+// DeliverTx implements tx.Handler.DeliverTx method.
 func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), tx.GetMsgs(), req.Tx)
 	if err != nil {
@@ -50,7 +50,7 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 	}, nil
 }
 
-// SimulateTx implements TxHandler.SimulateTx method.
+// SimulateTx implements tx.Handler.SimulateTx method.
 func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	res, err := txh.runMsgs(sdkCtx, sdkTx.GetMsgs(), req.TxBytes)

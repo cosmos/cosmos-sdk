@@ -12,11 +12,11 @@ import (
 
 type legacyAnteTxHandler struct {
 	anteHandler sdk.AnteHandler
-	inner       tx.TxHandler
+	inner       tx.Handler
 }
 
-func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.TxMiddleware {
-	return func(txHandler tx.TxHandler) tx.TxHandler {
+func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.Middleware {
+	return func(txHandler tx.Handler) tx.Handler {
 		return legacyAnteTxHandler{
 			anteHandler: anteHandler,
 			inner:       txHandler,
@@ -24,9 +24,9 @@ func newLegacyAnteMiddleware(anteHandler sdk.AnteHandler) tx.TxMiddleware {
 	}
 }
 
-var _ tx.TxHandler = legacyAnteTxHandler{}
+var _ tx.Handler = legacyAnteTxHandler{}
 
-// CheckTx implements TxHandler.CheckTx method.
+// CheckTx implements tx.Handler.CheckTx method.
 func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx, false)
 	if err != nil {
@@ -46,7 +46,7 @@ func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 	}, nil
 }
 
-// DeliverTx implements TxHandler.DeliverTx method.
+// DeliverTx implements tx.Handler.DeliverTx method.
 func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	sdkCtx, err := txh.runAnte(ctx, tx, req.Tx, false)
 	if err != nil {
@@ -66,7 +66,7 @@ func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abc
 	}, nil
 }
 
-// SimulateTx implements TxHandler.SimulateTx method.
+// SimulateTx implements tx.Handler.SimulateTx method.
 func (txh legacyAnteTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	sdkCtx, err := txh.runAnte(ctx, sdkTx, req.TxBytes, true)
 	if err != nil {

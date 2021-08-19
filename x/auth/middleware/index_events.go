@@ -13,13 +13,13 @@ type indexEventsTxHandler struct {
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
-	inner       tx.TxHandler
+	inner       tx.Handler
 }
 
 // NewIndexEventsTxMiddleware defines a middleware to optionally only index a
 // subset of the emitted events inside the Tendermint events indexer.
-func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.TxMiddleware {
-	return func(txHandler tx.TxHandler) tx.TxHandler {
+func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.Middleware {
+	return func(txHandler tx.Handler) tx.Handler {
 		return indexEventsTxHandler{
 			indexEvents: indexEvents,
 			inner:       txHandler,
@@ -27,9 +27,9 @@ func NewIndexEventsTxMiddleware(indexEvents map[string]struct{}) tx.TxMiddleware
 	}
 }
 
-var _ tx.TxHandler = indexEventsTxHandler{}
+var _ tx.Handler = indexEventsTxHandler{}
 
-// CheckTx implements TxHandler.CheckTx method.
+// CheckTx implements tx.Handler.CheckTx method.
 func (txh indexEventsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
 	res, err := txh.inner.CheckTx(ctx, tx, req)
 	if err != nil {
@@ -40,7 +40,7 @@ func (txh indexEventsTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 	return res, nil
 }
 
-// DeliverTx implements TxHandler.DeliverTx method.
+// DeliverTx implements tx.Handler.DeliverTx method.
 func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
 	res, err := txh.inner.DeliverTx(ctx, tx, req)
 	if err != nil {
@@ -51,7 +51,7 @@ func (txh indexEventsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req ab
 	return res, nil
 }
 
-// SimulateTx implements TxHandler.SimulateTx method.
+// SimulateTx implements tx.Handler.SimulateTx method.
 func (txh indexEventsTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
 	res, err := txh.inner.SimulateTx(ctx, tx, req)
 	if err != nil {

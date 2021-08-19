@@ -739,13 +739,13 @@ func (msg msgCounter) ValidateBasic() error {
 	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
 }
 
-func newTxCounter(counter int64, msgCounters ...int64) *txTest {
+func newTxCounter(counter int64, msgCounters ...int64) txTest {
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
 		msgs = append(msgs, msgCounter{c, false})
 	}
 
-	return &txTest{msgs, counter, false, math.MaxUint64}
+	return txTest{msgs, counter, false, math.MaxUint64}
 }
 
 // a msg we dont know how to route
@@ -1218,7 +1218,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	// transaction where ValidateBasic fails
 	{
 		testCases := []struct {
-			tx   *txTest
+			tx   txTest
 			fail bool
 		}{
 			{newTxCounter(0, 0), false},
@@ -1317,7 +1317,7 @@ func TestTxGasLimits(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	testCases := []struct {
-		tx      *txTest
+		tx      txTest
 		gasUsed uint64
 		fail    bool
 	}{
@@ -1343,7 +1343,7 @@ func TestTxGasLimits(t *testing.T) {
 	for i, tc := range testCases {
 		tx := tc.tx
 		tx.GasLimit = gasGranted
-		gInfo, result, err := app.Deliver(aminoTxEncoder(), *tx)
+		gInfo, result, err := app.Deliver(aminoTxEncoder(), tx)
 
 		// check gas used and wanted
 		require.Equal(t, tc.gasUsed, gInfo.GasUsed, fmt.Sprintf("tc #%d; gas: %v, result: %v, err: %s", i, gInfo, result, err))
@@ -1397,22 +1397,22 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	})
 
 	testCases := []struct {
-		tx                *txTest
+		tx                txTest
 		numDelivers       int
 		gasUsedPerDeliver uint64
 		fail              bool
 		failAfterDeliver  int
 	}{
-		// {newTxCounter(0, 0), 0, 0, false, 0},
+		{newTxCounter(0, 0), 0, 0, false, 0},
 		{newTxCounter(9, 1), 2, 10, false, 0},
-		// {newTxCounter(10, 0), 3, 10, false, 0},
-		// {newTxCounter(10, 0), 10, 10, false, 0},
-		// {newTxCounter(2, 7), 11, 9, false, 0},
-		// {newTxCounter(10, 0), 10, 10, false, 0}, // hit the limit but pass
+		{newTxCounter(10, 0), 3, 10, false, 0},
+		{newTxCounter(10, 0), 10, 10, false, 0},
+		{newTxCounter(2, 7), 11, 9, false, 0},
+		{newTxCounter(10, 0), 10, 10, false, 0}, // hit the limit but pass
 
-		// {newTxCounter(10, 0), 11, 10, true, 10},
-		// {newTxCounter(10, 0), 15, 10, true, 10},
-		// {newTxCounter(9, 0), 12, 9, true, 11}, // fly past the limit
+		{newTxCounter(10, 0), 11, 10, true, 10},
+		{newTxCounter(10, 0), 15, 10, true, 10},
+		{newTxCounter(9, 0), 12, 9, true, 11}, // fly past the limit
 	}
 
 	for i, tc := range testCases {

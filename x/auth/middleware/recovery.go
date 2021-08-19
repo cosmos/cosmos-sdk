@@ -12,22 +12,22 @@ import (
 )
 
 type recoveryTxHandler struct {
-	inner tx.TxHandler
+	inner tx.Handler
 }
 
 // NewRecoveryTxMiddleware defines a middleware that catches all panics that
 // happen in inner middlewares.
 //
 // Be careful, it won't catch any panics happening outside!
-func NewRecoveryTxMiddleware() tx.TxMiddleware {
-	return func(txh tx.TxHandler) tx.TxHandler {
+func NewRecoveryTxMiddleware() tx.Middleware {
+	return func(txh tx.Handler) tx.Handler {
 		return recoveryTxHandler{inner: txh}
 	}
 }
 
-var _ tx.TxHandler = recoveryTxHandler{}
+var _ tx.Handler = recoveryTxHandler{}
 
-// CheckTx implements TxHandler.CheckTx method.
+// CheckTx implements tx.Handler.CheckTx method.
 func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (res abci.ResponseCheckTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
@@ -40,7 +40,7 @@ func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Re
 	return txh.inner.CheckTx(ctx, tx, req)
 }
 
-// DeliverTx implements TxHandler.DeliverTx method.
+// DeliverTx implements tx.Handler.DeliverTx method.
 func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (res abci.ResponseDeliverTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// only run the tx if there is block gas remaining
@@ -76,7 +76,7 @@ func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.
 	return txh.inner.DeliverTx(ctx, tx, req)
 }
 
-// SimulateTx implements TxHandler.SimulateTx method.
+// SimulateTx implements tx.Handler.SimulateTx method.
 func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (res tx.ResponseSimulateTx, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Panic recovery.
@@ -92,7 +92,7 @@ func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req t
 func handleRecovery(r interface{}, sdkCtx sdk.Context) error {
 	switch r := r.(type) {
 	case sdk.ErrorOutOfGas:
-		return sdkerrors.ErrOutOfGas.Wrapf(
+		return sdkerrors.Wrapf(sdkerrors.ErrOutOfGas,
 			"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 			r.Descriptor, sdkCtx.GasMeter().Limit(), sdkCtx.GasMeter().GasConsumed(),
 		)

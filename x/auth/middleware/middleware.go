@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// ComposeTxMiddleware compose multiple middlewares on top of a TxHandler. Last
+// ComposeTxMiddleware compose multiple middlewares on top of a tx.Handler. Last
 // middleware is the outermost middleware.
-func ComposeTxMiddleware(txHandler tx.TxHandler, middlewares ...tx.TxMiddleware) tx.TxHandler {
+func ComposeTxMiddleware(txHandler tx.Handler, middlewares ...tx.Middleware) tx.Handler {
 	for _, m := range middlewares {
 		txHandler = m(txHandler)
 	}
@@ -29,7 +29,7 @@ type TxHandlerOptions struct {
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
 // for most applications.
-func NewDefaultTxHandler(options TxHandlerOptions) tx.TxHandler {
+func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
 	return ComposeTxMiddleware(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),

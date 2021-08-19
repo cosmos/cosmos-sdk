@@ -149,7 +149,7 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 	app.endBlocker = endBlocker
 }
 
-func (app *BaseApp) SetTxHandler(txHandler tx.TxHandler) {
+func (app *BaseApp) SetTxHandler(txHandler tx.Handler) {
 	if app.sealed {
 		panic("SetTxHandler() on sealed BaseApp")
 	}

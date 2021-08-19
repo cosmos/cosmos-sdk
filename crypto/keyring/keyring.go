@@ -958,38 +958,18 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 			return nil, err
 		}
 
-		k, err := NewLocalRecord(name, priv, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		return k, nil
+		return NewLocalRecord(name, priv, pk)
 	case TypeOffline:
-		k, err := NewOfflineRecord(name, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		return k, nil
+		return NewOfflineRecord(name, pk)
 	case TypeMulti:
-		k, err := NewMultiRecord(name, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		return k, nil
+		return NewMultiRecord(name, pk)
 	case TypeLedger:
 		path, err := info.GetPath()
 		if err != nil {
 			return nil, err
 		}
 
-		k, err := NewLedgerRecord(name, pk, path)
-		if err != nil {
-			return nil, err
-		}
-
-		return k, nil
+		return NewLedgerRecord(name, pk, path)
 	default:
 		return nil, errors.New("unknown LegacyInfo type")
 

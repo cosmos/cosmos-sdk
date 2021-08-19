@@ -69,9 +69,7 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
-	if t != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
@@ -94,11 +92,7 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 func SetupWithGenesisAccounts(t *testing.T, isCheckTx bool, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
-	if t != nil {
-		require.NoError(t, err)
-	} else if t == nil && err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
@@ -117,11 +111,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	genesisState = SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, genAccs, balances...)
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if t != nil {
-		require.NoError(t, err)
-	} else if t == nil && err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
@@ -159,17 +149,11 @@ func SetupGenesisStateWithValSet(t *testing.T, cdc codec.Codec, genesisState Gen
 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
-		if t != nil {
-			require.NoError(t, err)
-		} else if t == nil && err != nil {
-			panic(err)
-		}
+		require.NoError(t, err)
+
 		pkAny, err := codectypes.NewAnyWithValue(pk)
-		if t != nil {
-			require.NoError(t, err)
-		} else if t == nil && err != nil {
-			panic(err)
-		}
+		require.NoError(t, err)
+
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey:   pkAny,

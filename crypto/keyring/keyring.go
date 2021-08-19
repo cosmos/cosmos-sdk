@@ -815,8 +815,8 @@ func (ks keystore) writeRecord(k *Record) error {
 	return nil
 }
 
-// existsInDb returns true if key is in DB. Error is returned only when we have error
-// different thant ErrKeyNotFound
+// existsInDb returns (true, nil) if either addr or name exist is in keystore DB. 
+// On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyNotFound
 func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 
 	if _, err := ks.db.Get(addrHexKeyAsString(addr)); err == nil {
@@ -862,7 +862,6 @@ func (ks keystore) MigrateAll() (bool, error) {
 	}
 
 	if len(keys) == 0 {
-		fmt.Println("no keys available for migration")
 		return migrated, nil
 	}
 

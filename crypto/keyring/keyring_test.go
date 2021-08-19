@@ -10,9 +10,9 @@ import (
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -57,7 +57,7 @@ func TestNewKeyring(t *testing.T) {
 	require.Equal(t, "foo", k.Name)
 }
 
-func requireEqualNames(records []*Record, n1, n2 string) bool {
+func requirelNameOneOf(records []*Record, n1, n2 string) bool {
 	for _, k := range records {
 		if k == nil {
 			continue
@@ -78,20 +78,20 @@ func getIndices(list []*Record, uids ...string) map[string]int {
 		if l == nil {
 			continue
 		}
-	
+
 		for _, uid := range uids {
 			if l.Name != uid {
 				continue
 			}
-	
-			hmap[uid] = i 
+
+			hmap[uid] = i
 			break
 		}
 	}
-	
+
 	return hmap
 }
-	
+
 func TestKeyManagementKeyRing(t *testing.T) {
 	cdc := getCodec()
 	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
@@ -140,7 +140,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 4, len(keyS))
 	// note these are in alphabetical order
-	require.True(t, requireEqualNames(keyS, n1, n2))
+	require.True(t, requirelNameOneOf(keyS, n1, n2))
 
 	key1, err := k2.GetPubKey()
 	require.NoError(t, err)
@@ -549,7 +549,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 4, len(keyS))
 	// note these are in alphabetical order
-	uids := []string{n1,n2}
+	uids := []string{n1, n2}
 	hmap := getIndices(keyS, uids...)
 	require.Equal(t, n1, keyS[hmap[n1]].Name)
 	require.Equal(t, n2, keyS[hmap[n2]].Name)
@@ -944,7 +944,7 @@ func ExampleNew() {
 	// Carl
 	// signed by Bob
 }
-                       
+
 func TestAltKeyring_List(t *testing.T) {
 	dir := t.TempDir()
 	cdc := getCodec()

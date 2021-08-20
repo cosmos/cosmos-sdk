@@ -135,3 +135,7 @@ func (s *RecordTestSuite) TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
 	s.Require().Error(err)
 	s.Require().Nil(privKey2)
 }
+
+func TestRecordTestSuite(t *testing.T) {
+	suite.Run(t, new(RecordTestSuite))
+}

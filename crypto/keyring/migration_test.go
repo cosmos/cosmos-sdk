@@ -254,6 +254,11 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData(t *testing.T) {
 	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }
 
+
+func TestMigrationTestSuite(t *testing.T) {
+	suite.Run(t, new(MigrationTestSuite))
+}
+
 // newLegacyLocalInfo creates a new legacyLocalInfo instance
 func newLegacyLocalInfo(name string, pub cryptotypes.PubKey, privArmor string, algo hd.PubKeyType) LegacyInfo {
 	return &legacyLocalInfo{

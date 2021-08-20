@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"testing"
 
 	design99keyring "github.com/99designs/keyring"
 	"github.com/stretchr/testify/suite"
@@ -129,4 +130,61 @@ func (s *MigrateTestSuite) Test_runMigrateCmdNoKeys() {
 	mockIn.Reset("\n12345678\n\n\n\n\n")
 	s.T().Log(mockOut.String())
 	s.Assert().NoError(cmd.ExecuteContext(ctx))
+}
+
+func (s *MigrateTestSuite) Test_runListAndShowCmd() {
+	// add legacy keys
+    // run list CLI on kb MigrateAll() should run un
+	/*
+	 test simd keys list - to see that the migrated key is there
+ 	test simd show n1 - to see that the migration worked
+
+	*/
+
+	// adding LegacyInfo item into keyring
+	multi := multisig.NewLegacyAminoPubKey(
+		1, []cryptotypes.PubKey{
+			s.pub,
+		},
+	)
+	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(s.n1, multi)
+	s.Require().NoError(err)
+	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
+
+	
+	item := design99keyring.Item{
+		Key:         s.n1,
+		Data:        serializedLegacyMultiInfo,
+		Description: "SDK kerying version",
+	}
+
+	s.Require().NoError(s.setter.SetItem(item))
+
+	//run test simd keys list - to see that the migrated key is there
+	cmd := ListKeysCmd()
+	clientCtx := client.Context{}.WithKeyring(s.kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagHome, s.dir),
+		fmt.Sprintf("--%s=false", flagListNames),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+
+	s.Require().NoError(cmd.ExecuteContext(ctx))
+
+	// simd show n1 - to see that the migration worked
+	cmd = ShowKeysCmd()
+	clientCtx = clientCtx.WithCodec(s.cdc)
+	ctx = context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+	
+	cmd.SetArgs([]string{
+		s.n1,
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	s.Require().NoError(cmd.ExecuteContext(ctx))
+}
+
+func TestMigrateTestSuite(t *testing.T) {
+	suite.Run(t, new(MigrateTestSuite))
 }

@@ -358,6 +358,8 @@
     - [GenesisState](#cosmos.gov.v1beta1.GenesisState)
   
 - [cosmos/gov/v1beta1/query.proto](#cosmos/gov/v1beta1/query.proto)
+    - [QueryAllParamsRequest](#cosmos.gov.v1beta1.QueryAllParamsRequest)
+    - [QueryAllParamsResponse](#cosmos.gov.v1beta1.QueryAllParamsResponse)
     - [QueryDepositRequest](#cosmos.gov.v1beta1.QueryDepositRequest)
     - [QueryDepositResponse](#cosmos.gov.v1beta1.QueryDepositResponse)
     - [QueryDepositsRequest](#cosmos.gov.v1beta1.QueryDepositsRequest)
@@ -5272,6 +5274,33 @@ GenesisState defines the gov module's genesis state.
 
 
 
+<a name="cosmos.gov.v1beta1.QueryAllParamsRequest"></a>
+
+### QueryAllParamsRequest
+QueryAllParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="cosmos.gov.v1beta1.QueryAllParamsResponse"></a>
+
+### QueryAllParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `voting_params` | [VotingParams](#cosmos.gov.v1beta1.VotingParams) |  | voting_params defines the parameters related to voting. |
+| `deposit_params` | [DepositParams](#cosmos.gov.v1beta1.DepositParams) |  | deposit_params defines the parameters related to deposit. |
+| `tally_params` | [TallyParams](#cosmos.gov.v1beta1.TallyParams) |  | tally_params defines the parameters related to tally. |
+
+
+
+
+
+
 <a name="cosmos.gov.v1beta1.QueryDepositRequest"></a>
 
 ### QueryDepositRequest
@@ -5542,6 +5571,7 @@ Query defines the gRPC querier service for gov module
 | `Proposals` | [QueryProposalsRequest](#cosmos.gov.v1beta1.QueryProposalsRequest) | [QueryProposalsResponse](#cosmos.gov.v1beta1.QueryProposalsResponse) | Proposals queries all proposals based on given status. | GET|/cosmos/gov/v1beta1/proposals|
 | `Vote` | [QueryVoteRequest](#cosmos.gov.v1beta1.QueryVoteRequest) | [QueryVoteResponse](#cosmos.gov.v1beta1.QueryVoteResponse) | Vote queries voted information based on proposalID, voterAddr. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}|
 | `Votes` | [QueryVotesRequest](#cosmos.gov.v1beta1.QueryVotesRequest) | [QueryVotesResponse](#cosmos.gov.v1beta1.QueryVotesResponse) | Votes queries votes of a given proposal. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/votes|
+| `AllParams` | [QueryAllParamsRequest](#cosmos.gov.v1beta1.QueryAllParamsRequest) | [QueryAllParamsResponse](#cosmos.gov.v1beta1.QueryAllParamsResponse) | Params queries all parameters of the gov module. | GET|/cosmos/gov/v1beta1/params|
 | `Params` | [QueryParamsRequest](#cosmos.gov.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.gov.v1beta1.QueryParamsResponse) | Params queries all parameters of the gov module. | GET|/cosmos/gov/v1beta1/params/{params_type}|
 | `Deposit` | [QueryDepositRequest](#cosmos.gov.v1beta1.QueryDepositRequest) | [QueryDepositResponse](#cosmos.gov.v1beta1.QueryDepositResponse) | Deposit queries single deposit information based proposalID, depositAddr. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}|
 | `Deposits` | [QueryDepositsRequest](#cosmos.gov.v1beta1.QueryDepositsRequest) | [QueryDepositsResponse](#cosmos.gov.v1beta1.QueryDepositsResponse) | Deposits queries all deposits of a single proposal. | GET|/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits|

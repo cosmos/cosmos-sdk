@@ -155,7 +155,21 @@ func (q Keeper) Votes(c context.Context, req *types.QueryVotesRequest) (*types.Q
 	return &types.QueryVotesResponse{Votes: votes, Pagination: pageRes}, nil
 }
 
-// Params queries all params
+// AllParams queries all params
+func (q Keeper) AllParams(c context.Context, request *types.QueryAllParamsRequest) (*types.QueryAllParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	depositParams := q.GetDepositParams(ctx)
+	votingParams := q.GetVotingParams(ctx)
+	tallyParams := q.GetTallyParams(ctx)
+
+	return &types.QueryAllParamsResponse{
+		VotingParams:  votingParams,
+		DepositParams: depositParams,
+		TallyParams:   tallyParams,
+	}, nil
+}
+
+// Params queries all params based on param type
 func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -165,12 +179,12 @@ func (q Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 
 	switch req.ParamsType {
 	case types.ParamDeposit:
-		depositParmas := q.GetDepositParams(ctx)
-		return &types.QueryParamsResponse{DepositParams: depositParmas}, nil
+		depositParams := q.GetDepositParams(ctx)
+		return &types.QueryParamsResponse{DepositParams: depositParams}, nil
 
 	case types.ParamVoting:
-		votingParmas := q.GetVotingParams(ctx)
-		return &types.QueryParamsResponse{VotingParams: votingParmas}, nil
+		votingParams := q.GetVotingParams(ctx)
+		return &types.QueryParamsResponse{VotingParams: votingParams}, nil
 
 	case types.ParamTallying:
 		tallyParams := q.GetTallyParams(ctx)

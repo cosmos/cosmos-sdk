@@ -434,6 +434,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGRPCQueryAllParams() {
+	queryClient := suite.queryClient
+
+	params, err := queryClient.AllParams(gocontext.Background(), &types.QueryAllParamsRequest{})
+
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.DefaultDepositParams(), params.GetDepositParams())
+	suite.Require().Equal(types.DefaultVotingParams(), params.GetVotingParams())
+	suite.Require().Equal(types.DefaultTallyParams(), params.GetTallyParams())
+}
+
 func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	queryClient := suite.queryClient
 

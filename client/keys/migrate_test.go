@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"testing"
 
 	design99keyring "github.com/99designs/keyring"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -18,46 +16,64 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 type setter interface {
 	SetItem(item design99keyring.Item) error
 }
 
-func Test_runMigrateCmdLegacyInfo(t *testing.T) {
-	const n1 = "cosmos"
+type MigrateTestSuite struct {
+	suite.Suite
 
-	dir := t.TempDir()
+	dir  string
+	n1   string
+	cdc codec.Codec
+	kb   keyring.Keyring
+	priv cryptotypes.PrivKey
+	pub  cryptotypes.PubKey
+	setter setter
+}
+
+func (s *MigrateTestSuite) SetupSuite() {
+	s.dir = s.T().TempDir()
 	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
-	require := require.New(t)
+	s.cdc = simapp.MakeTestEncodingConfig().Codec
+	s.n1 = "cosmos"
 
-	// instantiate keyring
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
-	require.NoError(err)
+	kb, err := keyring.New(s.n1, keyring.BackendTest, s.dir, mockIn, s.cdc)
+	s.Require().NoError(err)
+	s.kb = kb
 
-	priv := secp256k1.GenPrivKey()
+	setter, ok := kb.(setter)
+	s.Require().True(ok)
+	s.setter = setter
+
+	s.priv = cryptotypes.PrivKey(secp256k1.GenPrivKey())
+	s.pub = s.priv.PubKey()
+}
+
+func (s *MigrateTestSuite) Test_runMigrateCmdLegacyInfo() {
+
 	multi := multisig.NewLegacyAminoPubKey(
 		1, []cryptotypes.PubKey{
-			priv.PubKey(),
+			s.pub,
 		},
 	)
-	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(n1, multi)
-	require.NoError(err)
+	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(s.n1, multi)
+	s.Require().NoError(err)
 	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
 
 	// adding LegacyInfo item into keyring
 	item := design99keyring.Item{
-		Key:         n1,
+		Key:         s.n1,
 		Data:        serializedLegacyMultiInfo,
 		Description: "SDK kerying version",
 	}
 
-	setter, ok := kb.(setter)
-	require.True(ok)
-	require.NoError(setter.SetItem(item))
+	s.Require().NoError(s.setter.SetItem(item))
 
-	clientCtx := client.Context{}.WithKeyringDir(dir).WithKeyring(kb)
+	clientCtx := client.Context{}.WithKeyringDir(s.dir).WithKeyring(s.kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	// run MigrateCommand, it should return no error
@@ -67,40 +83,25 @@ func Test_runMigrateCmdLegacyInfo(t *testing.T) {
 	mockIn2, mockOut := testutil.ApplyMockIO(cmd)
 
 	mockIn2.Reset("\n12345678\n\n\n\n\n")
-	t.Log(mockOut.String())
-	assert.NoError(t, cmd.ExecuteContext(ctx))
+	s.T().Log(mockOut.String())
+	s.Assert().NoError(cmd.ExecuteContext(ctx))
 }
 
-func Test_runMigrateCmdRecord(t *testing.T) {
-	const n1 = "cosmos"
-
-	dir := t.TempDir()
-	mockIn := strings.NewReader("")
-	encCfg := simapp.MakeTestEncodingConfig()
-	require := require.New(t)
-
-	// instantiate keyring
-	kb, err := keyring.New(n1, keyring.BackendTest, dir, mockIn, encCfg.Codec)
-	require.NoError(err)
-
-	priv := secp256k1.GenPrivKey()
-	privKey := cryptotypes.PrivKey(priv)
-	k, err := keyring.NewLocalRecord("test record", privKey, privKey.PubKey())
-	require.NoError(err)
-	serializedRecord, err := encCfg.Codec.Marshal(k)
-	require.NoError(err)
+func (s *MigrateTestSuite) Test_runMigrateCmdRecord() {
+	k, err := keyring.NewLocalRecord("test record", s.priv, s.pub)
+	s.Require().NoError(err)
+	serializedRecord, err := s.cdc.Marshal(k)
+	s.Require().NoError(err)
 
 	item := design99keyring.Item{
-		Key:         n1,
+		Key:         s.n1,
 		Data:        serializedRecord,
 		Description: "SDK kerying version",
 	}
 
-	setter, ok := kb.(setter)
-	require.True(ok)
-	require.NoError(setter.SetItem(item))
+	s.Require().NoError(s.setter.SetItem(item))
 
-	clientCtx := client.Context{}.WithKeyringDir(dir).WithKeyring(kb)
+	clientCtx := client.Context{}.WithKeyringDir(s.dir).WithKeyring(s.kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	// run MigrateCommand, it should return no error
@@ -110,13 +111,12 @@ func Test_runMigrateCmdRecord(t *testing.T) {
 	mockIn2, mockOut := testutil.ApplyMockIO(cmd)
 
 	mockIn2.Reset("\n12345678\n\n\n\n\n")
-	t.Log(mockOut.String())
-	assert.NoError(t, cmd.ExecuteContext(ctx))
+	s.T().Log(mockOut.String())
+	s.Assert().NoError(cmd.ExecuteContext(ctx))
 }
 
-func Test_runMigrateCmdNoKeys(t *testing.T) {
-	kbHome := t.TempDir()
-	clientCtx := client.Context{}.WithKeyringDir(kbHome)
+func (s *MigrateTestSuite) Test_runMigrateCmdNoKeys() {
+	clientCtx := client.Context{}.WithKeyringDir(s.dir)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
 	cmd := MigrateCommand()
@@ -127,6 +127,6 @@ func Test_runMigrateCmdNoKeys(t *testing.T) {
 	mockIn, mockOut := testutil.ApplyMockIO(cmd)
 
 	mockIn.Reset("\n12345678\n\n\n\n\n")
-	t.Log(mockOut.String())
-	assert.NoError(t, cmd.ExecuteContext(ctx))
+	s.T().Log(mockOut.String())
+	s.Assert().NoError(cmd.ExecuteContext(ctx))
 }

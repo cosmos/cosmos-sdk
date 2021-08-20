@@ -315,7 +315,6 @@ func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rose
 	}, nil
 }
 
-//nolint
 func (c converter) BalanceOps(status string, events []abci.Event) []*rosettatypes.Operation {
 	var ops []*rosettatypes.Operation
 

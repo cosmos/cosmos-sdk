@@ -11,10 +11,6 @@ import (
 
 var ErrPrivKeyExtr = errors.New("private key extraction works only for Local")
 
-func newLocalRecordItem(localRecord *Record_Local) *Record_Local_ {
-	return &Record_Local_{localRecord}
-}
-
 func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {
 	any, err := codectypes.NewAnyWithValue(pk)
 	if err != nil {
@@ -32,19 +28,15 @@ func NewLocalRecord(name string, priv cryptotypes.PrivKey, pk cryptotypes.PubKey
 	}
 
 	recordLocal := &Record_Local{any, priv.Type()}
-	recordLocalItem := newLocalRecordItem(recordLocal)
+	recordLocalItem := &Record_Local_{recordLocal}
 
 	return newRecord(name, pk, recordLocalItem)
-}
-
-func newLedgerRecordItem(ledgerRecord *Record_Ledger) *Record_Ledger_ {
-	return &Record_Ledger_{ledgerRecord}
 }
 
 // NewLedgerRecord creates a new Record with ledger item
 func NewLedgerRecord(name string, pk cryptotypes.PubKey, path *hd.BIP44Params) (*Record, error) {
 	recordLedger := &Record_Ledger{path}
-	recordLedgerItem := newLedgerRecordItem(recordLedger)
+	recordLedgerItem := &Record_Ledger_{recordLedger}
 	return newRecord(name, pk, recordLedgerItem)
 }
 
@@ -52,25 +44,17 @@ func (rl *Record_Ledger) GetPath() *hd.BIP44Params {
 	return rl.Path
 }
 
-func newOfflineRecordItem(re *Record_Offline) *Record_Offline_ {
-	return &Record_Offline_{re}
-}
-
 // NewOfflineRecord creates a new Record with offline item
 func NewOfflineRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
 	recordOffline := &Record_Offline{}
-	recordOfflineItem := newOfflineRecordItem(recordOffline)
+	recordOfflineItem := &Record_Offline_{recordOffline}
 	return newRecord(name, pk, recordOfflineItem)
-}
-
-func newMultiRecordItem(re *Record_Multi) *Record_Multi_ {
-	return &Record_Multi_{re}
 }
 
 // NewMultiRecord creates a new Record with multi item
 func NewMultiRecord(name string, pk cryptotypes.PubKey) (*Record, error) {
 	recordMulti := &Record_Multi{}
-	recordMultiItem := newMultiRecordItem(recordMulti)
+	recordMultiItem := &Record_Multi_{recordMulti}
 	return newRecord(name, pk, recordMultiItem)
 }
 

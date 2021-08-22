@@ -16,7 +16,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.crypto.PubKey", pk)
 	registry.RegisterImplementations(pk, &ed25519.PubKey{})
 	registry.RegisterImplementations(pk, &secp256k1.PubKey{})
-	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &ethsecp256k1.PubKey{})
+	registry.RegisterImplementations(pk, &ethsecp256k1.PubKey{})
 	registry.RegisterImplementations(pk, &multisig.LegacyAminoPubKey{})
 	secp256r1.RegisterInterfaces(registry)
 }

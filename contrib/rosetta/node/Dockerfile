@@ -7,6 +7,8 @@ WORKDIR /node
 COPY ./contrib/rosetta/node/data.tar.gz data.tar.gz
 RUN tar -zxvf data.tar.gz -C .
 
+RUN apk add gcc libc-dev --no-cache
+
 # build simd
 WORKDIR /simd
 COPY . ./

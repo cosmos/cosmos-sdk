@@ -71,7 +71,7 @@ func (privKey PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 	return privKey.Type() == other.Type() && subtle.ConstantTimeCompare(privKey.Bytes(), other.Bytes()) == 1
 }
 
-// Type returns eth_secp256k1
+// Type returns ethsecp256k1
 func (privKey PrivKey) Type() string {
 	return KeyType
 }
@@ -153,7 +153,7 @@ func (pubKey PubKey) String() string {
 	return fmt.Sprintf("EthPubKeySecp256k1{%X}", pubKey.Key)
 }
 
-// Type returns eth_secp256k1
+// Type returns ethsecp256k1
 func (pubKey PubKey) Type() string {
 	return KeyType
 }

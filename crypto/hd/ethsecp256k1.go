@@ -20,12 +20,12 @@ var (
 type ethSecp256k1Algo struct {
 }
 
-// Name returns eth_secp256k1
+// Name returns ethsecp256k1
 func (s ethSecp256k1Algo) Name() PubKeyType {
 	return EthSecp256k1Type
 }
 
-// Derive derives and returns the eth_secp256k1 private key for the given mnemonic and HD path.
+// Derive derives and returns the ethsecp256k1 private key for the given mnemonic and HD path.
 func (s ethSecp256k1Algo) Derive() DeriveFn {
 	return func(mnemonic string, bip39Passphrase, path string) ([]byte, error) {
 		hdpath, err := ethaccounts.ParseDerivationPath(path)
@@ -63,7 +63,7 @@ func (s ethSecp256k1Algo) Derive() DeriveFn {
 	}
 }
 
-// Generate generates a eth_secp256k1 private key from the given bytes.
+// Generate generates a ethsecp256k1 private key from the given bytes.
 func (s ethSecp256k1Algo) Generate() GenerateFn {
 	return func(bz []byte) types.PrivKey {
 		var bzArr = make([]byte, ethsecp256k1.PrivKeySize)

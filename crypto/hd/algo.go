@@ -3,6 +3,7 @@ package hd
 import (
 	bip39 "github.com/cosmos/go-bip39"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ethsecp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -20,6 +21,8 @@ const (
 	Ed25519Type = PubKeyType("ed25519")
 	// Sr25519Type represents the Sr25519Type signature system.
 	Sr25519Type = PubKeyType("sr25519")
+	// EthSecp256k1Type defines the ECDSA secp256k1 used on Ethereum
+	EthSecp256k1Type = PubKeyType(ethsecp256k1.KeyType)
 )
 
 var (

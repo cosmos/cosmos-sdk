@@ -3,6 +3,7 @@ package codec
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ethsecp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -15,6 +16,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterInterface("cosmos.crypto.PubKey", pk)
 	registry.RegisterImplementations(pk, &ed25519.PubKey{})
 	registry.RegisterImplementations(pk, &secp256k1.PubKey{})
+	registry.RegisterImplementations((*cryptotypes.PubKey)(nil), &ethsecp256k1.PubKey{})
 	registry.RegisterImplementations(pk, &multisig.LegacyAminoPubKey{})
 	secp256r1.RegisterInterfaces(registry)
 }

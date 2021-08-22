@@ -13,4 +13,5 @@ func TestDefaults(t *testing.T) {
 	require.Equal(t, hd.PubKeyType("secp256k1"), hd.Secp256k1Type)
 	require.Equal(t, hd.PubKeyType("ed25519"), hd.Ed25519Type)
 	require.Equal(t, hd.PubKeyType("sr25519"), hd.Sr25519Type)
+	require.Equal(t, hd.PubKeyType("ethsecp256k1"), hd.EthSecp256k1Type)
 }

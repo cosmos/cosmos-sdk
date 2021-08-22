@@ -1,0 +1,21 @@
+syntax = "proto3";
+package cosmos.crypto.ethsecp256k1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/ethsecp256k1";
+
+// PubKey defines a type alias for an ecdsa.PublicKey that implements
+// Tendermint's PubKey interface. It represents the 33-byte compressed public
+// key format.
+message PubKey {
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes key = 1;
+}
+
+// PrivKey defines a type alias for an ecdsa.PrivateKey that implements
+// Tendermint's PrivateKey interface.
+message PrivKey {
+  bytes key = 1;
+}

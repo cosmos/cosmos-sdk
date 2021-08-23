@@ -108,6 +108,7 @@ func (db *MemDB) ReadWriter() dbm.DBReadWriter {
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
 	atomic.AddInt32(&db.openWriters, 1)
+	// Clone creates a copy-on-write extension of the current tree
 	return &dbWriter{db.newTxn(db.btree.Clone())}
 }
 
@@ -124,8 +125,6 @@ func (db *MemDB) save(target uint64) (uint64, error) {
 		return 0, err
 	}
 	db.saved[target] = db.btree
-	// BTree's Clone() makes a CoW extension of the current tree
-	db.btree = db.btree.Clone()
 	db.vmgr = newVmgr
 	return target, nil
 }

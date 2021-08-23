@@ -1,6 +1,8 @@
 package ante_test
 
 import (
+	"math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,8 +35,8 @@ func (suite *AnteTestSuite) TestSetup() {
 	// Set height to non-zero value for GasMeter to be set
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
-	// Context GasMeter Limit not set
-	suite.Require().Equal(uint64(0), suite.ctx.GasMeter().Limit(), "GasMeter set with limit before setup")
+	// Context GasMeter Limit set to MaxUint64
+	suite.Require().Equal(uint64(math.MaxUint64), suite.ctx.GasMeter().Limit(), "GasMeter set with limit other than MaxUint64 before setup")
 
 	newCtx, err := antehandler(suite.ctx, tx, false)
 	suite.Require().Nil(err, "SetUpContextDecorator returned error")

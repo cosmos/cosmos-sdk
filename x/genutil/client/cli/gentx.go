@@ -57,7 +57,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -77,10 +77,9 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			}
 
 			// read --pubkey, if empty take it from priv_validator.json
-			if val, _ := cmd.Flags().GetString(cli.FlagPubKey); val != "" {
-				err = clientCtx.Codec.UnmarshalJSON([]byte(val), valPubKey)
-				if err != nil {
-					return errors.Wrap(err, "failed to unmarshal consensus node public key")
+			if pkStr, _ := cmd.Flags().GetString(cli.FlagPubKey); pkStr != "" {
+				if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pkStr), &valPubKey); err != nil {
+					return errors.Wrap(err, "failed to unmarshal validator public key")
 				}
 			}
 

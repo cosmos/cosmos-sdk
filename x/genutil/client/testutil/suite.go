@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -34,9 +35,11 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.network = network.New(s.T(), s.cfg)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 
@@ -85,8 +88,46 @@ func (s *IntegrationTestSuite) TestGenTxCmd() {
 	s.Require().Len(msgs, 1)
 
 	s.Require().Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(msgs[0]))
-	s.Require().Equal([]sdk.AccAddress{val.Address}, msgs[0].GetSigners())
+	s.Require().True(val.Address.Equals(msgs[0].GetSigners()[0]))
 	s.Require().Equal(amount, msgs[0].(*types.MsgCreateValidator).Value)
-	err = tx.ValidateBasic()
-	s.Require().NoError(err)
+	s.Require().NoError(tx.ValidateBasic())
+}
+
+func (s *IntegrationTestSuite) TestGenTxCmdPubkey() {
+	val := s.network.Validators[0]
+	dir := s.T().TempDir()
+
+	cmd := cli.GenTxCmd(
+		simapp.ModuleBasics,
+		val.ClientCtx.TxConfig,
+		banktypes.GenesisBalancesIterator{},
+		val.ClientCtx.HomeDir,
+	)
+
+	_, out := testutil.ApplyMockIO(cmd)
+	clientCtx := val.ClientCtx.WithOutput(out)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+
+	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))
+	genTxFile := filepath.Join(dir, "myTx")
+
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
+		fmt.Sprintf("--%s={\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
+		val.Moniker,
+		amount.String(),
+	})
+	s.Require().Error(cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		fmt.Sprintf("--%s=%s", flags.FlagChainID, s.network.Config.ChainID),
+		fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, genTxFile),
+		fmt.Sprintf("--%s={\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"BOIkjkFruMpfOFC9oNPhiJGfmY2pHF/gwHdLDLnrnS0=\"}", stakingcli.FlagPubKey),
+		val.Moniker,
+		amount.String(),
+	})
+	s.Require().NoError(cmd.ExecuteContext(ctx))
 }

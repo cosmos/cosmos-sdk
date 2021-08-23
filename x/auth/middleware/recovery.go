@@ -12,7 +12,7 @@ import (
 )
 
 type recoveryTxHandler struct {
-	inner tx.Handler
+	next tx.Handler
 }
 
 // NewRecoveryTxMiddleware defines a middleware that catches all panics that
@@ -21,7 +21,7 @@ type recoveryTxHandler struct {
 // Be careful, it won't catch any panics happening outside!
 func NewRecoveryTxMiddleware() tx.Middleware {
 	return func(txh tx.Handler) tx.Handler {
-		return recoveryTxHandler{inner: txh}
+		return recoveryTxHandler{next: txh}
 	}
 }
 
@@ -37,7 +37,7 @@ func (txh recoveryTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Re
 		}
 	}()
 
-	return txh.inner.CheckTx(ctx, tx, req)
+	return txh.next.CheckTx(ctx, tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
@@ -73,7 +73,7 @@ func (txh recoveryTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.
 		}
 	}()
 
-	return txh.inner.DeliverTx(ctx, tx, req)
+	return txh.next.DeliverTx(ctx, tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
@@ -86,7 +86,7 @@ func (txh recoveryTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req t
 		}
 	}()
 
-	return txh.inner.SimulateTx(ctx, sdkTx, req)
+	return txh.next.SimulateTx(ctx, sdkTx, req)
 }
 
 func handleRecovery(r interface{}, sdkCtx sdk.Context) error {

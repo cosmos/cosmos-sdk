@@ -42,9 +42,9 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
-func (suite *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
+func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	var ctx sdk.Context
-	suite.app, ctx = createTestApp(suite.T(), isCheckTx)
+	s.app, ctx = createTestApp(s.T(), isCheckTx)
 	ctx = ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
@@ -53,7 +53,7 @@ func (suite *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
 	testdata.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
-	suite.clientCtx = client.Context{}.
+	s.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
 	return ctx
@@ -61,23 +61,23 @@ func (suite *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 
 // CreatetestAccounts creates `numAccs` accounts, and return all relevant
 // information about them including their private keys.
-func (suite *MWTestSuite) CreatetestAccounts(ctx sdk.Context, numAccs int) []testAccount {
+func (s *MWTestSuite) CreatetestAccounts(ctx sdk.Context, numAccs int) []testAccount {
 	var accounts []testAccount
 
 	for i := 0; i < numAccs; i++ {
 		priv, _, addr := testdata.KeyTestPubAddr()
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		acc := s.app.AccountKeeper.NewAccountWithAddress(ctx, addr)
 		err := acc.SetAccountNumber(uint64(i))
-		suite.Require().NoError(err)
-		suite.app.AccountKeeper.SetAccount(ctx, acc)
+		s.Require().NoError(err)
+		s.app.AccountKeeper.SetAccount(ctx, acc)
 		someCoins := sdk.Coins{
 			sdk.NewInt64Coin("atom", 10000000),
 		}
-		err = suite.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, someCoins)
-		suite.Require().NoError(err)
+		err = s.app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, someCoins)
+		s.Require().NoError(err)
 
-		err = suite.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, someCoins)
-		suite.Require().NoError(err)
+		err = s.app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, someCoins)
+		s.Require().NoError(err)
 
 		accounts = append(accounts, testAccount{acc, priv})
 	}
@@ -85,8 +85,8 @@ func (suite *MWTestSuite) CreatetestAccounts(ctx sdk.Context, numAccs int) []tes
 	return accounts
 }
 
-// CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *MWTestSuite) CreateTestTx(txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, []byte, error) {
+// createTestTx is a helper function to create a tx given multiple inputs.
+func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, []byte, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -94,7 +94,7 @@ func (suite *MWTestSuite) CreateTestTx(txBuilder client.TxBuilder, privs []crypt
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				SignMode:  s.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -116,8 +116,8 @@ func (suite *MWTestSuite) CreateTestTx(txBuilder client.TxBuilder, privs []crypt
 			Sequence:      accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
-			txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
+			s.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+			txBuilder, priv, s.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, nil, err
 		}
@@ -129,7 +129,7 @@ func (suite *MWTestSuite) CreateTestTx(txBuilder client.TxBuilder, privs []crypt
 		return nil, nil, err
 	}
 
-	txBytes, err := suite.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	if err != nil {
 		return nil, nil, err
 	}

@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// ComposeTxMiddleware compose multiple middlewares on top of a tx.Handler. Last
+// ComposeMiddlewares compose multiple middlewares on top of a tx.Handler. Last
 // middleware is the outermost middleware.
-func ComposeTxMiddleware(txHandler tx.Handler, middlewares ...tx.Middleware) tx.Handler {
+func ComposeMiddlewares(txHandler tx.Handler, middlewares ...tx.Middleware) tx.Handler {
 	for _, m := range middlewares {
 		txHandler = m(txHandler)
 	}
@@ -30,7 +30,7 @@ type TxHandlerOptions struct {
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
 // for most applications.
 func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
-	return ComposeTxMiddleware(
+	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),
 		// Choose which events to index in Tendermint. Make sure no events are

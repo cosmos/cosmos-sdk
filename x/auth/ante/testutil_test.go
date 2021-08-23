@@ -80,7 +80,8 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 		ante.NewValidateMemoDecorator(suite.app.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper),
 		ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper),
-		ante.NewSetPubKeyDecorator(suite.app.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
+		// SetPubKeyDecorator must be called before all signature verification decorators
+		ante.NewSetPubKeyDecorator(suite.app.AccountKeeper),
 		ante.NewValidateSigCountDecorator(suite.app.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer),
 		ante.NewSigVerificationDecorator(suite.app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),

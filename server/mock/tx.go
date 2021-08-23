@@ -11,7 +11,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 )
 
-// An sdk.Tx which is its own sdk.Msg.
+// kvstoreTx defines a tx for mock purposes. The `key` and `value` fields will
+// set those bytes in the kvstore, and the `bytes` field represents its
+// GetSignBytes value.
 type kvstoreTx struct {
 	key   []byte
 	value []byte

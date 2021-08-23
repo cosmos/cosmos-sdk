@@ -17,7 +17,7 @@ type GasTx interface {
 }
 
 type gasTxHandler struct {
-	inner tx.Handler
+	next tx.Handler
 }
 
 // NewGasTxMiddleware defines a simple middleware that sets a new GasMeter on
@@ -25,7 +25,7 @@ type gasTxHandler struct {
 // by default, or sets to infinity in simulate mode.
 func NewGasTxMiddleware() tx.Middleware {
 	return func(txh tx.Handler) tx.Handler {
-		return gasTxHandler{inner: txh}
+		return gasTxHandler{next: txh}
 	}
 }
 
@@ -38,7 +38,7 @@ func (txh gasTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.Request
 		return abci.ResponseCheckTx{}, err
 	}
 
-	res, err := txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res, err := txh.next.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 	res.GasUsed = int64(sdkCtx.GasMeter().GasConsumed())
 	res.GasWanted = int64(sdkCtx.GasMeter().Limit())
 
@@ -52,7 +52,7 @@ func (txh gasTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.Reque
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	res, err := txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
+	res, err := txh.next.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 	res.GasUsed = int64(sdkCtx.GasMeter().GasConsumed())
 	res.GasWanted = int64(sdkCtx.GasMeter().Limit())
 
@@ -66,7 +66,7 @@ func (txh gasTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.Req
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	res, err := txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
+	res, err := txh.next.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
 	res.GasInfo = sdk.GasInfo{
 		GasWanted: sdkCtx.GasMeter().Limit(),
 		GasUsed:   sdkCtx.GasMeter().GasConsumed(),

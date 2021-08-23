@@ -1375,7 +1375,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	txHandlerOpt := func(bapp *BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(*msgCounter).Counter
+			count := msg.(msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})
@@ -1549,7 +1549,7 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	txHandlerOpt := func(bapp *BaseApp) {
 		legacyRouter := middleware.NewLegacyRouter()
 		r := sdk.NewRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-			count := msg.(*msgCounter).Counter
+			count := msg.(msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return &sdk.Result{}, nil
 		})

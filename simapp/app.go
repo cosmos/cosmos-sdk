@@ -388,12 +388,24 @@ func NewSimApp(
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
+	app.setTxHandler(encodingConfig.TxConfig, cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)))
 
+	if loadLatest {
+		if err := app.LoadLatestVersion(); err != nil {
+			tmos.Exit(err.Error())
+		}
+	}
+
+	return app
+}
+
+func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []string) {
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
 			BankKeeper:      app.BankKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  app.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
@@ -404,7 +416,7 @@ func NewSimApp(
 	}
 
 	indexEvents := map[string]struct{}{}
-	for _, e := range cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents)) {
+	for _, e := range indexEventsStr {
 		indexEvents[e] = struct{}{}
 	}
 	app.SetTxHandler(authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
@@ -414,15 +426,6 @@ func NewSimApp(
 		MsgServiceRouter:  app.msgSvcRouter,
 		LegacyAnteHandler: anteHandler,
 	}))
-	app.SetEndBlocker(app.EndBlocker)
-
-	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
-			tmos.Exit(err.Error())
-		}
-	}
-
-	return app
 }
 
 // Name returns the name of the App

@@ -150,7 +150,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 					return err
 				}
 
-				if p.Length < 1 {
+				if p.Length < 0 {
 					return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
 				}
 				period := types.Period{Length: p.Length, Amount: amount}

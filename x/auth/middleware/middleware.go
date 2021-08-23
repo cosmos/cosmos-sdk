@@ -38,12 +38,12 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
 		NewIndexEventsTxMiddleware(options.IndexEvents),
 		// Recover from panics. Panics outside of this middleware won't be
 		// caught, be careful!
-		NewRecoveryTxMiddleware(),
+		RecoveryTxMiddleware,
 		// Set a new GasMeter on sdk.Context.
 		//
 		// Make sure the Gas middleware is outside of all other middlewares
 		// that reads the GasMeter. In our case, the Recovery middleware reads
 		// the GasMeter to populate GasInfo.
-		NewGasTxMiddleware(),
+		GasTxMiddleware,
 	)
 }

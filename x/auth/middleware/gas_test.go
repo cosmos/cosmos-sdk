@@ -52,7 +52,7 @@ func (s *MWTestSuite) setupGasTx() (signing.Tx, []byte, sdk.Context, uint64) {
 
 func (s *MWTestSuite) TestSetup() {
 	tx, _, ctx, gasLimit := s.setupGasTx()
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.NewGasTxMiddleware())
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.GasTxMiddleware)
 
 	testcases := []struct {
 		name        string
@@ -79,13 +79,13 @@ func (s *MWTestSuite) TestSetup() {
 
 func (s *MWTestSuite) TestRecoverPanic() {
 	tx, txBytes, ctx, gasLimit := s.setupGasTx()
-	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.NewRecoveryTxMiddleware(), middleware.NewGasTxMiddleware())
+	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.RecoveryTxMiddleware, middleware.GasTxMiddleware)
 	res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes})
 	s.Require().Error(err, "Did not return error on OutOfGas panic")
 	s.Require().True(errors.Is(sdkerrors.ErrOutOfGas, err), "Returned error is not an out of gas error")
 	s.Require().Equal(gasLimit, uint64(res.GasWanted))
 
-	txHandler = middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.NewGasTxMiddleware())
+	txHandler = middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware)
 	s.Require().Panics(func() { txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes}) }, "Recovered from non-Out-of-Gas panic")
 }
 

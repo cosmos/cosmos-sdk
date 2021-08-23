@@ -20,13 +20,11 @@ type gasTxHandler struct {
 	next tx.Handler
 }
 
-// NewGasTxMiddleware defines a simple middleware that sets a new GasMeter on
+// GasTxMiddleware defines a simple middleware that sets a new GasMeter on
 // the sdk.Context, and sets the GasInfo on the result. It reads the tx.GetGas()
 // by default, or sets to infinity in simulate mode.
-func NewGasTxMiddleware() tx.Middleware {
-	return func(txh tx.Handler) tx.Handler {
-		return gasTxHandler{next: txh}
-	}
+func GasTxMiddleware(txh tx.Handler) tx.Handler {
+	return gasTxHandler{next: txh}
 }
 
 var _ tx.Handler = gasTxHandler{}

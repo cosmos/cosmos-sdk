@@ -15,14 +15,12 @@ type recoveryTxHandler struct {
 	next tx.Handler
 }
 
-// NewRecoveryTxMiddleware defines a middleware that catches all panics that
+// RecoveryTxMiddleware defines a middleware that catches all panics that
 // happen in inner middlewares.
 //
 // Be careful, it won't catch any panics happening outside!
-func NewRecoveryTxMiddleware() tx.Middleware {
-	return func(txh tx.Handler) tx.Handler {
-		return recoveryTxHandler{next: txh}
-	}
+func RecoveryTxMiddleware(txh tx.Handler) tx.Handler {
+	return recoveryTxHandler{next: txh}
 }
 
 var _ tx.Handler = recoveryTxHandler{}

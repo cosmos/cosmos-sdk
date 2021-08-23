@@ -106,12 +106,8 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 // Sign creates a recoverable ECDSA signature on the secp256k1 curve over the
 // provided hash of the message. The produced signature is 65 bytes
 // where the last byte contains the recovery ID.
-func (privKey PrivKey) Sign(digestBz []byte) ([]byte, error) {
-	if len(digestBz) != ethcrypto.DigestLength {
-		digestBz = ethcrypto.Keccak256Hash(digestBz).Bytes()
-	}
-
-	return ethcrypto.Sign(digestBz, privKey.ToECDSA())
+func (privKey PrivKey) Sign(msg []byte) ([]byte, error) {
+	return ethcrypto.Sign(ethcrypto.Keccak256Hash(msg).Bytes(), privKey.ToECDSA())
 }
 
 // ToECDSA returns the ECDSA private key as a reference to ecdsa.PrivateKey type.

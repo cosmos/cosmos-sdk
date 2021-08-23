@@ -94,13 +94,13 @@ func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTi
 	}
 }
 
-// Route returns the message route for a MsgCreateVestingAccount.
+// Route returns the message route for a MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) Route() string { return RouterKey }
 
-// Type returns the message type for a MsgCreateVestingAccount.
+// Type returns the message type for a MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) Type() string { return TypeMsgCreatePeriodicVestingAccount }
 
-// GetSigners returns the expected signers for a MsgCreateVestingAccount.
+// GetSigners returns the expected signers for a MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // MigrateCommand migrates key information from legacy keybase to OS secret store.
@@ -26,7 +25,7 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 		RunE: runMigrateCmd,
 	}
 
-	cmd.Flags().Bool(flags.FlagDryRun, false, "Run migration without actually persisting any changes to the new Keybase")
+	//cmd.Flags().Bool(flags.FlagDryRun, false, "Run migration without actually persisting any changes to the new Keybase")
 	return cmd
 }
 

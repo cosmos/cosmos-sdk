@@ -45,11 +45,9 @@ func (s *MigrationTestSuite) SetupSuite() {
 
 	s.priv = cryptotypes.PrivKey(secp256k1.GenPrivKey())
 	s.pub = s.priv.PubKey()
-
 }
 
 func (s *MigrationTestSuite) TestMigrateLegacyLocalKey() {
-
 	legacyLocalInfo := newLegacyLocalInfo(n1, s.pub, string(legacy.Cdc.MustMarshal(s.priv)), hd.Secp256k1.Name())
 	serializedLegacyLocalInfo := MarshalInfo(legacyLocalInfo)
 
@@ -66,9 +64,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyLocalKey() {
 	s.Require().NoError(err)
 }
 
-
 func (s *MigrationTestSuite) TestMigrateLegacyLedgerKey() {
-
 	account, coinType, index := uint32(118), uint32(0), uint32(0)
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 	legacyLedgerInfo := newLegacyLedgerInfo(n1, s.pub, *hdPath, hd.Secp256k1.Name())
@@ -88,8 +84,6 @@ func (s *MigrationTestSuite) TestMigrateLegacyLedgerKey() {
 }
 
 func (s *MigrationTestSuite) TestMigrateLegacyOfflineKey() {
-
-
 	legacyOfflineInfo := newLegacyOfflineInfo(n1, s.pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
@@ -106,8 +100,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyOfflineKey() {
 	s.Require().NoError(err)
 }
 
-func (s *MigrationTestSuite) TestMigrateLegacyMultiKey(t *testing.T) {
-
+func (s *MigrationTestSuite) TestMigrateLegacyMultiKey() {
 	multi := multisig.NewLegacyAminoPubKey(
 		1, []cryptotypes.PubKey{
 			s.pub,
@@ -132,7 +125,6 @@ func (s *MigrationTestSuite) TestMigrateLegacyMultiKey(t *testing.T) {
 }
 
 func (s *MigrationTestSuite) TestMigrateLocalRecord() {
-	
 	k1, err := NewLocalRecord("test record", s.priv, s.pub)
 	s.Require().NoError(err)
 
@@ -163,9 +155,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 }
 
 func (s *MigrationTestSuite) TestMigrateOneRandomItemError() {
-
 	randomBytes := []byte("abckd0s03l")
-
 	errItem := keyring.Item{
 		Key:         n1,
 		Data:        randomBytes,
@@ -180,7 +170,6 @@ func (s *MigrationTestSuite) TestMigrateOneRandomItemError() {
 }
 
 func (s *MigrationTestSuite) TestMigrateAllLegacyMultiOffline() {
-	
 	multi := multisig.NewLegacyAminoPubKey(
 		1, []cryptotypes.PubKey{
 			s.pub,
@@ -222,7 +211,6 @@ func (s *MigrationTestSuite) TestMigrateAllNoItem() {
 }
 
 func (s *MigrationTestSuite) TestMigrateErrUnknownItemKey() {
-
 	legacyOfflineInfo := newLegacyOfflineInfo(n1, s.pub, hd.Secp256k1.Name())
 	serializedLegacyOfflineInfo := MarshalInfo(legacyOfflineInfo)
 
@@ -240,7 +228,7 @@ func (s *MigrationTestSuite) TestMigrateErrUnknownItemKey() {
 	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, incorrectItemKey).Error())
 }
 
-func (s *MigrationTestSuite) TestMigrateErrEmptyItemData(t *testing.T) {
+func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        []byte{},
@@ -253,8 +241,6 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData(t *testing.T) {
 	s.Require().False(migrated)
 	s.Require().EqualError(err, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, n1).Error())
 }
-
-
 func TestMigrationTestSuite(t *testing.T) {
 	suite.Run(t, new(MigrationTestSuite))
 }

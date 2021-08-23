@@ -29,19 +29,18 @@ func (s *RecordTestSuite) SetupSuite() {
 }
 
 func (s *RecordTestSuite) TestOfflineRecordMarshaling() {
-
-	r, err := NewOfflineRecord("testrecord", s.pub)
+	k, err := NewOfflineRecord("testrecord", s.pub)
 	s.Require().NoError(err)
 
-	bz, err := s.cdc.Marshal(r)
+	bz, err := s.cdc.Marshal(k)
 	s.Require().NoError(err)
 
-	var r2 Record
-	s.Require().NoError(s.cdc.Unmarshal(bz, &r2))
-	s.Require().Equal(r.Name, r2.Name)
-	s.Require().True(r.PubKey.Equal(r2.PubKey))
+	var k2 Record
+	s.Require().NoError(s.cdc.Unmarshal(bz, &k2))
+	s.Require().Equal(k.Name, k2.Name)
+	s.Require().True(k.PubKey.Equal(k2.PubKey))
 
-	pk2, err := r2.GetPubKey()
+	pk2, err := k2.GetPubKey()
 	s.Require().NoError(err)
 	s.Require().True(s.pub.Equals(pk2))
 }
@@ -54,26 +53,26 @@ func (s *RecordTestSuite)  TestLocalRecordMarshaling() {
 	kb, err := New(n1, BackendTest, dir, mockIn, s.cdc)
 	s.Require().NoError(err)
 
-	r, err := NewLocalRecord("testrecord", s.priv, s.pub)
+	k, err := NewLocalRecord("testrecord", s.priv, s.pub)
 	s.Require().NoError(err)
 
 	ks, ok := kb.(keystore)
 	s.Require().True(ok)
 
-	bz, err := ks.protoMarshalRecord(r)
+	bz, err := ks.protoMarshalRecord(k)
 	s.Require().NoError(err)
 
-	r2, err := ks.protoUnmarshalRecord(bz)
+	k2, err := ks.protoUnmarshalRecord(bz)
 	s.Require().NoError(err)
-	s.Require().Equal(r.Name, r2.Name)
+	s.Require().Equal(k.Name, k2.Name)
 	// not sure if this will work -- we can remove this line, the later check is better.
-	s.Require().True(r.PubKey.Equal(r2.PubKey))
+	s.Require().True(k.PubKey.Equal(k2.PubKey))
 
-	pub2, err := r2.GetPubKey()
+	pub2, err := k2.GetPubKey()
 	s.Require().NoError(err)
 	s.Require().True(s.pub.Equals(pub2))
 
-	localRecord2 := r2.GetLocal()
+	localRecord2 := k2.GetLocal()
 	s.Require().NotNil(localRecord2)
 	anyPrivKey, err := codectypes.NewAnyWithValue(s.priv)
 	s.Require().NoError(err)
@@ -117,7 +116,6 @@ func (s *RecordTestSuite) TestLedgerRecordMarshaling() {
 }
 
 func (s *RecordTestSuite) TestExtractPrivKeyFromLocalRecord() {
-
 	// use proto serialize
 	k, err := NewLocalRecord("testrecord", s.priv, s.pub)
 	s.Require().NoError(err)
@@ -127,7 +125,7 @@ func (s *RecordTestSuite) TestExtractPrivKeyFromLocalRecord() {
 	s.Require().True(privKey2.Equals(s.priv))
 }
 
-func (s *RecordTestSuite) TestExtractPrivKeyFromOfflineRecord(t *testing.T) {
+func (s *RecordTestSuite) TestExtractPrivKeyFromOfflineRecord() {
 	k, err := NewOfflineRecord("testrecord", s.pub)
 	s.Require().NoError(err)
 

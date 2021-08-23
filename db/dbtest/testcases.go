@@ -35,7 +35,6 @@ func DoTestGetSetHasDelete(t *testing.T, load Loader) {
 	require.NoError(t, err)
 	require.False(t, ok)
 
-	view.Discard()
 	txn = db.ReadWriter()
 
 	// Set and get a value.

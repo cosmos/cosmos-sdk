@@ -1,13 +1,11 @@
 FROM golang:1.15-alpine as build
 
-RUN apk add --no-cache tar
+RUN apk add gcc libc-dev --no-cache tar
 
 # prepare node data
 WORKDIR /node
 COPY ./contrib/rosetta/node/data.tar.gz data.tar.gz
 RUN tar -zxvf data.tar.gz -C .
-
-RUN apk add gcc libc-dev --no-cache
 
 # build simd
 WORKDIR /simd

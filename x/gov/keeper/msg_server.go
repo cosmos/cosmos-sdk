@@ -16,6 +16,10 @@ type msgServer struct {
 	Keeper
 }
 
+// TODO: Revisit this once we have propoer gas fee framework.
+// Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
+const gasCostPerStorage = 10
+
 // NewMsgServerImpl returns an implementation of the gov MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
@@ -30,6 +34,13 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 	if err != nil {
 		return nil, err
 	}
+
+	bytes, err := proposal.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.BlockGasMeter().ConsumeGas(uint64(3*gasCostPerStorage*len(bytes)), "Submit proposal")
 
 	defer telemetry.IncrCounter(1, types.ModuleName, "proposal")
 

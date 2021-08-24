@@ -194,7 +194,6 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 }
 
 func (suite *KeeperTestSuite) TestBech32Prefix() {
-	suite.Run("TestBech32Prefix", func() {
 		suite.SetupTest() // reset
 		req := &types.Bech32PrefixRequest{}
 		res, err := suite.queryClient.Bech32Prefix(context.Background(), req)

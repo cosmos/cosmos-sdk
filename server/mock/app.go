@@ -41,6 +41,8 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	// Set a Route.
 	encCfg := simapp.MakeTestEncodingConfig()
 	legacyRouter := middleware.NewLegacyRouter()
+	// We're adding a test legacy route here, which accesses the kvstore
+	// and simply sets the Msg's key/value pair in the kvstore.
 	legacyRouter.AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
 	baseApp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		LegacyRouter:     legacyRouter,

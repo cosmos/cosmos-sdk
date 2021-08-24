@@ -5,11 +5,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// ComposeMiddlewares compose multiple middlewares on top of a tx.Handler. Last
-// middleware is the outermost middleware.
+// ComposeMiddlewares compose multiple middlewares on top of a tx.Handler. The
+// middleware order in the variadic arguments is from inside to outside.
+//
+// Example: Given a base tx.Handler H, and two middlewares A and B, the
+// middleware stack:
+// ```
+// A.pre
+//   B.pre
+//     H
+//   B.post
+// A.post
+// ```
+// is created by calling `ComposeMiddlewares(H, A, B)`.
 func ComposeMiddlewares(txHandler tx.Handler, middlewares ...tx.Middleware) tx.Handler {
-	for _, m := range middlewares {
-		txHandler = m(txHandler)
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		txHandler = middlewares[i](txHandler)
 	}
 
 	return txHandler
@@ -32,18 +43,20 @@ type TxHandlerOptions struct {
 func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
-		newLegacyAnteMiddleware(options.LegacyAnteHandler),
-		// Choose which events to index in Tendermint. Make sure no events are
-		// emitted outside of this middleware.
-		NewIndexEventsTxMiddleware(options.IndexEvents),
-		// Recover from panics. Panics outside of this middleware won't be
-		// caught, be careful!
-		RecoveryTxMiddleware,
 		// Set a new GasMeter on sdk.Context.
 		//
 		// Make sure the Gas middleware is outside of all other middlewares
 		// that reads the GasMeter. In our case, the Recovery middleware reads
 		// the GasMeter to populate GasInfo.
 		GasTxMiddleware,
+		// Recover from panics. Panics outside of this middleware won't be
+		// caught, be careful!
+		RecoveryTxMiddleware,
+		// Choose which events to index in Tendermint. Make sure no events are
+		// emitted outside of this middleware.
+		NewIndexEventsTxMiddleware(options.IndexEvents),
+		// Temporary middleware to bundle antehandlers.
+		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
+		newLegacyAnteMiddleware(options.LegacyAnteHandler),
 	)
 }

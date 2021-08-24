@@ -39,10 +39,12 @@ type dbTxn struct {
 }
 type dbWriter struct{ dbTxn }
 
-var _ dbm.DBConnection = (*MemDB)(nil)
-var _ dbm.DBReader = (*dbTxn)(nil)
-var _ dbm.DBWriter = (*dbWriter)(nil)
-var _ dbm.DBReadWriter = (*dbWriter)(nil)
+var (
+	_ dbm.DBConnection = (*MemDB)(nil)
+	_ dbm.DBReader     = (*dbTxn)(nil)
+	_ dbm.DBWriter     = (*dbWriter)(nil)
+	_ dbm.DBReadWriter = (*dbWriter)(nil)
+)
 
 // item is a btree.Item with byte slices as keys and values
 type item struct {

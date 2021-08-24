@@ -29,7 +29,7 @@ var (
 // DBConnection represents a connection to a versioned database.
 // Records are accessed via transaction objects, and must be safe for concurrent creation
 // and read and write access.
-// Past versions are only accessible read-only. TODO: do we want write access?
+// Past versions are only accessible read-only.
 type DBConnection interface {
 	// Opens a read-only transaction at the current working version.
 	Reader() DBReader

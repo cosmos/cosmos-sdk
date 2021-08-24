@@ -117,7 +117,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 ]
 	}
 		`,
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

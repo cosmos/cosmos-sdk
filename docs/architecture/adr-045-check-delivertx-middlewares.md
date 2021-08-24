@@ -55,6 +55,36 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 
 The implementations are similar for `BaseApp.CheckTx` and `BaseApp.Simulate`.
 
+### Implementing a Middleware
+
+In practice, a middleware is a Go function that takes as arguments some parameters needed for the middleware, and returns a `tx.Middleware`.
+
+For example, for creating `MyMiddleware`, we can implement:
+
+```go
+// myTxHandler is the
+type myTxHandler struct {
+    // next is the next tx.Handler in the middleware stack.
+    next tx.Handler
+    // some other fields that are relevant to the middleware can be added here
+}
+
+// NewMyMiddleware returns a middleware that does this and that.
+func NewMyMiddleware(arg1, arg2) tx.Middleware {
+    return func (txh tx.Handler) tx.Handler {
+        return myTxHandler{
+            next: txh,
+            // optionally, set arg1, arg2... if they are needed in the middleware
+        }
+    }
+}
+
+// Assert myTxHandler is a tx.Handler.
+var _ tx.Handler = myTxHandler{}
+
+func (txh myTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+```
+
 ### Composing Middlewares
 
 While BaseApp simply holds a reference to a `tx.Handler`, this `tx.Handler` itself is defined using a middleware stack. We define a base `tx.Handler` called `RunMsgsTxHandler`, which executes messages.
@@ -71,10 +101,10 @@ A.pre
 A.post
 ```
 
-We define a `ComposeMiddlewares` function for composing middlewares. It takes the base handler as first argument, and middlewares in the "inner to outer" order. For the above stack, the final `tx.Handler` is:
+We define a `ComposeMiddlewares` function for composing middlewares. It takes the base handler as first argument, and middlewares in the "outer to inner" order. For the above stack, the final `tx.Handler` is:
 
 ```go
-txHandler := middleware.ComposeMiddlewares(H, C, B, A)
+txHandler := middleware.ComposeMiddlewares(H, A, B, C)
 ```
 
 The middleware is set in BaseApp via its `SetTxHandler` setter:
@@ -102,12 +132,18 @@ While the app developer can define and compose the middlewares of their choice, 
 
 ### Similarities and Differences between Antehandlers and Middlewares
 
-The middleware-based design builds upon the existing antehandlers design described in [ADR-010](./adr-010-modular-antehandler.md).
+The middleware-based design builds upon the existing antehandlers design described in [ADR-010](./adr-010-modular-antehandler.md). It is very similar to the [Decorator Pattern](./adr-010-modular-antehandler.md#decorator-pattern) described in that ADR and used in [weave](https://github.com/iov-one/weave).
 
 #### Similarities
 
-- Both design are based on chaining/composing small modular pieces.
--
+- Designed as chaining/composing small modular pieces.
+- Allow code reuse for `{Check,Deliver}Tx` and for `Simulate`.
+- Set up in `app.go`, and easily customizable by app developers.
+
+#### Differences
+
+- The middleware approach uses separate methods for `{Check,Deliver,Simulate}Tx`, whereas the antehandlers pass a `simulate bool` flag and uses the `sdkCtx.Is{Check,Recheck}Tx()` flags to determine how we are executing transactions.
+- The middleware design lets each middleware hold a reference to the next middleware
 
 ## Consequences
 

@@ -64,6 +64,11 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, err
 	}
 
+	err = doPreUpgrade(l.cfg)
+	if err != nil {
+		return false, err
+	}
+
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
 }
 
@@ -140,5 +145,30 @@ func doBackup(cfg *Config) error {
 			"time taken to complete the backup: %s", dst, et, timeTaken)
 	}
 
+	return nil
+}
+
+// Runs the pre-upgrade command defined by the application
+func doPreUpgrade(cfg *Config) error {
+	bin, err := cfg.CurrentBin()
+	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+
+	_, err = preUpgradeCmd.Output()
+
+	if err != nil {
+		if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
+			fmt.Println("pre-upgrade command does not exist. continuing the upgrade.")
+			return nil
+		}
+		if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
+			return fmt.Errorf("pre-upgrade command failed : %w", err)
+		}
+		if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
+			fmt.Println("pre-upgrade command failed. retrying.")
+			return doPreUpgrade(cfg)
+		}
+		return err
+	}
+	fmt.Println("pre-upgrade successful. continuing the upgrade.")
 	return nil
 }

@@ -10,6 +10,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/coinbase/rosetta-sdk-go v0.6.10
 	github.com/confio/ics23/go v0.6.6
+	github.com/cosmos/cosmos-proto v0.0.0-20210720184750-6af320ed3523
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.16.0
 	github.com/cosmos/ledger-cosmos-go v0.11.1

@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"bytes"
 	"fmt"
+	"context"
+	"bytes"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -194,48 +195,38 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 }
 
 func (suite *KeeperTestSuite) TestBech32Prefix() {
-		suite.SetupTest() // reset
-		req := &types.Bech32PrefixRequest{}
-		res, err := suite.queryClient.Bech32Prefix(context.Background(), req)
-		suite.Require().NoError(err)
-		suite.Require().NotNil(res)
-		suite.Require().Equal(sdk.Bech32MainPrefix, res.Bech32Prefix)
-	})
+	suite.SetupTest() // reset
+	req := &types.Bech32PrefixRequest{}
+	res, err := suite.queryClient.Bech32Prefix(context.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().Equal(sdk.Bech32MainPrefix, res.Bech32Prefix)
 }
 
+
 func (suite *KeeperTestSuite) TestAddressBytesToString() {
-
-	_, _, addr := testdata.KeyTestPubAddr()
-	addrBytes := []byte(addr)
-
+	const addrStr = "cosmos13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"
+	addrBytes := []byte{0x8e, 0x22, 0xda, 0xb8, 0xa, 0x5a, 0x94, 0xdf, 0xbd, 0xb0, 0x58, 0xfa, 0x93, 0xcb, 0x11, 0x49, 0x5e, 0xac, 0xc5, 0x30}
+	
 	testCases := []struct {
 		msg       string
 		req       *types.AddressBytesToStringRequest
 		expPass   bool
-		posttests func(res *types.AddressBytesToStringResponse)
 	}{
 		{
 			"success",
 			&types.AddressBytesToStringRequest{AddressBytes: addrBytes},
 			true,
-			func(res *types.AddressBytesToStringResponse) {
-				text, err := suite.app.AccountKeeper.GetAddressCdC().BytesToString(addrBytes)
-				suite.Require().NoError(err)
-				suite.Require().NotNil(text)
-				suite.Require().Equal(text, res.AddressString)
-			},
 		},
 		{
 			"request is empty",
 			&types.AddressBytesToStringRequest{},
 			false,
-			func(res *types.AddressBytesToStringResponse) {},
 		},
 		{
 			"empty account address in request",
 			&types.AddressBytesToStringRequest{AddressBytes: []byte{}},
 			false,
-			func(res *types.AddressBytesToStringResponse) {},
 		},
 	}
 
@@ -250,48 +241,48 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
+				suite.Require().Equal(res.AddressString, addrStr)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
 			}
 
-			tc.posttests(res)
 		})
 	}
 }
 
+
 func (suite *KeeperTestSuite) TestAddressStringToBytes() {
-	_, _, addr := testdata.KeyTestPubAddr()
-	addrBytes := []byte(addr)
-	text, err := suite.app.AccountKeeper.GetAddressCdC().BytesToString(addrBytes)
-	suite.Require().NoError(err)
+	const addrStr = "cosmos13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"
+	addrBytes := []byte{0x8e, 0x22, 0xda, 0xb8, 0xa, 0x5a, 0x94, 0xdf, 0xbd, 0xb0, 0x58, 0xfa, 0x93, 0xcb, 0x11, 0x49, 0x5e, 0xac, 0xc5, 0x30}
+	
 
 	testCases := []struct {
 		msg       string
 		req       *types.AddressStringToBytesRequest
 		expPass   bool
-		posttests func(res *types.AddressStringToBytesResponse)
 	}{
 		{
 			"success",
-			&types.AddressStringToBytesRequest{AddressString: text},
+			&types.AddressStringToBytesRequest{AddressString: addrStr},
 			true,
-			func(res *types.AddressStringToBytesResponse) {
-				suite.Require().True(bytes.Equal(res.AddressBytes, addrBytes))
-			},
 		},
 		{
 			"request is empty",
 			&types.AddressStringToBytesRequest{},
 			false,
-			func(res *types.AddressStringToBytesResponse) {},
 		},
 		{
 			"AddressString field in request is empty",
 			&types.AddressStringToBytesRequest{AddressString: ""},
 			false,
-			func(res *types.AddressStringToBytesResponse) {},
 		},
+		{
+			"address prefix is incorrect",
+			&types.AddressStringToBytesRequest{AddressString: "regen13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv" },
+			false,
+		},
+
 	}
 
 	for _, tc := range testCases {
@@ -305,12 +296,12 @@ func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
+				suite.Require().True(bytes.Equal(res.AddressBytes, addrBytes))
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
 			}
 
-			tc.posttests(res)
 		})
 	}
 }

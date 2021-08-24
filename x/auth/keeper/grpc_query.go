@@ -112,7 +112,7 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 }
 
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
-	bech32Prefix, err := ak.GetBech32Prefix()
+	bech32Prefix, err := ak.getBech32Prefix()
 	if err != nil {
 		return nil, err
 	}

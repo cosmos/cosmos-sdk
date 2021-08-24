@@ -117,7 +117,7 @@ func (i *memDBIterator) Next() bool {
 
 // Error implements Iterator.
 func (i *memDBIterator) Error() error {
-	return nil // famous last words
+	return nil
 }
 
 // Key implements Iterator.

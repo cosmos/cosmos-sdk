@@ -33,17 +33,7 @@ func (txh legacyAnteTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.
 		return abci.ResponseCheckTx{}, err
 	}
 
-	res, err := txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
-	if err != nil {
-		return abci.ResponseCheckTx{}, err
-	}
-
-	return abci.ResponseCheckTx{
-		// Fields populated by inner runMsgsTxHandler
-		Data:   res.Data,
-		Events: res.Events,
-		Log:    res.Log,
-	}, nil
+	return txh.inner.CheckTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
 // DeliverTx implements tx.Handler.DeliverTx method.
@@ -53,17 +43,7 @@ func (txh legacyAnteTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abc
 		return abci.ResponseDeliverTx{}, err
 	}
 
-	res, err := txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
-	if err != nil {
-		return abci.ResponseDeliverTx{}, err
-	}
-
-	return abci.ResponseDeliverTx{
-		// Fields populated by inner runMsgsTxHandler
-		Data:   res.Data,
-		Events: res.Events,
-		Log:    res.Log,
-	}, nil
+	return txh.inner.DeliverTx(sdk.WrapSDKContext(sdkCtx), tx, req)
 }
 
 // SimulateTx implements tx.Handler.SimulateTx method.
@@ -73,14 +53,7 @@ func (txh legacyAnteTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req
 		return tx.ResponseSimulateTx{}, err
 	}
 
-	res, err := txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
-	if err != nil {
-		return tx.ResponseSimulateTx{}, err
-	}
-
-	return tx.ResponseSimulateTx{
-		Result: res.Result,
-	}, nil
+	return txh.inner.SimulateTx(sdk.WrapSDKContext(sdkCtx), sdkTx, req)
 }
 
 func (txh legacyAnteTxHandler) runAnte(ctx context.Context, tx sdk.Tx, txBytes []byte, isSimulate bool) (sdk.Context, error) {

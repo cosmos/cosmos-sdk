@@ -79,7 +79,7 @@ func (s *MWTestSuite) TestSetup() {
 
 func (s *MWTestSuite) TestRecoverPanic() {
 	tx, txBytes, ctx, gasLimit := s.setupGasTx()
-	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.RecoveryTxMiddleware, middleware.GasTxMiddleware)
+	txHandler := middleware.ComposeMiddlewares(outOfGasTxHandler{}, middleware.GasTxMiddleware, middleware.RecoveryTxMiddleware)
 	res, err := txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{Tx: txBytes})
 	s.Require().Error(err, "Did not return error on OutOfGas panic")
 	s.Require().True(errors.Is(sdkerrors.ErrOutOfGas, err), "Returned error is not an out of gas error")

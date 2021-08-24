@@ -57,7 +57,7 @@ type AccountKeeper struct {
 
 	// The prototypical AccountI constructor.
 	proto      func() types.AccountI
-	addressCdC address.Codec
+	addressCdc address.Codec
 }
 
 var _ AccountKeeperI = &AccountKeeper{}

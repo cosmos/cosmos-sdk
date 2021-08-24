@@ -248,7 +248,7 @@ func (ak AccountKeeper) GetAddressCdc() address.Codec { return ak.addressCdC }
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
 	bech32Codec, ok := ak.addressCdC.(bech32Codec)
 	if !ok {
-		return "", errors.New("unable cast addressCdC to bech32Codec")
+		return "", errors.New("unable cast addressCdc to bech32Codec")
 	}
 
 	return bech32Codec.bech32Prefix, nil

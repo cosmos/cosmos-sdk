@@ -46,6 +46,10 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
+	err = doPreUpgrade(l.cfg)
+	if err != nil {
+		return false, err
+	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
@@ -61,11 +65,6 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, err
 	}
 	if err := doBackup(l.cfg); err != nil {
-		return false, err
-	}
-
-	err = doPreUpgrade(l.cfg)
-	if err != nil {
 		return false, err
 	}
 
@@ -151,7 +150,7 @@ func doBackup(cfg *Config) error {
 // Runs the pre-upgrade command defined by the application
 func doPreUpgrade(cfg *Config) error {
 	bin, err := cfg.CurrentBin()
-	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
+	preUpgradeCmd := exec.Command(bin, "pre-upgrade", "--unsafe-skip-upgrades")
 
 	_, err = preUpgradeCmd.Output()
 

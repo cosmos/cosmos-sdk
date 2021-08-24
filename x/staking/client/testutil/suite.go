@@ -212,6 +212,15 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 				txResp := tc.respType.(*sdk.TxResponse)
 				require.Equal(tc.expectedCode, txResp.Code,
 					"test: %s, output\n:", tc.name, out.String())
+
+				events := txResp.Logs[0].GetEvents()
+				for i := 0; i < len(events); i++ {
+					if events[i].GetType() == "create_validator" {
+						attributes := events[i].GetAttributes()
+						require.Equal(attributes[1].Value, "100stake")
+						break
+					}
+				}
 			}
 		})
 	}

@@ -26,7 +26,8 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app, suite.ctx = createTestApp(true)
+	suite.app = simapp.Setup(suite.T(), false)
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	proposal.RegisterQueryServer(queryHelper, suite.app.ParamsKeeper)
@@ -35,14 +36,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-// returns context and app
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-
-	return app, ctx
 }
 
 func validateNoOp(_ interface{}) error { return nil }
@@ -146,6 +139,29 @@ func TestKeeper(t *testing.T) {
 
 func indirect(ptr interface{}) interface{} {
 	return reflect.ValueOf(ptr).Elem().Interface()
+}
+
+func TestGetSubspaces(t *testing.T) {
+	_, _, _, _, keeper := testComponents()
+
+	table := types.NewKeyTable(
+		types.NewParamSetPair([]byte("string"), "", validateNoOp),
+		types.NewParamSetPair([]byte("bool"), false, validateNoOp),
+	)
+
+	_ = keeper.Subspace("key1").WithKeyTable(table)
+	_ = keeper.Subspace("key2").WithKeyTable(table)
+
+	spaces := keeper.GetSubspaces()
+	require.Len(t, spaces, 2)
+
+	var names []string
+	for _, ss := range spaces {
+		names = append(names, ss.Name())
+	}
+
+	require.Contains(t, names, "key1")
+	require.Contains(t, names, "key2")
 }
 
 func TestSubspace(t *testing.T) {

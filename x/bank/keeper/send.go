@@ -243,8 +243,11 @@ func (k BaseSendKeeper) initBalances(ctx sdk.Context, addr sdk.AccAddress, balan
 
 		// x/bank invariants prohibit persistence of zero balances
 		if !balance.IsZero() {
-			bz := k.cdc.MustMarshal(&balance)
-			accountStore.Set([]byte(balance.Denom), bz)
+			amount, err := balance.Amount.Marshal()
+			if err != nil {
+				return err
+			}
+			accountStore.Set([]byte(balance.Denom), amount)
 
 			denomPrefixStore, ok := denomPrefixStores[balance.Denom]
 			if !ok {
@@ -278,8 +281,11 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		accountStore.Delete([]byte(balance.Denom))
 		denomPrefixStore.Delete(address.MustLengthPrefix(addr))
 	} else {
-		bz := k.cdc.MustMarshal(&balance)
-		accountStore.Set([]byte(balance.Denom), bz)
+		amount, err := balance.Amount.Marshal()
+		if err != nil {
+			return err
+		}
+		accountStore.Set([]byte(balance.Denom), amount)
 
 		// Store a reverse index from denomination to account address with a
 		// sentinel value.

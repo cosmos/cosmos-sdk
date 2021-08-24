@@ -245,7 +245,7 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 func (ak AccountKeeper) GetAddressCdc() address.Codec { return ak.addressCdC }
 
 // add getter for bech32Prefix
-func (ak AccountKeeper) GetBech32Prefix() (string, error) {
+func (ak AccountKeeper) getBech32Prefix() (string, error) {
 	bech32Codec, ok := ak.addressCdC.(bech32Codec)
 	if !ok {
 		return "", errors.New("unable cast addressCdC to bech32Codec")

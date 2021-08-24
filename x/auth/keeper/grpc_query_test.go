@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestBech32Prefix() {
 		res, err := suite.queryClient.Bech32Prefix(ctx, req)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
-		suite.Require().Equal(res.Bech32Prefix, sdk.Bech32MainPrefix)
+		suite.Require().Equal(sdk.Bech32MainPrefix, res.Bech32Prefix)
 	})
 }
 

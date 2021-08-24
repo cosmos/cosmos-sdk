@@ -4,7 +4,7 @@
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
-*Note: If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions do not support Cosmos SDK `v0.42` or earlier with the auto-download option enabled.*
+*Note: If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.*
 
 ## Contributing
 
@@ -12,13 +12,13 @@ Release branches have the following format `release/cosmovisor/vA.B.x`, where A 
 
 ## Installation
 
-To install `cosmovisor`, run the following command:
+To install the latest version of `cosmovisor`, run the following command:
 
 ```
-go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
+go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
 
-*Note: If you are using go `v1.15` or earlier, you will need to run `go get`.*
+*Note: If you are using go `v1.15` or earlier, you will need to use `go get`, and you may want to run the command outside a project directory.*
 
 ## Command Line Arguments And Environment Variables
 

@@ -32,11 +32,11 @@ In addition to migrating existing modules, the upgrade handler also performs sto
 
 We recommend validators use [Cosmovisor](../run-node/cosmovisor.html), which is a process manager for running application binaries. For security reasons, we recommend validators build their own upgrade binaries rather than enabling the auto-download option. Validators may still choose to use the auto-download option if the necessary security guarantees are in place (i.e. the URL provided in the upgrade proposal for the downloadable upgrade binary includes a proper checksum).
 
-Validators can use the auto-restart option to prevent unnecessary downtime during the upgrade process. The auto-restart option will automatically restart the chain with the upgrade binary once the chain has halted at the proposed upgrade height. With the auto-restart option, validators can prepare the upgrade binary in advance and then relax at the time of the upgrade.
-
 ::: tip
-If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions do not support Cosmos SDK `v0.42` or earlier with the auto-download option enabled.
+If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.
 :::
+
+Validators can use the auto-restart option to prevent unnecessary downtime during the upgrade process. The auto-restart option will automatically restart the chain with the upgrade binary once the chain has halted at the proposed upgrade height. With the auto-restart option, validators can prepare the upgrade binary in advance and then relax at the time of the upgrade.
 
 ## Migrating app.toml
 
@@ -121,7 +121,7 @@ go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0
 ```
 
 ::: tip
-If you are using go `v1.15` or earlier, you will need to change out of the current directory and run `go get` instead of `go install` and then switch back into the `cosmos-sdk` repository.
+If you are using go `v1.15` or earlier, you will need to change out of the `cosmos-sdk` directory, run `go get` instead of `go install`, and then change back into the `cosmos-sdk` repository.
 :::
 
 Set the required environment variables:

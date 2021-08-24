@@ -132,7 +132,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9952](https://github.com/cosmos/cosmos-sdk/pull/9952) ADR 040: Implement in-memory DB backend
 
 
-
 ### Client Breaking Changes
 
 * [\#8363](https://github.com/cosmos/cosmos-sdk/pull/8363) Addresses no longer have a fixed 20-byte length. From the SDK modules' point of view, any 1-255 bytes-long byte array is a valid address.

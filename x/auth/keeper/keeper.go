@@ -242,7 +242,7 @@ func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
 func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // GetAddressCdc returns address.Codec object used by the keeper
-func (ak AccountKeeper) GetAddressCdC() address.Codec { return ak.addressCdC }
+func (ak AccountKeeper) GetAddressCdc() address.Codec { return ak.addressCdC }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) GetBech32Prefix() (string, error) {

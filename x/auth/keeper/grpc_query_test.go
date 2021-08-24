@@ -196,9 +196,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 func (suite *KeeperTestSuite) TestBech32Prefix() {
 	suite.Run("TestBech32Prefix", func() {
 		suite.SetupTest() // reset
-		ctx := sdk.WrapSDKContext(suite.ctx)
 		req := &types.Bech32PrefixRequest{}
-		res, err := suite.queryClient.Bech32Prefix(ctx, req)
+		res, err := suite.queryClient.Bech32Prefix(context.Background(), req)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(res)
 		suite.Require().Equal(sdk.Bech32MainPrefix, res.Bech32Prefix)

@@ -217,30 +217,36 @@ if err != nil {
     panic(err)
 }
 - app.SetAnteHandler(anteHandler)
-+ app.SetTxHandler()
++ app.SetTxHandler(txHandler)
 ```
 
-As usual, the SDK will provide a migration document for app developers.
+Other more minor API breaking changes will also be provided in the CHANGELOG. As usual, the SDK will provide a release migration document for app developers.
+
+This ADR does not introduce any state-machine-, client- or CLI-breaking changes.
 
 ### Positive
 
-{positive consequences}
+- Allow custom logic to be run before an after `Msg` execution. This enables the [tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [gas refund](https://github.com/cosmos/cosmos-sdk/issues/2150) uses cases, and possibly other ones.
+- Make BaseApp more lightweight, and defer complex logic to small modular components.
+- Separate paths for `{Check,Deliver,Simulate}Tx` with different returns types. This allows for improved readability (replace `if sdkCtx.IsRecheckTx() && !simulate {...}` with separate methods) and more flexibility (e.g. returning a `priority` in `abci.ResponseCheckTx`).
 
 ### Negative
 
-{negative consequences}
+- It is hard to understand at first glance the state updates that would occur after a middleware runs given the `sdk.Context` and `tx`. A middleware can have an arbitrary number of nested middleware being called within its function body, each possibly doing some pre- and post-processing before calling the next middleware on the chain. Thus to understand what a middleware is doing, one must also understand what every other middleware further along the chain is also doing. This can get quite complicated to understand.
+- API-breaking changes for app developers.
 
 ### Neutral
 
-{neutral consequences}
+No neutral consequences.
 
 ## Further Discussions
 
 - [#9934](https://github.com/cosmos/cosmos-sdk/discussions/9934) Decomposing BaseApp's other ABCI methods into middlewares.
+- Replace `sdk.Tx` interface with the concrete protobuf Tx type in the `tx.Handler` methods signature.
 
 ## Test Cases
 
-We update the existing baseapp and antehandlers tests to the new middleware API, but keep the same test cases, to avoid introducing regressions. Existing CLI tests will also not be touched.
+We update the existing baseapp and antehandlers tests to use the new middleware API, but keep the same test cases and logic, to avoid introducing regressions. Existing CLI tests will also be left untouched.
 
 For new middlewares, we introduce unit tests. Since middlewares are purposefully small, unit tests suit well.
 

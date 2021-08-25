@@ -9568,7 +9568,8 @@ account.
 <a name="cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse"></a>
 
 ### MsgCreatePeriodicVestingAccountResponse
-
+MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+response type.
 
 
 

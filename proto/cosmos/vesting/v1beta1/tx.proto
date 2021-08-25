@@ -46,4 +46,6 @@ message MsgCreatePeriodicVestingAccount {
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
 }
 
+// MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+// response type.
 message MsgCreatePeriodicVestingAccountResponse {}

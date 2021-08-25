@@ -26,7 +26,7 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 		return gInfo, nil, err
 	}
 
-	return txResult(gInfo, res.Data, res.Log, res.Events)
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
 // Simulate executes a tx in simulate mode to get result and gas info.
@@ -61,7 +61,7 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 		return gInfo, nil, err
 	}
 
-	return txResult(gInfo, res.Data, res.Log, res.Events)
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
 // Context with current {check, deliver}State of the app used by tests.
@@ -76,8 +76,4 @@ func (app *BaseApp) NewContext(isCheckTx bool, header tmproto.Header) sdk.Contex
 
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header tmproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
-}
-
-func txResult(gInfo sdk.GasInfo, data []byte, log string, events []abci.Event) (sdk.GasInfo, *sdk.Result, error) {
-	return gInfo, &sdk.Result{Data: data, Log: log, Events: events}, nil
 }

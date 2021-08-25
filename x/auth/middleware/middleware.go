@@ -55,6 +55,9 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
 		// Choose which events to index in Tendermint. Make sure no events are
 		// emitted outside of this middleware.
 		NewIndexEventsTxMiddleware(options.IndexEvents),
+		// Reject all extension options which can optionally be included in the
+		// tx.
+		RejectExtensionOptionsMiddleware,
 		// Temporary middleware to bundle antehandlers.
 		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),

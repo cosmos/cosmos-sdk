@@ -39,7 +39,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := []sdk.AnteDecorator{
-		NewMempoolFeeDecorator(),
 		NewValidateBasicDecorator(),
 		NewTxTimeoutHeightDecorator(),
 		NewValidateMemoDecorator(options.AccountKeeper),

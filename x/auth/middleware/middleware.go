@@ -58,6 +58,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
 		// Reject all extension options which can optionally be included in the
 		// tx.
 		RejectExtensionOptionsMiddleware,
+		MempoolFeeMiddleware,
 		// Temporary middleware to bundle antehandlers.
 		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),

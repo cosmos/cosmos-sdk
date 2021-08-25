@@ -236,7 +236,7 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 
 			ctx := sdk.WrapSDKContext(suite.ctx)
 
-			res, err := suite.queryClient.AddressBytesToString(ctx, tc.req)
+			res, err := suite.queryClient.AddressBytesToString(context.Background(), tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

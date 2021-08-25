@@ -410,7 +410,6 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)
-
 	if err != nil {
 		panic(err)
 	}
@@ -419,13 +418,18 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 	for _, e := range indexEventsStr {
 		indexEvents[e] = struct{}{}
 	}
-	app.SetTxHandler(authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
+	txHandler, err := authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
 		Debug:             app.Trace(),
 		IndexEvents:       indexEvents,
 		LegacyRouter:      app.legacyRouter,
 		MsgServiceRouter:  app.msgSvcRouter,
 		LegacyAnteHandler: anteHandler,
-	}))
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetTxHandler(txHandler)
 }
 
 // Name returns the name of the App

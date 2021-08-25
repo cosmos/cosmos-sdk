@@ -40,7 +40,7 @@ type TxHandlerOptions struct {
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
 // for most applications.
-func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
+func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		// Set a new GasMeter on sdk.Context.
@@ -58,5 +58,5 @@ func NewDefaultTxHandler(options TxHandlerOptions) tx.Handler {
 		// Temporary middleware to bundle antehandlers.
 		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),
-	)
+	), nil
 }

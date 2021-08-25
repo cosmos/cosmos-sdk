@@ -26,9 +26,9 @@ The two following interfaces are the base of the middleware design, and are defi
 
 ```go
 type Handler interface {
-	CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error)
-	DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error)
-	SimulateTx(ctx context.Context, tx sdk.Tx, req RequestSimulateTx) (ResponseSimulateTx, error)
+    CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error)
+    DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error)
+    SimulateTx(ctx context.Context, tx sdk.Tx, req RequestSimulateTx) (ResponseSimulateTx, error)
 }
 
 type Middleware func(Handler) Handler
@@ -194,7 +194,33 @@ The middleware-based design builds upon the existing antehandlers design describ
 
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+Since this refactor removes some logic away from BaseApp and into middlewares, it introduces API-breaking changes for app developers. Most notably, instead of creating an antehandler chain in `app.go`, app developers need to create a middleware stack:
+
+```diff
+- anteHandler, err := ante.NewAnteHandler(
+-    ante.HandlerOptions{
+-        AccountKeeper:   app.AccountKeeper,
+-        BankKeeper:      app.BankKeeper,
+-        SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+-        FeegrantKeeper:  app.FeeGrantKeeper,
+-        SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+-    },
+-)
++txHandler, err := authmiddleware.NewDefaultTxHandler(authmiddleware.TxHandlerOptions{
++    Debug:             app.Trace(),
++    IndexEvents:       indexEvents,
++    LegacyRouter:      app.legacyRouter,
++    MsgServiceRouter:  app.msgSvcRouter,
++    LegacyAnteHandler: anteHandler,
++})
+if err != nil {
+    panic(err)
+}
+- app.SetAnteHandler(anteHandler)
++ app.SetTxHandler()
+```
+
+As usual, the SDK will provide a migration document for app developers.
 
 ### Positive
 
@@ -212,9 +238,11 @@ The middleware-based design builds upon the existing antehandlers design describ
 
 - [#9934](https://github.com/cosmos/cosmos-sdk/discussions/9934) Decomposing BaseApp's other ABCI methods into middlewares.
 
-## Test Cases [optional]
+## Test Cases
 
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
+We update the existing baseapp and antehandlers tests to the new middleware API, but keep the same test cases, to avoid introducing regressions. Existing CLI tests will also not be touched.
+
+For new middlewares, we introduce unit tests. Since middlewares are purposefully small, unit tests suit well.
 
 ## References
 

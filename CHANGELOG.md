@@ -67,7 +67,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9650](https://github.com/cosmos/cosmos-sdk/pull/9650) Removed deprecated message handler implementation from the SDK modules.
 * (x/bank) [\#9832] (https://github.com/cosmos/cosmos-sdk/pull/9832) `AddressFromBalancesStore` renamed to `AddressAndDenomFromBalancesStore`.
 * (tests) [\#9938](https://github.com/cosmos/cosmos-sdk/pull/9938) `simapp.Setup` accepts additional `testing.T` argument.
-
+* (baseapp) [\#9920](https://github.com/cosmos/cosmos-sdk/pull/9920) BaseApp `{Check,Deliver,Simulate}Tx` methods are now replaced by a middleware stack.
+  * Replace the Antehandler interface with the `tx.Handler` and `tx.Middleware` interfaces.
+  * Replace `baseapp.SetAnteHandler` with `baseapp.SetTxHandler`.
+  * Move Msg routers from BaseApp to middlewares.
+  * Move Baseapp panic recovery into a middleware.
+  * Rename simulation helper methods `baseapp.{Check,Deliver}` to `baseapp.Sim{Check,Deliver}`.
 
 ### Client Breaking Changes
 

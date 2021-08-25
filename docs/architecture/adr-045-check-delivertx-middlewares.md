@@ -6,7 +6,7 @@
 
 ## Status
 
-PROPOSED
+ACCEPTED
 
 ## Abstract
 
@@ -14,13 +14,13 @@ This ADR replaces the current BaseApp `runTx` and antehandlers design with a mid
 
 ## Context
 
-BaseApp's implementation of ABCI `{Check,Deliver}Tx()` and its own `Simulate()` method call the `runTx` method under the hood, which first runs antehandlers, then executes `Msg`s. However, the [transaction Tips](https://github.com/cosmos/cosmos-sdk/issues/9406) feature requires custom logic to be run after the `Msg`s execution. There is currently no way to achieve this.
+BaseApp's implementation of ABCI `{Check,Deliver}Tx()` and its own `Simulate()` method call the `runTx` method under the hood, which first runs antehandlers, then executes `Msg`s. However, the [transaction Tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [refunding unused gas](https://github.com/cosmos/cosmos-sdk/issues/2150) use cases require custom logic to be run after the `Msg`s execution. There is currently no way to achieve this.
 
 An naive solution would be to add post-`Msg` hooks to BaseApp. However, the SDK team thinks in parallel about the bigger picture of making app wiring simpler ([#9181](https://github.com/cosmos/cosmos-sdk/discussions/9182)), which includes making BaseApp more lightweight and modular.
 
 ## Decision
 
-We decide to transform Baseapp's implementation of ABCI `{Check,Deliver}Tx()` and its own `Simulate()` method to use a middleware-based design.
+We decide to transform Baseapp's implementation of ABCI `{Check,Deliver}Tx` and its own `Simulate` methods to use a middleware-based design.
 
 The two following interfaces are the base of the middleware design, and are defined in `types/tx`:
 
@@ -34,7 +34,16 @@ type Handler interface {
 type Middleware func(Handler) Handler
 ```
 
-BaseApp holds a reference to a `tx.Handler`, and the ABCI `{Check,Deliver}Tx()` and `Simulate()` methods simply call `app.txHandler.{Check,Deliver,Simulate}Tx()` with the relevant arguments. For example, for `DeliverTx`:
+BaseApp holds a reference to a `tx.Handler`:
+
+```go
+type BaseApp  struct {
+    // other fields
+    txHandler tx.Handler
+}
+```
+
+Baseapp's ABCI `{Check,Deliver}Tx()` and `Simulate()` methods simply call `app.txHandler.{Check,Deliver,Simulate}Tx()` with the relevant arguments. For example, for `DeliverTx`:
 
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
@@ -55,14 +64,17 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 
 The implementations are similar for `BaseApp.CheckTx` and `BaseApp.Simulate`.
 
+`baseapp.txHandler`'s three methods' implementations can obviously be monolithic functions, but for modularity we propose a middleware composition design, where a middleware is simply a function that takes a `tx.Handler`, and returns another `tx.Handler` wrapped around the previous one.
+
 ### Implementing a Middleware
 
-In practice, a middleware is a Go function that takes as arguments some parameters needed for the middleware, and returns a `tx.Middleware`.
+In practice, middlewares are created by Go function that takes as arguments some parameters needed for the middleware, and returns a `tx.Middleware`.
 
-For example, for creating `MyMiddleware`, we can implement:
+For example, for creating an arbitrary `MyMiddleware`, we can implement:
 
 ```go
-// myTxHandler is the
+// myTxHandler is the tx.Handler of this middleware. Note that it holds a
+// reference to the next tx.Handler in the stack.
 type myTxHandler struct {
     // next is the next tx.Handler in the middleware stack.
     next tx.Handler
@@ -83,19 +95,50 @@ func NewMyMiddleware(arg1, arg2) tx.Middleware {
 var _ tx.Handler = myTxHandler{}
 
 func (txh myTxHandler) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+    // CheckTx specific pre-processing logic
+
+    // run the next middleware
+    res, err := txh.next.CheckTx(ctx, tx, req)
+
+    // CheckTx specific post-processing logic
+
+    return res, err
+}
+
+func (txh myTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+    // DeliverTx specific pre-processing logic
+
+    // run the next middleware
+    res, err := txh.next.DeliverTx(ctx, tx, req)
+
+    // DeliverTx specific post-processing logic
+
+    return res, err
+}
+
+func (txh myTxHandler) SimulateTx(ctx context.Context, tx sdk.Tx, req tx.RequestSimulateTx) (abci.ResponseSimulateTx, error) {
+    // SimulateTx specific pre-processing logic
+
+    // run the next middleware
+    res, err := txh.next.SimulateTx(ctx, tx, req)
+
+    // SimulateTx specific post-processing logic
+
+    return res, err
+}
 ```
 
 ### Composing Middlewares
 
-While BaseApp simply holds a reference to a `tx.Handler`, this `tx.Handler` itself is defined using a middleware stack. We define a base `tx.Handler` called `RunMsgsTxHandler`, which executes messages.
+While BaseApp simply holds a reference to a `tx.Handler`, this `tx.Handler` itself is defined using a middleware stack. The SDK exposes a base (i.e. innermost) `tx.Handler` called `RunMsgsTxHandler`, which executes messages.
 
-Then, the app developer can compose multiple middlewares on top on the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
+Then, the app developer can compose multiple middlewares on top on the base `tx.Handler`. Each middleware can run pre-and-post-processing logic around its next middleware, as described in the section above. Conceptually, as an example, given the middlewares `A`, `B`, and `C` and the base `tx.Handler` `H` the stack looks like:
 
 ```
 A.pre
     B.pre
         C.pre
-            H // The base handler, usually `RunMsgsTxHandler`
+            H # The base tx.handler, for example `RunMsgsTxHandler`
         C.post
     B.post
 A.post
@@ -116,7 +159,7 @@ txHandler := middleware.ComposeMiddlewares(...)
 app.SetTxHandler(txHandler)
 ```
 
-Naturally, the app developer can define their own middlewares.
+The app developer can define their own middlewares, or use the SDK's pre-defined middlewares.
 
 ### Middlewares Maintained by the SDK
 
@@ -125,29 +168,29 @@ While the app developer can define and compose the middlewares of their choice, 
 | Middleware              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RunMsgsTxHandler        | This is the base `tx.Handler`. It replaces the old baseapp's `runMsgs`, and executes a transaction's `Msg`s.                                                                                                                                                                                                                                                                                                                                                                             |
-| {Antehandlers}          | Each antehandler is converted to its own middleware.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| {Antehandlers}          | Each antehandler is converted to its own middleware. These middlewares perform signature verification, fee deductions and other validations on the incoming transaction.                                                                                                                                                                                                                                                                                                                 |
 | IndexEventsTxMiddleware | This is a simple middleware that chooses which events to index in Tendermint. Replaces `baseapp.indexEvents` (which unfortunately still exists in baseapp too, because it's used to index Begin/EndBlock events)                                                                                                                                                                                                                                                                         |
-| RecoveryTxMiddleware    | This index recovers from panics. It replaces baseapp.runTx's panic recovery.                                                                                                                                                                                                                                                                                                                                                                                                             |
+| RecoveryTxMiddleware    | This index recovers from panics. It replaces baseapp.runTx's panic recovery described in [ADR-022](./adr-022-custom-panic-handling.md).                                                                                                                                                                                                                                                                                                                                                  |
 | GasTxMiddleware         | This replaces the [`Setup`](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/setup.go) Antehandler. It sets a GasMeter on sdk.Context. Note that before, GasMeter was set on sdk.Context inside the antehandlers, and there was some mess around the fact that antehandlers had their own panic recovery system so that the GasMeter could be read by baseapp's recovery system. Now, this mess is all removed: one middleware sets GasMeter, another one handles recovery. |
 
 ### Similarities and Differences between Antehandlers and Middlewares
 
-The middleware-based design builds upon the existing antehandlers design described in [ADR-010](./adr-010-modular-antehandler.md). It is very similar to the [Decorator Pattern](./adr-010-modular-antehandler.md#decorator-pattern) described in that ADR and used in [weave](https://github.com/iov-one/weave).
+The middleware-based design builds upon the existing antehandlers design described in [ADR-010](./adr-010-modular-antehandler.md). Even though the final decision of ADR-010 was to go with the "Simple Decorators" approach, the middleware design is actually very similar to the other [Decorator Pattern](./adr-010-modular-antehandler.md#decorator-pattern) proposal, also used in [weave](https://github.com/iov-one/weave).
 
-#### Similarities
+#### Similarities with Antehandlers
 
 - Designed as chaining/composing small modular pieces.
 - Allow code reuse for `{Check,Deliver}Tx` and for `Simulate`.
 - Set up in `app.go`, and easily customizable by app developers.
 
-#### Differences
+#### Differences with Antehandlers
 
-- The middleware approach uses separate methods for `{Check,Deliver,Simulate}Tx`, whereas the antehandlers pass a `simulate bool` flag and uses the `sdkCtx.Is{Check,Recheck}Tx()` flags to determine how we are executing transactions.
-- The middleware design lets each middleware hold a reference to the next middleware
+- The Antehandlers are run before `Msg` execution, whereas middlewares can run before and after.
+- The middleware approach uses separate methods for `{Check,Deliver,Simulate}Tx`, whereas the antehandlers pass a `simulate bool` flag and uses the `sdkCtx.Is{Check,Recheck}Tx()` flags to determine in which transaction mode we are.
+- The middleware design lets each middleware hold a reference to the next middleware, whereas the antehandlers pass a `next` argument in the `AnteHandle` method.
+- The middleware design use Go's standard `context.Context`, whereas the antehandlers use `sdk.Context`.
 
 ## Consequences
-
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
 
 ### Backwards Compatibility
 
@@ -175,8 +218,5 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-- {reference link}
-
-```
-
-```
+- Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/9585
+- Implementation: https://github.com/cosmos/cosmos-sdk/pull/9920

@@ -43,7 +43,7 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 	}
 
 	return abci.ResponseDeliverTx{
-		// GasInfo will be populated by the antehandlers.
+		// GasInfo will be populated by the Gas middleware.
 		Log:    res.Log,
 		Data:   res.Data,
 		Events: res.Events,
@@ -59,7 +59,7 @@ func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx
 	}
 
 	return tx.ResponseSimulateTx{
-		// GasInfo will be populated by the antehandlers.
+		// GasInfo will be populated by the Gas middleware.
 		Result: res,
 	}, nil
 }
@@ -84,7 +84,6 @@ func (txh runMsgsTxHandler) runMsgs(sdkCtx sdk.Context, msgs []sdk.Msg, txBytes 
 		Data: make([]*sdk.MsgData, 0, len(msgs)),
 	}
 
-	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
 		var (
 			msgResult    *sdk.Result

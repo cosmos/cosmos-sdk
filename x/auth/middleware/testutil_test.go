@@ -18,13 +18,13 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-// testAccount represents an account used in the tests in x/auth/ante.
+// testAccount represents an account used in the tests in x/auth/middleware.
 type testAccount struct {
 	acc  authtypes.AccountI
 	priv cryptotypes.PrivKey
 }
 
-// MWTestSuite is a test suite to be used with ante handler tests.
+// MWTestSuite is a test suite to be used with middleware tests.
 type MWTestSuite struct {
 	suite.Suite
 
@@ -41,7 +41,7 @@ func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	return app, ctx
 }
 
-// SetupTest setups a new test, with new app, context, and anteHandler.
+// setupTest setups a new test, with new app and context.
 func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 	var ctx sdk.Context
 	s.app, ctx = createTestApp(s.T(), isCheckTx)

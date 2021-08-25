@@ -52,8 +52,7 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	res, err := txh.runMsgs(sdkCtx, sdkTx.GetMsgs(), req.TxBytes)
+	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), sdkTx.GetMsgs(), req.TxBytes)
 	if err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}

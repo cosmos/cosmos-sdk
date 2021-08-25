@@ -71,9 +71,11 @@ func TestMsgService(t *testing.T) {
 	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
 	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
-	app.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
+	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		MsgServiceRouter: msr,
-	}))
+	})
+	require.NoError(t, err)
+	app.SetTxHandler(txHandler)
 	testdata.RegisterMsgServer(
 		msr,
 		testdata.MsgServerImpl{},
@@ -84,7 +86,7 @@ func TestMsgService(t *testing.T) {
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-	err := txBuilder.SetMsgs(&msg)
+	err = txBuilder.SetMsgs(&msg)
 	require.NoError(t, err)
 
 	// First round: we gather all the signer infos. We use the "set empty

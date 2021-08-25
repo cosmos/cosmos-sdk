@@ -129,7 +129,7 @@ func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address bytes is not allowed")
 	}
 
-	text, err := ak.addressCdC.BytesToString(req.AddressBytes)
+	text, err := ak.addressCdc.BytesToString(req.AddressBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 		return nil, errors.New("empty address string is not allowed")
 	}
 
-	bz, err := ak.addressCdC.StringToBytes(req.AddressString)
+	bz, err := ak.addressCdc.StringToBytes(req.AddressString)
 	if err != nil {
 		return nil, err
 	}

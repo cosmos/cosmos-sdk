@@ -10,6 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+const addrStr = "cosmos13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"
+var addrBytes = []byte{0x8e, 0x22, 0xda, 0xb8, 0xa, 0x5a, 0x94, 0xdf, 0xbd, 0xb0, 0x58, 0xfa, 0x93, 0xcb, 0x11, 0x49, 0x5e, 0xac, 0xc5, 0x30}
+
 func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 	var (
 		req *types.QueryAccountsRequest
@@ -194,6 +197,87 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
+	var (
+		req *types.QueryModuleAccountsRequest
+	)
+
+	testCases := []struct {
+		msg       string
+		malleate  func()
+		expPass   bool
+		posttests func(res *types.QueryModuleAccountsResponse)
+	}{
+		{
+			"success",
+			func() {
+				req = &types.QueryModuleAccountsRequest{}
+			},
+			true,
+			func(res *types.QueryModuleAccountsResponse) {
+				var mintModuleExists = false
+				for _, acc := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					suite.Require().NoError(err)
+
+					moduleAccount, ok := account.(types.ModuleAccountI)
+
+					suite.Require().True(ok)
+					if moduleAccount.GetName() == "mint" {
+						mintModuleExists = true
+					}
+				}
+				suite.Require().True(mintModuleExists)
+			},
+		},
+		{
+			"invalid module name",
+			func() {
+				req = &types.QueryModuleAccountsRequest{}
+			},
+			true,
+			func(res *types.QueryModuleAccountsResponse) {
+				var mintModuleExists = false
+				for _, acc := range res.Accounts {
+					var account types.AccountI
+					err := suite.app.InterfaceRegistry().UnpackAny(acc, &account)
+					suite.Require().NoError(err)
+
+					moduleAccount, ok := account.(types.ModuleAccountI)
+
+					suite.Require().True(ok)
+					if moduleAccount.GetName() == "falseCase" {
+						mintModuleExists = true
+					}
+				}
+				suite.Require().False(mintModuleExists)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			tc.malleate()
+			ctx := sdk.WrapSDKContext(suite.ctx)
+
+			res, err := suite.queryClient.ModuleAccounts(ctx, req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+			tc.posttests(res)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestBech32Prefix() {
 	suite.SetupTest() // reset
 	req := &types.Bech32PrefixRequest{}
@@ -203,11 +287,7 @@ func (suite *KeeperTestSuite) TestBech32Prefix() {
 	suite.Require().Equal(sdk.Bech32MainPrefix, res.Bech32Prefix)
 }
 
-
 func (suite *KeeperTestSuite) TestAddressBytesToString() {
-	const addrStr = "cosmos13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"
-	addrBytes := []byte{0x8e, 0x22, 0xda, 0xb8, 0xa, 0x5a, 0x94, 0xdf, 0xbd, 0xb0, 0x58, 0xfa, 0x93, 0xcb, 0x11, 0x49, 0x5e, 0xac, 0xc5, 0x30}
-	
 	testCases := []struct {
 		msg       string
 		req       *types.AddressBytesToStringRequest
@@ -234,8 +314,6 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
 			res, err := suite.queryClient.AddressBytesToString(context.Background(), tc.req)
 
 			if tc.expPass {
@@ -251,11 +329,7 @@ func (suite *KeeperTestSuite) TestAddressBytesToString() {
 	}
 }
 
-
 func (suite *KeeperTestSuite) TestAddressStringToBytes() {
-	const addrStr = "cosmos13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"
-	addrBytes := []byte{0x8e, 0x22, 0xda, 0xb8, 0xa, 0x5a, 0x94, 0xdf, 0xbd, 0xb0, 0x58, 0xfa, 0x93, 0xcb, 0x11, 0x49, 0x5e, 0xac, 0xc5, 0x30}
-	
 	testCases := []struct {
 		msg       string
 		req       *types.AddressStringToBytesRequest
@@ -288,9 +362,7 @@ func (suite *KeeperTestSuite) TestAddressStringToBytes() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.AddressStringToBytes(ctx, tc.req)
+			res, err := suite.queryClient.AddressStringToBytes(context.Background(), tc.req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

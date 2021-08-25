@@ -57,7 +57,7 @@ type AccountKeeper struct {
 
 	// The prototypical AccountI constructor.
 	proto      func() types.AccountI
-	addressCdC address.Codec
+	addressCdc address.Codec
 }
 
 var _ AccountKeeperI = &AccountKeeper{}
@@ -243,7 +243,7 @@ func (ak AccountKeeper) GetCodec() codec.BinaryCodec { return ak.cdc }
 
 // add getter for bech32Prefix
 func (ak AccountKeeper) getBech32Prefix() (string, error) {
-	bech32Codec, ok := ak.addressCdC.(bech32Codec)
+	bech32Codec, ok := ak.addressCdc.(bech32Codec)
 	if !ok {
 		return "", errors.New("unable cast addressCdc to bech32Codec")
 	}

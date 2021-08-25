@@ -91,7 +91,7 @@ func NewAccountKeeper(
 		cdc:           cdc,
 		paramSubspace: paramstore,
 		permAddrs:     permAddrs,
-		addressCdC:    bech32Codec,
+		addressCdc:    bech32Codec,
 	}
 }
 

@@ -1,20 +1,24 @@
 # Cosmosvisor Quick Start
 
-`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module via stdout for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
+*Note: If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.*
+
 ## Contributing
 
-Release branches has the following format `release/cosmovisor/vA.B.x`, where A and B are a number (eg: `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
+Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
 
 ## Installation
 
-To install `cosmovisor`, run the following command:
+To install the latest version of `cosmovisor`, run the following command:
 
 ```
-go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
+go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
+
+*Note: If you are using go `v1.15` or earlier, you will need to use `go get`, and you may want to run the command outside a project directory.*
 
 ## Command Line Arguments And Environment Variables
 

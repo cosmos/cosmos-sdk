@@ -19,6 +19,10 @@ func NewHandler(ak keeper.AccountKeeper, bk types.BankKeeper) sdk.Handler {
 			res, err := msgServer.CreateVestingAccount(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgCreatePeriodicVestingAccount:
+			res, err := msgServer.CreatePeriodicVestingAccount(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}

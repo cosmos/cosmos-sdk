@@ -27,7 +27,7 @@ require (
 	github.com/improbable-eng/grpc-web v0.14.1
 	github.com/jhump/protoreflect v1.10.1
 	github.com/kr/text v0.2.0 // indirect
-	github.com/lazyledger/smt v0.2.0 // indirect
+	github.com/lazyledger/smt v0.2.1-0.20210709230900-03ea40719554
 	github.com/magiconair/properties v1.8.5
 	github.com/mattn/go-isatty v0.0.14
 	github.com/onsi/ginkgo v1.16.4 // indirect

@@ -2,11 +2,16 @@ package keeper_test
 
 import (
 	"fmt"
+	"context"
+	"bytes"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
+
+const addrStr = "cosmos13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv"
+var addrBytes = []byte{0x8e, 0x22, 0xda, 0xb8, 0xa, 0x5a, 0x94, 0xdf, 0xbd, 0xb0, 0x58, 0xfa, 0x93, 0xcb, 0x11, 0x49, 0x5e, 0xac, 0xc5, 0x30}
 
 func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 	var (
@@ -269,6 +274,105 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			}
 
 			tc.posttests(res)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestBech32Prefix() {
+	suite.SetupTest() // reset
+	req := &types.Bech32PrefixRequest{}
+	res, err := suite.queryClient.Bech32Prefix(context.Background(), req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().Equal(sdk.Bech32MainPrefix, res.Bech32Prefix)
+}
+
+func (suite *KeeperTestSuite) TestAddressBytesToString() {
+	testCases := []struct {
+		msg       string
+		req       *types.AddressBytesToStringRequest
+		expPass   bool
+	}{
+		{
+			"success",
+			&types.AddressBytesToStringRequest{AddressBytes: addrBytes},
+			true,
+		},
+		{
+			"request is empty",
+			&types.AddressBytesToStringRequest{},
+			false,
+		},
+		{
+			"empty account address in request",
+			&types.AddressBytesToStringRequest{AddressBytes: []byte{}},
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			res, err := suite.queryClient.AddressBytesToString(context.Background(), tc.req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().Equal(res.AddressString, addrStr)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestAddressStringToBytes() {
+	testCases := []struct {
+		msg       string
+		req       *types.AddressStringToBytesRequest
+		expPass   bool
+	}{
+		{
+			"success",
+			&types.AddressStringToBytesRequest{AddressString: addrStr},
+			true,
+		},
+		{
+			"request is empty",
+			&types.AddressStringToBytesRequest{},
+			false,
+		},
+		{
+			"AddressString field in request is empty",
+			&types.AddressStringToBytesRequest{AddressString: ""},
+			false,
+		},
+		{
+			"address prefix is incorrect",
+			&types.AddressStringToBytesRequest{AddressString: "regen13c3d4wq2t22dl0dstraf8jc3f902e3fsy9n3wv" },
+			false,
+		},
+
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+			suite.SetupTest() // reset
+
+			res, err := suite.queryClient.AddressStringToBytes(context.Background(), tc.req)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().True(bytes.Equal(res.AddressBytes, addrBytes))
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
 		})
 	}
 }

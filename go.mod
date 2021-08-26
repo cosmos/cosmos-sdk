@@ -11,6 +11,7 @@ require (
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/cosmos-proto v0.0.0-20210914142853-23ed61ac79ce
+	github.com/cosmos/cosmos-sdk/db v0.0.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.1
 	github.com/cosmos/ledger-cosmos-go v0.11.1
@@ -128,3 +129,5 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+
+replace github.com/cosmos/cosmos-sdk/db => ./db

@@ -46,8 +46,7 @@ func TestInitCmd(t *testing.T) {
 				}
 			},
 			shouldErr: false,
-
-			err: nil,
+			err:       nil,
 		},
 	}
 
@@ -115,6 +114,30 @@ func TestInitRecover(t *testing.T) {
 
 	// use valid mnemonic and complete recovery key generation successfully
 	mockIn.Reset("decide praise business actor peasant farm drastic weather extend front hurt later song give verb rhythm worry fun pond reform school tumble august one\n")
+	require.NoError(t, cmd.ExecuteContext(ctx))
+}
+
+func TestInitStakingBondDenom(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithCodec(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithHomeDir(home)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+
+	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s --%s=testtoken", cli.HomeFlag, home, genutilcli.FlagStakingBondDenom)})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
@@ -199,11 +222,58 @@ func TestStartStandAlone(t *testing.T) {
 func TestInitNodeValidatorFiles(t *testing.T) {
 	home := t.TempDir()
 	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
-	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
+	require.NoError(t, err)
 
-	require.Nil(t, err)
+	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
+	require.NoError(t, err)
+
 	require.NotEqual(t, "", nodeID)
 	require.NotEqual(t, 0, len(valPubKey.Bytes()))
+}
+
+func TestInitConfig(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithCodec(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithChainID("foo"). // add chain-id to clientCtx
+		WithHomeDir(home)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+	cmd.SetArgs([]string{"testnode"})
+
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	cmd = server.ExportCmd(nil, home)
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	outC := make(chan string)
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	w.Close()
+	os.Stdout = old
+	out := <-outC
+
+	require.Contains(t, out, "\"chain_id\": \"foo\"")
 }
 
 // custom tx codec

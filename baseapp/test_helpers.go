@@ -1,34 +1,67 @@
 package baseapp
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-func (app *BaseApp) Check(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	// runTx expects tx bytes as argument, so we encode the tx argument into
-	// bytes. Note that runTx will actually decode those bytes again. But since
+// SimCheck defines a CheckTx helper function that used in tests and simulations.
+func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+	// CheckTx expects tx bytes as argument, so we encode the tx argument into
+	// bytes. Note that CheckTx will actually decode those bytes again. But since
 	// this helper is only used in tests/simulation, it's fine.
 	bz, err := txEncoder(tx)
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	return app.runTx(runTxModeCheck, bz)
+
+	ctx := app.getContextForTx(runTxModeDeliver, bz)
+	res, err := app.txHandler.CheckTx(ctx, tx, abci.RequestCheckTx{Tx: bz, Type: abci.CheckTxType_New})
+	gInfo := sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)}
+	if err != nil {
+		return gInfo, nil, err
+	}
+
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
+// Simulate executes a tx in simulate mode to get result and gas info.
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	return app.runTx(runTxModeSimulate, txBytes)
+	sdkTx, err := app.txDecoder(txBytes)
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+
+	ctx := app.getContextForTx(runTxModeSimulate, txBytes)
+	res, err := app.txHandler.SimulateTx(ctx, sdkTx, tx.RequestSimulateTx{TxBytes: txBytes})
+	if err != nil {
+		return res.GasInfo, nil, err
+	}
+
+	return res.GasInfo, res.Result, nil
 }
 
-func (app *BaseApp) Deliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+// SimDeliver defines a DeliverTx helper function that used in tests and
+// simulations.
+func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
 	// See comment for Check().
 	bz, err := txEncoder(tx)
 	if err != nil {
 		return sdk.GasInfo{}, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
-	return app.runTx(runTxModeDeliver, bz)
+
+	ctx := app.getContextForTx(runTxModeDeliver, bz)
+	res, err := app.txHandler.DeliverTx(ctx, tx, abci.RequestDeliverTx{Tx: bz})
+	gInfo := sdk.GasInfo{GasWanted: uint64(res.GasWanted), GasUsed: uint64(res.GasUsed)}
+	if err != nil {
+		return gInfo, nil, err
+	}
+
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
 // Context with current {check, deliver}State of the app used by tests.

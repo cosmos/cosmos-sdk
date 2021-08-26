@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -30,7 +31,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	ctx := benchmarkApp.BaseApp.NewContext(false, tmproto.Header{})
 
 	// some value conceivably higher than the benchmarks would ever go
-	require.NoError(b, simapp.FundAccount(benchmarkApp.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	require.NoError(b, testutil.FundAccount(benchmarkApp.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
 
 	benchmarkApp.Commit()
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -46,12 +47,12 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
 		benchmarkApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
-		_, _, err := benchmarkApp.Check(txGen.TxEncoder(), txs[i])
+		_, _, err := benchmarkApp.SimCheck(txGen.TxEncoder(), txs[i])
 		if err != nil {
 			panic("something is broken in checking transaction")
 		}
 
-		_, _, err = benchmarkApp.Deliver(txGen.TxEncoder(), txs[i])
+		_, _, err = benchmarkApp.SimDeliver(txGen.TxEncoder(), txs[i])
 		require.NoError(b, err)
 		benchmarkApp.EndBlock(abci.RequestEndBlock{Height: height})
 		benchmarkApp.Commit()
@@ -72,7 +73,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	ctx := benchmarkApp.BaseApp.NewContext(false, tmproto.Header{})
 
 	// some value conceivably higher than the benchmarks would ever go
-	require.NoError(b, simapp.FundAccount(benchmarkApp.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
+	require.NoError(b, testutil.FundAccount(benchmarkApp.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 100000000000))))
 
 	benchmarkApp.Commit()
 	txGen := simappparams.MakeTestEncodingConfig().TxConfig
@@ -88,12 +89,12 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; i < b.N; i++ {
 		benchmarkApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: height}})
-		_, _, err := benchmarkApp.Check(txGen.TxEncoder(), txs[i])
+		_, _, err := benchmarkApp.SimCheck(txGen.TxEncoder(), txs[i])
 		if err != nil {
 			panic("something is broken in checking transaction")
 		}
 
-		_, _, err = benchmarkApp.Deliver(txGen.TxEncoder(), txs[i])
+		_, _, err = benchmarkApp.SimDeliver(txGen.TxEncoder(), txs[i])
 		require.NoError(b, err)
 		benchmarkApp.EndBlock(abci.RequestEndBlock{Height: height})
 		benchmarkApp.Commit()

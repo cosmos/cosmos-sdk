@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -40,8 +39,8 @@ func TestMsgSendValidation(t *testing.T) {
 		{"", NewMsgSend(addr1, addrLong, atom123)},                             // valid send with long addr recipient
 		{": invalid coins", NewMsgSend(addr1, addr2, atom0)},                   // non positive coin
 		{"123atom,0eth: invalid coins", NewMsgSend(addr1, addr2, atom123eth0)}, // non positive coin in multicoins
-		{"Invalid sender address (empty address string is not allowed): invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
-		{"Invalid recipient address (empty address string is not allowed): invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
+		{"invalid from address: empty address string is not allowed: invalid address", NewMsgSend(addrEmpty, addr2, atom123)},
+		{"invalid to address: empty address string is not allowed: invalid address", NewMsgSend(addr1, addrEmpty, atom123)},
 	}
 
 	for _, tc := range cases {
@@ -63,13 +62,6 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 
 	expected := `{"type":"cosmos-sdk/MsgSend","value":{"amount":[{"amount":"10","denom":"atom"}],"from_address":"cosmos1d9h8qat57ljhcm","to_address":"cosmos1da6hgur4wsmpnjyg"}}`
 	require.Equal(t, expected, string(res))
-}
-
-func TestMsgSendGetSigners(t *testing.T) {
-	var msg = NewMsgSend(sdk.AccAddress([]byte("input111111111111111")), sdk.AccAddress{}, sdk.NewCoins())
-	res := msg.GetSigners()
-	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E707574313131313131313131313131313131]")
 }
 
 func TestMsgMultiSendRoute(t *testing.T) {
@@ -111,7 +103,7 @@ func TestInputValidation(t *testing.T) {
 		{"", NewInput(addr2, multiCoins)},
 		{"", NewInput(addrLong, someCoins)},
 
-		{"empty address string is not allowed", NewInput(addrEmpty, someCoins)},
+		{"invalid input address: empty address string is not allowed: invalid address", NewInput(addrEmpty, someCoins)},
 		{": invalid coins", NewInput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewInput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewInput(addr1, someEmptyCoins)}, // invalid coins
@@ -152,7 +144,7 @@ func TestOutputValidation(t *testing.T) {
 		{"", NewOutput(addr2, multiCoins)},
 		{"", NewOutput(addrLong, someCoins)},
 
-		{"Invalid output address (empty address string is not allowed): invalid address", NewOutput(addrEmpty, someCoins)},
+		{"invalid output address: empty address string is not allowed: invalid address", NewOutput(addrEmpty, someCoins)},
 		{": invalid coins", NewOutput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewOutput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewOutput(addr1, someEmptyCoins)}, // invalid coins
@@ -238,32 +230,25 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 }
 
 func TestMsgMultiSendGetSigners(t *testing.T) {
-	var msg = MsgMultiSend{
-		Inputs: []Input{
-			NewInput(sdk.AccAddress([]byte("input111111111111111")), nil),
-			NewInput(sdk.AccAddress([]byte("input222222222222222")), nil),
-			NewInput(sdk.AccAddress([]byte("input333333333333333")), nil),
-		},
+	addrs := make([]string, 3)
+	inputs := make([]Input, 3)
+	for i, v := range []string{"input111111111111111", "input222222222222222", "input333333333333333"} {
+		addr := sdk.AccAddress([]byte(v))
+		inputs[i] = NewInput(addr, nil)
+		addrs[i] = addr.String()
 	}
+	var msg = NewMsgMultiSend(inputs, nil)
 
 	res := msg.GetSigners()
-	// TODO: fix this !
-	require.Equal(t, "[696E707574313131313131313131313131313131 696E707574323232323232323232323232323232 696E707574333333333333333333333333333333]", fmt.Sprintf("%v", res))
+	for i, signer := range res {
+		require.Equal(t, signer.String(), addrs[i])
+	}
 }
 
-func TestMsgSendSigners(t *testing.T) {
-	signers := []sdk.AccAddress{
-		{1, 2, 3},
-		{4, 5, 6},
-		{7, 8, 9},
-	}
-
-	someCoins := sdk.NewCoins(sdk.NewInt64Coin("atom", 123))
-	inputs := make([]Input, len(signers))
-	for i, signer := range signers {
-		inputs[i] = NewInput(signer, someCoins)
-	}
-	tx := NewMsgMultiSend(inputs, nil)
-
-	require.Equal(t, signers, tx.GetSigners())
+func TestMsgSendGetSigners(t *testing.T) {
+	from := sdk.AccAddress([]byte("input111111111111111"))
+	msg := NewMsgSend(from, sdk.AccAddress{}, sdk.NewCoins())
+	res := msg.GetSigners()
+	require.Equal(t, 1, len(res))
+	require.True(t, from.Equals(res[0]))
 }

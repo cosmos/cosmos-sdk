@@ -11,6 +11,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,9 +35,11 @@ var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 
+	db := dbm.NewMemDB()
 	app := simapp.SetupWithCustomOptions(t, false, simapp.SetupOptions{
 		Logger:             log.NewNopLogger(),
 		SkipUpgradeHeights: skip,
+		DB:                 db,
 		InvCheckPeriod:     0,
 		HomePath:           simapp.DefaultNodeHome,
 		EncConfig:          simapp.MakeTestEncodingConfig(),

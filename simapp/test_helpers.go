@@ -58,6 +58,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
 	Logger             log.Logger
+	DB                 *dbm.MemDB
 	InvCheckPeriod     uint
 	HomePath           string
 	SkipUpgradeHeights map[int64]bool
@@ -94,8 +95,7 @@ func SetupWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) 
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	db := dbm.NewMemDB()
-	app := NewSimApp(options.Logger, db, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
+	app := NewSimApp(options.Logger, options.DB, nil, true, options.SkipUpgradeHeights, options.HomePath, options.InvCheckPeriod, options.EncConfig, options.AppOpts)
 	genesisState := NewDefaultGenesisState(app.appCodec)
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 

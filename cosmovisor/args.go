@@ -12,6 +12,16 @@ import (
 	"time"
 )
 
+// environment variable names
+const (
+	envHome           = "DAEMON_HOME"
+	envName           = "DAEMON_NAME"
+	envDownloadBin    = "DAEMON_ALLOW_DOWNLOAD_BINARIES"
+	envRestartUpgrade = "DAEMON_RESTART_AFTER_UPGRADE"
+	envSkipBackup     = "UNSAFE_SKIP_BACKUP"
+	envInterval       = "DAEMON_POLL_INTERVAL"
+)
+
 const (
 	rootName        = "cosmovisor"
 	genesisDir      = "genesis"
@@ -106,19 +116,22 @@ func (cfg *Config) CurrentBin() (string, error) {
 // and then validate it is reasonable
 func GetConfigFromEnv() (*Config, error) {
 	cfg := &Config{
-		Home: os.Getenv("DAEMON_HOME"),
-		Name: os.Getenv("DAEMON_NAME"),
+		Home: os.Getenv(envHome),
+		Name: os.Getenv(envName),
 	}
 
-	if os.Getenv("DAEMON_ALLOW_DOWNLOAD_BINARIES") == "true" {
-		cfg.AllowDownloadBinaries = true
+	var err error
+	if cfg.AllowDownloadBinaries, err = booleanOption(envDownloadBin, false); err != nil {
+		return nil, err
+	}
+	if cfg.RestartAfterUpgrade, err = booleanOption(envRestartUpgrade, false); err != nil {
+		return nil, err
+	}
+	if cfg.UnsafeSkipBackup, err = booleanOption(envSkipBackup, false); err != nil {
+		return nil, err
 	}
 
-	if os.Getenv("DAEMON_RESTART_AFTER_UPGRADE") == "true" {
-		cfg.RestartAfterUpgrade = true
-	}
-
-	interval := os.Getenv("DAEMON_POLL_INTERVAL")
+	interval := os.Getenv(envInterval)
 	if interval != "" {
 		i, err := strconv.ParseUint(interval, 10, 32)
 		if err != nil {
@@ -128,8 +141,6 @@ func GetConfigFromEnv() (*Config, error) {
 	} else {
 		cfg.PollInterval = 300 * time.Millisecond
 	}
-
-	cfg.UnsafeSkipBackup = os.Getenv("UNSAFE_SKIP_BACKUP") == "true"
 
 	if err := cfg.validate(); err != nil {
 		return nil, err
@@ -142,15 +153,15 @@ func GetConfigFromEnv() (*Config, error) {
 // and that Name is set
 func (cfg *Config) validate() error {
 	if cfg.Name == "" {
-		return errors.New("DAEMON_NAME is not set")
+		return errors.New(envName + " is not set")
 	}
 
 	if cfg.Home == "" {
-		return errors.New("DAEMON_HOME is not set")
+		return errors.New(envHome + " is not set")
 	}
 
 	if !filepath.IsAbs(cfg.Home) {
-		return errors.New("DAEMON_HOME must be an absolute path")
+		return errors.New(envHome + " must be an absolute path")
 	}
 
 	// ensure the root directory exists
@@ -230,4 +241,18 @@ returnError:
 	fmt.Println("[cosmovisor], error reading", filename, err)
 	cfg.currentUpgrade.Name = "_"
 	return cfg.currentUpgrade
+}
+
+// checks and validates env option
+func booleanOption(name string, defaultVal bool) (bool, error) {
+	p := os.Getenv(name)
+	switch p {
+	case "":
+		return defaultVal, nil
+	case "false":
+		return false, nil
+	case "true":
+		return true, nil
+	}
+	return false, fmt.Errorf("env variable %q must have a boolean value (\"true\" or \"false\"), got %q", name, p)
 }

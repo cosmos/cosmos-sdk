@@ -55,8 +55,8 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	},
 }
 
-// SimappOptions defines arguments that are passed into `Simapp` constructor.
-type SimappOptions struct {
+// SetupOptions defines arguments that are passed into `Simapp` constructor.
+type SetupOptions struct {
 	Logger             log.Logger
 	InvCheckPeriod     uint
 	HomePath           string
@@ -76,7 +76,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 }
 
 // SetupWithCustomOptions initializes a new SimApp with custom options.
-func SetupWithCustomOptions(t *testing.T, isCheckTx bool, options SimappOptions) *SimApp {
+func SetupWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *SimApp {
 	t.Helper()
 
 	privVal := mock.NewPV()

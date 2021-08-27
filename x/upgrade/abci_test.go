@@ -34,7 +34,7 @@ var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 
-	app := simapp.SetupWithCustomOptions(t, false, simapp.SimappOptions{
+	app := simapp.SetupWithCustomOptions(t, false, simapp.SetupOptions{
 		Logger:             log.NewNopLogger(),
 		SkipUpgradeHeights: skip,
 		InvCheckPeriod:     0,

@@ -107,6 +107,8 @@ type DBReader interface {
 // DBWriter is a write-only transaction interface.
 // It is safe for concurrent writes, following an optimistic (OCC) strategy, detecting any write
 // conflicts and returning an error on commit, rather than locking the DB.
+// Callers must call Commit or Discard when done with the transaction.
+//
 // This can be used to wrap a write-optimized batch object if provided by the backend implementation.
 type DBWriter interface {
 	// Set sets the value for the given key, replacing it if it already exists.
@@ -136,29 +138,32 @@ type DBReadWriter interface {
 //
 // Callers must make sure the iterator is valid before calling any methods on it, otherwise
 // these methods will panic. This is in part caused by most backend databases using this convention.
+// Note that the iterator is invalid on contruction: Next() must be called to initialize it to its
+// starting position.
 //
 // As with DBReader, keys and values should be considered read-only, and must be copied before they are
 // modified.
 //
 // Typical usage:
 //
-// var itr Iterator = ...
-// defer itr.Close()
+//   var itr Iterator = ...
+//   defer itr.Close()
 //
-// for ; itr.Valid(); itr.Next() {
-//   k, v := itr.Key(); itr.Value()
-//   ...
-// }
-// if err := itr.Error(); err != nil {
-//   ...
-// }
+//   for itr.Next() {
+//     k, v := itr.Key(); itr.Value()
+//     ...
+//   }
+//   if err := itr.Error(); err != nil {
+//     ...
+//   }
 type Iterator interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	// CONTRACT: start, end readonly []byte
 	Domain() (start []byte, end []byte)
 
 	// Next moves the iterator to the next key in the database, as defined by order of iteration;
-	// returns whether the iterator is valid. Once invalid, it remains invalid forever.
+	// returns whether the iterator is valid.
+	// Once this function returns false, the iterator remains invalid forever.
 	Next() bool
 
 	// Key returns the key at the current position. Panics if the iterator is invalid.

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -245,7 +246,7 @@ returnError:
 
 // checks and validates env option
 func booleanOption(name string, defaultVal bool) (bool, error) {
-	p := os.Getenv(name)
+	p := strings.ToLower(os.Getenv(name))
 	switch p {
 	case "":
 		return defaultVal, nil

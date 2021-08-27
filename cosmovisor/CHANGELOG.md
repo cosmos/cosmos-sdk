@@ -37,7 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## Improvements
+### Features
+
++ [\#8590](https://github.com/cosmos/cosmos-sdk/pull/8590) File watcher for cosmovisor. Instead of parsing logs from stdin and stderr, we watch the `<DAEMON_HOME>/data/upgrade-info.json` file updates using polling mechanism.
+
+### Improvements
 
 + [\#10018](https://github.com/cosmos/cosmos-sdk/pull/10018) Strict boolean argument parsing: cosmovisor will fail if user will not set correctly a boolean variable. Correct values are: "true", "false", "" (not setting).
 

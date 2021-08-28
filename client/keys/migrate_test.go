@@ -2,21 +2,22 @@ package keys
 
 import (
 	"context"
-     "fmt"
+	"fmt"
 	"testing"
+	"strings"
 
 	design99keyring "github.com/99designs/keyring"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client"
-    "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-   "github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 type setter interface {
@@ -92,6 +93,65 @@ func (s *MigrateTestSuite) Test_runListAndShowCmd() {
 	s.Require().NoError(cmd.ExecuteContext(ctx))
 }
 
+func (s *MigrateTestSuite)  Test_runMigrateCmdRecord() {
+	k, err := keyring.NewLocalRecord("test record", s.priv, s.pub)
+	s.Require().NoError(err)
+	serializedRecord, err := s.cdc.Marshal(k)
+	s.Require().NoError(err)
+
+	item := design99keyring.Item{
+		Key:         s.n1,
+		Data:        serializedRecord,
+		Description: "SDK kerying version",
+	}
+
+	cmd := MigrateCommand()
+	mockIn := strings.NewReader("")
+	kb, err := keyring.New(s.n1, keyring.BackendTest, s.dir, mockIn, s.cdc)
+	s.Require().NoError(err)
+
+	setter, ok := kb.(setter)
+	s.Require().True(ok)
+	s.Require().NoError(setter.SetItem(item))
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+	s.Require().NoError(cmd.ExecuteContext(ctx))
+}
+
+
+func (s *MigrateTestSuite)  Test_runMigrateCmdLegacyMultiInfo() {
+	// adding LegacyInfo item into keyring
+	multi := multisig.NewLegacyAminoPubKey(
+		1, []cryptotypes.PubKey{
+			s.pub,
+		},
+	)
+	
+	legacyMultiInfo, err := keyring.NewLegacyMultiInfo(s.n1, multi)
+	s.Require().NoError(err)
+	serializedLegacyMultiInfo := keyring.MarshalInfo(legacyMultiInfo)
+	
+	item := design99keyring.Item{
+		Key:         s.n1,
+		Data:        serializedLegacyMultiInfo,
+		Description: "SDK kerying version",
+	}
+
+	cmd := MigrateCommand()
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+
+	kb, err := keyring.New(s.n1, keyring.BackendTest, s.dir, mockIn, s.cdc)
+	s.Require().NoError(err)
+
+	setter, ok := kb.(setter)
+	s.Require().True(ok)
+	s.Require().NoError(setter.SetItem(item))
+
+	clientCtx := client.Context{}.WithKeyring(kb)
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+	s.Require().NoError(cmd.ExecuteContext(ctx))
+}
 
 func TestMigrateTestSuite(t *testing.T) {
 	suite.Run(t, new(MigrateTestSuite))

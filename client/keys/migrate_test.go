@@ -119,7 +119,6 @@ func (s *MigrateTestSuite)  Test_runMigrateCmdRecord() {
 	s.Require().NoError(cmd.ExecuteContext(ctx))
 }
 
-
 func (s *MigrateTestSuite)  Test_runMigrateCmdLegacyMultiInfo() {
 	// adding LegacyInfo item into keyring
 	multi := multisig.NewLegacyAminoPubKey(

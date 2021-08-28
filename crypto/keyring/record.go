@@ -84,12 +84,12 @@ func (k Record) GetType() KeyType {
 		return TypeLocal
 	case k.GetLedger() != nil:
 		return TypeLedger
-
 	case k.GetMulti() != nil:
 		return TypeMulti
-	// k.GetOffline()
-	default:
+	case k.GetOffline() != nil:
 		return TypeOffline
+	default:
+		panic("unrecognized record type")
 	}
 }
 

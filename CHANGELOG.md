@@ -52,20 +52,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * Add new `codec.Codec` argument in:
     * `keyring.NewInMemory`
     * `keyring.New`
-    * `newKeystore` 
   * Rename:
     * `SavePubKey` to `SaveOfflineKey`.
-    * `newLocalInfo`, `NewMultiInfo`, `NewLedgerInfo`, `NewOfflineInfo` to `newLegacyLocalInfo`, `NewLegacyMultiInfo`, `newLegacyLedgerInfo`, `NewLegacyOfflineInfo`,  respectively.  Move them into `legacy_info.go`.
-    * `localInfo`, `multiInfo`, `ledgerInfo`, `offlineInfo` structs to `legacyLocalInfo`,`legacyMultiInfo`,`legacyLedgerInfo`, `legacyOfflineInfo`, respectively. Move them into `legacy_info.go`.
-    * `printInfos` to `printKeyringRecords` and replace an argument `infos` to `records`.
-    * `printKeyInfo`to  `printKeyringRecord` and replace an argument type from `Info` to `keyring.Record`.
+    * `NewMultiInfo`, `NewLedgerInfo`  to `NewLegacyMultiInfo`, `newLegacyLedgerInfo`  respectively.  Move them into `legacy_info.go`.
+    * `NewOfflineInfo` to `newLegacyOfflineInfo` and move it to `migration_test.go`.
   * Return:
     *`keyring.Record, error` in `SaveOfflineKey`, `SaveLedgerKey`, `SaveMultiSig`, `Key` and `KeyByAddress`.
-    *`keyring.Record` instead of `Info` in `NewMnemonic`, `List`.
+    *`keyring.Record` instead of `Info` in `NewMnemonic` and `List`.
   * Remove `algo` argument from :
-    * `writeLocalKey`
-    * `writeLedgerKey`
-    * `writeOfflineKey` 
     * `SaveOfflineKey`
   * Take `keyring.Record` instead of `Info` as first argument in:
     * `MkConsKeyOutput`
@@ -97,7 +91,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### CLI Breaking Changes
 
 * [\#9695](https://github.com/cosmos/cosmos-sdk/pull/9695) `<app> keys migrate` CLI command now takes no arguments
-* [\#9827](https://github.com/cosmos/cosmos-sdk/pull/9827) Ensure parity of validator public key input between `tx staking create-validator` and `gentx`.
 * [\#9246](https://github.com/cosmos/cosmos-sdk/pull/9246) Removed the CLI flag `--setup-config-only` from the `testnet` command and added the subcommand `init-files`.
 
 ### Improvements

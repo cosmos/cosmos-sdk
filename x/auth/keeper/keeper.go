@@ -28,6 +28,9 @@ type AccountKeeperI interface {
 	// Retrieve an account from the store.
 	GetAccount(sdk.Context, sdk.AccAddress) types.AccountI
 
+	// Check if an account exists in the store.
+	HasAccount(sdk.Context, sdk.AccAddress) bool
+
 	// Set an account in the store.
 	SetAccount(sdk.Context, types.AccountI)
 

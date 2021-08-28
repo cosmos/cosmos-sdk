@@ -14,7 +14,7 @@ import (
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
@@ -36,7 +36,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valCommission := sdk.DecCoins{
@@ -88,7 +88,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 }
 
 func TestGetTotalRewards(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valCommission := sdk.DecCoins{
@@ -109,7 +109,7 @@ func TestGetTotalRewards(t *testing.T) {
 }
 
 func TestFundCommunityPool(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())

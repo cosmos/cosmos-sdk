@@ -781,7 +781,7 @@ func (ks keystore) writeRecord(k *Record) error {
 		return fmt.Errorf("public key %s already exists in keybase", key)
 	}
 
-	serializedRecord, err := ks.protoMarshalRecord(k)
+	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
 		return fmt.Errorf("unable to serialize record, err - %s", err)
 	}
@@ -904,7 +904,7 @@ func (ks keystore) migrate(key string) (*Record, bool, error) {
 		return nil, false, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
 	}
 
-	serializedRecord, err := ks.protoMarshalRecord(k)
+	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
 		return nil, false, fmt.Errorf("unable to serialize record, err: %w", err)
 	}
@@ -929,10 +929,6 @@ func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
 	}
 
 	return k, nil
-}
-
-func (ks keystore) protoMarshalRecord(k *Record) ([]byte, error) {
-	return ks.cdc.Marshal(k)
 }
 
 func (ks keystore) SetItem(item keyring.Item) error {

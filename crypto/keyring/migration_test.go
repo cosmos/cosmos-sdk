@@ -128,7 +128,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 	k1, err := NewLocalRecord("test record", s.priv, s.pub)
 	s.Require().NoError(err)
 
-	serializedRecord, err := s.ks.protoMarshalRecord(k1)
+	serializedRecord, err := s.ks.cdc.Marshal(k1)
 	s.Require().NoError(err)
 
 	item := keyring.Item{

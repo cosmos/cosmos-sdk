@@ -59,7 +59,7 @@ func (s *RecordTestSuite)  TestLocalRecordMarshaling() {
 	ks, ok := kb.(keystore)
 	s.Require().True(ok)
 
-	bz, err := ks.protoMarshalRecord(k)
+	bz, err := ks.cdc.Marshal(k)
 	s.Require().NoError(err)
 
 	k2, err := ks.protoUnmarshalRecord(bz)
@@ -95,7 +95,7 @@ func (s *RecordTestSuite) TestLedgerRecordMarshaling() {
 	ks, ok := kb.(keystore)
 	s.Require().True(ok)
 
-	bz, err := ks.protoMarshalRecord(k)
+	bz, err := ks.cdc.Marshal(k)
 	s.Require().NoError(err)
 
 	k2, err := ks.protoUnmarshalRecord(bz)

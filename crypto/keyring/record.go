@@ -8,7 +8,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
-
+// ErrPrivKeyExtr is used to output an error if extraction of a private key from Local item fails
 var ErrPrivKeyExtr = errors.New("private key extraction works only for Local")
 
 func newRecord(name string, pk cryptotypes.PubKey, item isRecord_Item) (*Record, error) {

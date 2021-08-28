@@ -24,8 +24,7 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 		Args: cobra.NoArgs,
 		RunE: runMigrateCmd,
 	}
-
-	//cmd.Flags().Bool(flags.FlagDryRun, false, "Run migration without actually persisting any changes to the new Keybase")
+	
 	return cmd
 }
 

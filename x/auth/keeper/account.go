@@ -29,11 +29,7 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.Ac
 func (ak AccountKeeper) HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(types.AddressStoreKey(addr))
-	if bz == nil {
-		return false
-	}
-
-	return true
+	return bz != nil
 }
 
 // GetAccount implements AccountKeeperI.

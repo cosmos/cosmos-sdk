@@ -161,7 +161,7 @@ func Test_runAddCmdLedgerDryRun(t *testing.T) {
 			added: false,
 		},
 	}
-	
+
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {

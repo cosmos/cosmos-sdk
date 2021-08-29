@@ -588,7 +588,7 @@ func (ks keystore) Key(uid string) (*Record, error) {
 		return nil, err
 	}
 
-	return k,nil
+	return k, nil
 }
 
 // SupportedAlgorithms returns the keystore Options' supported signing algorithm.
@@ -807,7 +807,7 @@ func (ks keystore) writeRecord(k *Record) error {
 	return nil
 }
 
-// existsInDb returns (true, nil) if either addr or name exist is in keystore DB. 
+// existsInDb returns (true, nil) if either addr or name exist is in keystore DB.
 // On the other hand, it returns (false, error) if Get method returns error different from keyring.ErrKeyNotFound
 func (ks keystore) existsInDb(addr sdk.Address, name string) (bool, error) {
 
@@ -866,7 +866,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 		if err != nil {
 			fmt.Printf("migrate err: %q", err)
 			continue
-		} 
+		}
 
 		if migrated2 {
 			migrated = true

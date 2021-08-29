@@ -192,7 +192,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 
 			kbHome := t.TempDir()
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
-		
+
 			kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 			require.NoError(t, err)
 

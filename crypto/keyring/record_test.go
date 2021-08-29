@@ -17,9 +17,9 @@ import (
 type RecordTestSuite struct {
 	suite.Suite
 
-	cdc codec.Codec
+	cdc  codec.Codec
 	priv cryptotypes.PrivKey
-	pub cryptotypes.PubKey
+	pub  cryptotypes.PubKey
 }
 
 func (s *RecordTestSuite) SetupSuite() {
@@ -45,7 +45,7 @@ func (s *RecordTestSuite) TestOfflineRecordMarshaling() {
 	s.Require().True(s.pub.Equals(pk2))
 }
 
-func (s *RecordTestSuite)  TestLocalRecordMarshaling() {
+func (s *RecordTestSuite) TestLocalRecordMarshaling() {
 	const n1 = "cosmos"
 	dir := s.T().TempDir()
 	mockIn := strings.NewReader("")

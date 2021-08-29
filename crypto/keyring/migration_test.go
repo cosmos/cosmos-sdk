@@ -18,15 +18,13 @@ import (
 
 const n1 = "cosmos"
 
-
 type MigrationTestSuite struct {
 	suite.Suite
 
-	kb Keyring
+	kb   Keyring
 	priv cryptotypes.PrivKey
-	pub cryptotypes.PubKey
-	ks keystore
-
+	pub  cryptotypes.PubKey
+	ks   keystore
 }
 
 func (s *MigrationTestSuite) SetupSuite() {
@@ -141,7 +139,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 
 	k2, migrated, err := s.ks.migrate(n1)
 	s.Require().Equal(k2.Name, k1.Name)
-	
+
 	pub, err := k2.GetPubKey()
 	s.Require().NoError(err)
 	s.Require().Equal(pub, s.pub)

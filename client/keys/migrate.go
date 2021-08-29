@@ -24,7 +24,7 @@ It is recommended to run in 'dry-run' mode first to verify all key migration mat
 		Args: cobra.NoArgs,
 		RunE: runMigrateCmd,
 	}
-	
+
 	return cmd
 }
 

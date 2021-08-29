@@ -33,7 +33,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 	pub, err := k.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, "D3923267FA8A3DD367BB768FA8BDC8FF7F89DA3F", pub.Address().String())
-	
+
 	addr, err := k.GetAddress()
 	require.NoError(t, err)
 	require.Equal(t, "cosmos16wfryel63g7axeamw68630wglalcnk3l0zuadc", sdk.MustBech32ifyAddressBytes("cosmos", addr))
@@ -52,7 +52,7 @@ func Test_runShowCmd(t *testing.T) {
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	kbHome := t.TempDir()
-	cdc:= simapp.MakeTestEncodingConfig().Codec
+	cdc := simapp.MakeTestEncodingConfig().Codec
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 

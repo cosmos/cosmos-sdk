@@ -142,7 +142,7 @@ type Binary struct {
 	// URL to a script or binary to download. Should be related to the UpgradeInstructions pre_run or post_run
 	// commands. If multiple files are needed, then they should be packed in a gzip archive.
 	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	// Checksum is a sha256 base64 encoded checsum of an artifact referenced by the URL.
+	// Checksum is a sha256 hex encoded checksum of an artifact referenced by the URL.
 	Checksum string `protobuf:"bytes,3,opt,name=checksum,proto3" json:"checksum,omitempty"`
 }
 

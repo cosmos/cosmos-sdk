@@ -9843,7 +9843,7 @@ Service defines a gRPC service for interacting with transactions.
 | ----- | ---- | ----- | ----------- |
 | `platform` | [string](#string) |  | Platform identifier. It's composed from OS and CPU architecture. Example: "linux/amd64" |
 | `url` | [string](#string) |  | URL to a script or binary to download. Should be related to the UpgradeInstructions pre_run or post_run commands. If multiple files are needed, then they should be packed in a gzip archive. |
-| `checksum` | [string](#string) |  | Checksum is a sha256 base64 encoded checsum of an artifact referenced by the URL. |
+| `checksum` | [string](#string) |  | Checksum is a sha256 hex encoded checksum of an artifact referenced by the URL. |
 
 
 

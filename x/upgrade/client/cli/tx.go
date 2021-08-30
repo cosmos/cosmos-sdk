@@ -158,9 +158,10 @@ func parseArgsToContent(cdc codec.Codec, cmd *cobra.Command, name string) (gov.C
 	if err != nil {
 		return nil, err
 	}
-	var instructions types.UpgradeInstructions
+	var instructions *types.UpgradeInstructions
 	if upgradeInstructions != "" {
-		if err = cdc.UnmarshalJSON([]byte(upgradeInstructions), &instructions); err != nil {
+		instructions = new(types.UpgradeInstructions)
+		if err = cdc.UnmarshalJSON([]byte(upgradeInstructions), instructions); err != nil {
 			return nil, errors.ErrJSONUnmarshal.Wrapf("Can't parse upgrade-instructions [%v]", err)
 		}
 	}

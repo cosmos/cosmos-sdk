@@ -15,7 +15,8 @@ func (p Plan) String() string {
 	return fmt.Sprintf(`Upgrade Plan
   Name: %s
   %s
-  Info: %s.`, p.Name, due, p.Info)
+  Info: %s
+  Instructions: %s.`, p.Name, due, p.Info, p.Upgrade)
 }
 
 // ValidateBasic does basic validation of a Plan

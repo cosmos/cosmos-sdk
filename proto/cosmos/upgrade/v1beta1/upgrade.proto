@@ -48,6 +48,8 @@ message Plan {
 }
 
 message UpgradeInstructions {
+  option (gogoproto.equal)            = true;
+
   // If not empty, a shell command to be run by the upgrade manager or a hypervisor after shutting down
   // the app and before running a new node.
   string pre_run = 1;
@@ -62,6 +64,8 @@ message UpgradeInstructions {
 }
 
 message Asset {
+  option (gogoproto.equal)            = true;
+
   // Platform identifier. It's composed from OS and CPU architecture. Example: "linux/amd64"
   string platform = 1;
   // URL to a script or binary to download. Should be related to the UpgradeInstructions pre_run or post_run

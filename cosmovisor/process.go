@@ -46,10 +46,6 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 	if err := cmd.Start(); err != nil {
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
-	err = doPreUpgrade(l.cfg)
-	if err != nil {
-		return false, err
-	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
@@ -65,6 +61,11 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, err
 	}
 	if err := doBackup(l.cfg); err != nil {
+		return false, err
+	}
+
+	err = doPreUpgrade(l.cfg)
+	if err != nil {
 		return false, err
 	}
 

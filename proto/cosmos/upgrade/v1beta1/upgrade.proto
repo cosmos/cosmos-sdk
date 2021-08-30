@@ -54,9 +54,9 @@ message UpgradeInstructions {
   // If not empty, a shell command to be run by the upgrade manager or a hypervisor after shutting down
   // the app and after running a new app.
   string post_run = 2;
-  // List of binaries to download. This follows the cosmovisor structure.
+  // List of required assets to download. This follows the cosmovisor structure.
   // SHOULD have only one entry per platform.
-  repeated Asset scripts    = 3;
+  repeated Asset assets    = 3;
   // Description contains additional information about the upgrade process. Can reference an external resource.
   string description = 4;
 }

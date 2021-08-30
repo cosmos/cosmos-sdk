@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -12,8 +14,9 @@ import (
 )
 
 const (
-	FlagUpgradeHeight = "upgrade-height"
-	FlagUpgradeInfo   = "upgrade-info"
+	FlagUpgradeHeight       = "upgrade-height"
+	FlagUpgradeInfo         = "upgrade-info"
+	FlagUpgradeInstructions = "upgrade-instructions"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -29,17 +32,11 @@ func GetTxCmd() *cobra.Command {
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "software-upgrade <name> --upgrade-height <height> [--upgrade-info <info>] [--upgrade <upgrade-instructions>] [flags]",
+		Use:   fmt.Sprintf("software-upgrade <name> --%s <height> [--%s <info>] [--%s <instructions>] [flags]", FlagUpgradeHeight, FlagUpgradeInfo, FlagUpgradeInstructions),
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
-			"You must a unique name and height for the upgrade to take effect.\n" +
-			"Optional parameters:" + `
-info: app specific information instructions. You can set here a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor
-
-upgrade-instructions: additional, not app specific download instructions. It set, it must have the UpgradeInstructions JSON format.
-	Example 1: '{"pre_run": "simd pre-upgrade", "scripts": [{"platform": "linux/amd64", "url": "https://ipfs.io/ipfs/Qme7ss...", checksum: "0cdbd28e71a2e37830dabee99adffb68a568488f6fcfcf051217984151b769ee"}]}'
-	Example 2: '{"pre_run": "./upgrade-v1", "download": [{"platform": "linux/amd64", "url": "https://}]}'`,
+			"You must use a unique name and height for the upgrade to take effect.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -75,7 +72,8 @@ upgrade-instructions: additional, not app specific download instructions. It set
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
-	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash, etc.")
+	cmd.Flags().String(FlagUpgradeInfo, "", "Optional info for the planned upgrade such as commit hash or a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor")
+	cmd.Flags().String(FlagUpgradeInstructions, "", `Optional, not app specific download instructions. It set, it must have the UpgradeInstructions JSON format.   Example 1: '{"pre_run": "./upgrade-v1", "assets": [{"platform": "linux/amd64", "url": "https://ipfs.io/ipfs/Qme7ss...", checksum: "0cdbd28e71a2e37830dabee99adffb68a568488f6fcfcf051217984151b769ee"}]}'   Example 2: '{"pre_run": "simd pre-upgrade"}'`)
 
 	return cmd
 }
@@ -153,6 +151,13 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 	info, err := cmd.Flags().GetString(FlagUpgradeInfo)
 	if err != nil {
 		return nil, err
+	}
+	upgradeInstructions, err := cmd.Flags().GetString(FlagUpgradeInstructions)
+	if err != nil {
+		return nil, err
+	}
+	if upgradeInstructions != nil {
+
 	}
 
 	plan := types.Plan{Name: name, Height: height, Info: info}

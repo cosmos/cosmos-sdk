@@ -9931,7 +9931,7 @@ upgrade.
 | ----- | ---- | ----- | ----------- |
 | `pre_run` | [string](#string) |  | If not empty, a shell command to be run by the upgrade manager or a hypervisor after shutting down the app and before running a new node. |
 | `post_run` | [string](#string) |  | If not empty, a shell command to be run by the upgrade manager or a hypervisor after shutting down the app and after running a new app. |
-| `scripts` | [Asset](#cosmos.upgrade.v1beta1.Asset) | repeated | List of binaries to download. This follows the cosmovisor structure. SHOULD have only one entry per platform. |
+| `assets` | [Asset](#cosmos.upgrade.v1beta1.Asset) | repeated | List of required assets to download. This follows the cosmovisor structure. SHOULD have only one entry per platform. |
 | `description` | [string](#string) |  | Description contains additional information about the upgrade process. Can reference an external resource. |
 
 

@@ -11,11 +11,36 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/valuerenderer"
 )
 
+func TestFormatCoin(t *testing.T) {
+    dvr := valuerenderer.NewDefaultValueRenderer()
 
-func TestFormat(t *testing.T) {
+	tt := []struct{
+		name string
+		coin types.Coin
+		expRes string
+		expErr bool
+	}{
+		{
+		"convert 1000000uregen to 1regen",
+	    types.NewCoin("uregen", types.NewInt(int64(1000000))),
+		"1regen",
+		false, 
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := dvr.Format(tc.coin)
+			require.NoError(t, err)
+			require.Equal(t, tc.expRes, res)
+		})
+	}
+}
+
+
+func TestFormatInt(t *testing.T) {
 
 	d := valuerenderer.NewDefaultValueRenderer()
-
 	decimal, _ := types.NewDecFromStr("349383323.894")
 	i, _ := types.NewIntFromString("2323293999402003")
 	
@@ -25,19 +50,15 @@ func TestFormat(t *testing.T) {
 		name string
 		input interface{}
 		expRes string
-		isIntType bool
 		expErr bool
 	}{
-		{"nil", nil, "", false, true},
-		{"convert a million, no error", types.NewInt(int64(1000000)),"1,000,000", true, false},
-		{"empty string error", types.Int{}, "", true, true},
-		{"Decimal, no error", decimal, "349,383,323.894", true, false},
-		{"Int, no error", i, "232,329,399,940,200,3", true, false},
-		{"Coin, no error", i, "232,329,399,940,200,3", true, false},
+		{"nil", nil, "",  true},
+		{"convert a million, no error", types.NewInt(int64(1000000)),"1,000,000", false},
+		{"empty string error", types.Int{}, "", true},
+		{"Decimal, no error", decimal, "349,383,323.894", false},
+		{"Int, no error", i, "232,329,399,940,200,3", false},
 
 		//{"invalid string input panic", "qwerty", "", true, true},
-
-
 	}
 
 	for _, tc := range tt {
@@ -48,25 +69,17 @@ func TestFormat(t *testing.T) {
 				require.Nil(t, res)
 				return 
 			} 
-			
-			if tc.isIntType {
-				require.Equal(t, tc.expRes, res)
-			} else {
-				
 
-			}
-
-		
-            
-
-
+			require.Equal(t, tc.expRes, res)
 		})
 	}
 }
 
+
+
 func TestParseString(t *testing.T) {
    re := regexp.MustCompile(`\d+[mu]?regen`)
-   d := valuerenderer.NewDefaultValueRenderer()
+   dvr := valuerenderer.NewDefaultValueRenderer()
 
    tt := []struct {
 	   str string
@@ -87,7 +100,7 @@ func TestParseString(t *testing.T) {
 
    for _, tc := range tt {
 	   t.Run(tc.str, func(t *testing.T) {
-		    x, err := d.Parse(tc.str)
+		    x, err := dvr.Parse(tc.str)
 			// TODO reconsider logic - put expErr at first
 			if tc.denomExp {
 				require.NoError(t, err)

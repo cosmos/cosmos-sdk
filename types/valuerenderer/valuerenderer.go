@@ -3,10 +3,10 @@ package valuerenderer
 import (
 	"errors"
     "strings"
-	"math"
 	"regexp"
 	"unicode"
 	"strconv"
+	"fmt"
 
 
 	"github.com/cosmos/cosmos-sdk/types"
@@ -24,18 +24,25 @@ type ValueRenderer interface {
 // create default value rreenderer in CLI and then get context from CLI 
 type DefaultValueRenderer struct {
 	// /string is denom that user sents
-	denomQuerier func(string) banktypes.Metadata// define in test only //convert DenomUnits to Display units 
-	//queryClient banktypes.QueryClient
+	//denomQuerier denomQuerierFunc// define in test only //convert DenomUnits to Display units 
 }
+
+// type denomQuerierFunc func(string) banktypes.Metadata
 
 func NewDefaultValueRenderer() DefaultValueRenderer {
 	return DefaultValueRenderer{}
 }
 
+/*
+func NewDefaultValueRendererWithDenomQuerier(denomQuerierFunc(string)) DefaultValueRenderer {
+	return DefaultValueRenderer{denomQuerier: denomQuerierFunc(string)}
+}
+*/
+
 var _ ValueRenderer = &DefaultValueRenderer{}
 
 // Format converts an empty interface into a string depending on interface type.
-func (d DefaultValueRenderer) Format(x interface{}) (string, error) { 
+func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) { 
 	if x == nil {
 		return "", errors.New("x is nil")
 	}
@@ -98,43 +105,91 @@ func (d DefaultValueRenderer) Format(x interface{}) (string, error) {
 				return "", errors.New("unable to cast empty interface to Coin")
 			}
 		
-			metadata := d.denomQuerier(coin.Denom)
+			metadata := dvr.denomQuerier()
 		
-			var srcExp, dstExp uint32
+			var srcExp, dstExp int64
 			// find exponent that matches coin.Denom  {
 			for _, denomUnit := range metadata.DenomUnits { 
 				//  test  23000000 mregen 3  =>  "regen" exp 0
 				if denomUnit.Denom == coin.Denom {
-					srcExp = denomUnit.Exponent
+					srcExp = int64(denomUnit.Exponent)
+					fmt.Printf("srcExp: %d", srcExp)
 				}
 
 				if denomUnit.Denom == metadata.Display {
-					dstExp = denomUnit.Exponent
+					dstExp = int64(denomUnit.Exponent)
+					fmt.Printf("dstExp: %d", dstExp)
 				}
 			}
             // wrap this code block into function
-			exp := dstExp - srcExp
-			multiplier := types.NewInt(int64(math.Pow(float64(10), float64(exp))))
-			amount := coin.Amount.Mul(multiplier)
+			exp := int64(5)
+			fmt.Printf("exp: %d", exp)
 
-			sb.WriteString(p.Sprintf("%d",amount.Int64()))
-			sb.WriteString(coin.Denom)
-		/* ?
-		default:
-			panic("type is invalid")
-		}
-		*/
+			fmt.Println("dec with prec", types.NewDecWithPrec(int64(10000000), exp).String())
+			fmt.Println("dec with abs prec", types.NewDecWithPrec(int64(10000000), exp).Abs().String())
+			
+
+			//sb.WriteString(p.Sprintf("%d",amount))
+			sb.WriteString("amount")
+			sb.WriteString(metadata.Display)
+		
+
+	//	default:
+	//		panic("type is invalid")
+	}
+	
 
 		return sb.String(), nil	
 }
 
-func (d DefaultValueRenderer) DenomQuerier(s string) banktypes.Metadata {
-	
+// see QueryDenomMetadataRequest() test
+func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
+	// TODO make sure denom is not empty
+	/*
+	app := simapp.Setup(t, false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, app.BankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+
+	req := &types.QueryDenomsMetadataRequest{
+		Pagination: &query.PageRequest{
+			Limit:      3,
+			CountTotal: true,
+		},
+	}
+
+	res, err := queryClient.DenomsMetadata(ctx, req)
+	*/
+
+	return banktypes.Metadata{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "regen",
+				Exponent: 0,
+				Aliases:  []string{"regen"},
+			},
+			{
+				Denom:    "uregen",
+				Exponent: 6,
+				Aliases:  []string{"microregen"},
+			},
+			{
+				Denom:    "mregen",
+				Exponent: 3,
+				Aliases:  []string{"miniregen"},
+			},
+		},
+		Base:    "uregen",
+		Display: "regen",
+	}
 }
-			
+
+	
 // Parse parses string and takes a decision whether to convert it into Coin or Uint
-func (d DefaultValueRenderer) Parse(s string) (interface{}, error) { 
+func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) { 
 	if s == ""{
 		return nil, errors.New("unable to parse empty string")
 	}
@@ -147,6 +202,7 @@ func (d DefaultValueRenderer) Parse(s string) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		return coin,nil
 	}
 

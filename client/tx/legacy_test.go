@@ -143,9 +143,9 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
 	stdTx = aminoBuilder.GetTx().(legacytx.StdTx)
-	stdtx2, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, stdTx)
+	stdTx2, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, stdTx)
 	s.Require().NoError(err)
-	s.Require().Equal(stdTx, stdtx2)
+	s.Require().Equal(stdTx, stdTx2)
 }
 
 func TestTestSuite(t *testing.T) {

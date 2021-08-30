@@ -59,6 +59,7 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		// tx.
 		RejectExtensionOptionsMiddleware,
 		MempoolFeeMiddleware,
+		ValidateBasicMiddleware,
 		// Temporary middleware to bundle antehandlers.
 		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),

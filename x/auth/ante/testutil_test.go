@@ -73,7 +73,6 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	// https://github.com/cosmos/cosmos-sdk/issues/9585
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
-		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(suite.app.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper),

@@ -11,30 +11,6 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// ValidateBasicDecorator will call tx.ValidateBasic, msg.ValidateBasic(for each msg inside tx)
-// and return any non-nil error.
-// If ValidateBasic passes, decorator calls next AnteHandler in chain. Note,
-// ValidateBasicDecorator decorator will not get executed on ReCheckTx since it
-// is not dependent on application state.
-type ValidateBasicDecorator struct{}
-
-func NewValidateBasicDecorator() ValidateBasicDecorator {
-	return ValidateBasicDecorator{}
-}
-
-func (vbd ValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// no need to validate basic on recheck tx, call next antehandler
-	if ctx.IsReCheckTx() {
-		return next(ctx, tx, simulate)
-	}
-
-	if err := tx.ValidateBasic(); err != nil {
-		return ctx, err
-	}
-
-	return next(ctx, tx, simulate)
-}
-
 // ValidateMemoDecorator will validate memo given the parameters passed in
 // If memo is too large decorator returns with error, otherwise call next AnteHandler
 // CONTRACT: Tx must implement TxWithMemo interface

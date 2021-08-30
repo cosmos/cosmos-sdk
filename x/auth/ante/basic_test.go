@@ -11,47 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
-func (suite *AnteTestSuite) TestValidateBasic() {
-	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
-	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
-
-	vbd := ante.NewValidateBasicDecorator()
-	antehandler := sdk.ChainAnteDecorators(vbd)
-	_, err = antehandler(suite.ctx, invalidTx, false)
-
-	suite.Require().NotNil(err, "Did not error on invalid tx")
-
-	privs, accNums, accSeqs = []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
-
-	_, err = antehandler(suite.ctx, validTx, false)
-	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
-
-	// test decorator skips on recheck
-	suite.ctx = suite.ctx.WithIsReCheckTx(true)
-
-	// decorator should skip processing invalidTx on recheck and thus return nil-error
-	_, err = antehandler(suite.ctx, invalidTx, false)
-
-	suite.Require().Nil(err, "ValidateBasicDecorator ran on ReCheck")
-}
-
 func (suite *AnteTestSuite) TestValidateMemo() {
 	suite.SetupTest(true) // setup
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()

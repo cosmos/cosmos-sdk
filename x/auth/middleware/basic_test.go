@@ -1,9 +1,12 @@
 package middleware_test
 
 import (
+	"strings"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/tendermint/tendermint/abci/types"
 )
@@ -170,51 +173,51 @@ func (suite *MWTestSuite) TestValidateBasic() {
 
 // }
 
-// func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {
-// 	suite.SetupTest(true)
+func (suite *MWTestSuite) TestTxHeightTimeoutMiddleware() {
+	ctx := suite.SetupTest(true)
 
-// 	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator())
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.TxTimeoutHeightMiddleware)
 
-// 	// keys and addresses
-// 	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
-// 	// msg and signatures
-// 	msg := testdata.NewTestMsg(addr1)
-// 	feeAmount := testdata.NewTestFeeAmount()
-// 	gasLimit := testdata.NewTestGasLimit()
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 
-// 	testCases := []struct {
-// 		name      string
-// 		timeout   uint64
-// 		height    int64
-// 		expectErr bool
-// 	}{
-// 		{"default value", 0, 10, false},
-// 		{"no timeout (greater height)", 15, 10, false},
-// 		{"no timeout (same height)", 10, 10, false},
-// 		{"timeout (smaller height)", 9, 10, true},
-// 	}
+	testCases := []struct {
+		name      string
+		timeout   uint64
+		height    int64
+		expectErr bool
+	}{
+		{"default value", 0, 10, false},
+		{"no timeout (greater height)", 15, 10, false},
+		{"no timeout (same height)", 10, 10, false},
+		{"timeout (smaller height)", 9, 10, true},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		suite.Run(tc.name, func() {
-// 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+		suite.Run(tc.name, func() {
+			txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
-// 			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
+			suite.Require().NoError(txBuilder.SetMsgs(msg))
 
-// 			suite.txBuilder.SetFeeAmount(feeAmount)
-// 			suite.txBuilder.SetGasLimit(gasLimit)
-// 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-// 			suite.txBuilder.SetTimeoutHeight(tc.timeout)
+			txBuilder.SetFeeAmount(feeAmount)
+			txBuilder.SetGasLimit(gasLimit)
+			txBuilder.SetMemo(strings.Repeat("01234567890", 10))
+			txBuilder.SetTimeoutHeight(tc.timeout)
 
-// 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-// 			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-// 			suite.Require().NoError(err)
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			suite.Require().NoError(err)
 
-// 			ctx := suite.ctx.WithBlockHeight(tc.height)
-// 			_, err = antehandler(ctx, tx, true)
-// 			suite.Require().Equal(tc.expectErr, err != nil, err)
-// 		})
-// 	}
-// }
+			ctx := ctx.WithBlockHeight(tc.height)
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx, txtypes.RequestSimulateTx{})
+			suite.Require().Equal(tc.expectErr, err != nil, err)
+		})
+	}
+}

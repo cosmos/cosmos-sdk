@@ -40,6 +40,34 @@ message Plan {
   // If this field is not empty, an error will be thrown.
   google.protobuf.Any upgraded_client_state = 5
       [deprecated = true];
+
+  // Upgrade contains additional instructions for the devops or a hypervisor. Optional.
+  // App specific instructions are handled by the `info` attribute. Here we provide
+  // such us pre-upgrade or post-upgrade commands.
+  UpgradeInstructions Upgrade = 6;
+}
+
+message UpgradeInstructions {
+  // If not empty, a command to be run by the upgrade manager or a hypervisor after shutting down the app and
+  // before running a new node.
+  string pre_run = 1;
+  // If not empty, a command to be run by the upgrade manager or a hypervisor after shutting down the app and
+  // after running a new app.
+  string post_run = 2;
+  // List of binaries to download. This follows the cosmovisor structure.
+  // SHOULD have only one entry per platform.
+  repeated Binary download    = 3;
+  string          description = 4;
+}
+
+message Binary {
+  // Platform identifier. It's composed from OS and CPU architecture. Example: "linux/amd64"
+  string platform = 1;
+  // URL to a script or binary to download. Should be related to the UpgradeInstructions pre_run or post_run
+  // commands. If multiple files are needed, then they should be packed in a gzip archive.
+  string url = 2;
+  // Checksum is a sha256 base64 encoded checsum of an artifact referenced by the URL.
+  string checksum = 3;
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software

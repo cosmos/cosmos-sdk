@@ -688,7 +688,7 @@
     - [Service](#cosmos.tx.v1beta1.Service)
   
 - [cosmos/upgrade/v1beta1/upgrade.proto](#cosmos/upgrade/v1beta1/upgrade.proto)
-    - [Binary](#cosmos.upgrade.v1beta1.Binary)
+    - [Asset](#cosmos.upgrade.v1beta1.Asset)
     - [CancelSoftwareUpgradeProposal](#cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal)
     - [ModuleVersion](#cosmos.upgrade.v1beta1.ModuleVersion)
     - [Plan](#cosmos.upgrade.v1beta1.Plan)
@@ -9833,9 +9833,9 @@ Service defines a gRPC service for interacting with transactions.
 
 
 
-<a name="cosmos.upgrade.v1beta1.Binary"></a>
+<a name="cosmos.upgrade.v1beta1.Asset"></a>
 
-### Binary
+### Asset
 
 
 
@@ -9896,7 +9896,7 @@ Plan specifies information about a planned upgrade and when it should occur.
 | `height` | [int64](#int64) |  | The height at which the upgrade must be performed. Only used if Time is not set. |
 | `info` | [string](#string) |  | Any application specific upgrade info to be included on-chain such as a git commit that validators could automatically upgrade to |
 | `upgraded_client_state` | [google.protobuf.Any](#google.protobuf.Any) |  | **Deprecated.** Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been moved to the IBC module in the sub module 02-client. If this field is not empty, an error will be thrown. |
-| `Upgrade` | [UpgradeInstructions](#cosmos.upgrade.v1beta1.UpgradeInstructions) |  | Upgrade contains additional instructions for the devops or a hypervisor. Optional. App specific instructions are handled by the `info` attribute. Here we provide such us pre-upgrade or post-upgrade commands. |
+| `Upgrade` | [UpgradeInstructions](#cosmos.upgrade.v1beta1.UpgradeInstructions) |  | Optional: Upgrade contains additional instructions for the devops or a hypervisor. App specific instructions are handled by the `info` attribute. Here we provide information such as pre-upgrade or post-upgrade commands. |
 
 
 
@@ -9929,10 +9929,10 @@ upgrade.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `pre_run` | [string](#string) |  | If not empty, a command to be run by the upgrade manager or a hypervisor after shutting down the app and before running a new node. |
-| `post_run` | [string](#string) |  | If not empty, a command to be run by the upgrade manager or a hypervisor after shutting down the app and after running a new app. |
-| `download` | [Binary](#cosmos.upgrade.v1beta1.Binary) | repeated | List of binaries to download. This follows the cosmovisor structure. SHOULD have only one entry per platform. |
-| `description` | [string](#string) |  |  |
+| `pre_run` | [string](#string) |  | If not empty, a shell command to be run by the upgrade manager or a hypervisor after shutting down the app and before running a new node. |
+| `post_run` | [string](#string) |  | If not empty, a shell command to be run by the upgrade manager or a hypervisor after shutting down the app and after running a new app. |
+| `scripts` | [Asset](#cosmos.upgrade.v1beta1.Asset) | repeated | List of binaries to download. This follows the cosmovisor structure. SHOULD have only one entry per platform. |
+| `description` | [string](#string) |  | Description contains additional information about the upgrade process. Can reference an external resource. |
 
 
 

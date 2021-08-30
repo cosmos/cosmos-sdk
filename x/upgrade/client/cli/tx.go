@@ -7,7 +7,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -43,7 +45,7 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				return err
 			}
 			name := args[0]
-			content, err := parseArgsToContent(cmd, name)
+			content, err := parseArgsToContent(clientCtx.Codec, cmd, name)
 			if err != nil {
 				return err
 			}
@@ -132,7 +134,7 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	return cmd
 }
 
-func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
+func parseArgsToContent(cdc codec.Codec, cmd *cobra.Command, name string) (gov.Content, error) {
 	title, err := cmd.Flags().GetString(cli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -156,11 +158,14 @@ func parseArgsToContent(cmd *cobra.Command, name string) (gov.Content, error) {
 	if err != nil {
 		return nil, err
 	}
-	if upgradeInstructions != nil {
-
+	var instructions types.UpgradeInstructions
+	if upgradeInstructions != "" {
+		if err = cdc.UnmarshalJSON([]byte(upgradeInstructions), &instructions); err != nil {
+			return nil, errors.ErrJSONUnmarshal.Wrapf("Can't parse upgrade-instructions [%v]", err)
+		}
 	}
 
-	plan := types.Plan{Name: name, Height: height, Info: info}
+	plan := types.Plan{Name: name, Height: height, Info: info, Upgrade: instructions}
 	content := types.NewSoftwareUpgradeProposal(title, description, plan)
 	return content, nil
 }

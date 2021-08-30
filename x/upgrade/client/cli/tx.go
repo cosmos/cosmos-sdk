@@ -29,12 +29,17 @@ func GetTxCmd() *cobra.Command {
 // NewCmdSubmitUpgradeProposal implements a command handler for submitting a software upgrade proposal transaction.
 func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "software-upgrade [name] (--upgrade-height [height]) (--upgrade-info [info]) [flags]",
+		Use:   "software-upgrade <name> --upgrade-height <height> [--upgrade-info <info>] [--upgrade <upgrade-instructions>] [flags]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
-			"Please specify a unique name and height for the upgrade to take effect.\n" +
-			"You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor",
+			"You must a unique name and height for the upgrade to take effect.\n" +
+			"Optional parameters:" + `
+info: app specific information instructions. You can set here a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor
+
+upgrade-instructions: additional, not app specific download instructions. It set, it must have the UpgradeInstructions JSON format.
+	Example 1: '{"pre_run": "simd pre-upgrade", "scripts": [{"platform": "linux/amd64", "url": "https://ipfs.io/ipfs/Qme7ss...", checksum: "0cdbd28e71a2e37830dabee99adffb68a568488f6fcfcf051217984151b769ee"}]}'
+	Example 2: '{"pre_run": "./upgrade-v1", "download": [{"platform": "linux/amd64", "url": "https://}]}'`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

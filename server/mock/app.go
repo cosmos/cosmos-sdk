@@ -44,10 +44,14 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	// We're adding a test legacy route here, which accesses the kvstore
 	// and simply sets the Msg's key/value pair in the kvstore.
 	legacyRouter.AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
-	baseApp.SetTxHandler(middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
+	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		LegacyRouter:     legacyRouter,
 		MsgServiceRouter: middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry),
-	}))
+	})
+	if err != nil {
+		return nil, err
+	}
+	baseApp.SetTxHandler(txHandler)
 
 	// Load latest version.
 	if err := baseApp.LoadLatestVersion(); err != nil {

@@ -43,7 +43,7 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 	}
 
 	return abci.ResponseDeliverTx{
-		// GasInfo will be populated by the antehandlers.
+		// GasInfo will be populated by the Gas middleware.
 		Log:    res.Log,
 		Data:   res.Data,
 		Events: res.Events,
@@ -52,14 +52,13 @@ func (txh runMsgsTxHandler) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.R
 
 // SimulateTx implements tx.Handler.SimulateTx method.
 func (txh runMsgsTxHandler) SimulateTx(ctx context.Context, sdkTx sdk.Tx, req tx.RequestSimulateTx) (tx.ResponseSimulateTx, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	res, err := txh.runMsgs(sdkCtx, sdkTx.GetMsgs(), req.TxBytes)
+	res, err := txh.runMsgs(sdk.UnwrapSDKContext(ctx), sdkTx.GetMsgs(), req.TxBytes)
 	if err != nil {
 		return tx.ResponseSimulateTx{}, err
 	}
 
 	return tx.ResponseSimulateTx{
-		// GasInfo will be populated by the antehandlers.
+		// GasInfo will be populated by the Gas middleware.
 		Result: res,
 	}, nil
 }

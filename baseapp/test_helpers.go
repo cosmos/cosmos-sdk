@@ -26,7 +26,7 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 		return gInfo, nil, err
 	}
 
-	return txResult(gInfo, res.Data, res.Log, res.Events)
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
 // Simulate executes a tx in simulate mode to get result and gas info.
@@ -61,7 +61,7 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 		return gInfo, nil, err
 	}
 
-	return txResult(gInfo, res.Data, res.Log, res.Events)
+	return gInfo, &sdk.Result{Data: res.Data, Log: res.Log, Events: res.Events}, nil
 }
 
 // Context with current {check, deliver}State of the app used by tests.

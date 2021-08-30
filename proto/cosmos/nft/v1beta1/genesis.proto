@@ -14,6 +14,9 @@ message GenesisState {
 
 // Entry Defines all nft owned by a person
 message Entry {
-  string   owner                       = 1;
+  // owner is the owner address of the following nft
+  string owner = 1;
+
+  // nfts is a group of nfts of the same owner
   repeated cosmos.nft.v1beta1.NFT nfts = 2;
 }

@@ -12,9 +12,16 @@ service Msg {
 }
 // MsgSend represents a message to send a nft from one account to another account.
 message MsgSend {
+  // class_id defines the unique identifier of the nft classification, similar to the contract address of ERC721
   string class_id = 1;
-  string id       = 2;
-  string sender   = 3;
+
+  // id defines the unique identification of nft
+  string id = 2;
+
+  // sender is the address of the owner of nft
+  string sender = 3;
+
+  // receiver is the receiver address of nft
   string receiver = 4;
 }
 // MsgSendResponse defines the Msg/Send response type.

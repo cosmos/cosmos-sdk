@@ -34,22 +34,13 @@ func (suite *MWTestSuite) TestEnsureMempoolFees() {
 	highGasPrice := []sdk.DecCoin{atomPrice}
 	ctx = ctx.WithMinGasPrices(highGasPrice)
 
-	// Set IsCheckTx to true
-	ctx = ctx.WithIsCheckTx(true)
-
 	// antehandler errors with insufficient fees
 	_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
 	suite.Require().NotNil(err, "Decorator should have errored on too low fee for local gasPrice")
 
-	// Set IsCheckTx to false
-	ctx = ctx.WithIsCheckTx(false)
-
 	// antehandler should not error since we do not check minGasPrice in DeliverTx
-	_, err = txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{})
 	suite.Require().Nil(err, "MempoolFeeDecorator returned error in DeliverTx")
-
-	// Set IsCheckTx back to true for testing sufficient mempool fee
-	ctx = ctx.WithIsCheckTx(true)
 
 	atomPrice = sdk.NewDecCoinFromDec("atom", sdk.NewDec(0).Quo(sdk.NewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}

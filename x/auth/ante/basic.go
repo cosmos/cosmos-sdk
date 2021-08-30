@@ -11,38 +11,6 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// ValidateMemoDecorator will validate memo given the parameters passed in
-// If memo is too large decorator returns with error, otherwise call next AnteHandler
-// CONTRACT: Tx must implement TxWithMemo interface
-type ValidateMemoDecorator struct {
-	ak AccountKeeper
-}
-
-func NewValidateMemoDecorator(ak AccountKeeper) ValidateMemoDecorator {
-	return ValidateMemoDecorator{
-		ak: ak,
-	}
-}
-
-func (vmd ValidateMemoDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	memoTx, ok := tx.(sdk.TxWithMemo)
-	if !ok {
-		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
-	}
-
-	params := vmd.ak.GetParams(ctx)
-
-	memoLength := len(memoTx.GetMemo())
-	if uint64(memoLength) > params.MaxMemoCharacters {
-		return ctx, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
-			"maximum number of characters is %d but received %d characters",
-			params.MaxMemoCharacters, memoLength,
-		)
-	}
-
-	return next(ctx, tx, simulate)
-}
-
 // ConsumeTxSizeGasDecorator will take in parameters and consume gas proportional
 // to the size of tx before calling next AnteHandler. Note, the gas costs will be
 // slightly over estimated due to the fact that any given signing account may need

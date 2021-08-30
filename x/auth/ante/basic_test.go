@@ -11,42 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
-func (suite *AnteTestSuite) TestValidateMemo() {
-	suite.SetupTest(true) // setup
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-	suite.txBuilder.SetFeeAmount(feeAmount)
-	suite.txBuilder.SetGasLimit(gasLimit)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
-	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
-
-	// require that long memos get rejected
-	vmd := ante.NewValidateMemoDecorator(suite.app.AccountKeeper)
-	antehandler := sdk.ChainAnteDecorators(vmd)
-	_, err = antehandler(suite.ctx, invalidTx, false)
-
-	suite.Require().NotNil(err, "Did not error on tx with high memo")
-
-	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	suite.Require().NoError(err)
-
-	// require small memos pass ValidateMemo Decorator
-	_, err = antehandler(suite.ctx, validTx, false)
-	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
-}
-
 func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	suite.SetupTest(true) // setup
 

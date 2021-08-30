@@ -51,41 +51,40 @@ func (suite *MWTestSuite) TestValidateBasic() {
 	suite.Require().Nil(err, "ValidateBasicDecorator ran on ReCheck")
 }
 
-// func (suite *AnteTestSuite) TestValidateMemo() {
-// 	suite.SetupTest(true) // setup
-// 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+func (suite *MWTestSuite) TestValidateMemo() {
+	ctx := suite.SetupTest(true) // setup
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateMemoDecorator(suite.app.AccountKeeper))
 
-// 	// keys and addresses
-// 	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
-// 	// msg and signatures
-// 	msg := testdata.NewTestMsg(addr1)
-// 	feeAmount := testdata.NewTestFeeAmount()
-// 	gasLimit := testdata.NewTestGasLimit()
-// 	suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-// 	suite.txBuilder.SetFeeAmount(feeAmount)
-// 	suite.txBuilder.SetGasLimit(gasLimit)
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	suite.Require().NoError(txBuilder.SetMsgs(msg))
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
 
-// 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-// 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 500))
-// 	invalidTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-// 	suite.Require().NoError(err)
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+	txBuilder.SetMemo(strings.Repeat("01234567890", 500))
+	invalidTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	suite.Require().NoError(err)
 
-// 	// require that long memos get rejected
-// 	vmd := ante.NewValidateMemoDecorator(suite.app.AccountKeeper)
-// 	antehandler := sdk.ChainAnteDecorators(vmd)
-// 	_, err = antehandler(suite.ctx, invalidTx, false)
+	// require that long memos get rejected
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), invalidTx, types.RequestDeliverTx{})
 
-// 	suite.Require().NotNil(err, "Did not error on tx with high memo")
+	suite.Require().NotNil(err, "Did not error on tx with high memo")
 
-// 	suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
-// 	validTx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-// 	suite.Require().NoError(err)
+	txBuilder.SetMemo(strings.Repeat("01234567890", 10))
+	validTx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	suite.Require().NoError(err)
 
-// 	// require small memos pass ValidateMemo Decorator
-// 	_, err = antehandler(suite.ctx, validTx, false)
-// 	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
-// }
+	// require small memos pass ValidateMemo Decorator
+	_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), validTx, types.RequestDeliverTx{})
+	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+}
 
 // func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 // 	suite.SetupTest(true) // setup

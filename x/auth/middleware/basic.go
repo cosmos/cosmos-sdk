@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -16,16 +15,16 @@ import (
 // validateBasicMiddleware will not get executed on ReCheckTx since it
 // is not dependent on application state.
 type validateBasicMiddleware struct {
-	next tx.Handler
+	next txtypes.Handler
 }
 
-func ValidateBasicMiddleware(txh tx.Handler) tx.Handler {
+func ValidateBasicMiddleware(txh txtypes.Handler) txtypes.Handler {
 	return validateBasicMiddleware{
 		next: txh,
 	}
 }
 
-var _ tx.Handler = validateBasicMiddleware{}
+var _ txtypes.Handler = validateBasicMiddleware{}
 
 // CheckTx implements tx.Handler.CheckTx.
 func (basic validateBasicMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
@@ -65,7 +64,7 @@ type (
 	// TxTimeoutHeightMiddleware defines an AnteHandler decorator that checks for a
 	// tx height timeout.
 	txTimeoutHeightMiddleware struct {
-		next tx.Handler
+		next txtypes.Handler
 	}
 
 	// TxWithTimeoutHeight defines the interface a tx must implement in order for
@@ -79,7 +78,7 @@ type (
 
 // TxTimeoutHeightMiddleware defines an AnteHandler decorator that checks for a
 // tx height timeout.
-func TxTimeoutHeightMiddleware(txh tx.Handler) tx.Handler {
+func TxTimeoutHeightMiddleware(txh txtypes.Handler) txtypes.Handler {
 	return txTimeoutHeightMiddleware{
 		next: txh,
 	}
@@ -137,4 +136,86 @@ func (txh txTimeoutHeightMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, 
 	}
 
 	return txh.next.SimulateTx(ctx, tx, req)
+}
+
+// validateMemoMiddleware will validate memo given the parameters passed in
+// If memo is too large middleware returns with error, otherwise call next middleware
+// CONTRACT: Tx must implement TxWithMemo interface
+type validateMemoMiddleware struct {
+	ak   AccountKeeper
+	next txtypes.Handler
+}
+
+func ValidateMemoDecorator(ak AccountKeeper) txtypes.Middleware {
+	return func(txHandler txtypes.Handler) txtypes.Handler {
+		return validateMemoMiddleware{
+			ak:   ak,
+			next: txHandler,
+		}
+	}
+}
+
+var _ txtypes.Handler = indexEventsTxHandler{}
+
+// CheckTx implements tx.Handler.CheckTx method.
+func (vmd validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	memoTx, ok := tx.(sdk.TxWithMemo)
+	if !ok {
+		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	params := vmd.ak.GetParams(sdkCtx)
+
+	memoLength := len(memoTx.GetMemo())
+	if uint64(memoLength) > params.MaxMemoCharacters {
+		return abci.ResponseCheckTx{}, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
+			"maximum number of characters is %d but received %d characters",
+			params.MaxMemoCharacters, memoLength,
+		)
+	}
+
+	return vmd.next.CheckTx(ctx, tx, req)
+}
+
+// DeliverTx implements tx.Handler.DeliverTx method.
+func (vmd validateMemoMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	memoTx, ok := tx.(sdk.TxWithMemo)
+	if !ok {
+		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	params := vmd.ak.GetParams(sdkCtx)
+
+	memoLength := len(memoTx.GetMemo())
+	if uint64(memoLength) > params.MaxMemoCharacters {
+		return abci.ResponseDeliverTx{}, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
+			"maximum number of characters is %d but received %d characters",
+			params.MaxMemoCharacters, memoLength,
+		)
+	}
+
+	return vmd.next.DeliverTx(ctx, tx, req)
+}
+
+// SimulateTx implements tx.Handler.SimulateTx method.
+func (vmd validateMemoMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	memoTx, ok := tx.(sdk.TxWithMemo)
+	if !ok {
+		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	params := vmd.ak.GetParams(sdkCtx)
+
+	memoLength := len(memoTx.GetMemo())
+	if uint64(memoLength) > params.MaxMemoCharacters {
+		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrapf(sdkerrors.ErrMemoTooLarge,
+			"maximum number of characters is %d but received %d characters",
+			params.MaxMemoCharacters, memoLength,
+		)
+	}
+
+	return vmd.next.SimulateTx(ctx, tx, req)
 }

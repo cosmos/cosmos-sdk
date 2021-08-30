@@ -1,13 +1,9 @@
 package valuerenderer_test
 
 import (
-	"regexp"
-	"strings"
-	"testing"
-	"strconv"
-	"errors"
-	"unicode"
 
+	"regexp"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 
@@ -16,38 +12,68 @@ import (
 )
 
 
-func TestFormatInt(t *testing.T) {
+func TestFormat(t *testing.T) {
+
+	d := valuerenderer.NewDefaultValueRenderer()
+
+	decimal, _ := types.NewDecFromStr("349383323.894")
+	i, _ := types.NewIntFromString("2323293999402003")
 	
-	billionStr := "1000000000"
-	x, ok := types.NewIntFromString(billionStr)
-	require.True(t, ok)
+	
+	// TODO consider add panic case and lens(strs) > 2 
+	tt := []struct{
+		name string
+		input interface{}
+		expRes string
+		isIntType bool
+		expErr bool
+	}{
+		{"nil", nil, "", false, true},
+		{"convert a million, no error", types.NewInt(int64(1000000)),"1,000,000", true, false},
+		{"empty string error", types.Int{}, "", true, true},
+		{"Decimal, no error", decimal, "349,383,323.894", true, false},
+		{"Int, no error", i, "232,329,399,940,200,3", true, false},
+		{"Coin, no error", i, "232,329,399,940,200,3", true, false},
 
-	d := valuerenderer.DefaultValueRenderer{}
-	s, err := d.Format(x)
-	require.NoError(t, err)
-	require.Equal(t, s, "1,000,000,000")
+		//{"invalid string input panic", "qwerty", "", true, true},
+
+
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := d.Format(tc.input)
+			if tc.expErr {
+				require.Error(t, err)
+				require.Nil(t, res)
+				return 
+			} 
+			
+			if tc.isIntType {
+				require.Equal(t, tc.expRes, res)
+			} else {
+				
+
+			}
+
+		
+            
+
+
+		})
+	}
 }
-
-/*
-func TestFormatInt(t *testing.T) {
-	v := uint64(1000000000)
-	x := types.NewIntFromUint64(v)
-	x64 := x.Int64()
-	p := message.NewPrinter(language.English)
-	s := p.Sprintf("%d", x64)
-	require.Equal(t, s, "1,000,000,000")
-}
-*/
-
 
 func TestParseString(t *testing.T) {
    re := regexp.MustCompile(`\d+[mu]?regen`)
+   d := valuerenderer.NewDefaultValueRenderer()
 
    tt := []struct {
 	   str string
 	   denomExp bool
-	   errExp bool
+	   expErr bool
    }{
+	   {"", false, true},
 	   {"10regen", true, false},
 	   {"1,000,000", false, false},
 	   {"323,000,000", false, false},
@@ -61,52 +87,29 @@ func TestParseString(t *testing.T) {
 
    for _, tc := range tt {
 	   t.Run(tc.str, func(t *testing.T) {
-			s := strings.ReplaceAll(tc.str, ",", "")
+		    x, err := d.Parse(tc.str)
+			// TODO reconsider logic - put expErr at first
 			if tc.denomExp {
-				// make sure it matches regexp to make up a Coin
-				require.True(t, re.MatchString(s))
-				c, err := coinFromString(s)
 				require.NoError(t, err)
-				require.NotNil(t, c)
+				coin, ok := x.(types.Coin)
+				require.True(t, ok)
+				require.NotNil(t, coin)
+				require.True(t, re.MatchString(tc.str))
 			} else {
-				// convert to Uint
-				i64, err := strconv.ParseUint(s, 10, 64)
-				if tc.errExp {
+				if tc.expErr {
 					require.Error(t, err)
+					require.Nil(t, x)
 				} else {
-					require.NoError(t, err)
-					require.NotNil(t, types.NewUint(i64))
+				require.NoError(t, err)
+				u, ok := x.(types.Uint)
+				require.True(t, ok)
+				require.NotNil(t, u)
 				}
 			} 
 	   })
    }
 }
 
-func coinFromString(s string) (types.Coin, error) {
-	index := len(s) -1
-	for i := len(s)-1; i >= 0; i--{
-		if unicode.IsLetter(rune(s[i])) {
-			continue
-		}
-
-		index = i
-		break
-	}
-
-	if index == len(s)-1 {
-		return types.Coin{}, errors.New("no denom has been found")
-	}
-    
-	denom := s[index+1:]
-	amountStr := s[:index+1]
-	// convert to int64 to make up Coin later
-	amountInt, ok := types.NewIntFromString(amountStr)
-	if !ok {
-		return types.Coin{}, errors.New("unable convert amoountStr to int64")
-	}
-
-	return types.NewCoin(denom, amountInt), nil
-}
 
 
 

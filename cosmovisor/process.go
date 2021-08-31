@@ -84,6 +84,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
+		fmt.Println("[cosmovisor] Daemon shutting down in an attempt to restart")
 		_ = cmd.Process.Kill()
 	case err := <-cmdDone:
 		l.fw.Stop()

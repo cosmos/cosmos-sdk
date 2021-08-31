@@ -126,15 +126,7 @@ func TestBuildSimTx(t *testing.T) {
 	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
 
-	path := hd.CreateHDPath(118, 0, 0).String()
-	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	require.NoError(t, err)
-
-	fromAddr, err := ac.BytesToString(sdk.AccAddress("from"))
-	require.NoError(t, err)
-
-	txf := mockTxFactory(txCfg).WithSignMode(defaultSignMode).WithKeybase(kb)
-	msg := &countertypes.MsgIncreaseCounter{Signer: fromAddr, Count: 1}
+	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	bz, err := txf.BuildSimTx(msg)
 	require.NoError(t, err)
 	require.NotNil(t, bz)
@@ -147,12 +139,7 @@ func TestBuildUnsignedTx(t *testing.T) {
 
 	path := hd.CreateHDPath(118, 0, 0).String()
 
-	_, _, err = kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	require.NoError(t, err)
-	fromAddr, err := ac.BytesToString(sdk.AccAddress("from"))
-	require.NoError(t, err)
-	txf := mockTxFactory(txConfig).WithKeybase(kb)
-	msg := &countertypes.MsgIncreaseCounter{Signer: fromAddr, Count: 1}
+	msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
 	tx, err := txf.BuildUnsignedTx(msg)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
@@ -266,16 +253,8 @@ func TestSign(t *testing.T) {
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT)
 	txfAmino := txfDirect.
 		WithSignMode(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-	addr1, err := k1.GetAddress()
-	requireT.NoError(err)
-	addr2, err := k2.GetAddress()
-	requireT.NoError(err)
-	addr1Str, err := ac.BytesToString(addr1)
-	require.NoError(t, err)
-	addr2Str, err := ac.BytesToString(addr2)
-	require.NoError(t, err)
-	msg1 := &countertypes.MsgIncreaseCounter{Signer: addr1Str, Count: 1}
-	msg2 := &countertypes.MsgIncreaseCounter{Signer: addr2Str, Count: 1}
+	msg1 := banktypes.NewMsgSend(info1.GetAddress(), sdk.AccAddress("to"), nil)
+	msg2 := banktypes.NewMsgSend(info2.GetAddress(), sdk.AccAddress("to"), nil)
 	txb, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)
 	requireT.NoError(err)
 	txb2, err := txfNoKeybase.BuildUnsignedTx(msg1, msg2)

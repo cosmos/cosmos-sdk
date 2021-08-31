@@ -12,48 +12,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-<<<<<<< HEAD:x/mint/client/rest/grpc_query_test.go
-type IntegrationTestSuite struct {
-	suite.Suite
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	cfg := network.DefaultConfig()
-
-	genesisState := cfg.GenesisState
-	cfg.NumValidators = 1
-
-	var mintData minttypes.GenesisState
-	s.Require().NoError(cfg.Codec.UnmarshalJSON(genesisState[minttypes.ModuleName], &mintData))
-
-	inflation := sdk.MustNewDecFromStr("1.0")
-	mintData.Minter.Inflation = inflation
-	mintData.Params.InflationMin = inflation
-	mintData.Params.InflationMax = inflation
-
-	mintDataBz, err := cfg.Codec.MarshalJSON(&mintData)
-	s.Require().NoError(err)
-	genesisState[minttypes.ModuleName] = mintDataBz
-	cfg.GenesisState = genesisState
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
-
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
-
-=======
->>>>>>> cd221680c (feat!: remove legacy REST  (#9594)):x/mint/client/testutil/grpc.go
 func (s *IntegrationTestSuite) TestQueryGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress

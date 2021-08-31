@@ -16,62 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-<<<<<<< HEAD:x/staking/client/rest/grpc_query_test.go
-type IntegrationTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 2
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
-
-	_, err := s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	unbond, err := sdk.ParseCoinNormalized("10stake")
-	s.Require().NoError(err)
-
-	val := s.network.Validators[0]
-	val2 := s.network.Validators[1]
-
-	// redelegate
-	_, err = stakingtestutil.MsgRedelegateExec(
-		val.ClientCtx,
-		val.Address,
-		val.ValAddress,
-		val2.ValAddress,
-		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 254000),
-	) // expected gas is 202987
-
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// unbonding
-	_, err = stakingtestutil.MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
-
-func (s *IntegrationTestSuite) TestQueryValidatorsGRPCHandler() {
-=======
 func (s *IntegrationTestSuite) TestGRPCQueryValidatorsHandler() {
->>>>>>> cd221680c (feat!: remove legacy REST  (#9594)):x/staking/client/testutil/grpc.go
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

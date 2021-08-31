@@ -12,61 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-<<<<<<< HEAD:x/gov/client/rest/grpc_query_test.go
-type IntegrationTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	s.cfg = network.DefaultConfig()
-	s.cfg.NumValidators = 1
-
-	s.network = network.New(s.T(), s.cfg)
-
-	_, err := s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	val := s.network.Validators[0]
-
-	// create a proposal with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 1", "Where is the title!?", types.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// vote for proposal
-	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "1", "yes")
-	s.Require().NoError(err)
-
-	// create a proposal without deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 2", "Where is the title!?", types.ProposalTypeText)
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// create a proposal3 with deposit
-	_, err = govtestutil.MsgSubmitProposal(val.ClientCtx, val.Address.String(),
-		"Text Proposal 3", "Where is the title!?", types.ProposalTypeText,
-		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, types.DefaultMinDepositTokens).String()))
-	s.Require().NoError(err)
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-
-	// vote for proposal3 as val
-	_, err = govtestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
-	s.Require().NoError(err)
-}
-
-=======
->>>>>>> cd221680c (feat!: remove legacy REST  (#9594)):x/gov/client/testutil/grpc.go
 func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 	val := s.network.Validators[0]
 

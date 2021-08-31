@@ -9,34 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-<<<<<<< HEAD:x/params/client/rest/grpc_query_test.go
-type IntegrationTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	cfg := network.DefaultConfig()
-	cfg.NumValidators = 1
-
-	s.cfg = cfg
-	s.network = network.New(s.T(), cfg)
-
-	_, err := s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
-
-=======
->>>>>>> cd221680c (feat!: remove legacy REST  (#9594)):x/params/client/testutil/grpc.go
 func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress

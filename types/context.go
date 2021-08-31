@@ -11,7 +11,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	// stypes2 "github.com/cosmos/cosmos-sdk/store/v2"
 )
 
 /*
@@ -24,7 +25,7 @@ and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
 	ctx           context.Context
-	ms            MultiStore
+	store         BasicRootStore
 	header        tmproto.Header
 	headerHash    tmbytes.HexBytes
 	chainID       string
@@ -44,8 +45,10 @@ type Context struct {
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context    { return c.ctx }
-func (c Context) MultiStore() MultiStore      { return c.ms }
+func (c Context) Context() context.Context { return c.ctx }
+
+// func (c Context) MultiStore() MultiStore      { return c.store }
+func (c Context) RootStore() BasicRootStore   { return c.store }
 func (c Context) BlockHeight() int64          { return c.header.Height }
 func (c Context) BlockTime() time.Time        { return c.header.Time }
 func (c Context) ChainID() string             { return c.chainID }
@@ -77,17 +80,17 @@ func (c Context) ConsensusParams() *abci.ConsensusParams {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(rs BasicRootStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
 		ctx:          context.Background(),
-		ms:           ms,
+		store:        rs,
 		header:       header,
 		chainID:      header.ChainID,
 		checkTx:      isCheckTx,
 		logger:       logger,
-		gasMeter:     storetypes.NewInfiniteGasMeter(),
+		gasMeter:     stypes.NewInfiniteGasMeter(),
 		minGasPrice:  DecCoins{},
 		eventManager: NewEventManager(),
 	}
@@ -100,8 +103,8 @@ func (c Context) WithContext(ctx context.Context) Context {
 }
 
 // WithMultiStore returns a Context with an updated MultiStore.
-func (c Context) WithMultiStore(ms MultiStore) Context {
-	c.ms = ms
+func (c Context) WithRootStore(rs BasicRootStore) Context {
+	c.store = rs
 	return c
 }
 
@@ -216,7 +219,7 @@ func (c Context) WithEventManager(em *EventManager) Context {
 
 // TODO: remove???
 func (c Context) IsZero() bool {
-	return c.ms == nil
+	return c.store == nil
 }
 
 // WithValue is deprecated, provided for backwards compatibility
@@ -242,23 +245,24 @@ func (c Context) Value(key interface{}) interface{} {
 // Store / Caching
 // ----------------------------------------------------------------------------
 
-// KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key storetypes.StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), storetypes.KVGasConfig())
+// KVStore fetches a KVStore from the RootStore.
+func (c Context) KVStore(key stypes.StoreKey) stypes.KVStore {
+	return gaskv.NewStore(c.RootStore().GetKVStore(key), c.GasMeter(), stypes.KVGasConfig())
 }
 
-// TransientStore fetches a TransientStore from the MultiStore.
-func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), storetypes.TransientGasConfig())
+// TransientStore fetches a TransientStore from the RootStore.
+func (c Context) TransientStore(key stypes.StoreKey) stypes.KVStore {
+	return gaskv.NewStore(c.RootStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new
 // EventManager. The cached context is written to the context when writeCache
 // is called.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
-	cms := c.MultiStore().CacheMultiStore()
-	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
-	return cc, cms.Write
+	// TODO replace with constructor?
+	crs := c.RootStore().CacheRootStore()
+	cc = c.WithRootStore(crs).WithEventManager(NewEventManager())
+	return cc, crs.Write
 }
 
 // ContextKey defines a type alias for a stdlib Context key.

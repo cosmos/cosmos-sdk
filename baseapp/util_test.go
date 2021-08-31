@@ -24,11 +24,11 @@ func (app *BaseApp) DeliverState() *state {
 	return app.deliverState
 }
 
-// CMS is an exported method to be able to access baseapp's cms in tests.
+// Store is an exported method to be able to access baseapp's root store in tests.
 //
 // This method is only accessible in baseapp tests.
-func (app *BaseApp) CMS() types.CommitMultiStore {
-	return app.cms
+func (app *BaseApp) Store() types.CommitRootStore {
+	return app.store
 }
 
 // GetMaximumBlockGas return maximum blocks gas.

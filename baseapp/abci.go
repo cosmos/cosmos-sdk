@@ -35,7 +35,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	if req.InitialHeight > 1 {
 		app.initialHeight = req.InitialHeight
 		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
-		err := app.cms.SetInitialVersion(req.InitialHeight)
+		err := app.store.SetInitialVersion(uint64(req.InitialHeight))
 		if err != nil {
 			panic(err)
 		}
@@ -105,7 +105,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 
 // Info implements the ABCI interface.
 func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
-	lastCommitID := app.cms.LastCommitID()
+	lastCommitID := app.store.LastCommitID()
 
 	return abci.ResponseInfo{
 		Data:             app.name,
@@ -144,8 +144,8 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	defer telemetry.MeasureSince(time.Now(), "abci", "begin_block")
 
-	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(sdk.TraceContext(
+	if app.store.TracingEnabled() {
+		app.store.SetTraceContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
 	}
@@ -211,7 +211,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	defer telemetry.MeasureSince(time.Now(), "abci", "end_block")
 
 	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
+		app.deliverState.ms.SetTraceContext(nil)
 	}
 
 	if app.endBlocker != nil {
@@ -316,9 +316,9 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	// Write the DeliverTx state into branched storage and commit the MultiStore.
 	// The write to the DeliverTx state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called is persists those values.
+	// MultiStore (app.store) so when Commit() is called it persists those values.
 	app.deliverState.ms.Write()
-	commitID := app.cms.Commit()
+	commitID := app.store.Commit()
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
@@ -648,7 +648,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	cacheMS, err := app.cms.CacheMultiStoreWithVersion(height)
+	cacheMS, err := app.store.GetVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(
@@ -722,7 +722,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 
 	// Define the state pruning offset, i.e. the block offset at which the
 	// underlying logical database is persisted to disk.
-	statePruningOffset := int64(app.cms.GetPruning().KeepEvery)
+	statePruningOffset := int64(app.store.GetPruning().KeepEvery)
 	if statePruningOffset > 0 {
 		if commitHeight > statePruningOffset {
 			v := commitHeight - (commitHeight % statePruningOffset)
@@ -800,12 +800,12 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	// "/store" prefix for store queries
-	queryable, ok := app.cms.(sdk.Queryable)
+	queryable, ok := app.store.(sdk.Queryable)
 	if !ok {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
 	}
 
-	req.Path = "/" + strings.Join(path[1:], "/")
+	req.Path = "/" + strings.Join(path[1:], "/") // = /store/main/key -> /main/key
 
 	if req.Height <= 1 && req.Prove {
 		return sdkerrors.QueryResult(

@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -17,12 +15,12 @@ import (
 // for options that need access to non-exported fields of the BaseApp
 
 // SetPruning sets a pruning option on the multistore associated with the app
-func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
-	return func(bap *BaseApp) { bap.cms.SetPruning(opts) }
+func SetPruning(opts sdk.PruningOptions) StoreOption {
+	return func(config *sdk.RootStoreConfig, _ uint64) error { config.Pruning = opts; return nil }
 }
 
 // SetMinGasPrices returns an option that sets the minimum gas prices on the app.
-func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
+func SetMinGasPrices(gasPricesStr string) AppOptionFunc {
 	gasPrices, err := sdk.ParseDecCoins(gasPricesStr)
 	if err != nil {
 		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
@@ -32,51 +30,74 @@ func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.
-func SetHaltHeight(blockHeight uint64) func(*BaseApp) {
+func SetHaltHeight(blockHeight uint64) AppOptionFunc {
 	return func(bap *BaseApp) { bap.setHaltHeight(blockHeight) }
 }
 
 // SetHaltTime returns a BaseApp option function that sets the halt block time.
-func SetHaltTime(haltTime uint64) func(*BaseApp) {
+func SetHaltTime(haltTime uint64) AppOptionFunc {
 	return func(bap *BaseApp) { bap.setHaltTime(haltTime) }
 }
 
 // SetMinRetainBlocks returns a BaseApp option function that sets the minimum
 // block retention height value when determining which heights to prune during
 // ABCI Commit.
-func SetMinRetainBlocks(minRetainBlocks uint64) func(*BaseApp) {
+func SetMinRetainBlocks(minRetainBlocks uint64) AppOptionFunc {
 	return func(bapp *BaseApp) { bapp.setMinRetainBlocks(minRetainBlocks) }
 }
 
 // SetTrace will turn on or off trace flag
-func SetTrace(trace bool) func(*BaseApp) {
+func SetTrace(trace bool) AppOptionFunc {
 	return func(app *BaseApp) { app.setTrace(trace) }
 }
 
 // SetIndexEvents provides a BaseApp option function that sets the events to index.
-func SetIndexEvents(ie []string) func(*BaseApp) {
+func SetIndexEvents(ie []string) AppOptionFunc {
 	return func(app *BaseApp) { app.setIndexEvents(ie) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
-func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
-	return func(app *BaseApp) { app.setInterBlockCache(cache) }
+func SetInterBlockCache(cache sdk.RootStorePersistentCache) AppOptionFunc {
+	opt := func(cfg *sdk.RootStoreConfig, v uint64) error {
+		cfg.PersistentCache = cache
+		return nil
+	}
+	return func(app *BaseApp) { app.storeOpts = append(app.storeOpts, opt) }
 }
 
 // SetSnapshotInterval sets the snapshot interval.
-func SetSnapshotInterval(interval uint64) func(*BaseApp) {
+func SetSnapshotInterval(interval uint64) AppOptionFunc {
 	return func(app *BaseApp) { app.SetSnapshotInterval(interval) }
 }
 
 // SetSnapshotKeepRecent sets the recent snapshots to keep.
-func SetSnapshotKeepRecent(keepRecent uint32) func(*BaseApp) {
+func SetSnapshotKeepRecent(keepRecent uint32) AppOptionFunc {
 	return func(app *BaseApp) { app.SetSnapshotKeepRecent(keepRecent) }
 }
 
 // SetSnapshotStore sets the snapshot store.
-func SetSnapshotStore(snapshotStore *snapshots.Store) func(*BaseApp) {
-	return func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) }
+func SetSnapshotStore(snapshotStore *snapshots.Store) AppOptionOrdered {
+	return AppOptionOrdered{
+		func(app *BaseApp) { app.SetSnapshotStore(snapshotStore) },
+		OptionOrderAfterStore,
+	}
+}
+
+// SetStorePrefixes store reserves prefix according to app configuration
+func SetStorePrefixes(keys ...storetypes.StoreKey) StoreOption {
+	return func(config *sdk.RootStoreConfig, _ uint64) error {
+		for _, key := range keys {
+			typ, err := storetypes.StoreKeyToType(key)
+			if err != nil {
+				return err
+			}
+			if err = config.ReservePrefix(key, typ); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -107,22 +128,6 @@ func (app *BaseApp) SetVersion(v string) {
 // SetProtocolVersion sets the application's protocol version
 func (app *BaseApp) SetProtocolVersion(v uint64) {
 	app.appVersion = v
-}
-
-func (app *BaseApp) SetDB(db dbm.DB) {
-	if app.sealed {
-		panic("SetDB() on sealed BaseApp")
-	}
-
-	app.db = db
-}
-
-func (app *BaseApp) SetCMS(cms store.CommitMultiStore) {
-	if app.sealed {
-		panic("SetEndBlocker() on sealed BaseApp")
-	}
-
-	app.cms = cms
 }
 
 func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
@@ -184,16 +189,20 @@ func (app *BaseApp) SetFauxMerkleMode() {
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.SetTracer(w)
+	opt := func(cfg *sdk.RootStoreConfig, v uint64) error {
+		cfg.TraceWriter = w
+		return nil
+	}
+	app.storeOpts = append(app.storeOpts, opt)
 }
 
-// SetStoreLoader allows us to customize the rootMultiStore initialization.
-func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
+// SetStoreLoader allows us to customize the root store initialization.
+func (app *BaseApp) SetStoreConstructor(ctor StoreConstructor) {
 	if app.sealed {
-		panic("SetStoreLoader() on sealed BaseApp")
+		panic("SetStoreConstructor() on sealed BaseApp")
 	}
 
-	app.storeLoader = loader
+	app.storeCtor = ctor
 }
 
 // SetSnapshotStore sets the snapshot store.
@@ -205,7 +214,7 @@ func (app *BaseApp) SetSnapshotStore(snapshotStore *snapshots.Store) {
 		app.snapshotManager = nil
 		return
 	}
-	app.snapshotManager = snapshots.NewManager(snapshotStore, app.cms)
+	app.snapshotManager = snapshots.NewManager(snapshotStore, app.store)
 }
 
 // SetSnapshotInterval sets the snapshot interval.

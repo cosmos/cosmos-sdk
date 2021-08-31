@@ -2,19 +2,21 @@ package baseapp
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	// "reflect"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	dbm "github.com/cosmos/cosmos-sdk/db"
+	// dbutil "github.com/cosmos/cosmos-sdk/internal/db"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	// "github.com/cosmos/cosmos-sdk/store"
+	// "github.com/cosmos/cosmos-sdk/store/rootmulti"
+	stypes "github.com/cosmos/cosmos-sdk/store/v2"
+	"github.com/cosmos/cosmos-sdk/store/v2/flat"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
@@ -34,23 +36,31 @@ type (
 	// Enum mode for app.runTx
 	runTxMode uint8
 
-	// StoreLoader defines a customizable function to control how we load the CommitMultiStore
+	// StoreLoader defines a customizable function to control how we load the CommitRootStore
 	// from disk. This is useful for state migration, when loading a datastore written with
 	// an older version of the software. In particular, if a module changed the substore key name
 	// (or removed a substore) between two versions of the software.
-	StoreLoader func(ms sdk.CommitMultiStore) error
+	// StoreLoader func(ms sdk.CommitRootStore) error
+
+	// StoreLoader func(initialVersion uint64) (sdk.CommitRootStore, error)
+	// StoreLoader func(sdk.RootStoreConfig) (sdk.CommitRootStore, error)
+	// StoreLoader func(*sdk.RootStoreConfig, uint64) (sdk.CommitRootStore, error)
+	StoreOption      func(*sdk.RootStoreConfig, uint64) error
+	StoreConstructor func(dbm.DBConnection, sdk.RootStoreConfig) (sdk.CommitRootStore, error)
 )
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { // nolint: maligned
 	// initialized on creation
-	logger            log.Logger
-	name              string               // application name from abci.Info
-	db                dbm.DB               // common DB backend
-	cms               sdk.CommitMultiStore // Main (uncached) state
-	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	queryRouter       sdk.QueryRouter      // router for redirecting query calls
-	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
+	logger    log.Logger
+	name      string // application name from abci.Info
+	db        dbm.DBConnection
+	storeCtor StoreConstructor
+	storeOpts []StoreOption       // options to configure root store
+	store     sdk.CommitRootStore // Main (uncached) state
+	// storeLoader StoreLoader         // function to handle store loading
+	queryRouter       sdk.QueryRouter  // router for redirecting query calls
+	grpcQueryRouter   *GRPCQueryRouter // router for redirecting gRPC query calls
 	interfaceRegistry types.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 
@@ -73,9 +83,6 @@ type BaseApp struct { // nolint: maligned
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
 	checkState   *state // for CheckTx
 	deliverState *state // for DeliverTx
-
-	// an inter-block write-through cache provided to the context during deliverState
-	interBlockCache sdk.MultiStorePersistentCache
 
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
@@ -131,33 +138,87 @@ type BaseApp struct { // nolint: maligned
 	abciListeners []ABCIListener
 }
 
+// OptionOrder represents the required ordering for options that are order dependent
+type OptionOrder int
+
+const (
+	OptionOrderDefault = iota
+	OptionOrderAfterStore
+)
+
+// AppOption is a configuration option for a BaseApp
+type AppOption interface {
+	Apply(*BaseApp)
+	Order() OptionOrder
+}
+
+type AppOptionFunc func(*BaseApp)
+
+type AppOptionOrdered struct {
+	AppOptionFunc
+	order OptionOrder
+}
+
+func (opt AppOptionOrdered) Order() OptionOrder { return opt.order }
+
+func (opt AppOptionFunc) Apply(app *BaseApp) { opt(app) }
+func (opt AppOptionFunc) Order() OptionOrder { return OptionOrderDefault }
+
+func (opt StoreOption) Apply(app *BaseApp) { app.storeOpts = append(app.storeOpts, opt) }
+func (opt StoreOption) Order() OptionOrder { return OptionOrderDefault }
+
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
 // variadic number of option functions, which act on the BaseApp to set
 // configuration choices.
 //
 // NOTE: The db is used to store the version number for now.
 func NewBaseApp(
-	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
+	name string,
+	logger log.Logger,
+	db dbm.DBConnection,
+	txDecoder sdk.TxDecoder,
+	options ...AppOption,
 ) *BaseApp {
 	app := &BaseApp{
 		logger:          logger,
 		name:            name,
 		db:              db,
-		cms:             store.NewCommitMultiStore(db),
-		storeLoader:     DefaultStoreLoader,
+		storeCtor:       DefaultStoreConstructor,
 		queryRouter:     NewQueryRouter(),
 		grpcQueryRouter: NewGRPCQueryRouter(),
 		txDecoder:       txDecoder,
 		fauxMerkleMode:  false,
 	}
 
+	var afterStoreOpts []AppOption
 	for _, option := range options {
-		option(app)
+		if int(option.Order()) > int(OptionOrderDefault) {
+			afterStoreOpts = append(afterStoreOpts, option)
+		} else {
+			option.Apply(app)
+		}
 	}
 
-	if app.interBlockCache != nil {
-		app.cms.SetInterBlockCache(app.interBlockCache)
+	err := app.loadStore()
+	if err != nil {
+		panic(err)
 	}
+	for _, option := range afterStoreOpts {
+		option.Apply(app)
+	}
+
+	// // TODO: conditional loading of multistore/rootstore
+	// if true {
+	// 	var err error
+	// 	opts := store.RootStoreConfig{PersistentCache: app.interBlockCache}
+	// 	app.store, err = store.NewCommitRootStore(db, opts)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// } else {
+	// 	// app.store = nil store.NewCommitMultiStore(dbutil.ConnectionAsTmdb(db))
+	// 	app.store = store.MultiStoreAsRootStore(db)
+	// }
 
 	return app
 }
@@ -187,105 +248,47 @@ func (app *BaseApp) Trace() bool {
 	return app.trace
 }
 
-// MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
-// multistore.
-func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
-	for _, key := range keys {
-		switch key.(type) {
-		case *storetypes.KVStoreKey:
-			if !app.fauxMerkleMode {
-				app.MountStore(key, storetypes.StoreTypeIAVL)
-			} else {
-				// StoreTypeDB doesn't do anything upon commit, and it doesn't
-				// retain history, but it's useful for faster simulation.
-				app.MountStore(key, storetypes.StoreTypeDB)
-			}
-
-		case *storetypes.TransientStoreKey:
-			app.MountStore(key, storetypes.StoreTypeTransient)
-
-		default:
-			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
-		}
+func (app *BaseApp) loadStore() error {
+	versions, err := app.db.Versions()
+	if err != nil {
+		return err
 	}
-}
-
-// MountKVStores mounts all IAVL or DB stores to the provided keys in the
-// BaseApp multistore.
-func (app *BaseApp) MountKVStores(keys map[string]*storetypes.KVStoreKey) {
-	for _, key := range keys {
-		if !app.fauxMerkleMode {
-			app.MountStore(key, storetypes.StoreTypeIAVL)
-		} else {
-			// StoreTypeDB doesn't do anything upon commit, and it doesn't
-			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, storetypes.StoreTypeDB)
-		}
+	latest := versions.Last()
+	config := flat.DefaultRootStoreConfig()
+	for _, opt := range app.storeOpts {
+		opt(&config, latest)
 	}
-}
-
-// MountTransientStores mounts all transient stores to the provided keys in
-// the BaseApp multistore.
-func (app *BaseApp) MountTransientStores(keys map[string]*storetypes.TransientStoreKey) {
-	for _, key := range keys {
-		app.MountStore(key, storetypes.StoreTypeTransient)
-	}
-}
-
-// MountMemoryStores mounts all in-memory KVStores with the BaseApp's internal
-// commit multi-store.
-func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey) {
-	for _, memKey := range keys {
-		app.MountStore(memKey, storetypes.StoreTypeMemory)
-	}
-}
-
-// MountStore mounts a store to the provided key in the BaseApp multistore,
-// using the default DB.
-func (app *BaseApp) MountStore(key storetypes.StoreKey, typ storetypes.StoreType) {
-	app.cms.MountStoreWithDB(key, typ, nil)
-}
-
-// LoadLatestVersion loads the latest application version. It will panic if
-// called more than once on a running BaseApp.
-func (app *BaseApp) LoadLatestVersion() error {
-	err := app.storeLoader(app.cms)
+	app.store, err = app.storeCtor(app.db, config)
 	if err != nil {
 		return fmt.Errorf("failed to load latest version: %w", err)
 	}
-
-	return app.init()
+	return nil
 }
 
-// DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
-	return ms.LoadLatestVersion()
+func (app *BaseApp) CloseStore() error {
+	return app.store.Close()
 }
 
-// LoadVersion loads the BaseApp application version. It will panic if called
-// more than once on a running baseapp.
-func (app *BaseApp) LoadVersion(version int64) error {
-	err := app.cms.LoadVersion(version)
-	if err != nil {
-		return fmt.Errorf("failed to load version %d: %w", version, err)
-	}
-
-	return app.init()
+// DefaultStoreConstructor attempts to create a new store, but loads from existing data if present.
+func DefaultStoreConstructor(db dbm.DBConnection, config sdk.RootStoreConfig) (stypes.CommitRootStore, error) {
+	return flat.NewRootStore(db, config)
 }
 
 // LastCommitID returns the last CommitID of the multistore.
-func (app *BaseApp) LastCommitID() storetypes.CommitID {
-	return app.cms.LastCommitID()
+func (app *BaseApp) LastCommitID() stypes.CommitID {
+	return app.store.LastCommitID()
 }
 
 // LastBlockHeight returns the last committed block height.
 func (app *BaseApp) LastBlockHeight() int64 {
-	return app.cms.LastCommitID().Version
+	return app.store.LastCommitID().Version
 }
 
-func (app *BaseApp) init() error {
+// Init sets the check state and seals the app. It will panic if
+// called more than once on a running BaseApp.
+func (app *BaseApp) Init() error {
 	if app.sealed {
-		panic("cannot call initFromMainStore: baseapp already sealed")
+		panic("cannot call Init: baseapp already sealed")
 	}
 
 	// needed for the export command which inits from store but never calls initchain
@@ -294,11 +297,7 @@ func (app *BaseApp) init() error {
 
 	// make sure the snapshot interval is a multiple of the pruning KeepEvery interval
 	if app.snapshotManager != nil && app.snapshotInterval > 0 {
-		rms, ok := app.cms.(*rootmulti.Store)
-		if !ok {
-			return errors.New("state sync snapshots require a rootmulti store")
-		}
-		pruningOpts := rms.GetPruning()
+		pruningOpts := app.store.GetPruning()
 		if pruningOpts.KeepEvery > 0 && app.snapshotInterval%pruningOpts.KeepEvery != 0 {
 			return fmt.Errorf(
 				"state sync snapshot interval %v must be a multiple of pruning keep every interval %v",
@@ -323,10 +322,6 @@ func (app *BaseApp) setHaltTime(haltTime uint64) {
 
 func (app *BaseApp) setMinRetainBlocks(minRetainBlocks uint64) {
 	app.minRetainBlocks = minRetainBlocks
-}
-
-func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
-	app.interBlockCache = cache
 }
 
 func (app *BaseApp) setTrace(trace bool) {
@@ -355,7 +350,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // provided header, and minimum gas prices set. It is set on InitChain and reset
 // on Commit.
 func (app *BaseApp) setCheckState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
+	ms := app.store.CacheRootStore()
 	app.checkState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
@@ -367,7 +362,7 @@ func (app *BaseApp) setCheckState(header tmproto.Header) {
 // and provided header. It is set on InitChain and BeginBlock and set to nil on
 // Commit.
 func (app *BaseApp) setDeliverState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
+	ms := app.store.CacheRootStore()
 	app.deliverState = &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),

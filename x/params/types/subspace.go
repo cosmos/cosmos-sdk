@@ -80,7 +80,8 @@ func (s Subspace) kvStore(ctx sdk.Context) sdk.KVStore {
 func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	return prefix.NewStore(ctx.TransientStore(s.tkey), append(s.name, '/'))
+	ts := ctx.TransientStore(s.tkey)
+	return prefix.NewStore(ts, append(s.name, '/'))
 }
 
 // Validate attempts to validate a parameter value by its key. If the key is not

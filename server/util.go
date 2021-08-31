@@ -21,9 +21,9 @@ import (
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -371,7 +371,7 @@ func addrToIP(addr net.Addr) net.IP {
 	return ip
 }
 
-func openDB(rootDir string) (dbm.DB, error) {
+func openDB(rootDir string) (dbm.DBConnection, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return sdk.NewDB("application", dataDir)
 }

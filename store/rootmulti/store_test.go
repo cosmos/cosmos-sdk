@@ -212,12 +212,6 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	expectedCommitID := getExpectedCommitID(store, 1)
 	checkStore(t, store, expectedCommitID, commitID)
 
-	ci, err := getCommitInfo(db, 1)
-	require.NoError(t, err)
-	require.Equal(t, int64(1), ci.Version)
-	require.Equal(t, 3, len(ci.StoreInfos))
-	checkContains(t, ci.StoreInfos, []string{"store1", "store2", "store3"})
-
 	// Load without changes and make sure it is sensible
 	store = newMultiStoreWithMounts(db, types.PruneNothing)
 

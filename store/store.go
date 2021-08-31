@@ -1,14 +1,14 @@
 package store
 
 import (
-	dbm "github.com/tendermint/tm-db"
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-func NewCommitMultiStore(db dbm.DB) types.CommitMultiStore {
+func NewCommitMultiStore(db tmdb.DB) types.CommitMultiStore {
 	return rootmulti.NewStore(db)
 }
 

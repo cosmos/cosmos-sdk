@@ -70,6 +70,14 @@ func (x Dec) Sub(y Dec) (Dec, error) {
 	return z, errors.Wrap(err, "decimal subtraction error")
 }
 
+// Mul returns a new Dec with value `x*y` (formatted as decimal128, with 34 digit precision) without
+// mutating any argument and error if there is an overflow.
+func (x Dec) Mul(y Dec) (Dec, error) {
+	var z Dec
+	_, err := dec128Context.Mul(&z.dec, &x.dec, &y.dec)
+	return z, errors.Wrap(err, "decimal multiplication error")
+}
+
 func (x Dec) Int64() (int64, error) {
 	return x.dec.Int64()
 }
@@ -96,19 +104,4 @@ func (x Dec) IsNegative() bool {
 
 func (x Dec) IsPositive() bool {
 	return !x.dec.Negative && !x.dec.IsZero()
-}
-
-// NumDecimalPlaces returns the number of decimal places in x.
-func (x Dec) NumDecimalPlaces() uint32 {
-	exp := x.dec.Exponent
-	if exp >= 0 {
-		return 0
-	}
-	return uint32(-exp)
-}
-
-func (x Dec) Reduce() (Dec, int) {
-	y := Dec{}
-	_, n := y.dec.Reduce(&x.dec)
-	return y, n
 }

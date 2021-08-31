@@ -37,7 +37,6 @@ func TestDec(t *testing.T) {
 	t.Run("TestIsZero", rapid.MakeCheck(testIsZero))
 	t.Run("TestIsNegative", rapid.MakeCheck(testIsNegative))
 	t.Run("TestIsPositive", rapid.MakeCheck(testIsPositive))
-	t.Run("TestNumDecimalPlaces", rapid.MakeCheck(testNumDecimalPlaces))
 
 	// Unit tests
 	zero := Dec{}
@@ -277,14 +276,6 @@ func testIsPositive(t *rapid.T) {
 	f, dec := floatAndDec.float, floatAndDec.dec
 
 	require.Equal(t, f > 0, dec.IsPositive())
-}
-
-// Property: floatDecimalPlaces(f) == NumDecimalPlaces(NewDecFromString(f.String()))
-func testNumDecimalPlaces(t *rapid.T) {
-	floatAndDec := genFloatAndDec.Draw(t, "floatAndDec").(floatAndDec)
-	f, dec := floatAndDec.float, floatAndDec.dec
-
-	require.Equal(t, floatDecimalPlaces(t, f), dec.NumDecimalPlaces())
 }
 
 func floatDecimalPlaces(t *rapid.T, f float64) uint32 {

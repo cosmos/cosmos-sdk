@@ -14,11 +14,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	"github.com/cosmos/cosmos-sdk/store"
+	// "github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -48,14 +48,15 @@ type StoreKeysPrefixes struct {
 
 // fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
 // an IAVLStore for faster simulation speed.
-func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
+var fauxMerkleModeOpt = baseapp.AppOptionFunc(func(bapp *baseapp.BaseApp) {
 	bapp.SetFauxMerkleMode()
-}
+})
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
 // inter-block write-through cache.
-func interBlockCacheOpt() func(*baseapp.BaseApp) {
-	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+func interBlockCacheOpt() baseapp.AppOptionFunc {
+	return func(*baseapp.BaseApp) {}
+	// return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 func TestFullAppSimulation(t *testing.T) {
@@ -310,7 +311,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				logger = log.NewNopLogger()
 			}
 
-			db := dbm.NewMemDB()
+			db := memdb.NewDB()
 			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
 
 			fmt.Printf(
@@ -331,9 +332,9 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			if config.Commit {
-				PrintStats(db)
-			}
+			// if config.Commit {
+			// 	PrintStats(db)//TODO
+			// }
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash

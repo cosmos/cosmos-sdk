@@ -75,7 +75,7 @@ You can introduce entirely new modules to the application during an upgrade. New
 
 ### Add StoreUpgrades for New Modules
 
-All chains preparing to run in-place store migrations will need to manually add store upgrades for new modules and then configure the store loader to apply those upgrades. This ensures that the new module's stores are added to the multistore before the migrations begin.
+All chains preparing to run in-place store migrations will need to manually add store upgrades for new modules and then configure the store to apply those upgrades. This ensures that the new module's stores are added to the multistore before the migrations begin.
 
 ```go
 upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
@@ -91,8 +91,8 @@ if upgradeInfo.Name == "my-plan" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.
 		// ...
 	}
 
-	// configure store loader that checks if version == upgradeHeight and applies store upgrades
-	app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	// configure store option that checks if version == upgradeHeight and applies store upgrades
+    app.SetStoreOption(upgradetypes.UpgradeStoreOption(upgradeInfo.Height, &storeUpgrades))
 }
 ```
 

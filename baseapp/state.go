@@ -5,14 +5,14 @@ import (
 )
 
 type state struct {
-	ms  sdk.CacheMultiStore
+	ms  sdk.CacheRootStore
 	ctx sdk.Context
 }
 
-// CacheMultiStore calls and returns a CacheMultiStore on the state's underling
-// CacheMultiStore.
-func (st *state) CacheMultiStore() sdk.CacheMultiStore {
-	return st.ms.CacheMultiStore()
+// CacheRootStore calls and returns a CacheRootStore on the state's underling
+// CacheRootStore.
+func (st *state) CacheRootStore() sdk.CacheRootStore {
+	return st.ms.CacheRootStore()
 }
 
 // Context returns the Context of the state.

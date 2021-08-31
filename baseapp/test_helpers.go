@@ -89,5 +89,5 @@ func (app *BaseApp) NewContext(isCheckTx bool, header tmproto.Header) sdk.Contex
 }
 
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header tmproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
+	return sdk.NewContext(app.store, header, isCheckTx, app.logger)
 }

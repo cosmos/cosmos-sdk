@@ -9,9 +9,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/db/memdb"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -38,8 +38,7 @@ import (
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
-	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	db := memdb.NewDB()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:             logger,
 		DB:                 db,
@@ -59,10 +58,12 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	app.Commit()
+	require.NoError(t, app.CloseStore())
 
 	logger2, _ := log.NewDefaultLogger("plain", "info", false)
 	// Making a new app object with the db, so that initchain hasn't been called
 	app2 := NewSimApp(logger2, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	require.NoError(t, app2.Init())
 	_, err := app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
@@ -73,13 +74,12 @@ func TestGetMaccPerms(t *testing.T) {
 }
 
 func TestRunMigrations(t *testing.T) {
-	db := dbm.NewMemDB()
 	encCfg := MakeTestEncodingConfig()
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	app := NewSimApp(logger, memdb.NewDB(), nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
 
 	// Create a new baseapp and configurator for the purpose of this test.
-	bApp := baseapp.NewBaseApp(appName, logger, db)
+	bApp := baseapp.NewBaseApp(appName, logger, memdb.NewDB(), encCfg.TxConfig.TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	msr := authmiddleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
@@ -98,6 +98,7 @@ func TestRunMigrations(t *testing.T) {
 
 		module.RegisterServices(app.configurator)
 	}
+	require.NoError(t, app.Init())
 
 	// Initialize the chain
 	app.InitChain(abci.RequestInitChain{})
@@ -203,10 +204,11 @@ func TestRunMigrations(t *testing.T) {
 }
 
 func TestInitGenesisOnMigration(t *testing.T) {
-	db := dbm.NewMemDB()
+	db := memdb.NewDB()
 	encCfg := MakeTestEncodingConfig()
 	logger, _ := log.NewDefaultLogger("plain", "info", false)
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	require.NoError(t, app.Init())
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
@@ -248,8 +250,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
-	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	db := memdb.NewDB()
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:             logger,
 		DB:                 db,

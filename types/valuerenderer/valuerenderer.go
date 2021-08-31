@@ -2,12 +2,11 @@ package valuerenderer
 
 import (
 	"errors"
-    "strings"
+	"math"
 	"regexp"
-	"unicode"
 	"strconv"
-	"fmt"
-
+	"strings"
+	"unicode"
 
 	"github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -21,10 +20,10 @@ type ValueRenderer interface {
 	Parse(string) (interface{}, error)
 }
 
-// create default value rreenderer in CLI and then get context from CLI 
+// create default value rreenderer in CLI and then get context from CLI
 type DefaultValueRenderer struct {
 	// /string is denom that user sents
-	//denomQuerier denomQuerierFunc// define in test only //convert DenomUnits to Display units 
+	//denomQuerier denomQuerierFunc// define in test only //convert DenomUnits to Display units
 }
 
 // type denomQuerierFunc func(string) banktypes.Metadata
@@ -42,127 +41,110 @@ func NewDefaultValueRendererWithDenomQuerier(denomQuerierFunc(string)) DefaultVa
 var _ ValueRenderer = &DefaultValueRenderer{}
 
 // Format converts an empty interface into a string depending on interface type.
-func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) { 
-	if x == nil {
-		return "", errors.New("x is nil")
-	}
-
+func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 	p := message.NewPrinter(language.English)
 	var sb strings.Builder
 
 	switch x.(type) {
-		case types.Int: 
-			i, ok := x.(types.Int)
-			if !ok {
-				return "", errors.New("unable to cast interface{} to Int")
+	case types.Dec:
+		i, ok := x.(types.Dec)
+		if !ok {
+			return "", errors.New("unable to cast interface{} to Int")
+		}
+
+		s := i.String()
+		if len(s) == 0 {
+			return "", errors.New("empty string")
+		}
+
+		strs := strings.Split(s, ".")
+
+		// TODO should I address cases with len(strs) > 2 and others
+		if len(strs) == 2 {
+			// there is a decimal place
+
+			// format the first part
+			i64, err := strconv.ParseInt(strs[0], 10, 64)
+			if err != nil {
+				return "", errors.New("unable to convert string to int64")
+			}
+			formated := p.Sprintf("%d", i64)
+
+			// concatanate first part, "." and second part
+			sb.WriteString(formated)
+			sb.WriteString(".")
+			sb.WriteString(strs[1])
+		}
+
+	case types.Int:
+		i, ok := x.(types.Int)
+		if !ok {
+			return "", errors.New("unable to cast interface{} to Int")
+		}
+
+		s := i.String()
+		if len(s) == 0 {
+			return "", errors.New("empty string")
+		}
+
+		sb.WriteString(p.Sprintf("%d", i.Int64()))
+
+	case types.Coin:
+		coin, ok := x.(types.Coin)
+		if !ok {
+			return "", errors.New("unable to cast empty interface to Coin")
+		}
+
+		metadata := dvr.denomQuerier()
+
+		var srcExp, dstExp int64
+		for _, denomUnit := range metadata.DenomUnits {
+			// TODO  test  23000000 mregen 3  =>  "regen" exp 0
+			if denomUnit.Denom == coin.Denom {
+				srcExp = int64(denomUnit.Exponent)
 			}
 
-			s := i.String()
-			if len(s) == 0 { 
-				return "", errors.New("empty string")
+			if denomUnit.Denom == metadata.Display {
+				dstExp = int64(denomUnit.Exponent)
 			}
+		}
 
-			// TODO  check for negative values in tests
-			// find out whether it is Dec or Int type
-			strs := strings.Split(s, ".")
-			
-			if len(strs) == 2 {
-				// there is a decimal place
-				// format the first part 
-				sb.WriteString(p.Sprint(strs[0]))
-				sb.WriteString(strs[1])
-				return sb.String(), nil
+		exp := int64(math.Abs(float64(dstExp - srcExp)))
 
-			} else if len(strs) > 2 {
-				// invalid input
-				return "", types.ErrInvalidDecimalStr	
-			}
-		
-			// there is no decimal place
-			sb.WriteString(p.Sprintf("%d",i.Int64()))
-	
-		case types.Coin:
-			/*
-			   - name = regen, exponent = 0
-    		   - name = uregen, exponent = 6
-    		   - name = mregen, exponent = 3
-			ex1: Coin(denom, amount)
-			    Coin               Display
-			    "1000000uregen"(exp 6) => regen (exp 0)
-				0 - 6 = -6
-			ex2 23000 uregen  ->  mregen ()
+		amount := types.NewDecFromIntWithPrec(coin.Amount, exp).TruncateInt64()
 
-				case Coin:  //convert Coin.Denom to Display.Denom
-			"1000000uregen" => "1regen"
-			"1 * 10^-6 regen
-			query denom.metadata from state
-		 	we concatanate fields Denom(choose Display.Denom) and Amount
-			for Amount use the same algo then in case Int
+		newAmount, newDenom := p.Sprintf("%d", amount), metadata.Display
+		sb.WriteString(newAmount)
+		sb.WriteString(newDenom)
 
-			*/
-			coin, ok := x.(types.Coin)
-			if !ok {
-				return "", errors.New("unable to cast empty interface to Coin")
-			}
-		
-			metadata := dvr.denomQuerier()
-		
-			var srcExp, dstExp int64
-			// find exponent that matches coin.Denom  {
-			for _, denomUnit := range metadata.DenomUnits { 
-				//  test  23000000 mregen 3  =>  "regen" exp 0
-				if denomUnit.Denom == coin.Denom {
-					srcExp = int64(denomUnit.Exponent)
-					fmt.Printf("srcExp: %d", srcExp)
-				}
-
-				if denomUnit.Denom == metadata.Display {
-					dstExp = int64(denomUnit.Exponent)
-					fmt.Printf("dstExp: %d", dstExp)
-				}
-			}
-            // wrap this code block into function
-			exp := int64(5)
-			fmt.Printf("exp: %d", exp)
-
-			fmt.Println("dec with prec", types.NewDecWithPrec(int64(10000000), exp).String())
-			fmt.Println("dec with abs prec", types.NewDecWithPrec(int64(10000000), exp).Abs().String())
-			
-
-			//sb.WriteString(p.Sprintf("%d",amount))
-			sb.WriteString("amount")
-			sb.WriteString(metadata.Display)
-		
-
-	//	default:
-	//		panic("type is invalid")
+		//	default:
+		//		panic("type is invalid")
 	}
-	
 
-		return sb.String(), nil	
+	return sb.String(), nil
 }
 
 // see QueryDenomMetadataRequest() test
 func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
-	// TODO make sure denom is not empty
+
 	/*
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+		app := simapp.Setup(t, false)
+		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.BankKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
+		queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
+		types.RegisterQueryServer(queryHelper, app.BankKeeper)
+		queryClient := types.NewQueryClient(queryHelper)
 
-	req := &types.QueryDenomsMetadataRequest{
-		Pagination: &query.PageRequest{
-			Limit:      3,
-			CountTotal: true,
-		},
-	}
+		req := &types.QueryDenomsMetadataRequest{
+			Pagination: &query.PageRequest{
+				Limit:      3,
+				CountTotal: true,
+			},
+		}
 
-	res, err := queryClient.DenomsMetadata(ctx, req)
+		res, err := queryClient.DenomsMetadata(ctx, req)
 	*/
-
+	// TODO make argument in denomQuerier to set Metadata.Display to convert between mregen and uregen
 	return banktypes.Metadata{
 		Description: "The native staking token of the Cosmos Hub.",
 		DenomUnits: []*banktypes.DenomUnit{
@@ -187,10 +169,9 @@ func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
 	}
 }
 
-	
 // Parse parses string and takes a decision whether to convert it into Coin or Uint
-func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) { 
-	if s == ""{
+func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) {
+	if s == "" {
 		return nil, errors.New("unable to parse empty string")
 	}
 
@@ -203,7 +184,7 @@ func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) {
 			return nil, err
 		}
 
-		return coin,nil
+		return coin, nil
 	}
 
 	// case2: convert it to Uint
@@ -212,12 +193,12 @@ func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) {
 		return nil, err
 	}
 
-	return types.NewUint(i), nil	
+	return types.NewUint(i), nil
 }
 
 func coinFromString(s string) (types.Coin, error) {
-	index := len(s) -1
-	for i := len(s)-1; i >= 0; i--{
+	index := len(s) - 1
+	for i := len(s) - 1; i >= 0; i-- {
 		if unicode.IsLetter(rune(s[i])) {
 			continue
 		}
@@ -229,7 +210,7 @@ func coinFromString(s string) (types.Coin, error) {
 	if index == len(s)-1 {
 		return types.Coin{}, errors.New("no denom has been found")
 	}
-    
+
 	denom := s[index+1:]
 	amount := s[:index+1]
 	// convert to int64 to make up Coin later
@@ -240,5 +221,3 @@ func coinFromString(s string) (types.Coin, error) {
 
 	return types.NewCoin(denom, amountInt), nil
 }
-
- 

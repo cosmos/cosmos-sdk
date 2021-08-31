@@ -109,7 +109,7 @@ func doBackup(cfg *Config) error {
 	// take backup if `UNSAFE_SKIP_BACKUP` is not set.
 	if !cfg.UnsafeSkipBackup {
 		// check if upgrade-info.json is not empty.
-		var uInfo UpgradeInfo
+		var uInfo Plan
 		upgradeInfoFile, err := ioutil.ReadFile(filepath.Join(cfg.Home, "data", "upgrade-info.json"))
 		if err != nil {
 			return fmt.Errorf("error while reading upgrade-info.json: %w", err)

@@ -18,7 +18,7 @@ import (
 // DoUpgrade will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func DoUpgrade(cfg *Config, info UpgradeInfo) error {
+func DoUpgrade(cfg *Config, info Plan) error {
 	// Simplest case is to switch the link
 	err := EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
@@ -49,7 +49,7 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 }
 
 // DownloadBinary will grab the binary and place it in the proper directory
-func DownloadBinary(cfg *Config, info UpgradeInfo) error {
+func DownloadBinary(cfg *Config, info Plan) error {
 	url, err := GetDownloadURL(info)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ type UpgradeConfig struct {
 }
 
 // GetDownloadURL will check if there is an arch-dependent binary specified in Info
-func GetDownloadURL(info UpgradeInfo) (string, error) {
+func GetDownloadURL(info Plan) (string, error) {
 	doc := strings.TrimSpace(info.Info)
 	// if this is a url, then we download that and try to get a new doc with the real info
 	if _, err := url.Parse(doc); err == nil {

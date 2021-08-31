@@ -10,19 +10,19 @@ import (
 	"time"
 )
 
-// UpgradeInfo is the update details created by `x/upgrade/keeper.DumpUpgradeInfoToDisk`.
-type UpgradeInfo struct {
-	Name   string `json:"name"`
-	Info   string `json:"info"`
-	Height uint   `json:"height"`
-}
+// // UpgradeInfo is the update details created by `x/upgrade/keeper.DumpUpgradeInfoToDisk`.
+// type UpgradeInfo struct {
+// 	Name   string `json:"name"`
+// 	Info   string `json:"info"`
+// 	Height uint   `json:"height"`
+// }
 
 type fileWatcher struct {
 	// full path to a watched file
 	filename string
 	interval time.Duration
 
-	currentInfo UpgradeInfo
+	currentInfo Plan
 	lastModTime time.Time
 	cancel      chan bool
 	ticker      *time.Ticker
@@ -46,7 +46,7 @@ func newUpgradeFileWatcher(filename string, interval time.Duration) (*fileWatche
 		return nil, fmt.Errorf("wrong path, %s must be an existing directory, [%w]", dirname, err)
 	}
 
-	return &fileWatcher{filenameAbs, interval, UpgradeInfo{}, time.Time{}, make(chan bool), time.NewTicker(interval), false, false}, nil
+	return &fileWatcher{filenameAbs, interval, Plan{}, time.Time{}, make(chan bool), time.NewTicker(interval), false, false}, nil
 }
 
 func (fw *fileWatcher) Stop() {
@@ -56,7 +56,7 @@ func (fw *fileWatcher) Stop() {
 // pools the filesystem to check for new upgrade currentInfo. currentName is the name
 // of currently running upgrade. The check is rejected if it finds an upgrade with the same
 // name.
-func (fw *fileWatcher) MonitorUpdate(currentUpgrade UpgradeInfo) <-chan struct{} {
+func (fw *fileWatcher) MonitorUpdate(currentUpgrade Plan) <-chan struct{} {
 	fw.ticker.Reset(fw.interval)
 	done := make(chan struct{})
 	fw.cancel = make(chan bool)
@@ -81,7 +81,7 @@ func (fw *fileWatcher) MonitorUpdate(currentUpgrade UpgradeInfo) <-chan struct{}
 // CheckUpdate reads update plan from file and checks if there is a new update request
 // currentName is the name of currently running upgrade. The check is rejected if it finds
 // an upgrade with the same name.
-func (fw *fileWatcher) CheckUpdate(currentUpgrade UpgradeInfo) bool {
+func (fw *fileWatcher) CheckUpdate(currentUpgrade Plan) bool {
 	if fw.needsUpdate {
 		return true
 	}
@@ -118,8 +118,8 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade UpgradeInfo) bool {
 	return false
 }
 
-func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
-	var ui UpgradeInfo
+func parseUpgradeInfoFile(filename string) (Plan, error) {
+	var ui Plan
 	f, err := os.Open(filename)
 	if err != nil {
 		return ui, err
@@ -132,7 +132,7 @@ func parseUpgradeInfoFile(filename string) (UpgradeInfo, error) {
 	}
 	// required values must be set
 	if ui.Height == 0 || ui.Name == "" {
-		return UpgradeInfo{}, fmt.Errorf("invalid upgrade-info.json content. Name and Hight must be not empty. Got: %v", ui)
+		return Plan{}, fmt.Errorf("invalid upgrade-info.json content. Name and Hight must be not empty. Got: %v", ui)
 	}
 	return ui, err
 }

@@ -10,39 +10,39 @@ import (
 func TestParseUpgradeInfoFile(t *testing.T) {
 	cases := []struct {
 		filename      string
-		expectUpgrade UpgradeInfo
+		expectUpgrade Plan
 		expectErr     bool
 	}{{
 		filename:      "f1-good.json",
-		expectUpgrade: UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		expectUpgrade: Plan{Name: "upgrade1", Info: "some info", Height: 123},
 		expectErr:     false,
 	}, {
 		filename:      "f2-bad-type.json",
-		expectUpgrade: UpgradeInfo{},
+		expectUpgrade: Plan{},
 		expectErr:     true,
 	}, {
 		filename:      "f2-bad-type-2.json",
-		expectUpgrade: UpgradeInfo{},
+		expectUpgrade: Plan{},
 		expectErr:     true,
 	}, {
 		filename:      "f3-empty.json",
-		expectUpgrade: UpgradeInfo{},
+		expectUpgrade: Plan{},
 		expectErr:     true,
 	}, {
 		filename:      "f4-empty-obj.json",
-		expectUpgrade: UpgradeInfo{},
+		expectUpgrade: Plan{},
 		expectErr:     true,
 	}, {
 		filename:      "f5-partial-obj-1.json",
-		expectUpgrade: UpgradeInfo{},
+		expectUpgrade: Plan{},
 		expectErr:     true,
 	}, {
 		filename:      "f5-partial-obj-2.json",
-		expectUpgrade: UpgradeInfo{},
+		expectUpgrade: Plan{},
 		expectErr:     true,
 	}, {
 		filename:      "unknown.json",
-		expectUpgrade: UpgradeInfo{},
+		expectUpgrade: Plan{},
 		expectErr:     true,
 	}}
 

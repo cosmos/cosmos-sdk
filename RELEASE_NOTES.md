@@ -16,9 +16,6 @@ Please see [Cosmos SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-s
 
 For a comprehensive list of all breaking changes and improvements since the v0.42 "Stargate" release series, please see the **[CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.44.x/CHANGELOG.md)**.
 
-### API Breaking Changes
-* (client/tx) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to the Tx Factory as methods.
-
 ### Client Breaking Changes
 
 * Remove broadcast & encode legacy REST endpoints. Both requests should use the new gRPC-Gateway REST endpoints. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.

@@ -25,6 +25,7 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
@@ -76,7 +77,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// NOTE: this uses amino explicitly, don't migrate it!
 	s.Require().NoError(s.cfg.LegacyAmino.UnmarshalJSON(res, &s.stdTxRes))
-	s.Require().Equal(uint32(0), s.stdTxRes.Code)
+	s.Require().Equal(uint32(0), s.stdTxRes.Code, string(res))
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
@@ -96,39 +97,6 @@ func mkStdTx() legacytx.StdTx {
 		},
 		Memo: "FOOBAR",
 	}
-}
-
-func (s *IntegrationTestSuite) TestEncodeDecode() {
-	var require = s.Require()
-	val := s.network.Validators[0]
-	stdTx := mkStdTx()
-
-	// NOTE: this uses amino explicitly, don't migrate it!
-	cdc := val.ClientCtx.LegacyAmino
-
-	bz, err := cdc.MarshalJSON(stdTx)
-	require.NoError(err)
-
-	res, err := rest.PostRequest(fmt.Sprintf("%s/txs/encode", val.APIAddress), "application/json", bz)
-	require.NoError(err)
-
-	var encodeResp authrest.EncodeResp
-	err = cdc.UnmarshalJSON(res, &encodeResp)
-	require.NoError(err)
-
-	bz, err = cdc.MarshalJSON(authrest.DecodeReq(encodeResp))
-	require.NoError(err)
-
-	res, err = rest.PostRequest(fmt.Sprintf("%s/txs/decode", val.APIAddress), "application/json", bz)
-	require.NoError(err)
-
-	var respWithHeight rest.ResponseWithHeight
-	err = cdc.UnmarshalJSON(res, &respWithHeight)
-	require.NoError(err)
-	var decodeResp authrest.DecodeResp
-	err = cdc.UnmarshalJSON(respWithHeight.Result, &decodeResp)
-	require.NoError(err)
-	require.Equal(stdTx, legacytx.StdTx(decodeResp))
 }
 
 func (s *IntegrationTestSuite) TestQueryAccountWithColon() {
@@ -358,14 +326,14 @@ func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) (
 
 	// NOTE: this uses amino explicitly, don't migrate it!
 	cdc := val.ClientCtx.LegacyAmino
-	req := authrest.BroadcastReq{
+	req := cli.BroadcastReq{
 		Tx:   stdTx,
 		Mode: mode,
 	}
 	bz, err := cdc.MarshalJSON(req)
 	s.Require().NoError(err)
 
-	return rest.PostRequest(fmt.Sprintf("%s/txs", val.APIAddress), "application/json", bz)
+	return rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", bz)
 }
 
 // testQueryIBCTx is a helper function to test querying txs which:

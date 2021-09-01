@@ -34,32 +34,34 @@ func NewDefaultValueRenderer() DefaultValueRenderer {
 }
 
 func NewDefaultValueRendererWithDenom(displayDenom string) DefaultValueRenderer {
-	return DefaultValueRenderer{
-		denomQuerier: func(denom string) banktypes.Metadata {
-			return banktypes.Metadata{
-				Description: "The native staking token of the Cosmos Hub.",
-				DenomUnits: []*banktypes.DenomUnit{
-					{
-						Denom:    denom,
-						Exponent: 0,
-						Aliases:  []string{denom},
-					},
-					{
-						Denom:    "u" + denom,
-						Exponent: 6,
-						Aliases:  []string{"micro" + denom},
-					},
-					{
-						Denom:    "m" + denom,
-						Exponent: 3,
-						Aliases:  []string{"mini" + denom},
-					},
+	getMetadata := func(denom string) banktypes.Metadata {
+		if strings.HasPrefix(denom, "m")  || strings.HasPrefix(denom, "u") {
+			denom = denom[1:]
+		}
+		return banktypes.Metadata{
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*banktypes.DenomUnit{
+				{
+					Denom:    denom,
+					Exponent: 0,
+					Aliases:  []string{denom},
 				},
-				Base:    "uregen",
-				Display: displayDenom,
-			}
-		},
+				{
+					Denom:    "u" + denom,
+					Exponent: 6,
+					Aliases:  []string{"micro" + denom},
+				},
+				{
+					Denom:    "m" + denom,
+					Exponent: 3,
+					Aliases:  []string{"mini" + denom},
+				},
+			},
+			Base:    "uregen",
+			Display: displayDenom,
+		}
 	}
+	return DefaultValueRenderer{getMetadata}
 }
 
 

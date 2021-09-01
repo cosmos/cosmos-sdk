@@ -14,12 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
-<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-=======
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
->>>>>>> 78c3c4e92 (fix!: Remove onlyAminoSigners in sequence check (#10029))
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )

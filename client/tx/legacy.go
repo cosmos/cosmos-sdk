@@ -5,12 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-<<<<<<< HEAD
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-=======
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
->>>>>>> 78c3c4e92 (fix!: Remove onlyAminoSigners in sequence check (#10029))
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 

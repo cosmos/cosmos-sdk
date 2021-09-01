@@ -25,10 +25,12 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/crypto v0.1.2
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/gogogateway v1.2.0
-	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/ledger-cosmos-go v0.13.3
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0
+	github.com/cosmos/iavl v0.17.1-0.20210901093355-89f6b77e9284
+	github.com/cosmos/ledger-cosmos-go v0.11.1
+	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
+	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
+	github.com/gogo/gateway v1.1.0
+	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.6.0

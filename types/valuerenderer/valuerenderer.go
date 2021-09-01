@@ -20,23 +20,49 @@ type ValueRenderer interface {
 	Parse(string) (interface{}, error)
 }
 
+
+type DenomQuerierFunc func() banktypes.Metadata
+
 // create default value rreenderer in CLI and then get context from CLI
 type DefaultValueRenderer struct {
 	// /string is denom that user sents
-	//denomQuerier denomQuerierFunc// define in test only //convert DenomUnits to Display units
+	denomQuerier DenomQuerierFunc// define in test only //convert DenomUnits to Display units
 }
-
-// type denomQuerierFunc func(string) banktypes.Metadata
 
 func NewDefaultValueRenderer() DefaultValueRenderer {
 	return DefaultValueRenderer{}
 }
 
-/*
-func NewDefaultValueRendererWithDenomQuerier(denomQuerierFunc(string)) DefaultValueRenderer {
-	return DefaultValueRenderer{denomQuerier: denomQuerierFunc(string)}
+func NewDefaultValueRendererWithDenom(displayDenom string) DefaultValueRenderer {
+	return DefaultValueRenderer{
+		denomQuerier: func() banktypes.Metadata {
+			return banktypes.Metadata{
+				Description: "The native staking token of the Cosmos Hub.",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    "regen",
+						Exponent: 0,
+						Aliases:  []string{"regen"},
+					},
+					{
+						Denom:    "uregen",
+						Exponent: 6,
+						Aliases:  []string{"microregen"},
+					},
+					{
+						Denom:    "mregen",
+						Exponent: 3,
+						Aliases:  []string{"miniregen"},
+					},
+				},
+				Base:    "uregen",
+				Display: displayDenom,
+			}
+		},
+	}
 }
-*/
+
+
 
 var _ ValueRenderer = &DefaultValueRenderer{}
 
@@ -95,7 +121,7 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 			return "", errors.New("unable to cast empty interface to Coin")
 		}
 
-		metadata := dvr.denomQuerier()
+		metadata := dvr.denomQuerier() 
 
 		var srcExp, dstExp int64
 		for _, denomUnit := range metadata.DenomUnits {
@@ -124,10 +150,12 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 	return sb.String(), nil
 }
 
+
 // see QueryDenomMetadataRequest() test
+/*
 func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
 
-	/*
+	
 		app := simapp.Setup(t, false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -143,7 +171,7 @@ func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
 		}
 
 		res, err := queryClient.DenomsMetadata(ctx, req)
-	*/
+
 	// TODO make argument in denomQuerier to set Metadata.Display to convert between mregen and uregen
 	return banktypes.Metadata{
 		Description: "The native staking token of the Cosmos Hub.",
@@ -168,6 +196,7 @@ func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
 		Display: "regen",
 	}
 }
+*/
 
 // Parse parses string and takes a decision whether to convert it into Coin or Uint
 func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) {

@@ -12,38 +12,50 @@ import (
 
 // TODO add more test cases
 func TestFormatCoin(t *testing.T) {
-	dvr := valuerenderer.NewDefaultValueRenderer()
+
 
 	// TODO add test case to convert from mregen to uregen
 	tt := []struct {
 		name   string
+		dvr    valuerenderer.DefaultValueRenderer
 		coin   types.Coin
 		expRes string
 		expErr bool
 	}{
 		{
 			"convert 1000000uregen to 1regen",
+			valuerenderer.NewDefaultValueRendererWithDenom("regen"),
 			types.NewCoin("uregen", types.NewInt(int64(1000000))),
 			"1regen",
 			false,
 		},
 		{
 			"convert 1000000000uregen to 1000regen",
+			valuerenderer.NewDefaultValueRendererWithDenom("regen"),
 			types.NewCoin("uregen", types.NewInt(int64(1000000000))),
 			"1,000regen",
 			false,
 		},
 		{
 			"convert 23000000mregen to 1000regen",
+			valuerenderer.NewDefaultValueRendererWithDenom("regen"),
 			types.NewCoin("mregen", types.NewInt(int64(23000000))),
 			"23,000regen",
 			false,
 		},
+		{
+			"convert 23000000mregen to 23000000000uregen",
+			valuerenderer.NewDefaultValueRendererWithDenom("uregen"),
+			types.NewCoin("mregen", types.NewInt(int64(23000000))),
+			"23000000000uregen",
+			false,
+		},
+
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := dvr.Format(tc.coin)
+			res, err := tc.dvr.Format(tc.coin)
 			require.NoError(t, err)
 			require.Equal(t, tc.expRes, res)
 		})

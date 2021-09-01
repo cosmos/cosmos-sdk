@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.44.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.0) - 2021-09-01
+
 ### Features
 
 * [\#9860](https://github.com/cosmos/cosmos-sdk/pull/9860) Emit transaction fee in ante handler fee decorator. The event type is `tx` and the attribute is `fee`.
@@ -53,7 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 + [\#9965](https://github.com/cosmos/cosmos-sdk/pull/9965) Fixed `simd version` command output to report the right release tag.
-+ 
++
 ### API Breaking Changes
 * (client/tx) [\#9421](https://github.com/cosmos/cosmos-sdk/pull/9421/) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to
   the Tx Factory as methods.
@@ -85,8 +87,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#8518](https://github.com/cosmos/cosmos-sdk/pull/8518) Help users of multisig wallets debug signature issues.
 * [\#9750](https://github.com/cosmos/cosmos-sdk/pull/9750) Emit events for tx signature and sequence, so clients can now query txs by signature (`tx.signature='<base64_sig>'`) or by address and sequence combo (`tx.acc_seq='<addr>/<seq>'`).
 
-
-### Improvements
+### Client Breaking Changes
 
 * [\#8363](https://github.com/cosmos/cosmos-sdk/pull/8363) Addresses no longer have a fixed 20-byte length. From the SDK modules' point of view, any 1-255 bytes-long byte array is a valid address.
 * (crypto/ed25519) [\#8690] Adopt zip1215 ed2559 verification rules.

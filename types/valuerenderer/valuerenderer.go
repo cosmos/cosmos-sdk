@@ -21,7 +21,7 @@ type ValueRenderer interface {
 }
 
 
-type DenomQuerierFunc func() banktypes.Metadata
+type DenomQuerierFunc func(string) banktypes.Metadata
 
 // create default value rreenderer in CLI and then get context from CLI
 type DefaultValueRenderer struct {
@@ -35,24 +35,24 @@ func NewDefaultValueRenderer() DefaultValueRenderer {
 
 func NewDefaultValueRendererWithDenom(displayDenom string) DefaultValueRenderer {
 	return DefaultValueRenderer{
-		denomQuerier: func() banktypes.Metadata {
+		denomQuerier: func(denom string) banktypes.Metadata {
 			return banktypes.Metadata{
 				Description: "The native staking token of the Cosmos Hub.",
 				DenomUnits: []*banktypes.DenomUnit{
 					{
-						Denom:    "regen",
+						Denom:    denom,
 						Exponent: 0,
-						Aliases:  []string{"regen"},
+						Aliases:  []string{denom},
 					},
 					{
-						Denom:    "uregen",
+						Denom:    "u" + denom,
 						Exponent: 6,
-						Aliases:  []string{"microregen"},
+						Aliases:  []string{"micro" + denom},
 					},
 					{
 						Denom:    "mregen",
 						Exponent: 3,
-						Aliases:  []string{"miniregen"},
+						Aliases:  []string{"mini" + denom},
 					},
 				},
 				Base:    "uregen",

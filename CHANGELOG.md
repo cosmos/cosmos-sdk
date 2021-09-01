@@ -53,13 +53,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-+ [\#9965](https://github.com/cosmos/cosmos-sdk/pull/9965) Fixed `simd version` command output to report the right release tag.
-+
-### API Breaking Changes
-* (client/tx) [\#9421](https://github.com/cosmos/cosmos-sdk/pull/9421/) `BuildUnsignedTx`, `BuildSimTx`, `PrintUnsignedStdTx` functions are moved to
-  the Tx Factory as methods.
+* [\#9965](https://github.com/cosmos/cosmos-sdk/pull/9965) Fixed `simd version` command output to report the right release tag.
 
 ### Client Breaking Changes
+
 * [\#10041](https://github.com/cosmos/cosmos-sdk/pull/10041) Remove broadcast & encode legacy REST endpoints. Please see the [REST Endpoints Migration guide](https://docs.cosmos.network/master/migrations/rest.html) to migrate to the new REST endpoints.
 
 ## [v0.43.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) - 2021-08-10
@@ -148,6 +145,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [\#9550](https://github.com/cosmos/cosmos-sdk/pull/9550) `server.InterceptConfigsPreRunHandler` now takes 2 additional arguments: customAppConfigTemplate and customAppConfig. If you don't need to customize these, simply put `""` and `nil`.
 * [\#8245](https://github.com/cosmos/cosmos-sdk/pull/8245) Removed `simapp.MakeCodecs` and use `simapp.MakeTestEncodingConfig` instead.
 * (x/capability) [\#9836](https://github.com/cosmos/cosmos-sdk/pull/9836) Removed `InitializeAndSeal(ctx sdk.Context)` and replaced with `Seal()`. App must add x/capability module to the begin blockers which will assure that the x/capability keeper is properly initialized. The x/capability begin blocker must be run before any other module which uses x/capability.
+
 
 
 ### State Machine Breaking

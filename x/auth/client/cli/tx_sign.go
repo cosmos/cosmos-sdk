@@ -16,7 +16,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 const (
@@ -449,8 +448,26 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txFactory tx.Factory, 
 		if err != nil {
 			return err
 		}
-		if !isSigner {
-			return errors.New("signing key is not a part of multisig key")
+
+		var json []byte
+		if aminoJSON {
+			stdTx, err := tx.ConvertTxToStdTx(clientCtx.LegacyAmino, txBuilder.GetTx())
+			if err != nil {
+				return err
+			}
+			req := BroadcastReq{
+				Tx:   stdTx,
+				Mode: "block|sync|async",
+			}
+			json, err = clientCtx.LegacyAmino.MarshalJSON(req)
+			if err != nil {
+				return err
+			}
+		} else {
+			json, err = marshalSignatureJSON(txCfg, txBuilder, printSignatureOnly)
+			if err != nil {
+				return err
+			}
 		}
 
 		err = authclient.SignTxWithSignerAddress(

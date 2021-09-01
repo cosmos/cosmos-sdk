@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -66,7 +67,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	genAccs := []authtypes.GenesisAccount{acc}
 
 	genesisState = SetupGenesisStateWithValSet(t, app.AppCodec(), genesisState, valSet, genAccs, balances...)
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(

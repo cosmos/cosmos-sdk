@@ -83,7 +83,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	maccPerms[randomPerm] = []string{"random"}
 	authKeeper := authkeeper.NewAccountKeeper(
 		appCodec, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
+		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 	)
 	keeper := keeper.NewBaseKeeper(
 		appCodec, app.GetKey(types.StoreKey), authKeeper,
@@ -1046,7 +1046,7 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 
 	suite.app.AccountKeeper = authkeeper.NewAccountKeeper(
 		suite.app.AppCodec(), suite.app.GetKey(authtypes.StoreKey), suite.app.GetSubspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
+		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 	)
 
 	suite.app.BankKeeper = keeper.NewBaseKeeper(suite.app.AppCodec(), suite.app.GetKey(types.StoreKey),

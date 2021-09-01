@@ -50,7 +50,7 @@ func NewDefaultValueRendererWithDenom(displayDenom string) DefaultValueRenderer 
 						Aliases:  []string{"micro" + denom},
 					},
 					{
-						Denom:    "mregen",
+						Denom:    "m" + denom,
 						Exponent: 3,
 						Aliases:  []string{"mini" + denom},
 					},
@@ -121,8 +121,7 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 			return "", errors.New("unable to cast empty interface to Coin")
 		}
 
-		metadata := dvr.denomQuerier() 
-
+		metadata := dvr.denomQuerier(coin.Denom)
 		var srcExp, dstExp int64
 		for _, denomUnit := range metadata.DenomUnits {
 			// TODO  test  23000000 mregen 3  =>  "regen" exp 0

@@ -340,14 +340,13 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 		)
 	}
 
-	// we're in simulation mode, or in ReCheckTx, or context is not
-	// on sig verify tx, then we do not need to verify the signatures
-	// in the tx.
-	if svd.ak.GetEnvironment().TransactionService.ExecMode(ctx) == transaction.ExecModeSimulate ||
-		isRecheckTx(ctx, svd.ak.GetEnvironment().TransactionService) ||
-		!isSigverifyTx(ctx) {
-		return nil
-	}
+		// Check account sequence number.
+		if sig.Sequence != acc.GetSequence() {
+			return ctx, sdkerrors.Wrapf(
+				sdkerrors.ErrWrongSequence,
+				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
+			)
+		}
 
 	// retrieve pubkey
 	pubKey := acc.GetPubKey()
@@ -355,15 +354,18 @@ func (svd SigVerificationDecorator) verifySig(ctx context.Context, tx sdk.Tx, ac
 		return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 	}
 
-	// retrieve signer data
-	hinfo := svd.ak.GetEnvironment().HeaderService.HeaderInfo(ctx)
-	genesis := hinfo.Height == 0
-	chainID := hinfo.ChainID
-	var accNum uint64
-	// if we are not in genesis use the account number from the account
-	if !genesis {
-		accNum = acc.GetAccountNumber()
-	}
+		if !simulate {
+			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
+			if err != nil {
+				var errMsg string
+				if OnlyLegacyAminoSigners(sig.Data) {
+					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
+					// and therefore communicate sequence number as a potential cause of error.
+					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)", accNum, acc.GetSequence(), chainID)
+				} else {
+					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s)", accNum, chainID)
+				}
+				return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 
 	// if the account number is 0 and the account is signing, the sign doc will not have an account number
 	if acc.GetSequence() == 0 && newlyCreated {

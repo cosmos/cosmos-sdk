@@ -64,12 +64,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, err
 	}
 
-	err = doPreUpgrade(l.cfg)
-	if err != nil {
-		return false, err
-	}
-
-	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
+	return doPrepAndUpgrade(l.cfg, l.fw.currentInfo)
 }
 
 // WaitForUpgradeOrExit checks upgrade plan file created by the app.
@@ -148,27 +143,79 @@ func doBackup(cfg *Config) error {
 	return nil
 }
 
-// Runs the pre-upgrade command defined by the application
-func doPreUpgrade(cfg *Config) error {
-	bin, err := cfg.CurrentBin()
-	preUpgradeCmd := exec.Command(bin, "pre-upgrade", "--unsafe-skip-upgrades")
+func doPrepAndUpgrade(cfg *Config, upgradeInfo Plan) (bool, error) {
 
-	_, err = preUpgradeCmd.Output()
+	err := downloadUpgradeAsset(cfg, upgradeInfo)
+	if err != nil {
+		return false, err
+	}
+
+	err = doPreUpgrade(cfg, upgradeInfo)
+	if err != nil {
+		return false, err
+	}
+
+	err = DoUpgrade(cfg, upgradeInfo)
+	if err != nil {
+		return false, err
+	}
+
+	err = doPostUpgrade(cfg, upgradeInfo)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func downloadUpgradeAsset(cfg *Config, upgradeInfo Plan) error {
+
+	for _, asset := range upgradeInfo.Upgrade.Assets {
+		if asset.Platform == OSArch() {
+			if err := DownloadFile(cfg, upgradeInfo.Name, asset.Url); err != nil {
+				return fmt.Errorf("cannot download asset %s. %w", asset.Url, err)
+			}
+		}
+	}
+
+}
+
+// Runs the pre-upgrade command defined by the application
+func doPreUpgrade(cfg *Config, upgradeInfo Plan) error {
+
+	cmdString := upgradeInfo.Upgrade.PreRun
+	return doRunUpgradeInstruction(cfg, cmdString)
+
+}
+
+// Runs the post-upgrade command defined by the application
+func doPostUpgrade(cfg *Config, upgradeInfo Plan) error {
+
+	cmdString := upgradeInfo.Upgrade.PostRun
+	return doRunUpgradeInstruction(cfg, cmdString)
+
+}
+
+func doRunUpgradeInstruction(cfg *Config, cmdString string) error {
+	bin, err := cfg.CurrentBin()
+	cmd := exec.Command(bin, cmdString)
+
+	_, err = cmd.Output()
 
 	if err != nil {
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 1 {
-			fmt.Println("pre-upgrade command does not exist. continuing the upgrade.")
+			fmt.Println("'%w' command does not exist. continuing the upgrade.", cmdString)
 			return nil
 		}
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 30 {
-			return fmt.Errorf("pre-upgrade command failed : %w", err)
+			return fmt.Errorf("'%w' command failed : %w", cmdString, err)
 		}
 		if err.(*exec.ExitError).ProcessState.ExitCode() == 31 {
-			fmt.Println("pre-upgrade command failed. retrying.")
-			return doPreUpgrade(cfg)
+			fmt.Println("'%w' command failed. retrying.", cmdString)
+			return doRunUpgradeInstruction(cfg, cmdString)
 		}
 		return err
 	}
-	fmt.Println("pre-upgrade successful. continuing the upgrade.")
+	fmt.Println("'%w' successful. continuing the upgrade.", cmdString)
+
 	return nil
 }

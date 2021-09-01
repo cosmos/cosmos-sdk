@@ -33,7 +33,7 @@ type Config struct {
 	UnsafeSkipBackup      bool
 
 	// currently running upgrade
-	currentUpgrade UpgradeInfo
+	currentUpgrade Plan
 }
 
 // Root returns the root directory where all info lives
@@ -167,7 +167,7 @@ func (cfg *Config) validate() error {
 }
 
 // SetCurrentUpgrade sets the named upgrade to be the current link, returns error if this binary doesn't exist
-func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
+func (cfg *Config) SetCurrentUpgrade(u Plan) error {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
@@ -205,14 +205,14 @@ func (cfg *Config) SetCurrentUpgrade(u UpgradeInfo) error {
 	return f.Close()
 }
 
-func (cfg *Config) UpgradeInfo() UpgradeInfo {
+func (cfg *Config) UpgradeInfo() Plan {
 	if cfg.currentUpgrade.Name != "" {
 		return cfg.currentUpgrade
 	}
 
 	filename := filepath.Join(cfg.Root(), currentLink, upgradeFilename)
 	_, err := os.Lstat(filename)
-	var u UpgradeInfo
+	var u Plan
 	var bz []byte
 	if err != nil { // no current directory
 		goto returnError

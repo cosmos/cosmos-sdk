@@ -37,7 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.44.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) - 2021-09-01
+## [v0.44.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.0) - 2021-09-01
 
 ### Features
 

@@ -76,8 +76,8 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	return app, GenesisState{}
 }
 
-// SetupWithCustomOptions initializes a new SimApp with custom options.
-func SetupWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *SimApp {
+// NewSimappWithCustomOptions initializes a new SimApp with custom options.
+func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *SimApp {
 	t.Helper()
 
 	privVal := mock.NewPV()

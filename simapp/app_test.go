@@ -39,7 +39,7 @@ import (
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
-	app := SetupWithCustomOptions(t, false, SetupOptions{
+	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 		DB:                 db,
 		InvCheckPeriod:     0,
@@ -246,7 +246,7 @@ func TestInitGenesisOnMigration(t *testing.T) {
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
-	app := SetupWithCustomOptions(t, false, SetupOptions{
+	app := NewSimappWithCustomOptions(t, false, SetupOptions{
 		Logger:             log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 		DB:                 db,
 		InvCheckPeriod:     0,

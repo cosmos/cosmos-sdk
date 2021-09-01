@@ -36,7 +36,7 @@ var s TestSuite
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 
 	db := dbm.NewMemDB()
-	app := simapp.SetupWithCustomOptions(t, false, simapp.SetupOptions{
+	app := simapp.NewSimappWithCustomOptions(t, false, simapp.SetupOptions{
 		Logger:             log.NewNopLogger(),
 		SkipUpgradeHeights: skip,
 		DB:                 db,

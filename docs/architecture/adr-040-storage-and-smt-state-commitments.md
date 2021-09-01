@@ -115,6 +115,7 @@ We identified use-cases, where modules will need to save an object commitment wi
 ### Remove MultiStore
 
 IAVL based store adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database.
+
 The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync problems (eg: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
 
 We propose to remove the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `rootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore` and make sure that the `rootStore` object implements `RootStore`.

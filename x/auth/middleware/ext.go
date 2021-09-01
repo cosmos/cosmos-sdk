@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -47,7 +46,6 @@ func (txh rejectExtensionOptionsMiddleware) CheckTx(ctx context.Context, tx sdk.
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (txh rejectExtensionOptionsMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
-	fmt.Println("1")
 	if hasExtOptsTx, ok := tx.(HasExtensionOptionsTx); ok {
 		if len(hasExtOptsTx.GetExtensionOptions()) != 0 {
 			return abci.ResponseDeliverTx{}, sdkerrors.ErrUnknownExtensionOptions

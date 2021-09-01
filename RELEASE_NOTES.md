@@ -1,14 +1,14 @@
 # Cosmos SDK v0.44.0 Release Notes
 
 v0.44 is a security release which contains a possible consensus breaking change.
-It doesn't bring any new feature and it's a logical continuation of the v0.43.
+It doesn't bring any new feature and it's a logical continuation of v0.43.
 
 Consequences:
 + v0.43 is discontinued;
-+ all chains should upgrade to v0.44. Update from v0.43 doesn't require any migration. Chains can upgrade directly from v0.42, in that case v0.43 migrations will be executed as a part of v0.44;
-+ all planned features for v0.44 are going to land in v0.45, with the same release schedule.
++ all chains should upgrade to v0.44. Update from v0.43 doesn't require any migration. Chains can upgrade directly from v0.42, in that case v0.43 migrations must be executed when upgrading to v0.44;
++ all previously planned features for v0.44 are going to land in v0.45, with the same release schedule.
 
-NOTE: v0.42 release will get to the end of life on September 8, 2021.
+NOTE: v0.42 release will reach end of life on September 8, 2021.
 
 Please see [Cosmos SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/RELEASE_NOTES.md).
 

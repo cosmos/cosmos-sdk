@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -12,9 +11,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-
-	errorsmod "cosmossdk.io/errors"
-	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,10 +30,10 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Get height header from the request context, if present.
 		var height int64
-		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) == 1 {
+		if heightHeaders := md.Get(grpctypes.GRPCBlockHeightHeader); len(heightHeaders) > 0 {
 			height, err = strconv.ParseInt(heightHeaders[0], 10, 64)
 			if err != nil {
-				return nil, errorsmod.Wrapf(
+				return nil, sdkerrors.Wrapf(
 					sdkerrors.ErrInvalidRequest,
 					"Baseapp.RegisterGRPCServer: invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
 			}
@@ -48,37 +44,20 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Create the sdk.Context. Passing false as 2nd arg, as we can't
 		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.CreateQueryContext(height, false)
+		sdkCtx, err := app.createQueryContext(height, false)
 		if err != nil {
 			return nil, err
-		}
-
-		// Add relevant gRPC headers
-		if height == 0 {
-			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 
 		// Attach the sdk.Context into the gRPC's context.Context.
 		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
 
-		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		if err = grpc.SetHeader(grpcCtx, md); err != nil {
-			app.logger.Error("failed to set gRPC header", "err", err)
+		// Add relevant gRPC headers
+		if height == 0 {
+			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
-
-		app.logger.Debug("gRPC query received of type: " + fmt.Sprintf("%#v", req))
-
-		// Catch an OutOfGasPanic caused in the query handlers
-		defer func() {
-			if r := recover(); r != nil {
-				switch rType := r.(type) {
-				case storetypes.ErrorOutOfGas:
-					err = errorsmod.Wrapf(sdkerrors.ErrOutOfGas, "Query gas limit exceeded: %v, out of gas in location: %v", sdkCtx.GasMeter().Limit(), rType.Descriptor)
-				default:
-					panic(r)
-				}
-			}
-		}()
+		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+		grpc.SetHeader(grpcCtx, md)
 
 		return handler(grpcCtx, req)
 	}

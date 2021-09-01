@@ -176,6 +176,8 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 			Query: "message.action='send'",
 		},
 	)
+	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
+	// should not error anymore.
 	s.Require().NoError(err)
 }
 

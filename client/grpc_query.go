@@ -29,25 +29,29 @@ var _ gogogrpc.ClientConn = Context{}
 var fallBackCodec = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 // Invoke implements the grpc ClientConn.Invoke method
-func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
+func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, args, reply interface{}, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
 	// 1. either we're broadcasting a Tx, in which call we call CometBFT's broadcast endpoint directly,
 	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.
 	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 
 	// In both cases, we don't allow empty request args (it will panic unexpectedly).
-	if reflect.ValueOf(req).IsNil() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
+	if reflect.ValueOf(args).IsNil() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 
 	// Case 1. Broadcasting a Tx.
-	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
+	if isBroadcast(method) {
+		req, ok := args.(*tx.BroadcastTxRequest)
+		if !ok {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), args)
+		}
 		res, ok := reply.(*tx.BroadcastTxResponse)
 		if !ok {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), req)
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), args)
 		}
 
-		broadcastRes, err := TxServiceBroadcast(grpcCtx, ctx, reqProto)
+		broadcastRes, err := TxServiceBroadcast(grpcCtx, ctx, req)
 		if err != nil {
 			return err
 		}
@@ -56,13 +60,8 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
-	if ctx.GRPCClient != nil {
-		// Case 2-1. Invoke grpc.
-		return ctx.GRPCClient.Invoke(grpcCtx, method, req, reply, opts...)
-	}
-
-	// Case 2-2. Querying state via abci query.
-	reqBz, err := ctx.gRPCCodec().Marshal(req)
+	// Case 2. Querying state.
+	reqBz, err := protoCodec.Marshal(args)
 	if err != nil {
 		return err
 	}
@@ -75,7 +74,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 			return err
 		}
 		if height < 0 {
-			return errorsmod.Wrapf(
+			return sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
 		}
@@ -83,18 +82,18 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		ctx = ctx.WithHeight(height)
 	}
 
-	abciReq := abci.QueryRequest{
+	req := abci.RequestQuery{
 		Path:   method,
 		Data:   reqBz,
 		Height: ctx.Height,
 	}
 
-	res, err := ctx.QueryABCI(abciReq)
+	res, err := ctx.QueryABCI(req)
 	if err != nil {
 		return err
 	}
 
-	err = ctx.gRPCCodec().Unmarshal(res.Value, reply)
+	err = protoCodec.Unmarshal(res.Value, reply)
 	if err != nil {
 		return err
 	}
@@ -123,20 +122,9 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 
 // NewStream implements the grpc ClientConn.NewStream method
 func (Context) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
-	return nil, errors.New("streaming rpc not supported")
+	return nil, fmt.Errorf("streaming rpc not supported")
 }
 
-// gRPCCodec checks if Context's Codec is codec.GRPCCodecProvider
-// otherwise it returns fallBackCodec.
-func (ctx Context) gRPCCodec() encoding.Codec {
-	if ctx.Codec == nil {
-		return fallBackCodec.GRPCCodec()
-	}
-
-	pc, ok := ctx.Codec.(codec.GRPCCodecProvider)
-	if !ok {
-		return fallBackCodec.GRPCCodec()
-	}
-
-	return pc.GRPCCodec()
+func isBroadcast(method string) bool {
+	return method == "/cosmos.tx.v1beta1.Service/BroadcastTx"
 }

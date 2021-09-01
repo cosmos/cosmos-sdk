@@ -27,19 +27,9 @@ type QueryRouter interface {
 
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	// routes maps query handlers used in ABCIQuery.
-	routes map[string]GRPCQueryHandler
-	// hybridHandlers maps the request name to the handler. It is a hybrid handler which seamlessly
-	// handles both gogo and protov2 messages.
-	hybridHandlers map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error
-	// responseByRequestName maps the request name to the response name.
-	responseByRequestName map[string]string
-	// binaryCodec is used to encode/decode binary protobuf messages.
-	binaryCodec codec.BinaryCodec
-	// cdc is the gRPC codec used by the router to correctly unmarshal messages.
-	cdc encoding.Codec
-	// serviceData contains the gRPC services and their handlers.
-	serviceData []serviceData
+	routes            map[string]GRPCQueryHandler
+	interfaceRegistry codectypes.InterfaceRegistry
+	serviceData       []serviceData
 }
 
 // serviceData represents a gRPC service, along with its handler.
@@ -56,9 +46,7 @@ var (
 // NewGRPCQueryRouter creates a new GRPCQueryRouter
 func NewGRPCQueryRouter() *GRPCQueryRouter {
 	return &GRPCQueryRouter{
-		routes:                map[string]GRPCQueryHandler{},
-		hybridHandlers:        map[string][]func(ctx context.Context, req, resp protoiface.MessageV1) error{},
-		responseByRequestName: map[string]string{},
+		routes: map[string]GRPCQueryHandler{},
 	}
 }
 
@@ -88,9 +76,35 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 		if err != nil {
 			panic(err)
 		}
-		err = qrt.registerHybridHandler(sd, method, handler)
-		if err != nil {
-			panic(err)
+
+		qrt.routes[fqName] = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error) {
+			// call the method handler from the service description with the handler object,
+			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
+			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
+				err := protoCodec.Unmarshal(req.Data, i)
+				if err != nil {
+					return err
+				}
+				if qrt.interfaceRegistry != nil {
+					return codectypes.UnpackInterfaces(i, qrt.interfaceRegistry)
+				}
+				return nil
+			}, nil)
+			if err != nil {
+				return abci.ResponseQuery{}, err
+			}
+
+			// proto marshal the result bytes
+			resBytes, err := protoCodec.Marshal(res)
+			if err != nil {
+				return abci.ResponseQuery{}, err
+			}
+
+			// return the result bytes as the response value
+			return abci.ResponseQuery{
+				Height: req.Height,
+				Value:  resBytes,
+			}, nil
 		}
 	}
 
@@ -179,5 +193,8 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	qrt.cdc = codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
 	// Once we have an interface registry, we can register the interface
 	// registry reflection gRPC service.
-	reflection.RegisterReflectionServiceServer(qrt, reflection.NewReflectionServiceServer(interfaceRegistry))
+	reflection.RegisterReflectionServiceServer(
+		qrt,
+		reflection.NewReflectionServiceServer(interfaceRegistry),
+	)
 }

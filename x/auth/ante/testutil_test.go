@@ -73,7 +73,6 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	// https://github.com/cosmos/cosmos-sdk/issues/9585
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(),
-		ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper),
 		ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(suite.app.AccountKeeper),

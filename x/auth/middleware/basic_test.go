@@ -4,16 +4,17 @@ import (
 	"strings"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *MWTestSuite) TestValidateBasic() {
 	ctx := suite.SetupTest(true) // setup
-	sdk.WrapSDKContext(ctx)
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
 	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ValidateBasicMiddleware)
@@ -86,91 +87,90 @@ func (suite *MWTestSuite) TestValidateMemo() {
 	suite.Require().Nil(err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
 }
 
-// func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
-// 	suite.SetupTest(true) // setup
+func (suite *MWTestSuite) TestConsumeGasForTxSize() {
+	ctx := suite.SetupTest(true) // setup
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
-// 	// keys and addresses
-// 	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.ConsumeTxSizeGasMiddleware(suite.app.AccountKeeper))
 
-// 	// msg and signatures
-// 	msg := testdata.NewTestMsg(addr1)
-// 	feeAmount := testdata.NewTestFeeAmount()
-// 	gasLimit := testdata.NewTestGasLimit()
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
-// 	cgtsd := ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper)
-// 	antehandler := sdk.ChainAnteDecorators(cgtsd)
+	// msg and signatures
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
 
-// 	testCases := []struct {
-// 		name  string
-// 		sigV2 signing.SignatureV2
-// 	}{
-// 		{"SingleSignatureData", signing.SignatureV2{PubKey: priv1.PubKey()}},
-// 		{"MultiSignatureData", signing.SignatureV2{PubKey: priv1.PubKey(), Data: multisig.NewMultisig(2)}},
-// 	}
+	testCases := []struct {
+		name  string
+		sigV2 signing.SignatureV2
+	}{
+		{"SingleSignatureData", signing.SignatureV2{PubKey: priv1.PubKey()}},
+		{"MultiSignatureData", signing.SignatureV2{PubKey: priv1.PubKey(), Data: multisig.NewMultisig(2)}},
+	}
 
-// 	for _, tc := range testCases {
-// 		suite.Run(tc.name, func() {
-// 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-// 			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))
-// 			suite.txBuilder.SetFeeAmount(feeAmount)
-// 			suite.txBuilder.SetGasLimit(gasLimit)
-// 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+			suite.Require().NoError(txBuilder.SetMsgs(msg))
+			txBuilder.SetFeeAmount(feeAmount)
+			txBuilder.SetGasLimit(gasLimit)
+			txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 
-// 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-// 			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-// 			suite.Require().NoError(err)
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			suite.Require().NoError(err)
 
-// 			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-// 			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
+			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
 
-// 			params := suite.app.AccountKeeper.GetParams(suite.ctx)
-// 			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
+			params := suite.app.AccountKeeper.GetParams(ctx)
+			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
-// 			// Set suite.ctx with TxBytes manually
-// 			suite.ctx = suite.ctx.WithTxBytes(txBytes)
+			// Set ctx with TxBytes manually
+			ctx = ctx.WithTxBytes(txBytes)
 
-// 			// track how much gas is necessary to retrieve parameters
-// 			beforeGas := suite.ctx.GasMeter().GasConsumed()
-// 			suite.app.AccountKeeper.GetParams(suite.ctx)
-// 			afterGas := suite.ctx.GasMeter().GasConsumed()
-// 			expectedGas += afterGas - beforeGas
+			// track how much gas is necessary to retrieve parameters
+			beforeGas := ctx.GasMeter().GasConsumed()
+			suite.app.AccountKeeper.GetParams(ctx)
+			afterGas := ctx.GasMeter().GasConsumed()
+			expectedGas += afterGas - beforeGas
 
-// 			beforeGas = suite.ctx.GasMeter().GasConsumed()
-// 			suite.ctx, err = antehandler(suite.ctx, tx, false)
-// 			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			beforeGas = ctx.GasMeter().GasConsumed()
+			_, err = txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
 
-// 			// require that decorator consumes expected amount of gas
-// 			consumedGas := suite.ctx.GasMeter().GasConsumed() - beforeGas
-// 			suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
+			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 
-// 			// simulation must not underestimate gas of this decorator even with nil signatures
-// 			txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
-// 			suite.Require().NoError(err)
-// 			suite.Require().NoError(txBuilder.SetSignatures(tc.sigV2))
-// 			tx = txBuilder.GetTx()
+			// require that decorator consumes expected amount of gas
+			consumedGas := ctx.GasMeter().GasConsumed() - beforeGas
+			suite.Require().Equal(expectedGas, consumedGas, "Decorator did not consume the correct amount of gas")
 
-// 			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-// 			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
-// 			// require that simulated tx is smaller than tx with signatures
-// 			suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
+			// simulation must not underestimate gas of this decorator even with nil signatures
+			txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+			suite.Require().NoError(err)
+			suite.Require().NoError(txBuilder.SetSignatures(tc.sigV2))
+			tx = txBuilder.GetTx()
 
-// 			// Set suite.ctx with smaller simulated TxBytes manually
-// 			suite.ctx = suite.ctx.WithTxBytes(simTxBytes)
+			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
+			suite.Require().Nil(err, "Cannot marshal tx: %v", err)
+			// require that simulated tx is smaller than tx with signatures
+			suite.Require().True(len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
 
-// 			beforeSimGas := suite.ctx.GasMeter().GasConsumed()
+			// Set suite.ctx with smaller simulated TxBytes manually
+			ctx = ctx.WithTxBytes(simTxBytes)
 
-// 			// run antehandler with simulate=true
-// 			suite.ctx, err = antehandler(suite.ctx, tx, true)
-// 			consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
+			beforeSimGas := ctx.GasMeter().GasConsumed()
 
-// 			// require that antehandler passes and does not underestimate decorator cost
-// 			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
-// 			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
+			// run antehandler in simulate mode
+			_, err = txHandler.SimulateTx(sdk.WrapSDKContext(ctx), tx, txtypes.RequestSimulateTx{})
+			consumedSimGas := ctx.GasMeter().GasConsumed() - beforeSimGas
 
-// 		})
-// 	}
-
-// }
+			// require that antehandler passes and does not underestimate decorator cost
+			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
+		})
+	}
+}
 
 func (suite *MWTestSuite) TestTxHeightTimeoutMiddleware() {
 	ctx := suite.SetupTest(true)

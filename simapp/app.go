@@ -424,6 +424,7 @@ func (app *SimApp) setTxHandler(txConfig client.TxConfig, indexEventsStr []strin
 		LegacyRouter:      app.legacyRouter,
 		MsgServiceRouter:  app.msgSvcRouter,
 		LegacyAnteHandler: anteHandler,
+		AccountKeeper:     app.AccountKeeper,
 	})
 	if err != nil {
 		panic(err)

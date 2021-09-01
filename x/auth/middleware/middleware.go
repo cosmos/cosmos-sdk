@@ -36,6 +36,7 @@ type TxHandlerOptions struct {
 	MsgServiceRouter *MsgServiceRouter
 
 	LegacyAnteHandler sdk.AnteHandler
+	AccountKeeper     AccountKeeper
 }
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
@@ -60,6 +61,9 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		RejectExtensionOptionsMiddleware,
 		MempoolFeeMiddleware,
 		ValidateBasicMiddleware,
+		TxTimeoutHeightMiddleware,
+		ValidateMemoDecorator(options.AccountKeeper),
+		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
 		// Temporary middleware to bundle antehandlers.
 		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.
 		newLegacyAnteMiddleware(options.LegacyAnteHandler),

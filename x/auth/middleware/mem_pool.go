@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -64,6 +65,8 @@ func (txh mempoolFeeMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci
 
 // DeliverTx implements tx.Handler.DeliverTx.
 func (txh mempoolFeeMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	fmt.Println("2")
+
 	return txh.next.DeliverTx(ctx, tx, req)
 }
 

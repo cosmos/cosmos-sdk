@@ -64,7 +64,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestMsgService(t *testing.T) {
-	priv, _, _ := testdata.KeyTestPubAddr()
+	priv, _, addr := testdata.KeyTestPubAddr()
 	encCfg := simapp.MakeTestEncodingConfig()
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 	db := dbm.NewMemDB()
@@ -82,7 +82,7 @@ func TestMsgService(t *testing.T) {
 	)
 	_ = app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 
-	msg := testdata.MsgCreateDog{Dog: &testdata.Dog{Name: "Spot"}}
+	msg := testdata.TestMsg{Signers: []string{addr.String()}}
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
 	txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit())

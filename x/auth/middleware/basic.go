@@ -3,9 +3,15 @@ package middleware
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -59,6 +65,8 @@ func (basic validateBasicMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, 
 
 	return basic.next.SimulateTx(ctx, tx, req)
 }
+
+var _ txtypes.Handler = txTimeoutHeightMiddleware{}
 
 type (
 	// TxTimeoutHeightMiddleware defines an AnteHandler decorator that checks for a
@@ -218,4 +226,134 @@ func (vmd validateMemoMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req
 	}
 
 	return vmd.next.SimulateTx(ctx, tx, req)
+}
+
+var _ txtypes.Handler = consumeTxSizeGasMiddleware{}
+
+// consumeTxSizeGasMiddleware will take in parameters and consume gas proportional
+// to the size of tx before calling next AnteHandler. Note, the gas costs will be
+// slightly over estimated due to the fact that any given signing account may need
+// to be retrieved from state.
+//
+// CONTRACT: If simulate=true, then signatures must either be completely filled
+// in or empty.
+// CONTRACT: To use this decorator, signatures of transaction must be represented
+// as legacytx.StdSignature otherwise simulate mode will incorrectly estimate gas cost.
+type consumeTxSizeGasMiddleware struct {
+	ak   AccountKeeper
+	next txtypes.Handler
+}
+
+func ConsumeTxSizeGasMiddleware(ak AccountKeeper) txtypes.Middleware {
+	return func(txHandler txtypes.Handler) txtypes.Handler {
+		return consumeTxSizeGasMiddleware{
+			ak:   ak,
+			next: txHandler,
+		}
+	}
+}
+
+// CheckTx implements tx.Handler.CheckTx.
+func (cgts consumeTxSizeGasMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	_, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return abci.ResponseCheckTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	}
+	params := cgts.ak.GetParams(sdkCtx)
+	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
+
+	return cgts.next.CheckTx(ctx, tx, req)
+}
+
+// DeliverTx implements tx.Handler.DeliverTx.
+func (cgts consumeTxSizeGasMiddleware) DeliverTx(ctx context.Context, tx sdk.Tx, req abci.RequestDeliverTx) (abci.ResponseDeliverTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	_, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return abci.ResponseDeliverTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	}
+	params := cgts.ak.GetParams(sdkCtx)
+	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
+
+	return cgts.next.DeliverTx(ctx, tx, req)
+}
+
+// SimulateTx implements tx.Handler.SimulateTx.
+func (cgts consumeTxSizeGasMiddleware) SimulateTx(ctx context.Context, tx sdk.Tx, req txtypes.RequestSimulateTx) (txtypes.ResponseSimulateTx, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return txtypes.ResponseSimulateTx{}, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "invalid tx type")
+	}
+	params := cgts.ak.GetParams(sdkCtx)
+	sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sdkCtx.TxBytes())), "txSize")
+
+	// simulate gas cost for signatures in simulate mode
+	// in simulate mode, each element should be a nil signature
+	sigs, err := sigTx.GetSignaturesV2()
+	if err != nil {
+		return txtypes.ResponseSimulateTx{}, err
+	}
+	n := len(sigs)
+
+	for i, signer := range sigTx.GetSigners() {
+		// if signature is already filled in, no need to simulate gas cost
+		if i < n && !isIncompleteSignature(sigs[i].Data) {
+			continue
+		}
+
+		var pubkey cryptotypes.PubKey
+
+		acc := cgts.ak.GetAccount(sdkCtx, signer)
+
+		// use placeholder simSecp256k1Pubkey if sig is nil
+		if acc == nil || acc.GetPubKey() == nil {
+			pubkey = simSecp256k1Pubkey
+		} else {
+			pubkey = acc.GetPubKey()
+		}
+
+		// use stdsignature to mock the size of a full signature
+		simSig := legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
+			Signature: simSecp256k1Sig[:],
+			PubKey:    pubkey,
+		}
+
+		sigBz := legacy.Cdc.MustMarshal(simSig)
+		cost := sdk.Gas(len(sigBz) + 6)
+
+		// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
+		// number of signers.
+		if _, ok := pubkey.(*multisig.LegacyAminoPubKey); ok {
+			cost *= params.TxSigLimit
+		}
+
+		sdkCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
+	}
+
+	return cgts.next.SimulateTx(ctx, tx, req)
+}
+
+// isIncompleteSignature tests whether SignatureData is fully filled in for simulation purposes
+func isIncompleteSignature(data signing.SignatureData) bool {
+	if data == nil {
+		return true
+	}
+
+	switch data := data.(type) {
+	case *signing.SingleSignatureData:
+		return len(data.Signature) == 0
+	case *signing.MultiSignatureData:
+		if len(data.Signatures) == 0 {
+			return true
+		}
+		for _, s := range data.Signatures {
+			if isIncompleteSignature(s) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

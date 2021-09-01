@@ -11,7 +11,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.6.10
 	github.com/confio/ics23/go v0.6.6
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.17.0
+	github.com/cosmos/iavl v0.17.1-0.20210901093355-89f6b77e9284
 	github.com/cosmos/ledger-cosmos-go v0.11.1
 	github.com/enigmampc/btcutil v1.0.3-0.20200723161021-e2fb6adb2a25
 	github.com/gogo/gateway v1.1.0

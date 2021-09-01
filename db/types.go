@@ -44,7 +44,7 @@ type DBConnection interface {
 	// Opens a write-only transaction at the current version.
 	Writer() DBWriter
 
-	// Returns all saved versions
+	// Returns all saved versions as an immutable set which is safe for concurrent access.
 	Versions() (VersionSet, error)
 
 	// Saves the current contents of the database and returns the next version ID, which will be

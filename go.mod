@@ -51,7 +51,6 @@ require (
 	google.golang.org/protobuf v1.27.1
 	nhooyr.io/websocket v1.8.6 // indirect
 	sigs.k8s.io/yaml v1.2.0
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.33.2

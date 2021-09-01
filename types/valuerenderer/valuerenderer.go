@@ -8,6 +8,7 @@ import (
 	"strings"
 	"unicode"
 
+
 	"github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -124,22 +125,35 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 		}
 
 		metadata := dvr.denomQuerier(coin.Denom)
-		var srcExp, dstExp int64
+		var coinExp, displayExp int64
 		for _, denomUnit := range metadata.DenomUnits {
 			// TODO  test  23000000 mregen 3  =>  "regen" exp 0
 			if denomUnit.Denom == coin.Denom {
-				srcExp = int64(denomUnit.Exponent)
+				coinExp = int64(denomUnit.Exponent)
 			}
 
 			if denomUnit.Denom == metadata.Display {
-				dstExp = int64(denomUnit.Exponent)
+				displayExp = int64(denomUnit.Exponent)
 			}
 		}
 
-		exp := int64(math.Abs(float64(dstExp - srcExp)))
+		expSub := float64(displayExp - coinExp)
+		var amount int64
 
-		amount := types.NewDecFromIntWithPrec(coin.Amount, exp).TruncateInt64()
-
+		switch  {
+		// negative , convert mregen to regen less zeroes
+		case math.Signbit(expSub):
+			// TODO or should i use math package?
+			amount = types.NewDecFromIntWithPrec(coin.Amount, int64(math.Abs(expSub))).TruncateInt64() // use Dec or just golang built in methods
+		// positive, convert mregen to uregen
+		case !math.Signbit(expSub):  
+			amount = coin.Amount.Mul(types.NewInt(int64(math.Pow(10, expSub)))).Int64()
+		// == 0, convert regen to regen, amount does not change
+		default:
+			amount = coin.Amount.Int64()
+		}
+	
+		
 		newAmount, newDenom := p.Sprintf("%d", amount), metadata.Display
 		sb.WriteString(newAmount)
 		sb.WriteString(newDenom)

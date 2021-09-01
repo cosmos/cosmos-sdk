@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -25,7 +26,6 @@ import (
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
@@ -72,7 +72,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// Broadcast a StdTx used for tests.
 	s.stdTx = s.createTestStdTx(s.network.Validators[0], 0, 1)
-	res, err := s.broadcastReq(s.stdTx, "block")
+	res, err := s.broadcastReq(s.stdTx, txtypes.BroadcastMode_BROADCAST_MODE_BLOCK)
 	s.Require().NoError(err)
 
 	// NOTE: this uses amino explicitly, don't migrate it!
@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) TestBroadcastTxRequest() {
 	stdTx := mkStdTx()
 
 	// we just test with async mode because this tx will fail - all we care about is that it got encoded and broadcast correctly
-	res, err := s.broadcastReq(stdTx, "async")
+	res, err := s.broadcastReq(stdTx, txtypes.BroadcastMode_BROADCAST_MODE_ASYNC)
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	// NOTE: this uses amino explicitly, don't migrate it!
@@ -261,7 +261,7 @@ func (s *IntegrationTestSuite) TestMultipleSyncBroadcastTxRequests() {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			// broadcast test with sync mode, as we want to run CheckTx to verify account sequence is correct
 			stdTx := s.createTestStdTx(s.network.Validators[1], 1, tc.sequence)
-			res, err := s.broadcastReq(stdTx, "sync")
+			res, err := s.broadcastReq(stdTx, txtypes.BroadcastMode_BROADCAST_MODE_SYNC)
 			s.Require().NoError(err)
 
 			var txRes sdk.TxResponse
@@ -321,19 +321,33 @@ func (s *IntegrationTestSuite) createTestStdTx(val *network.Validator, accNum, s
 	return stdTx
 }
 
-func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode string) ([]byte, error) {
+func (s *IntegrationTestSuite) broadcastReq(stdTx legacytx.StdTx, mode txtypes.BroadcastMode) ([]byte, error) {
 	val := s.network.Validators[0]
 
 	// NOTE: this uses amino explicitly, don't migrate it!
-	cdc := val.ClientCtx.LegacyAmino
-	req := cli.BroadcastReq{
-		Tx:   stdTx,
-		Mode: mode,
-	}
-	bz, err := cdc.MarshalJSON(req)
-	s.Require().NoError(err)
+	// cdc := val.ClientCtx.LegacyAmino
+	// type broadcastTx struct {
+	// 	Tx   legacytx.StdTx        `json:"tx" yaml:"tx"`
+	// 	Mode txtypes.BroadcastMode `json:"mode" yaml:"mode"`
+	// }
 
-	return rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", bz)
+	cctx := val.ClientCtx
+	bz, err := cctx.TxConfig.TxEncoder()(stdTx)
+	if err != nil {
+		return nil, err
+	}
+	req := txtypes.BroadcastTxRequest{
+		TxBytes: bz,
+		Mode:    mode,
+	}
+	// bz, err := cdc.MarshalJSON(req)
+	// fmt.Println(string(bz))
+	// s.Require().NoError(err)
+
+	resp, err := client.TxServiceBroadcast(nil, cctx, &req)
+	fmt.Println(resp)
+	return nil, err
+	// return rest.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress), "application/json", bz)
 }
 
 // testQueryIBCTx is a helper function to test querying txs which:

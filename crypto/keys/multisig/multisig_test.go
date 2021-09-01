@@ -32,6 +32,7 @@ func TestEquals(t *testing.T) {
 	multisigKey := kmultisig.NewLegacyAminoPubKey(1, []cryptotypes.PubKey{pubKey1, pubKey2})
 	otherMultisigKey := kmultisig.NewLegacyAminoPubKey(1, []cryptotypes.PubKey{pubKey1, multisigKey})
 
+
 	testCases := []struct {
 		msg      string
 		other    cryptotypes.PubKey
@@ -380,4 +381,5 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 	err := cdc.UnmarshalJSON([]byte(pkJSON), &pk)
 	require.NoError(t, err)
 	require.Equal(t, uint32(3), pk.(*kmultisig.LegacyAminoPubKey).Threshold)
+	require.Equal(t, 5, len(pk.(*kmultisig.LegacyAminoPubKey).PubKeys))
 }

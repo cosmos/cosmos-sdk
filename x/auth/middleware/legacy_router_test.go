@@ -1,4 +1,4 @@
-package baseapp
+package middleware_test
 
 import (
 	"testing"
@@ -6,14 +6,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 )
 
 var testHandler = func(_ sdk.Context, _ sdk.Msg) (*sdk.Result, error) {
 	return &sdk.Result{}, nil
 }
 
-func TestRouter(t *testing.T) {
-	rtr := NewRouter()
+func TestLegacyRouter(t *testing.T) {
+	rtr := middleware.NewLegacyRouter()
 
 	// require panic on invalid route
 	require.Panics(t, func() {

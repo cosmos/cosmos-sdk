@@ -215,6 +215,8 @@ func (m *MsgCreatePeriodicVestingAccount) GetVestingPeriods() []Period {
 	return nil
 }
 
+// MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+// response type.
 type MsgCreatePeriodicVestingAccountResponse struct {
 }
 

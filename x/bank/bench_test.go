@@ -19,6 +19,8 @@ import (
 var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
+	b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
+
 	b.ReportAllocs()
 	// Add an account at genesis
 	acc := authtypes.BaseAccount{
@@ -61,6 +63,8 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 }
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
+	b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
+
 	b.ReportAllocs()
 	// Add an account at genesis
 	acc := authtypes.BaseAccount{

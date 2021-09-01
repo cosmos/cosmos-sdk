@@ -39,27 +39,3 @@ var exactContext = apd.Context{
 	MinExponent: apd.MinExponent,
 	Traps:       apd.DefaultTraps | apd.Inexact | apd.Rounded,
 }
-
-// Add adds x and y and stores the result in res with arbitrary precision or returns an error.
-func Add(res, x, y *apd.Decimal) error {
-	_, err := exactContext.Add(res, x, y)
-	if err != nil {
-		return errors.Wrap(err, "decimal addition error")
-	}
-	return nil
-}
-
-// SafeSub subtracts the value of x from y and stores the result in res with arbitrary precision only
-// if the result will be non-negative. An insufficient funds error is returned if the result would be negative.
-func SafeSub(res, x, y *apd.Decimal) error {
-	_, err := exactContext.Sub(res, x, y)
-	if err != nil {
-		return errors.Wrap(err, "decimal subtraction error")
-	}
-
-	if res.Sign() < 0 {
-		return errors.ErrInsufficientFunds
-	}
-
-	return nil
-}

@@ -1,6 +1,6 @@
 # Cosmos SDK v0.44.0 Release Notes
 
-v0.44 is a security release which contains a possible consensus breaking change.
+v0.44 is a security release which contains a consensus breaking change.
 It doesn't bring any new feature and it's a logical continuation of v0.43.
 
 Consequences:

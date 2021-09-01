@@ -203,9 +203,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	}
 
 	pubKey := key.GetPubKey()
-	tx1 := txBuilder.GetTx()
-
-	pubkeys, err := tx1.GetPubKeys()
+	pubkeys, err := txBuilder.GetTx().GetPubKeys()
 	if err != nil {
 		return err
 	}

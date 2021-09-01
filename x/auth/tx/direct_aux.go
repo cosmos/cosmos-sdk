@@ -10,10 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+var _ signing.SignModeHandler = signModeDirectAuxHandler{}
+
 // signModeDirectAuxHandler defines the SIGN_MODE_DIRECT_AUX SignModeHandler
 type signModeDirectAuxHandler struct{}
-
-var _ signing.SignModeHandler = signModeDirectAuxHandler{}
 
 // DefaultMode implements SignModeHandler.DefaultMode
 func (signModeDirectAuxHandler) DefaultMode() signingtypes.SignMode {
@@ -26,7 +26,10 @@ func (signModeDirectAuxHandler) Modes() []signingtypes.SignMode {
 }
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
-func (signModeDirectAuxHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+func (signModeDirectAuxHandler) GetSignBytes(
+	mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx,
+) ([]byte, error) {
+
 	if mode != signingtypes.SignMode_SIGN_MODE_DIRECT_AUX {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, mode)
 	}

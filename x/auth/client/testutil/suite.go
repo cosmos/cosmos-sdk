@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -226,7 +225,7 @@ func (s *IntegrationTestSuite) TestCLISignAminoJSON() {
 		"--amino=true", signModeAminoFlag)
 	require.NoError(err)
 
-	var txAmino authrest.BroadcastReq
+	var txAmino authcli.BroadcastReq
 	err = val1.ClientCtx.LegacyAmino.UnmarshalJSON(res.Bytes(), &txAmino)
 	require.NoError(err)
 	require.Len(txAmino.Tx.Signatures, 2)

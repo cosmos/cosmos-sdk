@@ -1,6 +1,10 @@
 package config
 
 import (
+	"bytes"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,4 +21,82 @@ func TestSetMinimumFees(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.SetMinGasPrices(sdk.DecCoins{sdk.NewInt64DecCoin("foo", 5)})
 	require.Equal(t, "5.000000000000000000foo", cfg.MinGasPrices)
+}
+
+func TestIndexEventsMarshalling(t *testing.T) {
+	expectedIn := `index-events = ["key1", "key2", ]` + "\n"
+	cfg := DefaultConfig()
+	cfg.IndexEvents = []string{"key1", "key2"}
+	var buffer bytes.Buffer
+
+	err := configTemplate.Execute(&buffer, cfg)
+	require.NoError(t, err, "executing template")
+	actual := buffer.String()
+	assert.Contains(t, actual, expectedIn, "config file contents")
+}
+
+func TestIndexEventsReadWrite(t *testing.T) {
+	expected := []string{"key3", "key4"}
+	// Create config with two IndexEvents entries, and write it to a file.
+	confFile := filepath.Join(t.TempDir(), "app.toml")
+	conf := DefaultConfig()
+	conf.IndexEvents = expected
+	WriteConfigFile(confFile, conf)
+
+	// Read that file into viper.
+	vpr := viper.New()
+	vpr.SetConfigFile(confFile)
+	err := vpr.ReadInConfig()
+	require.NoError(t, err, "reading config file into viper")
+	actualRaw := vpr.GetStringSlice("index-events")
+	require.Equal(t, expected, actualRaw, "viper's index events")
+	cfg, perr := ParseConfig(vpr)
+	require.NoError(t, perr, "parsing config")
+	actual := cfg.IndexEvents
+	require.Equal(t, expected, actual, "config value")
+}
+
+func TestGlobalLabelsEventsMarshalling(t *testing.T) {
+	expectedIn := `global-labels = [
+  ["labelname1", "labelvalue1"],
+  ["labelname2", "labelvalue2"],
+]` + "\n"
+	cfg := DefaultConfig()
+	cfg.Telemetry.GlobalLabels = [][]string{{"labelname1", "labelvalue1"}, {"labelname2", "labelvalue2"}}
+	var buffer bytes.Buffer
+
+	err := configTemplate.Execute(&buffer, cfg)
+	require.NoError(t, err, "executing template")
+	actual := buffer.String()
+	assert.Contains(t, actual, expectedIn, "config file contents")
+}
+
+func TestGlobalLabelsReadWrite(t *testing.T) {
+	expected := [][]string{{"labelname3", "labelvalue3"}, {"labelname4", "labelvalue4"}}
+	expectedRaw := make([]interface{}, len(expected))
+	for i, exp := range expected {
+		pair := make([]interface{}, len(exp))
+		for j, s := range exp {
+			pair[j] = s
+		}
+		expectedRaw[i] = pair
+	}
+
+	// Create config with two GlobalLabels entries, and write it to a file.
+	confFile := filepath.Join(t.TempDir(), "app.toml")
+	conf := DefaultConfig()
+	conf.Telemetry.GlobalLabels = expected
+	WriteConfigFile(confFile, conf)
+
+	// Read that file into viper.
+	vpr := viper.New()
+	vpr.SetConfigFile(confFile)
+	rerr := vpr.ReadInConfig()
+	require.NoError(t, rerr, "reading config file into viper")
+	actualRaw := vpr.Get("telemetry.global-labels")
+	require.Equal(t, expectedRaw, actualRaw, "viper value")
+	cfg, perr := ParseConfig(vpr)
+	require.NoError(t, perr, "parsing config")
+	actual := cfg.Telemetry.GlobalLabels
+	require.Equal(t, expected, actual, "config value")
 }

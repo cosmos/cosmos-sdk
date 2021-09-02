@@ -29,7 +29,7 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 		},
 		{
 			legacytx.StdSignature{PubKey: pk, Signature: nil},
-			fmt.Sprintf("|\n  pubkey: %s\n  signature: \"\"\n", pkStr),
+			"pub_key: null\nsignature: null\n",
 		},
 	}
 

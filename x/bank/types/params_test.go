@@ -49,7 +49,7 @@ func Test_sendParamEqual(t *testing.T) {
 }
 
 func Test_sendParamString(t *testing.T) {
-	paramString := "denom: foo\nenabled: false\n"
+	paramString := "denom: foo\n"
 	param := NewSendEnabled("foo", false)
 
 	require.Equal(t, paramString, param.String())

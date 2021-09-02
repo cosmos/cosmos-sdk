@@ -238,12 +238,13 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 // Only entrypoint to mutate store.cache.
 func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
-	store.cache[conv.UnsafeBytesToStr(key)] = &cValue{
+	keyStr := conv.UnsafeBytesToStr(key)
+	store.cache[keyStr] = &cValue{
 		value:   value,
 		deleted: deleted,
 		dirty:   dirty,
 	}
 	if dirty {
-		store.unsortedCache[conv.UnsafeBytesToStr(key)] = struct{}{}
+		store.unsortedCache[keyStr] = struct{}{}
 	}
 }

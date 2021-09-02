@@ -6,12 +6,14 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/gorilla/mux"
 
 	"github.com/golang/mock/gomock"
-	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -38,9 +40,9 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
 	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
-	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
+	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
@@ -200,7 +202,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 2, len(mm.Modules))
 
-	ctx := sdk.Context{}
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}

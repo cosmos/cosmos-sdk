@@ -34,7 +34,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app, suite.ctx = createTestApp(true)
+	suite.app, suite.ctx = createTestApp(suite.T(), true)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.AccountKeeper)
@@ -46,7 +46,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func TestAccountMapperGetSet(t *testing.T) {
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(t, true)
 	addr := sdk.AccAddress([]byte("some---------address"))
 
 	// no account before its created
@@ -76,7 +76,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 }
 
 func TestAccountMapperRemoveAccount(t *testing.T) {
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(t, true)
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
 
@@ -109,7 +109,7 @@ func TestAccountMapperRemoveAccount(t *testing.T) {
 }
 
 func TestGetSetParams(t *testing.T) {
-	app, ctx := createTestApp(true)
+	app, ctx := createTestApp(t, true)
 	params := types.DefaultParams()
 
 	app.AccountKeeper.SetParams(ctx, params)
@@ -119,7 +119,7 @@ func TestGetSetParams(t *testing.T) {
 }
 
 func TestSupply_ValidatePermissions(t *testing.T) {
-	app, _ := createTestApp(true)
+	app, _ := createTestApp(t, true)
 
 	// add module accounts to supply keeper
 	maccPerms := simapp.GetMaccPerms()
@@ -129,10 +129,10 @@ func TestSupply_ValidatePermissions(t *testing.T) {
 	maccPerms[multiPerm] = []string{types.Burner, types.Minter, types.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 
-	cdc := simapp.MakeTestEncodingConfig().Marshaler
+	cdc := simapp.MakeTestEncodingConfig().Codec
 	keeper := keeper.NewAccountKeeper(
 		cdc, app.GetKey(types.StoreKey), app.GetSubspace(types.ModuleName),
-		types.ProtoBaseAccount, maccPerms,
+		types.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 	)
 
 	err := keeper.ValidatePermissions(multiPermAcc)

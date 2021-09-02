@@ -1,40 +1,20 @@
 <!--
-order: 3
+order: 2
 -->
 
 # REST Endpoints Migration
 
-Migrate your REST endpoints to the Stargate ones. {synopsis}
+Migrate to gRPC-Gateway REST endpoints. Legacy REST endpoints were marked as deprecated in v0.40 and removed in v0.44. {synopsis}
 
-## Deprecation of Legacy REST Endpoints
+## Legacy REST Endpoints
 
-The Cosmos SDK versions v0.39 and earlier provided REST endpoints to query the state and broadcast transactions. These endpoints are kept in Cosmos SDK v0.40 (Stargate), but they are marked as deprecated, and will be removed in v0.41. We therefore call these endpoints legacy REST endpoints.
+Cosmos SDK versions v0.39 and earlier registered REST endpoints using a package called `gorilla/mux`. These REST endpoints were marked as deprecated in v0.40 and have since been referred to as legacy REST endpoints. Legacy REST endpoints were officially removed in v0.44.
 
-Some important information concerning all legacy REST endpoints:
+## gRPC-Gateway REST Endpoints
 
-- Most of these endpoints are backwards-comptatible. All breaking changes are described in the next section.
-- In particular, these endpoints still output Amino JSON. Cosmos v0.40 introduced Protobuf as the default encoding library throughout the codebase, but legacy REST endpoints are one of the few places where the encoding is hardcoded to Amino. For more information about Protobuf and Amino, please read our [encoding guide](../core/encoding.md).
-- All legacy REST endpoints include a [HTTP deprecation header](https://tools.ietf.org/id/draft-dalal-deprecation-header-01.html) which links to this document.
-
-## Breaking Changes in Legacy REST Endpoints
-
-| Legacy REST Endpoint                                                     | Description                                 | Breaking Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ------------------------------------------------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /txs`                                                              | Broadcast tx                                | Endpoint will error when trying to broadcast transactions that don't support Amino serialization (e.g. IBC txs)<sup>1</sup>.                                                                                                                                                                                                                                                                                                                                                           |
-| `POST /txs/encode`, `POST /txs/decode`                                   | Encode/decode Amino txs from JSON to binary | Endpoint will error when trying to encode/decode transactions that don't support Amino serialization (e.g. IBC txs)<sup>1</sup>.                                                                                                                                                                                                                                                                                                                                                       |
-| `GET /txs/{hash}`                                                        | Query tx by hash                            | Endpoint will error when trying to output transactions that don't support Amino serialization (e.g. IBC txs)<sup>1</sup>.                                                                                                                                                                                                                                                                                                                                                              |
-| `GET /txs`                                                               | Query tx by events                          | Endpoint will error when trying to output transactions that don't support Amino serialization (e.g. IBC txs)<sup>1</sup>.                                                                                                                                                                                                                                                                                                                                                              |
-| `GET /gov/proposals/{id}/votes`, `GET /gov/proposals/{id}/votes/{voter}` | Gov endpoints for querying votes            | All gov endpoints which return votes return int32 in the `option` field instead of string: `1=VOTE_OPTION_YES, 2=VOTE_OPTION_ABSTAIN, 3=VOTE_OPTION_NO, 4=VOTE_OPTION_NO_WITH_VETO`.                                                                                                                                                                                                                                                                                                   |
-| `GET /staking/*`                                                         | Staking query endpoints                     | All staking endpoints which return validators have two breaking changes. First, the validator's `consensus_pubkey` field returns an Amino-encoded struct representing an `Any` instead of a Bech32-encoded string representing the pubkey. The `value` field of the `Any` is the pubkey's raw key as base64-encoded bytes. Second, the validator's `status` field now returns an int32 instead of string: `1=BOND_STATUS_UNBONDED`, `2=BOND_STATUS_UNBONDING`, `3=BOND_STATUS_BONDED`. |
-| `GET /staking/validators`                                                | Get all validators                          | BondStatus is now a protobuf enum instead of an int32, and JSON serialized using its protobuf name, so expect query parameters like `?status=BOND_STATUS_{BONDED,UNBONDED,UNBONDING}` as opposed to `?status={bonded,unbonded,unbonding}`.                                                                                                                                                                                                                                             |
-
-<sup>1</sup>: Transactions that don't support Amino serialization are the ones that contain one or more `Msg`s that are not registered with the Amino codec. Currently in the SDK, only IBC `Msg`s fall into this case.
+Following the Protocol Buffers migration in v0.40, Cosmos SDK has been set to take advantage of a vast number of gRPC tools and solutions. v0.40 introduced new REST endpoints generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/). These new REST endpoints are referred to as gRPC-Gateway REST endpoints.
 
 ## Migrating to New REST Endpoints
-
-Thanks to the Protocol Buffers migration in v0.40, we are able to take advantage of a vast number of gRPC tools and solutions. For most of the legacy REST endpoints, Cosmos SDK v0.40 provides new REST endpoints generated from [gRPC `Query` services](../building-modules/query-services.md) using [grpc-gateway](https://grpc-ecosystem.github.io/grpc-gateway/). We usually call them _gRPC-gateway REST endpoints_.
-
-Some modules expose legacy `POST` endpoints to generate unsigned transactions for their `Msg`s. These `POST` endpoints have been removed. We recommend to use [service `Msg`s](../building-modules/msg-services.md) directly, and use Protobuf to do client-side transaction generation. A guide can be found [here](../run-node/txs.md).
 
 | Legacy REST Endpoint                                                            | Description                                                         | New gRPC-gateway REST Endpoint                                                                        |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -98,4 +78,4 @@ Some modules expose legacy `POST` endpoints to generate unsigned transactions fo
 
 ## Migrating to gRPC
 
-Instead of hitting REST endpoints as described in the previous paragraph, the SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here](../core/grpc_rest.md), and a concrete tutorial for setting up a gRPC client [here](../run-node/txs.md#programmatically-with-go).
+Instead of hitting REST endpoints as described above, the SDK also exposes a gRPC server. Any client can use gRPC instead of REST to interact with the node. An overview of different ways to communicate with a node can be found [here](../core/grpc_rest.md), and a concrete tutorial for setting up a gRPC client can be found [here](../run-node/txs.md#programmatically-with-go).

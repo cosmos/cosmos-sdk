@@ -59,3 +59,15 @@ func (k Keeper) GetSubspace(s string) (types.Subspace, bool) {
 	}
 	return *space, ok
 }
+
+// GetSubspaces returns all the registered subspaces.
+func (k Keeper) GetSubspaces() []types.Subspace {
+	spaces := make([]types.Subspace, len(k.spaces))
+	i := 0
+	for _, ss := range k.spaces {
+		spaces[i] = *ss
+		i++
+	}
+
+	return spaces
+}

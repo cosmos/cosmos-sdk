@@ -64,7 +64,7 @@ func TestMsgGrantAllowance(t *testing.T) {
 			require.NoError(t, err)
 
 			addrSlice := msg.GetSigners()
-			require.Equal(t, tc.granter.String(), addrSlice[0].String())
+			require.True(t, tc.granter.Equals(addrSlice[0]))
 
 			allowance, err := msg.GetFeeAllowanceI()
 			require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestMsgRevokeAllowance(t *testing.T) {
 		if tc.valid {
 			require.NoError(t, err)
 			addrSlice := msg.GetSigners()
-			require.Equal(t, tc.granter.String(), addrSlice[0].String())
+			require.True(t, tc.granter.Equals(addrSlice[0]))
 		} else {
 			require.Error(t, err)
 		}

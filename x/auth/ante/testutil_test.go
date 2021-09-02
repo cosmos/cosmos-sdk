@@ -41,8 +41,8 @@ type AnteTestSuite struct {
 }
 
 // returns context and app with params set on account keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
-	app := simapp.Setup(isCheckTx)
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+	app := simapp.Setup(t, isCheckTx)
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
 
@@ -51,7 +51,7 @@ func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
 func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
-	suite.app, suite.ctx = createTestApp(isCheckTx)
+	suite.app, suite.ctx = createTestApp(suite.T(), isCheckTx)
 	suite.ctx = suite.ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
@@ -63,18 +63,32 @@ func (suite *AnteTestSuite) SetupTest(isCheckTx bool) {
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
 
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   suite.app.AccountKeeper,
-			BankKeeper:      suite.app.BankKeeper,
-			FeegrantKeeper:  suite.app.FeeGrantKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
-	)
+	// We're not using ante.NewAnteHandler here because:
+	// - ante.NewAnteHandler doesn't have SetUpContextDecorator, as it has been
+	//   moved to the gas TxMiddleware
+	// - whereas these tests have not been migrated to middlewares yet, so
+	//   still need the SetUpContextDecorator.
+	//
+	// TODO: migrate all antehandler tests to middleware tests.
+	// https://github.com/cosmos/cosmos-sdk/issues/9585
+	anteDecorators := []sdk.AnteDecorator{
+		ante.NewSetUpContextDecorator(),
+		ante.NewRejectExtensionOptionsDecorator(),
+		ante.NewMempoolFeeDecorator(),
+		ante.NewValidateBasicDecorator(),
+		ante.NewTxTimeoutHeightDecorator(),
+		ante.NewValidateMemoDecorator(suite.app.AccountKeeper),
+		ante.NewConsumeGasForTxSizeDecorator(suite.app.AccountKeeper),
+		ante.NewDeductFeeDecorator(suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.FeeGrantKeeper),
+		// SetPubKeyDecorator must be called before all signature verification decorators
+		ante.NewSetPubKeyDecorator(suite.app.AccountKeeper),
+		ante.NewValidateSigCountDecorator(suite.app.AccountKeeper),
+		ante.NewSigGasConsumeDecorator(suite.app.AccountKeeper, ante.DefaultSigVerificationGasConsumer),
+		ante.NewSigVerificationDecorator(suite.app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
+		ante.NewIncrementSequenceDecorator(suite.app.AccountKeeper),
+	}
 
-	suite.Require().NoError(err)
-	suite.anteHandler = anteHandler
+	suite.anteHandler = sdk.ChainAnteDecorators(anteDecorators...)
 }
 
 // CreateTestAccounts creates `numAccs` accounts, and return all relevant

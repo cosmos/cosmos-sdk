@@ -249,7 +249,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if err := config.ValidateBasic(); err != nil {
 		ctx.Logger.Error("WARNING: The minimum-gas-prices config in app.toml is set to the empty string. " +
 			"This defaults to 0 in the current version, but will error in the next version " +
-			"(SDK v0.44). Please explicitly put the desired minimum-gas-prices in your app.toml.")
+			"(SDK v0.45). Please explicitly put the desired minimum-gas-prices in your app.toml.")
 	}
 
 	app := appCreator(ctx.Logger, db, traceWriter, ctx.Viper)

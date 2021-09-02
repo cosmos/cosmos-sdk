@@ -3,10 +3,12 @@ However, some libraries are not Goroutine-safe (e.g. app simulations cannot be r
 and OS-native threading may be more efficient for many parallel simulations, so we use shell scripts here.
 
 ### Validate Gentxs
-A custom utility script is available to [validate gentxs](./validate-gentxs.sh). Though we have 
+
+A custom utility script is available to [validate gentxs](./validate-gentxs.sh). Though we have
 `ValidateBasic()` for validating gentx data, it cannot validate signatures. This custom script helps
 to validate all the gentxs by collecting them one by one and starting a local network.
 It requires the following env settings.
+
 ```shell
 export DAEMON=gaiad
 export CHAIN_ID=cosmoshub-1

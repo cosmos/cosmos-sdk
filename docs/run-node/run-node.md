@@ -42,6 +42,7 @@ The `~/.simapp` folder has the following structure:
 ## Updating Some Default Settings
 
 If you want to change any field values in configuration files (for ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) & `sed` commands to do that. Few examples are listed here.
+
 ```bash
 # to change the chain-id
 jq '.chain_id = "testing"' genesis.json > temp.json && mv temp.json genesis.json
@@ -57,6 +58,7 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 ```
 
 ## Adding Genesis Accounts
+
 Before starting the chain, you need to populate the state with at least one account. To do so, first [create a new account in the keyring](./keyring.md#adding-keys-to-the-keyring) named `my_validator` under the `test` keyring backend (feel free to choose another name and another backend).
 
 Now that you have created a local account, go ahead and grant it some `stake` tokens in your chain's genesis file. Doing so will also make sure your chain is aware of this account's existence:

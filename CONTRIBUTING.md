@@ -70,7 +70,7 @@ When proposing an architecture decision for the SDK, please start by opening an 
 ## Pull Requests
 
 PRs should be categorically broken up based on the type of changes being made (for example, `fix`, `feat`,
-`refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example, 
+`refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example,
 `fix: <description>`). This convention ensures that all changes that are committed to the base branch follow the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
 Additionally, each PR should only address a single issue.

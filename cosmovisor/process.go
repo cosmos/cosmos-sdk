@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -64,9 +65,11 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, err
 	}
 
-	err = doPreUpgrade(l.cfg)
-	if err != nil {
-		return false, err
+	if !skipUpgrade(args, l.fw.currentInfo) {
+		err = doPreUpgrade(l.cfg)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, DoUpgrade(l.cfg, l.fw.currentInfo)
@@ -171,4 +174,40 @@ func doPreUpgrade(cfg *Config) error {
 	}
 	fmt.Println("pre-upgrade successful. continuing the upgrade.")
 	return nil
+}
+
+// Checks if pre-upgrade script should be run. If the height in upgrade plan matches any heights provided in --safe-skip-upgrade, the script is not run
+func skipUpgrade(args []string, upgradeInfo UpgradeInfo) bool {
+	skipUpgradeHeights := upgradeSkipHeights(args)
+	for _, h := range skipUpgradeHeights {
+		if h == int(upgradeInfo.Height) {
+			return true
+		}
+
+	}
+	return false
+}
+
+// Gets all the heights provided when
+// 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
+func upgradeSkipHeights(args []string) []int {
+	var heights []int
+	for i, arg := range args {
+		if arg == "--unsafe-skip-upgrades" {
+			j := i + 1
+
+			for j < len(args) {
+				tArg := args[j]
+				if strings.HasPrefix(tArg, "-") {
+					break
+				}
+				h, _ := strconv.Atoi(tArg)
+				heights = append(heights, h)
+				j++
+			}
+
+			break
+		}
+	}
+	return heights
 }

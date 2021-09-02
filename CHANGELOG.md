@@ -35,6 +35,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+* (server) [#10016](https://github.com/cosmos/cosmos-sdk/issues/10016) Fix marshaling of index-events into server config file.
+
 ## [v0.43.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0-rc2) - 2021-07-19
 
 ### Bug Fixes

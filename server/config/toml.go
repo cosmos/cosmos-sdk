@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
 	"github.com/spf13/viper"
@@ -68,7 +69,7 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 #
 # Example:
 # ["message.sender", "message.recipient"]
-index-events = {{ .BaseConfig.IndexEvents }}
+index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 
 ###############################################################################
 ###                         Telemetry Configuration                         ###
@@ -208,7 +209,9 @@ var configTemplate *template.Template
 func init() {
 	var err error
 
-	tmpl := template.New("appConfigFileTemplate")
+	tmpl := template.New("appConfigFileTemplate").Funcs(template.FuncMap{
+		"StringsJoin": strings.Join,
+	})
 
 	if configTemplate, err = tmpl.Parse(DefaultConfigTemplate); err != nil {
 		panic(err)
@@ -229,7 +232,9 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 func SetConfigTemplate(customTemplate string) {
 	var err error
 
-	tmpl := template.New("appConfigFileTemplate")
+	tmpl := template.New("appConfigFileTemplate").Funcs(template.FuncMap{
+		"StringsJoin": strings.Join,
+	})
 
 	if configTemplate, err = tmpl.Parse(customTemplate); err != nil {
 		panic(err)

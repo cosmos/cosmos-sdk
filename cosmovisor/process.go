@@ -170,7 +170,6 @@ func doPreUpgrade(cfg *Config) error {
 			fmt.Println("pre-upgrade command failed. retrying.")
 			return doPreUpgrade(cfg)
 		}
-		return err
 	}
 	fmt.Println("pre-upgrade successful. continuing the upgrade.")
 	return nil

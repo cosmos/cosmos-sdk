@@ -35,7 +35,7 @@ func TestIndexEventsMarshalling(t *testing.T) {
 	assert.Contains(t, actual, expectedIn, "config file contents")
 }
 
-func TestIndexEventsReadWrite(t *testing.T) {
+func TestIndexEventsWriteRead(t *testing.T) {
 	expected := []string{"key3", "key4"}
 	// Create config with two IndexEvents entries, and write it to a file.
 	confFile := filepath.Join(t.TempDir(), "app.toml")
@@ -48,8 +48,10 @@ func TestIndexEventsReadWrite(t *testing.T) {
 	vpr.SetConfigFile(confFile)
 	err := vpr.ReadInConfig()
 	require.NoError(t, err, "reading config file into viper")
+	// Check that the raw viper value is correct.
 	actualRaw := vpr.GetStringSlice("index-events")
 	require.Equal(t, expected, actualRaw, "viper's index events")
+	// Check that it is parsed into the config correctly.
 	cfg, perr := ParseConfig(vpr)
 	require.NoError(t, perr, "parsing config")
 	actual := cfg.IndexEvents
@@ -71,7 +73,7 @@ func TestGlobalLabelsEventsMarshalling(t *testing.T) {
 	assert.Contains(t, actual, expectedIn, "config file contents")
 }
 
-func TestGlobalLabelsReadWrite(t *testing.T) {
+func TestGlobalLabelsWriteRead(t *testing.T) {
 	expected := [][]string{{"labelname3", "labelvalue3"}, {"labelname4", "labelvalue4"}}
 	expectedRaw := make([]interface{}, len(expected))
 	for i, exp := range expected {
@@ -93,8 +95,10 @@ func TestGlobalLabelsReadWrite(t *testing.T) {
 	vpr.SetConfigFile(confFile)
 	rerr := vpr.ReadInConfig()
 	require.NoError(t, rerr, "reading config file into viper")
+	// Check that the raw viper value is correct.
 	actualRaw := vpr.Get("telemetry.global-labels")
 	require.Equal(t, expectedRaw, actualRaw, "viper value")
+	// Check that it is parsed into the config correctly.
 	cfg, perr := ParseConfig(vpr)
 	require.NoError(t, perr, "parsing config")
 	actual := cfg.Telemetry.GlobalLabels

@@ -151,18 +151,16 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
-		),
-	})
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeTransfer,
+		sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+		sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
+	))
 
 	return nil
 }

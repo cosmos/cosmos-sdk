@@ -28,18 +28,28 @@ func NewEventManager() *EventManager {
 	return &EventManager{EmptyEvents()}
 }
 
+// Increase Capacity increases the capacity of the EventManager,
+// which is quite useful when many events are planned to be created.
+func (em *EventManager) IncreaseCapacity(capacity int) {
+	events := em.events.getUnderlyingSlice()
+	if cap(events) < capacity {
+		em.events = make(Events, 0, capacity)
+		em.events = append(em.events, events...)
+	}
+}
+
 func (em *EventManager) Events() Events { return em.events }
 
 // EmitEvent stores a single Event object.
 // Deprecated: Use EmitTypedEvent
 func (em *EventManager) EmitEvent(event Event) {
-	em.events = em.events.AppendEvent(event)
+	em.events = append(em.events, event)
 }
 
 // EmitEvents stores a series of Event objects.
 // Deprecated: Use EmitTypedEvents
 func (em *EventManager) EmitEvents(events Events) {
-	em.events = em.events.AppendEvents(events)
+	em.events = append(em.events, events...)
 }
 
 // ABCIEvents returns all stored Event objects as abci.Event objects.
@@ -153,7 +163,10 @@ type (
 // NewEvent creates a new Event object with a given type and slice of one or more
 // attributes.
 func NewEvent(ty string, attrs ...Attribute) Event {
-	e := Event{Type: ty}
+	e := Event{
+		Type:       ty,
+		Attributes: make([]abci.EventAttribute, 0, len(attrs)),
+	}
 
 	for _, attr := range attrs {
 		e.Attributes = append(e.Attributes, attr.ToKVPair())
@@ -178,7 +191,7 @@ func (a Attribute) String() string {
 
 // ToKVPair converts an Attribute object into a Tendermint key/value pair.
 func (a Attribute) ToKVPair() abci.EventAttribute {
-	return abci.EventAttribute{Key: toBytes(a.Key), Value: toBytes(a.Value)}
+	return abci.EventAttribute{Key: []byte(a.Key), Value: []byte(a.Value)}
 }
 
 // AppendAttributes adds one or more attributes to an Event.
@@ -210,15 +223,9 @@ func (e Events) ToABCIEvents() []abci.Event {
 	return res
 }
 
-func toBytes(i interface{}) []byte {
-	switch x := i.(type) {
-	case []uint8:
-		return x
-	case string:
-		return []byte(x)
-	default:
-		panic(i)
-	}
+// getUnderlyingSlice converts Events to its underlying []Event
+func (e Events) getUnderlyingSlice() []Event {
+	return e
 }
 
 // Common event types and attribute keys

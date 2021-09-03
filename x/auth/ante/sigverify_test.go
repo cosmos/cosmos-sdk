@@ -1,122 +1,16 @@
 package ante_test
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-func (suite *AnteTestSuite) TestSetPubKey() {
-	suite.SetupTest(true) // setup
-	require := suite.Require()
-	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
-
-	// keys and addresses
-	priv1, pub1, addr1 := testdata.KeyTestPubAddr()
-	priv2, pub2, addr2 := testdata.KeyTestPubAddr()
-	priv3, pub3, addr3 := testdata.KeyTestPubAddrSecp256R1(require)
-
-	addrs := []sdk.AccAddress{addr1, addr2, addr3}
-	pubs := []cryptotypes.PubKey{pub1, pub2, pub3}
-
-	msgs := make([]sdk.Msg, len(addrs))
-	// set accounts and create msg for each address
-	for i, addr := range addrs {
-		acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		require.NoError(acc.SetAccountNumber(uint64(i)))
-		suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-		msgs[i] = testdata.NewTestMsg(addr)
-	}
-	require.NoError(suite.txBuilder.SetMsgs(msgs...))
-	suite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
-	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
-	require.NoError(err)
-
-	spkd := ante.NewSetPubKeyDecorator(suite.app.AccountKeeper)
-	antehandler := sdk.ChainAnteDecorators(spkd)
-
-	ctx, err := antehandler(suite.ctx, tx, false)
-	require.NoError(err)
-
-	// Require that all accounts have pubkey set after Decorator runs
-	for i, addr := range addrs {
-		pk, err := suite.app.AccountKeeper.GetPubKey(ctx, addr)
-		require.NoError(err, "Error on retrieving pubkey from account")
-		require.True(pubs[i].Equals(pk),
-			"Wrong Pubkey retrieved from AccountKeeper, idx=%d\nexpected=%s\n     got=%s", i, pubs[i], pk)
-	}
-}
-
-func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
-	params := types.DefaultParams()
-	msg := []byte{1, 2, 3, 4}
-	cdc := simapp.MakeTestEncodingConfig().Amino
-
-	p := types.DefaultParams()
-	skR1, _ := secp256r1.GenPrivKey()
-	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
-	multisigKey1 := kmultisig.NewLegacyAminoPubKey(2, pkSet1)
-	multisignature1 := multisig.NewMultisig(len(pkSet1))
-	expectedCost1 := expectedGasCostByKeys(pkSet1)
-	for i := 0; i < len(pkSet1); i++ {
-		stdSig := legacytx.StdSignature{PubKey: pkSet1[i], Signature: sigSet1[i]}
-		sigV2, err := legacytx.StdSignatureToSignatureV2(cdc, stdSig)
-		suite.Require().NoError(err)
-		err = multisig.AddSignatureV2(multisignature1, sigV2, pkSet1)
-		suite.Require().NoError(err)
-	}
-
-	type args struct {
-		meter  sdk.GasMeter
-		sig    signing.SignatureData
-		pubkey cryptotypes.PubKey
-		params types.Params
-	}
-	tests := []struct {
-		name        string
-		args        args
-		gasConsumed uint64
-		shouldErr   bool
-	}{
-		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
-		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, p.SigVerifyCostSecp256k1, false},
-		{"PubKeySecp256r1", args{sdk.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
-		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
-		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
-	}
-	for _, tt := range tests {
-		sigV2 := signing.SignatureV2{
-			PubKey:   tt.args.pubkey,
-			Data:     tt.args.sig,
-			Sequence: 0, // Arbitrary account sequence
-		}
-		err := ante.DefaultSigVerificationGasConsumer(tt.args.meter, sigV2, tt.args.params)
-
-		if tt.shouldErr {
-			suite.Require().NotNil(err)
-		} else {
-			suite.Require().Nil(err)
-			suite.Require().Equal(tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
-		}
-	}
-}
 
 func (suite *AnteTestSuite) TestSigVerification() {
 	suite.SetupTest(true) // setup

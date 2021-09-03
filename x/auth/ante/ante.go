@@ -38,13 +38,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigGasConsumer = DefaultSigVerificationGasConsumer
 	}
 
-	anteDecorators := []sdk.AnteDecorator{
-		NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
-		NewValidateSigCountDecorator(options.AccountKeeper),
-		NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
-		NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
-		NewIncrementSequenceDecorator(options.AccountKeeper),
-	}
+	anteDecorators := []sdk.AnteDecorator{}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil
 }

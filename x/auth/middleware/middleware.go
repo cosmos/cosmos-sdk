@@ -3,6 +3,9 @@ package middleware
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // ComposeMiddlewares compose multiple middlewares on top of a tx.Handler. The
@@ -37,11 +40,20 @@ type TxHandlerOptions struct {
 
 	LegacyAnteHandler sdk.AnteHandler
 	AccountKeeper     AccountKeeper
+	BankKeeper        types.BankKeeper
+	FeegrantKeeper    FeegrantKeeper
+	SignModeHandler   authsigning.SignModeHandler
+	SigGasConsumer    func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error
 }
 
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
 // for most applications.
 func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
+	var sigGasConsumer = options.SigGasConsumer
+	if sigGasConsumer == nil {
+		sigGasConsumer = DefaultSigVerificationGasConsumer
+	}
+
 	return ComposeMiddlewares(
 		NewRunMsgsTxHandler(options.MsgServiceRouter, options.LegacyRouter),
 		// Set a new GasMeter on sdk.Context.
@@ -64,6 +76,12 @@ func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
 		TxTimeoutHeightMiddleware,
 		ValidateMemoDecorator(options.AccountKeeper),
 		ConsumeTxSizeGasMiddleware(options.AccountKeeper),
+		DeductFeeMiddleware(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper),
+		SetPubKeyMiddleware(options.AccountKeeper),
+		ValidateSigCountMiddleware(options.AccountKeeper),
+		SigGasConsumeMiddleware(options.AccountKeeper, sigGasConsumer),
+		SigVerificationMiddleware(options.AccountKeeper, options.SignModeHandler),
+		IncrementSequenceMiddleware(options.AccountKeeper),
 
 		// Temporary middleware to bundle antehandlers.
 		// TODO Remove in https://github.com/cosmos/cosmos-sdk/issues/9585.

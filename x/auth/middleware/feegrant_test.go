@@ -42,7 +42,7 @@ func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
 	// this tests the whole stack
 	// anteHandlerStack := //suite.anteHandler
 
-	// keys and addresses
+	// keys and addresses 
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	priv3, _, addr3 := testdata.KeyTestPubAddr()

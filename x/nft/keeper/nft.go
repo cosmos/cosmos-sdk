@@ -24,6 +24,7 @@ func (k Keeper) Mint(ctx sdk.Context, token nft.NFT, receiver sdk.AccAddress) er
 }
 
 // Burn defines a method for burning a nft from a specific account.
+// Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 	if !k.HasClass(ctx, classID) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, classID)
@@ -43,6 +44,7 @@ func (k Keeper) Burn(ctx sdk.Context, classID string, nftID string) error {
 }
 
 // Update defines a method for updating an exist nft
+// Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Update(ctx sdk.Context, token nft.NFT) error {
 	if !k.HasClass(ctx, token.ClassId) {
 		return sdkerrors.Wrap(nft.ErrClassNotExists, token.ClassId)
@@ -56,6 +58,7 @@ func (k Keeper) Update(ctx sdk.Context, token nft.NFT) error {
 }
 
 // Transfer defines a method for sending a nft from one account to another account.
+// Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Transfer(ctx sdk.Context,
 	classID string,
 	nftID string,
@@ -174,14 +177,16 @@ func (k Keeper) getClassStoreByOwner(ctx sdk.Context, owner sdk.AccAddress, clas
 
 func (k Keeper) incrTotalSupply(ctx sdk.Context, classID string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(classTotalSupply(classID))
+	supplyKey := classTotalSupply(classID)
+	bz := store.Get(supplyKey)
 	supply := sdk.BigEndianToUint64(bz) + 1
-	store.Set(classTotalSupply(classID), sdk.Uint64ToBigEndian(supply))
+	store.Set(supplyKey, sdk.Uint64ToBigEndian(supply))
 }
 
 func (k Keeper) decrTotalSupply(ctx sdk.Context, classID string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(classTotalSupply(classID))
+	supplyKey := classTotalSupply(classID)
+	bz := store.Get(supplyKey)
 	supply := sdk.BigEndianToUint64(bz) - 1
-	store.Set(classTotalSupply(classID), sdk.Uint64ToBigEndian(supply))
+	store.Set(supplyKey, sdk.Uint64ToBigEndian(supply))
 }

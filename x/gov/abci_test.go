@@ -21,8 +21,8 @@ import (
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(20000))
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
-	ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -40,8 +40,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	wrapCtx := sdk.WrapSDKContext(ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter()))
-	res, err := govMsgSvr.SubmitProposal(wrapCtx, newProposalMsg)
+	res, err := govMsgSvr.SubmitProposal(sdk.WrapSDKContext(ctx), newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
@@ -75,6 +74,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(20000))
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -152,6 +152,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 func TestTickPassedDepositPeriod(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(20000))
+
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -205,6 +207,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 func TestTickPassedVotingPeriod(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = ctx.WithBlockGasMeter(sdk.NewGasMeter(20000))
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
 	SortAddresses(addrs)

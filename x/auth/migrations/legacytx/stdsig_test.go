@@ -21,7 +21,7 @@ func TestStdSignatureMarshalYAML(t *testing.T) {
 	}{
 		{
 			legacytx.StdSignature{},
-			"|\n  pubkey: \"\"\n  signature: \"\"\n",
+			"pub_key: null\nsignature: null\n",
 		},
 		{
 			legacytx.StdSignature{PubKey: pk, Signature: []byte("dummySig")},

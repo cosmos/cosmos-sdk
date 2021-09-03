@@ -37,7 +37,7 @@ func preUpgradeCommand() *cobra.Command {
 				os.Exit(30)
 			}
 
-			os.Exit(1)
+			os.Exit(0)
 
 		},
 	}

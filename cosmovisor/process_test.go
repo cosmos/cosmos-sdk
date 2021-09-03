@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
@@ -128,48 +129,77 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
 }
 
-// TestLaunchProcessWithPreUpgrade will try running the script a few times and watch upgrades work properly
-// and args are passed through
-func (s *processTestSuite) TestLaunchProcessWithPreUpgrade() {
-	// binaries from testdata/validate directory
-	require := s.Require()
-	home := copyTestData(s.T(), "validate")
-	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", PollInterval: 20, UnsafeSkipBackup: true}
+// TestSkipUpgrade tests skip heights are identified and return if upgrade height matches them
+func TestSkipUpgrade(t *testing.T) {
+	cases := []struct {
+		args        []string
+		upgradeInfo cosmovisor.UpgradeInfo
+		expectRes   bool
+	}{{
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		expectRes:   false,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "--abcd"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		expectRes:   false,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "--abcd"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 11},
+		expectRes:   false,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 20},
+		expectRes:   true,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd", "34"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 34},
+		expectRes:   false,
+	}}
 
-	// should run the genesis binary and produce expected output
-	var stdout, stderr = NewBuffer(), NewBuffer()
-	currentBin, err := cfg.CurrentBin()
-	require.NoError(err)
-	require.Equal(cfg.GenesisBin(), currentBin)
+	for i := range cases {
+		tc := cases[i]
+		require := require.New(t)
+		h := cosmovisor.SkipUpgrade(tc.args, tc.upgradeInfo)
+		require.Equal(h, tc.expectRes)
+	}
+}
 
-	launcher, err := cosmovisor.NewLauncher(cfg)
-	require.NoError(err)
+// TestUpgradeSkipHeights tests if correct skip upgrade heights are identified from the cli args
+func TestUpgradeSkipHeights(t *testing.T) {
+	cases := []struct {
+		args      []string
+		expectRes []int
+	}{{
+		args:      []string{},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start"},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades"},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "--abcd"},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "--abcd"},
+		expectRes: []int{10},
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd"},
+		expectRes: []int{10, 20},
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd", "34"},
+		expectRes: []int{10, 20},
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "as", "20", "--abcd"},
+		expectRes: []int{10, 20},
+	}}
 
-	upgradeFile := cfg.UpgradeInfoFilePath()
-	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdout, stderr)
-	require.NoError(err)
-	require.True(doUpgrade)
-	require.Equal("", stderr.String())
-	require.Equal(fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile),
-		stdout.String())
-
-	// ensure this is upgraded now and produces new output
-
-	currentBin, err = cfg.CurrentBin()
-	require.NoError(err)
-
-	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
-	args = []string{"second", "run", "--verbose"}
-	stdout.Reset()
-	stderr.Reset()
-
-	doUpgrade, err = launcher.Run(args, stdout, stderr)
-	require.NoError(err)
-	require.False(doUpgrade)
-	require.Equal("", stderr.String())
-	require.Equal("Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
-
-	// ended without other upgrade
-	require.Equal(cfg.UpgradeBin("chain2"), currentBin)
+	for i := range cases {
+		tc := cases[i]
+		require := require.New(t)
+		h := cosmovisor.UpgradeSkipHeights(tc.args)
+		require.Equal(h, tc.expectRes)
+	}
 }

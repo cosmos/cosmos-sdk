@@ -151,7 +151,7 @@ func doBackup(cfg *Config) error {
 	return nil
 }
 
-// Runs the pre-upgrade command defined by the application
+// doPreUpgrade runs the pre-upgrade command defined by the application
 func doPreUpgrade(cfg *Config) error {
 	bin, err := cfg.CurrentBin()
 	preUpgradeCmd := exec.Command(bin, "pre-upgrade")
@@ -175,7 +175,7 @@ func doPreUpgrade(cfg *Config) error {
 	return nil
 }
 
-// Checks if pre-upgrade script should be run. If the height in upgrade plan matches any heights provided in --safe-skip-upgrade, the script is not run
+// skipUpgrade checks if pre-upgrade script should be run. If the height in upgrade plan matches any heights provided in --safe-skip-upgrade, the script is not run
 func skipUpgrade(args []string, upgradeInfo UpgradeInfo) bool {
 	skipUpgradeHeights := upgradeSkipHeights(args)
 	for _, h := range skipUpgradeHeights {
@@ -187,7 +187,7 @@ func skipUpgrade(args []string, upgradeInfo UpgradeInfo) bool {
 	return false
 }
 
-// Gets all the heights provided when
+// upgradeSkipHeights gets all the heights provided when
 // 		simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
 func upgradeSkipHeights(args []string) []int {
 	var heights []int

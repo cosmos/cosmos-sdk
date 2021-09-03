@@ -128,7 +128,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
 }
 
-// TestLaunchProcess will try running the script a few times and watch upgrades work properly
+// TestLaunchProcessWithPreUpgrade will try running the script a few times and watch upgrades work properly
 // and args are passed through
 func (s *processTestSuite) TestLaunchProcessWithPreUpgrade() {
 	// binaries from testdata/validate directory

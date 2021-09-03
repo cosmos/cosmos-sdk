@@ -1,6 +1,6 @@
 # Pre Upgrade Handling
 
-Cosmovisor now supports custom pre-upgrade handling. Any changes to the application configs prior to the upgrade, which may be needed by the newer version of the application, can be implemted in the application.
+Cosmovisor supports custom pre-upgrade handling. Any changes to the application configs prior to the upgrade, which may be needed by the newer version of the application, can be implemted in the application.
 
 For example, any changes to `app.toml` settings which might be needed by the newer version can be handled during the pre upgrade. This makes upgradation proccess seamless as the file does not have to be manually updated.
 
@@ -34,10 +34,10 @@ func preUpgradeCommand() *cobra.Command {
 			err := HandlePreUpgrade()
 
 			if err != nil {
-				return os.Exit(30)
+				os.Exit(30)
 			}
 
-			return os.Exit(1)
+			os.Exit(1)
 
 		},
 	}

@@ -22,6 +22,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+	ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -39,7 +40,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	wrapCtx := sdk.WrapSDKContext(ctx)
+	wrapCtx := sdk.WrapSDKContext(ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter()))
 	res, err := govMsgSvr.SubmitProposal(wrapCtx, newProposalMsg)
 	require.NoError(t, err)
 	require.NotNil(t, res)

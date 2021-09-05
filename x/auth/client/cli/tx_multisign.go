@@ -20,9 +20,15 @@ import (
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
+
+// BroadcastReq defines a tx broadcasting request.
+type BroadcastReq struct {
+	Tx   legacytx.StdTx `json:"tx" yaml:"tx"`
+	Mode string         `json:"mode" yaml:"mode"`
+}
 
 // GetSignCommand returns the sign command
 func GetMultiSignCommand() *cobra.Command {
@@ -155,7 +161,7 @@ func makeMultiSignCmd() func(cmd *cobra.Command, args []string) (err error) {
 				return err
 			}
 
-			req := rest.BroadcastReq{
+			req := BroadcastReq{
 				Tx:   stdTx,
 				Mode: "block|sync|async",
 			}
@@ -338,7 +344,7 @@ func makeBatchMultisignCmd() func(cmd *cobra.Command, args []string) error {
 					return err
 				}
 
-				req := rest.BroadcastReq{
+				req := BroadcastReq{
 					Tx:   stdTx,
 					Mode: "block|sync|async",
 				}

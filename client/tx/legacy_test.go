@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	signing2 "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -147,27 +146,6 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	stdTx2, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, stdTx)
 	s.Require().NoError(err)
 	s.Require().Equal(stdTx, stdTx2)
-}
-
-func (s *TestSuite) TestConvertAndEncodeStdTx() {
-	// convert amino -> proto -> amino
-	aminoBuilder := s.aminoCfg.NewTxBuilder()
-	buildTestTx(s.T(), aminoBuilder)
-	stdTx := aminoBuilder.GetTx().(legacytx.StdTx)
-	txBz, err := tx2.ConvertAndEncodeStdTx(s.protoCfg, stdTx)
-	s.Require().NoError(err)
-	decodedTx, err := s.protoCfg.TxDecoder()(txBz)
-	s.Require().NoError(err)
-	aminoBuilder2 := s.aminoCfg.NewTxBuilder()
-	s.Require().NoError(tx2.CopyTx(decodedTx.(signing.Tx), aminoBuilder2, false))
-	s.Require().Equal(stdTx, aminoBuilder2.GetTx())
-
-	// just use amino everywhere
-	txBz, err = tx2.ConvertAndEncodeStdTx(s.aminoCfg, stdTx)
-	s.Require().NoError(err)
-	decodedTx, err = s.aminoCfg.TxDecoder()(txBz)
-	s.Require().NoError(err)
-	s.Require().Equal(stdTx, decodedTx)
 }
 
 func TestTestSuite(t *testing.T) {

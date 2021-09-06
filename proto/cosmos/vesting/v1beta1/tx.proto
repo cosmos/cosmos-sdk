@@ -12,7 +12,9 @@ service Msg {
   // CreateVestingAccount defines a method that enables creating a vesting
   // account.
   rpc CreateVestingAccount(MsgCreateVestingAccount) returns (MsgCreateVestingAccountResponse);
-  rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreateVestingAccountResponse);
+  // CreatePeriodicVestingAccount defines a method that enables creating a
+  // periodic vesting account.
+  rpc CreatePeriodicVestingAccount(MsgCreatePeriodicVestingAccount) returns (MsgCreatePeriodicVestingAccountResponse);
 }
 
 // MsgCreateVestingAccount defines a message that enables creating a vesting
@@ -32,8 +34,7 @@ message MsgCreateVestingAccount {
 // MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
 message MsgCreateVestingAccountResponse {}
 
-
-// MsgCreateVestingAccount defines a message that enables creating a vesting
+// MsgCreatePeriodicVestingAccount defines a message that enables creating a vesting
 // account.
 message MsgCreatePeriodicVestingAccount {
   option (gogoproto.equal) = false;
@@ -43,3 +44,7 @@ message MsgCreatePeriodicVestingAccount {
   int64    start_time                      = 3 [(gogoproto.moretags) = "yaml:\"start_time\""];
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false];
 }
+
+// MsgCreatePeriodicVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+// response type.
+message MsgCreatePeriodicVestingAccountResponse {}

@@ -175,7 +175,7 @@ func doPreUpgrade(cfg *Config) error {
 	return nil
 }
 
-// skipUpgrade checks if pre-upgrade script should be run. If the height in upgrade plan matches any heights provided in --safe-skip-upgrade, the script is not run
+// skipUpgrade checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
 func SkipUpgrade(args []string, upgradeInfo UpgradeInfo) bool {
 	skipUpgradeHeights := UpgradeSkipHeights(args)
 	for _, h := range skipUpgradeHeights {

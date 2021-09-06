@@ -129,7 +129,7 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
 }
 
-// TestSkipUpgrade tests skip heights are identified and return if upgrade height matches them
+// TestSkipUpgrade tests heights that are identified to be skipped and return if upgrade height matches the skip heights
 func TestSkipUpgrade(t *testing.T) {
 	cases := []struct {
 		args        []string

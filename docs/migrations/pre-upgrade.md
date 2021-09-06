@@ -1,14 +1,14 @@
-# Pre Upgrade Handling
+# Pre-Upgrade Handling
 
-Cosmovisor supports custom pre-upgrade handling. Any changes to the application configs prior to the upgrade, which may be needed by the newer version of the application, can be implemted in the application.
+Cosmovisor supports custom pre-upgrade handling. Use pre-upgrade handling when you need to implement application config changes that are required in the newer version before you perform the upgrade.
 
-For example, any changes to `app.toml` settings which might be needed by the newer version can be handled during the pre upgrade. This makes upgradation proccess seamless as the file does not have to be manually updated.
+Using Cosmovisor pre-upgrade handling is optional. If pre-upgrade handling is not implemented, the upgrade continues.
 
-Prior to the application binary being upgraded, Cosmovisor calls a `pre-upgrade` command which can  be implemented by the application. 
-It is not mandatory to implement this command. If it is not implemented, the upgrade proceeds as it did previously.
+For example, make the required new-version changes to `app.toml` settings during the pre-upgrade handling. The pre-upgrade handling process means that the file does not have to be manually updated after the upgrade.
 
+Before the application binary is upgraded, Cosmovisor calls a `pre-upgrade` command that can  be implemented by the application.
 
-The `pre-upgrade` command does not take in any command line arguments and is expected to terminate with the following exit codes.
+The `pre-upgrade` command does not take in any command-line arguments and is expected to terminate with the following exit codes:
 
 
 | Exit status code | How it is handled in Cosmosvisor                                                                                    |
@@ -21,14 +21,14 @@ The `pre-upgrade` command does not take in any command line arguments and is exp
 
 ## Sample
 
-Here is a sample structure of how the `pre-upgrade` command should look like.
+Here is a sample structure of the `pre-upgrade` command:
 
 ```go
 func preUpgradeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pre-upgrade",
-		Short: "Pre upgrade command",
-        Long: "Pre upgrade command longer desc",
+		Short: "Pre-upgrade command",
+        Long: "Pre-upgrade command to implement custom pre-upgrade handling",
 		Run: func(cmd *cobra.Command, args []string) {
 
 			err := HandlePreUpgrade()
@@ -47,7 +47,7 @@ func preUpgradeCommand() *cobra.Command {
 ```
 
 
-Ensure that the pre-upgrade command has been registered in the application
+Ensure that the pre-upgrade command has been registered in the application:
 ```go
 rootCmd.AddCommand(
 		// ..

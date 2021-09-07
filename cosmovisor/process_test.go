@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
@@ -126,4 +127,79 @@ func (s *processTestSuite) TestLaunchProcessWithDownloads() {
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(err)
 	require.Equal(cfg.UpgradeBin("chain3"), currentBin)
+}
+
+// TestSkipUpgrade tests heights that are identified to be skipped and return if upgrade height matches the skip heights
+func TestSkipUpgrade(t *testing.T) {
+	cases := []struct {
+		args        []string
+		upgradeInfo cosmovisor.UpgradeInfo
+		expectRes   bool
+	}{{
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		expectRes:   false,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "--abcd"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 123},
+		expectRes:   false,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "--abcd"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 11},
+		expectRes:   false,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 20},
+		expectRes:   true,
+	}, {
+		args:        []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd", "34"},
+		upgradeInfo: cosmovisor.UpgradeInfo{Name: "upgrade1", Info: "some info", Height: 34},
+		expectRes:   false,
+	}}
+
+	for i := range cases {
+		tc := cases[i]
+		require := require.New(t)
+		h := cosmovisor.SkipUpgrade(tc.args, tc.upgradeInfo)
+		require.Equal(h, tc.expectRes)
+	}
+}
+
+// TestUpgradeSkipHeights tests if correct skip upgrade heights are identified from the cli args
+func TestUpgradeSkipHeights(t *testing.T) {
+	cases := []struct {
+		args      []string
+		expectRes []int
+	}{{
+		args:      []string{},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start"},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades"},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "--abcd"},
+		expectRes: nil,
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "--abcd"},
+		expectRes: []int{10},
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd"},
+		expectRes: []int{10, 20},
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "20", "--abcd", "34"},
+		expectRes: []int{10, 20},
+	}, {
+		args:      []string{"appb", "start", "--unsafe-skip-upgrades", "10", "as", "20", "--abcd"},
+		expectRes: []int{10, 20},
+	}}
+
+	for i := range cases {
+		tc := cases[i]
+		require := require.New(t)
+		h := cosmovisor.UpgradeSkipHeights(tc.args)
+		require.Equal(h, tc.expectRes)
+	}
 }

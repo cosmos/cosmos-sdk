@@ -104,3 +104,27 @@ func TestGlobalLabelsWriteRead(t *testing.T) {
 	actual := cfg.Telemetry.GlobalLabels
 	require.Equal(t, expected, actual, "config value")
 }
+
+func TestSetConfigTemplate(t *testing.T) {
+	conf := DefaultConfig()
+	var initBuffer, setBuffer bytes.Buffer
+
+	// Use the configTemplate defined during init() to create a config string.
+	ierr := configTemplate.Execute(&initBuffer, conf)
+	require.NoError(t, ierr, "initial configTemplate.Execute")
+	expected := initBuffer.String()
+
+	// Set the template to the default one.
+	initTmpl := configTemplate
+	require.NotPanics(t, func() {
+		SetConfigTemplate(DefaultConfigTemplate)
+	}, "SetConfigTemplate")
+	setTmpl := configTemplate
+	require.NotSame(t, initTmpl, setTmpl, "configTemplate after set")
+
+	// Create the string again and make sure it's the same.
+	serr := configTemplate.Execute(&setBuffer, conf)
+	require.NoError(t, serr, "after SetConfigTemplate, configTemplate.Execute")
+	actual := setBuffer.String()
+	require.Equal(t, expected, actual, "resulting config strings")
+}

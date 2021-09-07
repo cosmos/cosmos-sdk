@@ -55,7 +55,6 @@ func (store *Store) GetStoreType() types.StoreType {
 func (store *Store) Get(key []byte) (value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
-	defer telemetry.MeasureSince(time.Now(), "store", "cachekv", "get")
 
 	types.AssertValidKey(key)
 
@@ -74,7 +73,6 @@ func (store *Store) Get(key []byte) (value []byte) {
 func (store *Store) Set(key []byte, value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
-	defer telemetry.MeasureSince(time.Now(), "store", "cachekv", "set")
 
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
@@ -238,12 +236,13 @@ func (store *Store) dirtyItems(start, end []byte) {
 
 // Only entrypoint to mutate store.cache.
 func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
-	store.cache[conv.UnsafeBytesToStr(key)] = &cValue{
+	keyStr := conv.UnsafeBytesToStr(key)
+	store.cache[keyStr] = &cValue{
 		value:   value,
 		deleted: deleted,
 		dirty:   dirty,
 	}
 	if dirty {
-		store.unsortedCache[conv.UnsafeBytesToStr(key)] = struct{}{}
+		store.unsortedCache[keyStr] = struct{}{}
 	}
 }

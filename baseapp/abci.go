@@ -255,18 +255,18 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 		panic(fmt.Sprintf("unknown RequestCheckTx type: %s", req.Type))
 	}
 
-	gInfo, result, err := app.runTx(mode, req.Tx)
+	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		return sdkerrors.ResponseCheckTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
+		return sdkerrors.ResponseCheckTx(err, 0, 0, app.trace)
 	}
 
-	return abci.ResponseCheckTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	ctx := app.getContextForTx(mode, req.Tx)
+	res, err := app.txHandler.CheckTx(ctx, tx, req)
+	if err != nil {
+		return sdkerrors.ResponseCheckTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
 	}
+
+	return res
 }
 
 // DeliverTx implements the ABCI interface and executes a tx in DeliverTx mode.
@@ -277,20 +277,9 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	defer telemetry.MeasureSince(time.Now(), "abci", "deliver_tx")
 
-	gInfo := sdk.GasInfo{}
-	resultStr := "successful"
-
-	defer func() {
-		telemetry.IncrCounter(1, "tx", "count")
-		telemetry.IncrCounter(1, "tx", resultStr)
-		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
-		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
-	}()
-
-	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
+	tx, err := app.txDecoder(req.Tx)
 	if err != nil {
-		resultStr = "failed"
-		res := sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
+		res := sdkerrors.ResponseDeliverTx(err, 0, 0, app.trace)
 		// if we throw and error, be sure to still call the streaming service's hook
 		for _, hook := range app.hooks {
 			if err := hook.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
@@ -300,12 +289,17 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 		return res
 	}
 
-	res := abci.ResponseDeliverTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
+	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
+	res, err := app.txHandler.DeliverTx(ctx, tx, req)
+	if err != nil {
+		res := sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+		// if we throw and error, be sure to still call the streaming service's hook
+		for _, hook := range app.hooks {
+			if err := hook.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "err", err)
+			}
+		}
+		return res
 	}
 
 	// call the streaming service hooks with the DeliverTx messages

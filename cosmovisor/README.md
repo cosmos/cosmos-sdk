@@ -1,20 +1,24 @@
 # Cosmosvisor Quick Start
 
-`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module via stdout for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
+*Note: If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.*
+
 ## Contributing
 
-Release branches has the following format `release/cosmovisor/vA.B.x`, where A and B are a number (eg: `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
+Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
 
 ## Installation
 
-To install `cosmovisor`, run the following command:
+To install the latest version of `cosmovisor`, run the following command:
 
 ```
-go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
+go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
+
+*Note: If you are using go `v1.15` or earlier, you will need to use `go get`, and you may want to run the command outside a project directory.*
 
 ## Command Line Arguments And Environment Variables
 
@@ -26,6 +30,7 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_NAME` is the name of the binary itself (e.g. `gaiad`, `regend`, `simd`, etc.).
 * `DAEMON_ALLOW_DOWNLOAD_BINARIES` (*optional*), if set to `true`, will enable auto-downloading of new binaries (for security reasons, this is intended for full nodes rather than validators). By default, `cosmovisor` will not auto-download new binaries.
 * `DAEMON_RESTART_AFTER_UPGRADE` (*optional*), if set to `true`, will restart the subprocess with the same command-line arguments and flags (but with the new binary) after a successful upgrade. By default, `cosmovisor` stops running after an upgrade and requires the system administrator to manually restart it. Note that `cosmovisor` will not auto-restart the subprocess if there was an error.
+* `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, will backup the data before trying the upgrade. Otherwise it will upgrade directly without doing any backup. This is useful (and recommended) in case of failures and when needed to rollback. It is advised to use backup option, i.e., `UNSAFE_SKIP_BACKUP=false`
 
 ## Folder Layout
@@ -40,8 +45,9 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 │       └── $DAEMON_NAME
 └── upgrades
     └── <name>
-        └── bin
-            └── $DAEMON_NAME
+        ├── bin
+        │   └── $DAEMON_NAME
+        └── upgrade-info.json
 ```
 
 The `cosmovisor/` directory incudes a subdirectory for each version of the application (i.e. `genesis` or `upgrades/<name>`). Within each subdirectory is the application binary (i.e. `bin/$DAEMON_NAME`) and any additional auxiliary files associated with each binary. `current` is a symbolic link to the currently active directory (i.e. `genesis` or `upgrades/<name>`). The `name` variable in `upgrades/<name>` is the URI-encoded name of the upgrade as specified in the upgrade module plan.
@@ -70,6 +76,18 @@ The system administrator is responsible for:
 In order to support downloadable binaries, a tarball for each upgrade binary will need to be packaged up and made available through a canonical URL. Additionally, a tarball that includes the genesis binary and all available upgrade binaries can be packaged up and made available so that all the necessary binaries required to sync a fullnode from start can be easily downloaded.
 
 The `DAEMON` specific code and operations (e.g. tendermint config, the application db, syncing blocks, etc.) all work as expected. The application binaries' directives such as command-line flags and environment variables also work as expected.
+
+
+### Detecting Upgrades
+
+`cosmovisor` is polling the `$DAEMON_HOME/data/upgrade-info.json` file for new upgrade instructions. The file is created by the x/upgrade module in `BeginBlocker` when an upgrade is detected and the blockchain reaches the upgrade height.
+The following heuristic is applied to detect the upgrade:
++ When starting, `cosmovisor` doesn't know much about currently running upgrade, except the binary which is `current/bin/`. It tries to read the `current/update-info.json` file to get information about the current upgrade name.
++ If neither `cosmovisor/current/upgrade-info.json` nor `data/upgrade-info.json` exist, then `cosmovisor` will wait for `data/upgrade-info.json` file to trigger an upgrade.
++ If `cosmovisor/current/upgrade-info.json` doesn't exist but `data/upgrade-info.json` exists, then `cosmovisor` assumes that whatever is in `data/upgrade-info.json` is a valid upgrade request. In this case `cosmovisor` tries immediately to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
++ Otherwise, `cosmovisor` waits for changes in `upgrade-info.json`. As soon as a new upgrade name is recorded in the file, `cosmovisor` will trigger an upgrade mechanism.
+
+When the upgrade mechanism is triggered, `cosmovisor` will start by auto-downloading a new binary (if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled) into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute). `cosmovisor` will then update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
 
 ## Auto-Download
 

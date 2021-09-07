@@ -1,8 +1,6 @@
 package math
 
 import (
-	"fmt"
-
 	"github.com/cockroachdb/apd/v2"
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,50 +26,6 @@ func NewDecFromString(s string) (Dec, error) {
 		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
 	}
 	return Dec{*d}, nil
-}
-
-func NewNonNegativeDecFromString(s string) (Dec, error) {
-	d, err := NewDecFromString(s)
-	if err != nil {
-		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
-	}
-	if d.IsNegative() {
-		return Dec{}, ErrInvalidDecString.Wrapf("expected a non-negative decimal, got %s", s)
-	}
-	return d, nil
-}
-
-func NewNonNegativeFixedDecFromString(s string, max uint32) (Dec, error) {
-	d, err := NewNonNegativeDecFromString(s)
-	if err != nil {
-		return Dec{}, err
-	}
-	if d.NumDecimalPlaces() > max {
-		return Dec{}, fmt.Errorf("%s exceeds maximum decimal places: %d", s, max)
-	}
-	return d, nil
-}
-
-func NewPositiveDecFromString(s string) (Dec, error) {
-	d, err := NewDecFromString(s)
-	if err != nil {
-		return Dec{}, ErrInvalidDecString.Wrap(err.Error())
-	}
-	if !d.IsPositive() {
-		return Dec{}, ErrInvalidDecString.Wrapf("expected a positive decimal, got %s", s)
-	}
-	return d, nil
-}
-
-func NewPositiveFixedDecFromString(s string, max uint32) (Dec, error) {
-	d, err := NewPositiveDecFromString(s)
-	if err != nil {
-		return Dec{}, err
-	}
-	if d.NumDecimalPlaces() > max {
-		return Dec{}, fmt.Errorf("%s exceeds maximum decimal places: %d", s, max)
-	}
-	return d, nil
 }
 
 func NewDecFromInt64(x int64) Dec {
@@ -110,17 +64,4 @@ func (x Dec) IsEqual(y Dec) bool {
 
 func (x Dec) IsNegative() bool {
 	return x.dec.Negative && !x.dec.IsZero()
-}
-
-func (x Dec) IsPositive() bool {
-	return !x.dec.Negative && !x.dec.IsZero()
-}
-
-// NumDecimalPlaces returns the number of decimal places in x.
-func (x Dec) NumDecimalPlaces() uint32 {
-	exp := x.dec.Exponent
-	if exp >= 0 {
-		return 0
-	}
-	return uint32(-exp)
 }

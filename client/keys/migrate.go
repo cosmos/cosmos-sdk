@@ -34,6 +34,10 @@ func runMigrateCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	_, err = clientCtx.Keyring.MigrateAll()
-	return err
+	if _, err = clientCtx.Keyring.MigrateAll(); err != nil {
+		return err
+	}
+	
+	cmd.Println("Keys migration has been successfully executed")
+	return nil
 }

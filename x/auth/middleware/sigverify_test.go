@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -202,7 +202,10 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 	ctx = ctx.WithBlockHeight(1)
 
 	// Set up TxConfig.
-	aminoCdc := codec.NewLegacyAmino()
+	aminoCdc := legacy.Cdc
+	aminoCdc.RegisterInterface((*sdk.Msg)(nil), nil)
+	aminoCdc.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+
 	// We're using TestMsg amino encoding in some tests, so register it here.
 	txConfig := legacytx.StdTxConfig{Cdc: aminoCdc}
 

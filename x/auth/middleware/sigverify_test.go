@@ -373,7 +373,10 @@ func (suite *MWTestSuite) TestIncrementSequenceDecorator() {
 	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 	suite.Require().NoError(err)
 
-	txHandler := middleware.ComposeMiddlewares(noopTxHandler{}, middleware.IncrementSequenceMiddleware(suite.app.AccountKeeper))
+	txHandler := middleware.ComposeMiddlewares(
+		noopTxHandler{},
+		middleware.IncrementSequenceMiddleware(suite.app.AccountKeeper),
+	)
 
 	testCases := []struct {
 		ctx         sdk.Context

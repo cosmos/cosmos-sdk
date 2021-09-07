@@ -64,23 +64,25 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestMsgService(t *testing.T) {
+	app, _ := createTestApp(t, true)
 	priv, _, addr := testdata.KeyTestPubAddr()
 	encCfg := simapp.MakeTestEncodingConfig()
 	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
 	db := dbm.NewMemDB()
-	app := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
-	app.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	baseApp := baseapp.NewBaseApp("test", log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, encCfg.TxConfig.TxDecoder())
+	baseApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	msr := middleware.NewMsgServiceRouter(encCfg.InterfaceRegistry)
 	txHandler, err := middleware.NewDefaultTxHandler(middleware.TxHandlerOptions{
 		MsgServiceRouter: msr,
+		AccountKeeper:    app.AccountKeeper,
 	})
 	require.NoError(t, err)
-	app.SetTxHandler(txHandler)
+	baseApp.SetTxHandler(txHandler)
 	testdata.RegisterMsgServer(
 		msr,
 		testdata.MsgServerImpl{},
 	)
-	_ = app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	_ = baseApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
 
 	msg := testdata.TestMsg{Signers: []string{addr.String()}}
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
@@ -119,6 +121,6 @@ func TestMsgService(t *testing.T) {
 	// Send the tx to the app
 	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	res := baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
 }

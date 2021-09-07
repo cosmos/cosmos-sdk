@@ -128,11 +128,11 @@ func (suite *MWTestSuite) TestSigVerification() {
 	ctx = ctx.WithBlockHeight(1)
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
+		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
 			suite.app.AccountKeeper,
 			suite.clientCtx.TxConfig.SignModeHandler(),
 		),
-		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
 	)
 
 	// keys and addresses
@@ -233,11 +233,11 @@ func (suite *MWTestSuite) TestSigVerification_ExplicitAmino() {
 
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
+		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
 		middleware.SigVerificationMiddleware(
 			suite.app.AccountKeeper,
 			suite.clientCtx.TxConfig.SignModeHandler(),
 		),
-		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
 	)
 
 	type testCase struct {
@@ -332,12 +332,12 @@ func (suite *MWTestSuite) runSigDecorators(params types.Params, _ bool, privs ..
 
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
+		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
+		middleware.SigGasConsumeMiddleware(suite.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
 		middleware.SigVerificationMiddleware(
 			suite.app.AccountKeeper,
 			suite.clientCtx.TxConfig.SignModeHandler(),
 		),
-		middleware.SigGasConsumeMiddleware(suite.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
-		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),
 	)
 
 	// Determine gas consumption of antehandler with default params

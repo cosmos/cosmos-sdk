@@ -853,7 +853,7 @@ func (ks keystore) MigrateAll() (bool, error) {
 	}
 
 	if len(keys) == 0 {
-		return false, nil
+		return false, errors.New("no keys available for migration")
 	}
 
 	var migrated bool

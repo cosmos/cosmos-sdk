@@ -125,8 +125,12 @@ Examples:
 					return err
 				}
 
+				if periodClock <= 0 {
+					return fmt.Errorf("period clock was not set")
+				}
+
 				if periodLimit == nil {
-					return fmt.Errorf("Period limit was not set")
+					return fmt.Errorf("period limit was not set")
 				}
 
 				periodReset := getPeriodReset(periodClock)

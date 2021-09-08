@@ -40,12 +40,12 @@ Separation of storage and commitment (by the SMT) will allow the optimization of
 
 `SC` (SMT) is used to commit to a data and compute Merkle proofs. `SS` is used to directly access data. To avoid collisions, both `SS` and `SC` will use a separate storage namespace (they could use the same database underneath). `SS` will store each record directly (mapping `(key, value)` as `key → value`).
 
-SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is used as leaf path (we hash a key to uniformly distribute leaves in the tree) and `(hash(key),  hash(value))` as the leaf contents. The tree structure is specified in more depth [below](#smt-for-state-commitment).
+SMT is a merkle tree structure: we don't store keys directly. For every `(key, value)` pair, `hash(key)` is used as leaf path (we hash a key to uniformly distribute leaves in the tree) and `hash(value)` as the leaf contents. The tree structure is specified in more depth [below](#smt-for-state-commitment).
 
 For data access we propose 2 additional KV buckets (implemented as namespaces for the key-value pairs, sometimes called [column family](https://github.com/facebook/rocksdb/wiki/Terminology)):
 
 1. B1: `key → value`: the principal object storage, used by a state machine, behind the SDK `KVStore` interface: provides direct access by key and allows prefix iteration (KV DB backend must support it).
-2. B2: `hash(key) → key`: a reverse index to get a key from an SMT path. Recall that SMT will store `(k, v)` as `(hash(k), hash(value))`. So, we can get an object value by composing `hash(key) → B2 → B1`.
+2. B2: `hash(key) → key`: a reverse index to get a key from an SMT path. Internally the SMT will store `(key, value)` as `prefix || hash(key) || hash(value)`. So, we can get an object value by composing `hash(key) → B2 → B1`.
 3. We could use more buckets to optimize the app usage if needed.
 
 Above, we propose to use a KV DB. However, for the state machine, we could use an RDBMS, which we discuss below.

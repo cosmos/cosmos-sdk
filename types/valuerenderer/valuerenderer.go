@@ -33,6 +33,12 @@ func NewDefaultValueRenderer(bk keeper.BaseKeeper) DefaultValueRenderer {
 	return DefaultValueRenderer{bankKeeper: bk}
 }
 
+// it is used only in tests consider to refactor 
+func (dvr DefaultValueRenderer) GetBankKeeper() keeper.BaseKeeper {
+	return dvr.bankKeeper
+}
+
+
 func (dvr DefaultValueRenderer) QueryDenomMetadata(ctx context.Context, coin types.Coin) (banktypes.Metadata, error) {
 	req := &banktypes.QueryDenomMetadataRequest{
 		Denom: coin.Denom,
@@ -46,10 +52,12 @@ func (dvr DefaultValueRenderer) QueryDenomMetadata(ctx context.Context, coin typ
 	return res.Metadata, nil
 }
 
+// it is used only in tests consider to refactor 
 func (dvr DefaultValueRenderer) GetDenomMetadata() banktypes.Metadata {
 	return dvr.metaData
 }
 
+// it is used only in tests consider to refactor 
 func (dvr DefaultValueRenderer) SetDenomMetadata(metaData banktypes.Metadata)  {
 	dvr.metaData = metaData
 }

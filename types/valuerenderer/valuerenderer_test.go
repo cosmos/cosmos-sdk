@@ -63,11 +63,31 @@ func TestFormatCoin(t *testing.T) {
 	tt := []struct {
 		name   string
 		coin   types.Coin
+		metadata banktypes.Metadata
 		expErr bool
 	}{
 		{
-			"convert 1000000regen to 1000000regen",
-			types.NewCoin("regen", types.NewInt(int64(1000000))),
+			"convert 1000000uregen to 1regen",
+			types.NewCoin("uregen", types.NewInt(int64(1000000))),
+			banktypes.Metadata{
+					Name:        "Regen",
+					Symbol:      "REGEN",
+					Description: "The native staking token of the Regen network.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "uregen",
+							Exponent: 0,
+							Aliases:  []string{"microregen"},
+						},
+						{
+							Denom:    "regen",
+							Exponent: 6,
+							Aliases:  []string{"REGEN"},
+						},
+					},
+					Base:    "uregen",
+					Display: "regen",
+			},
 			false,
 		},
 		/*
@@ -101,6 +121,7 @@ func TestFormatCoin(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			dvr.GetBankKeeper().SetDenomMetaData(c, tc.metadata)
 			metaData, err := dvr.QueryDenomMetadata(ctx, tc.coin)
 			require.NoError(t, err)
 

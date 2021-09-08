@@ -1,15 +1,22 @@
 package middleware_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -925,4 +932,219 @@ func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {
 		}
 	}
 	return cost
+}
+
+func TestCountSubkeys(t *testing.T) {
+	genPubKeys := func(n int) []cryptotypes.PubKey {
+		var ret []cryptotypes.PubKey
+		for i := 0; i < n; i++ {
+			ret = append(ret, secp256k1.GenPrivKey().PubKey())
+		}
+		return ret
+	}
+	singleKey := secp256k1.GenPrivKey().PubKey()
+	singleLevelMultiKey := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
+	multiLevelSubKey1 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
+	multiLevelSubKey2 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
+	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{
+		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
+	type args struct {
+		pub cryptotypes.PubKey
+	}
+	testCases := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"single key", args{singleKey}, 1},
+		{"single level multikey", args{singleLevelMultiKey}, 5},
+		{"multi level multikey", args{multiLevelMultiKey}, 11},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(T *testing.T) {
+			require.Equal(t, tc.want, ante.CountSubKeys(tc.args.pub))
+		})
+	}
+}
+
+func (suite *MWTestSuite) TestAnteHandlerSigLimitExceeded() {
+	ctx := suite.SetupTest(false) // setup
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(ctx, 8)
+	var addrs []sdk.AccAddress
+	var privs []cryptotypes.PrivKey
+	for i := 0; i < 8; i++ {
+		addrs = append(addrs, accounts[i].acc.GetAddress())
+		privs = append(privs, accounts[i].priv)
+	}
+	msgs := []sdk.Msg{testdata.NewTestMsg(addrs...)}
+	accNums, accSeqs := []uint64{0, 1, 2, 3, 4, 5, 6, 7}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+
+	testCases := []TestCase{
+		{
+			"test rejection logic",
+			func() {},
+			false,
+			false,
+			sdkerrors.ErrTooManySignatures,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			tc.malleate()
+
+			suite.RunTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+		})
+	}
+}
+
+// Test custom SignatureVerificationGasConsumer
+func (suite *MWTestSuite) TestCustomSignatureVerificationGasConsumer() {
+	ctx := suite.SetupTest(false) // setup
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+
+	txHandler, err := middleware.NewDefaultTxHandler(
+		middleware.TxHandlerOptions{
+			AccountKeeper:   suite.app.AccountKeeper,
+			BankKeeper:      suite.app.BankKeeper,
+			FeegrantKeeper:  suite.app.FeeGrantKeeper,
+			SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
+			SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params types.Params) error {
+				switch pubkey := sig.PubKey.(type) {
+				case *ed25519.PubKey:
+					meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+					return nil
+				default:
+					return sdkerrors.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
+				}
+			},
+		},
+	)
+	suite.Require().NoError(err)
+	suite.txHandler = txHandler
+
+	suite.Require().NoError(err)
+
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(ctx, 1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+
+	// Variable data per test case
+	var (
+		accNums []uint64
+		msgs    []sdk.Msg
+		privs   []cryptotypes.PrivKey
+		accSeqs []uint64
+	)
+
+	testCases := []TestCase{
+		{
+			"verify that an secp256k1 account gets rejected",
+			func() {
+				msgs = []sdk.Msg{testdata.NewTestMsg(accounts[0].acc.GetAddress())}
+				privs, accNums, accSeqs = []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+			},
+			false,
+			false,
+			sdkerrors.ErrInvalidPubKey,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			tc.malleate()
+
+			suite.RunTestCase(ctx, txBuilder, privs, msgs, feeAmount, gasLimit, accNums, accSeqs, ctx.ChainID(), tc)
+		})
+	}
+}
+
+func (suite *MWTestSuite) TestAnteHandlerReCheck() {
+	ctx := suite.SetupTest(false) // setup
+	// Set recheck=true
+	ctx = ctx.WithIsReCheckTx(true)
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// Same data for every test cases
+	accounts := suite.CreateTestAccounts(ctx, 1)
+
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+
+	msg := testdata.NewTestMsg(accounts[0].acc.GetAddress())
+	msgs := []sdk.Msg{msg}
+	suite.Require().NoError(txBuilder.SetMsgs(msgs...))
+
+	txBuilder.SetMemo("thisisatestmemo")
+
+	// test that operations skipped on recheck do not run
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{accounts[0].priv}, []uint64{0}, []uint64{0}
+	tx, _, err := suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	suite.Require().NoError(err)
+
+	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
+	// since these decorators don't run on recheck, the tx should pass the antehandler
+	txBuilder, err = suite.clientCtx.TxConfig.WrapTxBuilder(tx)
+	suite.Require().NoError(err)
+	suite.Require().NoError(txBuilder.SetSignatures())
+
+	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), txBuilder.GetTx(), abci.RequestCheckTx{})
+	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)
+
+	tx, _, err = suite.createTestTx(txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+	suite.Require().NoError(err)
+	txBytes, err := json.Marshal(tx)
+	suite.Require().Nil(err, "Error marshalling tx: %v", err)
+	ctx = ctx.WithTxBytes(txBytes)
+
+	// require that state machine param-dependent checking is still run on recheck since parameters can change between check and recheck
+	testCases := []struct {
+		name   string
+		params types.Params
+	}{
+		{"memo size check", types.NewParams(1, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},
+		{"txsize check", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, 10000000, types.DefaultSigVerifyCostED25519, types.DefaultSigVerifyCostSecp256k1)},
+		{"sig verify cost check", types.NewParams(types.DefaultMaxMemoCharacters, types.DefaultTxSigLimit, types.DefaultTxSizeCostPerByte, types.DefaultSigVerifyCostED25519, 100000000)},
+	}
+
+	for _, tc := range testCases {
+		// set testcase parameters
+		suite.app.AccountKeeper.SetParams(ctx, tc.params)
+
+		_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+
+		suite.Require().NotNil(err, "tx does not fail on recheck with updated params in test case: %s", tc.name)
+
+		// reset parameters to default values
+		suite.app.AccountKeeper.SetParams(ctx, types.DefaultParams())
+	}
+
+	// require that local mempool fee check is still run on recheck since validator may change minFee between check and recheck
+	// create new minimum gas price so antehandler fails on recheck
+	ctx = ctx.WithMinGasPrices([]sdk.DecCoin{{
+		Denom:  "dnecoin", // fee does not have this denom
+		Amount: sdk.NewDec(5),
+	}})
+	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+
+	suite.Require().NotNil(err, "antehandler on recheck did not fail when mingasPrice was changed")
+	// reset min gasprice
+	ctx = ctx.WithMinGasPrices(sdk.DecCoins{})
+
+	// remove funds for account so antehandler fails on recheck
+	suite.app.AccountKeeper.SetAccount(ctx, accounts[0].acc)
+	balances := suite.app.BankKeeper.GetAllBalances(ctx, accounts[0].acc.GetAddress())
+	err = suite.app.BankKeeper.SendCoinsFromAccountToModule(ctx, accounts[0].acc.GetAddress(), minttypes.ModuleName, balances)
+	suite.Require().NoError(err)
+
+	_, err = suite.txHandler.CheckTx(sdk.WrapSDKContext(ctx), tx, abci.RequestCheckTx{})
+	suite.Require().NotNil(err, "antehandler on recheck did not fail once feePayer no longer has sufficient funds")
 }

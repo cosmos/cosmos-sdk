@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	)
 	s.Require().NoError(err)
 	blockHeight = header.Get(grpctypes.GRPCBlockHeightHeader)
-	s.Require().NotEmpty(blockHeight[0]) // blockHeight is []string, first element is block height.
+	s.Require().Equal([]string{"1"}, blockHeight)
 }
 
 func (s *IntegrationTestSuite) TestGRPCServer_Reflection() {
@@ -163,6 +163,8 @@ func (s *IntegrationTestSuite) TestGRPCServer_GetTxsEvent() {
 			Events: []string{"message.action='send'"},
 		},
 	)
+	// TODO Once https://github.com/cosmos/cosmos-sdk/pull/8029 is merged, this
+	// should not error anymore.
 	s.Require().NoError(err)
 }
 
@@ -199,9 +201,9 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 		value   string
 		wantErr string
 	}{
-		{"-1", "\"x-cosmos-block-height\" must be >= 0"},
+		{"-1", "height < 0"},
 		{"9223372036854775808", "value out of range"}, // > max(int64) by 1
-		{"-10", "\"x-cosmos-block-height\" must be >= 0"},
+		{"-10", "height < 0"},
 		{"18446744073709551615", "value out of range"}, // max uint64, which is  > max(int64)
 		{"-9223372036854775809", "value out of range"}, // Out of the range of for negative int64
 	}

@@ -99,7 +99,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 	return &types.MsgCreateVestingAccountResponse{}, nil
 }
 
-func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreateVestingAccountResponse, error) {
+func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	ak := s.AccountKeeper
@@ -159,6 +159,6 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		),
 	)
-	return &types.MsgCreateVestingAccountResponse{}, nil
+	return &types.MsgCreatePeriodicVestingAccountResponse{}, nil
 
 }

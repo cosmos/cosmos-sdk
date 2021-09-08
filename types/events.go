@@ -259,6 +259,7 @@ var (
 
 	AttributeKeyAccountSequence = "acc_seq"
 	AttributeKeySignature       = "signature"
+	AttributeKeyFee             = "fee"
 
 	EventTypeMessage = "message"
 

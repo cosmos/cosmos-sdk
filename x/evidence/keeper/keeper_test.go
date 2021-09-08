@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
@@ -77,12 +76,11 @@ type KeeperTestSuite struct {
 	app     *simapp.SimApp
 
 	queryClient types.QueryClient
-	stakingHdl  sdk.Handler
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
-	app := simapp.Setup(checkTx)
+	app := simapp.Setup(suite.T(), checkTx)
 
 	// recreate keeper in order to use custom testing types
 	evidenceKeeper := keeper.NewKeeper(
@@ -106,7 +104,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, app.EvidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
-	suite.stakingHdl = staking.NewHandler(app.StakingKeeper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

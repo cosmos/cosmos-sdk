@@ -17,10 +17,18 @@
     - [PageResponse](#cosmos.base.query.v1beta1.PageResponse)
   
 - [cosmos/auth/v1beta1/query.proto](#cosmos/auth/v1beta1/query.proto)
+    - [AddressBytesToStringRequest](#cosmos.auth.v1beta1.AddressBytesToStringRequest)
+    - [AddressBytesToStringResponse](#cosmos.auth.v1beta1.AddressBytesToStringResponse)
+    - [AddressStringToBytesRequest](#cosmos.auth.v1beta1.AddressStringToBytesRequest)
+    - [AddressStringToBytesResponse](#cosmos.auth.v1beta1.AddressStringToBytesResponse)
+    - [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest)
+    - [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse)
     - [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest)
     - [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse)
     - [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest)
     - [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse)
+    - [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest)
+    - [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse)
     - [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse)
   
@@ -474,6 +482,43 @@
   
     - [Query](#cosmos.mint.v1beta1.Query)
   
+- [cosmos/nft/v1beta1/event.proto](#cosmos/nft/v1beta1/event.proto)
+    - [EventBurn](#cosmos.nft.v1beta1.EventBurn)
+    - [EventMint](#cosmos.nft.v1beta1.EventMint)
+    - [EventSend](#cosmos.nft.v1beta1.EventSend)
+  
+- [cosmos/nft/v1beta1/nft.proto](#cosmos/nft/v1beta1/nft.proto)
+    - [Class](#cosmos.nft.v1beta1.Class)
+    - [NFT](#cosmos.nft.v1beta1.NFT)
+  
+- [cosmos/nft/v1beta1/genesis.proto](#cosmos/nft/v1beta1/genesis.proto)
+    - [Entry](#cosmos.nft.v1beta1.Entry)
+    - [GenesisState](#cosmos.nft.v1beta1.GenesisState)
+  
+- [cosmos/nft/v1beta1/query.proto](#cosmos/nft/v1beta1/query.proto)
+    - [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest)
+    - [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse)
+    - [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest)
+    - [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse)
+    - [QueryClassesRequest](#cosmos.nft.v1beta1.QueryClassesRequest)
+    - [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse)
+    - [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest)
+    - [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse)
+    - [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest)
+    - [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse)
+    - [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest)
+    - [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse)
+    - [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest)
+    - [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse)
+  
+    - [Query](#cosmos.nft.v1beta1.Query)
+  
+- [cosmos/nft/v1beta1/tx.proto](#cosmos/nft/v1beta1/tx.proto)
+    - [MsgSend](#cosmos.nft.v1beta1.MsgSend)
+    - [MsgSendResponse](#cosmos.nft.v1beta1.MsgSendResponse)
+  
+    - [Msg](#cosmos.nft.v1beta1.Msg)
+  
 - [cosmos/params/v1beta1/params.proto](#cosmos/params/v1beta1/params.proto)
     - [ParamChange](#cosmos.params.v1beta1.ParamChange)
     - [ParameterChangeProposal](#cosmos.params.v1beta1.ParameterChangeProposal)
@@ -481,6 +526,9 @@
 - [cosmos/params/v1beta1/query.proto](#cosmos/params/v1beta1/query.proto)
     - [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse)
+    - [QuerySubspacesRequest](#cosmos.params.v1beta1.QuerySubspacesRequest)
+    - [QuerySubspacesResponse](#cosmos.params.v1beta1.QuerySubspacesResponse)
+    - [Subspace](#cosmos.params.v1beta1.Subspace)
   
     - [Query](#cosmos.params.v1beta1.Query)
   
@@ -606,7 +654,10 @@
     - [ModeInfo.Multi](#cosmos.tx.v1beta1.ModeInfo.Multi)
     - [ModeInfo.Single](#cosmos.tx.v1beta1.ModeInfo.Single)
     - [SignDoc](#cosmos.tx.v1beta1.SignDoc)
+    - [SignDocDirectAux](#cosmos.tx.v1beta1.SignDocDirectAux)
+    - [SignDocJSON](#cosmos.tx.v1beta1.SignDocJSON)
     - [SignerInfo](#cosmos.tx.v1beta1.SignerInfo)
+    - [Tip](#cosmos.tx.v1beta1.Tip)
     - [Tx](#cosmos.tx.v1beta1.Tx)
     - [TxBody](#cosmos.tx.v1beta1.TxBody)
     - [TxRaw](#cosmos.tx.v1beta1.TxRaw)
@@ -644,12 +695,6 @@
   
     - [Query](#cosmos.upgrade.v1beta1.Query)
   
-- [cosmos/vesting/v1beta1/tx.proto](#cosmos/vesting/v1beta1/tx.proto)
-    - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
-    - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
-  
-    - [Msg](#cosmos.vesting.v1beta1.Msg)
-  
 - [cosmos/vesting/v1beta1/vesting.proto](#cosmos/vesting/v1beta1/vesting.proto)
     - [BaseVestingAccount](#cosmos.vesting.v1beta1.BaseVestingAccount)
     - [ContinuousVestingAccount](#cosmos.vesting.v1beta1.ContinuousVestingAccount)
@@ -657,6 +702,14 @@
     - [Period](#cosmos.vesting.v1beta1.Period)
     - [PeriodicVestingAccount](#cosmos.vesting.v1beta1.PeriodicVestingAccount)
     - [PermanentLockedAccount](#cosmos.vesting.v1beta1.PermanentLockedAccount)
+  
+- [cosmos/vesting/v1beta1/tx.proto](#cosmos/vesting/v1beta1/tx.proto)
+    - [MsgCreatePeriodicVestingAccount](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount)
+    - [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse)
+    - [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount)
+    - [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse)
+  
+    - [Msg](#cosmos.vesting.v1beta1.Msg)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -836,6 +889,91 @@ corresponding request message has used PageRequest.
 
 
 
+<a name="cosmos.auth.v1beta1.AddressBytesToStringRequest"></a>
+
+### AddressBytesToStringRequest
+AddressBytesToStringRequest is the request type for AddressString rpc method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address_bytes` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.AddressBytesToStringResponse"></a>
+
+### AddressBytesToStringResponse
+AddressBytesToStringResponse is the response type for AddressString rpc method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address_string` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.AddressStringToBytesRequest"></a>
+
+### AddressStringToBytesRequest
+AddressStringToBytesRequest is the request type for AccountBytes rpc method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address_string` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.AddressStringToBytesResponse"></a>
+
+### AddressStringToBytesResponse
+AddressStringToBytesResponse is the response type for AddressBytes rpc method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address_bytes` | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.Bech32PrefixRequest"></a>
+
+### Bech32PrefixRequest
+Bech32PrefixRequest is the request type for Bech32Prefix rpc method
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.Bech32PrefixResponse"></a>
+
+### Bech32PrefixResponse
+Bech32PrefixResponse is the response type for Bech32Prefix rpc method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bech32_prefix` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="cosmos.auth.v1beta1.QueryAccountRequest"></a>
 
 ### QueryAccountRequest
@@ -897,6 +1035,31 @@ QueryAccountsResponse is the response type for the Query/Accounts RPC method.
 
 
 
+<a name="cosmos.auth.v1beta1.QueryModuleAccountsRequest"></a>
+
+### QueryModuleAccountsRequest
+QueryModuleAccountsRequest is the request type for the Query/ModuleAccounts RPC method.
+
+
+
+
+
+
+<a name="cosmos.auth.v1beta1.QueryModuleAccountsResponse"></a>
+
+### QueryModuleAccountsResponse
+QueryModuleAccountsResponse is the response type for the Query/ModuleAccounts RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `accounts` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
+
+
+
+
+
+
 <a name="cosmos.auth.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
@@ -938,6 +1101,10 @@ Query defines the gRPC querier service.
 | `Accounts` | [QueryAccountsRequest](#cosmos.auth.v1beta1.QueryAccountsRequest) | [QueryAccountsResponse](#cosmos.auth.v1beta1.QueryAccountsResponse) | Accounts returns all the existing accounts | GET|/cosmos/auth/v1beta1/accounts|
 | `Account` | [QueryAccountRequest](#cosmos.auth.v1beta1.QueryAccountRequest) | [QueryAccountResponse](#cosmos.auth.v1beta1.QueryAccountResponse) | Account returns account details based on address. | GET|/cosmos/auth/v1beta1/accounts/{address}|
 | `Params` | [QueryParamsRequest](#cosmos.auth.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.auth.v1beta1.QueryParamsResponse) | Params queries all parameters. | GET|/cosmos/auth/v1beta1/params|
+| `ModuleAccounts` | [QueryModuleAccountsRequest](#cosmos.auth.v1beta1.QueryModuleAccountsRequest) | [QueryModuleAccountsResponse](#cosmos.auth.v1beta1.QueryModuleAccountsResponse) | ModuleAccounts returns all the existing module accounts. | GET|/cosmos/auth/v1beta1/module_accounts|
+| `Bech32Prefix` | [Bech32PrefixRequest](#cosmos.auth.v1beta1.Bech32PrefixRequest) | [Bech32PrefixResponse](#cosmos.auth.v1beta1.Bech32PrefixResponse) | Bech32 queries bech32Prefix | GET|/cosmos/auth/v1beta1/bech32|
+| `AddressBytesToString` | [AddressBytesToStringRequest](#cosmos.auth.v1beta1.AddressBytesToStringRequest) | [AddressBytesToStringResponse](#cosmos.auth.v1beta1.AddressBytesToStringResponse) | AddressBytesToString converts Account Address bytes to string | GET|/cosmos/auth/v1beta1/bech32/{address_bytes}|
+| `AddressStringToBytes` | [AddressStringToBytesRequest](#cosmos.auth.v1beta1.AddressStringToBytesRequest) | [AddressStringToBytesResponse](#cosmos.auth.v1beta1.AddressStringToBytesResponse) | AddressStringToBytes converts Address string to bytes | GET|/cosmos/auth/v1beta1/bech32/{address_string}|
 
  <!-- end services -->
 
@@ -6840,6 +7007,478 @@ Query provides defines the gRPC querier service.
 
 
 
+<a name="cosmos/nft/v1beta1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1beta1/event.proto
+
+
+
+<a name="cosmos.nft.v1beta1.EventBurn"></a>
+
+### EventBurn
+EventBurn is emitted on Burn
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.EventMint"></a>
+
+### EventMint
+EventMint is emitted on Mint
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.EventSend"></a>
+
+### EventSend
+EventSend is emitted on Msg/Send
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+| `receiver` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/nft/v1beta1/nft.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1beta1/nft.proto
+
+
+
+<a name="cosmos.nft.v1beta1.Class"></a>
+
+### Class
+Class defines the class of the nft type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `name` | [string](#string) |  |  |
+| `symbol` | [string](#string) |  |  |
+| `description` | [string](#string) |  |  |
+| `uri` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.NFT"></a>
+
+### NFT
+NFT defines the nft.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `uri` | [string](#string) |  |  |
+| `data` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/nft/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1beta1/genesis.proto
+
+
+
+<a name="cosmos.nft.v1beta1.Entry"></a>
+
+### Entry
+Entry Defines all nft owned by a person
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the nft module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `classes` | [Class](#cosmos.nft.v1beta1.Class) | repeated | class defines the class of the nft type. |
+| `entries` | [Entry](#cosmos.nft.v1beta1.Entry) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/nft/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1beta1/query.proto
+
+
+
+<a name="cosmos.nft.v1beta1.QueryBalanceRequest"></a>
+
+### QueryBalanceRequest
+QueryBalanceRequest is the request type for the Query/Balance RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryBalanceResponse"></a>
+
+### QueryBalanceResponse
+QueryBalanceResponse is the response type for the Query/Balance RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassRequest"></a>
+
+### QueryClassRequest
+QueryClassRequest is the request type for the Query/Class RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassResponse"></a>
+
+### QueryClassResponse
+QueryClassResponse is the response type for the Query/Class RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class` | [Class](#cosmos.nft.v1beta1.Class) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassesRequest"></a>
+
+### QueryClassesRequest
+QueryClassesRequest is the request type for the Query/Classes RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryClassesResponse"></a>
+
+### QueryClassesResponse
+QueryClassesResponse is the response type for the Query/Classes RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `classes` | [Class](#cosmos.nft.v1beta1.Class) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryNFTRequest"></a>
+
+### QueryNFTRequest
+QueryNFTRequest is the request type for the Query/NFT RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryNFTResponse"></a>
+
+### QueryNFTResponse
+QueryNFTResponse is the response type for the Query/NFT RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nft` | [NFT](#cosmos.nft.v1beta1.NFT) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassRequest"></a>
+
+### QueryNFTsOfClassRequest
+QueryNFTsOfClassRequest is the request type for the Query/NFTsOfClass RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `owner` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryNFTsOfClassResponse"></a>
+
+### QueryNFTsOfClassResponse
+QueryNFTsOfClassResponse is the response type for the Query/NFTsOfClass and Query/NFTsOfClassByOwner RPC methods
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `nfts` | [NFT](#cosmos.nft.v1beta1.NFT) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryOwnerRequest"></a>
+
+### QueryOwnerRequest
+QueryOwnerRequest is the request type for the Query/Owner RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QueryOwnerResponse"></a>
+
+### QueryOwnerResponse
+QueryOwnerResponse is the response type for the Query/Owner RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QuerySupplyRequest"></a>
+
+### QuerySupplyRequest
+QuerySupplyRequest is the request type for the Query/Supply RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.QuerySupplyResponse"></a>
+
+### QuerySupplyResponse
+QuerySupplyResponse is the response type for the Query/Supply RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [uint64](#uint64) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.nft.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Balance` | [QueryBalanceRequest](#cosmos.nft.v1beta1.QueryBalanceRequest) | [QueryBalanceResponse](#cosmos.nft.v1beta1.QueryBalanceResponse) | Balance queries the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721 | GET|/cosmos/nft/v1beta1/balance/{class_id}/{owner}|
+| `Owner` | [QueryOwnerRequest](#cosmos.nft.v1beta1.QueryOwnerRequest) | [QueryOwnerResponse](#cosmos.nft.v1beta1.QueryOwnerResponse) | Owner queries the owner of the NFT based on its class and id, same as ownerOf in ERC721 | GET|/cosmos/nft/v1beta1/owner/{class_id}/{id}|
+| `Supply` | [QuerySupplyRequest](#cosmos.nft.v1beta1.QuerySupplyRequest) | [QuerySupplyResponse](#cosmos.nft.v1beta1.QuerySupplyResponse) | Supply queries the number of nft based on the class, same as totalSupply of ERC721 | GET|/cosmos/nft/v1beta1/supply/{class_id}|
+| `NFTsOfClass` | [QueryNFTsOfClassRequest](#cosmos.nft.v1beta1.QueryNFTsOfClassRequest) | [QueryNFTsOfClassResponse](#cosmos.nft.v1beta1.QueryNFTsOfClassResponse) | NFTsOfClass queries all NFTs of a given class or optional owner, similar to tokenByIndex in ERC721Enumerable | GET|/cosmos/nft/v1beta1/nfts/{class_id}|
+| `NFT` | [QueryNFTRequest](#cosmos.nft.v1beta1.QueryNFTRequest) | [QueryNFTResponse](#cosmos.nft.v1beta1.QueryNFTResponse) | NFT queries an NFT based on its class and id. | GET|/cosmos/nft/v1beta1/nfts/{class_id}/{id}|
+| `Class` | [QueryClassRequest](#cosmos.nft.v1beta1.QueryClassRequest) | [QueryClassResponse](#cosmos.nft.v1beta1.QueryClassResponse) | Class queries an NFT class based on its id | GET|/cosmos/nft/v1beta1/classes/{class_id}|
+| `Classes` | [QueryClassesRequest](#cosmos.nft.v1beta1.QueryClassesRequest) | [QueryClassesResponse](#cosmos.nft.v1beta1.QueryClassesResponse) | Classes queries all NFT classes | GET|/cosmos/nft/v1beta1/classes|
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/nft/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/nft/v1beta1/tx.proto
+
+
+
+<a name="cosmos.nft.v1beta1.MsgSend"></a>
+
+### MsgSend
+MsgSend represents a message to send a nft from one account to another account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `class_id` | [string](#string) |  |  |
+| `id` | [string](#string) |  |  |
+| `sender` | [string](#string) |  |  |
+| `receiver` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.nft.v1beta1.MsgSendResponse"></a>
+
+### MsgSendResponse
+MsgSendResponse defines the Msg/Send response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.nft.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the nft Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Send` | [MsgSend](#cosmos.nft.v1beta1.MsgSend) | [MsgSendResponse](#cosmos.nft.v1beta1.MsgSendResponse) | Send defines a method to send a nft from one account to another account. | |
+
+ <!-- end services -->
+
+
+
 <a name="cosmos/params/v1beta1/params.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -6928,6 +7567,50 @@ QueryParamsResponse is response type for the Query/Params RPC method.
 
 
 
+
+<a name="cosmos.params.v1beta1.QuerySubspacesRequest"></a>
+
+### QuerySubspacesRequest
+QuerySubspacesRequest defines a request type for querying for all registered
+subspaces and all keys for a subspace.
+
+
+
+
+
+
+<a name="cosmos.params.v1beta1.QuerySubspacesResponse"></a>
+
+### QuerySubspacesResponse
+QuerySubspacesResponse defines the response types for querying for all
+registered subspaces and all keys for a subspace.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `subspaces` | [Subspace](#cosmos.params.v1beta1.Subspace) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.params.v1beta1.Subspace"></a>
+
+### Subspace
+Subspace defines a parameter subspace name and all the keys that exist for
+the subspace.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `subspace` | [string](#string) |  |  |
+| `keys` | [string](#string) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -6943,6 +7626,7 @@ Query defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#cosmos.params.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#cosmos.params.v1beta1.QueryParamsResponse) | Params queries a specific parameter of a module, given its subspace and key. | GET|/cosmos/params/v1beta1/params|
+| `Subspaces` | [QuerySubspacesRequest](#cosmos.params.v1beta1.QuerySubspacesRequest) | [QuerySubspacesResponse](#cosmos.params.v1beta1.QuerySubspacesResponse) | Subspaces queries for all registered subspaces and all keys for a subspace. | GET|/cosmos/params/v1beta1/subspaces|
 
  <!-- end services -->
 
@@ -8543,10 +9227,12 @@ SignMode represents a signing mode with its own security guarantees.
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| SIGN_MODE_UNSPECIFIED | 0 | SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected |
-| SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx |
-| SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT |
-| SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future |
+| SIGN_MODE_UNSPECIFIED | 0 | SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be rejected. |
+| SIGN_MODE_DIRECT | 1 | SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is verified with raw bytes from Tx. |
+| SIGN_MODE_TEXTUAL | 2 | SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-readable textual representation on top of the binary representation from SIGN_MODE_DIRECT. It is currently not supported. |
+| SIGN_MODE_DIRECT_JSON | 3 | SIGN_MODE_DIRECT_JSON specifies a signing mode which uses SignDocJSON. It is verified using a canonical JSON representation of the bytes used in SIGN_MODE_DIRECT. It is currently not supported. |
+| SIGN_MODE_DIRECT_AUX | 4 | SIGN_MODE_DIRECT_AUX specifies a signing mode which uses SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not require signers signing over other signers' `signer_info`. It also allows for adding Tips in transactions. |
+| SIGN_MODE_LEGACY_AMINO_JSON | 127 | SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses Amino JSON and will be removed in the future. |
 
 
  <!-- end enums -->
@@ -8575,6 +9261,7 @@ transaction.
 | ----- | ---- | ----- | ----------- |
 | `signer_infos` | [SignerInfo](#cosmos.tx.v1beta1.SignerInfo) | repeated | signer_infos defines the signing modes for the required signers. The number and order of elements must match the required signers from TxBody's messages. The first element is the primary signer and the one which pays the fee. |
 | `fee` | [Fee](#cosmos.tx.v1beta1.Fee) |  | Fee is the fee and gas limit for the transaction. The first signer is the primary signer and the one which pays the fee. The fee can be calculated based on the cost of evaluating the body and doing signature verification of the signers. This can be estimated via simulation. |
+| `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions. |
 
 
 
@@ -8668,6 +9355,49 @@ SignDoc is the type used for generating sign bytes for SIGN_MODE_DIRECT.
 
 
 
+<a name="cosmos.tx.v1beta1.SignDocDirectAux"></a>
+
+### SignDocDirectAux
+SignDocDirectAux is the type used for generating sign bytes for
+SIGN_MODE_DIRECT_AUX.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `body_bytes` | [bytes](#bytes) |  | body_bytes is protobuf serialization of a TxBody that matches the representation in TxRaw. |
+| `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  | public_key is the public key of the signing account. |
+| `chain_id` | [string](#string) |  | chain_id is the identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker. |
+| `account_number` | [uint64](#uint64) |  | account_number is the account number of the account in state. |
+| `sequence` | [uint64](#uint64) |  | sequence is the sequence number of the signing account. |
+| `tip` | [Tip](#cosmos.tx.v1beta1.Tip) |  | Tip is the optional tip used for meta-transactions. It should be left empty if the signer is not the tipper for this transaction. |
+
+
+
+
+
+
+<a name="cosmos.tx.v1beta1.SignDocJSON"></a>
+
+### SignDocJSON
+SignDocJSON is the type used for generating sign bytes for
+SIGN_MODE_DIRECT_JSON. It is designed to be serialized as proto3 JSON
+following the rules defined here:
+https://github.com/regen-network/canonical-proto3/blob/master/README.md#json.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `body` | [TxBody](#cosmos.tx.v1beta1.TxBody) |  | body is the processable content of the transaction |
+| `auth_info` | [AuthInfo](#cosmos.tx.v1beta1.AuthInfo) |  | auth_info is the authorization related content of the transaction, specifically signers, signer modes and fee |
+| `chain_id` | [string](#string) |  | chain_id is the identifier of the chain this transaction targets. It prevents signed transactions from being used on another chain by an attacker |
+| `account_number` | [uint64](#uint64) |  | account_number is the account number of the signing account in state |
+| `sign_doc_sha256_hash` | [bytes](#bytes) |  | sign_doc_sha256_hash is the SHA-256 hash of SignDoc. It is included here to reduce the malleability attack surface of SIGN_MODE_DIRECT_JSON vs SIGN_MODE_DIRECT to zero. Basically this means that any discrepancy between protobuf bytes over the wire and protobuf bytes that are signed cannot be exploited. This information is obviously redundant with information already in SignDocJSON, but is included as a security check for scenarios where this information may have inadvertently been excluded. We include the hash of SignDoc rather than the full SignDoc bytes to reduce the size of SignDocJSON for scenarios where large payloads could cause problems for hardware wallets. |
+
+
+
+
+
+
 <a name="cosmos.tx.v1beta1.SignerInfo"></a>
 
 ### SignerInfo
@@ -8680,6 +9410,22 @@ signer.
 | `public_key` | [google.protobuf.Any](#google.protobuf.Any) |  | public_key is the public key of the signer. It is optional for accounts that already exist in state. If unset, the verifier can use the required \ signer address for this position and lookup the public key. |
 | `mode_info` | [ModeInfo](#cosmos.tx.v1beta1.ModeInfo) |  | mode_info describes the signing mode of the signer and is a nested structure to support nested multisig pubkey's |
 | `sequence` | [uint64](#uint64) |  | sequence is the sequence of the account, which describes the number of committed transactions signed by a given address. It is used to prevent replay attacks. |
+
+
+
+
+
+
+<a name="cosmos.tx.v1beta1.Tip"></a>
+
+### Tip
+Tip is the tip used for meta-transactions.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | amount is the amount of the tip |
+| `tipper` | [string](#string) |  | tipper is the address of the account paying for the tip |
 
 
 
@@ -9174,64 +9920,8 @@ Query defines the gRPC upgrade querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CurrentPlan` | [QueryCurrentPlanRequest](#cosmos.upgrade.v1beta1.QueryCurrentPlanRequest) | [QueryCurrentPlanResponse](#cosmos.upgrade.v1beta1.QueryCurrentPlanResponse) | CurrentPlan queries the current upgrade plan. | GET|/cosmos/upgrade/v1beta1/current_plan|
 | `AppliedPlan` | [QueryAppliedPlanRequest](#cosmos.upgrade.v1beta1.QueryAppliedPlanRequest) | [QueryAppliedPlanResponse](#cosmos.upgrade.v1beta1.QueryAppliedPlanResponse) | AppliedPlan queries a previously applied upgrade plan by its name. | GET|/cosmos/upgrade/v1beta1/applied_plan/{name}|
-| `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier | GET|/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}|
+| `UpgradedConsensusState` | [QueryUpgradedConsensusStateRequest](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateRequest) | [QueryUpgradedConsensusStateResponse](#cosmos.upgrade.v1beta1.QueryUpgradedConsensusStateResponse) | UpgradedConsensusState queries the consensus state that will serve as a trusted kernel for the next version of this chain. It will only be stored at the last height of this chain. UpgradedConsensusState RPC not supported with legacy querier This rpc is deprecated now that IBC has its own replacement (https://github.com/cosmos/ibc-go/blob/2c880a22e9f9cc75f62b527ca94aa75ce1106001/proto/ibc/core/client/v1/query.proto#L54) | GET|/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}|
 | `ModuleVersions` | [QueryModuleVersionsRequest](#cosmos.upgrade.v1beta1.QueryModuleVersionsRequest) | [QueryModuleVersionsResponse](#cosmos.upgrade.v1beta1.QueryModuleVersionsResponse) | ModuleVersions queries the list of module versions from state. | GET|/cosmos/upgrade/v1beta1/module_versions|
-
- <!-- end services -->
-
-
-
-<a name="cosmos/vesting/v1beta1/tx.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## cosmos/vesting/v1beta1/tx.proto
-
-
-
-<a name="cosmos.vesting.v1beta1.MsgCreateVestingAccount"></a>
-
-### MsgCreateVestingAccount
-MsgCreateVestingAccount defines a message that enables creating a vesting
-account.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `from_address` | [string](#string) |  |  |
-| `to_address` | [string](#string) |  |  |
-| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `end_time` | [int64](#int64) |  |  |
-| `delayed` | [bool](#bool) |  |  |
-
-
-
-
-
-
-<a name="cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse"></a>
-
-### MsgCreateVestingAccountResponse
-MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="cosmos.vesting.v1beta1.Msg"></a>
-
-### Msg
-Msg defines the bank Msg service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `CreateVestingAccount` | [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount) | [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse) | CreateVestingAccount defines a method that enables creating a vesting account. | |
 
  <!-- end services -->
 
@@ -9353,6 +10043,93 @@ still be used for delegating and for governance votes even while locked.
  <!-- end enums -->
 
  <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="cosmos/vesting/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## cosmos/vesting/v1beta1/tx.proto
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount"></a>
+
+### MsgCreatePeriodicVestingAccount
+MsgCreateVestingAccount defines a message that enables creating a vesting
+account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  |  |
+| `to_address` | [string](#string) |  |  |
+| `start_time` | [int64](#int64) |  |  |
+| `vesting_periods` | [Period](#cosmos.vesting.v1beta1.Period) | repeated |  |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse"></a>
+
+### MsgCreatePeriodicVestingAccountResponse
+MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
+response type.
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgCreateVestingAccount"></a>
+
+### MsgCreateVestingAccount
+MsgCreateVestingAccount defines a message that enables creating a vesting
+account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `from_address` | [string](#string) |  |  |
+| `to_address` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `end_time` | [int64](#int64) |  |  |
+| `delayed` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse"></a>
+
+### MsgCreateVestingAccountResponse
+MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="cosmos.vesting.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the bank Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateVestingAccount` | [MsgCreateVestingAccount](#cosmos.vesting.v1beta1.MsgCreateVestingAccount) | [MsgCreateVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse) | CreateVestingAccount defines a method that enables creating a vesting account. | |
+| `CreatePeriodicVestingAccount` | [MsgCreatePeriodicVestingAccount](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount) | [MsgCreatePeriodicVestingAccountResponse](#cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse) | CreatePeriodicVestingAccount defines a method that enables creating a periodic vesting account. | |
 
  <!-- end services -->
 

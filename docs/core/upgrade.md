@@ -8,13 +8,13 @@ order: 15
 Read and understand all of the in-place store migration documentation before you run a migration on a live chain.
 :::
 
-Upgrade your app modules smoothly with custom in-place migration logic. {synopsis}
+Upgrade your app modules smoothly with custom in-place store migration logic. {synopsis}
 
 The Cosmos SDK uses two methods to perform upgrades.
 
-- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See the [Chain Upgrade Guide](../migrations/chain-upgrade-guide-040.md#upgrade-procedure).
+- Exporting the entire application state to a JSON file using the `export` CLI command, making changes, and then starting a new binary with the changed JSON file as the genesis file. See [Chain Upgrade Guide to v0.42](https://docs.cosmos.network/v0.42/migrations/chain-upgrade-guide-040.html).
 
-- Version v0.43 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Migration Upgrade Guide](../building-modules/upgrade.md) guide to set up your application modules to take advantage of in-place upgrades.
+- Version v0.44 and later can perform upgrades in place to significantly decrease the upgrade time for chains with a larger state. Use the [Module Upgrade Guide](../building-modules/upgrade.md) to set up your application modules to take advantage of in-place upgrades.
   
 This document provides steps to use the In-Place Store Migrations upgrade method.
 
@@ -48,13 +48,13 @@ The version map is a mapping of module names to consensus versions. The map is p
 
 Upgrades use an `UpgradeHandler` to facilitate migrations. The `UpgradeHandler` functions implemented by the app developer must conform to the following function signature. These functions retrieve the `VersionMap` from x/upgrade's state and return the new `VersionMap` to be stored in x/upgrade after the upgrade. The diff between the two `VersionMap`s determines which modules need upgrading.
 
-```golang
+```go
 type UpgradeHandler func(ctx sdk.Context, plan Plan, fromVM VersionMap) (VersionMap, error)
 ```
 
 Inside these functions, you must perform any upgrade logic to include in the provided `plan`. All upgrade handler functions must end with the following line of code:
 
-```golang
+```go
   return app.mm.RunMigrations(ctx, cfg, fromVM)
 ```
 
@@ -62,7 +62,7 @@ Inside these functions, you must perform any upgrade logic to include in the pro
 
 Migrations are run inside of an `UpgradeHandler` using  `app.mm.RunMigrations(ctx, cfg, vm)`. The `UpgradeHandler` functions describe the functionality to occur during an upgrade. The `RunMigration` function loops through the `VersionMap` argument and runs the migration scripts for all versions that are less than the versions of the new binary app module. After the migrations are finished, a new `VersionMap` is returned to persist the upgraded module versions to state.
 
-```golang
+```go
 cfg := module.NewConfigurator(...)
 app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 
@@ -76,7 +76,7 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 })
 ```
 
-To learn more about configuring migration scripts for your modules, see the [Migration Upgrade Guide](../building-modules/upgrade.md).
+To learn more about configuring migration scripts for your modules, see the [Module Upgrade Guide](../building-modules/upgrade.md).
 
 ## Adding New Modules During Upgrades
 
@@ -86,7 +86,7 @@ You can introduce entirely new modules to the application during an upgrade. New
 
 All chains preparing to run in-place store migrations will need to manually add store upgrades for new modules and then configure the store loader to apply those upgrades. This ensures that the new module's stores are added to the multistore before the migrations begin.
 
-```golang
+```go
 upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 if err != nil {
 	panic(err)

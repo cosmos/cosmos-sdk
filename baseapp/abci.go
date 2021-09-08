@@ -399,8 +399,19 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	}()
 
 	// when a client did not provide a query height, manually inject the latest
+	lastHeight := app.LastBlockHeight()
 	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
+		req.Height = lastHeight
+	}
+	if req.Height > lastHeight {
+		return sdkerrors.QueryResult(
+			sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidHeight,
+				"cannot query with height %d; latest height is %d",
+				req.Height, lastHeight,
+			),
+			app.trace,
+		)
 	}
 
 	// handle gRPC routes first rather than calling splitPath because '/' characters
@@ -411,7 +422,7 @@ func (app *BaseApp) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	path := splitPath(req.Path)
 	if len(path) == 0 {
-		sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
+		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace)
 	}
 
 	switch path[0] {
@@ -611,8 +622,17 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	// when a client did not provide a query height, manually inject the latest
+	lastHeight := app.LastBlockHeight()
 	if height == 0 {
-		height = app.LastBlockHeight()
+		height = lastHeight
+	}
+	if height > lastHeight {
+		return sdk.Context{}, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"cannot query with height %d; latest height is %d",
+			height,
+			lastHeight,
+		)
 	}
 
 	if height <= 1 && prove {

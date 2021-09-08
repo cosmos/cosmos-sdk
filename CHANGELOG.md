@@ -105,8 +105,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#9829](https://github.com/cosmos/cosmos-sdk/pull/9829) Fixed Coin denom sorting not being checked during `Balance.Validate` check. Refactored the Validation logic to use `Coins.Validate` for `Balance.Coins`.
 + [\#9965](https://github.com/cosmos/cosmos-sdk/pull/9965) Fixed `simd version` command output to report the right release tag.
 + [\#9980](https://github.com/cosmos/cosmos-sdk/pull/9980) Returning the error when the invalid argument is passed to bank query total supply cli.
-* [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049) Fixed the error message when periodlimit is not set on a feegrant tx
-
+* (x/feegrant) [\#10049](https://github.com/cosmos/cosmos-sdk/issues/10049) Fixed the error message when `period` or `period-limit` flag is not set on a feegrant grant tx
 ### State Machine Breaking
 
 * (x/auth)[\#9596](https://github.com/cosmos/cosmos-sdk/pull/9596) Enable creating periodic vesting accounts with a transactions instead of requiring them to be created in genesis.

@@ -1,6 +1,7 @@
 package valuerenderer
 
 import (
+	"context"
 	"errors"
 	"math"
 	"regexp"
@@ -8,8 +9,8 @@ import (
 	"strings"
 	"unicode"
 
-
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"golang.org/x/text/language"
@@ -21,52 +22,37 @@ type ValueRenderer interface {
 	Parse(string) (interface{}, error)
 }
 
-
-type DenomQuerierFunc func(string) banktypes.Metadata
-
 // create default value rreenderer in CLI and then get context from CLI
 type DefaultValueRenderer struct {
 	// /string is denom that user sents
-	denomQuerier DenomQuerierFunc// define in test only //convert DenomUnits to Display units
+	bankKeeper keeper.BaseKeeper // define in test only //convert DenomUnits to Display units
+	metaData   banktypes.Metadata
 }
 
-func NewDefaultValueRenderer() DefaultValueRenderer {
-	return DefaultValueRenderer{}
+func NewDefaultValueRenderer(bk keeper.BaseKeeper) DefaultValueRenderer {
+	return DefaultValueRenderer{bankKeeper: bk}
 }
 
-func NewDefaultValueRendererWithDenom(displayDenom string) DefaultValueRenderer {
-	getMetadata := func(denom string) banktypes.Metadata {
-		if strings.HasPrefix(denom, "m")  || strings.HasPrefix(denom, "u") {
-			denom = denom[1:]
-		}
-		return banktypes.Metadata{
-			Description: "The native staking token of the Cosmos Hub.",
-			DenomUnits: []*banktypes.DenomUnit{
-				{
-					Denom:    denom,
-					Exponent: 0,
-					Aliases:  []string{denom},
-				},
-				{
-					Denom:    "u" + denom,
-					Exponent: 6,
-					Aliases:  []string{"micro" + denom},
-				},
-				{
-					Denom:    "m" + denom,
-					Exponent: 3,
-					Aliases:  []string{"mini" + denom},
-				},
-			},
-			Base:    "uregen",
-			Display: displayDenom,
-		}
+func (dvr DefaultValueRenderer) QueryDenomMetadata(ctx context.Context, coin types.Coin) (banktypes.Metadata, error) {
+	req := &banktypes.QueryDenomMetadataRequest{
+		Denom: coin.Denom,
 	}
-	return DefaultValueRenderer{getMetadata}
+
+	res, err := dvr.bankKeeper.DenomMetadata(ctx, req)
+	if err != nil {
+		return banktypes.Metadata{}, err
+	}
+
+	return res.Metadata, nil
 }
 
+func (dvr DefaultValueRenderer) GetDenomMetadata() banktypes.Metadata {
+	return dvr.metaData
+}
 
-
+func (dvr DefaultValueRenderer) SetDenomMetadata(metaData banktypes.Metadata)  {
+	dvr.metaData = metaData
+}
 var _ ValueRenderer = &DefaultValueRenderer{}
 
 // Format converts an empty interface into a string depending on interface type.
@@ -124,37 +110,9 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 			return "", errors.New("unable to cast empty interface to Coin")
 		}
 
-		metadata := dvr.denomQuerier(coin.Denom)
-		var coinExp, displayExp int64
-		for _, denomUnit := range metadata.DenomUnits {
-			// TODO  test  23000000 mregen 3  =>  "regen" exp 0
-			if denomUnit.Denom == coin.Denom {
-				coinExp = int64(denomUnit.Exponent)
-			}
+		// check if dvr.metadata is not empty
 
-			if denomUnit.Denom == metadata.Display {
-				displayExp = int64(denomUnit.Exponent)
-			}
-		}
-
-		expSub := float64(displayExp - coinExp)
-		var amount int64
-
-		switch  {
-		// negative , convert mregen to regen less zeroes
-		case math.Signbit(expSub):
-			// TODO or should i use math package?
-			amount = types.NewDecFromIntWithPrec(coin.Amount, int64(math.Abs(expSub))).TruncateInt64() // use Dec or just golang built in methods
-		// positive, convert mregen to uregen
-		case !math.Signbit(expSub):  
-			amount = coin.Amount.Mul(types.NewInt(int64(math.Pow(10, expSub)))).Int64()
-		// == 0, convert regen to regen, amount does not change
-		default:
-			amount = coin.Amount.Int64()
-		}
-	
-		
-		newAmount, newDenom := p.Sprintf("%d", amount), metadata.Display
+		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(coin)), dvr.metaData.Display
 		sb.WriteString(newAmount)
 		sb.WriteString(newDenom)
 
@@ -165,12 +123,42 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 	return sb.String(), nil
 }
 
+func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin) int64 {
+	var coinExp, displayExp int64
+	for _, denomUnit := range dvr.metaData.DenomUnits {
+		if denomUnit.Denom == coin.Denom {
+			coinExp = int64(denomUnit.Exponent)
+		}
+
+		if denomUnit.Denom == dvr.metaData.Display {
+			displayExp = int64(denomUnit.Exponent)
+		}
+	}
+
+	expSub := float64(displayExp - coinExp)
+	var amount int64
+
+	switch {
+	// negative , convert mregen to regen less zeroes
+	case math.Signbit(expSub):
+		// TODO or should i use math package?
+		amount = types.NewDecFromIntWithPrec(coin.Amount, int64(math.Abs(expSub))).TruncateInt64() // use Dec or just golang built in methods
+	// positive, convert mregen to uregen
+	case !math.Signbit(expSub):
+		amount = coin.Amount.Mul(types.NewInt(int64(math.Pow(10, expSub)))).Int64()
+	// == 0, convert regen to regen, amount does not change
+	default:
+		amount = coin.Amount.Int64()
+	}
+
+	return amount
+}
 
 // see QueryDenomMetadataRequest() test
 /*
 func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
 
-	
+
 		app := simapp.Setup(t, false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 

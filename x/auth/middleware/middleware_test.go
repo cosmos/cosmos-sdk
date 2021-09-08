@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -962,7 +961,7 @@ func TestCountSubkeys(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(T *testing.T) {
-			require.Equal(t, tc.want, ante.CountSubKeys(tc.args.pub))
+			require.Equal(t, tc.want, middleware.CountSubKeys(tc.args.pub))
 		})
 	}
 }

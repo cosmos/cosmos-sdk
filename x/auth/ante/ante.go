@@ -35,7 +35,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 
 	var sigGasConsumer = options.SigGasConsumer
 	if sigGasConsumer == nil {
-		sigGasConsumer = DefaultSigVerificationGasConsumer
+		// sigGasConsumer = DefaultSigVerificationGasConsumer
 	}
 
 	anteDecorators := []sdk.AnteDecorator{}

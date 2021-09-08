@@ -449,8 +449,18 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 	}()
 
 	// when a client did not provide a query height, manually inject the latest
+	lastHeight := app.LastBlockHeight()
 	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
+		req.Height = lastHeight
+	}
+	if req.Height > lastHeight {
+		return sdkerrors.QueryResult(
+			sdkerrors.Wrapf(
+				sdkerrors.ErrInvalidHeight,
+				"given height %d is greater than latest height %d",
+				req.Height, lastHeight,
+			),
+		)
 	}
 
 	telemetry.IncrCounter(1, "query", "count")
@@ -469,7 +479,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.QueryRequest) (resp *abci
 
 	path := SplitABCIQueryPath(req.Path)
 	if len(path) == 0 {
-		return queryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace), nil
+		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"))
 	}
 
 	switch path[0] {
@@ -870,21 +880,18 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 		return nil, errors.New("application ExtendVote handler not set")
 	}
 
-	// If vote extensions are not enabled, as a safety precaution, we return an
-	// error.
-	cp := app.GetConsensusParams(ctx)
-
-	// Note: In this case, we do want to extend vote if the height is equal or
-	// greater than VoteExtensionsEnableHeight. This defers from the check done
-	// in ValidateVoteExtensions and PrepareProposal in which we'll check for
-	// vote extensions on VoteExtensionsEnableHeight+1.
-	extsEnabled := cp.Feature != nil && req.Height >= cp.Feature.VoteExtensionsEnableHeight.Value && cp.Feature.VoteExtensionsEnableHeight.Value != 0
-	if !extsEnabled {
-		// check abci params
-		extsEnabled = cp.Abci != nil && req.Height >= cp.Abci.VoteExtensionsEnableHeight && cp.Abci.VoteExtensionsEnableHeight != 0
-		if !extsEnabled {
-			return nil, fmt.Errorf("vote extensions are not enabled; unexpected call to ExtendVote at height %d", req.Height)
-		}
+	// when a client did not provide a query height, manually inject the latest
+	lastHeight := app.LastBlockHeight()
+	if height == 0 {
+		height = lastHeight
+	}
+	if height > lastHeight {
+		return sdk.Context{}, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"cannot query with height %d; last height is %d",
+			height,
+			lastHeight,
+		)
 	}
 
 	ctx = ctx.

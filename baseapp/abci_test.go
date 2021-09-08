@@ -2779,3 +2779,23 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 }
+
+func TestBaseAppCreateQueryContextRejectsFutureHeights(t *testing.T) {
+	t.Parallel()
+
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db, nil)
+
+	proves := []bool{
+		false, true,
+	}
+	for _, prove := range proves {
+		t.Run(fmt.Sprintf("prove=%t", prove), func(t *testing.T) {
+			sctx, err := app.createQueryContext(30, true)
+			require.Error(t, err)
+			require.Equal(t, sctx, sdk.Context{})
+		})
+	}
+}

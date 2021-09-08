@@ -42,7 +42,7 @@ func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
 	// this tests the whole stack
 	// anteHandlerStack := //suite.anteHandler
 
-	// keys and addresses 
+	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 	priv2, _, addr2 := testdata.KeyTestPubAddr()
 	priv3, _, addr3 := testdata.KeyTestPubAddr()
@@ -157,13 +157,12 @@ func (suite *MWTestSuite) TestDeductFeesNoDelegation() {
 				suite.Require().Error(err)
 			}
 
-			// TODO
-			// _, err = anteHandlerStack(ctx, tx, false) // tests while stack
-			// if tc.valid {
-			// 	suite.Require().NoError(err)
-			// } else {
-			// 	suite.Require().Error(err)
-			// }
+			_, err = suite.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, abci.RequestDeliverTx{}) // tests while stack
+			if tc.valid {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
 		})
 	}
 }

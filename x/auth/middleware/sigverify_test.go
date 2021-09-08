@@ -24,8 +24,8 @@ import (
 
 func (suite *MWTestSuite) TestSetPubKey() {
 	ctx := suite.SetupTest(true) // setup
-	require := suite.Require()
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+	require := suite.Require()
 	txHandler := middleware.ComposeMiddlewares(
 		noopTxHandler{},
 		middleware.SetPubKeyMiddleware(suite.app.AccountKeeper),

@@ -1,9 +1,12 @@
 package middleware_test
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -12,7 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -30,6 +35,7 @@ type MWTestSuite struct {
 
 	app       *simapp.SimApp
 	clientCtx client.Context
+	txHandler txtypes.Handler
 }
 
 // returns context and app with params set on account keeper
@@ -55,13 +61,32 @@ func (s *MWTestSuite) SetupTest(isCheckTx bool) sdk.Context {
 
 	s.clientCtx = client.Context{}.
 		WithTxConfig(encodingConfig.TxConfig)
+	// router := middleware.NewLegacyRouter()
+
+	s.txHandler = middleware.ComposeMiddlewares(
+		noopTxHandler{},
+		middleware.GasTxMiddleware,
+		middleware.RecoveryTxMiddleware,
+		middleware.RejectExtensionOptionsMiddleware,
+		middleware.MempoolFeeMiddleware,
+		middleware.ValidateBasicMiddleware,
+		middleware.TxTimeoutHeightMiddleware,
+		middleware.ValidateMemoDecorator(s.app.AccountKeeper),
+		middleware.ConsumeTxSizeGasMiddleware(s.app.AccountKeeper),
+		middleware.DeductFeeMiddleware(s.app.AccountKeeper, s.app.BankKeeper, s.app.FeeGrantKeeper),
+		middleware.SetPubKeyMiddleware(s.app.AccountKeeper),
+		middleware.ValidateSigCountMiddleware(s.app.AccountKeeper),
+		middleware.SigGasConsumeMiddleware(s.app.AccountKeeper, middleware.DefaultSigVerificationGasConsumer),
+		middleware.SigVerificationMiddleware(s.app.AccountKeeper, encodingConfig.TxConfig.SignModeHandler()),
+		middleware.IncrementSequenceMiddleware(s.app.AccountKeeper),
+	)
 
 	return ctx
 }
 
-// CreatetestAccounts creates `numAccs` accounts, and return all relevant
+// CreateTestAccounts creates `numAccs` accounts, and return all relevant
 // information about them including their private keys.
-func (s *MWTestSuite) CreatetestAccounts(ctx sdk.Context, numAccs int) []testAccount {
+func (s *MWTestSuite) CreateTestAccounts(ctx sdk.Context, numAccs int) []testAccount {
 	var accounts []testAccount
 
 	for i := 0; i < numAccs; i++ {
@@ -135,6 +160,50 @@ func (s *MWTestSuite) createTestTx(txBuilder client.TxBuilder, privs []cryptotyp
 	}
 
 	return txBuilder.GetTx(), txBytes, nil
+}
+
+func (s *MWTestSuite) RunTestCase(ctx sdk.Context, txBuilder client.TxBuilder, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, tc TestCase) {
+	s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		s.Require().NoError(txBuilder.SetMsgs(msgs...))
+		txBuilder.SetFeeAmount(feeAmount)
+		txBuilder.SetGasLimit(gasLimit)
+
+		// Theoretically speaking, ante handler unit tests should only test
+		// ante handlers, but here we sometimes also test the tx creation
+		// process.
+		tx, _, txErr := s.createTestTx(txBuilder, privs, accNums, accSeqs, chainID)
+		newCtx, anteErr := s.txHandler.DeliverTx(sdk.WrapSDKContext(ctx), tx, types.RequestDeliverTx{})
+
+		if tc.expPass {
+			s.Require().NoError(txErr)
+			s.Require().NoError(anteErr)
+			s.Require().NotNil(newCtx)
+
+			// s.ctx = newCtx
+		} else {
+			switch {
+			case txErr != nil:
+				s.Require().Error(txErr)
+				s.Require().True(errors.Is(txErr, tc.expErr))
+
+			case anteErr != nil:
+				s.Require().Error(anteErr)
+				s.Require().True(errors.Is(anteErr, tc.expErr))
+
+			default:
+				s.Fail("expected one of txErr,anteErr to be an error")
+			}
+		}
+	})
+}
+
+// TestCase represents a test case used in test tables.
+type TestCase struct {
+	desc     string
+	malleate func()
+	simulate bool
+	expPass  bool
+	expErr   error
 }
 
 func TestMWTestSuite(t *testing.T) {

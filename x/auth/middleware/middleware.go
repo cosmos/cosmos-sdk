@@ -49,6 +49,19 @@ type TxHandlerOptions struct {
 // NewDefaultTxHandler defines a TxHandler middleware stacks that should work
 // for most applications.
 func NewDefaultTxHandler(options TxHandlerOptions) (tx.Handler, error) {
+	// TODO:
+	// if options.AccountKeeper == nil {
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "account keeper is required for ante builder")
+	// }
+
+	// if options.BankKeeper == nil {
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "bank keeper is required for ante builder")
+	// }
+
+	// if options.SignModeHandler == nil {
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
+	// }
+
 	var sigGasConsumer = options.SigGasConsumer
 	if sigGasConsumer == nil {
 		sigGasConsumer = DefaultSigVerificationGasConsumer

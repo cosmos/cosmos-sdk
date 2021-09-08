@@ -47,13 +47,10 @@ module.exports = {
         "key": "v0.42"
       },
       {
-<<<<<<< HEAD
-=======
         "label": "v0.44",
         "key": "v0.44"
       },
       {
->>>>>>> d6c30175d (docs: update to v0.44 version tag (#10069))
         "label": "master",
         "key": "master"
       }

@@ -1,7 +1,4 @@
 master              master
 launchpad/backports v0.39
 release/v0.42.x     v0.42
-<<<<<<< HEAD
-=======
 release/v0.44.x     v0.44
->>>>>>> d6c30175d (docs: update to v0.44 version tag (#10069))

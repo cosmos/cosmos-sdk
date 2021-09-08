@@ -163,7 +163,7 @@ func ValidateMemoDecorator(ak AccountKeeper) txtypes.Middleware {
 	}
 }
 
-var _ txtypes.Handler = indexEventsTxHandler{}
+var _ txtypes.Handler = validateMemoMiddleware{}
 
 // CheckTx implements tx.Handler.CheckTx method.
 func (vmd validateMemoMiddleware) CheckTx(ctx context.Context, tx sdk.Tx, req abci.RequestCheckTx) (abci.ResponseCheckTx, error) {

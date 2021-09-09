@@ -135,7 +135,7 @@ Examples:
 
 				periodReset := getPeriodReset(periodClock)
 				if exp != "" && periodReset.Sub(expiresAtTime) > 0 {
-					return fmt.Errorf("period(%d) cannot reset after expiration(%v)", periodClock, exp)
+					return fmt.Errorf("period (%d) cannot reset after expiration (%v)", periodClock, exp)
 				}
 
 				periodic := feegrant.PeriodicAllowance{

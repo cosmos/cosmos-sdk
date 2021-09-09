@@ -1,4 +1,4 @@
-package baseapp
+package middleware
 
 import (
 	"context"
@@ -22,9 +22,10 @@ type MsgServiceRouter struct {
 var _ gogogrpc.Server = &MsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewMsgServiceRouter() *MsgServiceRouter {
+func NewMsgServiceRouter(registry codectypes.InterfaceRegistry) *MsgServiceRouter {
 	return &MsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		interfaceRegistry: registry,
+		routes:            map[string]MsgServiceHandler{},
 	}
 }
 
@@ -127,11 +128,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			return sdk.WrapServiceResult(ctx, resMsg, err)
 		}
 	}
-}
-
-// SetInterfaceRegistry sets the interface registry for the router.
-func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
-	msr.interfaceRegistry = interfaceRegistry
 }
 
 func noopDecoder(_ interface{}) error { return nil }

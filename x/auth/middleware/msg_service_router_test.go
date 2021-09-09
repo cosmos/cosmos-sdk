@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
@@ -83,6 +84,11 @@ func TestMsgService(t *testing.T) {
 		testdata.MsgServerImpl{},
 	)
 	_ = baseApp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+
+	key1 := types.NewKVStoreKey("params")
+	baseApp.MountStores(key1)
+	err = baseApp.LoadLatestVersion()
+	require.NotNil(t, err)
 
 	msg := testdata.TestMsg{Signers: []string{addr.String()}}
 	txBuilder := encCfg.TxConfig.NewTxBuilder()

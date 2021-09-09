@@ -27,9 +27,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
+var testMbm = module.NewBasicManager(
+	staking.AppModuleBasic{},
+	genutil.AppModuleBasic{},
+)
 
 func TestInitCmd(t *testing.T) {
 	tests := []struct {
@@ -117,6 +121,37 @@ func TestInitRecover(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
+<<<<<<< HEAD
+=======
+func TestInitStakingBondDenom(t *testing.T) {
+	home := t.TempDir()
+	logger := log.NewNopLogger()
+	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
+	require.NoError(t, err)
+
+	serverCtx := server.NewContext(viper.New(), cfg, logger)
+	interfaceRegistry := types.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	clientCtx := client.Context{}.
+		WithCodec(marshaler).
+		WithLegacyAmino(makeCodec()).
+		WithHomeDir(home)
+
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
+	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
+
+	cmd := genutilcli.InitCmd(testMbm, home)
+
+	cmd.SetArgs([]string{
+		"appnode-test",
+		fmt.Sprintf("--%s=%s", cli.HomeFlag, home),
+		fmt.Sprintf("--%s=testtoken", genutilcli.FlagStakingBondDenom),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+}
+
+>>>>>>> 148451b51 (fix: Allow --home to propagate to init command (#10104))
 func TestEmptyState(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()

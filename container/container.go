@@ -277,7 +277,7 @@ func (c *container) resolve(in ProviderInput, scope Scope, caller Location) (ref
 }
 
 func (c *container) run(invoker interface{}) error {
-	rctr, err := ExtractConstructorInfo(invoker)
+	rctr, err := ExtractProviderDescriptor(invoker)
 	if err != nil {
 		return err
 	}

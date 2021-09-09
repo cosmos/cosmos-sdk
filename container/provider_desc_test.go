@@ -90,16 +90,16 @@ func TestExtractConstructorInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := container.ExtractConstructorInfo(tt.ctr)
+			got, err := container.ExtractProviderDescriptor(tt.ctr)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ExtractConstructorInfo() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ExtractProviderDescriptor() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
-				t.Errorf("ExtractConstructorInfo() got = %v, want %v", got.Inputs, tt.wantIn)
+				t.Errorf("ExtractProviderDescriptor() got = %v, want %v", got.Inputs, tt.wantIn)
 			}
 			if !reflect.DeepEqual(got.Outputs, tt.wantOut) {
-				t.Errorf("ExtractConstructorInfo() got = %v, want %v", got.Outputs, tt.wantOut)
+				t.Errorf("ExtractProviderDescriptor() got = %v, want %v", got.Outputs, tt.wantOut)
 			}
 		})
 	}

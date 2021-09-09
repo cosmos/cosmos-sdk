@@ -34,11 +34,11 @@ type ProviderOutput struct {
 	Type reflect.Type
 }
 
-func ExtractProviderDescriptor(pvr interface{}) (ProviderDescriptor, error) {
-	rctr, ok := ctr.(ProviderDescriptor)
+func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error) {
+	rctr, ok := provider.(ProviderDescriptor)
 	if !ok {
 		var err error
-		rctr, err = doExtractConstructorInfo(ctr)
+		rctr, err = doExtractConstructorInfo(provider)
 		if err != nil {
 			return ProviderDescriptor{}, err
 		}

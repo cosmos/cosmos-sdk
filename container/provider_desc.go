@@ -38,7 +38,7 @@ func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error)
 	rctr, ok := provider.(ProviderDescriptor)
 	if !ok {
 		var err error
-		rctr, err = doExtractConstructorInfo(provider)
+		rctr, err = doExtractProviderDescriptor(provider)
 		if err != nil {
 			return ProviderDescriptor{}, err
 		}
@@ -47,7 +47,7 @@ func ExtractProviderDescriptor(provider interface{}) (ProviderDescriptor, error)
 	return expandStructArgsConstructor(rctr)
 }
 
-func doExtractConstructorInfo(ctr interface{}) (ProviderDescriptor, error) {
+func doExtractProviderDescriptor(ctr interface{}) (ProviderDescriptor, error) {
 	val := reflect.ValueOf(ctr)
 	typ := val.Type()
 	if typ.Kind() != reflect.Func {

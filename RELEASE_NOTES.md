@@ -8,8 +8,6 @@ Consequences:
 + all chains should upgrade to v0.44. Update from v0.43 doesn't require any migration. Chains can upgrade directly from v0.42, in that case v0.43 migrations must be executed when upgrading to v0.44;
 + all previously planned features for v0.44 are going to land in v0.45, with the same release schedule.
 
-NOTE: v0.42 release will reach end of life on September 8, 2021.
-
 Please see [Cosmos SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/RELEASE_NOTES.md).
 
 ## Updates

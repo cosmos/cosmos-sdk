@@ -522,7 +522,12 @@ func (coins Coins) Empty() bool {
 // AmountOf returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
 	mustValidateDenom(denom)
+	return coins.AmountOfNoDenomValidation(denom)
+}
 
+// AmountOfNoDenomValidation returns the amount of a denom from coins
+// without validating the denomination.
+func (coins Coins) AmountOfNoDenomValidation(denom string) Int {
 	switch len(coins) {
 	case 0:
 		return ZeroInt()
@@ -535,15 +540,16 @@ func (coins Coins) AmountOf(denom string) Int {
 		return ZeroInt()
 
 	default:
+		// Binary search the amount of coins remaining
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 		switch {
 		case denom < coin.Denom:
-			return coins[:midIdx].AmountOf(denom)
+			return coins[:midIdx].AmountOfNoDenomValidation(denom)
 		case denom == coin.Denom:
 			return coin.Amount
 		default:
-			return coins[midIdx+1:].AmountOf(denom)
+			return coins[midIdx+1:].AmountOfNoDenomValidation(denom)
 		}
 	}
 }

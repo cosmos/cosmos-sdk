@@ -103,7 +103,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 
 	// Check empty state
 	records, err := kb.List()
-	require.NoError(t, err)
+	require.EqualError(t, err, ErrNoKeysAvailable.Error())
 	require.Len(t, records, 0)
 
 	_, _, err = kb.NewMnemonic(n1, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, notSupportedAlgo{})
@@ -514,7 +514,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 
 	// Check empty state
 	l, err := cstore.List()
-	require.Nil(t, err)
+	require.EqualError(t, err, ErrNoKeysAvailable.Error())
 	require.Empty(t, l)
 
 	_, _, err = cstore.NewMnemonic(n1, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, notSupportedAlgo{})
@@ -953,7 +953,7 @@ func TestAltKeyring_List(t *testing.T) {
 	require.NoError(t, err)
 
 	list, err := kr.List()
-	require.NoError(t, err)
+	require.EqualError(t, err, ErrNoKeysAvailable.Error())
 	require.Len(t, list, 0)
 
 	// Fails on creating unsupported pubKeyType
@@ -1057,7 +1057,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 	require.NoError(t, err)
 
 	list, err = kr.List()
-	require.NoError(t, err)
+	require.EqualError(t, err, ErrNoKeysAvailable.Error())
 	require.Empty(t, list)
 }
 
@@ -1080,7 +1080,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 	require.NoError(t, err)
 
 	list, err = kr.List()
-	require.NoError(t, err)
+	require.EqualError(t, err, ErrNoKeysAvailable.Error())
 	require.Empty(t, list)
 }
 
@@ -1090,7 +1090,7 @@ func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 	require.NoError(t, err)
 
 	list, err := kr.List()
-	require.NoError(t, err)
+	require.EqualError(t, err, ErrNoKeysAvailable.Error())
 	require.Empty(t, list)
 
 	key := someKey

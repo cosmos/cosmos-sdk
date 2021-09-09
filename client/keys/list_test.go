@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"errors"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -48,10 +49,10 @@ func Test_runListCmd(t *testing.T) {
 	testData := []struct {
 		name    string
 		kbDir   string
-		wantErr bool
+		wantErr error
 	}{
-		{"keybase: empty", kbHome1, false},
-		{"keybase: w/key", kbHome2, false},
+		{"keybase: empty", kbHome1, keyring.ErrNoKeysAvailable},
+		{"keybase: w/key", kbHome2, keyring.ErrNoKeysAvailable},
 	}
 	for _, tt := range testData {
 		tt := tt
@@ -62,7 +63,7 @@ func Test_runListCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
-			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {
+			if err := cmd.ExecuteContext(ctx); err != nil && !errors.Is(err, tt.wantErr) {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -72,7 +73,7 @@ func Test_runListCmd(t *testing.T) {
 				fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 			})
 
-			if err := cmd.ExecuteContext(ctx); (err != nil) != tt.wantErr {
+			if err := cmd.ExecuteContext(ctx); err != nil && !errors.Is(err, tt.wantErr) {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

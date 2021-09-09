@@ -60,14 +60,14 @@ func (ModuleA) Provide(key KVStoreKey) (KeeperA, Handler, Command) {
 type ModuleB struct{}
 
 type BDependencies struct {
-	container.StructArgs
+	container.In
 
 	Key KVStoreKey
 	A   MsgClientA
 }
 
 type BProvides struct {
-	container.StructArgs
+	container.Out
 
 	KeeperB  KeeperB
 	Commands []Command
@@ -101,7 +101,6 @@ func TestScenario(t *testing.T) {
 					},
 				}, b)
 			},
-			container.Debug(),
 			container.AutoGroupTypes(reflect.TypeOf(Command{})),
 			container.OnePerScopeTypes(reflect.TypeOf(Handler{})),
 			container.Provide(
@@ -468,14 +467,14 @@ func TestSupply(t *testing.T) {
 }
 
 type TestInput struct {
-	container.StructArgs
+	container.In
 
 	X int `optional:"true"`
 	Y float64
 }
 
 type TestOutput struct {
-	container.StructArgs
+	container.Out
 
 	X string
 }

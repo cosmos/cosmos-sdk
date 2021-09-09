@@ -12,22 +12,42 @@ import (
 // directly, but will instead use the struct's fields to resolve or populate
 // dependencies. Types with embedded StructArgs can be used in both the input
 // and output parameter positions.
-type StructArgs struct{}
 
-func (StructArgs) isStructArgs() {}
+// In can be embedded in another struct to inform the container that the
+// fields of the struct should be treated as dependency inputs.
+// This allows a struct to be used to specify dependencies rather than
+// positional parameters.
+//
+// Fields of the struct may support the following tags:
+//		optional	if set to true, the dependency is optional and will
+//					be set to its default value if not found, rather than causing
+//					an error
+type In struct{}
 
-type isStructArgs interface {
-	isStructArgs()
-}
+func (In) isIn() {}
 
-var isStructArgsType = reflect.TypeOf((*isStructArgs)(nil)).Elem()
+type isIn interface{ isIn() }
+
+var isInType = reflect.TypeOf((*isIn)(nil)).Elem()
+
+// Out can be embedded in another struct to inform the container that the
+// fields of the struct should be treated as dependency outputs.
+// This allows a struct to be used to specify outputs rather than
+// positional return values.
+type Out struct{}
+
+func (Out) isOut() {}
+
+type isOut interface{ isOut() }
+
+var isOutType = reflect.TypeOf((*isOut)(nil)).Elem()
 
 func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescriptor, error) {
 	var foundStructArgs bool
 	var newIn []ProviderInput
 
 	for _, in := range constructor.In {
-		if in.Type.AssignableTo(isStructArgsType) {
+		if in.Type.AssignableTo(isInType) {
 			foundStructArgs = true
 			inTypes, err := structArgsInTypes(in.Type)
 			if err != nil {
@@ -41,7 +61,7 @@ func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescri
 
 	var newOut []ProviderOutput
 	for _, out := range constructor.Out {
-		if out.Type.AssignableTo(isStructArgsType) {
+		if out.Type.AssignableTo(isOutType) {
 			foundStructArgs = true
 			newOut = append(newOut, structArgsOutTypes(out.Type)...)
 		} else {
@@ -69,8 +89,8 @@ func expandStructArgsFn(constructor ProviderDescriptor) func(inputs []reflect.Va
 		j := 0
 		inputs1 := make([]reflect.Value, len(inParams))
 		for i, in := range inParams {
-			if in.Type.AssignableTo(isStructArgsType) {
-				v, n := buildStructArgs(in.Type, inputs[j:])
+			if in.Type.AssignableTo(isInType) {
+				v, n := buildIn(in.Type, inputs[j:])
 				inputs1[i] = v
 				j += n
 			} else {
@@ -86,8 +106,8 @@ func expandStructArgsFn(constructor ProviderDescriptor) func(inputs []reflect.Va
 
 		var outputs1 []reflect.Value
 		for i, out := range outParams {
-			if out.Type.AssignableTo(isStructArgsType) {
-				outputs1 = append(outputs1, extractFromStructArgs(out.Type, outputs[i])...)
+			if out.Type.AssignableTo(isOutType) {
+				outputs1 = append(outputs1, extractFromOut(out.Type, outputs[i])...)
 			} else {
 				outputs1 = append(outputs1, outputs[i])
 			}
@@ -102,7 +122,7 @@ func structArgsInTypes(typ reflect.Type) ([]ProviderInput, error) {
 	var res []ProviderInput
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
-		if f.Type.AssignableTo(isStructArgsType) {
+		if f.Type.AssignableTo(isInType) {
 			continue
 		}
 
@@ -129,7 +149,7 @@ func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
 	var res []ProviderOutput
 	for i := 0; i < n; i++ {
 		f := typ.Field(i)
-		if f.Type.AssignableTo(isStructArgsType) {
+		if f.Type.AssignableTo(isOutType) {
 			continue
 		}
 
@@ -140,13 +160,13 @@ func structArgsOutTypes(typ reflect.Type) []ProviderOutput {
 	return res
 }
 
-func buildStructArgs(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
+func buildIn(typ reflect.Type, values []reflect.Value) (reflect.Value, int) {
 	numFields := typ.NumField()
 	j := 0
 	res := reflect.New(typ)
 	for i := 0; i < numFields; i++ {
 		f := typ.Field(i)
-		if f.Type.AssignableTo(isStructArgsType) {
+		if f.Type.AssignableTo(isInType) {
 			continue
 		}
 
@@ -156,12 +176,12 @@ func buildStructArgs(typ reflect.Type, values []reflect.Value) (reflect.Value, i
 	return res.Elem(), j
 }
 
-func extractFromStructArgs(typ reflect.Type, value reflect.Value) []reflect.Value {
+func extractFromOut(typ reflect.Type, value reflect.Value) []reflect.Value {
 	numFields := typ.NumField()
 	var res []reflect.Value
 	for i := 0; i < numFields; i++ {
 		f := typ.Field(i)
-		if f.Type.AssignableTo(isStructArgsType) {
+		if f.Type.AssignableTo(isOutType) {
 			continue
 		}
 

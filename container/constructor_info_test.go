@@ -8,18 +8,18 @@ import (
 )
 
 type StructIn struct {
-	container.StructArgs
+	container.In
 	X int
 	Y float64 `optional:"true"`
 }
 
 type BadOptional struct {
-	container.StructArgs
+	container.In
 	X int `optional:"foo"`
 }
 
 type StructOut struct {
-	container.StructArgs
+	container.Out
 	X string
 	Y []byte
 }

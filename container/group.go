@@ -29,7 +29,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ Scope, caller Location) (re
 	c.logf("Providing %v to %s from:", g.sliceType, caller.Name())
 	c.indentLogger()
 	for _, node := range g.providers {
-		c.logf(node.ctr.Location.String())
+		c.logf(node.provider.Location.String())
 	}
 	c.dedentLogger()
 
@@ -66,7 +66,7 @@ func (g *groupResolver) addNode(n *simpleProvider, i int, c *container) error {
 	g.providers = append(g.providers, n)
 	g.idxsInValues = append(g.idxsInValues, i)
 
-	constructorGraphNode, err := c.locationGraphNode(n.ctr.Location, n.scope)
+	constructorGraphNode, err := c.locationGraphNode(n.provider.Location, n.scope)
 	if err != nil {
 		return err
 	}

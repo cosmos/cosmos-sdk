@@ -9,12 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-/*
-TODO:
-error resolve traces
-review all errors return
-*/
-
 type container struct {
 	*config
 
@@ -132,8 +126,8 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope, noLog 
 			c.logf("Registering provider: %s", constructor.Location.String())
 		}
 		node := &simpleProvider{
-			ctr:   constructor,
-			scope: scope,
+			provider: constructor,
+			scope:    scope,
 		}
 
 		constructorGraphNode, err := c.locationGraphNode(constructor.Location, scope)
@@ -319,10 +313,11 @@ func (c container) createOrGetScope(name string) Scope {
 
 func (c container) formatResolveStack() string {
 	buf := &bytes.Buffer{}
+	_, _ = fmt.Fprintf(buf, "\twhile resolving:\n")
 	n := len(c.resolveStack)
 	for i := n - 1; i >= 0; i-- {
 		rk := c.resolveStack[i]
-		_, _ = fmt.Fprintf(buf, "\t%v for %s\n", rk.typ, rk.loc)
+		_, _ = fmt.Fprintf(buf, "\t\t%v for %s\n", rk.typ, rk.loc)
 	}
 	return buf.String()
 }

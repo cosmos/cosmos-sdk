@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/cosmovisor"
+	"github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor/cmd"
 )
 
 func main() {
@@ -16,6 +17,10 @@ func main() {
 
 // Run is the main loop, but returns an error
 func Run(args []string) error {
+
+	// Setup the cosmosvisor cobra commands
+	cmd.Execute()
+
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err

@@ -27,9 +27,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
+var testMbm = module.NewBasicManager(
+	staking.AppModuleBasic{},
+	genutil.AppModuleBasic{},
+)
 
 func TestInitCmd(t *testing.T) {
 	tests := []struct {

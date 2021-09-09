@@ -34,7 +34,7 @@ type ProviderOutput struct {
 	Type reflect.Type
 }
 
-func ExtractConstructorInfo(ctr interface{}) (ProviderDescriptor, error) {
+func ExtractProviderDescriptor(pvr interface{}) (ProviderDescriptor, error) {
 	rctr, ok := ctr.(ProviderDescriptor)
 	if !ok {
 		var err error

@@ -28,7 +28,7 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	records, err := clientCtx.Keyring.List() 
+	records, err := clientCtx.Keyring.List()
 	if err != nil {
 		return err
 	}

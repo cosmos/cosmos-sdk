@@ -15,7 +15,7 @@ const (
 	OutputFormatJSON = "json"
 )
 
-type bechKeyOutFn func(k *cryptokeyring.Record) (cryptokeyring.KeyOutput, error)
+type bechKeyOutFn func(k *cryptokeyring.Record) (*cryptokeyring.KeyOutput, error)
 
 func printKeyringRecord(w io.Writer, k *cryptokeyring.Record, bechKeyOut bechKeyOutFn, output string) {
 	ko, err := bechKeyOut(k)
@@ -25,7 +25,7 @@ func printKeyringRecord(w io.Writer, k *cryptokeyring.Record, bechKeyOut bechKey
 
 	switch output {
 	case OutputFormatText:
-		printTextInfos(w, []cryptokeyring.KeyOutput{ko})
+		printTextInfos(w, []*cryptokeyring.KeyOutput{ko})
 
 	case OutputFormatJSON:
 		out, err := KeysCdc.MarshalJSON(ko)
@@ -59,13 +59,13 @@ func printKeyringRecords(w io.Writer, records []*cryptokeyring.Record, output st
 	}
 }
 
-func printTextInfos(w io.Writer, kos []cryptokeyring.KeyOutput) {
+func printTextInfos(w io.Writer, kos []*cryptokeyring.KeyOutput) {
 	for _, ko := range kos {
-		if ko == (cryptokeyring.KeyOutput{}) {
+		if ko == nil {
 			continue
 		}
 
-		out, err := yaml.Marshal(&ko)
+		out, err := yaml.Marshal(ko)
 		if err != nil {
 			panic(err)
 		}

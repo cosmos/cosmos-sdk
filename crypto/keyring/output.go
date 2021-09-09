@@ -78,8 +78,12 @@ func MkAccKeyOutput(k *Record) (KeyOutput, error) {
 func MkAccKeysOutput(records []*Record) ([]KeyOutput, error) {
 	kos := make([]KeyOutput, len(records))
 	var err error
-	for i, re := range records {
-		kos[i], err = MkAccKeyOutput(re)
+	for i, r := range records {
+		if r == nil {
+			continue
+		}
+		
+		kos[i], err = MkAccKeyOutput(r)
 		if err != nil {
 			return nil, err
 		}

@@ -60,9 +60,16 @@ func printKeyringRecords(w io.Writer, records []*cryptokeyring.Record, output st
 }
 
 func printTextInfos(w io.Writer, kos []cryptokeyring.KeyOutput) {
-	out, err := yaml.Marshal(&kos)
-	if err != nil {
-		panic(err)
+	for _, ko := range kos {
+		if ko == (cryptokeyring.KeyOutput{}) {
+			continue
+		}
+
+		out, err := yaml.Marshal(&ko)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Fprintln(w, string(out))
 	}
-	fmt.Fprintln(w, string(out))
 }

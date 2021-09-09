@@ -137,7 +137,11 @@ func TestInitStakingBondDenom(t *testing.T) {
 
 	cmd := genutilcli.InitCmd(testMbm, home)
 
-	cmd.SetArgs([]string{"appnode-test", fmt.Sprintf("--%s=%s --%s=testtoken", cli.HomeFlag, home, genutilcli.FlagStakingBondDenom)})
+	cmd.SetArgs([]string{
+		"appnode-test",
+		fmt.Sprintf("--%s=%s", cli.HomeFlag, home),
+		fmt.Sprintf("--%s=testtoken", genutilcli.FlagStakingBondDenom),
+	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 

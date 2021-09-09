@@ -11,11 +11,11 @@ import (
 // Ex:
 //   option.Provide(ProviderDescriptor{ ... })
 type ProviderDescriptor struct {
-	// In defines the in parameter types to Fn.
-	In []ProviderInput
+	// Inputs defines the in parameter types to Fn.
+	Inputs []ProviderInput
 
-	// Out defines the out parameter types to Fn.
-	Out []ProviderOutput
+	// Outputs defines the out parameter types to Fn.
+	Outputs []ProviderOutput
 
 	// Fn defines the constructor function.
 	Fn func([]reflect.Value) ([]reflect.Value, error)
@@ -84,8 +84,8 @@ func doExtractConstructorInfo(ctr interface{}) (ProviderDescriptor, error) {
 	}
 
 	return ProviderDescriptor{
-		In:  in,
-		Out: out,
+		Inputs:  in,
+		Outputs: out,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
 			res := val.Call(values)
 			if errIdx >= 0 {

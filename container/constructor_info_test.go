@@ -95,11 +95,11 @@ func TestExtractConstructorInfo(t *testing.T) {
 				t.Errorf("ExtractConstructorInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got.In, tt.wantIn) {
-				t.Errorf("ExtractConstructorInfo() got = %v, want %v", got.In, tt.wantIn)
+			if !reflect.DeepEqual(got.Inputs, tt.wantIn) {
+				t.Errorf("ExtractConstructorInfo() got = %v, want %v", got.Inputs, tt.wantIn)
 			}
-			if !reflect.DeepEqual(got.Out, tt.wantOut) {
-				t.Errorf("ExtractConstructorInfo() got = %v, want %v", got.Out, tt.wantOut)
+			if !reflect.DeepEqual(got.Outputs, tt.wantOut) {
+				t.Errorf("ExtractConstructorInfo() got = %v, want %v", got.Outputs, tt.wantOut)
 			}
 		})
 	}

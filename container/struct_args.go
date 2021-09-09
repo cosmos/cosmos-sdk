@@ -46,7 +46,7 @@ func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescri
 	var foundStructArgs bool
 	var newIn []ProviderInput
 
-	for _, in := range constructor.In {
+	for _, in := range constructor.Inputs {
 		if in.Type.AssignableTo(isInType) {
 			foundStructArgs = true
 			inTypes, err := structArgsInTypes(in.Type)
@@ -60,7 +60,7 @@ func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescri
 	}
 
 	var newOut []ProviderOutput
-	for _, out := range constructor.Out {
+	for _, out := range constructor.Outputs {
 		if out.Type.AssignableTo(isOutType) {
 			foundStructArgs = true
 			newOut = append(newOut, structArgsOutTypes(out.Type)...)
@@ -71,8 +71,8 @@ func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescri
 
 	if foundStructArgs {
 		return ProviderDescriptor{
-			In:       newIn,
-			Out:      newOut,
+			Inputs:   newIn,
+			Outputs:  newOut,
 			Fn:       expandStructArgsFn(constructor),
 			Location: constructor.Location,
 		}, nil
@@ -83,8 +83,8 @@ func expandStructArgsConstructor(constructor ProviderDescriptor) (ProviderDescri
 
 func expandStructArgsFn(constructor ProviderDescriptor) func(inputs []reflect.Value) ([]reflect.Value, error) {
 	fn := constructor.Fn
-	inParams := constructor.In
-	outParams := constructor.Out
+	inParams := constructor.Inputs
+	outParams := constructor.Outputs
 	return func(inputs []reflect.Value) ([]reflect.Value, error) {
 		j := 0
 		inputs1 := make([]reflect.Value, len(inParams))

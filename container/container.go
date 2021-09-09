@@ -83,8 +83,8 @@ func (c *container) call(constructor *ProviderDescriptor, scope Scope) ([]reflec
 
 	c.logf("Resolving dependencies for %s", loc)
 	c.indentLogger()
-	inVals := make([]reflect.Value, len(constructor.In))
-	for i, in := range constructor.In {
+	inVals := make([]reflect.Value, len(constructor.Inputs))
+	for i, in := range constructor.Inputs {
 		val, err := c.resolve(in, scope, loc)
 		if err != nil {
 			return nil, err
@@ -114,7 +114,7 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope, noLog 
 	}
 
 	hasScopeParam := false
-	for _, in := range constructor.In {
+	for _, in := range constructor.Inputs {
 		if in.Type == scopeType {
 			hasScopeParam = true
 		}
@@ -141,7 +141,7 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope, noLog 
 			return reflect.Value{}, err
 		}
 
-		for i, out := range constructor.Out {
+		for i, out := range constructor.Outputs {
 			typ := out.Type
 			// auto-group slices of auto-group types
 			if typ.Kind() == reflect.Slice && c.autoGroupTypes[typ.Elem()] {
@@ -180,7 +180,7 @@ func (c *container) addNode(constructor *ProviderDescriptor, scope Scope, noLog 
 			valueMap:       map[Scope][]reflect.Value{},
 		}
 
-		for i, out := range constructor.Out {
+		for i, out := range constructor.Outputs {
 			typ := out.Type
 			existing, ok := c.resolvers[typ]
 			if ok {
@@ -282,7 +282,7 @@ func (c *container) run(invoker interface{}) error {
 		return err
 	}
 
-	if len(rctr.Out) > 0 {
+	if len(rctr.Outputs) > 0 {
 		return errors.Errorf("invoker function cannot have return values other than error: %s", rctr.Location)
 	}
 

@@ -120,7 +120,7 @@ func wrapMethod0(module interface{}) interface{} {
 		panic(err)
 	}
 
-	ctrInfo.In = ctrInfo.In[1:]
+	ctrInfo.Inputs = ctrInfo.Inputs[1:]
 	fn := ctrInfo.Fn
 	ctrInfo.Fn = func(values []reflect.Value) ([]reflect.Value, error) {
 		return fn(append([]reflect.Value{reflect.ValueOf(module)}, values...))

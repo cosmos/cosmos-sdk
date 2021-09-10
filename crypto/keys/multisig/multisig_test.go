@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -16,6 +17,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
+
+func generatePubKeys(n int) []cryptotypes.PubKey {
+	pks := make([]cryptotypes.PubKey, n)
+	for i := 0; i < n; i++ {
+		pks[i] = secp256k1.GenPrivKey().PubKey()
+	}
+
+	return pks
+}
 
 func TestAddress(t *testing.T) {
 	msg := []byte{1, 2, 3, 4}
@@ -379,9 +389,6 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 	var pk cryptotypes.PubKey
 	err := cdc.UnmarshalJSON([]byte(pkJSON), &pk)
 	require.NoError(t, err)
-<<<<<<< HEAD
-	require.Equal(t, uint32(3), pk.(*kmultisig.LegacyAminoPubKey).Threshold)
-=======
 	lpk := pk.(*kmultisig.LegacyAminoPubKey)
 	require.Equal(t, uint32(3), lpk.Threshold)
 	require.Equal(t, 5, len(pk.(*kmultisig.LegacyAminoPubKey).PubKeys))
@@ -412,12 +419,11 @@ func TestProtoMarshalJSON(t *testing.T) {
 	require.True(pk2.Equals(msig))
 
 	// Test that we can correctly unmarshal key from keyring output
-
 	info, err := keyring.NewMultiInfo("my multisig", msig)
 	require.NoError(err)
+
 	ko, err := keyring.MkAccKeyOutput(info)
 	require.NoError(err)
 	require.Equal(ko.Address, sdk.AccAddress(pk2.Address()).String())
 	require.Equal(ko.PubKey, string(bz))
->>>>>>> 3d3bc7c43 (fix: unmarshalling issue with multisig keys in master (#10061))
 }

@@ -28,8 +28,8 @@ jobs:
   #         github-token: ${{ secrets.github_token }}
   #       if: env.GIT_DIFF
 
-jobs:
-  golangci-lint:
+  golangci:
+    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v2.1.4
@@ -42,6 +42,6 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: start localnet
+      - name: run go linters
         run: make lint
-        if: env.GIT_DIFF
+#        if: env.GIT_DIFF

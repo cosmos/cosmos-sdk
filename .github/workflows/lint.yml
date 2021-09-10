@@ -43,5 +43,5 @@ jobs:
             go.mod
             go.sum
       - name: run go linters
-        run: make lint
-#        if: env.GIT_DIFF
+        run: go run github.com/golangci/golangci-lint/cmd/golangci-lint run --out-format=tab ${{ env.GIT_DIFF }}
+        if: env.GIT_DIFF

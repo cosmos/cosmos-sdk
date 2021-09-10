@@ -23,17 +23,22 @@ const AverageBlockTime = 6 * time.Second
 
 // initialize the chain for the simulation
 func initChain(
-	r *rand.Rand, params Params, accounts []simulation.Account, app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn, config simulation.Config, cdc codec.JSONCodec,
+	r *rand.Rand,
+	params Params,
+	accounts []simulation.Account,
+	app *baseapp.BaseApp,
+	appStateFn simulation.AppStateFn,
+	config simulation.Config,
+	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
+
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
-
 	consensusParams := randomConsensusParams(r, appState, cdc)
-
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
+		Time:            genesisTimestamp,
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)

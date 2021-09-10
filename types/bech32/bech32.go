@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+// LengthLimitBIP173 is the maximum length of the bech32-encoded address
+// defined by BIP-173.
+const LengthLimitBIP173 = 90
+
 // charset is the set of characters used in the data section of bech32 strings.
 // Note that this is ordered, such that for a given charset[i], i is the binary
 // value of the character.
@@ -239,9 +243,9 @@ func DecodeNoLimit(bech string) (string, []byte, error) {
 //
 // Note that the returned data is 5-bit (base32) encoded and the human-readable
 // part will be lowercase.
-func Decode(bech string) (string, []byte, error) {
-	// The maximum allowed length for a bech32 string is 90.
-	if len(bech) > 90 {
+func Decode(bech string, limit int) (string, []byte, error) {
+	// The length of the given string should not exceed the limit.
+	if len(bech) > limit {
 		return "", nil, ErrInvalidLength(len(bech))
 	}
 
@@ -368,7 +372,7 @@ func EncodeFromBase256(hrp string, data []byte) (string, error) {
 // human-readable part (HRP) and base32-encoded data, converts that data to a
 // base256-encoded byte slice and returns it along with the lowercase HRP.
 func DecodeToBase256(bech string) (string, []byte, error) {
-	hrp, data, err := Decode(bech)
+	hrp, data, err := Decode(bech, LengthLimitBIP173)
 	if err != nil {
 		return "", nil, err
 	}

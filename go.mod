@@ -18,7 +18,6 @@ require (
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/golangci/golangci-lint v1.42.1 // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -27,8 +26,12 @@ require (
 	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87
 	github.com/improbable-eng/grpc-web v0.14.1
 	github.com/jhump/protoreflect v1.9.0
+	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.5
 	github.com/mattn/go-isatty v0.0.14
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/onsi/ginkgo v1.16.4 // indirect
+	github.com/onsi/gomega v1.13.0 // indirect
 	github.com/otiai10/copy v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
@@ -50,6 +53,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
 

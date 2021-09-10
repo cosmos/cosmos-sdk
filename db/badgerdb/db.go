@@ -29,7 +29,6 @@ type BadgerDB struct {
 	db   *badger.DB
 	vmgr *versionManager
 	mtx  sync.RWMutex
-	// Track open DBWriters
 	openWriters int32
 }
 
@@ -38,6 +37,7 @@ type badgerTxn struct {
 	// vmgr *versionManager
 	db *BadgerDB
 }
+
 type badgerWriter struct {
 	badgerTxn
 }
@@ -61,6 +61,7 @@ type versionManager struct {
 	vmap   versionTsMap
 	lastTs uint64
 }
+
 type versionTsMap map[uint64]uint64
 
 // NewDB creates or loads a BadgerDB key-value database inside the given directory.

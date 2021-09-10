@@ -13,50 +13,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
-// TODO consider to get rid of these constants, they are reused
-const (
-	holder     = "holder"
-	multiPerm  = "multiple permissions account"
-	randomPerm = "random permission"
-)
 
-/*
-func initBankKeeperAndContext(t *testing.T) (keeper.BaseKeeper, types.Context) {
-	app := simapp.Setup(t, false)
-	c := app.BaseApp.NewContext(false, tmproto.Header{})
-	maccPerms := simapp.GetMaccPerms()
-	appCodec := simapp.MakeTestEncodingConfig().Codec
-
-	maccPerms[holder] = nil
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
-	maccPerms[randomPerm] = []string{"random"}
-	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, app.GetKey(banktypes.StoreKey), app.GetSubspace(banktypes.ModuleName),
-		authtypes.ProtoBaseAccount, maccPerms,
-	)
-	blockedAddrs := make(map[string]bool)
-
-	keeper := keeper.NewBaseKeeper(
-		appCodec, app.GetKey(banktypes.StoreKey), authKeeper,
-		app.GetSubspace(banktypes.ModuleName), blockedAddrs,
-	)
-
-	return keeper,c
-}
-*/
-
-// TODO add more test cases
 func TestFormatCoin(t *testing.T) {
 	var (
-		expMetadata banktypes.Metadata
-	    req  *banktypes.QueryDenomMetadataRequest
+		expMetadatas []banktypes.Metadata
+		coin types.Coin
 	)
 	
 	//bk, c := initBankKeeperAndContext(t)
@@ -69,20 +36,42 @@ func TestFormatCoin(t *testing.T) {
 	queryClient := banktypes.NewQueryClient(queryHelper)
 	
 	p := message.NewPrinter(language.English)
-	
 
+	req := &banktypes.QueryDenomsMetadataRequest{
+		Pagination: &query.PageRequest{
+			Limit:      7,
+			CountTotal: true,
+		},
+	}
+	
 	// TODO add test case to convert from mregen to uregen
 	tt := []struct {
 		name   string
-		coin   types.Coin
 		malleate func()
 	}{
 		{
 			"convert 1000000uregen to 1regen",
-			types.NewCoin("uregen", types.NewInt(int64(1000000))),
 			func() {
-				// TODO handle multiple metadatas 
-				expMetadata = banktypes.Metadata{
+				coin = types.NewCoin("uregen", types.NewInt(int64(1000000)))
+				expMetadatas = []banktypes.Metadata{
+					{
+						Description: "The native staking token of the Cosmos Hub.",
+						DenomUnits: []*banktypes.DenomUnit{
+							{
+								Denom:    "uatom",
+								Exponent: 0,
+								Aliases:  []string{"microatom"},
+							},
+							{
+								Denom:    "atom",
+								Exponent: 6,
+								Aliases:  []string{"ATOM"},
+							},
+						},
+						Base:    "uatom",
+						Display: "atom",
+					},
+					{
 					Name:        "Regen",
 					Symbol:      "REGEN",
 					Description: "The native staking token of the Regen network.",
@@ -100,12 +89,14 @@ func TestFormatCoin(t *testing.T) {
 					},
 					Base:    "uregen",
 					Display: "regen",
+					},
 				}
 
-				app.BankKeeper.SetDenomMetaData(c, expMetadata)
-				req = &banktypes.QueryDenomMetadataRequest{
-					Denom: expMetadata.Base,
+				for _, m := range expMetadatas {
+					app.BankKeeper.SetDenomMetaData(c, m)
 				}
+
+				
 			},
 
 		},
@@ -141,18 +132,20 @@ func TestFormatCoin(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.malleate()
-			queryClient.DenomsMetadata()
-			res, err := queryClient.DenomMetadata(ctx, req)
-			require.NoError(t, err)
-			require.Equal(t, res.Metadata, expMetadata)
 
-			dvr := valuerenderer.NewDefaultValueRenderer(expMetadata)
-			formatedRes, err := dvr.Format(tc.coin)
+			res, err := queryClient.DenomsMetadata(ctx, req)
+			require.NoError(t, err)
+			require.Equal(t, res.Metadatas, expMetadatas)
+
+			dvr := valuerenderer.NewDefaultValueRenderer()
+			dvr.SetDenomToMetadataMap(expMetadatas)
+			formatedRes, err := dvr.Format(coin)
 			require.NoError(t, err)
 
-			expAmount := p.Sprintf("%d", dvr.ComputeAmount(tc.coin))
-			expDenom := expMetadata.Display
-			require.Equal(t, expAmount + expDenom, formatedRes)
+			metadata, err := dvr.LookupMetadataByDenom(valuerenderer.ConvertDenomToDisplay(coin.Denom))
+			require.NoError(t, err)
+			expRes := p.Sprintf("%d", dvr.ComputeAmount(coin, metadata)) + metadata.Display
+			require.Equal(t, expRes, formatedRes)
 		})
 	}
 }

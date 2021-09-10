@@ -23,13 +23,26 @@ type ValueRenderer interface {
 // create default value rreenderer in CLI and then get context from CLI
 type DefaultValueRenderer struct {
 	// /string is denom that user sents
-	metadata banktypes.Metadata // define in test only //convert DenomUnits to Display units
+	displayDenomToMetadataMap map[string]banktypes.Metadata // define in test only //convert DenomUnits to Display units
 }
 
 // TODO consider to move into valuerenderer_test.go
 // TODO handle an entire slice
-func NewDefaultValueRenderer(metadata []banktypes.Metadata) DefaultValueRenderer {
-	return DefaultValueRenderer{metadata}
+func NewDefaultValueRenderer() DefaultValueRenderer {
+	return DefaultValueRenderer{displayDenomToMetadataMap: make(map[string]banktypes.Metadata)}
+}
+
+func (dvr DefaultValueRenderer) SetDenomToMetadataMap(metadatas []banktypes.Metadata) error {
+	// TODO should I validate denom?
+	if metadatas == nil {
+		return errors.New("empty metadatas")
+	}
+
+	for _, m := range metadatas {
+		dvr.displayDenomToMetadataMap[m.Display] = m
+	}
+
+	return nil
 }
 
 var _ ValueRenderer = &DefaultValueRenderer{}
@@ -89,9 +102,12 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 			return "", errors.New("unable to cast empty interface to Coin")
 		}
 
-		// check if dvr.metadata is not empty
+		metadata, err := dvr.LookupMetadataByDenom(ConvertDenomToDisplay(coin.Denom))
+		if err != nil {
+			return "", err
+		}
 
-		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(coin)), dvr.metadata.Display
+		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(coin, metadata)), metadata.Display
 		sb.WriteString(newAmount)
 		sb.WriteString(newDenom)
 
@@ -102,16 +118,26 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 	return sb.String(), nil
 }
 
-func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin) int64 {
+func (dvr DefaultValueRenderer) LookupMetadataByDenom(denom string) (banktypes.Metadata, error) {
+	// lookup metadata by displayDenom
+	metadata, ok := dvr.displayDenomToMetadataMap[denom]
+	if !ok {
+		return banktypes.Metadata{}, errors.New("unable to lookup displayDenom in displayDenomToMetadataMap")
+	}
+
+	return metadata,nil
+}
+
+
+func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktypes.Metadata) int64 {
+
 	var coinExp, displayExp int64
-	// TODO handle multiple different metadatas
-	// maybe to use map for efficnet lookup
-	for _, denomUnit := range dvr.metadata.DenomUnits {
+	for _, denomUnit := range metadata.DenomUnits {
 		if denomUnit.Denom == coin.Denom {
 			coinExp = int64(denomUnit.Exponent)
 		}
 
-		if denomUnit.Denom == dvr.metadata.Display {
+		if denomUnit.Denom == metadata.Display {
 			displayExp = int64(denomUnit.Exponent)
 		}
 	}
@@ -133,6 +159,15 @@ func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin) int64 {
 	}
 
 	return amount
+}
+
+// mregen => regen, uregen => regen
+func ConvertDenomToDisplay(denom string) string {
+	if strings.HasPrefix(denom, "u") || strings.HasPrefix(denom, "m") {
+		denom = denom[1:]
+	}
+
+	return denom
 }
 
 // see QueryDenomMetadataRequest() test

@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -107,4 +109,47 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	}
 
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
+}
+
+func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
+	bech32Prefix, err := ak.getBech32Prefix()
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.Bech32PrefixResponse{Bech32Prefix: bech32Prefix}, nil
+}
+
+func (ak AccountKeeper) AddressBytesToString(ctx context.Context, req *types.AddressBytesToStringRequest) (*types.AddressBytesToStringResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.AddressBytes) == 0 {
+		return nil, errors.New("empty address bytes is not allowed")
+	}
+
+	text, err := ak.addressCdc.BytesToString(req.AddressBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.AddressBytesToStringResponse{AddressString: text}, nil
+}
+
+func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.AddressStringToBytesRequest) (*types.AddressStringToBytesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if len(strings.TrimSpace(req.AddressString)) == 0 {
+		return nil, errors.New("empty address string is not allowed")
+	}
+
+	bz, err := ak.addressCdc.StringToBytes(req.AddressString)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
 }

@@ -346,6 +346,7 @@ containerMarkdownLintFix=$(PROJECT_NAME)-markdownlint-fix
 
 golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint
 
+# NOTE: if you change the `lint` job then you must update ./github/workflows/lint.yml
 lint:
 	$(golangci_lint_cmd) run --out-format=tab
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi

@@ -8,26 +8,6 @@ on:
     branches:
       - master
 jobs:
-  # golangci:
-  #   name: golangci-lint
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 6
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: technote-space/get-diff-action@v5
-  #       with:
-  #         PATTERNS: |
-  #           **/**.go
-  #           go.mod
-  #           go.sum
-  #     - uses: golangci/golangci-lint-action@master
-  #       with:
-  #         # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-  #         version: v1.39
-  #         args: --timeout 10m
-  #         github-token: ${{ secrets.github_token }}
-  #       if: env.GIT_DIFF
-
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest

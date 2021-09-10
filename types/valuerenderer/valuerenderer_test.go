@@ -10,9 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/valuerenderer"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -20,12 +18,14 @@ import (
 	"golang.org/x/text/message"
 )
 
+// TODO consider to get rid of these constants, they are reused
 const (
 	holder     = "holder"
 	multiPerm  = "multiple permissions account"
 	randomPerm = "random permission"
 )
 
+/*
 func initBankKeeperAndContext(t *testing.T) (keeper.BaseKeeper, types.Context) {
 	app := simapp.Setup(t, false)
 	c := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -50,26 +50,39 @@ func initBankKeeperAndContext(t *testing.T) (keeper.BaseKeeper, types.Context) {
 
 	return keeper,c
 }
+*/
 
 // TODO add more test cases
 func TestFormatCoin(t *testing.T) {
-
-	bk, c := initBankKeeperAndContext(t)
+	var (
+		expMetadata banktypes.Metadata
+	    req  *banktypes.QueryDenomMetadataRequest
+	)
+	
+	//bk, c := initBankKeeperAndContext(t)
+	app := simapp.Setup(t, false)
+	c := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx := types.WrapSDKContext(c)
-	dvr := valuerenderer.NewDefaultValueRenderer(bk)
+	queryHelper := baseapp.NewQueryServerTestHelper(c, app.InterfaceRegistry())
+	banktypes.RegisterQueryServer(queryHelper, app.BankKeeper)
+	// TODO consider use bankKeeper instead of queryClient
+	queryClient := banktypes.NewQueryClient(queryHelper)
+	
 	p := message.NewPrinter(language.English)
+	
 
 	// TODO add test case to convert from mregen to uregen
 	tt := []struct {
 		name   string
 		coin   types.Coin
-		metadata banktypes.Metadata
-		expErr bool
+		malleate func()
 	}{
 		{
 			"convert 1000000uregen to 1regen",
 			types.NewCoin("uregen", types.NewInt(int64(1000000))),
-			banktypes.Metadata{
+			func() {
+				// TODO handle multiple metadatas 
+				expMetadata = banktypes.Metadata{
 					Name:        "Regen",
 					Symbol:      "REGEN",
 					Description: "The native staking token of the Regen network.",
@@ -87,8 +100,14 @@ func TestFormatCoin(t *testing.T) {
 					},
 					Base:    "uregen",
 					Display: "regen",
+				}
+
+				app.BankKeeper.SetDenomMetaData(c, expMetadata)
+				req = &banktypes.QueryDenomMetadataRequest{
+					Denom: expMetadata.Base,
+				}
 			},
-			false,
+
 		},
 		/*
 		{
@@ -121,17 +140,19 @@ func TestFormatCoin(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			dvr.GetBankKeeper().SetDenomMetaData(c, tc.metadata)
-			metaData, err := dvr.QueryDenomMetadata(ctx, tc.coin)
+			tc.malleate()
+			queryClient.DenomsMetadata()
+			res, err := queryClient.DenomMetadata(ctx, req)
 			require.NoError(t, err)
+			require.Equal(t, res.Metadata, expMetadata)
 
-			dvr.SetDenomMetadata(metaData)
-			res, err := dvr.Format(tc.coin)
+			dvr := valuerenderer.NewDefaultValueRenderer(expMetadata)
+			formatedRes, err := dvr.Format(tc.coin)
 			require.NoError(t, err)
 
 			expAmount := p.Sprintf("%d", dvr.ComputeAmount(tc.coin))
-			expDenom := dvr.GetDenomMetadata().Display
-			require.Equal(t, expAmount + expDenom, res)
+			expDenom := expMetadata.Display
+			require.Equal(t, expAmount + expDenom, formatedRes)
 		})
 	}
 }

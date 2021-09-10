@@ -1,7 +1,6 @@
 package valuerenderer
 
 import (
-	"context"
 	"errors"
 	"math"
 	"regexp"
@@ -10,7 +9,6 @@ import (
 	"unicode"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"golang.org/x/text/language"
@@ -25,42 +23,15 @@ type ValueRenderer interface {
 // create default value rreenderer in CLI and then get context from CLI
 type DefaultValueRenderer struct {
 	// /string is denom that user sents
-	bankKeeper keeper.BaseKeeper // define in test only //convert DenomUnits to Display units
-	metaData   banktypes.Metadata
+	metadata banktypes.Metadata // define in test only //convert DenomUnits to Display units
 }
 
-func NewDefaultValueRenderer(bk keeper.BaseKeeper) DefaultValueRenderer {
-	return DefaultValueRenderer{bankKeeper: bk}
+// TODO consider to move into valuerenderer_test.go
+// TODO handle an entire slice
+func NewDefaultValueRenderer(metadata []banktypes.Metadata) DefaultValueRenderer {
+	return DefaultValueRenderer{metadata}
 }
 
-// it is used only in tests consider to refactor 
-func (dvr DefaultValueRenderer) GetBankKeeper() keeper.BaseKeeper {
-	return dvr.bankKeeper
-}
-
-
-func (dvr DefaultValueRenderer) QueryDenomMetadata(ctx context.Context, coin types.Coin) (banktypes.Metadata, error) {
-	req := &banktypes.QueryDenomMetadataRequest{
-		Denom: coin.Denom,
-	}
-
-	res, err := dvr.bankKeeper.DenomMetadata(ctx, req)
-	if err != nil {
-		return banktypes.Metadata{}, err
-	}
-
-	return res.Metadata, nil
-}
-
-// it is used only in tests consider to refactor 
-func (dvr DefaultValueRenderer) GetDenomMetadata() banktypes.Metadata {
-	return dvr.metaData
-}
-
-// it is used only in tests consider to refactor 
-func (dvr DefaultValueRenderer) SetDenomMetadata(metaData banktypes.Metadata)  {
-	dvr.metaData = metaData
-}
 var _ ValueRenderer = &DefaultValueRenderer{}
 
 // Format converts an empty interface into a string depending on interface type.
@@ -120,7 +91,7 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 
 		// check if dvr.metadata is not empty
 
-		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(coin)), dvr.metaData.Display
+		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(coin)), dvr.metadata.Display
 		sb.WriteString(newAmount)
 		sb.WriteString(newDenom)
 
@@ -133,12 +104,14 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 
 func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin) int64 {
 	var coinExp, displayExp int64
-	for _, denomUnit := range dvr.metaData.DenomUnits {
+	// TODO handle multiple different metadatas
+	// maybe to use map for efficnet lookup
+	for _, denomUnit := range dvr.metadata.DenomUnits {
 		if denomUnit.Denom == coin.Denom {
 			coinExp = int64(denomUnit.Exponent)
 		}
 
-		if denomUnit.Denom == dvr.metaData.Display {
+		if denomUnit.Denom == dvr.metadata.Display {
 			displayExp = int64(denomUnit.Exponent)
 		}
 	}

@@ -19,23 +19,24 @@ var (
 	versionsFilename string = "versions.csv"
 )
 
-var _ dbm.DBConnection = (*BadgerDB)(nil)
-var _ dbm.DBReader = (*badgerTxn)(nil)
-var _ dbm.DBWriter = (*badgerWriter)(nil)
-var _ dbm.DBReadWriter = (*badgerWriter)(nil)
+var (
+	_ dbm.DBConnection = (*BadgerDB)(nil)
+	_ dbm.DBReader     = (*badgerTxn)(nil)
+	_ dbm.DBWriter     = (*badgerWriter)(nil)
+	_ dbm.DBReadWriter = (*badgerWriter)(nil)
+)
 
 // BadgerDB is a connection to a BadgerDB key-value database.
 type BadgerDB struct {
-	db   *badger.DB
-	vmgr *versionManager
-	mtx  sync.RWMutex
+	db          *badger.DB
+	vmgr        *versionManager
+	mtx         sync.RWMutex
 	openWriters int32
 }
 
 type badgerTxn struct {
 	txn *badger.Txn
-	// vmgr *versionManager
-	db *BadgerDB
+	db  *BadgerDB
 }
 
 type badgerWriter struct {
@@ -55,14 +56,12 @@ type badgerIterator struct {
 // A badger Txn's commit TS must be strictly greater than a record's "last-read"
 // TS in order to detect conflicts, and a Txn must be read at a TS after last
 // commit to see current state. So we must use commit increments that are more
-// granular than a version interval, mapping latter -> former.
+// granular than our version interval, and map versions to the corresponding TS.
 type versionManager struct {
 	*dbm.VersionManager
-	vmap   versionTsMap
+	vmap   map[uint64]uint64
 	lastTs uint64
 }
-
-type versionTsMap map[uint64]uint64
 
 // NewDB creates or loads a BadgerDB key-value database inside the given directory.
 // If dir does not exist, it will be created.
@@ -73,7 +72,6 @@ func NewDB(dir string) (*BadgerDB, error) {
 		return nil, err
 	}
 	opts := badger.DefaultOptions(dir)
-	// todo: NumVersionsToKeep
 	opts.SyncWrites = false // note that we have Sync methods
 	opts.Logger = nil       // badger is too chatty by default
 	return NewDBWithOptions(opts)
@@ -110,24 +108,25 @@ func readVersionsFile(path string) (*versionManager, error) {
 		return nil, err
 	}
 	var versions []uint64
-	var ts uint64
-	vmap := make(versionTsMap)
+	vmap := map[uint64]uint64{}
 	for _, row := range rows {
 		version, err := strconv.ParseUint(row[0], 10, 64)
 		if err != nil {
 			return nil, err
 		}
-		ts, err = strconv.ParseUint(row[1], 10, 64)
+		ts, err := strconv.ParseUint(row[1], 10, 64)
 		if err != nil {
 			return nil, err
 		}
 		versions = append(versions, version)
 		vmap[version] = ts
 	}
-	if ts == 0 {
-		ts = 1
-	}
-	return &versionManager{dbm.NewVersionManager(versions), vmap, ts}, nil
+	vmgr := dbm.NewVersionManager(versions)
+	return &versionManager{
+		VersionManager: vmgr,
+		vmap:           vmap,
+		lastTs:         vmgr.Last(),
+	}, nil
 }
 
 // Write version metadata to CSV file
@@ -377,19 +376,24 @@ func (i *badgerIterator) Value() []byte {
 func (vm *versionManager) versionTs(ver uint64) uint64 {
 	return vm.vmap[ver]
 }
+
+// Atomically accesses the last commit timestamp used as a version marker.
 func (vm *versionManager) lastCommitTs() uint64 {
 	return atomic.LoadUint64(&vm.lastTs)
 }
 func (vm *versionManager) Copy() *versionManager {
+	vmap := map[uint64]uint64{}
+	for ver, ts := range vm.vmap {
+		vmap[ver] = ts
+	}
 	return &versionManager{
 		VersionManager: vm.VersionManager.Copy(),
-		vmap:           vm.vmap,
-		lastTs:         vm.lastTs,
+		vmap:           vmap,
+		lastTs:         vm.lastCommitTs(),
 	}
 }
 
 // updateCommitTs atomically increments the lastTs if equal to readts.
-// Returns the new value.
 func (vm *versionManager) updateCommitTs(readts uint64) {
 	atomic.CompareAndSwapUint64(&vm.lastTs, readts, readts+1)
 }
@@ -398,6 +402,6 @@ func (vm *versionManager) Save(target uint64) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	vm.vmap[id] = atomic.LoadUint64(&vm.lastTs)
+	vm.vmap[id] = vm.lastTs // non-atomic, already guarded by the vmgr mutex
 	return id, nil
 }

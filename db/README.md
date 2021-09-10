@@ -38,9 +38,9 @@ This represents a self-contained and immutable view of a database's version hist
 The in-memory DB in the `db/memdb` package cannot be persisted to disk. It is implemented using the Google [btree](https://pkg.go.dev/github.com/google/btree) library.
   * This currently does not perform write conflict detection, so it only supports a single open write-transaction at a time. Multiple and concurrent read-transactions are supported.
 
-### BadgerDB ###
+### BadgerDB
 
-A [BadgerDB](https://pkg.go.dev/github.com/dgraph-io/badger/v3)-based backend. Internally, this uses BadgerDB's "managed" mode for version management.
+A [BadgerDB](https://pkg.go.dev/github.com/dgraph-io/badger/v3)-based backend. Internally, this uses BadgerDB's ["managed" mode](https://pkg.go.dev/github.com/dgraph-io/badger/v3#OpenManaged) for version management.
 Note that Badger only recognizes write conflicts for rows that are read _after_ a conflicting transaction was opened. In other words, the following will raise an error:
 
 ```go

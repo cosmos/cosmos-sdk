@@ -23,23 +23,30 @@ type ValueRenderer interface {
 // create default value rreenderer in CLI and then get context from CLI
 type DefaultValueRenderer struct {
 	// /string is denom that user sents
-	displayDenomToMetadataMap map[string]banktypes.Metadata // define in test only //convert DenomUnits to Display units
+	denomToMetadataMap map[string]banktypes.Metadata // define in test only //convert DenomUnits to Display units
 }
 
 // TODO consider to move into valuerenderer_test.go
 // TODO handle an entire slice
 func NewDefaultValueRenderer() DefaultValueRenderer {
-	return DefaultValueRenderer{displayDenomToMetadataMap: make(map[string]banktypes.Metadata)}
+	return DefaultValueRenderer{denomToMetadataMap: make(map[string]banktypes.Metadata)}
 }
 
+// TODO decide what is the most effiecnt way to map key to metadata
+// 1. current implementation O(m*d)
+// 2. use metadata.Symbol is a key ,but this is an optional field
+// 3. use metadata.Base or ,metadata.Display as a key in this case the helper function
 func (dvr DefaultValueRenderer) SetDenomToMetadataMap(metadatas []banktypes.Metadata) error {
 	// TODO should I validate denom?
 	if metadatas == nil {
 		return errors.New("empty metadatas")
 	}
 
+	// O(m*d), wheren m is number of metadatas and d is denumber of denomUnits in each metadata
 	for _, m := range metadatas {
-		dvr.displayDenomToMetadataMap[m.Display] = m
+		for _, denomUnit := range m.DenomUnits {
+			dvr.denomToMetadataMap[denomUnit.Denom] = m
+		}
 	}
 
 	return nil
@@ -102,7 +109,7 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 			return "", errors.New("unable to cast empty interface to Coin")
 		}
 
-		metadata, err := dvr.LookupMetadataByDenom(ConvertDenomToDisplay(coin.Denom))
+		metadata, err := dvr.LookupMetadataByDenom(coin.Denom)
 		if err != nil {
 			return "", err
 		}
@@ -120,14 +127,13 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 
 func (dvr DefaultValueRenderer) LookupMetadataByDenom(denom string) (banktypes.Metadata, error) {
 	// lookup metadata by displayDenom
-	metadata, ok := dvr.displayDenomToMetadataMap[denom]
+	metadata, ok := dvr.denomToMetadataMap[denom]
 	if !ok {
-		return banktypes.Metadata{}, errors.New("unable to lookup displayDenom in displayDenomToMetadataMap")
+		return banktypes.Metadata{}, errors.New("unable to lookup displayDenom in denomToMetadataMap")
 	}
 
-	return metadata,nil
+	return metadata, nil
 }
-
 
 func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktypes.Metadata) int64 {
 
@@ -142,7 +148,7 @@ func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktype
 		}
 	}
 
-	expSub := float64(displayExp - coinExp)
+	expSub := float64(coinExp - displayExp)
 	var amount int64
 
 	switch {
@@ -159,15 +165,6 @@ func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktype
 	}
 
 	return amount
-}
-
-// mregen => regen, uregen => regen
-func ConvertDenomToDisplay(denom string) string {
-	if strings.HasPrefix(denom, "u") || strings.HasPrefix(denom, "m") {
-		denom = denom[1:]
-	}
-
-	return denom
 }
 
 // see QueryDenomMetadataRequest() test

@@ -1,77 +1,76 @@
 package valuerenderer_test
 
 import (
-//	"context"
-//	"regexp"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/valuerenderer"
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
+type valueRendererTestSuite struct {
+	suite.Suite
 
-func TestFormatCoin(t *testing.T) {
-	var (
-		expMetadatas []banktypes.Metadata
-		coin types.Coin
-	)
-	
-	//bk, c := initBankKeeperAndContext(t)
-	app := simapp.Setup(t, false)
-	c := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx := types.WrapSDKContext(c)
-	queryHelper := baseapp.NewQueryServerTestHelper(c, app.InterfaceRegistry())
+	app         *simapp.SimApp
+	ctx         types.Context
+	queryClient banktypes.QueryClient
+	printer     *message.Printer
+}
+
+func TestValueRendererTestSuite(t *testing.T) {
+	suite.Run(t, new(valueRendererTestSuite))
+}
+
+func (suite *valueRendererTestSuite) SetupTest() {
+	app := simapp.Setup(suite.T(), false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	banktypes.RegisterQueryServer(queryHelper, app.BankKeeper)
-	// TODO consider use bankKeeper instead of queryClient
 	queryClient := banktypes.NewQueryClient(queryHelper)
-	
-	p := message.NewPrinter(language.English)
 
-	req := &banktypes.QueryDenomsMetadataRequest{
-		Pagination: &query.PageRequest{
-			Limit:      7,
-			CountTotal: true,
-		},
-	}
-	
-	// TODO add test case to convert from mregen to uregen
+	suite.app = app
+	suite.ctx = ctx
+	suite.queryClient = queryClient
+	suite.printer = message.NewPrinter(language.English)
+}
+
+func (suite *valueRendererTestSuite) TestFormatCoinSingleMetadata() {
+	var (
+		req         *banktypes.QueryDenomMetadataRequest
+		expMetadata banktypes.Metadata
+	)
+
+	// TODO more test cases here
 	tt := []struct {
-		name   string
-		malleate func()
+		name    string
+		coin    types.Coin
+		pretest func()
+		expRes  string
+		expFail bool
+		expErr  bool
 	}{
 		{
-			"convert 1000000uregen to 1regen",
+			"convert 23000000uregen to 23regen",
+			types.NewCoin("uregen", types.NewInt(int64(23000000))),
 			func() {
-				coin = types.NewCoin("uregen", types.NewInt(int64(1000000)))
-				expMetadatas = []banktypes.Metadata{
-					{
-						Description: "The native staking token of the Cosmos Hub.",
-						DenomUnits: []*banktypes.DenomUnit{
-							{
-								Denom:    "uatom",
-								Exponent: 0,
-								Aliases:  []string{"microatom"},
-							},
-							{
-								Denom:    "atom",
-								Exponent: 6,
-								Aliases:  []string{"ATOM"},
-							},
-						},
-						Base:    "uatom",
-						Display: "atom",
-					},
-					{
+				expMetadata = banktypes.Metadata{
 					Name:        "Regen",
 					Symbol:      "REGEN",
 					Description: "The native staking token of the Regen network.",
@@ -82,6 +81,11 @@ func TestFormatCoin(t *testing.T) {
 							Aliases:  []string{"microregen"},
 						},
 						{
+							Denom:    "mregen",
+							Exponent: 3,
+							Aliases:  []string{"milliregen"},
+						},
+						{
 							Denom:    "regen",
 							Exponent: 6,
 							Aliases:  []string{"REGEN"},
@@ -89,63 +93,428 @@ func TestFormatCoin(t *testing.T) {
 					},
 					Base:    "uregen",
 					Display: "regen",
-					},
 				}
-
-				for _, m := range expMetadatas {
-					app.BankKeeper.SetDenomMetaData(c, m)
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
+				req = &banktypes.QueryDenomMetadataRequest{
+					Denom: expMetadata.Base,
 				}
-
-				
 			},
-
+			"23regen",
+			false,
+			false,
 		},
-		/*
+		{
+			// test fails cause expMetadata.Display is set to uregen"
+			"convert 23regen to 23000000uregen",
+			types.NewCoin("regen", types.NewInt(int64(23000000))),
+			func() {
+				expMetadata = banktypes.Metadata{
+					Name:        "Regen",
+					Symbol:      "REGEN",
+					Description: "The native staking token of the Regen network.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "uregen",
+							Exponent: 0,
+							Aliases:  []string{"microregen"},
+						},
+						{
+							Denom:    "mregen",
+							Exponent: 3,
+							Aliases:  []string{"milliregen"},
+						},
+						{
+							Denom:    "regen",
+							Exponent: 6,
+							Aliases:  []string{"REGEN"},
+						},
+					},
+					Base:    "uregen",
+					Display: "uregen",
+				}
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
+				req = &banktypes.QueryDenomMetadataRequest{
+					Denom: "regen",
+				}
+			},
+			"23,000,000uregen",
+			true,
+			true,
+		},
+		{
+			// test fails error cause metadata.Display is set to uregen
+			// rpc error: code = NotFound desc = client metadata for denom mregen
+			"convert 23000000mregen to 23000000000uregen",
+			types.NewCoin("mregen", types.NewInt(int64(23000000))),
+			func() {
+				expMetadata = banktypes.Metadata{
+					Name:        "Regen",
+					Symbol:      "REGEN",
+					Description: "The native staking token of the Regen network.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "uregen",
+							Exponent: 0,
+							Aliases:  []string{"microregen"},
+						},
+						{
+							Denom:    "mregen",
+							Exponent: 3,
+							Aliases:  []string{"milliregen"},
+						},
+						{
+							Denom:    "regen",
+							Exponent: 6,
+							Aliases:  []string{"REGEN"},
+						},
+					},
+					Base:    "uregen",
+					Display: "uregen",
+				}
+
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, expMetadata)
+				req = &banktypes.QueryDenomMetadataRequest{
+					Denom: "mregen",
+				}
+			},
+			"23,000,000,000uregen",
+			true,
+			true,
+		},
+	}
+
+	for _, tc := range tt {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest() //reset
+			tc.pretest()
+
+			c := types.WrapSDKContext(suite.ctx)
+
+			resp, err := suite.queryClient.DenomMetadata(c, req)
+			if tc.expFail {
+				suite.Require().Error(err)
+				suite.Require().Nil(resp)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(resp.Metadata, expMetadata)
+
+			dvr := valuerenderer.NewDefaultValueRenderer()
+			metadatas := make([]banktypes.Metadata, 1)
+			metadatas[0] = expMetadata
+			dvr.SetDenomToMetadataMap(metadatas)
+
+			res, err := dvr.Format(tc.coin)
+
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Empty(res)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(res)
+				suite.Require().Equal(tc.expRes, res)
+			}
+
+		})
+	}
+
+}
+
+func (suite *valueRendererTestSuite) TestFormatCoinMultipleMetadatas() {
+	var (
+		expMetadatas []banktypes.Metadata
+	)
+
+	metadataAtom := banktypes.Metadata{
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "uatom",
+				Exponent: 0,
+				Aliases:  []string{"microatom"},
+			},
+			{
+				Denom:    "atom",
+				Exponent: 6,
+				Aliases:  []string{"ATOM"},
+			},
+		},
+		Base:    "uatom",
+		Display: "atom",
+	}
+
+	metadataRegen := banktypes.Metadata{
+		Name:        "Regen",
+		Symbol:      "REGEN",
+		Description: "The native staking token of the Regen network.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "uregen",
+				Exponent: 0,
+				Aliases:  []string{"microregen"},
+			},
+			{
+				Denom:    "mregen",
+				Exponent: 3,
+				Aliases:  []string{"mregen"},
+			},
+			{
+				Denom:    "regen",
+				Exponent: 6,
+				Aliases:  []string{"REGEN"},
+			},
+		},
+		Base:    "uregen",
+		Display: "regen",
+	}
+
+	req := &banktypes.QueryDenomsMetadataRequest{
+		Pagination: &query.PageRequest{
+			Limit:      7,
+			CountTotal: true,
+		},
+	}
+
+	// TODO more test cases here e.,g invalidMetadata which to add? think about
+	tt := []struct {
+		name    string
+		coin    types.Coin
+		pretest func()
+		expErr  bool
+	}{
+		{
+			"convert 1000000uregen to 1regen",
+			types.NewCoin("uregen", types.NewInt(int64(1000000))),
+			func() {
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataRegen)
+				expMetadatas = []banktypes.Metadata{metadataAtom, metadataRegen}
+			},
+			false,
+		},
 		{
 			"convert 1000000000uregen to 1000regen",
 			types.NewCoin("uregen", types.NewInt(int64(1000000000))),
+			func() {
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataRegen)
+				expMetadatas = []banktypes.Metadata{metadataAtom, metadataRegen}
+			},
 			false,
 		},
 		{
-			"convert 23000000mregen to 23000regen",
-			types.NewCoin("mregen", types.NewInt(int64(23000000))),
+			"convert 1000000mregen to 1000regen",
+			types.NewCoin("mregen", types.NewInt(int64(1000000))),
+			func() {
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataRegen)
+				expMetadatas = []banktypes.Metadata{metadataAtom, metadataRegen}
+			},
 			false,
 		},
 		{
-			"convert 23000000mregen to 23000000000uregen",
-			types.NewCoin("mregen", types.NewInt(int64(23000000))),
+			"invalid expMetadata error: convert 1000000000uregen to 1000regen",
+			types.NewCoin("eth", types.NewInt(int64(1000000000))),
+			func() {
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metadataRegen)
+				expMetadatas = []banktypes.Metadata{metadataAtom, metadataRegen}
+			},
+			true,
+		},
+	}
+
+	for _, tc := range tt {
+		suite.Run(tc.name, func() {
+			suite.SetupTest() //reset
+			tc.pretest()
+
+			c := types.WrapSDKContext(suite.ctx)
+
+			resp, err := suite.queryClient.DenomsMetadata(c, req)
+			suite.Require().NoError(err)
+			suite.Require().Equal(resp.Metadatas, expMetadatas)
+
+			dvr := valuerenderer.NewDefaultValueRenderer()
+			dvr.SetDenomToMetadataMap(expMetadatas)
+
+			res, err := dvr.Format(tc.coin)
+
+			if tc.expErr {
+				suite.Require().Error(err)
+				suite.Require().Empty(res)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(res)
+				metadata, err := dvr.LookupMetadataByDenom((tc.coin.Denom))
+				suite.Require().NoError(err)
+				suite.Require().NotNil(metadata)
+				// TODO should I hardcode expRes?
+				expRes := suite.printer.Sprintf("%d", dvr.ComputeAmount(tc.coin, metadata)) + metadata.Display
+				suite.Require().Equal(expRes, res)
+			}
+
+		})
+	}
+}
+
+// TODO address edge case  "convert 23mregen to 0,023regen" or not?
+func TestFormatNoDenomQuery(t *testing.T) {
+
+	tt := []struct {
+		name      string
+		coin      types.Coin
+		metadatas []banktypes.Metadata
+		expRes    string
+		expErr    bool
+	}{
+		{
+			"convert 1000mregen to 1000000uregen",
+			types.NewCoin("mregen", types.NewInt(int64(1000))),
+			[]banktypes.Metadata{
+				{
+					Name:        "Regen",
+					Symbol:      "REGEN",
+					Description: "The native staking token of the Regen network.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "uregen",
+							Exponent: 0,
+							Aliases:  []string{"microregen"},
+						},
+						{
+							Denom:    "mregen",
+							Exponent: 3,
+							Aliases:  []string{"milliregen"},
+						},
+						{
+							Denom:    "regen",
+							Exponent: 6,
+							Aliases:  []string{"REGEN"},
+						},
+					},
+					Base:    "uregen",
+					Display: "uregen",
+				},
+			},
+			"1,000,000uregen",
 			false,
 		},
 		{
-			"convert 23000000regen to 23000000000mregen",
-			types.NewCoin("regen", types.NewInt(int64(23000000))),
+			"convert 23000mregen to 23regen",
+			types.NewCoin("mregen", types.NewInt(int64(23000))),
+			[]banktypes.Metadata{
+				{
+					Name:        "Regen",
+					Symbol:      "REGEN",
+					Description: "The native staking token of the Regen network.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "uregen",
+							Exponent: 0,
+							Aliases:  []string{"microregen"},
+						},
+						{
+							Denom:    "mregen",
+							Exponent: 3,
+							Aliases:  []string{"milliregen"},
+						},
+						{
+							Denom:    "regen",
+							Exponent: 6,
+							Aliases:  []string{"REGEN"},
+						},
+					},
+					Base:    "uregen",
+					Display: "regen",
+				},
+			},
+			"23regen",
 			false,
 		},
 		{
-			"convert 23000regen to 23000regen",
-			types.NewCoin("regen", types.NewInt(int64(23000))),
+			"convert 23000000uregen to 23regen, multiple denoms",
+			types.NewCoin("mregen", types.NewInt(int64(23000))),
+			[]banktypes.Metadata{
+				{
+					Name:        "Regen",
+					Symbol:      "REGEN",
+					Description: "The native staking token of the Regen network.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    "uregen",
+							Exponent: 0,
+							Aliases:  []string{"microregen"},
+						},
+						{
+							Denom:    "mregen",
+							Exponent: 3,
+							Aliases:  []string{"milliregen"},
+						},
+						{
+							Denom:    "regen",
+							Exponent: 6,
+							Aliases:  []string{"REGEN"},
+						},
+					},
+					Base:    "uregen",
+					Display: "regen",
+				},
+				{
+					Name:        "Cosmos Hub Atom",
+					Symbol:      "ATOM",
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{"uatom", uint32(0), []string{"microatom"}},
+						{"matom", uint32(3), []string{"milliatom"}},
+						{"atom", uint32(6), nil},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				},
+			},
+			"23regen",
 			false,
 		},
-		*/
+		{
+			"invalid denom",
+			types.NewCoin("mregen", types.NewInt(int64(23000))),
+			[]banktypes.Metadata{
+				{
+					Name:        "Cosmos Hub Atom",
+					Symbol:      "ATOM",
+					Description: "The native staking token of the Cosmos Hub.",
+					DenomUnits: []*banktypes.DenomUnit{
+						{"uatom", uint32(0), []string{"microatom"}},
+						{"matom", uint32(3), []string{"milliatom"}},
+						{"atom", uint32(6), nil},
+					},
+					Base:    "uatom",
+					Display: "atom",
+				},
+			},
+			"",
+			true,
+		},
 	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.malleate()
-
-			res, err := queryClient.DenomsMetadata(ctx, req)
-			require.NoError(t, err)
-			require.Equal(t, res.Metadatas, expMetadatas)
-
 			dvr := valuerenderer.NewDefaultValueRenderer()
-			dvr.SetDenomToMetadataMap(expMetadatas)
-			formatedRes, err := dvr.Format(coin)
-			require.NoError(t, err)
+			dvr.SetDenomToMetadataMap(tc.metadatas)
 
-			metadata, err := dvr.LookupMetadataByDenom(valuerenderer.ConvertDenomToDisplay(coin.Denom))
-			require.NoError(t, err)
-			expRes := p.Sprintf("%d", dvr.ComputeAmount(coin, metadata)) + metadata.Display
-			require.Equal(t, expRes, formatedRes)
+			res, err := dvr.Format(tc.coin)
+			if tc.expErr {
+				require.Error(t, err)
+				require.Empty(t, res)
+			} else {
+				require.NoError(t, err)
+				require.NotEmpty(t, res)
+				require.Equal(t, tc.expRes, res)
+			}
 		})
 	}
 }
@@ -230,7 +599,7 @@ func TestFormatInt(t *testing.T) {
 }
 
 // TODO add more test cases
-/*
+
 func TestParseString(t *testing.T) {
 	re := regexp.MustCompile(`\d+[mu]?regen`)
 	dvr := valuerenderer.NewDefaultValueRenderer()
@@ -274,4 +643,36 @@ func TestParseString(t *testing.T) {
 		})
 	}
 }
+
+
+/*
+func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
+	return []types.Metadata{{
+		Name:        "Cosmos Hub Atom",
+		Symbol:      "ATOM",
+		Description: "The native staking token of the Cosmos Hub.",
+		DenomUnits: []*types.DenomUnit{
+			{"uatom", uint32(0), []string{"microatom"}},
+			{"matom", uint32(3), []string{"milliatom"}},
+			{"atom", uint32(6), nil},
+		},
+		Base:    "uatom",
+		Display: "atom",
+	},
+		{
+			Name:        "Token",
+			Symbol:      "TOKEN",
+			Description: "The native staking token of the Token Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{"1token", uint32(5), []string{"decitoken"}},
+				{"2token", uint32(4), []string{"centitoken"}},
+				{"3token", uint32(7), []string{"dekatoken"}},
+			},
+			Base:    "utoken",
+			Display: "token",
+		},
+	}
+}
+
+
 */

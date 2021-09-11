@@ -33,6 +33,9 @@ type Keeper interface {
 	IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metadata) bool)
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToManyAccounts(
+		ctx sdk.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
+	) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	DelegateCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
@@ -296,6 +299,30 @@ func (k BaseKeeper) SendCoinsFromModuleToAccount(
 	}
 
 	return k.SendCoins(ctx, senderAddr, recipientAddr, amt)
+}
+
+// SendCoinsFromModuleToManyAccounts transfers coins from a ModuleAccount to multiple AccAddresses.
+// It will panic if the module account does not exist. An error is returned if
+// the recipient address is black-listed or if sending the tokens fails.
+func (k BaseKeeper) SendCoinsFromModuleToManyAccounts(
+	ctx sdk.Context, senderModule string, recipientAddrs []sdk.AccAddress, amts []sdk.Coins,
+) error {
+	if len(recipientAddrs) != len(amts) {
+		panic(fmt.Errorf("addresses and amounts numbers does not match"))
+	}
+
+	senderAddr := k.ak.GetModuleAddress(senderModule)
+	if senderAddr == nil {
+		panic(sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", senderModule))
+	}
+
+	for _, recipientAddr := range recipientAddrs {
+		if k.BlockedAddr(recipientAddr) {
+			return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", recipientAddr)
+		}
+	}
+
+	return k.SendManyCoins(ctx, senderAddr, recipientAddrs, amts)
 }
 
 // SendCoinsFromModuleToModule transfers coins from a ModuleAccount to another.

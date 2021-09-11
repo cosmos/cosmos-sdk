@@ -151,6 +151,9 @@ func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() 
 	suite.Require().Error(keeper.SendCoinsFromModuleToAccount(
 		ctx, minttypes.ModuleName, addr1, initCoins,
 	))
+	suite.Require().Error(keeper.SendCoinsFromModuleToManyAccounts(
+		ctx, minttypes.ModuleName, []sdk.AccAddress{addr1}, []sdk.Coins{initCoins},
+	))
 }
 
 func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
@@ -186,8 +189,15 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) // nolint:errcheck
 	})
 
+	suite.Require().Panics(func() {
+		keeper.SendCoinsFromModuleToManyAccounts(ctx, authtypes.Burner, []sdk.AccAddress{baseAcc.GetAddress()}, []sdk.Coins{initCoins, initCoins})
+	})
+
 	suite.Require().Error(
 		keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), baseAcc.GetAddress(), initCoins.Add(initCoins...)),
+	)
+	suite.Require().Error(
+		keeper.SendCoinsFromModuleToManyAccounts(ctx, holderAcc.GetName(), []sdk.AccAddress{baseAcc.GetAddress()}, []sdk.Coins{initCoins.Add(initCoins...)}),
 	)
 
 	suite.Require().NoError(
@@ -205,6 +215,12 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	suite.Require().NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
 	suite.Require().Equal(sdk.NewCoins().String(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()).String())
 	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
+
+	suite.Require().NoError(
+		keeper.SendCoinsFromModuleToManyAccounts(ctx, authtypes.Burner, []sdk.AccAddress{baseAcc.GetAddress()}, []sdk.Coins{initCoins}),
+	)
+	suite.Require().Equal(sdk.Coins(nil), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
+	suite.Require().Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 }
 
 func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
@@ -452,6 +468,51 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	})
 	suite.Require().Len(coins, 1)
 	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
+}
+
+func (suite *IntegrationTestSuite) TestSendManyCoins() {
+	app, ctx := suite.app, suite.ctx
+	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
+
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	app.AccountKeeper.SetAccount(ctx, acc2)
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr2, balances))
+
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
+	app.AccountKeeper.SetAccount(ctx, acc3)
+
+	toAddrs := []sdk.AccAddress{}
+	toAddrs = append(toAddrs, addr2)
+
+	sendAmts := []sdk.Coins{}
+	sendAmts = append(sendAmts, sdk.NewCoins(newFooCoin(50), newBarCoin(25)))
+	sendAmts = append(sendAmts, sdk.NewCoins(newFooCoin(50)))
+
+	suite.Require().Error(app.BankKeeper.SendManyCoins(ctx, addr1, toAddrs, sendAmts))
+
+	suite.Require().NoError(app.BankKeeper.SetBalances(ctx, addr1, balances))
+	suite.Require().Error(app.BankKeeper.SendManyCoins(ctx, addr1, toAddrs, sendAmts))
+
+	toAddrs = append(toAddrs, addr3)
+	suite.Require().NoError(app.BankKeeper.SendManyCoins(ctx, addr1, toAddrs, sendAmts))
+
+	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
+	expected := sdk.NewCoins(newFooCoin(0), newBarCoin(25))
+	suite.Require().Equal(expected, acc1Balances)
+
+	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
+	expected = sdk.NewCoins(newFooCoin(150), newBarCoin(75))
+	suite.Require().Equal(expected, acc2Balances)
+
+	acc3Balances := app.BankKeeper.GetAllBalances(ctx, addr3)
+	expected = sdk.NewCoins(newFooCoin(50))
+	suite.Require().Equal(expected, acc3Balances)
 }
 
 func (suite *IntegrationTestSuite) TestValidateBalance() {

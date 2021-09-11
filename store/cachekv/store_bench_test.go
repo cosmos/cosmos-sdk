@@ -62,10 +62,34 @@ func benchmarkBlankParentAppend(b *testing.B, keysize int) {
 	}
 }
 
+// Benchmark setting New keys to a store, where the new keys are random.
+// the speed of this function does not depend on the values in the parent store
+func benchmarkRandomSet(b *testing.B, keysize int) {
+	b.StopTimer()
+
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	kvstore := cachekv.NewStore(mem)
+
+	// Use a singleton for value, to not waste time computing it
+	value := randSlice(32)
+	keys := generateRandomKeys(keysize, b.N)
+
+	b.ReportAllocs()
+	b.StartTimer()
+
+	for _, k := range keys {
+		kvstore.Set(k, value)
+	}
+}
+
 func BenchmarkBlankParentIteratorNextKeySize32(b *testing.B) {
 	benchmarkBlankParentIteratorNext(b, 32)
 }
 
 func BenchmarkBlankParentAppendKeySize32(b *testing.B) {
 	benchmarkBlankParentAppend(b, 32)
+}
+
+func BenchmarkSetKeySize32(b *testing.B) {
+	benchmarkRandomSet(b, 32)
 }

@@ -20,7 +20,6 @@ func incrementByteSlice(bz []byte) {
 }
 
 // Generate many keys starting at startKey, and are in sequential order
-// TODO: Use golang generator syntax, to not double memory overhead
 func generateSequentialKeys(startKey []byte, numKeys int) [][]byte {
 	toReturn := make([][]byte, 0, numKeys)
 	cur := make([]byte, len(startKey))
@@ -30,6 +29,16 @@ func generateSequentialKeys(startKey []byte, numKeys int) [][]byte {
 		copy(newKey, cur)
 		toReturn = append(toReturn, newKey)
 		incrementByteSlice(cur)
+	}
+	return toReturn
+}
+
+// Generate many random, unsorted keys
+func generateRandomKeys(keySize int, numKeys int) [][]byte {
+	toReturn := make([][]byte, 0, numKeys)
+	for i := 0; i < numKeys; i++ {
+		newKey := randSlice(keySize)
+		toReturn = append(toReturn, newKey)
 	}
 	return toReturn
 }

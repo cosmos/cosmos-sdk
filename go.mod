@@ -200,18 +200,8 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-retract (
-	// false start by tagging the wrong branch
-	v0.50.0
-	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331
-	v0.46.12
-	// subject to a bug in the group module and gov module migration
-	[v0.46.5, v0.46.6]
-	// subject to the dragonberry vulnerability
-	// and/or the bank coin metadata migration issue
-	[v0.46.0, v0.46.4]
-	// subject to the dragonberry vulnerability
-	[v0.45.0, v0.45.8]
-	// do not use
-	v0.43.0
-)
+// The following is to test committingClient (allowing parallel queries during
+// write transactions):
+replace github.com/tendermint/tendermint => github.com/agoric-labs/tendermint v0.34.12-alpha.agoric.8
+
+replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76

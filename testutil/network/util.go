@@ -79,11 +79,11 @@ func startInProcess(cfg Config, val *Validator) error {
 		cmtCfg,
 		pv,
 		nodeKey,
-		proxy.NewLocalClientCreator(cmtApp),
-		appGenesisProvider,
-		cmtcfg.DefaultDBProvider,
-		node.DefaultMetricsProvider(cmtCfg.Instrumentation),
-		servercmtlog.CometLoggerWrapper{Logger: logger.With("module", val.moniker)},
+		proxy.NewCommittingClientCreator(app),
+		genDocProvider,
+		node.DefaultDBProvider,
+		node.DefaultMetricsProvider(tmCfg.Instrumentation),
+		logger.With("module", val.Moniker),
 	)
 	if err != nil {
 		return err

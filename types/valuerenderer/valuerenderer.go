@@ -15,19 +15,22 @@ import (
 	"golang.org/x/text/message"
 )
 
+// ValueRenderer defines an interface to produce formated output for Int,Dec,Coin types as well as parse a string to Coin or Uint.
 type ValueRenderer interface {
 	Format(interface{}) (string, error)
 	Parse(string) (interface{}, error)
 }
 
-// create default value rreenderer in CLI and then get context from CLI
+// DefaultValueRenderer defines a struct that implements ValueRenderer interface
 type DefaultValueRenderer struct {
-	// /string is denom that user sents
-	denomToMetadataMap map[string]banktypes.Metadata // define in test only //convert DenomUnits to Display units
+	// denomToMetadataMap represents a hashmap to lookup banktypes.Metadata by coin denom
+	denomToMetadataMap map[string]banktypes.Metadata
 }
 
+var _ ValueRenderer = &DefaultValueRenderer{}
+
 // TODO consider to move into valuerenderer_test.go
-// TODO handle an entire slice
+// NewDefaultValueRenderer  initiates denomToMetadataMap field and returns DefaultValueRenderer struct
 func NewDefaultValueRenderer() DefaultValueRenderer {
 	return DefaultValueRenderer{denomToMetadataMap: make(map[string]banktypes.Metadata)}
 }
@@ -36,13 +39,14 @@ func NewDefaultValueRenderer() DefaultValueRenderer {
 // 1. current implementation O(m*d)
 // 2. use metadata.Symbol is a key ,but this is an optional field
 // 3. use metadata.Base or ,metadata.Display as a key in this case the helper function
+// SetDenomToMetadataMap populates a hashmap that maps coin denomination to a metadata.
 func (dvr DefaultValueRenderer) SetDenomToMetadataMap(metadatas []banktypes.Metadata) error {
 	// TODO should I validate denom?
 	if metadatas == nil {
 		return errors.New("empty metadatas")
 	}
 
-	// O(m*d), wheren m is number of metadatas and d is denumber of denomUnits in each metadata
+	// O(m*d), wheren m is number of metadatas and d is a number of denomUnits in each metadata
 	for _, m := range metadatas {
 		for _, denomUnit := range m.DenomUnits {
 			dvr.denomToMetadataMap[denomUnit.Denom] = m
@@ -52,28 +56,20 @@ func (dvr DefaultValueRenderer) SetDenomToMetadataMap(metadatas []banktypes.Meta
 	return nil
 }
 
-var _ ValueRenderer = &DefaultValueRenderer{}
-
 // Format converts an empty interface into a string depending on interface type.
 func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 	p := message.NewPrinter(language.English)
 	var sb strings.Builder
 
-	switch x.(type) {
+	switch v := x.(type) {
 	case types.Dec:
-		i, ok := x.(types.Dec)
-		if !ok {
-			return "", errors.New("unable to cast interface{} to Int")
-		}
-
-		s := i.String()
+		s := v.String()
 		if len(s) == 0 {
 			return "", errors.New("empty string")
 		}
 
 		strs := strings.Split(s, ".")
 
-		// TODO should I address cases with len(strs) > 2 and others
 		if len(strs) == 2 {
 			// there is a decimal place
 
@@ -91,40 +87,31 @@ func (dvr DefaultValueRenderer) Format(x interface{}) (string, error) {
 		}
 
 	case types.Int:
-		i, ok := x.(types.Int)
-		if !ok {
-			return "", errors.New("unable to cast interface{} to Int")
-		}
-
-		s := i.String()
+		s := v.String()
 		if len(s) == 0 {
 			return "", errors.New("empty string")
 		}
 
-		sb.WriteString(p.Sprintf("%d", i.Int64()))
+		sb.WriteString(p.Sprintf("%d", v.Int64()))
 
 	case types.Coin:
-		coin, ok := x.(types.Coin)
-		if !ok {
-			return "", errors.New("unable to cast empty interface to Coin")
-		}
-
-		metadata, err := dvr.LookupMetadataByDenom(coin.Denom)
+		metadata, err := dvr.LookupMetadataByDenom(v.Denom)
 		if err != nil {
 			return "", err
 		}
 
-		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(coin, metadata)), metadata.Display
+		newAmount, newDenom := p.Sprintf("%d", dvr.ComputeAmount(v, metadata)), metadata.Display
 		sb.WriteString(newAmount)
 		sb.WriteString(newDenom)
 
 		//	default:
-		//		panic("type is invalid")
+		//	panic("type is invalid")
 	}
 
 	return sb.String(), nil
 }
 
+// LookupMetadataByDenom lookups metadata by coin denom
 func (dvr DefaultValueRenderer) LookupMetadataByDenom(denom string) (banktypes.Metadata, error) {
 	// lookup metadata by displayDenom
 	metadata, ok := dvr.denomToMetadataMap[denom]
@@ -135,6 +122,7 @@ func (dvr DefaultValueRenderer) LookupMetadataByDenom(denom string) (banktypes.M
 	return metadata, nil
 }
 
+// ComputeAmount calculates an amount to produce formated output
 func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktypes.Metadata) int64 {
 
 	var coinExp, displayExp int64
@@ -167,59 +155,12 @@ func (dvr DefaultValueRenderer) ComputeAmount(coin types.Coin, metadata banktype
 	return amount
 }
 
-// see QueryDenomMetadataRequest() test
-/*
-func (dvr DefaultValueRenderer) denomQuerier() banktypes.Metadata {
-
-
-		app := simapp.Setup(t, false)
-		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-		queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-		types.RegisterQueryServer(queryHelper, app.BankKeeper)
-		queryClient := types.NewQueryClient(queryHelper)
-
-		req := &types.QueryDenomsMetadataRequest{
-			Pagination: &query.PageRequest{
-				Limit:      3,
-				CountTotal: true,
-			},
-		}
-
-		res, err := queryClient.DenomsMetadata(ctx, req)
-
-	// TODO make argument in denomQuerier to set Metadata.Display to convert between mregen and uregen
-	return banktypes.Metadata{
-		Description: "The native staking token of the Cosmos Hub.",
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    "regen",
-				Exponent: 0,
-				Aliases:  []string{"regen"},
-			},
-			{
-				Denom:    "uregen",
-				Exponent: 6,
-				Aliases:  []string{"microregen"},
-			},
-			{
-				Denom:    "mregen",
-				Exponent: 3,
-				Aliases:  []string{"miniregen"},
-			},
-		},
-		Base:    "uregen",
-		Display: "regen",
-	}
-}
-*/
-
-// Parse parses string and takes a decision whether to convert it into Coin or Uint
+// Parse parses a string and takes a decision whether to convert it into Coin or Uint
 func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) {
 	if s == "" {
 		return nil, errors.New("unable to parse empty string")
 	}
-
+	// remove all commas
 	str := strings.ReplaceAll(s, ",", "")
 	re := regexp.MustCompile(`\d+[mu]?regen`)
 	// case 1: "1000000regen" => Coin
@@ -241,6 +182,8 @@ func (dvr DefaultValueRenderer) Parse(s string) (interface{}, error) {
 	return types.NewUint(i), nil
 }
 
+// should I add tests for coinFromString?
+// coinFromString converts a string to coin
 func coinFromString(s string) (types.Coin, error) {
 	index := len(s) - 1
 	for i := len(s) - 1; i >= 0; i-- {
@@ -253,15 +196,14 @@ func coinFromString(s string) (types.Coin, error) {
 	}
 
 	if index == len(s)-1 {
-		return types.Coin{}, errors.New("no denom has been found")
+		return types.Coin{}, errors.New("unable to find a denonination")
 	}
 
-	denom := s[index+1:]
-	amount := s[:index+1]
+	amount, denom := s[:index+1], s[index+1:]
 	// convert to int64 to make up Coin later
 	amountInt, ok := types.NewIntFromString(amount)
 	if !ok {
-		return types.Coin{}, errors.New("unable convert amountStr to int64")
+		return types.Coin{}, errors.New("unable to convert amountStr into int64")
 	}
 
 	return types.NewCoin(denom, amountInt), nil

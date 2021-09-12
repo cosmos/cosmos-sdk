@@ -599,7 +599,6 @@ func TestFormatInt(t *testing.T) {
 }
 
 // TODO add more test cases
-
 func TestParseString(t *testing.T) {
 	re := regexp.MustCompile(`\d+[mu]?regen`)
 	dvr := valuerenderer.NewDefaultValueRenderer()
@@ -628,14 +627,14 @@ func TestParseString(t *testing.T) {
 				return
 			}
 
+			require.NoError(t, err)
 			if tc.satisfyRegExp {
-				require.NoError(t, err)
+				// should i validate coin here?
 				coin, ok := x.(types.Coin)
 				require.True(t, ok)
 				require.NotNil(t, coin)
 				require.True(t, re.MatchString(tc.str))
 			} else {
-				require.NoError(t, err)
 				u, ok := x.(types.Uint)
 				require.True(t, ok)
 				require.NotNil(t, u)
@@ -643,36 +642,3 @@ func TestParseString(t *testing.T) {
 		})
 	}
 }
-
-
-/*
-func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
-	return []types.Metadata{{
-		Name:        "Cosmos Hub Atom",
-		Symbol:      "ATOM",
-		Description: "The native staking token of the Cosmos Hub.",
-		DenomUnits: []*types.DenomUnit{
-			{"uatom", uint32(0), []string{"microatom"}},
-			{"matom", uint32(3), []string{"milliatom"}},
-			{"atom", uint32(6), nil},
-		},
-		Base:    "uatom",
-		Display: "atom",
-	},
-		{
-			Name:        "Token",
-			Symbol:      "TOKEN",
-			Description: "The native staking token of the Token Hub.",
-			DenomUnits: []*types.DenomUnit{
-				{"1token", uint32(5), []string{"decitoken"}},
-				{"2token", uint32(4), []string{"centitoken"}},
-				{"3token", uint32(7), []string{"dekatoken"}},
-			},
-			Base:    "utoken",
-			Display: "token",
-		},
-	}
-}
-
-
-*/

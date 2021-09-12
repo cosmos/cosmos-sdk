@@ -58,4 +58,8 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
+// The following is to test committingClient (allowing parallel queries during
+// write transactions):
+replace github.com/tendermint/tendermint => github.com/agoric-labs/tendermint v0.34.12-alpha.agoric.8
+
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76

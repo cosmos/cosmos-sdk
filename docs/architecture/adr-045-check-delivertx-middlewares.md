@@ -159,7 +159,7 @@ txHandler := middleware.ComposeMiddlewares(...)
 app.SetTxHandler(txHandler)
 ```
 
-The app developer can define their own middlewares, or use the SDK's pre-defined middlewares.
+The app developer can define their own middlewares, or use the SDK's pre-defined middlewares from `middleware.NewDefaultTxHandler()`.
 
 ### Middlewares Maintained by the SDK
 

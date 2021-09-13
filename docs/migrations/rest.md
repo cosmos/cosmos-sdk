@@ -4,11 +4,15 @@ order: 2
 
 # REST Endpoints Migration
 
-Migrate your REST endpoints. Legacy REST endpoints have been deprecated since v0.40 and they will be removed in v0.44. {synopsis}
+Migrate to gRPC-Gateway REST endpoints. Legacy REST endpoints were marked as deprecated in v0.40 and will be removed in v0.45. {synopsis}
+
+::: warning
+Two Legacy REST endpoints (`POST /txs` and `POST /txs/encode`) were removed ahead of schedule in v0.44 due to a security vulnerability.
+:::
 
 ## Deprecation of Legacy REST Endpoints
 
-The Cosmos SDK versions v0.39 and earlier provided REST endpoints to query the state and broadcast transactions. These endpoints were kept in Cosmos SDK v0.40 and they are still available in v0.43, but they are marked as deprecated and will be removed in v0.44. We therefore call these endpoints legacy REST endpoints.
+Cosmos SDK versions v0.39 and earlier registered REST endpoints using a package called `gorilla/mux`. These REST endpoints were marked as deprecated in v0.40 and have since been referred to as legacy REST endpoints. Legacy REST endpoints will be officially removed in v0.45.
 
 Some important information concerning all legacy REST endpoints:
 

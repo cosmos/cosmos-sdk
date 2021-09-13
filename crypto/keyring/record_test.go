@@ -48,7 +48,6 @@ func (s *RecordTestSuite) TestOfflineRecordMarshaling() {
 }
 
 func (s *RecordTestSuite) TestLocalRecordMarshaling() {
-	const n1 = "cosmos"
 	dir := s.T().TempDir()
 	mockIn := strings.NewReader("")
 

@@ -16,7 +16,7 @@ You must upgrade to Stargate v0.42 before upgrading to v0.44. If you have not do
 - [In-Place Store Migrations](../core/upgrade.html) {prereq}
 - [Cosmovisor](../run-node/cosmovisor.html) {prereq}
 
-Cosmos SDK v0.44 introduces a new way of handling chain upgrades that no longer requires exporting state to JSON, making the necesssary changes, and then creating a new chain with the modified JSON as the new genesis file.
+Cosmos SDK v0.44 introduces a new way of handling chain upgrades that no longer requires exporting state to JSON, making the necessary changes, and then creating a new chain with the modified JSON as the new genesis file.
 
 Instead of starting a new chain, the upgrade binary will read the existing database and perform in-place store migrations. This new way of handling chain upgrades can be used alongside [Cosmovisor](../run-node/cosmovisor.html) to make the upgrade process seamless.
 

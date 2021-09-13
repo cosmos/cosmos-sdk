@@ -18,9 +18,6 @@ func main() {
 // Run is the main loop, but returns an error
 func Run(args []string) error {
 
-	// Run cosmosvisor commands e.g `cosmovisor version`
-	cmd.RunCosmovisorCommands(args)
-
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {
 		return err
@@ -39,5 +36,8 @@ func Run(args []string) error {
 	if doUpgrade && err == nil {
 		fmt.Println("[cosmovisor] upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
 	}
+
+	// Run cosmosvisor commands e.g `cosmovisor version`
+	cmd.RunCosmovisorCommands(args)
 	return err
 }

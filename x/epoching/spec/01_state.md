@@ -6,15 +6,15 @@ order: 1
 
 ## Messages queue
 
-Messages are queued to run at the end of epochs. Queued messages have epoch number to be run and at the end of epochs, it run messages queued for the epoch and execute the message.
+Messages are queued to run at the end of each epoch. Queued messages have an epoch number and for each epoch number, the queues are iterated over and each message is executed.
 
 ### Message queues
 
-Each module has 1 message queue that is specific to a module.
+Each module has one unique message queue that is specific to that module.
 
 ## Actions
 
-A module will add a message that complies with the `sdk.Msg` interface. These message will be executed at a later date.
+A module will add a message that implements the `sdk.Msg` interface. These message will be executed at a later time (end of the next epoch).
 
 ```go
 type Msg interface {
@@ -44,7 +44,7 @@ type Msg interface {
 
 ## Buffered Messages Export / Import
 
-For now, it's implemented to export all buffered messages without epoch number. And when import, Buffered messages are stored on current epoch to run at the end of current epoch.
+For now, the `x/epoching` module is implemented to export all buffered messages without epoch numbers. When state is imported, buffered messages are stored on current epoch to run at the end of current epoch.
 
 ## Genesis Transactions
 

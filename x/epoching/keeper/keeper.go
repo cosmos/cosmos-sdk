@@ -10,7 +10,6 @@ import (
 	db "github.com/tendermint/tm-db"
 )
 
-// keys
 var (
 	NextEpochActionID      = []byte("next_epoch_action_id")
 	EpochNumberID          = []byte{0x50}
@@ -25,7 +24,6 @@ type Keeper struct {
 
 // NewKeeper creates a epoch queue manager
 func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey) Keeper {
-
 	return Keeper{
 		storeKey: key,
 		cdc:      cdc,
@@ -39,7 +37,7 @@ func (k Keeper) GetNewActionID(ctx sdk.Context) uint64 {
 	bz := store.Get(NextEpochActionID)
 	if bz == nil {
 		// return default action ID to 1
-		return 1
+		return DefaultEpochActionID
 	}
 	id := sdk.BigEndianToUint64(bz)
 
@@ -55,10 +53,9 @@ func ActionStoreKey(epochNumber int64, actionID uint64) []byte {
 }
 
 // QueueMsgForEpoch save the actions that need to be executed on next epoch
-func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, action sdk.Msg) {
+func (k Keeper) QueueMsgForEpoch(ctx sdk.Context, epochNumber int64, msg sdk.Msg) {
 	store := ctx.KVStore(k.storeKey)
 
-	// reference from TestMarshalAny(t *testing.T)
 	bz, err := k.cdc.MarshalInterface(action)
 	if err != nil {
 		panic(err)
@@ -160,7 +157,7 @@ func (k Keeper) GetEpochNumber(ctx sdk.Context) int64 {
 	bz := store.Get(EpochNumberID)
 	if bz == nil {
 		// return default EpochNumber 0
-		return 0
+		return DefaultEpochNumber
 	}
 
 	return int64(sdk.BigEndianToUint64(bz))

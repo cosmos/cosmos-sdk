@@ -18,8 +18,8 @@ func main() {
 // Run is the main loop, but returns an error
 func Run(args []string) error {
 
-	// Setup the cosmosvisor cobra commands
-	cmd.Execute()
+	// Run cosmosvisor commands e.g `cosmovisor version`
+	cmd.RunCosmovisorCommands(args)
 
 	cfg, err := cosmovisor.GetConfigFromEnv()
 	if err != nil {

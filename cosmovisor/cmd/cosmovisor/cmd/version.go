@@ -12,6 +12,7 @@ var Version string
 
 const (
 	versionRegex = `^v(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)`
+	// ^                       - Ensuring the text starts with the match
 	// v                       - Version string starts with `v`
 	// (?P<major>0|[1-9]\d*)   - Match group `major` - Matches 0 once or digits 1-9 zero or many times
 	// \.                      - Dot between `major` and `minor`

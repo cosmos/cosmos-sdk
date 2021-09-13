@@ -77,7 +77,3 @@ func (app *BaseApp) NewContext(isCheckTx bool, header tmproto.Header) sdk.Contex
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header tmproto.Header) sdk.Context {
 	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
 }
-
-func txResult(gInfo sdk.GasInfo, data []byte, log string, events []abci.Event) (sdk.GasInfo, *sdk.Result, error) {
-	return gInfo, &sdk.Result{Data: data, Log: log, Events: events}, nil
-}

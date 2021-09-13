@@ -33,6 +33,22 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, will backup the data before trying the upgrade. Otherwise it will upgrade directly without doing any backup. This is useful (and recommended) in case of failures and when needed to rollback. It is advised to use backup option, i.e., `UNSAFE_SKIP_BACKUP=false`
 
+## Commands
+
+As Cosmovisor is meant to be used as a wrapper for a `Cosmos SDK` application, it does not support many commands. 
+
+However, to determine the version of Cosmovisor being run, the following command can be run.
+```
+cosmovisor version
+``` 
+This returns the version of the `Cosmos SDK` application as well as the version of Cosmovisor as shown below
+```
+v0.43.0-beta1-319-ge3aec1840
+Cosmovisor Version:  v0.1.0
+```
+
+
+
 ## Folder Layout
 
 `$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and the subprocesses that are controlled by it. The folder content is organized as follows:

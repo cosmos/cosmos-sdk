@@ -17,12 +17,14 @@ import (
 type RecordTestSuite struct {
 	suite.Suite
 
-	cdc  codec.Codec
-	priv cryptotypes.PrivKey
-	pub  cryptotypes.PubKey
+	appName string
+	cdc     codec.Codec
+	priv    cryptotypes.PrivKey
+	pub     cryptotypes.PubKey
 }
 
 func (s *RecordTestSuite) SetupSuite() {
+	s.appName = "cosmos"
 	s.cdc = getCodec()
 	s.priv = cryptotypes.PrivKey(ed25519.GenPrivKey())
 	s.pub = s.priv.PubKey()
@@ -50,7 +52,7 @@ func (s *RecordTestSuite) TestLocalRecordMarshaling() {
 	dir := s.T().TempDir()
 	mockIn := strings.NewReader("")
 
-	kb, err := New(n1, BackendTest, dir, mockIn, s.cdc)
+	kb, err := New(s.appName, BackendTest, dir, mockIn, s.cdc)
 	s.Require().NoError(err)
 
 	k, err := NewLocalRecord("testrecord", s.priv, s.pub)
@@ -81,11 +83,10 @@ func (s *RecordTestSuite) TestLocalRecordMarshaling() {
 }
 
 func (s *RecordTestSuite) TestLedgerRecordMarshaling() {
-	const n1 = "cosmos"
 	dir := s.T().TempDir()
 	mockIn := strings.NewReader("")
 
-	kb, err := New(n1, BackendTest, dir, mockIn, s.cdc)
+	kb, err := New(s.appName, BackendTest, dir, mockIn, s.cdc)
 	s.Require().NoError(err)
 
 	path := hd.NewFundraiserParams(4, 12345, 57)

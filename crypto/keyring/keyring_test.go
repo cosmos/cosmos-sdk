@@ -1021,7 +1021,7 @@ func TestAltKeyring_Get(t *testing.T) {
 
 	key, err := kr.Key(uid)
 	require.NoError(t, err)
-	requireEqualRecord(t, mnemonic, key)
+	requireEqualRecord(t, mnemonic, key, true)
 }
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
@@ -1037,7 +1037,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 	require.NoError(t, err)
 	key, err := kr.KeyByAddress(addr)
 	require.NoError(t, err)
-	requireEqualRecord(t, key, mnemonic)
+	requireEqualRecord(t, key, mnemonic, true)
 }
 
 func TestAltKeyring_Delete(t *testing.T) {
@@ -1347,9 +1347,68 @@ func TestBackendConfigConstructors(t *testing.T) {
 	require.Equal(t, "keyring-test", backend.PassPrefix)
 }
 
-func requireEqualRecord(t *testing.T, key *Record, mnemonic *Record) {
-	require.Equal(t, key.Name, mnemonic.Name)
+func TestRenameKey(t *testing.T) {
+	testCases := []struct {
+		name string
+		run  func(Keyring)
+	}{
+		{
+			name: "rename a key",
+			run: func(kr Keyring) {
+				oldKeyUID, newKeyUID := "old", "new"
+				oldKeyRecord := newKeyRecord(t, kr, oldKeyUID)
+				err := kr.Rename(oldKeyUID, newKeyUID) // rename from "old" to "new"
+				require.NoError(t, err)
+				newRecord, err := kr.Key(newKeyUID) // new key should be in keyring
+				require.NoError(t, err)
+				requireEqualRecord(t, newRecord, oldKeyRecord, false) // oldKeyRecord and newRecord should be the same except name
+				oldKeyRecord, err = kr.Key(oldKeyUID)                 // old key should be gone from keyring
+				require.Error(t, err)
+			},
+		},
+		{
+			name: "cant rename a key that doesnt exist",
+			run: func(kr Keyring) {
+				err := kr.Rename("bogus", "bogus2")
+				require.Error(t, err)
+			},
+		},
+		{
+			name: "cant rename a key to an already existing key name",
+			run: func(kr Keyring) {
+				key1, key2 := "existingKey", "existingKey2" // create 2 keys
+				newKeyRecord(t, kr, key1)
+				newKeyRecord(t, kr, key2)
+				err := kr.Rename(key2, key1)
+				require.Equal(t, fmt.Errorf("rename failed: %s already exists in the keyring", key1), err)
+				assertKeysExist(t, kr, key1, key2) // keys should still exist after failed rename
+			},
+		},
+		{
+			name: "cant rename key to itself",
+			run: func(kr Keyring) {
+				keyName := "keyName"
+				newKeyRecord(t, kr, keyName)
+				err := kr.Rename(keyName, keyName)
+				require.Equal(t, fmt.Errorf("rename failed: %s already exists in the keyring", keyName), err)
+				assertKeysExist(t, kr, keyName)
+			},
+		},
+	}
 
+	for _, tc := range testCases {
+		tc := tc
+		kr := newKeyring(t, "testKeyring")
+		t.Run(tc.name, func(t *testing.T) {
+			tc.run(kr)
+		})
+	}
+}
+
+func requireEqualRecord(t *testing.T, key *Record, mnemonic *Record, nameMatch bool) {
+	if nameMatch {
+		require.Equal(t, key.Name, mnemonic.Name)
+	}
 	keyAddr, err := key.GetAddress()
 	require.NoError(t, err)
 	mnemonicAddr, err := mnemonic.GetAddress()
@@ -1362,6 +1421,26 @@ func requireEqualRecord(t *testing.T, key *Record, mnemonic *Record) {
 	require.NoError(t, err)
 	require.Equal(t, key1, key2)
 	require.Equal(t, key.GetType(), mnemonic.GetType())
+}
+
+func newKeyring(t *testing.T, name string) Keyring {
+	cdc := getCodec()
+	kr, err := New(name, "test", t.TempDir(), nil, cdc)
+	require.NoError(t, err)
+	return kr
+}
+
+func newKeyRecord(t *testing.T, kr Keyring, name string) *Record {
+	k, _, err := kr.NewMnemonic(name, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+	return k
+}
+
+func assertKeysExist(t *testing.T, kr Keyring, names ...string) {
+	for _, n := range names {
+		_, err := kr.Key(n)
+		require.NoError(t, err)
+	}
 }
 
 func accAddr(k *Record) (sdk.AccAddress, error) { return k.GetAddress() }

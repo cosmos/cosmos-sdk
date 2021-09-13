@@ -418,13 +418,4 @@ func TestProtoMarshalJSON(t *testing.T) {
 	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
 	require.NoError(err)
 	require.True(pk2.Equals(msig))
-
-	// Test that we can correctly unmarshal key from keyring output
-	info, err := keyring.NewMultiInfo("my multisig", msig)
-	require.NoError(err)
-
-	ko, err := keyring.MkAccKeyOutput(info)
-	require.NoError(err)
-	require.Equal(ko.Address, sdk.AccAddress(pk2.Address()).String())
-	require.Equal(ko.PubKey, string(bz))
 }

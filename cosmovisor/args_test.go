@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -128,4 +129,44 @@ func (s *argsTestSuite) TestEnsureBin() {
 			s.Require().Error(err)
 		}
 	}
+}
+
+func (s *argsTestSuite) TestBooleanOption() {
+	require := s.Require()
+	name := "COSMOVISOR_TEST_VAL"
+
+	check := func(def, expected, isErr bool, msg string) {
+		v, err := booleanOption(name, def)
+		if isErr {
+			require.Error(err)
+			return
+		}
+		require.NoError(err)
+		require.Equal(expected, v, msg)
+	}
+
+	os.Setenv(name, "")
+	check(true, true, false, "should correctly set default value")
+	check(false, false, false, "should correctly set default value")
+
+	os.Setenv(name, "wrong")
+	check(true, true, true, "should error on wrong value")
+	os.Setenv(name, "truee")
+	check(true, true, true, "should error on wrong value")
+
+	os.Setenv(name, "false")
+	check(true, false, false, "should handle false value")
+	check(false, false, false, "should handle false value")
+	os.Setenv(name, "faLSe")
+	check(true, false, false, "should handle false value case not sensitive")
+	check(false, false, false, "should handle false value case not sensitive")
+
+	os.Setenv(name, "true")
+	check(true, true, false, "should handle true value")
+	check(false, true, false, "should handle true value")
+
+	os.Setenv(name, "TRUE")
+	check(true, true, false, "should handle true value case not sensitive")
+	check(false, true, false, "should handle true value case not sensitive")
+
 }

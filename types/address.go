@@ -136,7 +136,9 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 
 // VerifyAddressFormat verifies that the provided bytes form a valid address
 // according to the default address rules or a custom address verifier set by
-// GetConfig().SetAddressVerifier()
+// GetConfig().SetAddressVerifier().
+// TODO make an issue to get rid of global Config
+// ref: https://github.com/cosmos/cosmos-sdk/issues/9690
 func VerifyAddressFormat(bz []byte) error {
 	verifier := GetConfig().GetAddressVerifier()
 	if verifier != nil {

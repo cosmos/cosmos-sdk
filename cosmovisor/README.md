@@ -1,22 +1,37 @@
-# Cosmosvisor Quick Start
+# Cosmosvisor
 
-`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module via stdout for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+`cosmovisor` is a small process manager for Cosmos SDK application binaries that monitors the governance module for incoming chain upgrade proposals. If it sees a proposal that gets approved, `cosmovisor` can automatically download the new binary, stop the current binary, switch from the old binary to the new one, and finally restart the node with the new binary.
+
+#### Design
+
+Cosmovisor is designed to be used as a wrapper for an `Cosmos SDK` app:
+* it will pass all arguments to the app. Running `cosmovisor arg1 arg2 ....` will run `app arg1 arg2 ...`;
+* it will manage an app by restarting and upgrading if needed;
+* it is configured using environment variables, not positional arguments.
 
 *Note: If new versions of the application are not set up to run in-place store migrations, migrations will need to be run manually before restarting `cosmovisor` with the new binary. For this reason, we recommend applications adopt in-place store migrations.*
 
+*Note: If validators would like to enable the auto-download option, and they are currently running an application using Cosmos SDK `v0.42`, they will need to use Cosmovisor [`v0.1`](https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv0.1.0). Later versions of Cosmovisor do not support Cosmos SDK `v0.42` or earlier if the auto-download option is enabled.*
+
 ## Contributing
 
-Release branches has the following format `release/cosmovisor/vA.B.x`, where A and B are a number (eg: `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
+Cosmovisor is part of the Cosmos SDK monorepo, but it's a separate module with it's own release schedule.
 
-## Installation
+Release branches have the following format `release/cosmovisor/vA.B.x`, where A and B are a number (e.g. `release/cosmovisor/v0.1.x`). Releases are tagged using the following format: `cosmovisor/vA.B.C`.
 
-To install `cosmovisor`, run the following command:
+## Setup
+
+### Installation
+
+To install the latest version of `cosmovisor`, run the following command:
 
 ```
-go get github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor
+go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@latest
 ```
 
-## Command Line Arguments And Environment Variables
+*Note: If you are using go `v1.15` or earlier, you will need to use `go get`, and you may want to run the command outside a project directory.*
+
+### Command Line Arguments And Environment Variables
 
 All arguments passed to `cosmovisor` will be passed to the application binary (as a subprocess). `cosmovisor` will return `/dev/stdout` and `/dev/stderr` of the subprocess as its own. For this reason, `cosmovisor` cannot accept any command-line arguments other than those available to the application binary, nor will it print anything to output other than what is printed by the application binary.
 
@@ -29,7 +44,7 @@ All arguments passed to `cosmovisor` will be passed to the application binary (a
 * `DAEMON_POLL_INTERVAL` is the interval length in milliseconds for polling the upgrade plan file. Default: 300.
 * `UNSAFE_SKIP_BACKUP` (defaults to `false`), if set to `false`, will backup the data before trying the upgrade. Otherwise it will upgrade directly without doing any backup. This is useful (and recommended) in case of failures and when needed to rollback. It is advised to use backup option, i.e., `UNSAFE_SKIP_BACKUP=false`
 
-## Folder Layout
+### Folder Layout
 
 `$DAEMON_HOME/cosmovisor` is expected to belong completely to `cosmovisor` and the subprocesses that are controlled by it. The folder content is organized as follows:
 
@@ -85,7 +100,7 @@ The following heuristic is applied to detect the upgrade:
 
 When the upgrade mechanism is triggered, `cosmovisor` will start by auto-downloading a new binary (if `DAEMON_ALLOW_DOWNLOAD_BINARIES` is enabled) into `cosmovisor/<name>/bin` (where `<name>` is the `upgrade-info.json:name` attribute). `cosmovisor` will then update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to `cosmovisor/current/upgrade-info.json`.
 
-## Auto-Download
+### Auto-Download
 
 Generally, `cosmovisor` requires that the system administrator place all relevant binaries on disk before the upgrade happens. However, for people who don't need such control and want an easier setup (maybe they are syncing a non-validating fullnode and want to do little maintenance), there is another option.
 

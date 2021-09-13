@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-getter"
+	urlhelper "github.com/hashicorp/go-getter/helper/url"
 	"github.com/otiai10/copy"
 )
 
@@ -50,15 +51,43 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 	return cfg.SetCurrentUpgrade(info)
 }
 
+func ensureChecksumUrl(url string) error {
+	u, err := urlhelper.Parse(url)
+	if err != nil {
+		return err
+	}
+	const expectedFmtMsg = "expected scheme: `checksum=<hash_algo>:<hexbytes>`"
+
+	q := u.Query()
+	v := q.Get("checksum")
+	if v == "" {
+		return fmt.Errorf("checksum must be included in the URL, %s", expectedFmtMsg)
+	}
+
+	vs := strings.SplitN(v, ":", 2)
+	if len(vs) != 2 {
+		return fmt.Errorf("checksum URL query parameter is malformated, %s", expectedFmtMsg)
+	}
+
+	switch vs[0] {
+	case "md5", "sha256", "sha512":
+	default:
+		return fmt.Errorf(
+			"unsupported checksum type: %s", vs[0])
+	}
+	return nil
+}
+
 // DownloadBinary will grab the binary and place it in the proper directory
 func DownloadBinary(cfg *Config, info UpgradeInfo) error {
 	url, err := GetDownloadURL(info)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid URL: %v", err)
 	}
 
 	// download into the bin dir (works for one file)
 	binPath := cfg.UpgradeBin(info.Name)
+	ensureChecksumUrl(url)
 	err = getter.GetFile(binPath, url)
 
 	// if this fails, let's see if it is a zipped directory

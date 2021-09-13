@@ -36,9 +36,11 @@ func DoUpgrade(cfg *Config, info UpgradeInfo) error {
 	}
 
 	// If not there, then we try to download it... maybe
+	fmt.Println("[cosmovisor] No upgrade binary found, beginning to download it")
 	if err := DownloadBinary(cfg, info); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
+	fmt.Println("[cosmovisor] Downloading binary complete")
 
 	// and then set the binary again
 	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {

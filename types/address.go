@@ -1,5 +1,7 @@
 package types
 
+// testing second file
+
 import (
 	"bytes"
 	"encoding/hex"

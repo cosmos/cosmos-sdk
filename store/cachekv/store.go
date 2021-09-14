@@ -182,7 +182,7 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 // from string -> []byte to speed up operations, it is not meant
 // to be used generally, but for a specific pattern to check for available
 // keys within a domain.
-func strToByte(s string) []byte {
+func strToBytes(s string) []byte {
 	var b []byte
 	hdr := (*reflect.SliceHeader)(unsafe.Pointer(&b))
 	hdr.Cap = len(s)
@@ -203,10 +203,6 @@ func byteSliceToStr(b []byte) string {
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	n := len(store.unsortedCache)
-<<<<<<< HEAD
-	for key := range store.unsortedCache {
-		if dbm.IsKeyInDomain(strToByte(key), start, end) {
-=======
 	unsorted := make([]*kv.Pair, 0)
 	// If the unsortedCache is too big, its costs too much to determine
 	// whats in the subset we are concerned about.
@@ -216,14 +212,13 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// than just not having the cache.
 	if n >= 1024 {
 		for key := range store.unsortedCache {
->>>>>>> 28bf2c124 (perf: Make CacheKV store interleaved iterator and insertion not O(n^2) (#10026))
 			cacheValue := store.cache[key]
 			unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
 		}
 	} else {
 		// else do a linear scan to determine if the unsorted pairs are in the pool.
 		for key := range store.unsortedCache {
-			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
+			if dbm.IsKeyInDomain(strToBytes(key), start, end) {
 				cacheValue := store.cache[key]
 				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
 			}
@@ -266,13 +261,7 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair) {
 
 // Only entrypoint to mutate store.cache.
 func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
-<<<<<<< HEAD
-	store.cache[string(key)] = &cValue{
-		value:   value,
-		deleted: deleted,
-		dirty:   dirty,
-=======
-	keyStr := conv.UnsafeBytesToStr(key)
+	keyStr := byteSliceToStr(key)
 	store.cache[keyStr] = &cValue{
 		value: value,
 		dirty: dirty,
@@ -281,7 +270,6 @@ func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
 		store.deleted[keyStr] = struct{}{}
 	} else {
 		delete(store.deleted, keyStr)
->>>>>>> 28bf2c124 (perf: Make CacheKV store interleaved iterator and insertion not O(n^2) (#10026))
 	}
 	if dirty {
 		store.unsortedCache[string(key)] = struct{}{}

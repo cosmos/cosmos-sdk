@@ -57,7 +57,7 @@ simd tx authz --help
 The `exec` command allows a grantee to execute a transaction on behalf of granter.
 
 ```
-  simd tx authz exec [msg_tx_json_file] --from [grantee] [flags]
+  simd tx authz exec [tx-json-file] --from [grantee] [flags]
 ```
 
 Example:
@@ -84,7 +84,7 @@ simd tx authz grant cosmos1.. send /cosmos.bank.v1beta1.MsgSend --spend-limit=10
 The `revoke` command allows a granter to revoke an authorization from a grantee.
 
 ```
-simd tx authz revoke [grantee] [msg_type_url] --from=[granter] [flags]
+simd tx authz revoke [grantee] [msg-type-url] --from=[granter] [flags]
 ```
 
 Example:

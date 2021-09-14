@@ -62,7 +62,7 @@ func (l Launcher) Run(args []string, stdout, stderr io.Writer) (bool, error) {
 		return false, err
 	}
 
-	if !SkipUpgrade(args, l.fw.currentInfo) {
+	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
 
 		if err := doBackup(l.cfg); err != nil {
 			return false, err
@@ -177,8 +177,8 @@ func doPreUpgrade(cfg *Config) error {
 	return nil
 }
 
-// skipUpgrade checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
-func SkipUpgrade(args []string, upgradeInfo UpgradeInfo) bool {
+// IsSkipUpgradeHeight checks if pre-upgrade script must be run. If the height in the upgrade plan matches any of the heights provided in --safe-skip-upgrade, the script is not run
+func IsSkipUpgradeHeight(args []string, upgradeInfo UpgradeInfo) bool {
 	skipUpgradeHeights := UpgradeSkipHeights(args)
 	for _, h := range skipUpgradeHeights {
 		if h == int(upgradeInfo.Height) {

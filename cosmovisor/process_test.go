@@ -160,7 +160,7 @@ func TestSkipUpgrade(t *testing.T) {
 	for i := range cases {
 		tc := cases[i]
 		require := require.New(t)
-		h := cosmovisor.SkipUpgrade(tc.args, tc.upgradeInfo)
+		h := cosmovisor.IsSkipUpgradeHeight(tc.args, tc.upgradeInfo)
 		require.Equal(h, tc.expectRes)
 	}
 }

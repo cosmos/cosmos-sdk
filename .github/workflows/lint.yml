@@ -19,7 +19,7 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
-            **/*.go
+            **/**.go
             go.mod
             go.sum
       - name: run go linters

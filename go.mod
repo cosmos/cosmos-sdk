@@ -1,5 +1,6 @@
 go 1.15
 
+// testing
 module github.com/cosmos/cosmos-sdk
 
 require (

@@ -6,6 +6,8 @@ order: 6
 
 A user can query and interact with the `bank` module using the CLI.
 
+## CLI
+
 ### Query
 
 The `query` commands allow users to query `bank` state.
@@ -41,8 +43,6 @@ pagination:
 
 #### denom-metadata
 
-<!-- TODO: denom-metadata is not working -->
-
 The `denom-metadata` command allows users to query metadata for coin denominations. A user can query metadata for a single denomination using the `--denom` flag or all denominations without it.
 
 ```
@@ -58,7 +58,16 @@ simd query bank denom-metadata --denom stake
 Example Output:
 
 ```
-Error: rpc error: code = NotFound desc = rpc error: code = NotFound desc = client metadata for denom stake: key not found
+metadata:
+  base: stake
+  denom_units:
+  - aliases:
+    - STAKE
+    denom: stake
+  description: native staking token of simulation app
+  display: stake
+  name: SimApp Token
+  symbol: STK
 ```
 
 #### total
@@ -171,8 +180,6 @@ Example Output:
 
 ### DenomMetadata
 
-<!-- TODO: DenomMetadata is not working -->
-
 The `DenomMetadata` endpoint allows users to query metadata for a single coin denomination.
 
 ```
@@ -191,14 +198,26 @@ grpcurl -plaintext \
 Example Output:
 
 ```
-ERROR:
-  Code: NotFound
-  Message: rpc error: code = NotFound desc = client metadata for denom stake: key not found
+{
+  "metadata": {
+    "description": "native staking token of simulation app",
+    "denomUnits": [
+      {
+        "denom": "stake",
+        "aliases": [
+          "STAKE"
+        ]
+      }
+    ],
+    "base": "stake",
+    "display": "stake",
+    "name": "SimApp Token",
+    "symbol": "STK"
+  }
+}
 ```
 
 ### DenomsMetadata
-
-<!-- TODO: DenomsMetadata is not working -->
 
 The `DenomsMetadata` endpoint allows users to query metadata for all coin denominations.
 
@@ -218,15 +237,30 @@ Example Output:
 
 ```
 {
+  "metadatas": [
+    {
+      "description": "native staking token of simulation app",
+      "denomUnits": [
+        {
+          "denom": "stake",
+          "aliases": [
+            "STAKE"
+          ]
+        }
+      ],
+      "base": "stake",
+      "display": "stake",
+      "name": "SimApp Token",
+      "symbol": "STK"
+    }
+  ],
   "pagination": {
-    
+    "total": "1"
   }
 }
 ```
 
 ### DenomOwners
-
-<!-- TODO: DenomOwners is not working -->
 
 The `DenomOwners` endpoint allows users to query metadata for a single coin denomination.
 
@@ -246,7 +280,27 @@ grpcurl -plaintext \
 Example Output:
 
 ```
-Error invoking method "cosmos.bank.v1beta1.Query/DenomOwners": service "cosmos.bank.v1beta1.Query" does not include a method named "DenomOwners"
+{
+  "denomOwners": [
+    {
+      "address": "cosmos1..",
+      "balance": {
+        "denom": "stake",
+        "amount": "5000000000"
+      }
+    },
+    {
+      "address": "cosmos1..",
+      "balance": {
+        "denom": "stake",
+        "amount": "5000000000"
+      }
+    },
+  ],
+  "pagination": {
+    "total": "2"
+  }
+}
 ```
 
 ### TotalSupply

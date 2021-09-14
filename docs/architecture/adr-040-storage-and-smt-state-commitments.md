@@ -80,7 +80,7 @@ Some DB engines support snapshotting. Hence, we propose to reuse that functional
 
 One of the Stargate core features is a _snapshot sync_ delivered in the `/snapshot` package. It provides a way to trustlessly sync a blockchain without repeating all transactions from the genesis. This feature is implemented in SDK and requires storage support. Currently IAVL is the only supported backend. It works by streaming to a client a snapshot of a `SS` at a certain version together with a header chain.
 
-A new database snapshot will be created in every `EndBlocker` and identified by a block height. The `rootmulti.Store` keeps track of the available snapshots to offer `SS` at a certain version. The `rootmulti.Store` implements the `CommitMultiStore` interface, which encapsulates a `Committer` interface. `Committer` has a `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `rootStore.Commit` function creates a new snapshot and increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
+A new database snapshot will be created in every `EndBlocker` and identified by a block height. The `root` store keeps track of the available snapshots to offer `SS` at a certain version. The `root` store implements the `RootStore` interface described below. In essence, `RootStore` encapsulates a `Committer` interface. `Committer` has a `Commit`, `SetPruning`, `GetPruning` functions which will be used for creating and removing snapshots. The `rootStore.Commit` function creates a new snapshot and increments the version on each call, and checks if it needs to remove old versions. We will need to update the SMT interface to implement the `Committer` interface.
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
@@ -112,13 +112,13 @@ We need to be able to process transactions and roll-back state updates if a tran
 We identified use-cases, where modules will need to save an object commitment without storing an object itself. Sometimes clients are receiving complex objects, and they have no way to prove a correctness of that object without knowing the storage layout. For those use cases it would be easier to commit to the object without storing it directly.
 
 
-### Remove MultiStore
+### Reduce MultiStore
 
-IAVL based store adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database.
+Stargate `/store` implementation (StoreV1) adds an additional layer in the SDK store construction - the `MultiStore` structure. The multistore exists to support the modularity of the Cosmos SDK - each module is using its own instance of IAVL, but in the current implementation, all instances share the same database.
 
-The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync problems (eg: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
+The latter indicates, however, that the implementation doesn't provide true modularity. Instead it causes problems related to race condition and sync (see: [\#6370](https://github.com/cosmos/cosmos-sdk/issues/6370)).
 
-We propose to remove the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `rootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore` and make sure that the `rootStore` object implements `RootStore`.
+We propose to reduce the multistore concept from the SDK, and to use a single instance of `SC` and `SS` in a `rootStore` object. To avoid confusion, we should rename the `MultiStore` interface to `RootStore`.
 
 Moreover, to improve usability, we should extend the `KVStore` interface with _prefix store_. This will allow module developers to bind a store to a namespace for module sub-components:
 
@@ -131,16 +131,42 @@ type KVStore interface {
 ```
 
 The `WithPrefix` method will create a proxy object for the parent object and will prepend `prefix` to a key parameter of all key-value operations (similar to the `store/prefix.Store` implementation).
-The following invariant should be applied
+The following invariant must hold:
 
 ```
 for each OP in [Get Has, Set, ...]
     store.WithPrefix(prefix).OP(key) == store.OP(prefix + key)
 ```
 
+
+The `RootStore` will have the following interface:
+
+```
+TODO
+```
+
+In contrast to `MultiStore`, `RootStore` doesn't allow to mount dynamically sub stores. However it can inherit a multistore functionality in it's concrete implementation (which will be needed for IBC support).
+
+#### Merkle Proofs and IBC
+
+Currently IBC (v1.0) module merkle proof for a `(key, value)` consists of two elements `[storeKey, proof]`. Verification using 2 passes:
+1. Checks that a `proof` is a valid merkle proof `(key, value)` using ICS-23 spec.
+2. Then it checks that the `storeKey` and `root(proof)` hashes to the AppHash (App state commitment).
+
+Breaking this behavior would severely impact the Cosmos ecosystem which already widely adopts the IBC module. Unfortunately, the straightforward implementation is breaking. Hence, we
+
+, it then verifies proof store key hashes to app_hash with simple merkle tree verification method.
+
+
+RootStore merkle proofs, except for IBC module, will have only one pass. For module `M` and it's store key `S_m`, an object `O` with key `k` will be stored in `RootStore.WithPrefix(S_m)`.
+This will create a record in `SC` at key `hash(S_m + key)`.
+
+However this breaks the existing IBC
+
+
 ### Optimization: compress module keys
 
-We can consider a compression of prefix keys using [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding). It will require knowledge of used prefixes (module store keys) a priori. And for best results, it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding, the above invariant should have the following form:
+We consider a compression of prefix keys using [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding). It will require knowledge of used prefixes (module store keys) a priori. And for best results, it will need frequency information for each prefix (how often objects are stored in the store under the same prefix key). With Huffman Coding, the `WithPrefix` invariant has the following form:
 
 ```
 for each OP in [Get Has, Set, ...]
@@ -149,7 +175,7 @@ for each OP in [Get Has, Set, ...]
 
 Where `store.Code(prefix)` is a Huffman Code of `prefix` in the given `store`.
 
-To avoid conflicts in the address space, we need to assure that in the set of prefix codes, there are not two elements where one is a prefix of another:
+To avoid conflicts in the address space, we need to assure that in the set of prefix codes there are no two elements where one is a prefix of another:
 
 ```
 for each k1, k2 \in {store.Code(p): p \in StoreModuleKeys}
@@ -172,12 +198,13 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 + Performance improvements.
 + Joining SMT based camp which has wider and proven adoption than IAVL. Example projects which decided on SMT: Ethereum2, Diem (Libra), Trillan, Tezos, LazyLedger.
 + Multistore removal fixes a longstanding issue with the current MultiStore design.
-
++ Simplifies merkle proofs - all modules, except IBC, have only one pass for merkle proof.
 
 ### Negative
 
 + Storage migration
 + LL SMT doesn't support pruning - we will need to add and test that functionality.
++ `SS` keys will have an overhead of a key prefix. This doesn't impact `SC` because all keys in `SC` have same size (they are hashed).
 
 ### Neutral
 

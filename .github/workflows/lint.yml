@@ -17,13 +17,13 @@ jobs:
           go-version: 1.16
       - uses: technote-space/get-diff-action@v5
         id: GIT_DIFF
-        # with:
-        #   PATTERNS: |
-        #     **/**.go
-        #     go.mod
-        #     go.sum
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
       - name: print changed files
-        run: echo '${{ env.GIT_DIFF }}'
+        run: echo 'files: ${{ env.GIT_DIFF }}'
       - name: run go linters
         run: make lint-go
         # if: env.GIT_DIFF

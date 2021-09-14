@@ -253,4 +253,4 @@ For new middlewares, we introduce unit tests. Since middlewares are purposefully
 ## References
 
 - Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/9585
-- Implementation: https://github.com/cosmos/cosmos-sdk/pull/9920
+- Implementation: [#9920 BaseApp refactor](https://github.com/cosmos/cosmos-sdk/pull/9920) and [#10028 Antehandlers migration](https://github.com/cosmos/cosmos-sdk/pull/10028)

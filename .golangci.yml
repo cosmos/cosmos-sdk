@@ -15,7 +15,6 @@ linters:
     - gocritic
     - gofmt
     - goimports
-    - golint
     - gosec
     - gosimple
     - govet
@@ -23,6 +22,7 @@ linters:
     - misspell
     - nakedret
     - prealloc
+    - revive
     - exportloopref
     - staticcheck
     - structcheck

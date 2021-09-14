@@ -25,3 +25,6 @@ granting arbitrary privileges from one account (the granter) to another account 
     - [MsgExec](03_messages.md#MsgExec)
 4. **[Events](04_events.md)**
     - [Keeper](04_events.md#Keeper)
+5. **[Client](05_client.md)**
+    - [CLI](05_client.md#cli)
+    - [gRPC](05_client.md#grpc)
